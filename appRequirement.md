@@ -1,9 +1,10 @@
 ## Project Requirement: Build Mini Trello
 1. Authentication & Onboarding
-- Đăng ký tài khoản (email + password qua Supabase Auth)
+- Đăng nhập bằng Firebase Auth — Google SignInPopup (có thể mở rộng thêm email/password sau)
 - Đăng nhập / đăng xuất
-- Quên mật khẩu / reset password
-- Khi đăng ký lần đầu → tự động tạo tenant mới, user trở thành owner
+- Sau khi login, frontend lấy Firebase ID token gửi kèm mọi request tới backend
+- Backend verify ID token, đồng bộ (upsert) bản ghi vào bảng users (id = Firebase uid)
+- Khi đăng nhập lần đầu (chưa thuộc tenant nào) → trang onboarding tạo tenant mới, user trở thành owner
 - Trang onboarding: đặt tên công ty/team (= tên tenant)
 
 2. Quản lý Tenant & Thành viên
@@ -47,8 +48,11 @@
 
 7. Phân quyền (Authorization)
 - 2 role: owner (toàn quyền: quản lý thành viên, xóa board/tenant) và member (tạo/sửa card, list, board nhưng không quản lý thành viên)
-- RLS ở tầng Postgres đảm bảo user chỉ thấy dữ liệu thuộc tenant của mình
-- Guard ở tầng NestJS kiểm tra role trước khi cho phép hành động nhạy cảm (xóa board, đổi role, xóa thành viên)
+- Vì auth chuyển sang Firebase và backend dùng Supabase service_role (bỏ qua RLS), BACKEND là lớp bảo mật chính:
+  - Mọi request qua FirebaseAuthGuard (verify ID token) để lấy userId
+  - Guard lọc dữ liệu theo tenant của user (thay vai trò của RLS trước đây)
+  - RolesGuard kiểm tra owner cho hành động nhạy cảm (xóa board/tenant, đổi role, xóa thành viên)
+- (Tùy chọn) vẫn có thể bật RLS ở Postgres như lớp phòng thủ sâu, nhưng không còn là lớp chính
 
 8. Dashboard / Trang tổng quan (bonus nếu còn thời gian)
 - Trang tổng quan hiển thị: số board, số card đang mở, card sắp đến hạn (due soon)
@@ -58,3 +62,12 @@
 - Cập nhật thông tin cá nhân (tên hiển thị, avatar)
 - Dark mode / light mode 
 - Responsive cơ bản (dùng được trên tablet/mobile, không cần tối ưu hoàn hảo)
+
+10. AI Chat → tạo card tự động (tính năng mở rộng)
+- Mỗi board có một khung chat để thành viên trao đổi
+- AI đọc từng tin nhắn để phát hiện đâu là tin "giao task"
+- Nếu là task: AI trích tiêu đề, người phụ trách (map theo tên thành viên), hạn chót → hiện gợi ý
+- Người dùng bấm xác nhận thì mới tạo card (không tự tạo để tránh rác board)
+- Ranh giới bảo mật: frontend KHÔNG gọi Claude trực tiếp; backend (NestJS) gọi Claude API rồi trả về theo contract cố định (DetectTaskRequest / DetectTaskResponse)
+- Endpoint backend đề xuất: POST /ai/detect-task
+- Cần bảng messages ở DB (xem databaseScheme.md)
