@@ -69,6 +69,12 @@
   }
 }
 
+.sidebar-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 0.75rem 0.75rem;
+}
+
 .nav-item {
   display: flex;
   align-items: flex-start;

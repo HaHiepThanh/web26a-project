@@ -1,0 +1,240 @@
+@if (!project() || !isMember()) {
+  <div class="page">
+    <a routerLink="/settings/manage-workspace" class="back-link">← Danh sách dự án</a>
+    <div class="empty-state">
+      <p>{{ project() ? 'Bạn không phải thành viên của dự án này.' : 'Không tìm thấy dự án.' }}</p>
+    </div>
+  </div>
+} @else {
+  <div class="page">
+    <a routerLink="/settings/manage-workspace" class="back-link">← Danh sách dự án</a>
+
+    <header class="project-header">
+      <div>
+        <h1>{{ project()!.name }}</h1>
+        <span class="workspace-tag">{{ project()!.workspaceName }}</span>
+      </div>
+      <span class="role-badge" [class]="'role-' + myRole()">Role của bạn: {{ roleLabel(myRole()!) }}</span>
+    </header>
+
+    <div class="tab-bar">
+      <div class="tabs">
+        <button type="button" class="tab-btn" [class.active]="activeTab() === 'members'" (click)="setTab('members')">
+          Members
+        </button>
+        @if (isAdmin()) {
+          <button type="button" class="tab-btn" [class.active]="activeTab() === 'invitations'" (click)="setTab('invitations')">
+            Pending Invitations
+            @if (project()!.pendingInvitations.length > 0) {
+              <span class="tab-count">{{ project()!.pendingInvitations.length }}</span>
+            }
+          </button>
+          <button type="button" class="tab-btn" [class.active]="activeTab() === 'requests'" (click)="setTab('requests')">
+            Join Requests
+            @if (project()!.joinRequests.length > 0) {
+              <span class="tab-count tab-count-alert">{{ project()!.joinRequests.length }}</span>
+            }
+          </button>
+        }
+      </div>
+
+      @if (isAdmin()) {
+        <button type="button" class="btn-primary" (click)="openInviteModal()">+ Invite</button>
+      }
+    </div>
+
+    <!-- ======================= TAB: MEMBERS (mọi thành viên) ======================= -->
+    @if (activeTab() === 'members') {
+      <div class="search-row">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" placeholder="Tìm thành viên..." [value]="searchQuery()" (input)="searchQuery.set($any($event.target).value)" />
+      </div>
+
+      <div class="table-wrap">
+        <table class="member-table">
+          <thead>
+            <tr>
+              <th>Thành viên</th>
+              <th>Role</th>
+              <th>Đang giữ</th>
+              @if (isAdmin()) { <th></th> }
+            </tr>
+          </thead>
+          <tbody>
+            @for (member of filteredMembers(); track trackByUserId($index, member)) {
+              <tr>
+                <td>
+                  <div class="member-cell">
+                    <img [src]="member.avatarUrl" [alt]="member.name" class="member-avatar" />
+                    <div>
+                      <div class="member-name">
+                        {{ member.name }}
+                        @if (member.userId === CURRENT_USER_ID) { <span class="you-tag">Bạn</span> }
+                      </div>
+                      <div class="member-email">{{ member.email }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  @if (isAdmin()) {
+                    <select
+                      class="role-select"
+                      [ngModel]="member.role"
+                      (ngModelChange)="onChangeRole(member, $event)"
+                      [disabled]="member.userId === CURRENT_USER_ID && isLastAdmin(member)"
+                    >
+                      @for (role of roleOptions; track role) {
+                        <option [value]="role">{{ roleLabel(role) }}</option>
+                      }
+                    </select>
+                  } @else {
+                    <span class="role-badge-inline" [class]="'role-' + member.role">{{ roleLabel(member.role) }}</span>
+                  }
+                </td>
+                <td>
+                  @if (member.assignedCards.length === 0) {
+                    <span class="no-cards">Không có thẻ nào</span>
+                  } @else {
+                    <button type="button" class="cards-toggle" (click)="toggleExpandedCards(member.userId)">
+                      {{ member.assignedCards.length }} card{{ member.assignedCards.length > 1 ? 's' : '' }}
+                      <span class="chevron" [class.open]="expandedMemberId() === member.userId">▾</span>
+                    </button>
+                    @if (expandedMemberId() === member.userId) {
+                      <ul class="assigned-cards-list">
+                        @for (card of member.assignedCards; track card.id) {
+                          <li>
+                            <span class="card-title">{{ card.title }}</span>
+                            <span class="card-meta">{{ card.listName }}@if (card.dueDate) { · hạn {{ card.dueDate }} }</span>
+                          </li>
+                        }
+                      </ul>
+                    }
+                  }
+                </td>
+                @if (isAdmin()) {
+                  <td class="td-actions">
+                    @if (member.userId !== CURRENT_USER_ID || !isLastAdmin(member)) {
+                      <button type="button" class="btn-ghost-danger" (click)="openRemoveConfirm(member)">
+                        {{ member.userId === CURRENT_USER_ID ? 'Rời dự án' : 'Xoá' }}
+                      </button>
+                    }
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- ======================= TAB: PENDING INVITATIONS (admin only) ======================= -->
+    @if (activeTab() === 'invitations' && isAdmin()) {
+      @if (project()!.pendingInvitations.length === 0) {
+        <div class="empty-state small">Không có lời mời nào đang chờ.</div>
+      } @else {
+        <div class="table-wrap">
+          <table class="member-table">
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Role dự kiến</th>
+                <th>Người mời</th>
+                <th>Ngày mời</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (inv of project()!.pendingInvitations; track trackByInvitationId($index, inv)) {
+                <tr>
+                  <td>{{ inv.email }}</td>
+                  <td><span class="role-badge-inline" [class]="'role-' + inv.role">{{ roleLabel(inv.role) }}</span></td>
+                  <td>{{ inv.invitedBy }}</td>
+                  <td>{{ inv.invitedAt }}</td>
+                  <td class="td-actions">
+                    <button type="button" class="btn-ghost-danger" (click)="revokeInvitation(inv.id)">Thu hồi</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+
+    <!-- ======================= TAB: JOIN REQUESTS (admin only) ======================= -->
+    @if (activeTab() === 'requests' && isAdmin()) {
+      @if (project()!.joinRequests.length === 0) {
+        <div class="empty-state small">Không có yêu cầu tham gia nào.</div>
+      } @else {
+        <ul class="request-list">
+          @for (req of project()!.joinRequests; track trackByInvitationId($index, req)) {
+            <li class="request-item">
+              <img [src]="req.avatarUrl" [alt]="req.name" class="member-avatar" />
+              <div class="request-info">
+                <div class="member-name">{{ req.name }}</div>
+                <div class="member-email">{{ req.email }} · yêu cầu ngày {{ req.requestedAt }}</div>
+              </div>
+              <div class="request-actions">
+                <button type="button" class="btn-secondary" (click)="rejectJoinRequest(req.id)">Từ chối</button>
+                <button type="button" class="btn-primary" (click)="approveJoinRequest(req.id)">Duyệt</button>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    }
+  </div>
+
+  <!-- ============================== MODALS (admin only) ============================== -->
+  @if (showInviteModal()) {
+    <div class="modal-overlay" (click)="closeInviteModal()">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <h3>Mời thành viên vào dự án</h3>
+        <div class="field">
+          <label for="inviteEmail">Email</label>
+          <input id="inviteEmail" type="email" placeholder="ten@congty.com" [ngModel]="inviteEmail()" (ngModelChange)="inviteEmail.set($event)" />
+        </div>
+        <div class="field">
+          <label for="inviteRole">Vai trò</label>
+          <select id="inviteRole" [ngModel]="inviteRole()" (ngModelChange)="inviteRole.set($event)">
+            @for (role of roleOptions; track role) {
+              <option [value]="role">{{ roleLabel(role) }}</option>
+            }
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closeInviteModal()">Huỷ</button>
+          <button type="button" class="btn-primary" (click)="submitInvite()">Gửi lời mời</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (memberToRemove(); as member) {
+    <div class="modal-overlay" (click)="closeRemoveConfirm()">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <h3>{{ member.userId === CURRENT_USER_ID ? 'Rời khỏi dự án?' : 'Gỡ thành viên?' }}</h3>
+        <p class="confirm-text">
+          {{ member.userId === CURRENT_USER_ID
+            ? 'Bạn sẽ mất quyền truy cập dự án này.'
+            : (member.name + ' sẽ bị gỡ khỏi dự án và mất quyền truy cập.') }}
+        </p>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closeRemoveConfirm()">Huỷ</button>
+          <button type="button" class="btn-danger" (click)="confirmRemove()">
+            {{ member.userId === CURRENT_USER_ID ? 'Rời dự án' : 'Gỡ thành viên' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+}
+
+<div class="toast-stack">
+  @for (toast of toasts(); track toast.id) {
+    <div class="toast" [class]="toast.type">{{ toast.message }}</div>
+  }
+</div>
