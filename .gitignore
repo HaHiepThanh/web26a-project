@@ -1,0 +1,33 @@
+# Dependency directories
+node_modules/
+
+# Build outputs
+dist/
+build/
+out-tsc/
+/.angular/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Operating System files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDEs and editors
+.idea/
+*.sublime-workspace
+*.sublime-project
+.vscode/
+
+# Logs and coverage
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+coverage/
+

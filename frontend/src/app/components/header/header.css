@@ -1,0 +1,335 @@
+/* Ported from trello-workspace/style.css section 3 (Top Navigation Bar) + user popover. */
+
+.top-navbar {
+  height: 52px;
+  background-color: var(--bg-navbar);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-md);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow-sm);
+  transition: background-color var(--transition-normal), border-color var(--transition-normal);
+}
+
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.trello-logo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  text-decoration: none;
+  color: var(--text-primary);
+  font-weight: 700;
+  font-size: 18px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  transition: background-color var(--transition-fast);
+}
+
+.trello-logo:hover {
+  background-color: var(--bg-surface-hover);
+}
+
+.logo-icon {
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, #0052cc, #0747a6);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 3px;
+}
+
+.logo-bar {
+  background: #ffffff;
+  border-radius: 1px;
+}
+
+.logo-bar.bar-1 {
+  width: 7px;
+  height: 14px;
+}
+
+.logo-bar.bar-2 {
+  width: 7px;
+  height: 9px;
+  align-self: flex-start;
+  margin-top: 2px;
+}
+
+.logo-brand {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.logo-text {
+  font-size: 17px;
+  letter-spacing: -0.3px;
+  color: #0052cc;
+}
+
+[data-theme='dark'] .logo-text {
+  color: #579dff;
+}
+
+.logo-tag {
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--text-muted);
+  letter-spacing: 0.8px;
+}
+
+.navbar-center {
+  flex: 1;
+  max-width: 600px;
+  margin: 0 var(--space-lg);
+}
+
+.search-container {
+  position: relative;
+  width: 100%;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+  width: 16px;
+  height: 16px;
+}
+
+.search-input {
+  width: 100%;
+  height: 36px;
+  padding: 0 12px 0 36px;
+  background-color: var(--bg-app);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  color: var(--text-primary);
+  transition: all var(--transition-fast);
+}
+
+.search-input:focus {
+  background-color: var(--bg-surface);
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 2px var(--accent-blue-soft);
+  outline: none;
+}
+
+.search-shortcut-badge {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: var(--border-color);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.nav-btn {
+  height: 34px;
+  padding: 0 var(--space-md);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all var(--transition-fast);
+}
+
+.btn-primary-nav {
+  background-color: #0052cc;
+  color: #ffffff;
+}
+
+.btn-primary-nav:hover {
+  background-color: #0747a6;
+  transform: translateY(-1px);
+}
+
+[data-theme='dark'] .btn-primary-nav {
+  background-color: #579dff;
+  color: #1d2125;
+}
+
+[data-theme='dark'] .btn-primary-nav:hover {
+  background-color: #85b8ff;
+}
+
+.icon-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+  position: relative;
+  text-decoration: none;
+  font-size: 15px;
+}
+
+.icon-btn:hover {
+  background-color: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+.notification-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 3px;
+  background-color: #ef4444;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  border-radius: 999px;
+  border: 2px solid var(--bg-navbar);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-profile-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 3px 10px 3px 4px;
+  border-radius: 20px;
+  background-color: var(--bg-app);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.user-profile-btn:hover {
+  background-color: var(--bg-surface-hover);
+}
+
+.user-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-align: left;
+}
+
+.user-name {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* User dropdown menu */
+.user-menu-popover {
+  position: absolute;
+  top: 56px;
+  right: 16px;
+  width: 260px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-sm);
+  display: none;
+  z-index: 200;
+}
+
+.user-menu-popover.active {
+  display: block;
+}
+
+.menu-account-label {
+  padding: 8px 12px 0;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.menu-account-email {
+  padding: 0 12px 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.menu-item:hover {
+  background-color: var(--bg-surface-hover);
+}
+
+.menu-item-danger {
+  color: #ef4444;
+}
+
+.menu-divider {
+  height: 1px;
+  background-color: var(--border-color);
+  margin: var(--space-xs) 0;
+}
+
+@media (max-width: 768px) {
+  .navbar-center {
+    display: none;
+  }
+
+  .user-info {
+    display: none;
+  }
+}

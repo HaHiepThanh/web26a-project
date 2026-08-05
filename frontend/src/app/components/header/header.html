@@ -1,0 +1,63 @@
+<header class="top-navbar">
+  <div class="navbar-left">
+    <a routerLink="/dashboard" class="trello-logo">
+      <div class="logo-icon">
+        <div class="logo-bar bar-1"></div>
+        <div class="logo-bar bar-2"></div>
+      </div>
+      <div class="logo-brand">
+        <span class="logo-text">Trello</span>
+        <span class="logo-tag">WORKSPACE</span>
+      </div>
+    </a>
+  </div>
+
+  <div class="navbar-center">
+    <div class="search-container">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input type="text" class="search-input" placeholder="Tìm kiếm bảng dự án..." (input)="onSearchInput($event)" />
+      <span class="search-shortcut-badge">/</span>
+    </div>
+  </div>
+
+  <div class="navbar-right">
+    <button class="nav-btn btn-primary-nav" (click)="requestCreateBoard()">
+      <span>+</span>
+      <span>Tạo</span>
+    </button>
+
+    <button class="icon-btn" (click)="toggleTheme()" [title]="theme() === 'dark' ? 'Chuyển giao diện sáng' : 'Chuyển giao diện tối'">
+      {{ theme() === 'dark' ? '☀️' : '🌙' }}
+    </button>
+
+    <button class="icon-btn" [title]="dueBadgeCount() > 0 ? dueBadgeCount() + ' thẻ của bạn sắp/đã quá hạn' : 'Thông báo'">
+      🔔
+      @if (dueBadgeCount() > 0) {
+        <span class="notification-badge">{{ dueBadgeCount() }}</span>
+      }
+    </button>
+
+    <a class="icon-btn" routerLink="/settings" title="Cài đặt">⚙️</a>
+
+    <div class="user-profile-btn" (click)="toggleUserMenu()">
+      <div class="user-avatar">{{ initials() }}</div>
+      <div class="user-info">
+        <span class="user-name">{{ currentUser()?.displayName ?? currentUser()?.email ?? 'Khách' }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="user-menu-popover" [class.active]="menuOpen()">
+    <div class="menu-account-label">Tài khoản</div>
+    <div class="menu-account-email">{{ currentUser()?.email ?? '—' }}</div>
+    <div class="menu-divider"></div>
+    <a class="menu-item" routerLink="/settings">👤 Hồ sơ và quyền riêng tư</a>
+    <a class="menu-item" routerLink="/workspace">🗂️ Không gian làm việc</a>
+    <a class="menu-item" routerLink="/members">👥 Thành viên</a>
+    <div class="menu-divider"></div>
+    <div class="menu-item menu-item-danger" (click)="logout()">🚪 Đăng xuất</div>
+  </div>
+</header>

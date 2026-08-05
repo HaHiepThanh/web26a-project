@@ -1,0 +1,58 @@
+<div class="dashboard-page">
+  <h1 class="page-title">Tổng quan của bạn</h1>
+
+  @if (!boardId()) {
+    <div class="empty-state">
+      <p>Chưa có dữ liệu — mở 1 board bất kỳ để xem "Sắp đến hạn" và "Việc của tôi" ở đây.</p>
+      <a routerLink="/workspace" class="empty-link">Đi tới Không gian làm việc →</a>
+    </div>
+  } @else {
+    <section class="dash-section">
+      <div class="section-head">
+        <span class="section-icon">🔔</span>
+        <h2>Sắp đến hạn</h2>
+      </div>
+
+      @if (dueSoonTasks().length === 0) {
+        <div class="empty-note">Không có thẻ nào sắp/đã quá hạn. Tốt lắm!</div>
+      } @else {
+        <div class="task-list">
+          @for (card of dueSoonTasks(); track trackByCardId($index, card)) {
+            <a [routerLink]="['/board', boardId()]" class="task-row">
+              <span class="task-priority" [class]="'p-' + card.priority">{{ priorityLabel[card.priority] }}</span>
+              <span class="task-title">{{ card.title }}</span>
+              <span class="task-list-name">{{ listNameFor(card) }}</span>
+              <span class="task-due" [class.overdue]="isOverdue(card)">{{ card.dueDate }}</span>
+            </a>
+          }
+        </div>
+      }
+    </section>
+
+    <section class="dash-section">
+      <div class="section-head">
+        <span class="section-icon">✅</span>
+        <h2>Việc của tôi</h2>
+      </div>
+
+      @if (myTasks().length === 0) {
+        <div class="empty-note">Bạn chưa được gán thẻ nào trên board này.</div>
+      } @else {
+        <div class="task-list">
+          @for (card of myTasks(); track trackByCardId($index, card)) {
+            <a [routerLink]="['/board', boardId()]" class="task-row">
+              <span class="task-priority" [class]="'p-' + card.priority">{{ priorityLabel[card.priority] }}</span>
+              <span class="task-title">{{ card.title }}</span>
+              <span class="task-list-name">{{ listNameFor(card) }}</span>
+              @if (card.dueDate) {
+                <span class="task-due" [class.overdue]="isOverdue(card)">{{ card.dueDate }}</span>
+              } @else {
+                <span class="task-due muted">Không hạn</span>
+              }
+            </a>
+          }
+        </div>
+      }
+    </section>
+  }
+</div>

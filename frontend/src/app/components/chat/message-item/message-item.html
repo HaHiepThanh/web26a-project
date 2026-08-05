@@ -1,0 +1,16 @@
+<div class="msg-row" [class.own]="isOwn()">
+  <span class="msg-avatar" [style.background]="avatarColor()">{{ initials() }}</span>
+  <div class="msg-col">
+    <span class="msg-name">{{ senderLabel() }}</span>
+    <div class="msg-bubble">
+      @for (part of contentParts(); track $index) {
+        @if (part.isMention) {
+          <span class="mention">{{ part.text }}</span>
+        } @else {
+          <span>{{ part.text }}</span>
+        }
+      }
+    </div>
+    <span class="msg-time">{{ timeLabel() }}</span>
+  </div>
+</div>

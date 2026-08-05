@@ -1,0 +1,45 @@
+<div class="chat-widget">
+  @if (toastMessage(); as toast) {
+    <div class="msg-toast show" (click)="openFromToast()">
+      <span class="msg-toast-avatar">{{ toast.name.charAt(0) }}</span>
+      <div class="msg-toast-body">
+        <div class="msg-toast-name">{{ toast.name }}</div>
+        <div class="msg-toast-text">{{ toast.text }}</div>
+      </div>
+    </div>
+  }
+
+  <button type="button" class="chat-bubble-btn" [class.pulse]="pulse()" (click)="toggleOpen()" aria-label="Mở chat">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+    @if (unreadCount() > 0) {
+      <span class="unread-badge">{{ unreadCount() }}</span>
+    }
+  </button>
+
+  @if (isOpen()) {
+    <div class="chat-float-panel">
+      <div class="chat-head">
+        <h3>Chat nhóm — board này</h3>
+        <div class="chat-head-actions">
+          <button type="button" class="sim-btn-mini" (click)="simulateIncoming()" title="Giả lập tin nhắn mới từ người khác (demo)">🎲</button>
+          <button type="button" class="chat-head-close" (click)="toggleOpen()" aria-label="Đóng">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <app-message-list
+        [messages]="messages()"
+        [usersById]="usersById()"
+        [currentUserId]="currentUserId"
+        [memberNames]="memberNames()"
+        [pendingSuggestion]="pendingSuggestion()"
+        [pendingAssigneeName]="pendingAssigneeName()"
+        (confirmSuggestion)="confirmSuggestion()"
+        (dismissSuggestion)="dismissSuggestion()"
+      />
+
+      <app-chat-input [members]="members()" (send)="onSend($event)" />
+    </div>
+  }
+</div>

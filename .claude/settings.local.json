@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-NetTCPConnection -LocalPort 4200 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Get-Process -Id $_.OwningProcess } | Select-Object Id, ProcessName, StartTime)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:4200 --max-time 2)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:4200 --max-time 3)"
+    ]
+  }
+}

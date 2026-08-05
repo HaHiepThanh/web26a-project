@@ -1,0 +1,106 @@
+<div class="modal-overlay" (click)="close.emit()">
+  <div class="detail-box" (click)="$event.stopPropagation()">
+    <div class="detail-header">
+      <input class="title-input" [value]="card().title" spellcheck="false" (change)="onTitleChange($event)" />
+
+      <span class="presence-stack">
+        @for (v of viewers(); track v.name) {
+          <span class="presence-avatar" [style.background]="v.color" [title]="v.name + ' đang xem'">
+            {{ v.name.slice(0, 2).toUpperCase() }}
+            <span class="live-dot"></span>
+          </span>
+        }
+      </span>
+
+      <button type="button" class="close-btn" (click)="close.emit()" aria-label="Đóng">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="detail-body">
+      @if (viewers().length > 0) {
+        <div class="presence-banner">
+          🟡
+          @if (viewers().length === 1) {
+            <span><strong>{{ viewers()[0].name }}</strong> cũng đang xem thẻ này — cẩn thận ghi đè nhé.</span>
+          } @else {
+            <span><strong>{{ viewers().length }} người khác</strong> cũng đang xem thẻ này — cẩn thận ghi đè nhé.</span>
+          }
+        </div>
+      }
+
+      <div class="presence-sim-row">
+        <button type="button" class="sim-btn" (click)="addSimulatedViewer()">+ Giả lập có người mở thẻ này</button>
+        <button type="button" class="sim-btn" (click)="removeSimulatedViewer()">− Giả lập có người đóng thẻ</button>
+      </div>
+
+      <div class="detail-field">
+        <label class="detail-label">Mức độ ưu tiên</label>
+        <div class="priority-row">
+          @for (p of priorities; track p.id) {
+            <button type="button" class="priority-choice" [class]="'p-' + p.id" [class.selected]="card().priority === p.id" (click)="onPriorityChange(p.id)">
+              {{ p.label }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="detail-field">
+        <label class="detail-label">Nhãn</label>
+        <app-label-picker [boardId]="boardId()" [selectedIds]="selectedLabelIds()" (selectionChange)="onLabelsChange($event)" />
+      </div>
+
+      <div class="detail-row">
+        <div class="detail-field half">
+          <label class="detail-label" for="detail-assignee-select">Người phụ trách</label>
+          <select id="detail-assignee-select" class="detail-input" [ngModel]="card().assigneeId ?? null" (ngModelChange)="onAssigneeChange($event)">
+            <option [ngValue]="null">Chưa gán</option>
+            @for (m of members(); track m.id) {
+              <option [ngValue]="m.id">{{ m.displayName ?? m.email }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="detail-field half">
+          <label class="detail-label" for="detail-due-input">Ngày hết hạn</label>
+          <input type="date" id="detail-due-input" class="detail-input" [value]="card().dueDate ?? ''" (change)="onDueChange($event)" />
+        </div>
+      </div>
+
+      <div class="detail-field">
+        <label class="detail-label" for="detail-desc">Mô tả</label>
+        <textarea id="detail-desc" class="detail-textarea" rows="4" placeholder="Thêm mô tả chi tiết hơn..." [value]="card().description ?? ''" (change)="onDescriptionChange($event)"></textarea>
+      </div>
+
+      <div class="history-section">
+        <button type="button" class="history-toggle" [class.open]="historyOpen()" (click)="toggleHistory()">
+          <span class="h-title">Lịch sử thay đổi ({{ activityLogs().length }})</span>
+          <svg class="icon chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+
+        @if (historyOpen()) {
+          <div class="history-feed">
+            @if (activityLogs().length === 0) {
+              <div class="history-empty">Chưa có thay đổi nào được ghi lại.</div>
+            }
+            @for (h of activityLogs(); track h.id) {
+              <div class="h-item">
+                <div class="h-body">
+                  <div class="h-text">{{ h.actionText }}</div>
+                  <div class="h-time">{{ h.createdAt | date: 'HH:mm dd/MM/yyyy' }}</div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="detail-footer">
+        <button type="button" class="delete-btn" (click)="requestDelete()">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>
+          Xoá thẻ
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
