@@ -1,8 +1,10 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { Card, CardPriority } from '../../models';
+import { Board, Card, CardPriority } from '../../models';
 import { CardService } from '../../services/card.service';
 import { ListService } from '../../services/list.service';
+import { DashboardChat } from '../../components/chat/dashboard-chat/dashboard-chat';
+import { DashboardChatThread } from '../../components/chat/dashboard-chat-thread/dashboard-chat-thread';
 
 const PRIORITY_LABEL: Record<CardPriority, string> = { cao: 'Cao', trung: 'Trung bình', thap: 'Thấp' };
 const DUE_SOON_WINDOW_DAYS = 3;
@@ -15,13 +17,20 @@ const DUE_SOON_WINDOW_DAYS = 3;
  */
 @Component({
   selector: 'app-dashboard',
-  imports: [RouterLink],
+  imports: [RouterLink, DashboardChat, DashboardChatThread],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
 export class Dashboard {
   private readonly cardService = inject(CardService);
   private readonly listService = inject(ListService);
+
+  /** Hội thoại đang chọn ở sidebar trái — null = đang xem "Tổng quan" (mặc định). */
+  readonly selectedBoard = signal<Board | null>(null);
+
+  /** Điều hướng "danh sách ↔ chi tiết" kiểu Messenger mobile — trên màn hình < md chỉ
+   *  hiện 1 trong 2 cột cùng lúc; từ md trở lên cả 2 cột luôn hiện, cờ này bị bỏ qua. */
+  readonly mobileView = signal<'list' | 'detail'>('list');
 
   readonly boardId = this.cardService.loadedBoardId;
   readonly priorityLabel = PRIORITY_LABEL;
@@ -41,6 +50,15 @@ export class Dashboard {
     const soonLimitStr = soonLimit.toISOString().slice(0, 10);
     return this.myTasks().filter((c) => c.dueDate && c.dueDate <= soonLimitStr);
   });
+
+  onSelectBoard(board: Board | null): void {
+    this.selectedBoard.set(board);
+    this.mobileView.set('detail');
+  }
+
+  showListOnMobile(): void {
+    this.mobileView.set('list');
+  }
 
   listNameFor(card: Card): string {
     return this.listNameById()[card.listId] ?? '—';

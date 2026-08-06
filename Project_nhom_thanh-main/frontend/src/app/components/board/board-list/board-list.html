@@ -1,13 +1,21 @@
 @if (collapsed()) {
-  <div class="h-full w-full">
-    <button type="button" class="collapsed-head flex h-full min-h-[120px] w-full flex-col items-center gap-2.5 rounded-box bg-base-200 py-2.5 text-base-content/70 transition-colors duration-150 hover:bg-base-300 hover:text-base-content" (click)="toggleCollapse.emit()" title="Mở rộng danh sách">
-      <svg class="block h-3.5 w-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"/></svg>
-      <span class="collapsed-name whitespace-nowrap text-xs font-bold">{{ list().name }}</span>
+  @if (orientation() === 'horizontal') {
+    <button type="button" class="flex h-full min-h-[34px] w-full flex-shrink-0 items-center gap-2.5 rounded-box bg-base-200 px-3 text-base-content/70 transition-colors duration-150 hover:bg-base-300 hover:text-base-content" (click)="toggleCollapse.emit()" title="Mở rộng danh sách">
+      <svg class="block h-3.5 w-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg>
+      <span class="whitespace-nowrap text-xs font-bold">{{ list().name }}</span>
       <span class="badge badge-ghost badge-sm">{{ cards().length }}</span>
     </button>
-  </div>
+  } @else {
+    <div class="h-full w-full">
+      <button type="button" class="collapsed-head flex h-full min-h-[120px] w-full flex-col items-center gap-2.5 rounded-box bg-base-200 py-2.5 text-base-content/70 transition-colors duration-150 hover:bg-base-300 hover:text-base-content" (click)="toggleCollapse.emit()" title="Mở rộng danh sách">
+        <svg class="block h-3.5 w-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"/></svg>
+        <span class="collapsed-name whitespace-nowrap text-xs font-bold">{{ list().name }}</span>
+        <span class="badge badge-ghost badge-sm">{{ cards().length }}</span>
+      </button>
+    </div>
+  }
 } @else {
-  <div class="flex max-h-full w-full flex-col overflow-hidden rounded-box bg-base-200">
+  <div class="flex max-h-full w-full flex-col overflow-hidden rounded-box bg-base-200" [class.min-w-0]="orientation() === 'horizontal'">
     <app-list-header
       [list]="list()"
       [cardCount]="cards().length"
@@ -17,16 +25,21 @@
     />
 
     <div
-      class="list-cards flex flex-1 flex-col gap-2 overflow-y-auto overflow-x-hidden px-2"
+      class="list-cards flex flex-1 gap-2 px-2"
+      [class.flex-col]="orientation() === 'vertical'"
+      [class.overflow-y-auto]="orientation() === 'vertical'"
+      [class.overflow-x-hidden]="orientation() === 'vertical'"
+      [class.list-cards--row]="orientation() === 'horizontal'"
       style="min-height: 40px"
       cdkDropList
       [id]="list().id"
       [cdkDropListData]="cards()"
+      [cdkDropListOrientation]="orientation()"
       [cdkDropListSortingDisabled]="!sortingEnabled()"
       (cdkDropListDropped)="onCardDrop($event)"
     >
       @for (card of cards(); track trackByCardId($index, card)) {
-        <div class="card-drag-wrap cursor-grab active:cursor-grabbing" cdkDrag [cdkDragData]="card" (click)="onCardClick($event, card)">
+        <div class="card-drag-wrap cursor-grab active:cursor-grabbing" [class.row-card]="orientation() === 'horizontal'" cdkDrag [cdkDragData]="card" (click)="onCardClick($event, card)">
           <div class="h-[52px] rounded-field border-2 border-dashed border-primary bg-primary/10" *cdkDragPlaceholder></div>
           <app-card-item
             [card]="card"
@@ -41,10 +54,18 @@
           />
         </div>
       }
+
+      @if (orientation() === 'horizontal') {
+        <div class="row-add-card flex-shrink-0 self-start">
+          <app-add-card (open)="addCard.emit()" />
+        </div>
+      }
     </div>
 
-    <div class="flex-shrink-0 px-2 pb-2 pt-1">
-      <app-add-card (open)="addCard.emit()" />
-    </div>
+    @if (orientation() === 'vertical') {
+      <div class="flex-shrink-0 px-2 pb-2 pt-1">
+        <app-add-card (open)="addCard.emit()" />
+      </div>
+    }
   </div>
 }

@@ -1,6 +1,6 @@
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CdkDragDrop, CdkDragEnd, DragDropModule } from '@angular/cdk/drag-drop';
 import { Card, CardPriority, Label, List, User } from '../../models';
 import { BoardService } from '../../services/board.service';
@@ -14,6 +14,7 @@ import { LabelPicker } from '../../components/board/label-picker/label-picker';
 import { CardItem } from '../../components/board/card-item/card-item';
 import { ChatPanel } from '../../components/chat/chat-panel/chat-panel';
 import { CardDetailModal } from '../../components/board/card-detail-modal/card-detail-modal';
+import { BoardMinimap, MinimapListGeom } from '../../components/board/board-minimap/board-minimap';
 
 type ToastType = 'success' | 'error' | 'info';
 interface Toast {
@@ -23,6 +24,9 @@ interface Toast {
 }
 type SortMode = 'manual' | 'priority' | 'due' | 'new';
 type ViewMode = 'status' | 'matrix';
+/** Layout trình bày cho chế độ "status": column = Trello mặc định (List ngang, Card dọc),
+ *  row = Lists xếp dọc, mỗi List là 1 hàng Card cuộn ngang riêng. Không đổi data model. */
+type LayoutMode = 'column' | 'row';
 type DateFilter = 'overdue' | 'today' | 'week';
 /** Kích thước ô lưới fallback cho thẻ chưa từng được kéo trên canvas "2 chiều" (#6). */
 const CANVAS_FALLBACK_COL_WIDTH = 300;
@@ -32,6 +36,11 @@ const CANVAS_CARD_WIDTH = 272;
 /** Sentinel cho "Chưa gán ai" / "Chưa có nhãn nào" trong bộ lọc (#7). */
 const UNASSIGNED = '__unassigned__';
 const NO_LABEL = '__no_label__';
+
+/** Ngưỡng hiện Mini Map (#13): board "lớn" khi có nhiều List, hoặc nội dung vượt
+ *  hẳn khung nhìn — chứ không phải chỉ tràn nhẹ vài chục px. */
+const MINIMAP_LIST_COUNT_THRESHOLD = 8;
+const MINIMAP_OVERFLOW_RATIO = 1.5;
 
 interface SavedFilter {
   id: string;
@@ -78,12 +87,13 @@ const DATE_OPTIONS: { id: DateFilter; label: string }[] = [
  */
 @Component({
   selector: 'app-board',
-  imports: [FormsModule, RouterLink, DragDropModule, BoardList, AddList, LabelPicker, CardItem, ChatPanel, CardDetailModal],
+  imports: [FormsModule, RouterLink, DragDropModule, BoardList, AddList, LabelPicker, CardItem, ChatPanel, CardDetailModal, BoardMinimap],
   templateUrl: './board.html',
   styleUrl: './board.css',
 })
 export class Board {
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly boardService = inject(BoardService);
   private readonly listService = inject(ListService);
   private readonly cardService = inject(CardService);
@@ -91,6 +101,11 @@ export class Board {
   private readonly activityService = inject(ActivityService);
 
   readonly boardId = this.route.snapshot.paramMap.get('id') ?? 'demo-board';
+
+  /** Dashboard Chat (#chat-hub, Level 1) điều hướng vào đây kèm ?chat=1 để Board
+   *  Chat (Level 2) tự mở luôn — không cần bấm thêm nút "Chat". */
+  private readonly chatPanelRef = viewChild<ChatPanel>('chatPanel');
+  private chatQueryHandled = false;
 
   readonly board = this.boardService.currentBoard;
   readonly members = this.boardService.members;
@@ -148,6 +163,120 @@ export class Board {
   // với trạng thái (list) hay mức ưu tiên nữa — 2 trục = vị trí ngang/dọc của
   // chính thẻ đó (canvasX/canvasY trên Card), độc lập với chế độ "Theo trạng thái". ----
   readonly viewMode = signal<ViewMode>('status');
+
+  // ---- Column View / Row View — lưu theo board ở localStorage, tự khôi phục khi mở lại board ----
+  readonly layoutMode = signal<LayoutMode>('column');
+
+  private layoutModeKey(): string {
+    return `trello_layout_mode_${this.boardId}`;
+  }
+
+  private loadLayoutMode(): void {
+    const raw = localStorage.getItem(this.layoutModeKey());
+    this.layoutMode.set(raw === 'row' ? 'row' : 'column');
+  }
+
+  setLayoutMode(mode: LayoutMode): void {
+    this.layoutMode.set(mode);
+    localStorage.setItem(this.layoutModeKey(), mode);
+  }
+
+  // ---- Mini Map (#13): thanh điều hướng thu nhỏ nổi góc dưới-phải, chỉ hiện khi
+  // board "lớn". Đo trực tiếp từ DOM thật của khung cuộn (thay vì hardcode lại
+  // hằng số layout 272/230/34px) nên đúng cho cả Column View lẫn Row View bằng
+  // cùng 1 đường code — không nhân bản logic theo hướng. ----
+  private readonly boardScrollRef = viewChild<ElementRef<HTMLDivElement>>('boardScroll');
+
+  readonly minimapItems = signal<MinimapListGeom[]>([]);
+  readonly minimapScrollPos = signal(0);
+  readonly minimapViewportSize = signal(0);
+  readonly minimapContentSize = signal(0);
+
+  readonly showMinimap = computed(() => {
+    if (this.viewMode() !== 'status') return false;
+    const count = this.lists().length;
+    if (count === 0) return false;
+    if (count >= MINIMAP_LIST_COUNT_THRESHOLD) return true;
+    const viewport = this.minimapViewportSize();
+    if (viewport <= 0) return false;
+    return this.minimapContentSize() > viewport * MINIMAP_OVERFLOW_RATIO;
+  });
+
+  private minimapResizeObserver?: ResizeObserver;
+  private minimapScrollRaf = 0;
+
+  private setupMinimapTracking(): void {
+    effect(() => {
+      const el = this.boardScrollRef()?.nativeElement;
+      this.minimapResizeObserver?.disconnect();
+      if (!el) return;
+      this.minimapResizeObserver = new ResizeObserver(() => this.updateMinimapGeometry());
+      this.minimapResizeObserver.observe(el);
+      this.updateMinimapGeometry();
+    });
+
+    // Số lượng/kích thước List đổi (thêm/xoá/thu gọn) hoặc đổi layout → đo lại vị
+    // trí thật trên DOM sau khi Angular render xong khung mới.
+    effect(() => {
+      this.lists();
+      this.collapsedListIds();
+      this.layoutMode();
+      this.viewMode();
+      queueMicrotask(() => this.updateMinimapGeometry());
+    });
+
+    inject(DestroyRef).onDestroy(() => this.minimapResizeObserver?.disconnect());
+  }
+
+  private updateMinimapGeometry(): void {
+    const el = this.boardScrollRef()?.nativeElement;
+    if (!el) return;
+    const horizontal = this.layoutMode() === 'column';
+    const containerRect = el.getBoundingClientRect();
+    const items: MinimapListGeom[] = [];
+    el.querySelectorAll<HTMLElement>('[data-list-id]').forEach((node) => {
+      const id = node.dataset['listId'];
+      const list = id ? this.lists().find((l) => l.id === id) : undefined;
+      if (!id || !list) return;
+      const rect = node.getBoundingClientRect();
+      const offset = horizontal ? rect.left - containerRect.left + el.scrollLeft : rect.top - containerRect.top + el.scrollTop;
+      const size = horizontal ? rect.width : rect.height;
+      items.push({ id, name: list.name, cardCount: this.cardsFor(id).length, offset, size });
+    });
+    this.minimapItems.set(items);
+    this.updateMinimapScrollMetrics(el);
+  }
+
+  private updateMinimapScrollMetrics(el: HTMLDivElement): void {
+    const horizontal = this.layoutMode() === 'column';
+    this.minimapScrollPos.set(horizontal ? el.scrollLeft : el.scrollTop);
+    this.minimapViewportSize.set(horizontal ? el.clientWidth : el.clientHeight);
+    this.minimapContentSize.set(horizontal ? el.scrollWidth : el.scrollHeight);
+  }
+
+  /** rAF-throttle: khung cuộn bắn (scroll) rất dày, chỉ cần đọc lại vị trí — không
+   *  đo lại geometry từng List (chỉ đổi khi lists/collapsed/layout đổi, xem effect ở trên). */
+  onBoardScroll(): void {
+    if (this.minimapScrollRaf) return;
+    this.minimapScrollRaf = requestAnimationFrame(() => {
+      this.minimapScrollRaf = 0;
+      const el = this.boardScrollRef()?.nativeElement;
+      if (el) this.updateMinimapScrollMetrics(el);
+    });
+  }
+
+  /** Click 1 List trên Mini Map → cuộn mượt khung Board thật, đưa List đó về gần
+   *  giữa khung nhìn (không nhảy tức thời, không tự vẽ lại Board). */
+  scrollToList(listId: string): void {
+    const el = this.boardScrollRef()?.nativeElement;
+    const item = this.minimapItems().find((i) => i.id === listId);
+    if (!el || !item) return;
+    const horizontal = this.layoutMode() === 'column';
+    const viewportSize = horizontal ? el.clientWidth : el.clientHeight;
+    const maxScroll = Math.max(horizontal ? el.scrollWidth - el.clientWidth : el.scrollHeight - el.clientHeight, 0);
+    const target = Math.min(Math.max(item.offset - (viewportSize - item.size) / 2, 0), maxScroll);
+    el.scrollTo(horizontal ? { left: target, behavior: 'smooth' } : { top: target, behavior: 'smooth' });
+  }
 
   // ---- Lọc board — highlight/làm mờ (#7) ----
   readonly UNASSIGNED = UNASSIGNED;
@@ -414,6 +543,8 @@ export class Board {
     this.loadSavedFilters();
     this.loadSavedHighlightGroups();
     this.loadCollapsedLists();
+    this.loadLayoutMode();
+    this.setupMinimapTracking();
 
     effect(() => {
       const err = this.listService.lastError();
@@ -422,6 +553,18 @@ export class Board {
     effect(() => {
       const err = this.cardService.lastError();
       if (err) this.addToast(err.message, 'error');
+    });
+
+    // ?chat=1 (tới từ Dashboard Chat) → ép mở Board Chat đúng 1 lần, không đụng
+    // tới preference đã lưu (#chat-hub) — chạy khi ChatPanel đã render xong.
+    effect(() => {
+      const panel = this.chatPanelRef();
+      if (!panel || this.chatQueryHandled) return;
+      if (this.route.snapshot.queryParamMap.get('chat') === '1') {
+        this.chatQueryHandled = true;
+        panel.open();
+        void this.router.navigate([], { relativeTo: this.route, queryParams: {}, replaceUrl: true });
+      }
     });
   }
 

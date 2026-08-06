@@ -5,6 +5,7 @@ import { BoardService } from '../../../services/board.service';
 import { CardService } from '../../../services/card.service';
 import { ListService } from '../../../services/list.service';
 import { ActivityService } from '../../../services/activity.service';
+import { createResizablePanel } from '../../../services/resizable-panel.util';
 import { MessageList } from '../message-list/message-list';
 import { ChatInput } from '../chat-input/chat-input';
 
@@ -15,6 +16,7 @@ const COLLAPSED_WIDTH = 56;
 const MAX_WIDTH_RATIO = 0.45;
 const WIDTH_STORAGE_KEY = 'trello_chat_width';
 const COLLAPSED_STORAGE_KEY = 'trello_chat_collapsed';
+const OPEN_STORAGE_KEY = 'trello_chat_open';
 
 /**
  * Khung chat dạng dock bên trái board (#8), ẩn/hiện qua nút "Chat" ở topbar
@@ -42,96 +44,44 @@ export class ChatPanel {
   readonly boardId = input.required<string>();
   readonly taskCreated = output<string>();
 
-  readonly isOpen = signal(false);
   readonly unreadCount = signal(0);
   readonly pulse = signal(false);
   readonly toastMessage = signal<{ name: string; text: string } | null>(null);
 
-  // ---- Resize + thu gọn (#resize) ----
-  readonly minWidth = MIN_WIDTH;
-  readonly collapsedWidth = COLLAPSED_WIDTH;
-  readonly width = signal(DEFAULT_WIDTH);
-  readonly collapsed = signal(false);
-  readonly isResizing = signal(false);
-  private resizeRafId: number | null = null;
+  // ---- Resize + thu gọn (#resize) — logic dùng chung, xem resizable-panel.util.ts ----
+  private readonly panel = createResizablePanel({
+    defaultWidth: DEFAULT_WIDTH,
+    minWidth: MIN_WIDTH,
+    collapsedWidth: COLLAPSED_WIDTH,
+    maxWidthRatio: MAX_WIDTH_RATIO,
+    widthStorageKey: WIDTH_STORAGE_KEY,
+    collapsedStorageKey: COLLAPSED_STORAGE_KEY,
+  });
+  readonly minWidth = this.panel.minWidth;
+  readonly collapsedWidth = this.panel.collapsedWidth;
+  readonly width = this.panel.width;
+  readonly collapsed = this.panel.collapsed;
+  readonly isResizing = this.panel.isResizing;
+  maxWidth = (): number => this.panel.maxWidth();
+  startResize = (event: PointerEvent): void => this.panel.startResize(event);
+  onHandleKeydown = (event: KeyboardEvent): void => this.panel.onHandleKeydown(event);
+  toggleCollapsed = (): void => this.panel.toggleCollapsed();
 
-  /** Public — template dùng cho aria-valuemax của tay cầm resize. */
-  maxWidth(): number {
-    return Math.round(window.innerWidth * MAX_WIDTH_RATIO);
-  }
+  // ---- Mở/đóng khung (#8) — nhớ theo localStorage, mặc định MỞ (#3) ----
+  readonly isOpen = signal(true);
 
-  private clampWidth(w: number): number {
-    return Math.min(Math.max(w, MIN_WIDTH), this.maxWidth());
-  }
-
-  private loadResizeState(): void {
+  private loadOpenState(): void {
     try {
-      const rawWidth = localStorage.getItem(WIDTH_STORAGE_KEY);
-      if (rawWidth) this.width.set(this.clampWidth(Number(rawWidth) || DEFAULT_WIDTH));
+      const raw = localStorage.getItem(OPEN_STORAGE_KEY);
+      this.isOpen.set(raw === null ? true : raw === '1');
     } catch {
-      this.width.set(DEFAULT_WIDTH);
-    }
-    try {
-      this.collapsed.set(localStorage.getItem(COLLAPSED_STORAGE_KEY) === '1');
-    } catch {
-      this.collapsed.set(false);
-    }
-  }
-
-  /** Bắt đầu kéo tay cầm ở rìa phải khung — dùng rAF để gộp nhiều pointermove
-   *  thành 1 lần ghi width/frame (mượt, không giật/chớp khi kéo nhanh). */
-  startResize(event: PointerEvent): void {
-    event.preventDefault();
-    const startX = event.clientX;
-    const startWidth = this.width();
-    this.isResizing.set(true);
-
-    const onMove = (e: PointerEvent): void => {
-      const next = this.clampWidth(startWidth + (e.clientX - startX));
-      if (this.resizeRafId !== null) return;
-      this.resizeRafId = requestAnimationFrame(() => {
-        this.width.set(next);
-        this.resizeRafId = null;
-      });
-    };
-
-    const onUp = (): void => {
-      document.removeEventListener('pointermove', onMove);
-      document.removeEventListener('pointerup', onUp);
-      this.isResizing.set(false);
-      try {
-        localStorage.setItem(WIDTH_STORAGE_KEY, String(this.width()));
-      } catch {
-        /* localStorage không khả dụng — bỏ qua, chỉ mất tính năng nhớ bề rộng */
-      }
-    };
-
-    document.addEventListener('pointermove', onMove);
-    document.addEventListener('pointerup', onUp, { once: true });
-  }
-
-  /** Bàn phím thay chuột trên tay cầm resize (ARIA "separator" pattern, #accessibility). */
-  onHandleKeydown(event: KeyboardEvent): void {
-    const STEP = 16;
-    let next: number | null = null;
-    if (event.key === 'ArrowLeft') next = this.width() - STEP;
-    else if (event.key === 'ArrowRight') next = this.width() + STEP;
-    else if (event.key === 'Home') next = MIN_WIDTH;
-    else if (event.key === 'End') next = this.maxWidth();
-    if (next === null) return;
-    event.preventDefault();
-    this.width.set(this.clampWidth(next));
-    try {
-      localStorage.setItem(WIDTH_STORAGE_KEY, String(this.width()));
-    } catch {
-      /* bỏ qua */
+      this.isOpen.set(true);
     }
   }
 
-  toggleCollapsed(): void {
-    this.collapsed.update((v) => !v);
+  private persistOpenState(): void {
     try {
-      localStorage.setItem(COLLAPSED_STORAGE_KEY, this.collapsed() ? '1' : '0');
+      localStorage.setItem(OPEN_STORAGE_KEY, this.isOpen() ? '1' : '0');
     } catch {
       /* bỏ qua */
     }
@@ -160,12 +110,18 @@ export class ChatPanel {
   private lastSeenCount = 0;
 
   constructor() {
-    this.loadResizeState();
+    this.loadOpenState();
 
     // effect() (không phải constructor body trực tiếp) vì input.required() chỉ có
     // giá trị SAU khi Angular gán input, không đọc được ngay trong constructor.
     effect(() => {
       void this.chat.loadMessages(this.boardId());
+    });
+
+    // Board đang mở chat = coi như đã xem tới hiện tại (#chat-hub) — chạy lại mỗi
+    // khi boardId hoặc isOpen đổi, kể cả lần mở mặc định đầu tiên (không qua toggleOpen()).
+    effect(() => {
+      if (this.isOpen()) this.chat.markSeen(this.boardId());
     });
 
     effect(() => {
@@ -198,11 +154,23 @@ export class ChatPanel {
 
   toggleOpen(): void {
     this.isOpen.update((v) => !v);
-    if (this.isOpen()) {
-      this.unreadCount.set(0);
-      this.toastMessage.set(null);
-      this.updateTitle();
-    }
+    this.persistOpenState();
+    if (this.isOpen()) this.markOpened();
+  }
+
+  /** Mở khung nếu đang đóng — idempotent, dùng khi board.ts ép mở qua ?chat=1 (#2)
+   *  mà không đảo ngược trạng thái đang mở sẵn như toggleOpen() sẽ làm. */
+  open(): void {
+    if (this.isOpen()) return;
+    this.isOpen.set(true);
+    this.persistOpenState();
+    this.markOpened();
+  }
+
+  private markOpened(): void {
+    this.unreadCount.set(0);
+    this.toastMessage.set(null);
+    this.updateTitle();
   }
 
   openFromToast(): void {

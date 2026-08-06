@@ -1,5 +1,5 @@
 import { Component, ElementRef, HostListener, computed, inject, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ThemeService } from '../../services/theme.service';
 import { WorkspaceUiService } from '../../services/workspace-ui.service';
@@ -8,7 +8,7 @@ import { CardService } from '../../services/card.service';
 /** Top navbar shared by every page inside app-layout (ported from trello-workspace prototype). */
 @Component({
   selector: 'app-header',
-  imports: [RouterLink],
+  imports: [RouterLink, RouterLinkActive],
   templateUrl: './header.html',
   styleUrl: './header.css',
 })

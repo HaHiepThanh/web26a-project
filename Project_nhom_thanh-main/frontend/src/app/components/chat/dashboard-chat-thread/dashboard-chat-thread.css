@@ -1,0 +1,5 @@
+/* display: contents so the thread fills the flex-1 content column in dashboard.html
+   without an extra block-level wrapper fighting min-h-0/overflow. */
+:host {
+  display: contents;
+}

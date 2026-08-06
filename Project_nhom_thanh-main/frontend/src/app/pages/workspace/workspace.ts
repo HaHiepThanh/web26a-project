@@ -2,6 +2,7 @@ import { Component, HostListener, computed, effect, inject, signal } from '@angu
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { WorkspaceUiService } from '../../services/workspace-ui.service';
+import { mockWorkspaceSeeds } from '../../services/workspace.service';
 
 type Privacy = 'Workspace' | 'Private' | 'Public';
 type BgClass = 'bg-board-blue' | 'bg-board-purple' | 'bg-board-green' | 'bg-board-teal' | 'bg-board-orange';
@@ -40,31 +41,11 @@ interface Toast {
   type: ToastType;
 }
 
+/** Seed dùng chung với WorkspaceService/BoardService (Dashboard Chat hub đọc cùng nguồn này) —
+ *  xem mockWorkspaceSeeds() ở workspace.service.ts. Trang này vẫn giữ state cục bộ có thể
+ *  sửa (đổi sao, tạo board...) chỉ KHỞI TẠO từ seed, không đọc reactive từ service. */
 function mockWorkspaces(): WorkspaceItem[] {
-  return [
-    {
-      id: 'ws-1',
-      name: 'Đồ án Tốt nghiệp CNTT',
-      icon: '🎓',
-      membersCount: 4,
-      description: 'Workspace quản lý toàn bộ các công việc nghiên cứu và phát triển phần mềm đồ án tốt nghiệp khóa K22.',
-      boards: [
-        { id: 'b-1', title: 'Hệ thống Quản lý Kanban', tag: 'ĐỒ ÁN TỐT NGHIỆP CNTT', privacy: 'Workspace', badge: 'KANBAN', starred: true, bgClass: 'bg-board-blue' },
-        { id: 'b-2', title: 'Ứng dụng tìm trọ thông minh', tag: 'ĐỒ ÁN TỐT NGHIỆP CNTT', privacy: 'Private', badge: 'KANBAN', starred: false, bgClass: 'bg-board-green' },
-        { id: 'b-3', title: 'Kế hoạch Tuần cá nhân', tag: 'ĐỒ ÁN TỐT NGHIỆP CNTT', privacy: 'Workspace', badge: 'KANBAN', starred: false, bgClass: 'bg-board-teal' },
-      ],
-    },
-    {
-      id: 'ws-2',
-      name: 'Dự án Khởi nghiệp SaaS',
-      icon: '🚀',
-      membersCount: 2,
-      description: 'Không gian làm việc cho dự án SaaS khởi nghiệp sinh viên.',
-      boards: [
-        { id: 'b-4', title: 'Sản phẩm MVP v1.0', tag: 'DỰ ÁN KHỞI NGHIỆP SAAS', privacy: 'Public', badge: 'KANBAN', starred: true, bgClass: 'bg-board-purple' },
-      ],
-    },
-  ];
+  return mockWorkspaceSeeds();
 }
 
 const TEMPLATES: Template[] = [
@@ -205,7 +186,7 @@ export class Workspace {
   }
 
   // ---- Header "+ Tạo" button (via WorkspaceUiService) opens the modal too ----
-  private lastCreateRequestSeen = 0;
+  private lastCreateRequestSeen = this.workspaceUi.createBoardRequests();
   private readonly openOnHeaderRequest = effect(() => {
     const n = this.workspaceUi.createBoardRequests();
     if (n > this.lastCreateRequestSeen) {

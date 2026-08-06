@@ -1,3 +1,6 @@
+/* Cùng công thức đã dùng ở board.css: trừ chiều cao header (~68px) + footer
+   (~44px) để hàng flex chứa nội dung + Team Chat lấp đầy phần còn lại. */
 :host {
-  display: block;
+  display: flex;
+  height: calc(100vh - 68px - 44px);
 }

@@ -1,0 +1,22 @@
+:host {
+  display: block;
+  position: fixed;
+  right: 1rem;
+  bottom: 1.25rem;
+  z-index: 700;
+}
+
+/* Tablet: thu nhỏ lại, vẫn neo góc dưới-phải. */
+@media (max-width: 1024px) {
+  :host {
+    transform: scale(0.85);
+    transform-origin: bottom right;
+  }
+}
+
+/* Mobile: ẩn hẳn — không đủ chỗ để hữu ích. */
+@media (max-width: 768px) {
+  :host {
+    display: none;
+  }
+}

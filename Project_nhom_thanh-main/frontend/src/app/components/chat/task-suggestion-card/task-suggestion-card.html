@@ -1,17 +1,17 @@
 <div class="max-w-[92%] self-start rounded-box border border-secondary bg-secondary/10 px-2.5 py-2.5">
-  <div class="mb-1.5 flex items-center gap-1 text-[9.5px] font-bold uppercase tracking-wide text-secondary">
-    <svg class="h-[11px] w-[11px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>
+  <div class="mb-1.5 flex items-center gap-1 text-[10.5px] font-bold uppercase tracking-wide text-secondary">
+    <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>
     AI phát hiện task
   </div>
-  <div class="mb-1 text-xs font-semibold text-base-content">{{ suggestion().title }}</div>
-  <div class="mb-2 text-[10px] text-base-content/70">
+  <div class="mb-1 text-sm font-semibold text-base-content">{{ suggestion().title }}</div>
+  <div class="mb-2 text-xs text-base-content/70">
     Giao cho: {{ assigneeName() ?? 'Chưa rõ' }}
     @if (suggestion().dueDate) {
       · Hạn: {{ suggestion().dueDate }}
     }
   </div>
   <div class="flex gap-1.5">
-    <button type="button" class="btn btn-secondary btn-xs" (click)="confirm.emit()">Tạo thẻ</button>
-    <button type="button" class="btn btn-ghost btn-xs text-base-content/70" (click)="dismiss.emit()">Bỏ qua</button>
+    <button type="button" class="btn btn-secondary btn-sm" (click)="confirm.emit()">Tạo thẻ</button>
+    <button type="button" class="btn btn-ghost btn-sm text-base-content/70" (click)="dismiss.emit()">Bỏ qua</button>
   </div>
 </div>

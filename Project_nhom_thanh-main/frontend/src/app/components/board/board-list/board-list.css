@@ -23,3 +23,20 @@
   writing-mode: vertical-rl;
   transform: rotate(180deg);
 }
+
+/* -------------------- Row View: Cards trong 1 list xếp ngang, tự cuộn ngang riêng -------------------- */
+.list-cards--row {
+  flex-direction: row;
+  align-items: flex-start;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.list-cards--row .row-card {
+  flex-shrink: 0;
+  width: 240px;
+}
+
+.list-cards--row .row-add-card {
+  width: 220px;
+}

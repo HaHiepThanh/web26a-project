@@ -39,6 +39,9 @@ export class BoardList {
   readonly collapsed = input(false);
   /** Chọn nhiều thẻ bằng Shift+click (#12). */
   readonly selectedCardIds = input<ReadonlySet<string>>(new Set());
+  /** Row View (board.ts layoutMode='row'): Cards trong list xếp ngang thay vì dọc.
+   *  Chỉ đổi hướng cdkDropList/hiển thị — onCardDrop() và data model không đổi. */
+  readonly orientation = input<'vertical' | 'horizontal'>('vertical');
 
   readonly renameList = output<string>();
   readonly deleteList = output<void>();

@@ -1,85 +1,97 @@
-<header class="navbar relative h-[52px] min-h-0 bg-base-100 border-b border-base-300 sticky top-0 z-[100] shadow-sm px-4 transition-colors duration-300">
-  <div class="navbar-start w-auto">
-    <a routerLink="/dashboard" class="flex items-center gap-2 no-underline text-base-content font-bold text-lg py-1 px-2 rounded-md transition-colors duration-150 hover:bg-base-200">
+<header class="navbar relative h-[68px] min-h-0 bg-base-100 border-b border-base-300 sticky top-0 z-[100] shadow-sm px-5 transition-colors duration-300">
+  <div class="navbar-start flex-1 gap-4">
+    <a routerLink="/workspace" class="flex items-center gap-2.5 no-underline text-base-content font-bold text-lg py-1 px-2 rounded-md transition-colors duration-150 hover:bg-base-200 shrink-0" title="Không gian làm việc">
       <div class="logo-icon">
         <div class="logo-bar bar-1"></div>
         <div class="logo-bar bar-2"></div>
       </div>
       <div class="flex flex-col leading-tight">
-        <span class="text-[17px] tracking-[-0.3px] text-primary">Trello</span>
-        <span class="text-[9px] font-extrabold text-base-content/60 tracking-[0.8px]">WORKSPACE</span>
+        <span class="text-[20px] tracking-[-0.3px] text-primary">Trello</span>
+        <span class="text-[11px] font-extrabold text-base-content/60 tracking-[0.8px]">WORKSPACE</span>
       </div>
     </a>
-  </div>
 
-  <div class="navbar-center hidden md:flex flex-1 max-w-[600px] mx-6">
-    <div class="relative w-full">
+    <a
+      routerLink="/dashboard"
+      routerLinkActive="btn-active text-base-content"
+      class="btn btn-ghost gap-1.5 text-base-content/70 hover:text-base-content shrink-0"
+      title="Tổng quan"
+    >
+      <span class="text-lg">📊</span>
+      <span class="hidden lg:inline text-sm font-semibold">Tổng quan</span>
+    </a>
+
+    <div class="relative flex-1 max-w-[420px] hidden md:block">
       <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-base-content/60 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="11" cy="11" r="8"></circle>
         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
       </svg>
       <input
         type="text"
-        class="input input-sm w-full h-9 pl-9 pr-9 bg-base-200 border border-base-300 rounded-2xl text-base-content transition-colors duration-150 focus:bg-base-100 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+        class="input w-full h-11 pl-9 pr-9 bg-base-200 border border-base-300 rounded-2xl text-base-content transition-colors duration-150 focus:bg-base-100 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
         placeholder="Tìm kiếm bảng dự án..."
         (input)="onSearchInput($event)"
       />
       <span class="absolute right-3 top-1/2 -translate-y-1/2 bg-base-300 text-base-content/60 text-[11px] font-semibold py-0.5 px-1.5 rounded pointer-events-none">/</span>
     </div>
-  </div>
 
-  <div class="navbar-end w-auto gap-2">
-    <button class="btn btn-primary btn-sm rounded-box gap-1.5" (click)="requestCreateBoard()">
+    <button class="btn btn-primary rounded-box gap-1.5 shrink-0" (click)="requestCreateBoard()">
       <span>+</span>
       <span>Tạo</span>
     </button>
+  </div>
 
+  <div class="navbar-end w-auto gap-2">
     <button
-      class="btn btn-ghost btn-circle btn-sm text-base-content/70 hover:text-base-content"
+      class="btn btn-ghost btn-circle text-base-content/70 hover:text-base-content"
       (click)="toggleTheme()"
       [title]="theme() === 'dark' ? 'Chuyển giao diện sáng' : 'Chuyển giao diện tối'"
     >
-      {{ theme() === 'dark' ? '☀️' : '🌙' }}
+      <span class="text-xl">{{ theme() === 'dark' ? '☀️' : '🌙' }}</span>
     </button>
 
     <button
-      class="btn btn-ghost btn-circle btn-sm relative text-base-content/70 hover:text-base-content"
+      class="btn btn-ghost btn-circle relative text-base-content/70 hover:text-base-content"
       [title]="dueBadgeCount() > 0 ? dueBadgeCount() + ' thẻ của bạn sắp/đã quá hạn' : 'Thông báo'"
     >
-      🔔
+      <span class="text-xl">🔔</span>
       @if (dueBadgeCount() > 0) {
-        <span class="badge badge-error badge-sm absolute -top-0.5 -right-0.5 px-1 text-[9px] border-2 border-base-100">{{ dueBadgeCount() }}</span>
+        <span class="badge badge-error badge-sm absolute -top-1 -right-1 px-1 text-[10px] border-2 border-base-100">{{ dueBadgeCount() }}</span>
       }
     </button>
 
-    <a class="btn btn-ghost btn-circle btn-sm text-base-content/70 hover:text-base-content" routerLink="/settings" title="Cài đặt">⚙️</a>
+    <a class="btn btn-ghost btn-circle text-base-content/70 hover:text-base-content" routerLink="/settings" title="Cài đặt">
+      <span class="text-xl">⚙️</span>
+    </a>
 
-    <div
-      class="flex items-center gap-2 py-1 pl-1 pr-2.5 rounded-full bg-base-200 border border-base-300 cursor-pointer transition-colors duration-150 hover:bg-base-300"
-      (click)="toggleUserMenu()"
-    >
-      <div class="avatar avatar-placeholder">
-        <div class="w-7 rounded-full bg-primary text-primary-content text-xs font-bold">
-          <span>{{ initials() }}</span>
+    <div class="relative">
+      <div
+        class="flex items-center gap-2.5 py-1.5 pl-1.5 pr-3 rounded-full bg-base-200 border border-base-300 cursor-pointer transition-colors duration-150 hover:bg-base-300"
+        (click)="toggleUserMenu()"
+      >
+        <div class="avatar avatar-placeholder">
+          <div class="w-10 rounded-full bg-primary text-primary-content text-sm font-bold">
+            <span>{{ initials() }}</span>
+          </div>
+        </div>
+        <div class="hidden md:flex items-center gap-1.5 text-left">
+          <span class="font-semibold text-[15px] text-base-content whitespace-nowrap max-w-[140px] overflow-hidden text-ellipsis">{{ currentUser()?.displayName ?? currentUser()?.email ?? 'Khách' }}</span>
         </div>
       </div>
-      <div class="hidden md:flex items-center gap-1.5 text-left">
-        <span class="font-semibold text-[13px] text-base-content whitespace-nowrap max-w-[140px] overflow-hidden text-ellipsis">{{ currentUser()?.displayName ?? currentUser()?.email ?? 'Khách' }}</span>
+
+      <div
+        class="dropdown-content menu absolute top-full right-0 mt-2 w-[260px] bg-base-100 border border-base-300 rounded-box shadow-lg p-2 z-[200]"
+        [class.hidden]="!menuOpen()"
+      >
+        <div class="pt-2 px-3 font-bold text-base-content text-[13px]">Tài khoản</div>
+        <div class="pb-2 px-3 text-xs text-base-content/60">{{ currentUser()?.email ?? '—' }}</div>
+        <div class="h-px bg-base-300 my-1"></div>
+        <a class="flex items-center gap-2 py-2 px-4 rounded-md text-base-content text-[13px] transition-colors duration-150 hover:bg-base-200" routerLink="/settings">👤 Hồ sơ và quyền riêng tư</a>
+        <a class="flex items-center gap-2 py-2 px-4 rounded-md text-base-content text-[13px] transition-colors duration-150 hover:bg-base-200" routerLink="/workspace">🗂️ Không gian làm việc</a>
+        <a class="flex items-center gap-2 py-2 px-4 rounded-md text-base-content text-[13px] transition-colors duration-150 hover:bg-base-200" routerLink="/members">👥 Thành viên</a>
+        <div class="h-px bg-base-300 my-1"></div>
+        <div class="flex items-center gap-2 py-2 px-4 rounded-md text-error text-[13px] cursor-pointer transition-colors duration-150 hover:bg-base-200" (click)="logout()">🚪 Đăng xuất</div>
       </div>
     </div>
-  </div>
-
-  <div
-    class="dropdown-content menu absolute top-[56px] right-4 w-[260px] bg-base-100 border border-base-300 rounded-box shadow-lg p-2 z-[200]"
-    [class.hidden]="!menuOpen()"
-  >
-    <div class="pt-2 px-3 font-bold text-base-content text-[13px]">Tài khoản</div>
-    <div class="pb-2 px-3 text-xs text-base-content/60">{{ currentUser()?.email ?? '—' }}</div>
-    <div class="h-px bg-base-300 my-1"></div>
-    <a class="flex items-center gap-2 py-2 px-4 rounded-md text-base-content text-[13px] transition-colors duration-150 hover:bg-base-200" routerLink="/settings">👤 Hồ sơ và quyền riêng tư</a>
-    <a class="flex items-center gap-2 py-2 px-4 rounded-md text-base-content text-[13px] transition-colors duration-150 hover:bg-base-200" routerLink="/workspace">🗂️ Không gian làm việc</a>
-    <a class="flex items-center gap-2 py-2 px-4 rounded-md text-base-content text-[13px] transition-colors duration-150 hover:bg-base-200" routerLink="/members">👥 Thành viên</a>
-    <div class="h-px bg-base-300 my-1"></div>
-    <div class="flex items-center gap-2 py-2 px-4 rounded-md text-error text-[13px] cursor-pointer transition-colors duration-150 hover:bg-base-200" (click)="logout()">🚪 Đăng xuất</div>
   </div>
 </header>

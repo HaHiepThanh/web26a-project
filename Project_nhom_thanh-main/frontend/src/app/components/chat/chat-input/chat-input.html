@@ -2,7 +2,7 @@
   @if (mentionOpen() && mentionMatches().length) {
     <div class="absolute bottom-full left-2.5 right-2.5 z-10 mb-1 overflow-hidden rounded-field border border-base-300 bg-base-100 shadow-md">
       @for (m of mentionMatches(); track m.id) {
-        <button type="button" class="block w-full px-2.5 py-1.5 text-left text-xs font-medium text-base-content hover:bg-base-200" (click)="pickMention(m, msgInput)">
+        <button type="button" class="block w-full px-2.5 py-1.5 text-left text-sm font-medium text-base-content hover:bg-base-200" (click)="pickMention(m, msgInput)">
           {{ m.displayName ?? m.email }}
         </button>
       }
@@ -13,14 +13,14 @@
     <input
       #msgInput
       type="text"
-      class="input input-bordered input-sm min-w-0 flex-1 text-xs focus:border-primary"
+      class="input input-bordered input-sm min-w-0 flex-1 text-sm focus:border-primary"
       placeholder="Nhắn gì đó cho cả nhóm... (gõ @ để nhắc tên)"
       [value]="value()"
       (input)="onInput($event)"
       (keydown.enter)="onSend()"
     />
     <button type="button" class="btn btn-primary btn-square btn-sm flex-shrink-0" (click)="onSend()" aria-label="Gửi">
-      <svg class="h-[13px] w-[13px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg>
+      <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg>
     </button>
   </div>
 </div>

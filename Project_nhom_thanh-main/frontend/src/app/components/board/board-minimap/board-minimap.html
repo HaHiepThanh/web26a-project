@@ -1,0 +1,66 @@
+<div
+  class="w-fit rounded-box border-2 border-primary/25 bg-base-100/95 p-2 shadow-xl backdrop-blur-sm transition-opacity duration-300"
+  [class.opacity-100]="!dimmed()"
+  [class.opacity-35]="dimmed()"
+  role="navigation"
+  [attr.aria-label]="layoutMode() === 'column' ? 'Sơ đồ thu nhỏ danh sách (dạng cột)' : 'Sơ đồ thu nhỏ danh sách (dạng hàng)'"
+  (mouseenter)="onContainerHover(true)"
+  (mouseleave)="onContainerHover(false)"
+>
+  <div class="mb-1.5 flex items-center gap-1.5 px-0.5 text-[10px] font-bold tracking-wide text-primary uppercase">
+    <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <rect x="3" y="3" width="7" height="7" rx="1" />
+      <rect x="14" y="3" width="7" height="7" rx="1" />
+      <rect x="3" y="14" width="7" height="7" rx="1" />
+      <rect x="14" y="14" width="7" height="7" rx="1" />
+    </svg>
+    Mini map
+  </div>
+
+  <!-- Vùng toạ độ (0,0) chung cho cả rects lẫn tooltip — track bên trong bị cắt
+       (overflow-hidden) để bo góc đẹp, còn lớp tooltip nằm ngoài để không bao giờ bị cắt. -->
+  <div class="relative" [style.width.px]="trackWidth()" [style.height.px]="trackHeight()">
+    <div class="absolute inset-0 overflow-hidden rounded-md bg-base-200">
+      @for (r of rects(); track r.item.id) {
+        <button
+          type="button"
+          class="absolute rounded-[4px] border border-primary/50 bg-primary/60 transition-colors duration-150 hover:border-primary hover:bg-primary/90 focus-visible:border-primary focus-visible:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary"
+          [style.left.px]="r.rect.left"
+          [style.top.px]="r.rect.top"
+          [style.width.px]="r.rect.width"
+          [style.height.px]="r.rect.height"
+          [attr.title]="r.item.name + ' — ' + r.item.cardCount + ' thẻ'"
+          [attr.aria-label]="r.item.name + ', ' + r.item.cardCount + ' thẻ'"
+          [attr.aria-describedby]="hoveredId() === r.item.id ? 'minimap-tooltip' : null"
+          (click)="onActivate(r.item.id)"
+          (mouseenter)="onHover(r.item.id)"
+          (mouseleave)="onHover(null)"
+          (focus)="onHover(r.item.id)"
+          (blur)="onHover(null)"
+        ></button>
+      }
+
+      <div
+        class="pointer-events-none absolute rounded-[3px] border-2 border-primary bg-primary/20 shadow-[0_0_6px_var(--color-primary)] transition-all duration-150 ease-out"
+        [style.left.px]="viewportRect().left"
+        [style.top.px]="viewportRect().top"
+        [style.width.px]="viewportRect().width"
+        [style.height.px]="viewportRect().height"
+      ></div>
+    </div>
+
+    @if (hoveredItem(); as h) {
+      <div class="pointer-events-none absolute inset-0">
+        <div
+          id="minimap-tooltip"
+          role="tooltip"
+          class="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full rounded-md bg-neutral px-2 py-1 text-[11px] whitespace-nowrap text-neutral-content shadow-md"
+          [style.left.px]="tooltipLeft()"
+          [style.top.px]="tooltipTop()"
+        >
+          {{ h.name }} · {{ h.cardCount }} thẻ
+        </div>
+      </div>
+    }
+  </div>
+</div>
