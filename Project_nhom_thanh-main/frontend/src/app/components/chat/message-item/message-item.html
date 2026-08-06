@@ -1,0 +1,24 @@
+<div [class]="isOwn() ? 'chat chat-end' : 'chat chat-start'">
+  <div class="chat-image avatar avatar-placeholder">
+    <div class="flex h-[22px] w-[22px] items-center justify-center rounded-full" [style.background]="avatarColor()">
+      <span class="text-[9px] font-bold text-white">{{ initials() }}</span>
+    </div>
+  </div>
+  <div class="chat-header text-[10.5px] font-semibold text-base-content/70">{{ senderLabel() }}</div>
+  <div
+    [class]="
+      isOwn()
+        ? 'chat-bubble rounded-2xl rounded-tr-md break-words bg-primary/10 text-xs leading-relaxed text-base-content'
+        : 'chat-bubble rounded-2xl rounded-tl-md break-words bg-base-200 text-xs leading-relaxed text-base-content'
+    "
+  >
+    @for (part of contentParts(); track $index) {
+      @if (part.isMention) {
+        <span class="font-semibold text-primary">{{ part.text }}</span>
+      } @else {
+        <span>{{ part.text }}</span>
+      }
+    }
+  </div>
+  <div class="chat-footer text-[9px] text-base-content/60">{{ timeLabel() }}</div>
+</div>

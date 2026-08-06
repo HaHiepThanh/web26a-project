@@ -1,0 +1,31 @@
+/* Thin custom scrollbar for the sidebar/content panes — no Tailwind utility
+   equivalent for ::-webkit-scrollbar styling. */
+.scroll-slim::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scroll-slim::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scroll-slim::-webkit-scrollbar-thumb {
+  background: var(--color-base-300, #e2e8f0);
+  border-radius: 999px;
+}
+
+.scroll-slim {
+  scrollbar-width: thin;
+}
+
+/* Referenced by the toast's `animate-[toast-in_0.2s_ease]` Tailwind arbitrary
+   animation utility — @keyframes can't be expressed as a utility class. */
+@keyframes toast-in {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

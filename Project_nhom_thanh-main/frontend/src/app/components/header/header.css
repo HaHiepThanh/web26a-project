@@ -1,0 +1,32 @@
+/* Ported from trello-workspace/style.css section 3 (Top Navigation Bar) + user popover. */
+/* Only the decorative brand logo mark remains here — everything else moved to
+   Tailwind/daisyUI utility classes in header.html. */
+
+.logo-icon {
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, #0052cc, #0747a6);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 3px;
+}
+
+.logo-bar {
+  background: #ffffff;
+  border-radius: 1px;
+}
+
+.logo-bar.bar-1 {
+  width: 7px;
+  height: 14px;
+}
+
+.logo-bar.bar-2 {
+  width: 7px;
+  height: 9px;
+  align-self: flex-start;
+  margin-top: 2px;
+}

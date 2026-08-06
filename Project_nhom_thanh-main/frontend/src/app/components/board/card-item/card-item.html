@@ -1,0 +1,54 @@
+<div
+  class="card-face relative rounded-field border border-base-300 bg-base-100 p-2 shadow-sm transition-shadow duration-150 hover:shadow-md"
+  [class.saving]="isSaving()"
+  [class.error-flash]="isError()"
+  [class.dimmed]="isDimmed()"
+  [class.highlighted]="isHighlighted()"
+  [class.selected]="isSelected()"
+>
+  @if (isSelected()) {
+    <span class="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-white">
+      <svg class="block h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+    </span>
+  }
+
+  <div class="priority-row mb-1.5 flex items-center gap-1 text-[10px] font-bold" [class]="'p-' + card().priority">
+    <svg class="h-3 w-3 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+      @if (card().priority === 'cao') {
+        <path [attr.d]="flagPath" fill="currentColor" stroke="none" />
+      }
+      @if (card().priority === 'trung') {
+        <defs>
+          <clipPath [attr.id]="clipId"><rect x="4" y="2" width="8" height="20" /></clipPath>
+        </defs>
+        <path [attr.d]="flagPath" fill="currentColor" [attr.clip-path]="'url(#' + clipId + ')'" />
+      }
+      <path [attr.d]="flagPath" />
+    </svg>
+    <span>{{ priorityText() }}</span>
+  </div>
+
+  @if (labels().length) {
+    <div class="mb-1.5 flex flex-wrap gap-1.5">
+      @for (lb of labels(); track lb.id) {
+        <span class="h-1.5 w-6 rounded-sm" [style.background]="lb.color" [title]="lb.name"></span>
+      }
+    </div>
+  }
+
+  <div class="mb-1.5 break-words text-[12.5px] font-medium leading-snug text-base-content">{{ card().title }}</div>
+
+  <div class="flex items-center justify-between">
+    @if (dueText(); as due) {
+      <span class="due-badge inline-flex items-center gap-1 text-[10px] text-base-content/60" [class.overdue]="isOverdue()">
+        <svg class="block h-[11px] w-[11px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        {{ due }}
+      </span>
+    } @else {
+      <span></span>
+    }
+    @if (assignee(); as user) {
+      <span class="flex h-[19px] w-[19px] flex-shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white" [style.background]="assigneeColor()" [title]="user.displayName ?? user.email">{{ assigneeInitials() }}</span>
+    }
+  </div>
+</div>

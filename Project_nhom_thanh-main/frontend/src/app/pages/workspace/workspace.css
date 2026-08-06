@@ -1,0 +1,97 @@
+/* Ported from trello-workspace/style.css sections 4-9 (everything except the
+   top navbar, which became the shared Header component).
+
+   Migrated to Tailwind/daisyUI utility classes in workspace.html. What remains
+   here is only the handful of bespoke, non-theme-token decorations (gradients,
+   fixed brand colors) that don't map onto daisyUI's semantic palette and need
+   an explicit [data-theme='dark'] override the way the rest of this app does. */
+
+:host {
+  display: block;
+}
+
+/* -------------------- Sidebar "tips" card (purple gradient callout) -------------------- */
+.tips-card {
+  background: linear-gradient(135deg, #f3e8ff 0%, #e0e7ff 100%);
+  border: 1px solid #d8b4fe;
+}
+
+[data-theme='dark'] .tips-card {
+  background: linear-gradient(135deg, #2e1065 0%, #1e1b4b 100%);
+  border-color: #581c87;
+}
+
+.tips-badge {
+  background-color: #9333ea;
+  color: #ffffff;
+}
+
+.tips-title {
+  color: #4c1d95;
+}
+
+[data-theme='dark'] .tips-title {
+  color: #e9d5ff;
+}
+
+.tips-desc {
+  color: #5b21b6;
+}
+
+[data-theme='dark'] .tips-desc {
+  color: #c084fc;
+}
+
+.tips-kbd {
+  background-color: rgba(255, 255, 255, 0.7);
+  color: #4c1d95;
+}
+
+[data-theme='dark'] .tips-kbd {
+  background-color: rgba(0, 0, 0, 0.4);
+  color: #f3e8ff;
+}
+
+/* -------------------- Board cover gradients (also reused for the color-swatch picker) -------------------- */
+.bg-board-blue {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+}
+.bg-board-purple {
+  background: linear-gradient(135deg, #6d28d9 0%, #4c1d95 100%);
+}
+.bg-board-green {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+.bg-board-teal {
+  background: linear-gradient(135deg, #0d9488 0%, #115e59 100%);
+}
+.bg-board-orange {
+  background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+}
+
+/* -------------------- Template badges -------------------- */
+.badge-blue {
+  background-color: #2563eb;
+}
+.badge-green {
+  background-color: #059669;
+}
+.badge-orange {
+  background-color: #ea580c;
+}
+
+/* -------------------- Toast enter animation -------------------- */
+.toast-slide-in {
+  animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}

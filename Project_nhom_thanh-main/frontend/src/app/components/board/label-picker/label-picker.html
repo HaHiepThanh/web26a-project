@@ -1,0 +1,43 @@
+<div class="mb-2 flex max-h-40 flex-col gap-0.5 overflow-y-auto">
+  @for (lb of labels(); track lb.id) {
+    <label class="flex cursor-pointer items-center gap-2 rounded-field px-1 py-1.5 hover:bg-base-200" [class.checked]="isSelected(lb.id)">
+      <input type="checkbox" class="sr-only" [checked]="isSelected(lb.id)" (change)="toggle(lb.id)" />
+      <span class="flex h-5 w-[30px] flex-shrink-0 items-center justify-center rounded-md text-white" [style.background]="lb.color">
+        @if (isSelected(lb.id)) {
+          <svg class="block h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+        }
+      </span>
+      <span class="text-xs font-medium text-base-content">{{ lb.name }}</span>
+    </label>
+  }
+  @if (labels().length === 0) {
+    <div class="px-0.5 py-1.5 text-[11.5px] text-base-content/60">Board chưa có nhãn nào — tạo nhãn đầu tiên bên dưới.</div>
+  }
+</div>
+
+@if (!showCreateForm()) {
+  <button type="button" class="flex items-center gap-1.5 rounded-field px-1 py-1.5 text-[11.5px] font-semibold text-base-content/70 hover:bg-base-200 hover:text-base-content" (click)="openCreateForm()">
+    <svg class="block h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+    Tạo nhãn mới
+  </button>
+} @else {
+  <div class="rounded-field border border-dashed border-base-300 p-2">
+    <input
+      type="text"
+      class="input input-sm mb-2 w-full"
+      placeholder="Tên nhãn..."
+      [ngModel]="newName()"
+      (ngModelChange)="newName.set($event)"
+      (keydown.enter)="submitCreateForm()"
+    />
+    <div class="mb-2 flex flex-wrap gap-1.5">
+      @for (c of palette; track c) {
+        <button type="button" class="h-5 w-5 rounded-full border-2 border-transparent" [class.border-base-content]="newColor() === c" [style.background]="c" (click)="newColor.set(c)"></button>
+      }
+    </div>
+    <div class="flex justify-end gap-1.5">
+      <button type="button" class="btn btn-ghost btn-xs" (click)="cancelCreateForm()">Huỷ</button>
+      <button type="button" class="btn btn-primary btn-xs" [disabled]="!newName().trim()" (click)="submitCreateForm()">Tạo nhãn</button>
+    </div>
+  </div>
+}

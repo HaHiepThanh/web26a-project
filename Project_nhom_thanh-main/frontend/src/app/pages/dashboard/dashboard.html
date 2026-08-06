@@ -1,0 +1,70 @@
+<div class="max-w-[900px] mx-auto p-10 flex flex-col gap-8">
+  <h1 class="text-[22px] font-extrabold text-base-content">Tổng quan của bạn</h1>
+
+  @if (!boardId()) {
+    <div class="bg-base-100 border border-dashed border-base-300 rounded-2xl p-8 text-center text-base-content/60">
+      <p>Chưa có dữ liệu — mở 1 board bất kỳ để xem "Sắp đến hạn" và "Việc của tôi" ở đây.</p>
+      <a routerLink="/workspace" class="inline-block mt-2.5 text-primary font-semibold text-[13px] hover:underline">Đi tới Không gian làm việc →</a>
+    </div>
+  } @else {
+    <section class="bg-base-100 border border-base-300 rounded-2xl p-6">
+      <div class="flex items-center gap-2 mb-4">
+        <span class="text-base leading-none">🔔</span>
+        <h2 class="text-[14px] font-extrabold text-base-content uppercase tracking-[0.3px]">Sắp đến hạn</h2>
+      </div>
+
+      @if (dueSoonTasks().length === 0) {
+        <div class="p-3.5 text-center text-base-content/60 text-[12.5px] bg-base-200 rounded-box">Không có thẻ nào sắp/đã quá hạn. Tốt lắm!</div>
+      } @else {
+        <div class="flex flex-col gap-1.5">
+          @for (card of dueSoonTasks(); track trackByCardId($index, card)) {
+            <a [routerLink]="['/board', boardId()]" class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-box text-base-content bg-base-200 hover:bg-base-300 transition-colors duration-150">
+              <span
+                class="shrink-0 text-[10px] font-bold px-[7px] py-0.5 rounded-full"
+                [class]="card.priority === 'cao' ? 'bg-error/15 text-error' : card.priority === 'trung' ? 'bg-warning/15 text-warning' : 'bg-base-200 text-base-content/60'"
+              >{{ priorityLabel[card.priority] }}</span>
+              <span class="flex-1 min-w-0 text-[13px] font-medium truncate">{{ card.title }}</span>
+              <span class="shrink-0 text-[11px] text-base-content/60 bg-base-200 px-2 py-0.5 rounded-full">{{ listNameFor(card) }}</span>
+              <span
+                class="shrink-0 text-[11.5px] font-semibold min-w-[76px] text-right"
+                [class]="isOverdue(card) ? 'text-error' : 'text-base-content/70'"
+              >{{ card.dueDate }}</span>
+            </a>
+          }
+        </div>
+      }
+    </section>
+
+    <section class="bg-base-100 border border-base-300 rounded-2xl p-6">
+      <div class="flex items-center gap-2 mb-4">
+        <span class="text-base leading-none">✅</span>
+        <h2 class="text-[14px] font-extrabold text-base-content uppercase tracking-[0.3px]">Việc của tôi</h2>
+      </div>
+
+      @if (myTasks().length === 0) {
+        <div class="p-3.5 text-center text-base-content/60 text-[12.5px] bg-base-200 rounded-box">Bạn chưa được gán thẻ nào trên board này.</div>
+      } @else {
+        <div class="flex flex-col gap-1.5">
+          @for (card of myTasks(); track trackByCardId($index, card)) {
+            <a [routerLink]="['/board', boardId()]" class="flex items-center gap-2.5 px-2.5 py-[9px] rounded-box text-base-content bg-base-200 hover:bg-base-300 transition-colors duration-150">
+              <span
+                class="shrink-0 text-[10px] font-bold px-[7px] py-0.5 rounded-full"
+                [class]="card.priority === 'cao' ? 'bg-error/15 text-error' : card.priority === 'trung' ? 'bg-warning/15 text-warning' : 'bg-base-200 text-base-content/60'"
+              >{{ priorityLabel[card.priority] }}</span>
+              <span class="flex-1 min-w-0 text-[13px] font-medium truncate">{{ card.title }}</span>
+              <span class="shrink-0 text-[11px] text-base-content/60 bg-base-200 px-2 py-0.5 rounded-full">{{ listNameFor(card) }}</span>
+              @if (card.dueDate) {
+                <span
+                  class="shrink-0 text-[11.5px] font-semibold min-w-[76px] text-right"
+                  [class]="isOverdue(card) ? 'text-error' : 'text-base-content/70'"
+                >{{ card.dueDate }}</span>
+              } @else {
+                <span class="shrink-0 text-[11.5px] font-normal text-base-content/60 min-w-[76px] text-right">Không hạn</span>
+              }
+            </a>
+          }
+        </div>
+      }
+    </section>
+  }
+</div>

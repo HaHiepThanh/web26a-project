@@ -1,0 +1,14 @@
+<div class="flex h-full flex-col gap-2.5 overflow-y-auto px-3 py-2.5" #scrollArea>
+  @for (m of messages(); track trackByMessageId($index, m)) {
+    <app-message-item [message]="m" [sender]="usersById()[m.userId] ?? null" [isOwn]="m.userId === currentUserId()" [memberNames]="memberNames()" />
+  }
+
+  @if (pendingSuggestion(); as suggestion) {
+    <app-task-suggestion-card
+      [suggestion]="suggestion"
+      [assigneeName]="pendingAssigneeName()"
+      (confirm)="confirmSuggestion.emit()"
+      (dismiss)="dismissSuggestion.emit()"
+    />
+  }
+</div>

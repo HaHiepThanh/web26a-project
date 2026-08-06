@@ -1,0 +1,110 @@
+<div class="modal modal-open" (click)="close.emit()">
+  <div class="modal-box max-h-[88vh] w-[420px] max-w-full overflow-y-auto p-0" (click)="$event.stopPropagation()">
+    <div class="flex items-start gap-2 px-4 pb-1 pt-4">
+      <input class="min-w-0 flex-1 rounded-field border-none bg-transparent px-1.5 py-1 text-base font-bold text-base-content outline-none hover:bg-base-200 focus:bg-base-200" [value]="card().title" spellcheck="false" (change)="onTitleChange($event)" />
+
+      <span class="mt-1 flex flex-shrink-0 items-center">
+        @for (v of viewers(); track v.name) {
+          <span class="relative -ml-2 flex h-6 w-6 items-center justify-center rounded-full border-2 border-base-100 text-[9px] font-bold text-white first:ml-0" [style.background]="v.color" [title]="v.name + ' đang xem'">
+            {{ v.name.slice(0, 2).toUpperCase() }}
+            <span class="absolute -bottom-px -right-px h-[7px] w-[7px] rounded-full border-2 border-base-100 bg-green-500"></span>
+          </span>
+        }
+      </span>
+
+      <button type="button" class="btn btn-ghost btn-circle btn-sm flex-shrink-0" (click)="close.emit()" aria-label="Đóng">
+        <svg class="block h-[15px] w-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="px-4 pb-4 pt-2">
+      @if (viewers().length > 0) {
+        <div class="mb-2.5 flex items-center gap-1.5 rounded-field border border-warning bg-warning/10 px-2.5 py-1.5 text-[11.5px] text-base-content">
+          🟡
+          @if (viewers().length === 1) {
+            <span><strong>{{ viewers()[0].name }}</strong> cũng đang xem thẻ này — cẩn thận ghi đè nhé.</span>
+          } @else {
+            <span><strong>{{ viewers().length }} người khác</strong> cũng đang xem thẻ này — cẩn thận ghi đè nhé.</span>
+          }
+        </div>
+      }
+
+      <div class="mb-4 flex gap-1.5">
+        <button type="button" class="btn btn-outline btn-xs flex-1" (click)="addSimulatedViewer()">+ Giả lập có người mở thẻ này</button>
+        <button type="button" class="btn btn-outline btn-xs flex-1" (click)="removeSimulatedViewer()">− Giả lập có người đóng thẻ</button>
+      </div>
+
+      <div class="mb-4">
+        <label class="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-base-content/60">Mức độ ưu tiên</label>
+        <div class="flex gap-1.5">
+          @for (p of priorities; track p.id) {
+            <button
+              type="button"
+              class="priority-choice flex-1 rounded-field border-[1.5px] border-base-300 bg-base-100 px-1 py-1.5 text-center text-[11.5px] font-semibold text-base-content/70"
+              [class]="'p-' + p.id"
+              [class.selected]="card().priority === p.id"
+              (click)="onPriorityChange(p.id)"
+            >
+              {{ p.label }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label class="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-base-content/60">Nhãn</label>
+        <app-label-picker [boardId]="boardId()" [selectedIds]="selectedLabelIds()" (selectionChange)="onLabelsChange($event)" />
+      </div>
+
+      <div class="flex gap-3">
+        <div class="mb-4 min-w-0 flex-1">
+          <label class="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-base-content/60" for="detail-assignee-select">Người phụ trách</label>
+          <select id="detail-assignee-select" class="select select-sm w-full" [ngModel]="card().assigneeId ?? null" (ngModelChange)="onAssigneeChange($event)">
+            <option [ngValue]="null">Chưa gán</option>
+            @for (m of members(); track m.id) {
+              <option [ngValue]="m.id">{{ m.displayName ?? m.email }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="mb-4 min-w-0 flex-1">
+          <label class="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-base-content/60" for="detail-due-input">Ngày hết hạn</label>
+          <input type="date" id="detail-due-input" class="input input-sm w-full" [value]="card().dueDate ?? ''" (change)="onDueChange($event)" />
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label class="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-base-content/60" for="detail-desc">Mô tả</label>
+        <textarea id="detail-desc" class="textarea w-full" rows="4" placeholder="Thêm mô tả chi tiết hơn..." [value]="card().description ?? ''" (change)="onDescriptionChange($event)"></textarea>
+      </div>
+
+      <div class="mb-4 border-t border-base-300 pt-3">
+        <button type="button" class="flex w-full items-center justify-between" (click)="toggleHistory()">
+          <span class="text-[11px] font-bold uppercase tracking-wide text-base-content/70">Lịch sử thay đổi ({{ activityLogs().length }})</span>
+          <svg class="h-[15px] w-[15px] text-base-content/60 transition-transform duration-150" [class.rotate-90]="historyOpen()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+
+        @if (historyOpen()) {
+          <div class="mt-2.5 flex max-h-[200px] flex-col gap-2 overflow-y-auto">
+            @if (activityLogs().length === 0) {
+              <div class="text-[11.5px] text-base-content/60">Chưa có thay đổi nào được ghi lại.</div>
+            }
+            @for (h of activityLogs(); track h.id) {
+              <div class="text-xs">
+                <div class="leading-relaxed text-base-content">{{ h.actionText }}</div>
+                <div class="mt-px text-[10px] text-base-content/60">{{ h.createdAt | date: 'HH:mm dd/MM/yyyy' }}</div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="border-t border-dashed border-base-300 pt-1.5">
+        <button type="button" class="btn btn-ghost btn-sm gap-1.5 text-error hover:bg-error/10" (click)="requestDelete()">
+          <svg class="block h-[15px] w-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>
+          Xoá thẻ
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

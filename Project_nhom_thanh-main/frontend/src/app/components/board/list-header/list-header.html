@@ -1,0 +1,22 @@
+<div class="sticky top-0 z-[1] flex w-full items-center justify-between gap-1.5 rounded-t-box bg-base-200 px-2 pb-1.5 pt-2">
+  <span class="flex min-w-0 flex-1 items-center">
+    <span class="mr-1.5 h-2 w-2 flex-shrink-0 rounded-full" [style.background]="list().color || '#64748b'"></span>
+    <input class="name-input min-w-0 w-full rounded-field border-none bg-transparent px-1 py-0.5 text-[12.5px] font-bold text-base-content/70 outline-none hover:bg-base-300 hover:text-base-content focus:bg-base-300 focus:text-base-content" [value]="list().name" spellcheck="false" (change)="onNameChange($event)" />
+  </span>
+
+  <span class="relative flex flex-shrink-0 items-center gap-1">
+    <span class="badge badge-ghost badge-sm">{{ cardCount() }}</span>
+    <button class="flex h-[22px] w-[22px] items-center justify-center rounded-field text-base-content/60 transition-colors duration-150 hover:bg-base-300 hover:text-base-content" (click)="collapseToggle.emit()" title="Thu gọn danh sách" aria-label="Thu gọn danh sách">
+      <svg class="block h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <button class="flex h-[22px] w-[22px] items-center justify-center rounded-field text-base-content/60 transition-colors duration-150 hover:bg-base-300 hover:text-base-content" (click)="toggleMenu()" aria-label="Tuỳ chọn danh sách">
+      <svg class="block h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg>
+    </button>
+
+    @if (menuOpen()) {
+      <div class="absolute right-0 top-[26px] z-10 min-w-[140px] overflow-hidden rounded-field border border-base-300 bg-base-100 shadow-md">
+        <button class="block w-full px-2.5 py-2 text-left text-xs text-error hover:bg-base-200" (click)="onDeleteClick()">Xoá danh sách</button>
+      </div>
+    }
+  </span>
+</div>

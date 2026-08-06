@@ -1,0 +1,855 @@
+<div class="flex min-h-full flex-1 bg-base-200 text-base-content">
+  <!-- ============================== LEFT NAV ============================== -->
+  <aside class="scroll-slim w-[300px] max-[900px]:w-full shrink-0 border-r border-base-300 max-[900px]:border-r-0 max-[900px]:border-b bg-base-100 py-6 px-4 overflow-y-auto">
+    <div class="px-3 pt-2 pb-5">
+      <h1 class="text-xl font-bold mb-1">Cài đặt</h1>
+      <p class="m-0 text-[13px] text-base-content/60">Quản lý tài khoản, workspace và bảo mật</p>
+    </div>
+
+    <nav class="flex flex-col gap-1 max-[900px]:flex-row max-[900px]:overflow-x-auto">
+      @for (item of navItems; track item.id) {
+        <button
+          type="button"
+          class="flex items-start gap-3 py-2.5 px-3 rounded-box text-left cursor-pointer transition duration-150 max-[900px]:shrink-0 max-[900px]:whitespace-nowrap"
+          [class]="activeTab() === item.id ? 'bg-primary/10 text-primary' : 'text-base-content/70 hover:bg-base-200 hover:text-base-content'"
+          (click)="onTabChange(item.id)"
+        >
+          <span
+            class="w-5 h-5 shrink-0 mt-0.5 [&>svg]:w-full [&>svg]:h-full"
+            [class]="activeTab() === item.id ? 'text-primary' : 'text-base-content/60'"
+          >
+            @switch (item.icon) {
+              @case ('user') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <circle cx="12" cy="8" r="3.4" /><path d="M4.5 20c1.6-3.6 4.6-5.4 7.5-5.4s5.9 1.8 7.5 5.4" stroke-linecap="round" />
+                </svg>
+              }
+              @case ('bell') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 14 6 10Z" stroke-linejoin="round" />
+                  <path d="M10 18.5a2 2 0 0 0 4 0" stroke-linecap="round" />
+                </svg>
+              }
+              @case ('building') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <rect x="4" y="3.5" width="10" height="17" rx="1" /><rect x="16" y="9" width="4.5" height="11.5" rx="1" />
+                  <line x1="7" y1="7" x2="7" y2="7.01" stroke-linecap="round" /><line x1="10.5" y1="7" x2="10.5" y2="7.01" stroke-linecap="round" />
+                  <line x1="7" y1="11" x2="7" y2="11.01" stroke-linecap="round" /><line x1="10.5" y1="11" x2="10.5" y2="11.01" stroke-linecap="round" />
+                </svg>
+              }
+              @case ('palette') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M12 3.5a8.2 8.2 0 1 0 0 16.4c1.1 0 1.8-.9 1.8-1.9 0-.5-.2-.9-.5-1.3-.3-.3-.5-.7-.5-1.2 0-1 .8-1.7 1.8-1.7h1.9c2 0 3.5-1.6 3.5-3.6 0-3.7-3.6-6.7-8-6.7Z" />
+                  <circle cx="7.5" cy="11" r="1" fill="currentColor" stroke="none" /><circle cx="9.5" cy="7.3" r="1" fill="currentColor" stroke="none" />
+                  <circle cx="14.5" cy="7.3" r="1" fill="currentColor" stroke="none" />
+                </svg>
+              }
+              @case ('card') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <rect x="3" y="5.5" width="18" height="13" rx="2" /><line x1="3" y1="9.5" x2="21" y2="9.5" />
+                  <line x1="6" y1="14.5" x2="10" y2="14.5" stroke-linecap="round" />
+                </svg>
+              }
+              @case ('plug') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M9 3v5M15 3v5M6.5 8h11l-.5 5.5a5 5 0 0 1-5 4.5 5 5 0 0 1-5-4.5L6.5 8Z" stroke-linejoin="round" />
+                  <line x1="12" y1="18" x2="12" y2="21" stroke-linecap="round" />
+                </svg>
+              }
+            }
+          </span>
+          <span class="flex flex-col gap-0.5">
+            <span class="text-sm font-semibold">{{ item.label }}</span>
+            <span class="text-xs text-base-content/60 max-[900px]:hidden">{{ item.description }}</span>
+          </span>
+        </button>
+      }
+    </nav>
+  </aside>
+
+  <!-- ============================== CONTENT ============================== -->
+  <main class="scroll-slim flex-1 min-w-0 pt-8 px-10 pb-16 overflow-y-auto max-sm:pt-5 max-sm:px-4 max-sm:pb-12">
+    @switch (activeTab()) {
+
+      <!-- ======================= TAB 1: PROFILE ======================= -->
+      @case ('profile') {
+        <section class="max-w-[860px] mx-auto">
+          <header class="mb-6">
+            <h2 class="text-2xl font-bold mb-1.5">Trang cá nhân</h2>
+            <p class="m-0 text-base-content/60 text-sm">Cập nhật thông tin hiển thị và cách người khác liên hệ với bạn.</p>
+          </header>
+
+          <form [formGroup]="profileForm" (ngSubmit)="onSaveProfile()" class="flex flex-col gap-5">
+            <!-- Avatar -->
+            <div class="bg-base-100 border border-base-300 rounded-box p-6 shadow-sm">
+              <h3 class="text-base font-semibold mb-4">Ảnh đại diện</h3>
+              <div class="flex items-center gap-5 flex-wrap">
+                <div class="w-[72px] h-[72px] rounded-full overflow-hidden bg-primary/10 flex items-center justify-center shrink-0">
+                  @if (avatarPreview()) {
+                    <img [src]="avatarPreview()" alt="Ảnh đại diện" class="w-full h-full object-cover" />
+                  } @else {
+                    <span class="text-2xl font-bold text-primary uppercase">{{ profileForm.get('fullName')?.value?.charAt(0) || '?' }}</span>
+                  }
+                </div>
+                <div class="flex items-center gap-2.5 flex-wrap">
+                  <label class="btn btn-sm">
+                    <input type="file" accept="image/*" class="sr-only" (change)="onUploadAvatar($event)" />
+                    Tải ảnh lên
+                  </label>
+                  <button type="button" class="btn btn-ghost btn-sm" (click)="onRemoveAvatar()" [disabled]="!avatarPreview()">
+                    Xoá ảnh
+                  </button>
+                  <p class="basis-full mt-1.5 text-xs text-base-content/60">PNG, JPG tối đa 4MB. Kích thước đề xuất 256x256.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Basic info -->
+            <div class="bg-base-100 border border-base-300 rounded-box p-6 shadow-sm">
+              <h3 class="text-base font-semibold mb-4">Thông tin cơ bản</h3>
+              <div class="grid grid-cols-2 gap-x-5 gap-y-4 max-sm:grid-cols-1">
+                <div class="flex flex-col gap-1.5">
+                  <label for="fullName" class="text-[13px] font-semibold text-base-content/70">Họ và tên</label>
+                  <input id="fullName" type="text" formControlName="fullName" class="input input-bordered w-full" />
+                  @if (profileForm.get('fullName')?.invalid && profileForm.get('fullName')?.touched) {
+                    <span class="text-xs text-error">Vui lòng nhập họ tên hợp lệ (tối thiểu 2 ký tự).</span>
+                  }
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label for="username" class="text-[13px] font-semibold text-base-content/70">Username</label>
+                  <input id="username" type="text" formControlName="username" class="input input-bordered w-full" />
+                  @if (profileForm.get('username')?.invalid && profileForm.get('username')?.touched) {
+                    <span class="text-xs text-error">3-20 ký tự: chữ thường, số, "_" hoặc ".".</span>
+                  }
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label for="jobTitle" class="text-[13px] font-semibold text-base-content/70">Tiêu đề công việc</label>
+                  <input id="jobTitle" type="text" formControlName="jobTitle" placeholder="VD: Frontend Engineer" class="input input-bordered w-full" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Contact -->
+            <div class="bg-base-100 border border-base-300 rounded-box p-6 shadow-sm">
+              <h3 class="text-base font-semibold mb-4">Liên hệ</h3>
+              <div class="grid grid-cols-2 gap-x-5 gap-y-4 max-sm:grid-cols-1">
+                <div class="flex flex-col gap-1.5">
+                  <label for="email" class="text-[13px] font-semibold text-base-content/70">Email</label>
+                  <div class="flex items-center gap-2.5">
+                    <input id="email" type="email" formControlName="email" class="input input-bordered flex-1" />
+                    @if (emailVerified()) {
+                      <span class="badge badge-sm badge-success badge-soft">Đã xác minh</span>
+                    } @else {
+                      <span class="badge badge-sm badge-warning badge-soft">Chưa xác minh</span>
+                    }
+                  </div>
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label for="phone" class="text-[13px] font-semibold text-base-content/70">Số điện thoại</label>
+                  <input id="phone" type="tel" formControlName="phone" placeholder="+84 9xx xxx xxx" class="input input-bordered w-full" />
+                  @if (profileForm.get('phone')?.invalid && profileForm.get('phone')?.touched) {
+                    <span class="text-xs text-error">Số điện thoại không hợp lệ.</span>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <!-- Language & timezone -->
+            <div class="bg-base-100 border border-base-300 rounded-box p-6 shadow-sm">
+              <h3 class="text-base font-semibold mb-4">Ngôn ngữ & Múi giờ</h3>
+              <div class="grid grid-cols-2 gap-x-5 gap-y-4 max-sm:grid-cols-1">
+                <div class="flex flex-col gap-1.5">
+                  <label for="language" class="text-[13px] font-semibold text-base-content/70">Ngôn ngữ</label>
+                  <select id="language" formControlName="language" class="select select-bordered w-full">
+                    @for (lang of languageOptions; track lang.code) {
+                      <option [value]="lang.code">{{ lang.label }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label for="timezone" class="text-[13px] font-semibold text-base-content/70">Múi giờ</label>
+                  <select id="timezone" formControlName="timezone" class="select select-bordered w-full">
+                    @for (tz of timezoneOptions; track tz.value) {
+                      <option [value]="tz.value">{{ tz.label }}</option>
+                    }
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex justify-end">
+              <button type="submit" class="btn btn-primary" [disabled]="profileForm.pristine || profileForm.invalid">
+                Lưu thay đổi
+              </button>
+            </div>
+          </form>
+        </section>
+      }
+
+      <!-- ======================= TAB 2: NOTIFICATIONS ======================= -->
+      @case ('notifications') {
+        <section class="max-w-[860px] mx-auto">
+          <header class="mb-6">
+            <h2 class="text-2xl font-bold mb-1.5">Thông báo</h2>
+            <p class="m-0 text-base-content/60 text-sm">Chọn cách bạn muốn được thông báo về hoạt động trong workspace.</p>
+          </header>
+
+          <div class="flex flex-col gap-5">
+            <div class="bg-base-100 border border-base-300 rounded-box p-6 shadow-sm">
+              <h3 class="text-base font-semibold mb-4">Kênh nhận thông báo</h3>
+              <div class="flex items-center justify-between gap-4 py-3">
+                <div class="flex flex-col gap-0.5">
+                  <strong class="text-sm">Email Notifications</strong>
+                  <span class="text-xs text-base-content/60">Nhận tổng hợp và thông báo quan trọng qua email.</span>
+                </div>
+                <button
+                  type="button"
+                  class="relative inline-flex h-6 w-[42px] shrink-0 items-center rounded-full cursor-pointer transition-colors duration-200"
+                  [class]="emailNotifications() ? 'bg-primary' : 'bg-base-300'"
+                  (click)="toggleEmailChannel()"
+                  role="switch"
+                  [attr.aria-checked]="emailNotifications()"
+                >
+                  <span
+                    class="pointer-events-none absolute top-[3px] left-[3px] h-[18px] w-[18px] rounded-full bg-white shadow-sm transition-transform duration-200"
+                    [class]="emailNotifications() ? 'translate-x-[18px]' : 'translate-x-0'"
+                  ></span>
+                </button>
+              </div>
+              <div class="flex items-center justify-between gap-4 py-3 border-t border-base-300">
+                <div class="flex flex-col gap-0.5">
+                  <strong class="text-sm">Push / In-app Notifications</strong>
+                  <span class="text-xs text-base-content/60">Nhận thông báo tức thời trên trình duyệt và ứng dụng.</span>
+                </div>
+                <button
+                  type="button"
+                  class="relative inline-flex h-6 w-[42px] shrink-0 items-center rounded-full cursor-pointer transition-colors duration-200"
+                  [class]="pushNotifications() ? 'bg-primary' : 'bg-base-300'"
+                  (click)="togglePushChannel()"
+                  role="switch"
+                  [attr.aria-checked]="pushNotifications()"
+                >
+                  <span
+                    class="pointer-events-none absolute top-[3px] left-[3px] h-[18px] w-[18px] rounded-full bg-white shadow-sm transition-transform duration-200"
+                    [class]="pushNotifications() ? 'translate-x-[18px]' : 'translate-x-0'"
+                  ></span>
+                </button>
+              </div>
+            </div>
+
+            <div class="bg-base-100 border border-base-300 rounded-box p-6 shadow-sm">
+              <h3 class="text-base font-semibold mb-4">Tuỳ chỉnh sự kiện</h3>
+              <div class="overflow-x-auto">
+                <table class="w-full border-collapse text-sm [&_tbody_tr:last-child_td]:border-b-0">
+                  <thead>
+                    <tr>
+                      <th class="text-left text-[11px] uppercase tracking-wide text-base-content/60 pl-2 pr-2 pb-2.5 border-b border-base-300">Sự kiện</th>
+                      <th class="text-left text-[11px] uppercase tracking-wide text-base-content/60 pl-2 pr-2 pb-2.5 border-b border-base-300 text-center w-[70px]">Email</th>
+                      <th class="text-left text-[11px] uppercase tracking-wide text-base-content/60 pl-2 pr-2 pb-2.5 border-b border-base-300 text-center w-[70px]">Push</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (rule of notificationRules(); track rule.key) {
+                      <tr>
+                        <td class="py-3 px-2 border-b border-base-300 align-middle">
+                          <strong class="text-sm">{{ rule.label }}</strong>
+                          <span class="block text-xs text-base-content/60 mt-0.5">{{ rule.description }}</span>
+                          @if (rule.key === 'due') {
+                            <div class="flex gap-4 mt-2">
+                              <label class="inline-flex items-center gap-1.5 text-xs text-base-content/70 cursor-pointer">
+                                <input type="radio" name="leadTime" value="1h" class="radio radio-primary radio-xs" [checked]="dueDateLeadTime() === '1h'" (change)="setDueDateLeadTime('1h')" />
+                                Trước 1 giờ
+                              </label>
+                              <label class="inline-flex items-center gap-1.5 text-xs text-base-content/70 cursor-pointer">
+                                <input type="radio" name="leadTime" value="1d" class="radio radio-primary radio-xs" [checked]="dueDateLeadTime() === '1d'" (change)="setDueDateLeadTime('1d')" />
+                                Trước 1 ngày
+                              </label>
+                            </div>
+                          }
+                        </td>
+                        <td class="py-3 px-2 border-b border-base-300 align-middle text-center w-[70px]">
+                          <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" [checked]="rule.email" (change)="toggleNotificationCell(rule.key, 'email')" [disabled]="!emailNotifications()" />
+                        </td>
+                        <td class="py-3 px-2 border-b border-base-300 align-middle text-center w-[70px]">
+                          <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" [checked]="rule.push" (change)="toggleNotificationCell(rule.key, 'push')" [disabled]="!pushNotifications()" />
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="bg-base-100 border border-base-300 rounded-box p-6 shadow-sm">
+              <div class="flex items-center justify-between gap-4 py-3">
+                <div class="flex flex-col gap-0.5">
+                  <strong class="text-sm">Quiet Hours</strong>
+                  <span class="text-xs text-base-content/60">Tự động tắt thông báo ngoài giờ làm việc.</span>
+                </div>
+                <button
+                  type="button"
+                  class="relative inline-flex h-6 w-[42px] shrink-0 items-center rounded-full cursor-pointer transition-colors duration-200"
+                  [class]="quietHoursEnabled() ? 'bg-primary' : 'bg-base-300'"
+                  (click)="toggleQuietHours()"
+                  role="switch"
+                  [attr.aria-checked]="quietHoursEnabled()"
+                >
+                  <span
+                    class="pointer-events-none absolute top-[3px] left-[3px] h-[18px] w-[18px] rounded-full bg-white shadow-sm transition-transform duration-200"
+                    [class]="quietHoursEnabled() ? 'translate-x-[18px]' : 'translate-x-0'"
+                  ></span>
+                </button>
+              </div>
+              @if (quietHoursEnabled()) {
+                <form [formGroup]="quietHoursForm" class="grid grid-cols-2 gap-x-5 gap-y-4 max-sm:grid-cols-1 mt-3 pt-3 border-t border-base-300">
+                  <div class="flex flex-col gap-1.5">
+                    <label for="quietFrom" class="text-[13px] font-semibold text-base-content/70">Bắt đầu</label>
+                    <input id="quietFrom" type="time" formControlName="from" class="input input-bordered w-full" />
+                  </div>
+                  <div class="flex flex-col gap-1.5">
+                    <label for="quietTo" class="text-[13px] font-semibold text-base-content/70">Kết thúc</label>
+                    <input id="quietTo" type="time" formControlName="to" class="input input-bordered w-full" />
+                  </div>
+                </form>
+              }
+            </div>
+
+            <div class="flex justify-end">
+              <button type="button" class="btn btn-primary" (click)="onSaveNotifications()">Lưu thay đổi</button>
+            </div>
+          </div>
+        </section>
+      }
+
+      <!-- ======================= TAB 3: WORKSPACE ======================= -->
+      @case ('workspace') {
+        <section class="max-w-[860px] mx-auto">
+          <header class="mb-6">
+            <h2 class="text-2xl font-bold mb-1.5">Không gian làm việc</h2>
+            <p class="m-0 text-base-content/60 text-sm">Quản lý thông tin workspace, thương hiệu và thành viên.</p>
+          </header>
+
+          <div class="flex flex-col gap-5">
+            <form [formGroup]="workspaceForm" (ngSubmit)="onSaveWorkspace()" class="flex flex-col gap-5">
+              <div class="bg-base-100 border border-base-300 rounded-box p-6 shadow-sm">
+                <h3 class="text-base font-semibold mb-4">Thông tin Workspace</h3>
+                <div class="grid grid-cols-2 gap-x-5 gap-y-4 max-sm:grid-cols-1">
+                  <div class="flex flex-col gap-1.5">
+                    <label for="wsName" class="text-[13px] font-semibold text-base-content/70">Tên workspace</label>
+                    <input id="wsName" type="text" formControlName="name" class="input input-bordered w-full" />
+                  </div>
+                  <div class="flex flex-col gap-1.5">
+                    <label for="wsSlug" class="text-[13px] font-semibold text-base-content/70">Đường dẫn (Slug)</label>
+                    <div class="join w-full">
+                      <span class="join-item flex items-center px-3 bg-base-200 border border-base-300 text-[13px] text-base-content/60 whitespace-nowrap">app.teamthanh.io/</span>
+                      <input id="wsSlug" type="text" formControlName="slug" class="input input-bordered join-item w-full" />
+                    </div>
+                    @if (workspaceForm.get('slug')?.invalid && workspaceForm.get('slug')?.touched) {
+                      <span class="text-xs text-error">3-40 ký tự: chữ thường, số, dấu gạch ngang.</span>
+                    }
+                  </div>
+                  <div class="flex flex-col gap-1.5 col-span-full">
+                    <label for="wsDesc" class="text-[13px] font-semibold text-base-content/70">Mô tả ngắn</label>
+                    <textarea id="wsDesc" rows="2" formControlName="description" maxlength="240" class="textarea textarea-bordered w-full"></textarea>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-base-100 border border-base-300 rounded-box p-6 shadow-sm">
+                <h3 class="text-base font-semibold mb-4">Thương hiệu (Branding)</h3>
+                <div class="flex items-center gap-5 flex-wrap">
+                  <div class="w-[72px] h-[72px] rounded-box overflow-hidden bg-primary/10 flex items-center justify-center shrink-0">
+                    @if (workspaceLogo()) {
+                      <img [src]="workspaceLogo()" alt="Logo workspace" class="w-full h-full object-cover" />
+                    } @else {
+                      <span class="text-2xl font-bold text-primary uppercase">{{ workspaceForm.get('name')?.value?.charAt(0) }}</span>
+                    }
+                  </div>
+                  <div class="flex items-center gap-2.5 flex-wrap">
+                    <label class="btn btn-sm">
+                      <input type="file" accept="image/*" class="sr-only" (change)="onUploadWorkspaceLogo($event)" />
+                      Tải logo lên
+                    </label>
+                    <p class="basis-full mt-1.5 text-xs text-base-content/60">Định dạng vuông, tối thiểu 128x128px.</p>
+                  </div>
+                </div>
+                <div class="flex flex-col gap-1.5 max-w-[240px] mt-4">
+                  <label for="brandColor" class="text-[13px] font-semibold text-base-content/70">Màu nhận diện thương hiệu</label>
+                  <div class="flex items-center gap-2.5">
+                    <input id="brandColor" type="color" [value]="workspaceBrandColor()" (input)="workspaceBrandColor.set($any($event.target).value)" class="w-10 h-8 p-0 border border-base-300 rounded-md bg-transparent cursor-pointer" />
+                    <span class="font-mono text-[13px]">{{ workspaceBrandColor() }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex justify-end">
+                <button type="submit" class="btn btn-primary" [disabled]="workspaceForm.pristine || workspaceForm.invalid">
+                  Lưu thay đổi
+                </button>
+              </div>
+            </form>
+
+            <div class="bg-base-100 border border-base-300 rounded-box p-6 shadow-sm">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base font-semibold">Quản lý thành viên</h3>
+                <button type="button" class="btn btn-primary btn-sm" (click)="openInviteModal()">+ Mời thành viên</button>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full border-collapse text-sm [&_tbody_tr:last-child_td]:border-b-0">
+                  <thead>
+                    <tr>
+                      <th class="text-left text-[11px] uppercase tracking-wide text-base-content/60 pl-2 pr-2 pb-2.5 border-b border-base-300">Thành viên</th>
+                      <th class="text-left text-[11px] uppercase tracking-wide text-base-content/60 pl-2 pr-2 pb-2.5 border-b border-base-300">Vai trò</th>
+                      <th class="text-left text-[11px] uppercase tracking-wide text-base-content/60 pl-2 pr-2 pb-2.5 border-b border-base-300">Trạng thái</th>
+                      <th class="text-left text-[11px] uppercase tracking-wide text-base-content/60 pl-2 pr-2 pb-2.5 border-b border-base-300"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (member of members(); track trackByMemberId($index, member)) {
+                      <tr [class]="member.status === 'frozen' ? 'opacity-[0.55]' : ''">
+                        <td class="py-3 px-2 border-b border-base-300 align-middle">
+                          <div class="flex items-center gap-2.5">
+                            <img [src]="member.avatarUrl" [alt]="member.name" class="w-9 h-9 rounded-full object-cover" />
+                            <div>
+                              <div class="font-semibold">{{ member.name }}</div>
+                              <div class="text-xs text-base-content/60">{{ member.email }}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td class="py-3 px-2 border-b border-base-300 align-middle">
+                          @if (member.role === 'Owner') {
+                            <span class="badge badge-sm badge-primary badge-soft">Owner</span>
+                          } @else {
+                            <select class="select select-bordered select-sm w-auto" [ngModel]="member.role" (ngModelChange)="onChangeRole(member, $event)">
+                              @for (role of memberRoles; track role) {
+                                <option [value]="role">{{ role }}</option>
+                              }
+                            </select>
+                          }
+                        </td>
+                        <td class="py-3 px-2 border-b border-base-300 align-middle">
+                          @if (member.status === 'active') {
+                            <span class="badge badge-sm badge-success badge-soft">Hoạt động</span>
+                          } @else {
+                            <span class="badge badge-sm badge-ghost">Đã đóng băng</span>
+                          }
+                        </td>
+                        <td class="py-3 px-2 border-b border-base-300 align-middle">
+                          @if (member.role !== 'Owner') {
+                            <div class="flex gap-1.5 justify-end">
+                              <button type="button" class="btn btn-ghost btn-xs" (click)="onToggleFreeze(member)">
+                                {{ member.status === 'active' ? 'Đóng băng' : 'Kích hoạt lại' }}
+                              </button>
+                              <button type="button" class="btn btn-ghost btn-xs text-error" (click)="onRemoveMember(member)">Xoá</button>
+                            </div>
+                          }
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+      }
+
+      <!-- ======================= TAB 4: APPEARANCE & SECURITY ======================= -->
+      @case ('appearance-security') {
+        <section class="max-w-[860px] mx-auto">
+          <header class="mb-6">
+            <h2 class="text-2xl font-bold mb-1.5">Giao diện & Bảo mật</h2>
+            <p class="m-0 text-base-content/60 text-sm">Tuỳ chỉnh giao diện hiển thị và bảo vệ tài khoản của bạn.</p>
+          </header>
+
+          <div class="flex flex-col gap-5">
+            <!-- Theme -->
+            <div class="bg-base-100 border border-base-300 rounded-box p-6 shadow-sm">
+              <h3 class="text-base font-semibold mb-4">Giao diện (Theme)</h3>
+              <div class="grid grid-cols-2 gap-4 max-w-[420px] max-[480px]:grid-cols-1">
+                <button
+                  type="button"
+                  class="flex flex-col items-center gap-2.5 p-3 rounded-box border-2 cursor-pointer text-[13px] font-semibold transition-colors duration-150"
+                  [class]="themeService.theme() === 'light' ? 'border-primary text-primary' : 'border-base-300 text-base-content/70 hover:border-base-content/30'"
+                  (click)="themeService.set('light')"
+                >
+                  <span class="w-full h-[70px] rounded-lg p-2.5 flex flex-col gap-1.5 bg-[#f4f5f7]">
+                    <span class="h-2.5 rounded w-2/5 bg-[#6366f1]"></span>
+                    <span class="h-1.5 rounded w-[90%] bg-[#d1d5db]"></span>
+                    <span class="h-1.5 rounded w-3/5 bg-[#d1d5db]"></span>
+                  </span>
+                  <span>Light Mode</span>
+                </button>
+                <button
+                  type="button"
+                  class="flex flex-col items-center gap-2.5 p-3 rounded-box border-2 cursor-pointer text-[13px] font-semibold transition-colors duration-150"
+                  [class]="themeService.theme() === 'dark' ? 'border-primary text-primary' : 'border-base-300 text-base-content/70 hover:border-base-content/30'"
+                  (click)="themeService.set('dark')"
+                >
+                  <span class="w-full h-[70px] rounded-lg p-2.5 flex flex-col gap-1.5 bg-[#0f1117]">
+                    <span class="h-2.5 rounded w-2/5 bg-[#818cf8]"></span>
+                    <span class="h-1.5 rounded w-[90%] bg-[#3a3e50]"></span>
+                    <span class="h-1.5 rounded w-3/5 bg-[#3a3e50]"></span>
+                  </span>
+                  <span>Dark Mode</span>
+                </button>
+              </div>
+
+              <h4 class="text-sm font-semibold text-base-content/70 mt-5 mb-2.5">Màu chủ đạo</h4>
+              <div class="flex gap-2.5 flex-wrap">
+                @for (color of accentColors; track color.value) {
+                  <button
+                    type="button"
+                    class="w-8 h-8 rounded-full border-2 cursor-pointer shadow-[inset_0_0_0_2px_rgba(255,255,255,0.4)]"
+                    [class]="accentColor() === color.value ? 'border-base-content' : 'border-transparent'"
+                    [style.background]="color.value"
+                    [attr.aria-label]="color.name"
+                    (click)="setAccentColor(color.value)"
+                  ></button>
+                }
+              </div>
+            </div>
+
+            <!-- Change password -->
+            <div class="bg-base-100 border border-base-300 rounded-box p-6 shadow-sm">
+              <h3 class="text-base font-semibold mb-4">Đổi mật khẩu</h3>
+              <form [formGroup]="passwordForm" (ngSubmit)="onChangePassword()" class="grid grid-cols-2 gap-x-5 gap-y-4 max-sm:grid-cols-1">
+                <div class="flex flex-col gap-1.5 col-span-full">
+                  <label for="currentPassword" class="text-[13px] font-semibold text-base-content/70">Mật khẩu hiện tại</label>
+                  <input id="currentPassword" type="password" formControlName="currentPassword" autocomplete="current-password" class="input input-bordered w-full" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label for="newPassword" class="text-[13px] font-semibold text-base-content/70">Mật khẩu mới</label>
+                  <input id="newPassword" type="password" formControlName="newPassword" autocomplete="new-password" class="input input-bordered w-full" />
+                  @if (passwordForm.get('newPassword')?.value) {
+                    <div class="flex items-center gap-2.5 mt-1.5">
+                      <div class="h-1.5 rounded-full bg-base-300 overflow-hidden flex-1">
+                        <div class="h-full rounded-full transition-all" [style.width.%]="passwordStrength.percent" [style.background]="passwordStrength.colorVar"></div>
+                      </div>
+                      <span class="text-xs font-bold whitespace-nowrap" [style.color]="passwordStrength.colorVar">{{ passwordStrength.label }}</span>
+                    </div>
+                  }
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label for="confirmPassword" class="text-[13px] font-semibold text-base-content/70">Xác nhận mật khẩu mới</label>
+                  <input id="confirmPassword" type="password" formControlName="confirmPassword" autocomplete="new-password" class="input input-bordered w-full" />
+                  @if (passwordForm.hasError('passwordMismatch') && passwordForm.get('confirmPassword')?.touched) {
+                    <span class="text-xs text-error">Mật khẩu xác nhận không khớp.</span>
+                  }
+                </div>
+                <div class="col-span-full">
+                  <button type="submit" class="btn btn-primary" [disabled]="passwordForm.invalid">Cập nhật mật khẩu</button>
+                </div>
+              </form>
+            </div>
+
+            <!-- 2FA -->
+            <div class="bg-base-100 border border-base-300 rounded-box p-6 shadow-sm">
+              <div class="flex items-center justify-between gap-4 py-3">
+                <div class="flex flex-col gap-0.5">
+                  <strong class="text-sm">Xác thực 2 lớp (2FA)</strong>
+                  <span class="text-xs text-base-content/60">Bảo vệ tài khoản bằng ứng dụng Authenticator.</span>
+                </div>
+                @if (twoFAEnabled()) {
+                  <span class="badge badge-sm badge-success badge-soft">Đã kích hoạt</span>
+                } @else {
+                  <button type="button" class="btn btn-sm" (click)="openTwoFASetup()">Thiết lập</button>
+                }
+              </div>
+              @if (twoFAEnabled()) {
+                <button type="button" class="btn btn-ghost btn-sm text-error" (click)="disableTwoFA()">Tắt 2FA</button>
+              }
+
+              @if (twoFASetupOpen()) {
+                <div class="mt-4 p-4 rounded-box bg-base-200 border border-dashed border-base-300">
+                  <p class="text-xs text-base-content/60">Quét mã QR bằng ứng dụng Authenticator (Google Authenticator, Authy, ...):</p>
+                  <div class="my-2 inline-block rounded-lg overflow-hidden border border-base-300" [attr.aria-label]="twoFAQrSeed()">
+                    <svg viewBox="0 0 100 100" width="140" height="140">
+                      <rect width="100" height="100" class="fill-base-200" />
+                      @for (row of [0,1,2,3,4,5,6,7,8,9]; track row) {
+                        @for (col of [0,1,2,3,4,5,6,7,8,9]; track col) {
+                          @if ((row * 7 + col * 3 + row * col) % 3 === 0) {
+                            <rect [attr.x]="col * 10" [attr.y]="row * 10" width="9" height="9" class="fill-base-content" />
+                          }
+                        }
+                      }
+                    </svg>
+                  </div>
+                  <p class="text-xs text-base-content/60">Mã minh hoạ — không phải QR thực. Sau khi thêm, nhập mã 6 số để xác nhận.</p>
+                  <div class="flex flex-col gap-1.5 max-w-[160px]">
+                    <input type="text" placeholder="000000" maxlength="6" class="input input-bordered w-full text-center tracking-widest" />
+                  </div>
+                  <div class="flex justify-end gap-2.5 mt-3">
+                    <button type="button" class="btn btn-ghost btn-sm" (click)="closeTwoFASetup()">Huỷ</button>
+                    <button type="button" class="btn btn-primary btn-sm" (click)="confirmTwoFA()">Xác nhận & kích hoạt</button>
+                  </div>
+                </div>
+              }
+            </div>
+
+            <!-- Active sessions -->
+            <div class="bg-base-100 border border-base-300 rounded-box p-6 shadow-sm">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base font-semibold">Phiên đăng nhập</h3>
+                <button type="button" class="btn btn-ghost btn-sm text-error" (click)="onLogoutAllOtherSessions()">
+                  Đăng xuất khỏi tất cả thiết bị khác
+                </button>
+              </div>
+              <ul class="list-none m-0 p-0 flex flex-col [&>li+li]:border-t [&>li+li]:border-base-300">
+                @for (session of sessions(); track trackBySessionId($index, session)) {
+                  <li class="flex items-center gap-3.5 py-3">
+                    <span class="w-[22px] h-[22px] text-base-content/60 shrink-0 [&>svg]:w-full [&>svg]:h-full">
+                      @switch (session.icon) {
+                        @case ('desktop') {
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="12" rx="1.5" /><line x1="8" y1="20" x2="16" y2="20" stroke-linecap="round" /><line x1="12" y1="16" x2="12" y2="20" /></svg>
+                        }
+                        @case ('mobile') {
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="7" y="2.5" width="10" height="19" rx="2" /><line x1="11" y1="18" x2="13" y2="18" stroke-linecap="round" /></svg>
+                        }
+                        @case ('tablet') {
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="2.5" width="14" height="19" rx="2" /><line x1="11" y1="18" x2="13" y2="18" stroke-linecap="round" /></svg>
+                        }
+                      }
+                    </span>
+                    <div class="flex-1 min-w-0">
+                      <div class="font-semibold text-sm flex items-center gap-2">
+                        {{ session.device }}
+                        @if (session.current) { <span class="badge badge-sm badge-primary badge-soft">Thiết bị này</span> }
+                      </div>
+                      <div class="text-xs text-base-content/60 mt-0.5">{{ session.browser }} · {{ session.ip }} · {{ session.location }}</div>
+                    </div>
+                    <div class="text-xs text-base-content/60 whitespace-nowrap">{{ session.lastActive }}</div>
+                    @if (!session.current) {
+                      <button type="button" class="btn btn-ghost btn-xs text-error" (click)="onRevokeSession(session)">Đăng xuất</button>
+                    }
+                  </li>
+                }
+              </ul>
+            </div>
+          </div>
+        </section>
+      }
+
+      <!-- ======================= TAB 5: BILLING & PLAN ======================= -->
+      @case ('billing') {
+        <section class="max-w-[860px] mx-auto">
+          <header class="mb-6">
+            <h2 class="text-2xl font-bold mb-1.5">Gói dịch vụ</h2>
+            <p class="m-0 text-base-content/60 text-sm">Theo dõi mức sử dụng và quản lý gói đăng ký của workspace.</p>
+          </header>
+
+          <div class="flex flex-col gap-5">
+            <div class="bg-base-100 border border-base-300 rounded-box p-6 shadow-sm">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base font-semibold">Gói hiện tại</h3>
+                <span class="badge badge-sm badge-primary badge-soft">{{ currentPlan().toUpperCase() }} PLAN</span>
+              </div>
+
+              <div class="grid gap-4 grid-cols-3 max-sm:grid-cols-1">
+                <div>
+                  <div class="flex justify-between text-xs text-base-content/70 mb-1.5">
+                    <span>Dung lượng lưu trữ</span>
+                    <span>{{ usage.storageUsedGB }}GB / {{ usage.storageLimitGB }}GB</span>
+                  </div>
+                  <div class="h-2 rounded-full bg-base-300 overflow-hidden">
+                    <div class="h-full rounded-full bg-primary" [style.width.%]="usagePercent(usage.storageUsedGB, usage.storageLimitGB)"></div>
+                  </div>
+                </div>
+                <div>
+                  <div class="flex justify-between text-xs text-base-content/70 mb-1.5">
+                    <span>Boards / Projects</span>
+                    <span>{{ usage.boardsUsed }} / {{ usage.boardsLimit }}</span>
+                  </div>
+                  <div class="h-2 rounded-full bg-base-300 overflow-hidden">
+                    <div class="h-full rounded-full bg-primary" [style.width.%]="usagePercent(usage.boardsUsed, usage.boardsLimit)"></div>
+                  </div>
+                </div>
+                <div>
+                  <div class="flex justify-between text-xs text-base-content/70 mb-1.5">
+                    <span>Thành viên</span>
+                    <span>{{ usage.membersUsed }} / {{ usage.membersLimit }}</span>
+                  </div>
+                  <div class="h-2 rounded-full bg-base-300 overflow-hidden">
+                    <div class="h-full rounded-full bg-primary" [style.width.%]="usagePercent(usage.membersUsed, usage.membersLimit)"></div>
+                  </div>
+                </div>
+              </div>
+
+              <button type="button" class="btn btn-sm mt-4">Quản lý thẻ thanh toán</button>
+            </div>
+
+            <div class="bg-base-100 border border-base-300 rounded-box p-6 shadow-sm">
+              <h3 class="text-base font-semibold mb-4">Nâng cấp gói</h3>
+              <div class="grid grid-cols-3 gap-4 max-[900px]:grid-cols-1">
+                @for (plan of plans(); track trackByPlanId($index, plan)) {
+                  <div
+                    class="relative border rounded-box p-5 flex flex-col gap-3"
+                    [class]="(plan.highlighted ? 'border-primary ring-1 ring-primary ' : 'border-base-300 ') + (plan.current ? 'bg-primary/10' : 'bg-base-200')"
+                  >
+                    @if (plan.highlighted) { <span class="absolute -top-2.5 right-4 bg-primary text-primary-content text-[11px] font-bold py-0.5 px-2.5 rounded-full">Phổ biến nhất</span> }
+                    <h4 class="m-0 text-base font-semibold">{{ plan.name }}</h4>
+                    <div class="text-2xl font-bold">{{ plan.price }} <span class="text-xs font-medium text-base-content/60">{{ plan.period }}</span></div>
+                    <ul class="list-none m-0 p-0 flex flex-col gap-2 flex-1">
+                      @for (feature of plan.features; track feature) {
+                        <li class="flex items-start gap-2 text-[13px] text-base-content/70">
+                          <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" class="text-success shrink-0 mt-0.5"><path d="M4 10l4 4 8-8" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                          {{ feature }}
+                        </li>
+                      }
+                    </ul>
+                    <button
+                      type="button"
+                      class="btn w-full"
+                      [class]="!plan.current ? 'btn-primary' : ''"
+                      [disabled]="plan.current"
+                      (click)="onUpgradePlan(plan.id)"
+                    >
+                      {{ plan.current ? 'Gói hiện tại' : 'Chọn gói này' }}
+                    </button>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        </section>
+      }
+
+      <!-- ======================= TAB 6: INTEGRATIONS & API ======================= -->
+      @case ('integrations') {
+        <section class="max-w-[860px] mx-auto">
+          <header class="mb-6">
+            <h2 class="text-2xl font-bold mb-1.5">Tích hợp & API</h2>
+            <p class="m-0 text-base-content/60 text-sm">Kết nối ứng dụng bên ngoài và quản lý API key cá nhân.</p>
+          </header>
+
+          <div class="flex flex-col gap-5">
+            <div class="bg-base-100 border border-base-300 rounded-box p-6 shadow-sm">
+              <h3 class="text-base font-semibold mb-4">Ứng dụng kết nối</h3>
+              <ul class="list-none m-0 p-0 flex flex-col [&>li+li]:border-t [&>li+li]:border-base-300">
+                @for (integration of integrations(); track trackByIntegrationId($index, integration)) {
+                  <li class="flex items-center gap-3.5 py-3.5">
+                    <span class="w-[38px] h-[38px] rounded-[10px] text-white font-bold text-xs flex items-center justify-center shrink-0" [style.background]="integration.colorVar">{{ integration.initials }}</span>
+                    <div class="flex-1 min-w-0 flex flex-col">
+                      <strong class="text-sm">{{ integration.name }}</strong>
+                      <span class="text-xs text-base-content/60">{{ integration.description }}</span>
+                    </div>
+                    <button
+                      type="button"
+                      class="relative inline-flex h-6 w-[42px] shrink-0 items-center rounded-full cursor-pointer transition-colors duration-200"
+                      [class]="integration.connected ? 'bg-primary' : 'bg-base-300'"
+                      (click)="toggleIntegration(integration)"
+                      role="switch"
+                      [attr.aria-checked]="integration.connected"
+                    >
+                      <span
+                        class="pointer-events-none absolute top-[3px] left-[3px] h-[18px] w-[18px] rounded-full bg-white shadow-sm transition-transform duration-200"
+                        [class]="integration.connected ? 'translate-x-[18px]' : 'translate-x-0'"
+                      ></span>
+                    </button>
+                  </li>
+                }
+              </ul>
+            </div>
+
+            <div class="bg-base-100 border border-base-300 rounded-box p-6 shadow-sm">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base font-semibold">Personal Access Tokens</h3>
+                <button type="button" class="btn btn-primary btn-sm" (click)="openNewTokenModal()">+ Tạo token mới</button>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full border-collapse text-sm [&_tbody_tr:last-child_td]:border-b-0">
+                  <thead>
+                    <tr>
+                      <th class="text-left text-[11px] uppercase tracking-wide text-base-content/60 pl-2 pr-2 pb-2.5 border-b border-base-300">Tên</th>
+                      <th class="text-left text-[11px] uppercase tracking-wide text-base-content/60 pl-2 pr-2 pb-2.5 border-b border-base-300">Token</th>
+                      <th class="text-left text-[11px] uppercase tracking-wide text-base-content/60 pl-2 pr-2 pb-2.5 border-b border-base-300">Tạo lúc</th>
+                      <th class="text-left text-[11px] uppercase tracking-wide text-base-content/60 pl-2 pr-2 pb-2.5 border-b border-base-300">Dùng lần cuối</th>
+                      <th class="text-left text-[11px] uppercase tracking-wide text-base-content/60 pl-2 pr-2 pb-2.5 border-b border-base-300"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (token of apiTokens(); track trackByTokenId($index, token)) {
+                      <tr>
+                        <td class="py-3 px-2 border-b border-base-300 align-middle"><strong class="text-sm">{{ token.name }}</strong></td>
+                        <td class="py-3 px-2 border-b border-base-300 align-middle"><code class="font-mono text-[13px]">{{ token.tokenPreview }}</code></td>
+                        <td class="py-3 px-2 border-b border-base-300 align-middle">{{ token.createdAt }}</td>
+                        <td class="py-3 px-2 border-b border-base-300 align-middle">{{ token.lastUsedAt ?? 'Chưa sử dụng' }}</td>
+                        <td class="py-3 px-2 border-b border-base-300 align-middle">
+                          <div class="flex gap-1.5 justify-end">
+                            <button type="button" class="btn btn-ghost btn-xs text-error" (click)="onRevokeToken(token)">Thu hồi</button>
+                          </div>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+      }
+    }
+  </main>
+
+  <!-- ============================== MODALS ============================== -->
+  @if (showInviteModal()) {
+    <div class="modal modal-open" (click)="closeInviteModal()">
+      <div class="modal-box" (click)="$event.stopPropagation()">
+        <h3 class="text-lg font-semibold mb-4">Mời thành viên mới</h3>
+        <form [formGroup]="inviteForm" (ngSubmit)="onSendInvite()" class="flex flex-col gap-4">
+          <div class="flex flex-col gap-1.5">
+            <label for="inviteEmail" class="text-[13px] font-semibold text-base-content/70">Địa chỉ email</label>
+            <input id="inviteEmail" type="email" formControlName="email" placeholder="ten@congty.com" class="input input-bordered w-full" />
+            @if (inviteForm.get('email')?.invalid && inviteForm.get('email')?.touched) {
+              <span class="text-xs text-error">Vui lòng nhập email hợp lệ.</span>
+            }
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <label for="inviteRole" class="text-[13px] font-semibold text-base-content/70">Phân quyền ban đầu</label>
+            <select id="inviteRole" formControlName="role" class="select select-bordered w-full">
+              @for (role of memberRoles; track role) {
+                <option [value]="role">{{ role }}</option>
+              }
+            </select>
+          </div>
+          <div class="flex justify-end gap-2.5 mt-1">
+            <button type="button" class="btn btn-ghost" (click)="closeInviteModal()">Huỷ</button>
+            <button type="submit" class="btn btn-primary" [disabled]="inviteForm.invalid">Gửi lời mời</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  @if (showNewTokenModal()) {
+    <div class="modal modal-open" (click)="closeNewTokenModal()">
+      <div class="modal-box" (click)="$event.stopPropagation()">
+        <h3 class="text-lg font-semibold mb-4">Tạo Personal Access Token</h3>
+        @if (!generatedToken()) {
+          <div class="flex flex-col gap-1.5">
+            <label for="tokenName" class="text-[13px] font-semibold text-base-content/70">Tên token</label>
+            <input id="tokenName" type="text" [ngModel]="newTokenName()" (ngModelChange)="newTokenName.set($event)" placeholder="VD: CI/CD Pipeline" class="input input-bordered w-full" />
+          </div>
+          <div class="flex justify-end gap-2.5 mt-4">
+            <button type="button" class="btn btn-ghost" (click)="closeNewTokenModal()">Huỷ</button>
+            <button type="button" class="btn btn-primary" [disabled]="!newTokenName().trim()" (click)="generateToken()">Tạo token</button>
+          </div>
+        } @else {
+          <p class="text-xs text-base-content/60">Sao chép token ngay — bạn sẽ không thể xem lại sau khi đóng cửa sổ này.</p>
+          <div class="flex items-center justify-between gap-3 py-3 px-4 rounded-field bg-base-200 border border-base-300 my-3">
+            <code class="font-mono text-[13px] break-all">{{ generatedToken() }}</code>
+            <button type="button" class="btn btn-sm" (click)="copyToClipboard(generatedToken()!)">Sao chép</button>
+          </div>
+          <div class="flex justify-end gap-2.5 mt-1">
+            <button type="button" class="btn btn-primary" (click)="closeNewTokenModal()">Xong</button>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- ============================== TOAST ============================== -->
+  @if (toastMessage()) {
+    <div class="fixed bottom-6 right-6 z-[60] bg-base-content text-base-100 py-3 px-4 rounded-box text-sm font-semibold shadow-md animate-[toast-in_0.2s_ease]">{{ toastMessage() }}</div>
+  }
+</div>

@@ -1,0 +1,80 @@
+:host {
+  display: block;
+}
+
+.card-face.saving::after {
+  content: '';
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #0284c7;
+  animation: saving-blink 1s infinite;
+}
+
+.card-face.error-flash {
+  border-color: #dc2626;
+  animation: card-shake 0.35s;
+}
+
+/* Lọc board (#7): khớp điều kiện thì viền sáng nổi bật; không khớp thì làm mờ
+   (không ẩn hẳn, vẫn giữ bối cảnh toàn board). */
+.card-face.dimmed {
+  opacity: 0.35;
+  filter: grayscale(0.25);
+}
+
+.card-face.highlighted {
+  outline: 2px solid #0284c7;
+  outline-offset: 1px;
+}
+
+/* Chọn nhiều thẻ (#12) */
+.card-face.selected {
+  outline: 2px solid #0284c7;
+  outline-offset: 1px;
+  background: rgba(2, 132, 199, 0.1);
+}
+
+@keyframes saving-blink {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes card-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-3px);
+  }
+  75% {
+    transform: translateX(3px);
+  }
+}
+
+/* Hàng cờ ưu tiên (#4) — tách riêng khỏi hàng nhãn, đúng "phương án A" đã chốt. */
+.priority-row.p-cao {
+  color: #dc2626;
+}
+
+.priority-row.p-trung {
+  color: #d97706;
+}
+
+.priority-row.p-thap {
+  color: #64748b;
+}
+
+.due-badge.overdue {
+  color: #dc2626;
+  font-weight: 600;
+}

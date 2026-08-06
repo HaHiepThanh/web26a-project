@@ -1,0 +1,5 @@
+/* display: contents so the docked panel div renders as a direct flex item of
+   the parent board row (Tailwind classes on that inner div handle the rest). */
+:host {
+  display: contents;
+}

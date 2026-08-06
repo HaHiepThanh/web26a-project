@@ -1,0 +1,23 @@
+:host {
+  display: block;
+}
+
+/* Ba mức ưu tiên khoá màu riêng (đỏ/vàng/xám) — tổ hợp .selected + .p-* động theo
+   dữ liệu nên giữ lại làm CSS thay vì tổ hợp class Tailwind tĩnh. */
+.priority-choice.selected.p-cao {
+  border-color: #dc2626;
+  background: rgba(220, 38, 38, 0.12);
+  color: #dc2626;
+}
+
+.priority-choice.selected.p-trung {
+  border-color: #d97706;
+  background: rgba(217, 119, 6, 0.12);
+  color: #d97706;
+}
+
+.priority-choice.selected.p-thap {
+  border-color: #64748b;
+  background: #f1f5f9;
+  color: #475569;
+}

@@ -1,0 +1,232 @@
+<div class="flex max-[992px]:flex-col min-h-[calc(100vh-96px)] w-full">
+
+  <!-- Left Sidebar -->
+  <aside class="w-[280px] max-[992px]:w-full shrink-0 bg-base-100 border-r border-base-300 max-[992px]:border-r-0 max-[992px]:border-b p-4 flex flex-col gap-4 transition-colors duration-300">
+    <div class="bg-base-100 border border-base-300 rounded-box p-4 shadow-sm">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-[11px] font-bold text-base-content/60 tracking-[0.6px] uppercase">KHÔNG GIAN LÀM VIỆC</span>
+        <button class="w-[22px] h-[22px] rounded flex items-center justify-center text-base-content/70 text-base font-semibold transition duration-150 hover:bg-base-200 hover:text-base-content" title="Tạo Workspace mới" (click)="addWorkspace()">+</button>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        @for (ws of workspaces(); track trackByWorkspaceId($index, ws)) {
+          <a href="javascript:void(0)"
+             [class]="'flex items-center gap-2 py-2 px-2.5 rounded-md cursor-pointer no-underline transition duration-150 ' + (activeWorkspaceId() === ws.id ? 'bg-primary/10 text-primary font-semibold' : 'text-base-content hover:bg-base-200')"
+             (click)="selectWorkspace(ws.id)">
+            <div class="w-7 h-7 rounded-md bg-base-300 flex items-center justify-center text-[15px] shrink-0">{{ ws.icon }}</div>
+            <div class="flex flex-col overflow-hidden">
+              <div class="text-[13px] font-semibold whitespace-nowrap overflow-hidden text-ellipsis">{{ ws.name }}</div>
+              <div class="text-[11px] text-base-content/60">{{ ws.membersCount }} thành viên</div>
+            </div>
+          </a>
+        }
+      </div>
+    </div>
+
+    <div class="tips-card relative overflow-hidden rounded-box p-4">
+      <span class="tips-badge inline-block text-[10px] font-bold py-0.5 px-2 rounded-xl tracking-wide mb-2">MẸO NHỎ</span>
+      <h4 class="tips-title text-sm font-bold mb-1">Hỗ trợ đầy đủ phím tắt</h4>
+      <p class="tips-desc text-xs leading-snug">
+        Nhấn <kbd class="tips-kbd py-0.5 px-1.5 rounded font-bold text-[11px]">N</kbd> để tạo nhanh thẻ công việc mới, <kbd class="tips-kbd py-0.5 px-1.5 rounded font-bold text-[11px]">/</kbd> để tập trung tìm kiếm, hoặc <kbd class="tips-kbd py-0.5 px-1.5 rounded font-bold text-[11px]">Esc</kbd> để đóng nhanh các hộp thoại.
+      </p>
+    </div>
+  </aside>
+
+  <!-- Main Workspace Content -->
+  <main class="flex-1 bg-base-200 p-10 max-[992px]:p-6 flex flex-col gap-12 max-w-[1400px] mx-auto transition-colors duration-300">
+
+    <!-- Hero Welcome Banner -->
+    <section class="relative overflow-hidden flex items-center justify-between max-[992px]:flex-col max-[992px]:items-start gap-8 rounded-3xl px-10 py-8 text-white shadow-lg bg-[linear-gradient(135deg,#1e1b4b_0%,#312e81_40%,#1e3a8a_100%)] before:content-[''] before:absolute before:-top-[50px] before:-right-[50px] before:w-[250px] before:h-[250px] before:rounded-full before:bg-[radial-gradient(circle,rgba(255,255,255,0.1)_0%,rgba(255,255,255,0)_70%)] before:pointer-events-none">
+      <div class="max-w-[680px]">
+        <h1 class="text-[26px] font-extrabold mb-2 leading-[1.2] tracking-[-0.5px]">Chào buổi tối! 👋</h1>
+        <p class="text-sm text-slate-300 leading-relaxed">
+          Hôm nay bạn muốn hoàn thành mục tiêu gì? Cùng kéo thả, quản lý tiến độ và cùng thảo luận công việc với các thành viên trong nhóm nhé.
+        </p>
+      </div>
+      <button class="btn bg-white text-slate-900 border-none shadow-md gap-2 transition duration-150 hover:bg-slate-100 hover:-translate-y-0.5 hover:shadow-lg" (click)="openCreateModal(activeWorkspaceId())">
+        <span>+</span>
+        <span>Tạo bảng mới</span>
+      </button>
+    </section>
+
+    <!-- Section 1: Starred Important Boards -->
+    <section>
+      <div class="flex items-center gap-2 mb-4">
+        <span class="text-lg">⭐</span>
+        <h2 class="text-base font-extrabold tracking-wide text-base-content uppercase">BẢNG QUAN TRỌNG ĐƯỢC ĐÁNH DẤU SAO</h2>
+      </div>
+      <div class="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4">
+        @if (starredBoards().length === 0) {
+          <div class="col-span-full p-5 text-center text-base-content/60 bg-base-100 rounded-box border border-dashed border-base-300">Không có bảng quan trọng nào được đánh dấu sao.</div>
+        }
+        @for (board of starredBoards(); track board.id) {
+          <div class="h-[125px] rounded-box p-4 text-white relative flex flex-col justify-between cursor-pointer transition duration-150 overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-[3px]" [class]="board.bgClass" (click)="onBoardClick(board)">
+            <div>
+              <div class="text-[10px] font-extrabold tracking-wide opacity-90 uppercase">{{ board.tag }}</div>
+              <div class="text-base font-bold leading-[1.3] mt-1 [text-shadow:0_1px_2px_rgba(0,0,0,0.2)]">{{ board.title }}</div>
+            </div>
+            <button class="absolute top-3 right-3 text-base text-white/60 transition duration-150 hover:text-amber-400 hover:scale-110" [class.text-amber-400]="board.starred" [class.scale-110]="board.starred" title="Đánh dấu sao" (click)="$event.stopPropagation(); toggleStar(board.id)">
+              {{ board.starred ? '⭐' : '☆' }}
+            </button>
+            <div class="flex items-center justify-between text-[11px] font-semibold opacity-95">
+              <span>{{ board.privacy === 'Public' ? '🌐' : '🔒' }} {{ board.privacy }}</span>
+              <span class="bg-black/25 py-0.5 px-1.5 rounded text-[10px] tracking-wide">{{ board.badge }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- Section 2: Templates -->
+    <section>
+      <div class="flex items-center gap-2 mb-4">
+        <span class="text-lg">📖</span>
+        <h2 class="text-base font-extrabold tracking-wide text-base-content uppercase">KHỞI TẠO NHANH THEO MẪU (TEMPLATES)</h2>
+      </div>
+
+      <div class="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4">
+        @for (tpl of templates; track tpl.title) {
+          <div class="bg-base-100 border border-base-300 rounded-box p-4 flex flex-col justify-between min-h-[140px] shadow-sm transition duration-150 hover:-translate-y-0.5 hover:border-primary hover:shadow-md">
+            <div class="flex gap-4 items-start">
+              <div class="w-8 h-8 rounded-md text-white font-extrabold text-[15px] flex items-center justify-center shrink-0" [class]="tpl.badgeClass">{{ tpl.badge }}</div>
+              <div class="flex-1">
+                <h3 class="text-[15px] font-bold text-base-content mb-1">{{ tpl.title }}</h3>
+                <p class="text-xs text-base-content/60 leading-relaxed">{{ tpl.desc }}</p>
+              </div>
+            </div>
+            <div class="flex items-center justify-between mt-4 pt-1 border-t border-base-300 text-xs text-base-content/60">
+              <span>Cột: {{ tpl.columns }} cột</span>
+              <button class="text-primary font-bold text-xs flex items-center gap-1 hover:gap-2 transition-[gap] duration-150" (click)="useTemplate(tpl)">Sử dụng &gt;</button>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- Section 3: All Workspaces & Boards -->
+    <section>
+      <div class="flex items-center gap-2 mb-4">
+        <span class="text-lg">🥞</span>
+        <h2 class="text-base font-extrabold tracking-wide text-base-content uppercase">TẤT CẢ KHÔNG GIAN LÀM VIỆC CỦA BẠN</h2>
+      </div>
+
+      <div class="flex flex-col gap-8">
+        @for (ws of filteredWorkspaces(); track trackByWorkspaceId($index, ws)) {
+          <div class="bg-base-100 border border-base-300 rounded-2xl p-8 shadow-sm">
+            <div class="flex items-center justify-between mb-8 gap-4">
+              <div class="flex items-center gap-4">
+                <div class="w-11 h-11 rounded-box bg-base-300 flex items-center justify-center text-[22px] shrink-0">{{ ws.icon }}</div>
+                <div>
+                  <h3 class="text-lg font-extrabold text-base-content">{{ ws.name }}</h3>
+                  <p class="text-xs text-base-content/60 mt-0.5">{{ ws.description }}</p>
+                </div>
+              </div>
+              <button class="bg-primary/10 text-primary font-bold text-[13px] py-2 px-4 rounded-box transition duration-150 hover:bg-primary hover:text-primary-content" (click)="openCreateModal(ws.id)">+ Thêm bảng</button>
+            </div>
+
+            <div class="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4">
+              @for (board of ws.boards; track board.id) {
+                <div class="h-[125px] rounded-box p-4 text-white relative flex flex-col justify-between cursor-pointer transition duration-150 overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-[3px]" [class]="board.bgClass" (click)="onBoardClick(board)">
+                  <div>
+                    <div class="text-[10px] font-extrabold tracking-wide opacity-90 uppercase">{{ board.tag }}</div>
+                    <div class="text-base font-bold leading-[1.3] mt-1 [text-shadow:0_1px_2px_rgba(0,0,0,0.2)]">{{ board.title }}</div>
+                  </div>
+                  <button class="absolute top-3 right-3 text-base text-white/60 transition duration-150 hover:text-amber-400 hover:scale-110" [class.text-amber-400]="board.starred" [class.scale-110]="board.starred" title="Đánh dấu sao" (click)="$event.stopPropagation(); toggleStar(board.id)">
+                    {{ board.starred ? '⭐' : '☆' }}
+                  </button>
+                  <div class="flex items-center justify-between text-[11px] font-semibold opacity-95">
+                    <span>{{ board.privacy === 'Public' ? '🌐' : '🔒' }} {{ board.privacy }}</span>
+                    <span class="bg-black/25 py-0.5 px-1.5 rounded text-[10px] tracking-wide">{{ board.badge }}</span>
+                  </div>
+                </div>
+              }
+              <div class="h-[125px] rounded-box border-2 border-dashed border-base-300 bg-base-100 text-base-content/60 flex flex-col items-center justify-center gap-1 cursor-pointer transition duration-150 font-semibold text-sm hover:bg-base-200 hover:border-primary hover:text-primary" (click)="openCreateModal(ws.id)">
+                <span class="text-xl">+</span>
+                <span>Tạo bảng mới</span>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- MODAL: Create new board -->
+@if (showCreateModal()) {
+  <div class="modal modal-open" (click)="closeCreateModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-lg font-extrabold text-base-content">Tạo bảng làm việc mới</h3>
+        <button class="text-base-content/60 w-7 h-7 rounded-full flex items-center justify-center text-xl transition duration-150 hover:bg-base-200 hover:text-base-content" (click)="closeCreateModal()">&times;</button>
+      </div>
+
+      <form (ngSubmit)="onCreateBoardSubmit()">
+        <div class="mb-4">
+          <label class="block text-xs font-bold text-base-content/70 uppercase mb-1.5" for="board-title-input">Tên bảng dự án</label>
+          <input
+            type="text"
+            id="board-title-input"
+            class="input input-bordered w-full h-10"
+            placeholder="Ví dụ: Quản lý Sprint 12..."
+            required
+            [ngModel]="newBoardTitle()"
+            (ngModelChange)="newBoardTitle.set($event)"
+            name="boardTitle"
+          />
+        </div>
+
+        <div class="mb-4">
+          <label class="block text-xs font-bold text-base-content/70 uppercase mb-1.5" for="board-workspace-select">Workspace</label>
+          <select
+            id="board-workspace-select"
+            class="select select-bordered w-full h-10"
+            [ngModel]="newBoardWorkspaceId()"
+            (ngModelChange)="newBoardWorkspaceId.set($event)"
+            name="boardWorkspace"
+          >
+            @for (ws of workspaces(); track ws.id) {
+              <option [value]="ws.id">{{ ws.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="mb-4">
+          <label class="block text-xs font-bold text-base-content/70 uppercase mb-1.5" for="board-privacy-select">Quyền riêng tư</label>
+          <select
+            id="board-privacy-select"
+            class="select select-bordered w-full h-10"
+            [ngModel]="newBoardPrivacy()"
+            (ngModelChange)="newBoardPrivacy.set($event)"
+            name="boardPrivacy"
+          >
+            <option value="Workspace">🔒 Workspace (Thành viên không gian làm việc)</option>
+            <option value="Private">🔒 Riêng tư (Chỉ mình bạn)</option>
+            <option value="Public">🌐 Công khai (Bất kỳ ai có liên kết)</option>
+          </select>
+        </div>
+
+        <div class="mb-4">
+          <label class="block text-xs font-bold text-base-content/70 uppercase mb-1.5">Phông màu nền</label>
+          <div class="flex gap-2 mt-1.5">
+            @for (bg of bgClasses; track bg) {
+              <div class="w-9 h-9 rounded-md cursor-pointer border-2 border-transparent transition duration-150" [class]="bg" [class.border-base-content]="selectedBgClass() === bg" [class.scale-110]="selectedBgClass() === bg" (click)="selectedBgClass.set(bg)"></div>
+            }
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 mt-6">
+          <button type="button" class="btn" (click)="closeCreateModal()">Hủy</button>
+          <button type="submit" class="btn btn-primary">Tạo bảng</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<div class="fixed bottom-6 right-6 flex flex-col gap-2.5 z-[2000]">
+  @for (toast of toasts(); track toast.id) {
+    <div class="toast-slide-in bg-neutral text-neutral-content py-3 px-5 rounded-box shadow-lg text-[13px] font-semibold flex items-center gap-2.5" [class]="toast.type"><span>✨</span> <span>{{ toast.message }}</span></div>
+  }
+</div>

@@ -1,0 +1,74 @@
+@if (toastMessage(); as toast) {
+  <div class="toast toast-bottom toast-end z-[600]">
+    <div class="flex max-w-[280px] cursor-pointer items-start gap-2.5 rounded-box border border-base-300 bg-base-100 p-3 shadow-lg" (click)="openFromToast()">
+      <div class="avatar avatar-placeholder flex-shrink-0">
+        <div class="w-8 rounded-full bg-primary text-xs text-primary-content">{{ toast.name.charAt(0) }}</div>
+      </div>
+      <div class="min-w-0">
+        <div class="truncate text-xs font-bold text-base-content">{{ toast.name }}</div>
+        <div class="truncate text-xs text-base-content/70">{{ toast.text }}</div>
+      </div>
+    </div>
+  </div>
+}
+
+@if (isOpen()) {
+  <div
+    class="relative flex h-full flex-shrink-0 flex-col overflow-hidden border-r border-base-300 bg-base-100 transition-[width] duration-150 ease-out"
+    [class.select-none]="isResizing()"
+    [style.width.px]="collapsed() ? collapsedWidth : width()"
+    [style.transition]="isResizing() ? 'none' : null"
+  >
+    @if (collapsed()) {
+      <div class="flex h-full flex-col items-center gap-2 py-3">
+        <button type="button" class="btn btn-square btn-ghost btn-sm relative" (click)="toggleCollapsed()" aria-label="Mở rộng khung chat" title="Mở rộng khung chat">
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+          @if (unreadCount() > 0) {
+            <span class="badge badge-error badge-xs absolute -right-1 -top-1 text-white">{{ unreadCount() }}</span>
+          }
+        </button>
+        <span class="text-[11px] font-semibold whitespace-nowrap text-base-content/60 [writing-mode:vertical-rl]">Chat</span>
+      </div>
+    } @else {
+      <div class="flex flex-shrink-0 items-center justify-between border-b border-base-300 px-3.5 py-2.5">
+        <h3 class="truncate text-sm font-bold text-base-content">Chat nhóm — board này</h3>
+        <div class="flex flex-shrink-0 items-center gap-1">
+          <button type="button" class="btn btn-ghost btn-xs" (click)="simulateIncoming()" title="Giả lập tin nhắn mới từ người khác (demo)">🎲</button>
+          <button type="button" class="btn btn-square btn-ghost btn-xs" (click)="toggleCollapsed()" aria-label="Thu gọn khung chat" title="Thu gọn khung chat">
+            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
+          </button>
+          <button type="button" class="btn btn-square btn-ghost btn-xs" (click)="toggleOpen()" aria-label="Đóng khung chat">
+            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <app-message-list
+        class="min-h-0 flex-1"
+        [messages]="messages()"
+        [usersById]="usersById()"
+        [currentUserId]="currentUserId"
+        [memberNames]="memberNames()"
+        [pendingSuggestion]="pendingSuggestion()"
+        [pendingAssigneeName]="pendingAssigneeName()"
+        (confirmSuggestion)="confirmSuggestion()"
+        (dismissSuggestion)="dismissSuggestion()"
+      />
+
+      <app-chat-input [members]="members()" (send)="onSend($event)" />
+
+      <div
+        class="absolute top-0 right-0 z-10 h-full w-1.5 cursor-col-resize touch-none hover:bg-primary/30 active:bg-primary/50"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Kéo để đổi bề rộng khung chat"
+        [attr.aria-valuenow]="width()"
+        [attr.aria-valuemin]="minWidth"
+        [attr.aria-valuemax]="maxWidth()"
+        tabindex="0"
+        (pointerdown)="startResize($event)"
+        (keydown)="onHandleKeydown($event)"
+      ></div>
+    }
+  </div>
+}
