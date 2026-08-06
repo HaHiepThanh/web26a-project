@@ -1,1 +1,17 @@
-<!-- TODO: [AI-CHAT] Khi AI đoán tin là task: hiện gợi ý (title/assignee/dueDate) + nút "Tạo card" / "Bỏ qua". Chỉ tạo card khi user xác nhận. -->
+<div class="ai-suggestion">
+  <div class="ai-suggestion-label">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>
+    AI phát hiện task
+  </div>
+  <div class="ai-suggestion-title">{{ suggestion().title }}</div>
+  <div class="ai-suggestion-meta">
+    Giao cho: {{ assigneeName() ?? 'Chưa rõ' }}
+    @if (suggestion().dueDate) {
+      · Hạn: {{ suggestion().dueDate }}
+    }
+  </div>
+  <div class="ai-actions">
+    <button type="button" class="ai-btn confirm" (click)="confirm.emit()">Tạo thẻ</button>
+    <button type="button" class="ai-btn dismiss" (click)="dismiss.emit()">Bỏ qua</button>
+  </div>
+</div>

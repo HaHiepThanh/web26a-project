@@ -1,3 +1,152 @@
 /* You can add global styles to this file, and also import other style files */
 
 @import 'tailwindcss';
+
+/* ==========================================================================
+   Design tokens — canonical theme (merged from trello-workspace prototype).
+   Toggled by ThemeService via [data-theme] attribute + .dark class on <html>.
+   ========================================================================== */
+:root {
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-xxl: 40px;
+  --space-3xl: 48px;
+
+  --bg-app: #f1f5f9;
+  --bg-navbar: #ffffff;
+  --bg-sidebar: #ffffff;
+  --bg-surface: #ffffff;
+  --bg-surface-hover: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f1f5f9;
+
+  --border-color: #e2e8f0;
+  --border-subtle: #f1f5f9;
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --text-white: #ffffff;
+
+  --accent-blue: #0284c7;
+  --accent-blue-hover: #0369a1;
+  --accent-blue-soft: #e0f2fe;
+
+  --accent-purple: #6d28d9;
+  --accent-purple-soft: #f3e8ff;
+
+  --accent-green: #059669;
+  --accent-green-soft: #d1fae5;
+
+  --star-gold: #eab308;
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+
+  --transition-fast: 150ms ease-in-out;
+  --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Aliases so the ported Settings page (own naming) reads the same tokens */
+  --bg-surface-2: var(--bg-app);
+  --bg-hover: var(--bg-card-hover);
+  --border: var(--border-color);
+  --border-strong: var(--border-color);
+  --accent: var(--accent-blue);
+  --accent-hover: var(--accent-blue-hover);
+  --accent-soft: var(--accent-blue-soft);
+  --success: var(--accent-green);
+  --warning: #d97706;
+  --danger: #dc2626;
+  --danger-soft: rgba(220, 38, 38, 0.12);
+
+  color-scheme: light;
+}
+
+[data-theme='dark'] {
+  --bg-app: #22272b;
+  --bg-navbar: #1d2125;
+  --bg-sidebar: #1d2125;
+  --bg-surface: #22272b;
+  --bg-surface-hover: #2c333a;
+  --bg-card: #2c333a;
+  --bg-card-hover: #38414a;
+
+  --border-color: #3b444c;
+  --border-subtle: #2c333a;
+
+  --text-primary: #ffffff;
+  --text-secondary: #9fadbc;
+  --text-muted: #738496;
+
+  --accent-blue: #579dff;
+  --accent-blue-hover: #85b8ff;
+  --accent-blue-soft: rgba(87, 157, 255, 0.15);
+
+  --accent-purple: #9e75ff;
+  --accent-purple-soft: rgba(158, 117, 255, 0.15);
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+
+  --warning: #fbbf24;
+  --danger: #f87171;
+  --danger-soft: rgba(248, 113, 113, 0.14);
+
+  color-scheme: dark;
+}
+
+/* ==========================================================================
+   Base reset (app-wide — must live outside component encapsulation)
+   ========================================================================== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  font-family: var(--font-family);
+  font-size: 14px;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color var(--transition-normal), color var(--transition-normal);
+}
+
+a {
+  color: var(--accent-blue);
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  border: none;
+  background: none;
+  cursor: pointer;
+  outline: none;
+}
+
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+}

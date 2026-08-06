@@ -1,1 +1,49 @@
-<!-- TODO: Một cột: <app-list-header> + danh sách <app-card-item> + <app-add-card>. Là cdkDropList để kéo thả card (#4). -->
+@if (collapsed()) {
+  <div class="list-column list-column-collapsed">
+    <button type="button" class="collapsed-head" (click)="toggleCollapse.emit()" title="Mở rộng danh sách">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"/></svg>
+      <span class="collapsed-name">{{ list().name }}</span>
+      <span class="count-badge">{{ cards().length }}</span>
+    </button>
+  </div>
+} @else {
+  <div class="list-column">
+    <app-list-header
+      [list]="list()"
+      [cardCount]="cards().length"
+      (rename)="renameList.emit($event)"
+      (deleteList)="deleteList.emit()"
+      (collapseToggle)="toggleCollapse.emit()"
+    />
+
+    <div
+      class="list-cards"
+      cdkDropList
+      [id]="list().id"
+      [cdkDropListData]="cards()"
+      [cdkDropListSortingDisabled]="!sortingEnabled()"
+      (cdkDropListDropped)="onCardDrop($event)"
+    >
+      @for (card of cards(); track trackByCardId($index, card)) {
+        <div class="card-drag-wrap" cdkDrag [cdkDragData]="card" (click)="onCardClick($event, card)">
+          <div class="drag-placeholder" *cdkDragPlaceholder></div>
+          <app-card-item
+            [card]="card"
+            [labels]="labelsByCardId()[card.id] ?? []"
+            [assignee]="card.assigneeId ? (membersById()[card.assigneeId] ?? null) : null"
+            [isSaving]="savingCardIds().has(card.id)"
+            [isError]="errorCardIds().has(card.id)"
+            [isDimmed]="dimmed().has(card.id)"
+            [isHighlighted]="highlighted().has(card.id)"
+            [isSelected]="selectedCardIds().has(card.id)"
+            [today]="today()"
+          />
+        </div>
+      }
+    </div>
+
+    <div class="list-footer">
+      <app-add-card (open)="addCard.emit()" />
+    </div>
+  </div>
+}

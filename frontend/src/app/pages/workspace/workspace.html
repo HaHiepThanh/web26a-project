@@ -1,1 +1,230 @@
-<!-- TODO: Danh sách board dạng grid (dùng <app-board-card>) + tạo/sửa/xoá workspace & board (#3). -->
+<div class="app-container">
+
+  <!-- Left Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-card">
+      <div class="sidebar-header">
+        <span class="sidebar-title">KHÔNG GIAN LÀM VIỆC</span>
+        <button class="sidebar-add-btn" title="Tạo Workspace mới" (click)="addWorkspace()">+</button>
+      </div>
+
+      <div class="workspace-list">
+        @for (ws of workspaces(); track trackByWorkspaceId($index, ws)) {
+          <a href="javascript:void(0)" class="workspace-item" [class.active]="activeWorkspaceId() === ws.id" (click)="selectWorkspace(ws.id)">
+            <div class="ws-icon-wrap">{{ ws.icon }}</div>
+            <div class="ws-text-wrap">
+              <div class="ws-name">{{ ws.name }}</div>
+              <div class="ws-meta">{{ ws.membersCount }} thành viên</div>
+            </div>
+          </a>
+        }
+      </div>
+    </div>
+
+    <div class="tips-card">
+      <span class="tips-badge">MẸO NHỎ</span>
+      <h4 class="tips-title">Hỗ trợ đầy đủ phím tắt</h4>
+      <p class="tips-desc">
+        Nhấn <kbd class="tips-kbd">N</kbd> để tạo nhanh thẻ công việc mới, <kbd class="tips-kbd">/</kbd> để tập trung tìm kiếm, hoặc <kbd class="tips-kbd">Esc</kbd> để đóng nhanh các hộp thoại.
+      </p>
+    </div>
+  </aside>
+
+  <!-- Main Workspace Content -->
+  <main class="main-content">
+
+    <!-- Hero Welcome Banner -->
+    <section class="hero-banner">
+      <div class="hero-text-area">
+        <h1 class="hero-title">Chào buổi tối! 👋</h1>
+        <p class="hero-desc">
+          Hôm nay bạn muốn hoàn thành mục tiêu gì? Cùng kéo thả, quản lý tiến độ và cùng thảo luận công việc với các thành viên trong nhóm nhé.
+        </p>
+      </div>
+      <button class="hero-action-btn" (click)="openCreateModal(activeWorkspaceId())">
+        <span>+</span>
+        <span>Tạo bảng mới</span>
+      </button>
+    </section>
+
+    <!-- Section 1: Starred Important Boards -->
+    <section>
+      <div class="section-header">
+        <span class="section-icon">⭐</span>
+        <h2 class="section-title">BẢNG QUAN TRỌNG ĐƯỢC ĐÁNH DẤU SAO</h2>
+      </div>
+      <div class="boards-grid">
+        @if (starredBoards().length === 0) {
+          <div class="empty-note">Không có bảng quan trọng nào được đánh dấu sao.</div>
+        }
+        @for (board of starredBoards(); track board.id) {
+          <div class="board-card" [class]="board.bgClass" (click)="onBoardClick(board)">
+            <div>
+              <div class="board-top-tag">{{ board.tag }}</div>
+              <div class="board-title" style="margin-top: 4px;">{{ board.title }}</div>
+            </div>
+            <button class="star-btn" [class.active]="board.starred" title="Đánh dấu sao" (click)="$event.stopPropagation(); toggleStar(board.id)">
+              {{ board.starred ? '⭐' : '☆' }}
+            </button>
+            <div class="board-footer">
+              <span>{{ board.privacy === 'Public' ? '🌐' : '🔒' }} {{ board.privacy }}</span>
+              <span class="board-badge">{{ board.badge }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- Section 2: Templates -->
+    <section>
+      <div class="section-header">
+        <span class="section-icon">📖</span>
+        <h2 class="section-title">KHỞI TẠO NHANH THEO MẪU (TEMPLATES)</h2>
+      </div>
+
+      <div class="templates-grid">
+        @for (tpl of templates; track tpl.title) {
+          <div class="template-card">
+            <div class="template-header">
+              <div class="template-badge" [class]="tpl.badgeClass">{{ tpl.badge }}</div>
+              <div class="template-body">
+                <h3 class="template-title">{{ tpl.title }}</h3>
+                <p class="template-desc">{{ tpl.desc }}</p>
+              </div>
+            </div>
+            <div class="template-footer">
+              <span>Cột: {{ tpl.columns }} cột</span>
+              <button class="use-template-btn" (click)="useTemplate(tpl)">Sử dụng &gt;</button>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- Section 3: All Workspaces & Boards -->
+    <section>
+      <div class="section-header">
+        <span class="section-icon">🥞</span>
+        <h2 class="section-title">TẤT CẢ KHÔNG GIAN LÀM VIỆC CỦA BẠN</h2>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: var(--space-xl);">
+        @for (ws of filteredWorkspaces(); track trackByWorkspaceId($index, ws)) {
+          <div class="workspace-block-card">
+            <div class="ws-block-header">
+              <div class="ws-info-group">
+                <div class="ws-avatar-lg">{{ ws.icon }}</div>
+                <div>
+                  <h3 class="ws-block-title">{{ ws.name }}</h3>
+                  <p class="ws-block-desc">{{ ws.description }}</p>
+                </div>
+              </div>
+              <button class="btn-add-board" (click)="openCreateModal(ws.id)">+ Thêm bảng</button>
+            </div>
+
+            <div class="boards-grid">
+              @for (board of ws.boards; track board.id) {
+                <div class="board-card" [class]="board.bgClass" (click)="onBoardClick(board)">
+                  <div>
+                    <div class="board-top-tag">{{ board.tag }}</div>
+                    <div class="board-title" style="margin-top: 4px;">{{ board.title }}</div>
+                  </div>
+                  <button class="star-btn" [class.active]="board.starred" title="Đánh dấu sao" (click)="$event.stopPropagation(); toggleStar(board.id)">
+                    {{ board.starred ? '⭐' : '☆' }}
+                  </button>
+                  <div class="board-footer">
+                    <span>{{ board.privacy === 'Public' ? '🌐' : '🔒' }} {{ board.privacy }}</span>
+                    <span class="board-badge">{{ board.badge }}</span>
+                  </div>
+                </div>
+              }
+              <div class="create-board-card" (click)="openCreateModal(ws.id)">
+                <span style="font-size: 20px;">+</span>
+                <span>Tạo bảng mới</span>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- MODAL: Create new board -->
+@if (showCreateModal()) {
+  <div class="modal-overlay active" (click)="closeCreateModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">Tạo bảng làm việc mới</h3>
+        <button class="modal-close-btn" (click)="closeCreateModal()">&times;</button>
+      </div>
+
+      <form (ngSubmit)="onCreateBoardSubmit()">
+        <div class="form-group">
+          <label class="form-label" for="board-title-input">Tên bảng dự án</label>
+          <input
+            type="text"
+            id="board-title-input"
+            class="form-input"
+            placeholder="Ví dụ: Quản lý Sprint 12..."
+            required
+            [ngModel]="newBoardTitle()"
+            (ngModelChange)="newBoardTitle.set($event)"
+            name="boardTitle"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="board-workspace-select">Workspace</label>
+          <select
+            id="board-workspace-select"
+            class="form-select"
+            [ngModel]="newBoardWorkspaceId()"
+            (ngModelChange)="newBoardWorkspaceId.set($event)"
+            name="boardWorkspace"
+          >
+            @for (ws of workspaces(); track ws.id) {
+              <option [value]="ws.id">{{ ws.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="board-privacy-select">Quyền riêng tư</label>
+          <select
+            id="board-privacy-select"
+            class="form-select"
+            [ngModel]="newBoardPrivacy()"
+            (ngModelChange)="newBoardPrivacy.set($event)"
+            name="boardPrivacy"
+          >
+            <option value="Workspace">🔒 Workspace (Thành viên không gian làm việc)</option>
+            <option value="Private">🔒 Riêng tư (Chỉ mình bạn)</option>
+            <option value="Public">🌐 Công khai (Bất kỳ ai có liên kết)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Phông màu nền</label>
+          <div class="color-options-grid">
+            @for (bg of bgClasses; track bg) {
+              <div class="color-option" [class]="bg" [class.selected]="selectedBgClass() === bg" (click)="selectedBgClass.set(bg)"></div>
+            }
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="closeCreateModal()">Hủy</button>
+          <button type="submit" class="nav-btn btn-primary-nav" style="height: 38px;">Tạo bảng</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<div class="toast-stack">
+  @for (toast of toasts(); track toast.id) {
+    <div class="toast" [class]="toast.type"><span>✨</span> <span>{{ toast.message }}</span></div>
+  }
+</div>

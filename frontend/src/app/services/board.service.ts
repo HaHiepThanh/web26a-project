@@ -1,29 +1,63 @@
-import { Injectable, inject, signal } from '@angular/core';
-import { ApiService } from './api.service';
-import { Board, BoardVisibility } from '../models';
+import { Injectable, signal } from '@angular/core';
+import { Board, User } from '../models';
 
-/** CRUD board + visibility (#3). */
+/** Bảng màu avatar cố định theo id — dùng chung cho card assignee + avatar stack. */
+const AVATAR_PALETTE = ['#0284c7', '#7c3aed', '#059669', '#ea580c', '#dc2626', '#0d9488'];
+
+export function avatarColorFor(id: string): string {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+  return AVATAR_PALETTE[hash % AVATAR_PALETTE.length];
+}
+
+export function initialsOf(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  const first = parts[0]?.[0] ?? '?';
+  const last = parts.length > 1 ? parts[parts.length - 1][0] : '';
+  return (first + last).toUpperCase();
+}
+
+/** "Bạn" trong toàn bộ demo (chat, banner nhắc hạn, dashboard "việc của tôi") —
+ *  tới khi AuthService/Firebase thật được bật, dùng tạm 1 thành viên mock cố định. */
+export const CURRENT_USER_ID = 'u-nam';
+
+/** Thành viên tenant giả lập — dùng làm nguồn chọn "Người phụ trách" (#2) tới khi có API thật. */
+const MOCK_MEMBERS: User[] = [
+  { id: 'u-nam', email: 'nam@trello.dev', displayName: 'Nam' },
+  { id: 'u-linh', email: 'linh@trello.dev', displayName: 'Linh' },
+  { id: 'u-khoa', email: 'khoa@trello.dev', displayName: 'Khoa' },
+  { id: 'u-my', email: 'my@trello.dev', displayName: 'My' },
+  { id: 'u-bao', email: 'bao@trello.dev', displayName: 'Bảo' },
+];
+
+/** CRUD board + visibility (#3). Hiện dùng dữ liệu giả (chưa nối backend thật). */
 @Injectable({ providedIn: 'root' })
 export class BoardService {
-  private readonly api = inject(ApiService); // TODO: gọi backend qua this.api (get/post/patch/delete)
-
   readonly boards = signal<Board[]>([]); // danh sách board trong 1 workspace
   readonly currentBoard = signal<Board | null>(null);
+  readonly members = signal<User[]>(MOCK_MEMBERS);
 
-  // TODO: lấy các board của workspace (grid) — kèm số card/member để hiển thị.
+  // TODO: khi có backend thật, gọi ApiService.get(`/workspaces/${workspaceId}/boards`) thay vì mock.
   async loadBoards(workspaceId: string): Promise<void> {}
 
-  // TODO: lấy 1 board theo id (mở trang /board/:id) -> set currentBoard.
-  async loadBoard(boardId: string): Promise<void> {}
+  /** Mock: dựng 1 Board tối thiểu từ :id trên route để trang /board/:id có gì đó để hiển thị. */
+  async loadBoard(boardId: string): Promise<void> {
+    this.currentBoard.set({
+      id: boardId,
+      tenantId: 'tenant-demo',
+      workspaceId: 'ws-1',
+      name: 'Hệ thống Quản lý Kanban',
+      visibility: 'public',
+      createdBy: MOCK_MEMBERS[0].id,
+      createdAt: new Date().toISOString(),
+    });
+  }
 
-  // TODO: tạo board mới trong workspace.
   async createBoard(workspaceId: string, name: string): Promise<Board | null> {
     return null;
   }
 
-  // TODO: sửa tên / visibility board.
   async updateBoard(id: string, changes: Partial<Pick<Board, 'name' | 'visibility'>>): Promise<void> {}
 
-  // TODO: xoá board — chỉ owner (#7).
   async deleteBoard(id: string): Promise<void> {}
 }

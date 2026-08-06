@@ -1,1 +1,14 @@
-<!-- TODO: [AI-CHAT] Danh sách tin nhắn (dùng <app-message-item>), auto scroll xuống cuối. -->
+<div class="chat-messages" #scrollArea>
+  @for (m of messages(); track trackByMessageId($index, m)) {
+    <app-message-item [message]="m" [sender]="usersById()[m.userId] ?? null" [isOwn]="m.userId === currentUserId()" [memberNames]="memberNames()" />
+  }
+
+  @if (pendingSuggestion(); as suggestion) {
+    <app-task-suggestion-card
+      [suggestion]="suggestion"
+      [assigneeName]="pendingAssigneeName()"
+      (confirm)="confirmSuggestion.emit()"
+      (dismiss)="dismissSuggestion.emit()"
+    />
+  }
+</div>

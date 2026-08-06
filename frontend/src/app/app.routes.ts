@@ -17,6 +17,10 @@ import { roleGuard } from './guards/role.guard';
  * TODO(học viên): bật lại các guard khi service auth/tenant đã hoạt động.
  */
 export const routes: Routes = [
+  // Điều hướng mặc định — phải đứng TRƯỚC route "" bên dưới, nếu không route
+  // "" (prefix match) sẽ luôn khớp trước và redirect không bao giờ chạy.
+  { path: '', pathMatch: 'full', redirectTo: 'login' },
+
   // --- Nhóm xác thực (#1) ---
   {
     path: '',
@@ -47,7 +51,6 @@ export const routes: Routes = [
     ],
   },
 
-  // --- Điều hướng mặc định + 404 ---
-  { path: '', pathMatch: 'full', redirectTo: 'login' },
+  // --- 404 ---
   { path: '**', loadComponent: () => import('./pages/not-found/not-found').then((m) => m.NotFound) },
 ];

@@ -1,3 +1,6 @@
+// Mức độ ưu tiên thẻ (CLAUDE.md #4) — dùng trong modal tạo thẻ ở #2.
+export type CardPriority = 'cao' | 'trung' | 'thap';
+
 // Card = thẻ công việc trong một list (#4).
 export interface Card {
   id: string; // uuid
@@ -7,6 +10,7 @@ export interface Card {
   description?: string; // nullable, hỗ trợ markdown đơn giản
   assigneeId?: string; // FK auth.users.id, nullable — người phụ trách
   dueDate?: string; // nullable, dạng 'YYYY-MM-DD'
+  priority: CardPriority; // cột mới (CLAUDE.md #4), default 'trung' — xem migrations/0001_*.sql
   position: number; // float — thứ tự trong list
   createdBy: string; // FK auth.users.id
   createdAt: string; // ISO timestamptz

@@ -1,1 +1,54 @@
-<!-- TODO: Thẻ tóm tắt: title, label màu, avatar assignee, due date. Click -> mở card detail (#4). -->
+<div
+  class="card-face"
+  [class.saving]="isSaving()"
+  [class.error-flash]="isError()"
+  [class.dimmed]="isDimmed()"
+  [class.highlighted]="isHighlighted()"
+  [class.selected]="isSelected()"
+>
+  @if (isSelected()) {
+    <span class="select-check">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+    </span>
+  }
+
+  <div class="priority-row" [class]="'p-' + card().priority">
+    <svg class="flag-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+      @if (card().priority === 'cao') {
+        <path [attr.d]="flagPath" fill="currentColor" stroke="none" />
+      }
+      @if (card().priority === 'trung') {
+        <defs>
+          <clipPath [attr.id]="clipId"><rect x="4" y="2" width="8" height="20" /></clipPath>
+        </defs>
+        <path [attr.d]="flagPath" fill="currentColor" [attr.clip-path]="'url(#' + clipId + ')'" />
+      }
+      <path [attr.d]="flagPath" />
+    </svg>
+    <span class="priority-text">{{ priorityText() }}</span>
+  </div>
+
+  @if (labels().length) {
+    <div class="label-row">
+      @for (lb of labels(); track lb.id) {
+        <span class="label-chip" [style.background]="lb.color" [title]="lb.name"></span>
+      }
+    </div>
+  }
+
+  <div class="card-title">{{ card().title }}</div>
+
+  <div class="card-bottom">
+    @if (dueText(); as due) {
+      <span class="due-badge" [class.overdue]="isOverdue()">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        {{ due }}
+      </span>
+    } @else {
+      <span></span>
+    }
+    @if (assignee(); as user) {
+      <span class="card-avatar" [style.background]="assigneeColor()" [title]="user.displayName ?? user.email">{{ assigneeInitials() }}</span>
+    }
+  </div>
+</div>

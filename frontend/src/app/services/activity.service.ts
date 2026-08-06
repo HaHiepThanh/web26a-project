@@ -1,17 +1,35 @@
-import { Injectable, inject, signal } from '@angular/core';
-import { ApiService } from './api.service';
+import { Injectable, signal } from '@angular/core';
 import { ActivityLog } from '../models';
+import { CURRENT_USER_ID } from './board.service';
 
-/** [BONUS #6] Activity log dạng feed cho board. */
+let idSeq = 1;
+function mockId(prefix: string): string {
+  return `${prefix}-${Date.now()}-${idSeq++}`;
+}
+
+/** [BONUS #6 / mục 11] Activity log dạng feed, lọc theo từng thẻ (cần `activity_logs.card_id`
+ *  — xem migrations/0002_*.sql). Dữ liệu giả tại chỗ, ghi log ngay khi board.ts /
+ *  card-detail-modal gọi record() sau mỗi hành động quan trọng. */
 @Injectable({ providedIn: 'root' })
 export class ActivityService {
-  private readonly api = inject(ApiService); // TODO: gọi backend qua this.api (get/post/patch/delete)
-
   readonly logs = signal<ActivityLog[]>([]);
 
-  // TODO: lấy log của board, sort mới nhất trước.
-  async loadLogs(boardId: string): Promise<void> {}
+  logsForCard(cardId: string): ActivityLog[] {
+    return this.logs()
+      .filter((l) => l.cardId === cardId)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }
 
-  // TODO: ghi 1 dòng log (câu mô tả sẵn) khi có hành động quan trọng.
-  async record(boardId: string, actionText: string): Promise<void> {}
+  record(boardId: string, cardId: string, actionText: string): void {
+    const entry: ActivityLog = {
+      id: mockId('log'),
+      tenantId: 'tenant-demo',
+      boardId,
+      cardId,
+      userId: CURRENT_USER_ID,
+      actionText,
+      createdAt: new Date().toISOString(),
+    };
+    this.logs.update((all) => [...all, entry]);
+  }
 }

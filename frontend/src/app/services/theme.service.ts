@@ -2,17 +2,33 @@ import { Injectable, signal, effect } from '@angular/core';
 
 export type Theme = 'light' | 'dark';
 
+const STORAGE_KEY = 'trello_theme';
+
+function readInitialTheme(): Theme {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved === 'light' || saved === 'dark') return saved;
+  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
 /** Dark/light mode (#9). Lưu lựa chọn vào localStorage, đồng bộ class trên <html>. */
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
-  readonly theme = signal<Theme>('light');
+  readonly theme = signal<Theme>(readInitialTheme());
 
   constructor() {
-    // TODO: đọc theme đã lưu từ localStorage (hoặc prefers-color-scheme) -> set signal.
-    // TODO: effect() -> mỗi khi theme đổi: thêm/xoá class 'dark' trên document.documentElement
-    //       và lưu lại localStorage.
+    effect(() => {
+      const theme = this.theme();
+      document.documentElement.classList.toggle('dark', theme === 'dark');
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem(STORAGE_KEY, theme);
+    });
   }
 
-  // TODO: đảo light <-> dark.
-  toggle(): void {}
+  set(theme: Theme): void {
+    this.theme.set(theme);
+  }
+
+  toggle(): void {
+    this.theme.set(this.theme() === 'dark' ? 'light' : 'dark');
+  }
 }

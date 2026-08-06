@@ -1,1 +1,22 @@
-<!-- TODO: Tên list + menu sửa tên / xoá list (#4). -->
+<div class="list-head">
+  <span class="head-left">
+    <span class="color-dot" [style.background]="list().color || 'var(--text-muted)'"></span>
+    <input class="name-input" [value]="list().name" spellcheck="false" (change)="onNameChange($event)" />
+  </span>
+
+  <span class="head-right">
+    <span class="count-badge">{{ cardCount() }}</span>
+    <button class="menu-btn" (click)="collapseToggle.emit()" title="Thu gọn danh sách" aria-label="Thu gọn danh sách">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <button class="menu-btn" (click)="toggleMenu()" aria-label="Tuỳ chọn danh sách">
+      <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg>
+    </button>
+
+    @if (menuOpen()) {
+      <div class="menu-popover">
+        <button class="menu-item danger" (click)="onDeleteClick()">Xoá danh sách</button>
+      </div>
+    }
+  </span>
+</div>

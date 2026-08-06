@@ -1,1 +1,793 @@
-<!-- TODO: Cài đặt cá nhân: <app-profile> (tên, avatar) + <app-theme-toggle> dark/light (#9). -->
+<div class="settings-shell">
+  <!-- ============================== LEFT NAV ============================== -->
+  <aside class="settings-sidebar scroll-slim">
+    <div class="sidebar-header">
+      <h1>Cài đặt</h1>
+      <p>Quản lý tài khoản, workspace và bảo mật</p>
+    </div>
+
+    <nav class="sidebar-nav">
+      @for (item of navItems; track item.id) {
+        <button
+          type="button"
+          class="nav-item"
+          [class.active]="activeTab() === item.id"
+          (click)="onTabChange(item.id)"
+        >
+          <span class="nav-icon">
+            @switch (item.icon) {
+              @case ('user') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <circle cx="12" cy="8" r="3.4" /><path d="M4.5 20c1.6-3.6 4.6-5.4 7.5-5.4s5.9 1.8 7.5 5.4" stroke-linecap="round" />
+                </svg>
+              }
+              @case ('bell') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 14 6 10Z" stroke-linejoin="round" />
+                  <path d="M10 18.5a2 2 0 0 0 4 0" stroke-linecap="round" />
+                </svg>
+              }
+              @case ('building') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <rect x="4" y="3.5" width="10" height="17" rx="1" /><rect x="16" y="9" width="4.5" height="11.5" rx="1" />
+                  <line x1="7" y1="7" x2="7" y2="7.01" stroke-linecap="round" /><line x1="10.5" y1="7" x2="10.5" y2="7.01" stroke-linecap="round" />
+                  <line x1="7" y1="11" x2="7" y2="11.01" stroke-linecap="round" /><line x1="10.5" y1="11" x2="10.5" y2="11.01" stroke-linecap="round" />
+                </svg>
+              }
+              @case ('palette') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M12 3.5a8.2 8.2 0 1 0 0 16.4c1.1 0 1.8-.9 1.8-1.9 0-.5-.2-.9-.5-1.3-.3-.3-.5-.7-.5-1.2 0-1 .8-1.7 1.8-1.7h1.9c2 0 3.5-1.6 3.5-3.6 0-3.7-3.6-6.7-8-6.7Z" />
+                  <circle cx="7.5" cy="11" r="1" fill="currentColor" stroke="none" /><circle cx="9.5" cy="7.3" r="1" fill="currentColor" stroke="none" />
+                  <circle cx="14.5" cy="7.3" r="1" fill="currentColor" stroke="none" />
+                </svg>
+              }
+              @case ('card') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <rect x="3" y="5.5" width="18" height="13" rx="2" /><line x1="3" y1="9.5" x2="21" y2="9.5" />
+                  <line x1="6" y1="14.5" x2="10" y2="14.5" stroke-linecap="round" />
+                </svg>
+              }
+              @case ('plug') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M9 3v5M15 3v5M6.5 8h11l-.5 5.5a5 5 0 0 1-5 4.5 5 5 0 0 1-5-4.5L6.5 8Z" stroke-linejoin="round" />
+                  <line x1="12" y1="18" x2="12" y2="21" stroke-linecap="round" />
+                </svg>
+              }
+            }
+          </span>
+          <span class="nav-text">
+            <span class="nav-label">{{ item.label }}</span>
+            <span class="nav-desc">{{ item.description }}</span>
+          </span>
+        </button>
+      }
+    </nav>
+  </aside>
+
+  <!-- ============================== CONTENT ============================== -->
+  <main class="settings-content scroll-slim">
+    @switch (activeTab()) {
+
+      <!-- ======================= TAB 1: PROFILE ======================= -->
+      @case ('profile') {
+        <section class="panel">
+          <header class="panel-header">
+            <h2>Trang cá nhân</h2>
+            <p>Cập nhật thông tin hiển thị và cách người khác liên hệ với bạn.</p>
+          </header>
+
+          <form [formGroup]="profileForm" (ngSubmit)="onSaveProfile()" class="panel-body">
+            <!-- Avatar -->
+            <div class="card">
+              <h3 class="card-title">Ảnh đại diện</h3>
+              <div class="avatar-row">
+                <div class="avatar-preview">
+                  @if (avatarPreview()) {
+                    <img [src]="avatarPreview()" alt="Ảnh đại diện" />
+                  } @else {
+                    <span class="avatar-fallback">{{ profileForm.get('fullName')?.value?.charAt(0) || '?' }}</span>
+                  }
+                </div>
+                <div class="avatar-actions">
+                  <label class="btn btn-secondary btn-sm">
+                    <input type="file" accept="image/*" class="sr-only" (change)="onUploadAvatar($event)" />
+                    Tải ảnh lên
+                  </label>
+                  <button type="button" class="btn btn-ghost btn-sm" (click)="onRemoveAvatar()" [disabled]="!avatarPreview()">
+                    Xoá ảnh
+                  </button>
+                  <p class="hint">PNG, JPG tối đa 4MB. Kích thước đề xuất 256x256.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Basic info -->
+            <div class="card">
+              <h3 class="card-title">Thông tin cơ bản</h3>
+              <div class="form-grid">
+                <div class="field">
+                  <label for="fullName">Họ và tên</label>
+                  <input id="fullName" type="text" formControlName="fullName" />
+                  @if (profileForm.get('fullName')?.invalid && profileForm.get('fullName')?.touched) {
+                    <span class="error">Vui lòng nhập họ tên hợp lệ (tối thiểu 2 ký tự).</span>
+                  }
+                </div>
+                <div class="field">
+                  <label for="username">Username</label>
+                  <input id="username" type="text" formControlName="username" />
+                  @if (profileForm.get('username')?.invalid && profileForm.get('username')?.touched) {
+                    <span class="error">3-20 ký tự: chữ thường, số, "_" hoặc ".".</span>
+                  }
+                </div>
+                <div class="field">
+                  <label for="jobTitle">Tiêu đề công việc</label>
+                  <input id="jobTitle" type="text" formControlName="jobTitle" placeholder="VD: Frontend Engineer" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Contact -->
+            <div class="card">
+              <h3 class="card-title">Liên hệ</h3>
+              <div class="form-grid">
+                <div class="field">
+                  <label for="email">Email</label>
+                  <div class="input-with-badge">
+                    <input id="email" type="email" formControlName="email" />
+                    @if (emailVerified()) {
+                      <span class="badge badge-success">Đã xác minh</span>
+                    } @else {
+                      <span class="badge badge-warning">Chưa xác minh</span>
+                    }
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="phone">Số điện thoại</label>
+                  <input id="phone" type="tel" formControlName="phone" placeholder="+84 9xx xxx xxx" />
+                  @if (profileForm.get('phone')?.invalid && profileForm.get('phone')?.touched) {
+                    <span class="error">Số điện thoại không hợp lệ.</span>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <!-- Language & timezone -->
+            <div class="card">
+              <h3 class="card-title">Ngôn ngữ & Múi giờ</h3>
+              <div class="form-grid">
+                <div class="field">
+                  <label for="language">Ngôn ngữ</label>
+                  <select id="language" formControlName="language">
+                    @for (lang of languageOptions; track lang.code) {
+                      <option [value]="lang.code">{{ lang.label }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="timezone">Múi giờ</label>
+                  <select id="timezone" formControlName="timezone">
+                    @for (tz of timezoneOptions; track tz.value) {
+                      <option [value]="tz.value">{{ tz.label }}</option>
+                    }
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel-footer">
+              <button type="submit" class="btn btn-primary" [disabled]="profileForm.pristine || profileForm.invalid">
+                Lưu thay đổi
+              </button>
+            </div>
+          </form>
+        </section>
+      }
+
+      <!-- ======================= TAB 2: NOTIFICATIONS ======================= -->
+      @case ('notifications') {
+        <section class="panel">
+          <header class="panel-header">
+            <h2>Thông báo</h2>
+            <p>Chọn cách bạn muốn được thông báo về hoạt động trong workspace.</p>
+          </header>
+
+          <div class="panel-body">
+            <div class="card">
+              <h3 class="card-title">Kênh nhận thông báo</h3>
+              <div class="switch-row">
+                <div class="switch-row-text">
+                  <strong>Email Notifications</strong>
+                  <span>Nhận tổng hợp và thông báo quan trọng qua email.</span>
+                </div>
+                <button type="button" class="toggle" [class.on]="emailNotifications()" (click)="toggleEmailChannel()" role="switch" [attr.aria-checked]="emailNotifications()">
+                  <span class="toggle-thumb"></span>
+                </button>
+              </div>
+              <div class="switch-row">
+                <div class="switch-row-text">
+                  <strong>Push / In-app Notifications</strong>
+                  <span>Nhận thông báo tức thời trên trình duyệt và ứng dụng.</span>
+                </div>
+                <button type="button" class="toggle" [class.on]="pushNotifications()" (click)="togglePushChannel()" role="switch" [attr.aria-checked]="pushNotifications()">
+                  <span class="toggle-thumb"></span>
+                </button>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3 class="card-title">Tuỳ chỉnh sự kiện</h3>
+              <div class="table-wrap">
+                <table class="rule-table">
+                  <thead>
+                    <tr>
+                      <th>Sự kiện</th>
+                      <th>Email</th>
+                      <th>Push</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (rule of notificationRules(); track rule.key) {
+                      <tr>
+                        <td>
+                          <strong>{{ rule.label }}</strong>
+                          <span class="row-desc">{{ rule.description }}</span>
+                          @if (rule.key === 'due') {
+                            <div class="lead-time-select">
+                              <label>
+                                <input type="radio" name="leadTime" value="1h" [checked]="dueDateLeadTime() === '1h'" (change)="setDueDateLeadTime('1h')" />
+                                Trước 1 giờ
+                              </label>
+                              <label>
+                                <input type="radio" name="leadTime" value="1d" [checked]="dueDateLeadTime() === '1d'" (change)="setDueDateLeadTime('1d')" />
+                                Trước 1 ngày
+                              </label>
+                            </div>
+                          }
+                        </td>
+                        <td class="td-center">
+                          <input type="checkbox" class="checkbox" [checked]="rule.email" (change)="toggleNotificationCell(rule.key, 'email')" [disabled]="!emailNotifications()" />
+                        </td>
+                        <td class="td-center">
+                          <input type="checkbox" class="checkbox" [checked]="rule.push" (change)="toggleNotificationCell(rule.key, 'push')" [disabled]="!pushNotifications()" />
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="switch-row">
+                <div class="switch-row-text">
+                  <strong>Quiet Hours</strong>
+                  <span>Tự động tắt thông báo ngoài giờ làm việc.</span>
+                </div>
+                <button type="button" class="toggle" [class.on]="quietHoursEnabled()" (click)="toggleQuietHours()" role="switch" [attr.aria-checked]="quietHoursEnabled()">
+                  <span class="toggle-thumb"></span>
+                </button>
+              </div>
+              @if (quietHoursEnabled()) {
+                <form [formGroup]="quietHoursForm" class="form-grid quiet-hours-grid">
+                  <div class="field">
+                    <label for="quietFrom">Bắt đầu</label>
+                    <input id="quietFrom" type="time" formControlName="from" />
+                  </div>
+                  <div class="field">
+                    <label for="quietTo">Kết thúc</label>
+                    <input id="quietTo" type="time" formControlName="to" />
+                  </div>
+                </form>
+              }
+            </div>
+
+            <div class="panel-footer">
+              <button type="button" class="btn btn-primary" (click)="onSaveNotifications()">Lưu thay đổi</button>
+            </div>
+          </div>
+        </section>
+      }
+
+      <!-- ======================= TAB 3: WORKSPACE ======================= -->
+      @case ('workspace') {
+        <section class="panel">
+          <header class="panel-header">
+            <h2>Không gian làm việc</h2>
+            <p>Quản lý thông tin workspace, thương hiệu và thành viên.</p>
+          </header>
+
+          <div class="panel-body">
+            <form [formGroup]="workspaceForm" (ngSubmit)="onSaveWorkspace()">
+              <div class="card">
+                <h3 class="card-title">Thông tin Workspace</h3>
+                <div class="form-grid">
+                  <div class="field">
+                    <label for="wsName">Tên workspace</label>
+                    <input id="wsName" type="text" formControlName="name" />
+                  </div>
+                  <div class="field">
+                    <label for="wsSlug">Đường dẫn (Slug)</label>
+                    <div class="input-prefix">
+                      <span>app.teamthanh.io/</span>
+                      <input id="wsSlug" type="text" formControlName="slug" />
+                    </div>
+                    @if (workspaceForm.get('slug')?.invalid && workspaceForm.get('slug')?.touched) {
+                      <span class="error">3-40 ký tự: chữ thường, số, dấu gạch ngang.</span>
+                    }
+                  </div>
+                  <div class="field field-full">
+                    <label for="wsDesc">Mô tả ngắn</label>
+                    <textarea id="wsDesc" rows="2" formControlName="description" maxlength="240"></textarea>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <h3 class="card-title">Thương hiệu (Branding)</h3>
+                <div class="avatar-row">
+                  <div class="avatar-preview avatar-square">
+                    @if (workspaceLogo()) {
+                      <img [src]="workspaceLogo()" alt="Logo workspace" />
+                    } @else {
+                      <span class="avatar-fallback">{{ workspaceForm.get('name')?.value?.charAt(0) }}</span>
+                    }
+                  </div>
+                  <div class="avatar-actions">
+                    <label class="btn btn-secondary btn-sm">
+                      <input type="file" accept="image/*" class="sr-only" (change)="onUploadWorkspaceLogo($event)" />
+                      Tải logo lên
+                    </label>
+                    <p class="hint">Định dạng vuông, tối thiểu 128x128px.</p>
+                  </div>
+                </div>
+                <div class="field" style="max-width: 240px; margin-top: 1rem;">
+                  <label for="brandColor">Màu nhận diện thương hiệu</label>
+                  <div class="color-input-row">
+                    <input id="brandColor" type="color" [value]="workspaceBrandColor()" (input)="workspaceBrandColor.set($any($event.target).value)" />
+                    <span class="mono">{{ workspaceBrandColor() }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="panel-footer">
+                <button type="submit" class="btn btn-primary" [disabled]="workspaceForm.pristine || workspaceForm.invalid">
+                  Lưu thay đổi
+                </button>
+              </div>
+            </form>
+
+            <div class="card">
+              <div class="card-title-row">
+                <h3 class="card-title">Quản lý thành viên</h3>
+                <button type="button" class="btn btn-primary btn-sm" (click)="openInviteModal()">+ Mời thành viên</button>
+              </div>
+              <div class="table-wrap">
+                <table class="member-table">
+                  <thead>
+                    <tr>
+                      <th>Thành viên</th>
+                      <th>Vai trò</th>
+                      <th>Trạng thái</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (member of members(); track trackByMemberId($index, member)) {
+                      <tr [class.frozen-row]="member.status === 'frozen'">
+                        <td>
+                          <div class="member-cell">
+                            <img [src]="member.avatarUrl" [alt]="member.name" class="member-avatar" />
+                            <div>
+                              <div class="member-name">{{ member.name }}</div>
+                              <div class="member-email">{{ member.email }}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          @if (member.role === 'Owner') {
+                            <span class="badge badge-accent">Owner</span>
+                          } @else {
+                            <select class="role-select" [ngModel]="member.role" (ngModelChange)="onChangeRole(member, $event)">
+                              @for (role of memberRoles; track role) {
+                                <option [value]="role">{{ role }}</option>
+                              }
+                            </select>
+                          }
+                        </td>
+                        <td>
+                          @if (member.status === 'active') {
+                            <span class="badge badge-success">Hoạt động</span>
+                          } @else {
+                            <span class="badge badge-muted">Đã đóng băng</span>
+                          }
+                        </td>
+                        <td class="td-actions">
+                          @if (member.role !== 'Owner') {
+                            <button type="button" class="btn btn-ghost btn-xs" (click)="onToggleFreeze(member)">
+                              {{ member.status === 'active' ? 'Đóng băng' : 'Kích hoạt lại' }}
+                            </button>
+                            <button type="button" class="btn btn-ghost btn-xs danger" (click)="onRemoveMember(member)">Xoá</button>
+                          }
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+      }
+
+      <!-- ======================= TAB 4: APPEARANCE & SECURITY ======================= -->
+      @case ('appearance-security') {
+        <section class="panel">
+          <header class="panel-header">
+            <h2>Giao diện & Bảo mật</h2>
+            <p>Tuỳ chỉnh giao diện hiển thị và bảo vệ tài khoản của bạn.</p>
+          </header>
+
+          <div class="panel-body">
+            <!-- Theme -->
+            <div class="card">
+              <h3 class="card-title">Giao diện (Theme)</h3>
+              <div class="theme-grid">
+                <button type="button" class="theme-card" [class.selected]="themeService.theme() === 'light'" (click)="themeService.set('light')">
+                  <span class="theme-preview theme-preview-light">
+                    <span class="tp-bar"></span><span class="tp-line"></span><span class="tp-line short"></span>
+                  </span>
+                  <span>Light Mode</span>
+                </button>
+                <button type="button" class="theme-card" [class.selected]="themeService.theme() === 'dark'" (click)="themeService.set('dark')">
+                  <span class="theme-preview theme-preview-dark">
+                    <span class="tp-bar"></span><span class="tp-line"></span><span class="tp-line short"></span>
+                  </span>
+                  <span>Dark Mode</span>
+                </button>
+              </div>
+
+              <h4 class="sub-title">Màu chủ đạo</h4>
+              <div class="accent-row">
+                @for (color of accentColors; track color.value) {
+                  <button
+                    type="button"
+                    class="accent-swatch"
+                    [class.selected]="accentColor() === color.value"
+                    [style.background]="color.value"
+                    [attr.aria-label]="color.name"
+                    (click)="setAccentColor(color.value)"
+                  ></button>
+                }
+              </div>
+            </div>
+
+            <!-- Change password -->
+            <div class="card">
+              <h3 class="card-title">Đổi mật khẩu</h3>
+              <form [formGroup]="passwordForm" (ngSubmit)="onChangePassword()" class="form-grid">
+                <div class="field field-full">
+                  <label for="currentPassword">Mật khẩu hiện tại</label>
+                  <input id="currentPassword" type="password" formControlName="currentPassword" autocomplete="current-password" />
+                </div>
+                <div class="field">
+                  <label for="newPassword">Mật khẩu mới</label>
+                  <input id="newPassword" type="password" formControlName="newPassword" autocomplete="new-password" />
+                  @if (passwordForm.get('newPassword')?.value) {
+                    <div class="strength-meter">
+                      <div class="strength-track">
+                        <div class="strength-fill" [style.width.%]="passwordStrength.percent" [style.background]="passwordStrength.colorVar"></div>
+                      </div>
+                      <span class="strength-label" [style.color]="passwordStrength.colorVar">{{ passwordStrength.label }}</span>
+                    </div>
+                  }
+                </div>
+                <div class="field">
+                  <label for="confirmPassword">Xác nhận mật khẩu mới</label>
+                  <input id="confirmPassword" type="password" formControlName="confirmPassword" autocomplete="new-password" />
+                  @if (passwordForm.hasError('passwordMismatch') && passwordForm.get('confirmPassword')?.touched) {
+                    <span class="error">Mật khẩu xác nhận không khớp.</span>
+                  }
+                </div>
+                <div class="field-full">
+                  <button type="submit" class="btn btn-primary" [disabled]="passwordForm.invalid">Cập nhật mật khẩu</button>
+                </div>
+              </form>
+            </div>
+
+            <!-- 2FA -->
+            <div class="card">
+              <div class="switch-row">
+                <div class="switch-row-text">
+                  <strong>Xác thực 2 lớp (2FA)</strong>
+                  <span>Bảo vệ tài khoản bằng ứng dụng Authenticator.</span>
+                </div>
+                @if (twoFAEnabled()) {
+                  <span class="badge badge-success">Đã kích hoạt</span>
+                } @else {
+                  <button type="button" class="btn btn-secondary btn-sm" (click)="openTwoFASetup()">Thiết lập</button>
+                }
+              </div>
+              @if (twoFAEnabled()) {
+                <button type="button" class="btn btn-ghost btn-sm danger" (click)="disableTwoFA()">Tắt 2FA</button>
+              }
+
+              @if (twoFASetupOpen()) {
+                <div class="inline-panel">
+                  <p class="hint">Quét mã QR bằng ứng dụng Authenticator (Google Authenticator, Authy, ...):</p>
+                  <div class="qr-mock" [attr.aria-label]="twoFAQrSeed()">
+                    <svg viewBox="0 0 100 100" width="140" height="140">
+                      <rect width="100" height="100" fill="var(--bg-surface-2)" />
+                      @for (row of [0,1,2,3,4,5,6,7,8,9]; track row) {
+                        @for (col of [0,1,2,3,4,5,6,7,8,9]; track col) {
+                          @if ((row * 7 + col * 3 + row * col) % 3 === 0) {
+                            <rect [attr.x]="col * 10" [attr.y]="row * 10" width="9" height="9" fill="var(--text-primary)" />
+                          }
+                        }
+                      }
+                    </svg>
+                  </div>
+                  <p class="hint">Mã minh hoạ — không phải QR thực. Sau khi thêm, nhập mã 6 số để xác nhận.</p>
+                  <div class="field" style="max-width: 160px;">
+                    <input type="text" placeholder="000000" maxlength="6" />
+                  </div>
+                  <div class="inline-panel-actions">
+                    <button type="button" class="btn btn-ghost btn-sm" (click)="closeTwoFASetup()">Huỷ</button>
+                    <button type="button" class="btn btn-primary btn-sm" (click)="confirmTwoFA()">Xác nhận & kích hoạt</button>
+                  </div>
+                </div>
+              }
+            </div>
+
+            <!-- Active sessions -->
+            <div class="card">
+              <div class="card-title-row">
+                <h3 class="card-title">Phiên đăng nhập</h3>
+                <button type="button" class="btn btn-ghost btn-sm danger" (click)="onLogoutAllOtherSessions()">
+                  Đăng xuất khỏi tất cả thiết bị khác
+                </button>
+              </div>
+              <ul class="session-list">
+                @for (session of sessions(); track trackBySessionId($index, session)) {
+                  <li class="session-item">
+                    <span class="session-icon">
+                      @switch (session.icon) {
+                        @case ('desktop') {
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="12" rx="1.5" /><line x1="8" y1="20" x2="16" y2="20" stroke-linecap="round" /><line x1="12" y1="16" x2="12" y2="20" /></svg>
+                        }
+                        @case ('mobile') {
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="7" y="2.5" width="10" height="19" rx="2" /><line x1="11" y1="18" x2="13" y2="18" stroke-linecap="round" /></svg>
+                        }
+                        @case ('tablet') {
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="2.5" width="14" height="19" rx="2" /><line x1="11" y1="18" x2="13" y2="18" stroke-linecap="round" /></svg>
+                        }
+                      }
+                    </span>
+                    <div class="session-info">
+                      <div class="session-device">
+                        {{ session.device }}
+                        @if (session.current) { <span class="badge badge-accent">Thiết bị này</span> }
+                      </div>
+                      <div class="session-meta">{{ session.browser }} · {{ session.ip }} · {{ session.location }}</div>
+                    </div>
+                    <div class="session-last">{{ session.lastActive }}</div>
+                    @if (!session.current) {
+                      <button type="button" class="btn btn-ghost btn-xs danger" (click)="onRevokeSession(session)">Đăng xuất</button>
+                    }
+                  </li>
+                }
+              </ul>
+            </div>
+          </div>
+        </section>
+      }
+
+      <!-- ======================= TAB 5: BILLING & PLAN ======================= -->
+      @case ('billing') {
+        <section class="panel">
+          <header class="panel-header">
+            <h2>Gói dịch vụ</h2>
+            <p>Theo dõi mức sử dụng và quản lý gói đăng ký của workspace.</p>
+          </header>
+
+          <div class="panel-body">
+            <div class="card">
+              <div class="card-title-row">
+                <h3 class="card-title">Gói hiện tại</h3>
+                <span class="badge badge-accent">{{ currentPlan().toUpperCase() }} PLAN</span>
+              </div>
+
+              <div class="usage-grid">
+                <div class="usage-item">
+                  <div class="usage-label">
+                    <span>Dung lượng lưu trữ</span>
+                    <span>{{ usage.storageUsedGB }}GB / {{ usage.storageLimitGB }}GB</span>
+                  </div>
+                  <div class="usage-track"><div class="usage-fill" [style.width.%]="usagePercent(usage.storageUsedGB, usage.storageLimitGB)"></div></div>
+                </div>
+                <div class="usage-item">
+                  <div class="usage-label">
+                    <span>Boards / Projects</span>
+                    <span>{{ usage.boardsUsed }} / {{ usage.boardsLimit }}</span>
+                  </div>
+                  <div class="usage-track"><div class="usage-fill" [style.width.%]="usagePercent(usage.boardsUsed, usage.boardsLimit)"></div></div>
+                </div>
+                <div class="usage-item">
+                  <div class="usage-label">
+                    <span>Thành viên</span>
+                    <span>{{ usage.membersUsed }} / {{ usage.membersLimit }}</span>
+                  </div>
+                  <div class="usage-track"><div class="usage-fill" [style.width.%]="usagePercent(usage.membersUsed, usage.membersLimit)"></div></div>
+                </div>
+              </div>
+
+              <button type="button" class="btn btn-secondary btn-sm" style="margin-top: 1rem;">Quản lý thẻ thanh toán</button>
+            </div>
+
+            <div class="card">
+              <h3 class="card-title">Nâng cấp gói</h3>
+              <div class="plan-grid">
+                @for (plan of plans(); track trackByPlanId($index, plan)) {
+                  <div class="plan-card" [class.highlighted]="plan.highlighted" [class.current]="plan.current">
+                    @if (plan.highlighted) { <span class="plan-badge">Phổ biến nhất</span> }
+                    <h4>{{ plan.name }}</h4>
+                    <div class="plan-price">{{ plan.price }} <span>{{ plan.period }}</span></div>
+                    <ul class="plan-features">
+                      @for (feature of plan.features; track feature) {
+                        <li>
+                          <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 10l4 4 8-8" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                          {{ feature }}
+                        </li>
+                      }
+                    </ul>
+                    <button
+                      type="button"
+                      class="btn btn-block"
+                      [class.btn-primary]="!plan.current"
+                      [class.btn-secondary]="plan.current"
+                      [disabled]="plan.current"
+                      (click)="onUpgradePlan(plan.id)"
+                    >
+                      {{ plan.current ? 'Gói hiện tại' : 'Chọn gói này' }}
+                    </button>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        </section>
+      }
+
+      <!-- ======================= TAB 6: INTEGRATIONS & API ======================= -->
+      @case ('integrations') {
+        <section class="panel">
+          <header class="panel-header">
+            <h2>Tích hợp & API</h2>
+            <p>Kết nối ứng dụng bên ngoài và quản lý API key cá nhân.</p>
+          </header>
+
+          <div class="panel-body">
+            <div class="card">
+              <h3 class="card-title">Ứng dụng kết nối</h3>
+              <ul class="integration-list">
+                @for (integration of integrations(); track trackByIntegrationId($index, integration)) {
+                  <li class="integration-item">
+                    <span class="integration-icon" [style.background]="integration.colorVar">{{ integration.initials }}</span>
+                    <div class="integration-info">
+                      <strong>{{ integration.name }}</strong>
+                      <span>{{ integration.description }}</span>
+                    </div>
+                    <button
+                      type="button"
+                      class="toggle"
+                      [class.on]="integration.connected"
+                      (click)="toggleIntegration(integration)"
+                      role="switch"
+                      [attr.aria-checked]="integration.connected"
+                    >
+                      <span class="toggle-thumb"></span>
+                    </button>
+                  </li>
+                }
+              </ul>
+            </div>
+
+            <div class="card">
+              <div class="card-title-row">
+                <h3 class="card-title">Personal Access Tokens</h3>
+                <button type="button" class="btn btn-primary btn-sm" (click)="openNewTokenModal()">+ Tạo token mới</button>
+              </div>
+              <div class="table-wrap">
+                <table class="member-table">
+                  <thead>
+                    <tr>
+                      <th>Tên</th>
+                      <th>Token</th>
+                      <th>Tạo lúc</th>
+                      <th>Dùng lần cuối</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (token of apiTokens(); track trackByTokenId($index, token)) {
+                      <tr>
+                        <td><strong>{{ token.name }}</strong></td>
+                        <td><code class="mono">{{ token.tokenPreview }}</code></td>
+                        <td>{{ token.createdAt }}</td>
+                        <td>{{ token.lastUsedAt ?? 'Chưa sử dụng' }}</td>
+                        <td class="td-actions">
+                          <button type="button" class="btn btn-ghost btn-xs danger" (click)="onRevokeToken(token)">Thu hồi</button>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+      }
+    }
+  </main>
+
+  <!-- ============================== MODALS ============================== -->
+  @if (showInviteModal()) {
+    <div class="modal-overlay" (click)="closeInviteModal()">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <h3>Mời thành viên mới</h3>
+        <form [formGroup]="inviteForm" (ngSubmit)="onSendInvite()">
+          <div class="field">
+            <label for="inviteEmail">Địa chỉ email</label>
+            <input id="inviteEmail" type="email" formControlName="email" placeholder="ten@congty.com" />
+            @if (inviteForm.get('email')?.invalid && inviteForm.get('email')?.touched) {
+              <span class="error">Vui lòng nhập email hợp lệ.</span>
+            }
+          </div>
+          <div class="field">
+            <label for="inviteRole">Phân quyền ban đầu</label>
+            <select id="inviteRole" formControlName="role">
+              @for (role of memberRoles; track role) {
+                <option [value]="role">{{ role }}</option>
+              }
+            </select>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-ghost" (click)="closeInviteModal()">Huỷ</button>
+            <button type="submit" class="btn btn-primary" [disabled]="inviteForm.invalid">Gửi lời mời</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  @if (showNewTokenModal()) {
+    <div class="modal-overlay" (click)="closeNewTokenModal()">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <h3>Tạo Personal Access Token</h3>
+        @if (!generatedToken()) {
+          <div class="field">
+            <label for="tokenName">Tên token</label>
+            <input id="tokenName" type="text" [ngModel]="newTokenName()" (ngModelChange)="newTokenName.set($event)" placeholder="VD: CI/CD Pipeline" />
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-ghost" (click)="closeNewTokenModal()">Huỷ</button>
+            <button type="button" class="btn btn-primary" [disabled]="!newTokenName().trim()" (click)="generateToken()">Tạo token</button>
+          </div>
+        } @else {
+          <p class="hint">Sao chép token ngay — bạn sẽ không thể xem lại sau khi đóng cửa sổ này.</p>
+          <div class="token-display">
+            <code class="mono">{{ generatedToken() }}</code>
+            <button type="button" class="btn btn-secondary btn-sm" (click)="copyToClipboard(generatedToken()!)">Sao chép</button>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-primary" (click)="closeNewTokenModal()">Xong</button>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- ============================== TOAST ============================== -->
+  @if (toastMessage()) {
+    <div class="toast">{{ toastMessage() }}</div>
+  }
+</div>

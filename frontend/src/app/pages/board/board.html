@@ -1,1 +1,420 @@
-<!-- TODO: MÀN TRELLO ⭐: <app-board-list> cho từng cột (kéo thả ngang) + <app-add-list>. Mở <app-card-detail-modal> khi click card. Có thể kèm <app-activity-feed> (#4,#5,#6). Panel bên phải: <app-chat-panel> (AI bắt task -> gợi ý tạo card). -->
+<div class="board-page">
+
+  <div class="board-topbar">
+    <div class="topbar-left">
+      <a routerLink="/workspace" class="back-btn" aria-label="Quay lại không gian làm việc">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </a>
+      <span class="board-emoji">🗂️</span>
+      <div class="board-title-wrap">
+        <span class="board-title">{{ board()?.name ?? 'Đang tải bảng...' }}</span>
+        <span class="board-subtitle">{{ lists().length }} danh sách · {{ totalCards() }} thẻ</span>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <button type="button" class="chaos-btn" [class.armed]="networkArmed()" (click)="armNetworkFailure()" title="Giả lập lỗi mạng ở lần kéo-thả tiếp theo (demo optimistic UI)">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+        {{ networkArmed() ? 'Sẽ lỗi ở lần kéo tới' : 'Giả lập lỗi mạng' }}
+      </button>
+    </div>
+  </div>
+
+  @if (showDueBanner()) {
+    <div class="due-banner">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+      <span>
+        Bạn có
+        @if (myDueCounts().overdue > 0) {
+          <strong>{{ myDueCounts().overdue }} thẻ đã quá hạn</strong>
+        }
+        @if (myDueCounts().overdue > 0 && myDueCounts().dueSoon > 0) {
+          và
+        }
+        @if (myDueCounts().dueSoon > 0) {
+          <strong>{{ myDueCounts().dueSoon }} thẻ sắp đến hạn</strong>
+        }
+        trên bảng này.
+      </span>
+      <button type="button" class="due-banner-close" (click)="dismissDueBanner()" aria-label="Đóng thông báo">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+  }
+
+  <div class="board-toolbar">
+    <div class="view-switch">
+      <button type="button" class="view-btn" [class.active]="viewMode() === 'status'" (click)="viewMode.set('status')">Theo trạng thái</button>
+      <button type="button" class="view-btn" [class.active]="viewMode() === 'matrix'" (click)="viewMode.set('matrix')">Theo ưu tiên (2 chiều)</button>
+    </div>
+
+    <div class="toolbar-right">
+      @if (viewMode() === 'matrix') {
+        <span class="priority-legend">
+          @for (p of priorities; track p.id) {
+            <span class="legend-item" [class]="'p-' + p.id"><span class="legend-dot"></span>{{ p.label }}</span>
+          }
+        </span>
+      }
+
+      <select class="sort-select" [ngModel]="sortMode()" (ngModelChange)="sortMode.set($event)" title="Sắp xếp thẻ trong từng danh sách">
+        @for (opt of sortOptions; track opt.id) {
+          <option [ngValue]="opt.id">{{ opt.label }}</option>
+        }
+      </select>
+
+      <div class="filter-wrap">
+        <button type="button" class="filter-toggle-btn" [class.active]="isFilteringActive()" (click)="toggleFilterPanel()">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+          Lọc
+          @if (isFilteringActive()) {
+            <span class="filter-count-badge">{{ filterMatchCount().matched }}/{{ filterMatchCount().total }}</span>
+          }
+        </button>
+
+        @if (showFilterPanel()) {
+          <div class="filter-panel">
+            @if (savedFilters().length || savedHighlightGroups().length) {
+              <div class="quick-chip-row">
+                @for (f of savedFilters(); track f.id) {
+                  <button type="button" class="quick-chip" [class.active]="activeSavedFilterId() === f.id" (click)="applySavedFilter(f)" title="Bộ lọc theo điều kiện">
+                    ⭐ {{ f.name }}
+                    <span class="chip-remove" (click)="removeSavedFilter(f.id, $event)">✕</span>
+                  </button>
+                }
+                @for (g of savedHighlightGroups(); track g.id) {
+                  <button type="button" class="quick-chip highlight-chip" [class.active]="activeHighlightGroupId() === g.id" (click)="applyHighlightGroup(g)" title="Bộ highlight chọn tay ({{ g.cardIds.length }} thẻ)">
+                    📌 {{ g.name }}
+                    <span class="chip-remove" (click)="removeHighlightGroup(g.id, $event)">✕</span>
+                  </button>
+                }
+              </div>
+            }
+
+            <div class="filter-group">
+              <div class="filter-group-label">Người phụ trách</div>
+              <div class="filter-options">
+                @for (m of members(); track m.id) {
+                  <button type="button" class="filter-opt" [class.selected]="filterAssigneeIds().includes(m.id)" (click)="toggleFilterAssignee(m.id)">
+                    {{ m.displayName ?? m.email }}
+                  </button>
+                }
+                <button type="button" class="filter-opt" [class.selected]="filterAssigneeIds().includes(UNASSIGNED)" (click)="toggleFilterAssignee(UNASSIGNED)">
+                  Chưa gán ai
+                </button>
+              </div>
+            </div>
+
+            <div class="filter-group">
+              <div class="filter-group-label">Nhãn</div>
+              <div class="filter-options">
+                @for (lb of labels(); track lb.id) {
+                  <button type="button" class="filter-opt" [class.selected]="filterLabelIds().includes(lb.id)" (click)="toggleFilterLabel(lb.id)">
+                    <span class="dot" [style.background]="lb.color"></span>{{ lb.name }}
+                  </button>
+                }
+                <button type="button" class="filter-opt" [class.selected]="filterLabelIds().includes(NO_LABEL)" (click)="toggleFilterLabel(NO_LABEL)">
+                  Chưa có nhãn nào
+                </button>
+              </div>
+            </div>
+
+            <div class="filter-group">
+              <div class="filter-group-label">Mức ưu tiên</div>
+              <div class="filter-options">
+                @for (p of priorities; track p.id) {
+                  <button type="button" class="filter-opt" [class.selected]="filterPriorities().includes(p.id)" (click)="toggleFilterPriority(p.id)">
+                    {{ p.label }}
+                  </button>
+                }
+              </div>
+            </div>
+
+            <div class="filter-group">
+              <div class="filter-group-label">Ngày</div>
+              <div class="filter-options">
+                @for (d of dateOptions; track d.id) {
+                  <button type="button" class="filter-opt" [class.selected]="filterDate() === d.id" (click)="toggleFilterDate(d.id)">
+                    {{ d.label }}
+                  </button>
+                }
+              </div>
+            </div>
+
+            <div class="filter-footer">
+              <span class="match-count">{{ hasActiveFilter() ? filterMatchCount().matched + '/' + filterMatchCount().total + ' thẻ khớp' : 'Chưa lọc gì — hiện tất cả ' + totalCards() + ' thẻ' }}</span>
+              @if (hasActiveFilter()) {
+                <button type="button" class="clear-filter-btn" (click)="clearFilters()">Xoá lọc</button>
+              }
+            </div>
+
+            @if (hasActiveFilter()) {
+              @if (!showSaveFilterForm()) {
+                <button type="button" class="save-filter-toggle" (click)="openSaveFilterForm()">⭐ Lưu thành nút nhanh</button>
+              } @else {
+                <div class="save-filter-row">
+                  <input
+                    type="text"
+                    class="save-filter-input"
+                    placeholder="Đặt tên cho bộ lọc..."
+                    [ngModel]="newFilterName()"
+                    (ngModelChange)="newFilterName.set($event)"
+                    (keydown.enter)="saveCurrentFilter()"
+                  />
+                  <button type="button" class="save-filter-confirm" [disabled]="!newFilterName().trim()" (click)="saveCurrentFilter()">Lưu</button>
+                  <button type="button" class="save-filter-cancel" (click)="cancelSaveFilterForm()">Huỷ</button>
+                </div>
+              }
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  @if (viewMode() === 'status') {
+    <div class="board-body">
+      <div
+        class="board-row"
+        cdkDropList
+        cdkDropListGroup
+        cdkDropListOrientation="horizontal"
+        [cdkDropListData]="lists()"
+        (cdkDropListDropped)="onListDrop($event)"
+      >
+        @for (list of lists(); track trackByListId($index, list)) {
+          <div class="list-drag-wrap" [class.collapsed]="collapsedListIds().has(list.id)" cdkDrag [cdkDragData]="list" cdkDragLockAxis="x">
+            <div class="list-drop-placeholder" *cdkDragPlaceholder></div>
+
+            <div class="list-grip" cdkDragHandle title="Kéo để đổi thứ tự danh sách">
+              <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><circle cx="7" cy="6" r="1.3"/><circle cx="13" cy="6" r="1.3"/><circle cx="7" cy="12" r="1.3"/><circle cx="13" cy="12" r="1.3"/><circle cx="7" cy="18" r="1.3"/><circle cx="13" cy="18" r="1.3"/></svg>
+            </div>
+
+            <app-board-list
+              [list]="list"
+              [boardId]="boardId"
+              [cards]="cardsFor(list.id)"
+              [labelsByCardId]="labelsByCardId()"
+              [membersById]="membersById()"
+              [savingCardIds]="savingCardIds()"
+              [errorCardIds]="errorCardIds()"
+              [sortingEnabled]="sortMode() === 'manual'"
+              [dimmed]="dimmedCardIds()"
+              [highlighted]="highlightedCardIds()"
+              [collapsed]="collapsedListIds().has(list.id)"
+              [selectedCardIds]="selectedCardIds()"
+              [today]="today"
+              (renameList)="renameList(list, $event)"
+              (deleteList)="requestDeleteList(list)"
+              (addCard)="openCardModal(list.id)"
+              (cardClick)="onCardActivate($event.card, $event.shiftKey)"
+              (toggleCollapse)="toggleListCollapse(list.id)"
+            />
+          </div>
+        }
+
+        <app-add-list (open)="openListModal()" />
+      </div>
+    </div>
+  } @else {
+    <!-- Board 2 chiều (#6): hàng = mức ưu tiên, cột = danh sách, kéo tự do cả 2 trục -->
+    <div class="board-body matrix-body">
+      <div class="matrix-scroll" cdkDropListGroup>
+        <div class="matrix-row matrix-header-row">
+          <div class="matrix-row-label"></div>
+          <div class="matrix-row-grid" [style.grid-template-columns]="gridCols()">
+            @for (list of lists(); track trackByListId($index, list)) {
+              <div class="matrix-col-head">
+                <span class="col-color-dot" [style.background]="list.color || 'var(--text-muted)'"></span>
+                {{ list.name }}
+              </div>
+            }
+          </div>
+        </div>
+
+        @for (lane of priorities; track lane.id) {
+          <div class="matrix-row">
+            <div class="matrix-row-label" [class]="'p-' + lane.id">{{ lane.label }}</div>
+            <div class="matrix-row-grid" [style.grid-template-columns]="gridCols()">
+              @for (list of lists(); track trackByListId($index, list)) {
+                <div
+                  class="matrix-cell"
+                  cdkDropList
+                  [id]="matrixCellId(list.id, lane.id)"
+                  [cdkDropListData]="cardsForCell(list.id, lane.id)"
+                  [cdkDropListSortingDisabled]="sortMode() !== 'manual'"
+                  (cdkDropListDropped)="onMatrixCardDrop($event)"
+                >
+                  @for (card of cardsForCell(list.id, lane.id); track card.id) {
+                    <div class="matrix-card-drag" cdkDrag [cdkDragData]="card" (click)="onCardActivate(card, $event.shiftKey)">
+                      <div class="drag-placeholder" *cdkDragPlaceholder></div>
+                      <app-card-item
+                        [card]="card"
+                        [labels]="labelsByCardId()[card.id] ?? []"
+                        [assignee]="card.assigneeId ? (membersById()[card.assigneeId] ?? null) : null"
+                        [isSaving]="savingCardIds().has(card.id)"
+                        [isError]="errorCardIds().has(card.id)"
+                        [isDimmed]="dimmedCardIds().has(card.id)"
+                        [isHighlighted]="highlightedCardIds().has(card.id)"
+                        [isSelected]="selectedCardIds().has(card.id)"
+                        [today]="today"
+                      />
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Modal: tạo danh sách -->
+  @if (showListModal()) {
+    <div class="modal-overlay" (click)="closeListModal()">
+      <div class="modal-box" (click)="$event.stopPropagation()">
+        <div class="modal-title">Tạo danh sách mới</div>
+
+        <div class="field-group">
+          <label class="field-label" for="list-name-input">Tên danh sách</label>
+          <input
+            type="text"
+            id="list-name-input"
+            class="field-input"
+            placeholder="Vd: Chờ kiểm thử"
+            [ngModel]="newListName()"
+            (ngModelChange)="newListName.set($event)"
+            (keydown.enter)="submitListModal()"
+          />
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Màu</label>
+          <div class="color-row">
+            @for (c of listColors; track c) {
+              <button type="button" class="color-swatch" [style.background]="c" [class.selected]="newListColor() === c" (click)="newListColor.set(c)">
+                @if (newListColor() === c) {
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+                }
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="modal-btn cancel" (click)="closeListModal()">Huỷ</button>
+          <button type="button" class="modal-btn save" [disabled]="!newListName().trim()" (click)="submitListModal()">Tạo danh sách</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal: tạo thẻ -->
+  @if (showCardModal()) {
+    <div class="modal-overlay" (click)="closeCardModal()">
+      <div class="modal-box" (click)="$event.stopPropagation()">
+        <div class="modal-title">Tạo thẻ mới</div>
+
+        <div class="field-group">
+          <label class="field-label" for="card-title-input">Tên thẻ</label>
+          <input
+            type="text"
+            id="card-title-input"
+            class="field-input"
+            placeholder="Vd: Sửa lỗi đăng nhập"
+            [ngModel]="newCardTitle()"
+            (ngModelChange)="newCardTitle.set($event)"
+            (keydown.enter)="submitCardModal()"
+          />
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Nhãn (chọn nhiều)</label>
+          <app-label-picker [boardId]="boardId" [selectedIds]="newCardLabelIds()" (selectionChange)="newCardLabelIds.set($event)" />
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Mức độ ưu tiên</label>
+          <div class="priority-row">
+            @for (p of priorities; track p.id) {
+              <button type="button" class="priority-choice" [class]="'p-' + p.id" [class.selected]="newCardPriority() === p.id" (click)="newCardPriority.set(p.id)">
+                {{ p.label }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" for="card-assignee-select">Người phụ trách</label>
+          <select id="card-assignee-select" class="field-input" [ngModel]="newCardAssigneeId()" (ngModelChange)="newCardAssigneeId.set($event)">
+            <option [ngValue]="null">Chưa gán</option>
+            @for (m of members(); track m.id) {
+              <option [ngValue]="m.id">{{ m.displayName ?? m.email }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" for="card-due-input">Ngày hết hạn</label>
+          <input type="date" id="card-due-input" class="field-input" [ngModel]="newCardDue()" (ngModelChange)="newCardDue.set($event)" />
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="modal-btn cancel" (click)="closeCardModal()">Huỷ</button>
+          <button type="button" class="modal-btn save" [disabled]="!newCardTitle().trim()" (click)="submitCardModal()">Tạo thẻ</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal: chi tiết thẻ (appRequirement #4) -->
+  @if (selectedCard(); as card) {
+    <app-card-detail-modal [card]="card" [boardId]="boardId" (close)="closeCardDetail()" (deleted)="onCardDetailDeleted()" />
+  }
+
+  <!-- Thanh hành động hàng loạt (#12) -->
+  @if (selectedCardIds().size > 0) {
+    <div class="bulk-bar">
+      <span class="bulk-count">Đã chọn {{ selectedCardIds().size }} thẻ</span>
+
+      <select class="bulk-select" (change)="onBulkMoveSelect($event)">
+        <option value="" selected disabled>Chuyển cột...</option>
+        @for (list of lists(); track list.id) {
+          <option [value]="list.id">{{ list.name }}</option>
+        }
+      </select>
+
+      <div class="bulk-label-wrap">
+        <button type="button" class="bulk-action-btn" (click)="toggleBulkLabelPicker()">Gắn nhãn</button>
+        @if (showBulkLabelPicker()) {
+          <div class="bulk-label-popover">
+            @for (lb of labels(); track lb.id) {
+              <button type="button" class="bulk-label-opt" (click)="applyBulkLabel(lb.id)">
+                <span class="dot" [style.background]="lb.color"></span>{{ lb.name }}
+              </button>
+            }
+            @if (labels().length === 0) {
+              <div class="bulk-label-empty">Board chưa có nhãn nào.</div>
+            }
+          </div>
+        }
+      </div>
+
+      <button type="button" class="bulk-action-btn" (click)="saveSelectionAsHighlightGroup()" title="Lưu đúng những thẻ đang chọn thành 1 chip highlight nhanh">📌 Lưu highlight</button>
+      <button type="button" class="bulk-action-btn danger" (click)="bulkDelete()">Xoá</button>
+      <button type="button" class="bulk-clear-btn" (click)="clearSelection()" aria-label="Bỏ chọn">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+  }
+
+  <div class="toast-stack">
+    @for (toast of toasts(); track toast.id) {
+      <div class="toast" [class]="toast.type">{{ toast.message }}</div>
+    }
+  </div>
+
+  <app-chat-panel [boardId]="boardId" (taskCreated)="onChatTaskCreated($event)" />
+
+</div>
