@@ -1,6 +1,6 @@
 import { Component, HostListener, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { WorkspaceUiService } from '../../services/workspace-ui.service';
 
 type Privacy = 'Workspace' | 'Private' | 'Public';
@@ -78,13 +78,12 @@ const BG_CLASSES: BgClass[] = ['bg-board-blue', 'bg-board-purple', 'bg-board-gre
 /** Bảng grid + workspace dashboard (ported từ trello-workspace prototype). */
 @Component({
   selector: 'app-workspace',
-  imports: [FormsModule],
+  imports: [FormsModule, RouterLink],
   templateUrl: './workspace.html',
   styleUrl: './workspace.css',
 })
 export class Workspace {
   private readonly workspaceUi = inject(WorkspaceUiService);
-  private readonly router = inject(Router);
 
   readonly workspaces = signal<WorkspaceItem[]>(mockWorkspaces());
   readonly activeWorkspaceId = signal('ws-1');
@@ -138,7 +137,7 @@ export class Workspace {
   }
 
   onBoardClick(board: BoardItem): void {
-    this.router.navigate(['/board', board.id]);
+    this.addToast(`Đang mở bảng: ${board.title}`);
   }
 
   // ---- Create board modal ----

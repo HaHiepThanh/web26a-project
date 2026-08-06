@@ -74,6 +74,8 @@ cards
 ├── description    text nullable
 ├── assignee_id    text FK → users.id, nullable
 ├── due_date       date nullable
+├── priority       text nullable  -- enum: low | medium | high — dùng cho trang Workspace Stats
+├── completed_at   timestamptz nullable  -- set khi card được chuyển vào list "Done"
 ├── position       float
 ├── created_by     text FK → users.id
 ├── created_at     timestamptz
@@ -85,6 +87,8 @@ activity_logs
 ├── tenant_id      uuid FK → tenants.id
 ├── board_id       uuid FK → boards.id
 ├── user_id        text FK → users.id
+├── action_type    text     -- enum: card_created | card_moved | card_updated | card_deleted | card_assigned | comment_added
+├── target_id      uuid nullable  -- FK cards.id (hoặc list/comment...) liên quan đến hành động
 ├── action_text    text     -- vd: "Nam đã chuyển card 'Fix bug' sang Doing"
 └── created_at     timestamptz
 

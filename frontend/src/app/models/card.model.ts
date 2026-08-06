@@ -1,7 +1,6 @@
-// Mức độ ưu tiên thẻ (CLAUDE.md #4) — dùng trong modal tạo thẻ ở #2.
-export type CardPriority = 'cao' | 'trung' | 'thap';
-
 // Card = thẻ công việc trong một list (#4).
+export type CardPriority = 'low' | 'medium' | 'high';
+
 export interface Card {
   id: string; // uuid
   tenantId: string; // FK tenants.id
@@ -10,7 +9,8 @@ export interface Card {
   description?: string; // nullable, hỗ trợ markdown đơn giản
   assigneeId?: string; // FK auth.users.id, nullable — người phụ trách
   dueDate?: string; // nullable, dạng 'YYYY-MM-DD'
-  priority: CardPriority; // cột mới (CLAUDE.md #4), default 'trung' — xem migrations/0001_*.sql
+  priority?: CardPriority; // nullable — dùng cho thống kê (trang Workspace Stats), mặc định coi như 'medium' nếu thiếu
+  completedAt?: string; // nullable, ISO timestamptz — set khi card được chuyển vào list "Done"; dùng để tính đúng hạn/thời gian xử lý
   position: number; // float — thứ tự trong list
   createdBy: string; // FK auth.users.id
   createdAt: string; // ISO timestamptz

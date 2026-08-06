@@ -1,0 +1,138 @@
+<div class="stats-page">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Thống kê workspace</h1>
+      <p class="page-subtitle">{{ workspaceName }}</p>
+    </div>
+    <select class="range-select" [ngModel]="dateRange()" (ngModelChange)="dateRange.set($event)">
+      <option value="7d">7 ngày qua</option>
+      <option value="30d">30 ngày qua</option>
+    </select>
+  </div>
+
+  <!-- Overview KPI cards -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <span class="kpi-label">Task hoàn thành</span>
+      <span class="kpi-value">{{ overview.completedCount }}</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">Đang thực hiện</span>
+      <span class="kpi-value">{{ overview.inProgressCount }}</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">Quá hạn</span>
+      <span class="kpi-value kpi-danger">{{ overview.overdueCount }}</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">Thành viên hoạt động</span>
+      <span class="kpi-value">{{ overview.activeMemberCount }}/{{ overview.totalMemberCount }}</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">Tỷ lệ đúng hạn</span>
+      <span class="kpi-value">{{ overview.onTimeRatePct === null ? '—' : overview.onTimeRatePct + '%' }}</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">TB thời gian xử lý</span>
+      <span class="kpi-value">{{ overview.avgCompletionDays === null ? '—' : overview.avgCompletionDays + ' ngày' }}</span>
+    </div>
+  </div>
+
+  <!-- Inactivity warning -->
+  @if (inactiveMembers().length > 0) {
+    <div class="warning-banner">
+      <span class="warning-icon">⚠️</span>
+      <span>{{ inactiveMembers().length }} thành viên chưa hoạt động từ 3 ngày trở lên: {{ inactiveMembersLabel() }}</span>
+    </div>
+  }
+
+  <!-- Daily activity chart -->
+  <section class="stats-section">
+    <h2 class="section-label">Hoạt động theo ngày</h2>
+    @if (maxDailyCount() === 0) {
+      <p class="empty-note">Chưa có hoạt động nào trong khoảng thời gian này.</p>
+    } @else {
+      <div class="bar-chart">
+        @for (point of dailyActivity(); track trackByDate($index, point)) {
+          <div class="bar-col" [title]="point.date + ': ' + point.count + ' hoạt động'">
+            <div class="bar" [style.height.%]="point.heightPct || 2"></div>
+            <span class="bar-label">{{ point.date.slice(5) }}</span>
+          </div>
+        }
+      </div>
+    }
+  </section>
+
+  <!-- Priority breakdown -->
+  <section class="stats-section">
+    <h2 class="section-label">Phân bổ theo độ ưu tiên</h2>
+    <div class="workload-list">
+      @for (p of priorityBreakdown(); track trackByPriority($index, p)) {
+        <div class="workload-row">
+          <span class="priority-name" [class]="'priority-' + p.priority">{{ p.label }}</span>
+          <div class="workload-track">
+            <div class="workload-fill" [class]="'priority-fill-' + p.priority" [style.width.%]="p.barPct"></div>
+          </div>
+          <span class="workload-count">{{ p.count }}</span>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- Workload per member -->
+  <section class="stats-section">
+    <div class="log-header">
+      <h2 class="section-label">Khối lượng công việc theo thành viên</h2>
+      <button class="export-btn" (click)="exportWorkloadCsv()">⬇ Xuất CSV</button>
+    </div>
+    <div class="workload-list">
+      @for (m of sortedWorkload(); track trackByUserId($index, m)) {
+        <div class="workload-row">
+          <img class="avatar-sm" [src]="m.avatarUrl" [alt]="m.name" />
+          <span class="workload-name">{{ m.name }}</span>
+          <div class="workload-track">
+            <div class="workload-fill" [style.width.%]="m.barPct"></div>
+          </div>
+          <span class="workload-count">{{ m.assignedCount }}</span>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- Activity log -->
+  <section class="stats-section">
+    <div class="log-header">
+      <h2 class="section-label">Nhật ký hoạt động</h2>
+      <div class="log-controls">
+        <select class="member-select" [ngModel]="selectedMemberId()" (ngModelChange)="selectedMemberId.set($event)">
+          <option value="all">Tất cả thành viên</option>
+          @for (m of memberWorkload; track trackByUserId($index, m)) {
+            <option [value]="m.userId">{{ m.name }}</option>
+          }
+        </select>
+        <div class="scope-toggle">
+          <button class="scope-btn" [class.active]="logScope() === 'mine'" (click)="logScope.set('mine')">Của tôi</button>
+          <button class="scope-btn" [class.active]="logScope() === 'team'" (click)="logScope.set('team')">Cả nhóm</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="activity-list">
+      @if (filteredActivityLogs().length === 0) {
+        <p class="empty-note">Không có hoạt động nào khớp với bộ lọc hiện tại.</p>
+      }
+      @for (log of filteredActivityLogs(); track trackByLogId($index, log)) {
+        <div class="activity-row">
+          <img class="avatar-sm" [src]="memberAvatar(log.userId)" [alt]="memberName(log.userId)" />
+          <span class="activity-icon">{{ actionIcon(log.actionType) }}</span>
+          <div class="activity-body">
+            <p class="activity-text">{{ log.actionText }}</p>
+            <p class="activity-time">{{ relativeTime(log.createdAt) }}</p>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
+</div>
