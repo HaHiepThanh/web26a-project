@@ -6,6 +6,7 @@ import { MemberWorkloadStat, mockWorkspaceStats } from './workspace-stats.mock';
 
 type DateRange = '7d' | '30d';
 type LogScope = 'mine' | 'team';
+type ActionGroup = 'all' | 'created' | 'moved' | 'assigned' | 'updated' | 'deleted';
 
 const ACTION_ICON: Record<ActivityActionType, string> = {
   card_created: '🆕',
@@ -16,7 +17,32 @@ const ACTION_ICON: Record<ActivityActionType, string> = {
   comment_added: '💬',
 };
 
-const PRIORITY_LABEL: Record<CardPriority, string> = { high: 'Cao', medium: 'Trung bình', low: 'Thấp' };
+const ACTION_GROUP: Record<ActivityActionType, ActionGroup> = {
+  card_created: 'created',
+  card_moved: 'moved',
+  card_assigned: 'assigned',
+  card_updated: 'updated',
+  comment_added: 'updated',
+  card_deleted: 'deleted',
+};
+
+const ACTION_GROUP_LABEL: Record<ActionGroup, string> = {
+  all: 'Tất cả hành động',
+  created: 'Tạo mới',
+  moved: 'Chuyển trạng thái',
+  assigned: 'Gán người phụ trách',
+  updated: 'Bình luận/Cập nhật',
+  deleted: 'Xoá',
+};
+
+const ACTION_GROUPS: ActionGroup[] = ['all', 'created', 'moved', 'assigned', 'updated', 'deleted'];
+
+// Cao = đỏ (bắt mắt tối đa); Trung bình = vàng dịu; Thấp = xanh dương — dùng màu ngữ nghĩa của daisyUI.
+const PRIORITY_STYLE: Record<CardPriority, { label: string; progressClass: string; textClass: string }> = {
+  high: { label: 'Cao', progressClass: 'progress-error', textClass: 'text-error' },
+  medium: { label: 'Trung bình', progressClass: 'progress-warning', textClass: 'text-warning' },
+  low: { label: 'Thấp', progressClass: 'progress-info', textClass: 'text-info' },
+};
 
 // Không hoạt động từ 3 ngày trở lên (kể cả khi vẫn còn việc đang làm) -> đáng chú ý cho quản lý.
 const INACTIVITY_THRESHOLD_DAYS = 3;
@@ -35,13 +61,17 @@ export class WorkspaceStats {
   readonly workspaceName = this.data.workspaceName;
   readonly overview = this.data.overview;
   readonly memberWorkload = this.data.memberWorkload;
+  readonly overdueCards = this.data.overdueCards;
+
+  readonly actionGroups = ACTION_GROUPS;
+  readonly actionGroupLabel = ACTION_GROUP_LABEL;
 
   readonly maxPriorityCount = computed(() => Math.max(1, ...this.data.priorityBreakdown.map((p) => p.count)));
 
   readonly priorityBreakdown = computed(() =>
     this.data.priorityBreakdown.map((p) => ({
       ...p,
-      label: PRIORITY_LABEL[p.priority],
+      ...PRIORITY_STYLE[p.priority],
       barPct: Math.round((p.count / this.maxPriorityCount()) * 100),
     })),
   );
@@ -59,6 +89,8 @@ export class WorkspaceStats {
   readonly dateRange = signal<DateRange>('7d');
   readonly selectedMemberId = signal<'all' | string>('all');
   readonly logScope = signal<LogScope>('team');
+  readonly logSearch = signal('');
+  readonly actionFilter = signal<ActionGroup>('all');
 
   // Mock hiện chỉ seed 7 ngày gần nhất; chọn "30 ngày" sẽ hiển thị toàn bộ dữ liệu
   // đang có (không bịa thêm điểm dữ liệu giả cho những ngày chưa seed).
@@ -70,10 +102,16 @@ export class WorkspaceStats {
     return all.slice(all.length - days);
   });
 
-  readonly maxDailyCount = computed(() => Math.max(1, ...this.visibleDailyActivity().map((d) => d.count)));
+  readonly maxDailyTotal = computed(() =>
+    Math.max(1, ...this.visibleDailyActivity().map((d) => d.createdCount + d.completedCount)),
+  );
 
   readonly dailyActivity = computed(() =>
-    this.visibleDailyActivity().map((d) => ({ ...d, heightPct: Math.round((d.count / this.maxDailyCount()) * 100) })),
+    this.visibleDailyActivity().map((d) => ({
+      ...d,
+      createdPct: Math.round((d.createdCount / this.maxDailyTotal()) * 100),
+      completedPct: Math.round((d.completedCount / this.maxDailyTotal()) * 100),
+    })),
   );
 
   readonly maxAssignedCount = computed(() => Math.max(1, ...this.memberWorkload.map((m) => m.assignedCount)));
@@ -81,15 +119,24 @@ export class WorkspaceStats {
   readonly sortedWorkload = computed(() =>
     [...this.memberWorkload]
       .sort((a, b) => b.assignedCount - a.assignedCount)
-      .map((m) => ({ ...m, barPct: Math.round((m.assignedCount / this.maxAssignedCount()) * 100) })),
+      .map((m) => ({
+        ...m,
+        donePct: Math.round((m.completedCount / this.maxAssignedCount()) * 100),
+        doingPct: Math.round((m.doingCount / this.maxAssignedCount()) * 100),
+        overduePct: Math.round((m.overdueCount / this.maxAssignedCount()) * 100),
+      })),
   );
 
   readonly filteredActivityLogs = computed<ActivityLog[]>(() => {
     const scope = this.logScope();
     const memberId = this.selectedMemberId();
+    const group = this.actionFilter();
+    const query = this.logSearch().trim().toLowerCase();
     return this.data.activityLogs.filter((log) => {
       if (scope === 'mine' && log.userId !== CURRENT_USER_ID) return false;
       if (memberId !== 'all' && log.userId !== memberId) return false;
+      if (group !== 'all' && ACTION_GROUP[log.actionType] !== group) return false;
+      if (query && !log.actionText.toLowerCase().includes(query)) return false;
       return true;
     });
   });
@@ -138,7 +185,7 @@ export class WorkspaceStats {
       m.name,
       String(m.assignedCount),
       String(m.completedCount),
-      String(m.inProgressCount),
+      String(m.doingCount),
       String(m.overdueCount),
       m.lastActiveAt ?? 'Chưa có hoạt động',
     ]);
@@ -157,4 +204,6 @@ export class WorkspaceStats {
   trackByLogId = (_: number, item: ActivityLog) => item.id;
   trackByDate = (_: number, item: { date: string }) => item.date;
   trackByPriority = (_: number, item: { priority: CardPriority }) => item.priority;
+  trackByCardId = (_: number, item: { id: string }) => item.id;
+  trackByGroup = (_: number, item: ActionGroup) => item;
 }
