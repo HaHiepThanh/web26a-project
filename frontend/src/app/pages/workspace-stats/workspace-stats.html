@@ -63,17 +63,33 @@
       @if (maxDailyTotal() === 0) {
         <p class="rounded-box border border-dashed border-base-300 bg-base-100 p-4 text-sm text-base-content/50">Chưa có hoạt động nào trong khoảng thời gian này.</p>
       } @else {
-        <div class="flex h-32 items-end gap-2 rounded-box border border-base-300 bg-base-100 p-4">
+        <div class="flex items-end gap-2 rounded-box border border-base-300 bg-base-100 p-4">
           @for (point of dailyActivity(); track trackByDate($index, point)) {
-            <div class="flex flex-1 flex-col items-center gap-1" [title]="point.date + ': ' + point.createdCount + ' tạo mới, ' + point.completedCount + ' hoàn thành'">
+            <button
+              type="button"
+              class="flex flex-1 cursor-pointer flex-col items-center gap-1 rounded-md p-1 transition-colors hover:bg-base-200"
+              [class.bg-base-200]="selectedDate() === point.date"
+              (click)="selectedDate.set(selectedDate() === point.date ? null : point.date)"
+              [title]="point.date + ': ' + point.createdCount + ' tạo mới, ' + point.completedCount + ' hoàn thành'"
+            >
               <div class="flex w-full flex-col-reverse overflow-hidden rounded-t" [style.height.px]="point.createdPx + point.completedPx">
                 <div class="w-full bg-warning" [style.height.px]="point.createdPx"></div>
                 <div class="w-full bg-success" [style.height.px]="point.completedPx"></div>
               </div>
               <span class="text-[11px] text-base-content/50">{{ point.date.slice(5) }}</span>
-            </div>
+            </button>
           }
         </div>
+        @if (selectedDailyPoint(); as sel) {
+          <div class="flex flex-wrap items-center justify-between gap-2 rounded-box border border-base-300 bg-base-100 p-3 text-sm">
+            <span class="font-semibold text-base-content">{{ sel.date }}</span>
+            <div class="flex items-center gap-4">
+              <span class="flex items-center gap-1 text-base-content/70"><span class="h-2 w-2 rounded-full bg-warning"></span>{{ sel.createdCount }} task mới tạo</span>
+              <span class="flex items-center gap-1 text-base-content/70"><span class="h-2 w-2 rounded-full bg-success"></span>{{ sel.completedCount }} task hoàn thành</span>
+            </div>
+            <button type="button" class="btn btn-ghost btn-xs" (click)="selectedDate.set(null)" aria-label="Đóng">✕</button>
+          </div>
+        }
       }
     </section>
 

@@ -96,6 +96,7 @@ export class WorkspaceStats {
   readonly logScope = signal<LogScope>('team');
   readonly logSearch = signal('');
   readonly actionFilter = signal<ActionGroup>('all');
+  readonly selectedDate = signal<string | null>(null);
 
   // Mock hiện chỉ seed 7 ngày gần nhất; chọn "30 ngày" sẽ hiển thị toàn bộ dữ liệu
   // đang có (không bịa thêm điểm dữ liệu giả cho những ngày chưa seed).
@@ -120,6 +121,8 @@ export class WorkspaceStats {
       completedPx: px(d.completedCount),
     }));
   });
+
+  readonly selectedDailyPoint = computed(() => this.dailyActivity().find((d) => d.date === this.selectedDate()) ?? null);
 
   readonly maxAssignedCount = computed(() => Math.max(1, ...this.memberWorkload.map((m) => m.assignedCount)));
 
