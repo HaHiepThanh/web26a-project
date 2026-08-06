@@ -47,6 +47,11 @@ const PRIORITY_STYLE: Record<CardPriority, { label: string; progressClass: strin
 // Không hoạt động từ 3 ngày trở lên (kể cả khi vẫn còn việc đang làm) -> đáng chú ý cho quản lý.
 const INACTIVITY_THRESHOLD_DAYS = 3;
 
+// Chiều cao tối đa (px) của cột trong "Hoạt động theo ngày". Cột đo bằng px thay vì %
+// của container cố định, để phần màu luôn chạm đúng mép trên của chính nó — nhờ vậy
+// góc bo (rounded-t) luôn hiện đúng ở mọi cột, không chỉ cột cao nhất (100%).
+const DAILY_BAR_MAX_PX = 80;
+
 /** Trang thống kê thành viên workspace (#bonus): nhật ký hoạt động + tổng quan tiến độ.
  *  Dữ liệu lấy từ workspace-stats.mock.ts — xem file đó để biết cách nối API thật sau này. */
 @Component({
@@ -106,13 +111,15 @@ export class WorkspaceStats {
     Math.max(1, ...this.visibleDailyActivity().map((d) => d.createdCount + d.completedCount)),
   );
 
-  readonly dailyActivity = computed(() =>
-    this.visibleDailyActivity().map((d) => ({
+  readonly dailyActivity = computed(() => {
+    const max = this.maxDailyTotal();
+    const px = (count: number) => (count > 0 ? Math.max(2, Math.round((count / max) * DAILY_BAR_MAX_PX)) : 0);
+    return this.visibleDailyActivity().map((d) => ({
       ...d,
-      createdPct: Math.round((d.createdCount / this.maxDailyTotal()) * 100),
-      completedPct: Math.round((d.completedCount / this.maxDailyTotal()) * 100),
-    })),
-  );
+      createdPx: px(d.createdCount),
+      completedPx: px(d.completedCount),
+    }));
+  });
 
   readonly maxAssignedCount = computed(() => Math.max(1, ...this.memberWorkload.map((m) => m.assignedCount)));
 

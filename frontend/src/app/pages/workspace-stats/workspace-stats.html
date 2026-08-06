@@ -65,10 +65,10 @@
       } @else {
         <div class="flex h-32 items-end gap-2 rounded-box border border-base-300 bg-base-100 p-4">
           @for (point of dailyActivity(); track trackByDate($index, point)) {
-            <div class="flex h-full flex-1 flex-col items-center justify-end gap-1" [title]="point.date + ': ' + point.createdCount + ' tạo mới, ' + point.completedCount + ' hoàn thành'">
-              <div class="flex w-full flex-1 flex-col-reverse overflow-hidden rounded-t">
-                <div class="w-full bg-warning" [style.height.%]="point.createdPct"></div>
-                <div class="w-full bg-success" [style.height.%]="point.completedPct"></div>
+            <div class="flex flex-1 flex-col items-center gap-1" [title]="point.date + ': ' + point.createdCount + ' tạo mới, ' + point.completedCount + ' hoàn thành'">
+              <div class="flex w-full flex-col-reverse overflow-hidden rounded-t" [style.height.px]="point.createdPx + point.completedPx">
+                <div class="w-full bg-warning" [style.height.px]="point.createdPx"></div>
+                <div class="w-full bg-success" [style.height.px]="point.completedPx"></div>
               </div>
               <span class="text-[11px] text-base-content/50">{{ point.date.slice(5) }}</span>
             </div>
