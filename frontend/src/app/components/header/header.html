@@ -1,63 +1,63 @@
-<header class="top-navbar">
-  <div class="navbar-left">
-    <a routerLink="/dashboard" class="trello-logo">
-      <div class="logo-icon">
-        <div class="logo-bar bar-1"></div>
-        <div class="logo-bar bar-2"></div>
+<header class="sticky top-0 z-[100] flex h-[52px] items-center justify-between border-b border-base-300 bg-base-200 px-3 shadow-sm">
+  <div class="flex items-center gap-2">
+    <a routerLink="/dashboard" class="flex items-center gap-2 rounded-md px-2 py-1 font-bold text-base-content hover:bg-base-300">
+      <div class="flex h-6 w-6 items-center justify-center gap-0.5 rounded bg-gradient-to-br from-[#0052cc] to-[#0747a6] p-[3px]">
+        <div class="h-[14px] w-[7px] rounded-[1px] bg-white"></div>
+        <div class="mt-0.5 h-[9px] w-[7px] self-start rounded-[1px] bg-white"></div>
       </div>
-      <div class="logo-brand">
-        <span class="logo-text">Trello</span>
-        <span class="logo-tag">WORKSPACE</span>
+      <div class="flex flex-col leading-[1.1]">
+        <span class="text-[17px] tracking-[-0.3px] text-primary">Trello</span>
+        <span class="text-[9px] font-extrabold tracking-[0.8px] text-base-content/50">WORKSPACE</span>
       </div>
     </a>
   </div>
 
-  <div class="navbar-center">
-    <div class="search-container">
-      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+  <div class="mx-6 max-w-[600px] flex-1 max-md:hidden">
+    <div class="relative w-full">
+      <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-base-content/50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="11" cy="11" r="8"></circle>
         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
       </svg>
-      <input type="text" class="search-input" placeholder="Tìm kiếm bảng dự án..." (input)="onSearchInput($event)" />
-      <span class="search-shortcut-badge">/</span>
+      <input type="text" class="input input-bordered h-9 w-full rounded-lg pl-9 pr-9" placeholder="Tìm kiếm bảng dự án..." (input)="onSearchInput($event)" />
+      <span class="kbd kbd-sm pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">/</span>
     </div>
   </div>
 
-  <div class="navbar-right">
-    <button class="nav-btn btn-primary-nav" (click)="requestCreateBoard()">
+  <div class="flex items-center gap-2">
+    <button class="btn btn-primary btn-sm gap-1.5" (click)="requestCreateBoard()">
       <span>+</span>
       <span>Tạo</span>
     </button>
 
-    <button class="icon-btn" (click)="toggleTheme()" [title]="theme() === 'dark' ? 'Chuyển giao diện sáng' : 'Chuyển giao diện tối'">
+    <button class="btn btn-circle btn-ghost btn-sm text-base" (click)="toggleTheme()" [title]="theme() === 'dark' ? 'Chuyển giao diện sáng' : 'Chuyển giao diện tối'">
       {{ theme() === 'dark' ? '☀️' : '🌙' }}
     </button>
 
-    <button class="icon-btn" [title]="dueBadgeCount() > 0 ? dueBadgeCount() + ' thẻ của bạn sắp/đã quá hạn' : 'Thông báo'">
+    <button class="btn btn-circle btn-ghost btn-sm relative text-base" [title]="dueBadgeCount() > 0 ? dueBadgeCount() + ' thẻ của bạn sắp/đã quá hạn' : 'Thông báo'">
       🔔
       @if (dueBadgeCount() > 0) {
-        <span class="notification-badge">{{ dueBadgeCount() }}</span>
+        <span class="badge badge-error absolute -right-0.5 -top-0.5 h-[15px] min-w-[15px] rounded-full border-2 border-base-200 px-1 text-[9px] font-bold text-white">{{ dueBadgeCount() }}</span>
       }
     </button>
 
-    <a class="icon-btn" routerLink="/settings" title="Cài đặt">⚙️</a>
+    <a class="btn btn-circle btn-ghost btn-sm text-base" routerLink="/settings" title="Cài đặt">⚙️</a>
 
-    <div class="user-profile-btn" (click)="toggleUserMenu()">
-      <div class="user-avatar">{{ initials() }}</div>
-      <div class="user-info">
-        <span class="user-name">{{ currentUser()?.displayName ?? currentUser()?.email ?? 'Khách' }}</span>
+    <div class="flex cursor-pointer items-center gap-2 rounded-[20px] border border-base-300 bg-base-100 py-[3px] pl-1 pr-2.5 hover:bg-base-300" (click)="toggleUserMenu()">
+      <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#2563eb] to-[#1d4ed8] text-xs font-bold text-white">{{ initials() }}</div>
+      <div class="flex items-center gap-1.5 text-left max-md:hidden">
+        <span class="max-w-[140px] truncate text-[13px] font-semibold text-base-content">{{ currentUser()?.displayName ?? currentUser()?.email ?? 'Khách' }}</span>
       </div>
     </div>
   </div>
 
-  <div class="user-menu-popover" [class.active]="menuOpen()">
-    <div class="menu-account-label">Tài khoản</div>
-    <div class="menu-account-email">{{ currentUser()?.email ?? '—' }}</div>
-    <div class="menu-divider"></div>
-    <a class="menu-item" routerLink="/settings">👤 Hồ sơ và quyền riêng tư</a>
-    <a class="menu-item" routerLink="/workspace">🗂️ Không gian làm việc</a>
-    <a class="menu-item" routerLink="/members">👥 Thành viên</a>
-    <div class="menu-divider"></div>
-    <div class="menu-item menu-item-danger" (click)="logout()">🚪 Đăng xuất</div>
+  <div class="absolute right-4 top-14 z-[200] w-[260px] rounded-box border border-base-300 bg-base-100 p-2 shadow-lg" [class.hidden]="!menuOpen()">
+    <div class="px-3 pt-2 text-[13px] font-bold text-base-content">Tài khoản</div>
+    <div class="px-3 pb-2 text-xs text-base-content/50">{{ currentUser()?.email ?? '—' }}</div>
+    <div class="my-1 h-px bg-base-300"></div>
+    <a class="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-[13px] text-base-content hover:bg-base-200" routerLink="/settings">👤 Hồ sơ và quyền riêng tư</a>
+    <a class="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-[13px] text-base-content hover:bg-base-200" routerLink="/workspace">🗂️ Không gian làm việc</a>
+    <a class="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-[13px] text-base-content hover:bg-base-200" routerLink="/members">👥 Thành viên</a>
+    <div class="my-1 h-px bg-base-300"></div>
+    <div class="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-[13px] text-error hover:bg-base-200" (click)="logout()">🚪 Đăng xuất</div>
   </div>
 </header>

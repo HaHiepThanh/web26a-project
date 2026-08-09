@@ -2,26 +2,8 @@
   display: block;
 }
 
-.icon {
-  width: 11px;
-  height: 11px;
-  display: block;
-}
-
-.card-face {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  padding: 8px 9px;
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow var(--transition-fast), border-color var(--transition-fast);
-  position: relative;
-}
-
-.card-face:hover {
-  box-shadow: var(--shadow-md);
-}
-
+/* Stateful / animated styles kept in CSS (pseudo-elements + keyframes are not
+   utility-friendly); static visuals live as Tailwind classes in the template. */
 .card-face.saving::after {
   content: '';
   position: absolute;
@@ -39,12 +21,6 @@
   animation: card-shake 0.35s;
 }
 
-/* Lọc board (#7): khớp điều kiện thì viền sáng nổi bật; không khớp thì làm mờ
-   (không ẩn hẳn, vẫn giữ bối cảnh toàn board). */
-.card-face {
-  transition: opacity 150ms ease, filter 150ms ease, outline-color 150ms ease;
-}
-
 .card-face.dimmed {
   opacity: 0.35;
   filter: grayscale(0.25);
@@ -55,30 +31,10 @@
   outline-offset: 1px;
 }
 
-/* Chọn nhiều thẻ (#12) */
 .card-face.selected {
   outline: 2px solid var(--accent-blue);
   outline-offset: 1px;
   background: var(--accent-blue-soft);
-}
-
-.select-check {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: var(--accent-blue);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.select-check .icon {
-  width: 10px;
-  height: 10px;
 }
 
 @keyframes saving-blink {
@@ -102,86 +58,4 @@
   75% {
     transform: translateX(3px);
   }
-}
-
-/* Hàng cờ ưu tiên (#4) — tách riêng khỏi hàng nhãn, đúng "phương án A" đã chốt. */
-.priority-row {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-bottom: 5px;
-  font-size: 10px;
-  font-weight: 700;
-}
-
-.priority-row.p-cao {
-  color: var(--danger);
-}
-
-.priority-row.p-trung {
-  color: var(--warning);
-}
-
-.priority-row.p-thap {
-  color: var(--text-muted);
-}
-
-.flag-icon {
-  width: 12px;
-  height: 12px;
-  flex-shrink: 0;
-}
-
-.label-row {
-  display: flex;
-  gap: 5px;
-  flex-wrap: wrap;
-  margin-bottom: 5px;
-}
-
-.label-chip {
-  width: 24px;
-  height: 6px;
-  border-radius: 3px;
-}
-
-.card-title {
-  font-size: 12.5px;
-  font-weight: 500;
-  color: var(--text-primary);
-  line-height: 1.4;
-  margin-bottom: 6px;
-  word-break: break-word;
-}
-
-.card-bottom {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.due-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 10px;
-  color: var(--text-muted);
-}
-
-.due-badge.overdue {
-  color: var(--danger);
-  font-weight: 600;
-}
-
-.card-avatar {
-  width: 19px;
-  height: 19px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 9px;
-  font-weight: 700;
-  color: #fff;
-  flex-shrink: 0;
 }

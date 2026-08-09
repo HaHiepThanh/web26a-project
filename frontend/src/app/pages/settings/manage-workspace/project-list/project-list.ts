@@ -11,6 +11,11 @@ import { ProjectSummary, mockProjects, roleLabel } from '../manage-workspace.mod
 })
 export class ProjectList {
   readonly roleLabel = roleLabel;
+  readonly roleBadge: Record<string, string> = {
+    admin: 'badge-primary badge-soft',
+    member: 'badge-success badge-soft',
+    observer: 'badge-ghost',
+  };
   readonly searchQuery = signal('');
   private readonly projects = signal<ProjectSummary[]>(mockProjects());
 

@@ -9,7 +9,7 @@ export interface Card {
   description?: string; // nullable, hỗ trợ markdown đơn giản
   assigneeId?: string; // FK auth.users.id, nullable — người phụ trách
   dueDate?: string; // nullable, dạng 'YYYY-MM-DD'
-  priority?: CardPriority; // nullable — dùng cho thống kê (trang Workspace Stats), mặc định coi như 'medium' nếu thiếu
+  priority: CardPriority; // cột mới (CLAUDE.md #4), default 'medium' — xem migrations/0001_*.sql; dùng cho cờ ưu tiên (#4) và trang Workspace Stats
   completedAt?: string; // nullable, ISO timestamptz — set khi card được chuyển vào list "Done"; dùng để tính đúng hạn/thời gian xử lý
   position: number; // float — thứ tự trong list
   createdBy: string; // FK auth.users.id

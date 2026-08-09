@@ -116,13 +116,13 @@ export class ChatPanel {
     if (!targetList) return;
     const card = await this.cardService.createCard(targetList.id, {
       title: pending.suggestion.title,
-      priority: 'trung',
+      priority: 'medium',
       assigneeId: pending.suggestion.assigneeId,
       dueDate: pending.suggestion.dueDate,
     });
     this.chat.dismissSuggestion();
     if (card) {
-      this.activityService.record(this.boardId(), card.id, 'đã tạo thẻ này từ gợi ý AI trong chat');
+      this.activityService.record(this.boardId(), card.id, 'đã tạo thẻ này từ gợi ý AI trong chat', 'card_created');
       this.taskCreated.emit(card.title);
     }
   }

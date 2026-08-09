@@ -38,6 +38,11 @@ export class ProjectMembers {
   private readonly route = inject(ActivatedRoute);
   readonly roleLabel = roleLabel;
   readonly roleOptions: BoardRole[] = ['admin', 'member', 'observer'];
+  readonly roleBadge: Record<string, string> = {
+    admin: 'badge-primary badge-soft',
+    member: 'badge-success badge-soft',
+    observer: 'badge-ghost',
+  };
   readonly CURRENT_USER_ID = CURRENT_USER_ID;
 
   private readonly boardId = this.route.snapshot.paramMap.get('boardId') ?? '';

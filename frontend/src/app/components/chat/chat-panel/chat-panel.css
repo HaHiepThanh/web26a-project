@@ -2,37 +2,13 @@
   display: block;
 }
 
-.icon {
-  width: 20px;
-  height: 20px;
-  display: block;
+/* Animations kept in CSS (keyframes are not utility-friendly). */
+.pulse {
+  animation: bubble-pulse 0.5s ease-in-out 2;
 }
 
-.chat-widget {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 500;
-}
-
-/* -------------------- Bong bóng nổi (#8, phương án B) -------------------- */
-.chat-bubble-btn {
-  position: relative;
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  background: var(--accent-blue);
-  color: #fff;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: var(--shadow-lg);
-  margin-left: auto;
-}
-
-.chat-bubble-btn:hover {
-  background: var(--accent-blue-hover);
+.msg-toast {
+  animation: toast-in 0.25s ease;
 }
 
 @keyframes bubble-pulse {
@@ -45,45 +21,6 @@
   }
 }
 
-.chat-bubble-btn.pulse {
-  animation: bubble-pulse 0.5s ease-in-out 2;
-}
-
-.unread-badge {
-  position: absolute;
-  top: -3px;
-  right: -3px;
-  background: var(--danger);
-  color: #fff;
-  font-size: 10px;
-  font-weight: 700;
-  min-width: 17px;
-  height: 17px;
-  border-radius: 999px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 4px;
-  border: 2px solid var(--bg-app);
-}
-
-/* -------------------- Toast preview — cùng góc với bong bóng -------------------- */
-.msg-toast {
-  position: absolute;
-  bottom: 62px;
-  right: 0;
-  width: 250px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
-  padding: 10px 11px;
-  display: flex;
-  gap: 8px;
-  cursor: pointer;
-  animation: toast-in 0.25s ease;
-}
-
 @keyframes toast-in {
   from {
     transform: translateY(10px);
@@ -92,117 +29,5 @@
   to {
     transform: translateY(0);
     opacity: 1;
-  }
-}
-
-.msg-toast-avatar {
-  flex-shrink: 0;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--accent-purple);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.msg-toast-body {
-  min-width: 0;
-}
-
-.msg-toast-name {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.msg-toast-text {
-  font-size: 11px;
-  color: var(--text-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-top: 1px;
-}
-
-/* -------------------- Panel nổi khi mở -------------------- */
-.chat-float-panel {
-  position: absolute;
-  bottom: 62px;
-  right: 0;
-  width: 300px;
-  height: 420px;
-  background: var(--bg-surface);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-lg);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.chat-head {
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--border-color);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-shrink: 0;
-}
-
-.chat-head h3 {
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.chat-head-actions {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.sim-btn-mini {
-  font-size: 13px;
-  width: 24px;
-  height: 24px;
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.sim-btn-mini:hover {
-  background: var(--bg-surface-hover);
-}
-
-.chat-head-close {
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  display: flex;
-  width: 24px;
-  height: 24px;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-sm);
-}
-
-.chat-head-close .icon {
-  width: 15px;
-  height: 15px;
-}
-
-.chat-head-close:hover {
-  color: var(--text-primary);
-  background: var(--bg-surface-hover);
-}
-
-@media (max-width: 480px) {
-  .chat-float-panel {
-    width: calc(100vw - 40px);
   }
 }

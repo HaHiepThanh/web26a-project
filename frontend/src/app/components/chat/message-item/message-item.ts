@@ -33,6 +33,12 @@ export class MessageItem {
   readonly initials = computed(() => initialsOf(this.senderLabel()));
   readonly avatarColor = computed(() => avatarColorFor(this.sender()?.id ?? this.message().userId));
 
+  readonly bubbleClass = computed(() =>
+    this.isOwn()
+      ? 'break-words rounded-xl rounded-tr-[3px] bg-primary/10 px-2.5 py-1.5 text-xs leading-relaxed text-base-content'
+      : 'break-words rounded-xl rounded-tl-[3px] bg-base-200 px-2.5 py-1.5 text-xs leading-relaxed text-base-content',
+  );
+
   readonly timeLabel = computed(() => {
     const d = new Date(this.message().createdAt);
     return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });

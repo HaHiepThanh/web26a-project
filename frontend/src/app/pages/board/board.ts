@@ -50,11 +50,11 @@ interface SavedHighlightGroup {
 
 const LIST_COLORS = ['#64748b', '#2563eb', '#059669', '#d97706', '#7c3aed', '#dc2626'];
 const PRIORITIES: { id: CardPriority; label: string }[] = [
-  { id: 'cao', label: 'Cao' },
-  { id: 'trung', label: 'Trung bình' },
-  { id: 'thap', label: 'Thấp' },
+  { id: 'high', label: 'Cao' },
+  { id: 'medium', label: 'Trung bình' },
+  { id: 'low', label: 'Thấp' },
 ];
-const PRIORITY_RANK: Record<CardPriority, number> = { cao: 0, trung: 1, thap: 2 };
+const PRIORITY_RANK: Record<CardPriority, number> = { high: 0, medium: 1, low: 2 };
 const SORT_OPTIONS: { id: SortMode; label: string }[] = [
   { id: 'manual', label: 'Sắp xếp: Thủ công' },
   { id: 'priority', label: 'Sắp xếp: Mức ưu tiên' },
@@ -473,7 +473,7 @@ export class Board {
     void this.cardService.moveCardOptimistic(card.id, from.listId, to.listId, targetIndex, to.priority);
     if (!sameCell) {
       const priorityLabel = this.priorities.find((p) => p.id === to.priority)?.label ?? to.priority;
-      this.activityService.record(this.boardId, card.id, `đã kéo thẻ "${card.title}" sang "${this.listNameFor(to.listId)} · ${priorityLabel}"`);
+      this.activityService.record(this.boardId, card.id, `đã kéo thẻ "${card.title}" sang "${this.listNameFor(to.listId)} · ${priorityLabel}"`, 'card_moved');
     }
   }
 
@@ -521,7 +521,7 @@ export class Board {
   readonly showCardModal = signal(false);
   readonly targetListId = signal<string | null>(null);
   readonly newCardTitle = signal('');
-  readonly newCardPriority = signal<CardPriority>('trung');
+  readonly newCardPriority = signal<CardPriority>('medium');
   readonly newCardAssigneeId = signal<string | null>(null);
   readonly newCardDue = signal('');
   readonly newCardLabelIds = signal<string[]>([]);
@@ -529,7 +529,7 @@ export class Board {
   openCardModal(listId: string): void {
     this.targetListId.set(listId);
     this.newCardTitle.set('');
-    this.newCardPriority.set('trung');
+    this.newCardPriority.set('medium');
     this.newCardAssigneeId.set(null);
     this.newCardDue.set('');
     this.newCardLabelIds.set([]);
@@ -554,7 +554,7 @@ export class Board {
     if (card && this.newCardLabelIds().length) {
       this.labelService.setCardLabels(card.id, this.newCardLabelIds());
     }
-    if (card) this.activityService.record(this.boardId, card.id, 'đã tạo thẻ này');
+    if (card) this.activityService.record(this.boardId, card.id, 'đã tạo thẻ này', 'card_created');
     this.closeCardModal();
   }
 

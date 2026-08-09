@@ -9,11 +9,11 @@ import { ActivityService } from '../../../services/activity.service';
 import { LabelPicker } from '../label-picker/label-picker';
 
 const PRIORITIES: { id: CardPriority; label: string }[] = [
-  { id: 'cao', label: 'Cao' },
-  { id: 'trung', label: 'Trung bình' },
-  { id: 'thap', label: 'Thấp' },
+  { id: 'high', label: 'Cao' },
+  { id: 'medium', label: 'Trung bình' },
+  { id: 'low', label: 'Thấp' },
 ];
-const PRIORITY_LABEL: Record<CardPriority, string> = { cao: 'Cao', trung: 'Trung bình', thap: 'Thấp' };
+const PRIORITY_LABEL: Record<CardPriority, string> = { high: 'Cao', medium: 'Trung bình', low: 'Thấp' };
 
 /** Người "giả lập đang xem cùng" cho demo Presence (#11) — không có backend Realtime
  *  thật nên dùng nút 🎲 giống demo `09-card-presence.html`, state chỉ tồn tại khi modal mở. */
@@ -123,6 +123,18 @@ export class CardDetailModal {
     if (old === priority) return;
     void this.cardService.updateCard(this.card().id, { priority });
     this.log(`đã đổi mức ưu tiên từ "${PRIORITY_LABEL[old]}" thành "${PRIORITY_LABEL[priority]}"`);
+  }
+
+  /** Class Tailwind/DaisyUI cho nút chọn mức ưu tiên (tô màu khi đang được chọn). */
+  priorityChoiceClass(id: CardPriority): string {
+    const base = 'flex-1 rounded-md border-[1.5px] px-1 py-1.5 text-center text-[11.5px] font-semibold transition-colors';
+    if (this.card().priority !== id) return `${base} border-base-300 bg-base-100 text-base-content/80 hover:bg-base-200`;
+    const selected: Record<CardPriority, string> = {
+      high: 'border-error bg-error/10 text-error',
+      medium: 'border-warning bg-warning/10 text-warning',
+      low: 'border-base-content/40 bg-base-200 text-base-content/80',
+    };
+    return `${base} ${selected[id]}`;
   }
 
   onLabelsChange(labelIds: string[]): void {

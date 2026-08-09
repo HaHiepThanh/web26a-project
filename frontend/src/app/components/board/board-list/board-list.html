@@ -1,13 +1,13 @@
 @if (collapsed()) {
-  <div class="list-column list-column-collapsed">
-    <button type="button" class="collapsed-head" (click)="toggleCollapse.emit()" title="Mở rộng danh sách">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"/></svg>
-      <span class="collapsed-name">{{ list().name }}</span>
-      <span class="count-badge">{{ cards().length }}</span>
+  <div class="h-full w-full">
+    <button type="button" class="flex h-full min-h-[120px] w-full flex-col items-center gap-2.5 rounded-box bg-base-200 py-2.5 text-base-content/80 hover:bg-base-300 hover:text-base-content" (click)="toggleCollapse.emit()" title="Mở rộng danh sách">
+      <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"/></svg>
+      <span class="rotate-180 whitespace-nowrap text-xs font-bold [writing-mode:vertical-rl]">{{ list().name }}</span>
+      <span class="badge badge-ghost badge-sm [writing-mode:horizontal-tb]">{{ cards().length }}</span>
     </button>
   </div>
 } @else {
-  <div class="list-column">
+  <div class="flex max-h-full w-full flex-col overflow-hidden rounded-box bg-base-200">
     <app-list-header
       [list]="list()"
       [cardCount]="cards().length"
@@ -17,7 +17,7 @@
     />
 
     <div
-      class="list-cards"
+      class="list-cards flex min-h-[40px] flex-1 flex-col gap-2 overflow-y-auto overflow-x-hidden px-2"
       cdkDropList
       [id]="list().id"
       [cdkDropListData]="cards()"
@@ -25,7 +25,7 @@
       (cdkDropListDropped)="onCardDrop($event)"
     >
       @for (card of cards(); track trackByCardId($index, card)) {
-        <div class="card-drag-wrap" cdkDrag [cdkDragData]="card" (click)="onCardClick($event, card)">
+        <div class="card-drag-wrap cursor-grab active:cursor-grabbing" cdkDrag [cdkDragData]="card" (click)="onCardClick($event, card)">
           <div class="drag-placeholder" *cdkDragPlaceholder></div>
           <app-card-item
             [card]="card"
@@ -42,7 +42,7 @@
       }
     </div>
 
-    <div class="list-footer">
+    <div class="shrink-0 px-2 pb-2 pt-1">
       <app-add-card (open)="addCard.emit()" />
     </div>
   </div>

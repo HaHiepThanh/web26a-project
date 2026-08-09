@@ -77,6 +77,7 @@ export class Login {
       this.submitting.set(false);
       this.showDemoSuccess({ name, email, initials: initialsOf(name) });
       this.addToast(`Chào mừng quay trở lại, ${name}!`, 'success');
+      setTimeout(() => this.router.navigateByUrl('/workspace'), 600);
     }, 900);
   }
 
@@ -114,7 +115,7 @@ export class Login {
       await this.auth.loginWithGoogle();
       const user = this.auth.currentUser();
       this.addToast(`Đã đăng nhập bằng Google${user?.displayName ? ' — chào ' + user.displayName : ''}!`, 'success');
-      setTimeout(() => this.router.navigateByUrl('/dashboard'), 500);
+      setTimeout(() => this.router.navigateByUrl('/workspace'), 500);
     } catch {
       this.addToast('Đăng nhập Google thất bại. Vui lòng thử lại.', 'error');
     } finally {

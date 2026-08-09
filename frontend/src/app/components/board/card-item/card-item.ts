@@ -2,10 +2,11 @@ import { Component, computed, input } from '@angular/core';
 import { Card, CardPriority, Label, User } from '../../../models';
 import { avatarColorFor, initialsOf } from '../../../services/board.service';
 
-const PRIORITY_LABEL: Record<CardPriority, string> = { cao: 'Cao', trung: 'Trung bình', thap: 'Thấp' };
+const PRIORITY_LABEL: Record<CardPriority, string> = { high: 'Cao', medium: 'Trung bình', low: 'Thấp' };
+const PRIORITY_TEXT: Record<CardPriority, string> = { high: 'text-error', medium: 'text-warning', low: 'text-base-content/50' };
 
 /** Hình cờ dùng chung cho mức ưu tiên (#4, phương án A đã chốt trong demo 04):
- *  cao = tô đặc, trung = tô nửa (clip trái), thấp = chỉ viền. */
+ *  high = tô đặc, medium = tô nửa (clip trái), low = chỉ viền. */
 export const FLAG_PATH = 'M5 21V4a1 1 0 011-1h11.4a1 1 0 01.8 1.6L15 9l3.2 4.4a1 1 0 01-.8 1.6H6v6z';
 
 let clipSeq = 0;
@@ -34,6 +35,7 @@ export class CardItem {
   readonly clipId = `flag-clip-${clipSeq++}`;
 
   readonly priorityText = computed(() => PRIORITY_LABEL[this.card().priority]);
+  readonly priorityColorClass = computed(() => PRIORITY_TEXT[this.card().priority]);
 
   readonly dueText = computed(() => {
     const due = this.card().dueDate;

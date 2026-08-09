@@ -1,29 +1,29 @@
-<div class="chat-widget">
+<div class="fixed bottom-5 right-5 z-[500]">
   @if (toastMessage(); as toast) {
-    <div class="msg-toast show" (click)="openFromToast()">
-      <span class="msg-toast-avatar">{{ toast.name.charAt(0) }}</span>
-      <div class="msg-toast-body">
-        <div class="msg-toast-name">{{ toast.name }}</div>
-        <div class="msg-toast-text">{{ toast.text }}</div>
+    <div class="msg-toast absolute bottom-[62px] right-0 flex w-[250px] cursor-pointer gap-2 rounded-box border border-base-300 bg-base-100 p-2.5 shadow-lg" (click)="openFromToast()">
+      <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--accent-purple)] text-[11px] font-bold text-white">{{ toast.name.charAt(0) }}</span>
+      <div class="min-w-0">
+        <div class="text-[11px] font-bold text-base-content">{{ toast.name }}</div>
+        <div class="mt-px truncate text-[11px] text-base-content/80">{{ toast.text }}</div>
       </div>
     </div>
   }
 
-  <button type="button" class="chat-bubble-btn" [class.pulse]="pulse()" (click)="toggleOpen()" aria-label="Mở chat">
-    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+  <button type="button" class="btn btn-circle btn-primary relative ml-auto h-[52px] w-[52px] shadow-lg" [class.pulse]="pulse()" (click)="toggleOpen()" aria-label="Mở chat">
+    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
     @if (unreadCount() > 0) {
-      <span class="unread-badge">{{ unreadCount() }}</span>
+      <span class="badge badge-error absolute -right-1 -top-1 h-[17px] min-w-[17px] rounded-full border-2 border-base-100 px-1 text-[10px] font-bold text-white">{{ unreadCount() }}</span>
     }
   </button>
 
   @if (isOpen()) {
-    <div class="chat-float-panel">
-      <div class="chat-head">
-        <h3>Chat nhóm — board này</h3>
-        <div class="chat-head-actions">
-          <button type="button" class="sim-btn-mini" (click)="simulateIncoming()" title="Giả lập tin nhắn mới từ người khác (demo)">🎲</button>
-          <button type="button" class="chat-head-close" (click)="toggleOpen()" aria-label="Đóng">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    <div class="absolute bottom-[62px] right-0 flex h-[420px] w-[300px] flex-col overflow-hidden rounded-box border border-base-300 bg-base-100 shadow-lg max-[480px]:w-[calc(100vw-40px)]">
+      <div class="flex shrink-0 items-center justify-between border-b border-base-300 px-3 py-2.5">
+        <h3 class="text-xs font-semibold text-base-content">Chat nhóm — board này</h3>
+        <div class="flex items-center gap-1">
+          <button type="button" class="btn btn-square btn-ghost btn-xs text-[13px]" (click)="simulateIncoming()" title="Giả lập tin nhắn mới từ người khác (demo)">🎲</button>
+          <button type="button" class="btn btn-square btn-ghost btn-xs" (click)="toggleOpen()" aria-label="Đóng">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
           </button>
         </div>
       </div>

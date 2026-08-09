@@ -1,25 +1,26 @@
-<div class="chat-input-wrap">
+<div class="relative">
   @if (mentionOpen() && mentionMatches().length) {
-    <div class="mention-dropdown">
+    <div class="absolute bottom-full left-2.5 right-2.5 mb-1 overflow-hidden rounded-md border border-base-300 bg-base-100 shadow-md">
       @for (m of mentionMatches(); track m.id) {
-        <button type="button" class="mention-item" (click)="pickMention(m, msgInput)">
+        <button type="button" class="block w-full px-2.5 py-1.5 text-left text-xs font-medium text-base-content hover:bg-primary/10 hover:text-primary" (click)="pickMention(m, msgInput)">
           {{ m.displayName ?? m.email }}
         </button>
       }
     </div>
   }
 
-  <div class="chat-input-row">
+  <div class="flex gap-1.5 border-t border-base-300 px-2.5 py-2">
     <input
       #msgInput
       type="text"
+      class="input input-bordered input-sm min-w-0 flex-1"
       placeholder="Nhắn gì đó cho cả nhóm... (gõ @ để nhắc tên)"
       [value]="value()"
       (input)="onInput($event)"
       (keydown.enter)="onSend()"
     />
-    <button type="button" class="chat-send" (click)="onSend()" aria-label="Gửi">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg>
+    <button type="button" class="btn btn-square btn-primary btn-sm" (click)="onSend()" aria-label="Gửi">
+      <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg>
     </button>
   </div>
 </div>

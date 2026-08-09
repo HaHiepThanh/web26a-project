@@ -4,7 +4,8 @@ import { Card, CardPriority } from '../../models';
 import { CardService } from '../../services/card.service';
 import { ListService } from '../../services/list.service';
 
-const PRIORITY_LABEL: Record<CardPriority, string> = { cao: 'Cao', trung: 'Trung bình', thap: 'Thấp' };
+const PRIORITY_LABEL: Record<CardPriority, string> = { high: 'Cao', medium: 'Trung bình', low: 'Thấp' };
+const PRIORITY_BADGE: Record<CardPriority, string> = { high: 'badge-error badge-soft', medium: 'badge-warning badge-soft', low: 'badge-ghost' };
 const DUE_SOON_WINDOW_DAYS = 3;
 
 /**
@@ -25,6 +26,7 @@ export class Dashboard {
 
   readonly boardId = this.cardService.loadedBoardId;
   readonly priorityLabel = PRIORITY_LABEL;
+  readonly priorityBadge = PRIORITY_BADGE;
   private readonly today = new Date().toISOString().slice(0, 10);
 
   private readonly listNameById = computed(() => {

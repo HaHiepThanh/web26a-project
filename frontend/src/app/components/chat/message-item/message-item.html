@@ -1,16 +1,16 @@
-<div class="msg-row" [class.own]="isOwn()">
-  <span class="msg-avatar" [style.background]="avatarColor()">{{ initials() }}</span>
-  <div class="msg-col">
-    <span class="msg-name">{{ senderLabel() }}</span>
-    <div class="msg-bubble">
+<div class="flex max-w-[88%] gap-[7px]" [class.flex-row-reverse]="isOwn()" [class.ml-auto]="isOwn()" [class.self-end]="isOwn()">
+  <span class="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white" [style.background]="avatarColor()">{{ initials() }}</span>
+  <div class="flex min-w-0 flex-col gap-0.5" [class.items-end]="isOwn()">
+    <span class="text-[10.5px] font-semibold text-base-content/80">{{ senderLabel() }}</span>
+    <div [class]="bubbleClass()">
       @for (part of contentParts(); track $index) {
         @if (part.isMention) {
-          <span class="mention">{{ part.text }}</span>
+          <span class="font-semibold text-primary">{{ part.text }}</span>
         } @else {
           <span>{{ part.text }}</span>
         }
       }
     </div>
-    <span class="msg-time">{{ timeLabel() }}</span>
+    <span class="text-[9px] text-base-content/50">{{ timeLabel() }}</span>
   </div>
 </div>

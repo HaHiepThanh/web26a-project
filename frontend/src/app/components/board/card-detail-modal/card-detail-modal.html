@@ -1,25 +1,25 @@
-<div class="modal-overlay" (click)="close.emit()">
-  <div class="detail-box" (click)="$event.stopPropagation()">
-    <div class="detail-header">
-      <input class="title-input" [value]="card().title" spellcheck="false" (change)="onTitleChange($event)" />
+<div class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/45 p-5" (click)="close.emit()">
+  <div class="max-h-[88vh] w-[420px] max-w-full overflow-y-auto rounded-box bg-base-100 shadow-xl" (click)="$event.stopPropagation()">
+    <div class="flex items-start gap-2 px-4 pb-1 pt-4">
+      <input class="min-w-0 flex-1 rounded-md bg-transparent px-1.5 py-1 text-base font-bold text-base-content outline-none hover:bg-base-200 focus:bg-base-200" [value]="card().title" spellcheck="false" (change)="onTitleChange($event)" />
 
-      <span class="presence-stack">
+      <span class="mt-1 flex shrink-0 items-center">
         @for (v of viewers(); track v.name) {
-          <span class="presence-avatar" [style.background]="v.color" [title]="v.name + ' đang xem'">
+          <span class="relative -ml-2 flex h-6 w-6 items-center justify-center rounded-full border-2 border-base-100 text-[9px] font-bold text-white first:ml-0" [style.background]="v.color" [title]="v.name + ' đang xem'">
             {{ v.name.slice(0, 2).toUpperCase() }}
-            <span class="live-dot"></span>
+            <span class="absolute -bottom-px -right-px h-[7px] w-[7px] rounded-full border-2 border-base-100 bg-[#22c55e]"></span>
           </span>
         }
       </span>
 
-      <button type="button" class="close-btn" (click)="close.emit()" aria-label="Đóng">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      <button type="button" class="btn btn-circle btn-ghost btn-sm shrink-0" (click)="close.emit()" aria-label="Đóng">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </button>
     </div>
 
-    <div class="detail-body">
+    <div class="px-4 pb-4 pt-2">
       @if (viewers().length > 0) {
-        <div class="presence-banner">
+        <div class="mb-2.5 flex items-center gap-2 rounded-md border border-warning bg-warning/10 px-2.5 py-2 text-[11.5px] text-base-content">
           🟡
           @if (viewers().length === 1) {
             <span><strong>{{ viewers()[0].name }}</strong> cũng đang xem thẻ này — cẩn thận ghi đè nhé.</span>
@@ -29,31 +29,31 @@
         </div>
       }
 
-      <div class="presence-sim-row">
-        <button type="button" class="sim-btn" (click)="addSimulatedViewer()">+ Giả lập có người mở thẻ này</button>
-        <button type="button" class="sim-btn" (click)="removeSimulatedViewer()">− Giả lập có người đóng thẻ</button>
+      <div class="mb-4 flex gap-1.5">
+        <button type="button" class="btn btn-outline btn-xs flex-1" (click)="addSimulatedViewer()">+ Giả lập có người mở thẻ này</button>
+        <button type="button" class="btn btn-outline btn-xs flex-1" (click)="removeSimulatedViewer()">− Giả lập có người đóng thẻ</button>
       </div>
 
-      <div class="detail-field">
-        <label class="detail-label">Mức độ ưu tiên</label>
-        <div class="priority-row">
+      <div class="mb-4">
+        <label class="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-base-content/50">Mức độ ưu tiên</label>
+        <div class="flex gap-1.5">
           @for (p of priorities; track p.id) {
-            <button type="button" class="priority-choice" [class]="'p-' + p.id" [class.selected]="card().priority === p.id" (click)="onPriorityChange(p.id)">
+            <button type="button" [class]="priorityChoiceClass(p.id)" (click)="onPriorityChange(p.id)">
               {{ p.label }}
             </button>
           }
         </div>
       </div>
 
-      <div class="detail-field">
-        <label class="detail-label">Nhãn</label>
+      <div class="mb-4">
+        <label class="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-base-content/50">Nhãn</label>
         <app-label-picker [boardId]="boardId()" [selectedIds]="selectedLabelIds()" (selectionChange)="onLabelsChange($event)" />
       </div>
 
-      <div class="detail-row">
-        <div class="detail-field half">
-          <label class="detail-label" for="detail-assignee-select">Người phụ trách</label>
-          <select id="detail-assignee-select" class="detail-input" [ngModel]="card().assigneeId ?? null" (ngModelChange)="onAssigneeChange($event)">
+      <div class="flex gap-3">
+        <div class="mb-4 min-w-0 flex-1">
+          <label class="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-base-content/50" for="detail-assignee-select">Người phụ trách</label>
+          <select id="detail-assignee-select" class="select select-bordered select-sm w-full" [ngModel]="card().assigneeId ?? null" (ngModelChange)="onAssigneeChange($event)">
             <option [ngValue]="null">Chưa gán</option>
             @for (m of members(); track m.id) {
               <option [ngValue]="m.id">{{ m.displayName ?? m.email }}</option>
@@ -61,43 +61,41 @@
           </select>
         </div>
 
-        <div class="detail-field half">
-          <label class="detail-label" for="detail-due-input">Ngày hết hạn</label>
-          <input type="date" id="detail-due-input" class="detail-input" [value]="card().dueDate ?? ''" (change)="onDueChange($event)" />
+        <div class="mb-4 min-w-0 flex-1">
+          <label class="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-base-content/50" for="detail-due-input">Ngày hết hạn</label>
+          <input type="date" id="detail-due-input" class="input input-bordered input-sm w-full" [value]="card().dueDate ?? ''" (change)="onDueChange($event)" />
         </div>
       </div>
 
-      <div class="detail-field">
-        <label class="detail-label" for="detail-desc">Mô tả</label>
-        <textarea id="detail-desc" class="detail-textarea" rows="4" placeholder="Thêm mô tả chi tiết hơn..." [value]="card().description ?? ''" (change)="onDescriptionChange($event)"></textarea>
+      <div class="mb-4">
+        <label class="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-base-content/50" for="detail-desc">Mô tả</label>
+        <textarea id="detail-desc" class="textarea textarea-bordered w-full text-[12.5px]" rows="4" placeholder="Thêm mô tả chi tiết hơn..." [value]="card().description ?? ''" (change)="onDescriptionChange($event)"></textarea>
       </div>
 
-      <div class="history-section">
-        <button type="button" class="history-toggle" [class.open]="historyOpen()" (click)="toggleHistory()">
-          <span class="h-title">Lịch sử thay đổi ({{ activityLogs().length }})</span>
-          <svg class="icon chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+      <div class="mb-4 border-t border-base-300 pt-3">
+        <button type="button" class="flex w-full items-center justify-between" (click)="toggleHistory()">
+          <span class="text-[11px] font-bold uppercase tracking-wide text-base-content/80">Lịch sử thay đổi ({{ activityLogs().length }})</span>
+          <svg class="h-3.5 w-3.5 text-base-content/50 transition-transform" [class.rotate-90]="historyOpen()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
         </button>
 
         @if (historyOpen()) {
-          <div class="history-feed">
+          <div class="mt-2.5 flex max-h-[200px] flex-col gap-2 overflow-y-auto">
             @if (activityLogs().length === 0) {
-              <div class="history-empty">Chưa có thay đổi nào được ghi lại.</div>
+              <div class="text-[11.5px] text-base-content/50">Chưa có thay đổi nào được ghi lại.</div>
             }
             @for (h of activityLogs(); track h.id) {
-              <div class="h-item">
-                <div class="h-body">
-                  <div class="h-text">{{ h.actionText }}</div>
-                  <div class="h-time">{{ h.createdAt | date: 'HH:mm dd/MM/yyyy' }}</div>
-                </div>
+              <div class="text-xs">
+                <div class="leading-normal text-base-content">{{ h.actionText }}</div>
+                <div class="mt-px text-[10px] text-base-content/50">{{ h.createdAt | date: 'HH:mm dd/MM/yyyy' }}</div>
               </div>
             }
           </div>
         }
       </div>
 
-      <div class="detail-footer">
-        <button type="button" class="delete-btn" (click)="requestDelete()">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>
+      <div class="border-t border-dashed border-base-300 pt-1.5">
+        <button type="button" class="btn btn-ghost btn-sm gap-1.5 text-error hover:bg-error/10" (click)="requestDelete()">
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>
           Xoá thẻ
         </button>
       </div>

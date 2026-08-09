@@ -39,22 +39,22 @@ function mockCards(boardId: string, listIdByIndex: string[]): Record<string, Car
   const byList: Record<string, Card[]> = {};
   if (todo) {
     byList[todo] = [
-      make(todo, 'Thiết kế wireframe trang chủ', 'cao', 'u-linh', '2026-08-05', 0),
-      make(todo, 'Viết API xác thực người dùng', 'trung', 'u-khoa', '2026-08-10', 1),
-      make(todo, 'Chuẩn hoá style guide UI', 'thap', 'u-my', undefined, 2),
+      make(todo, 'Thiết kế wireframe trang chủ', 'high', 'u-linh', '2026-08-05', 0),
+      make(todo, 'Viết API xác thực người dùng', 'medium', 'u-khoa', '2026-08-10', 1),
+      make(todo, 'Chuẩn hoá style guide UI', 'low', 'u-my', undefined, 2),
     ];
   }
   if (doing) {
     byList[doing] = [
-      make(doing, 'Review pull request #482', 'trung', 'u-nam', '2026-08-04', 0),
-      make(doing, 'Tối ưu tốc độ tải trang', 'cao', 'u-bao', '2026-08-03', 1),
+      make(doing, 'Review pull request #482', 'medium', 'u-nam', '2026-08-04', 0),
+      make(doing, 'Tối ưu tốc độ tải trang', 'high', 'u-bao', '2026-08-03', 1),
     ];
   }
   if (review) {
-    byList[review] = [make(review, 'Kiểm thử luồng thanh toán', 'cao', 'u-khoa', '2026-08-06', 0)];
+    byList[review] = [make(review, 'Kiểm thử luồng thanh toán', 'high', 'u-khoa', '2026-08-06', 0)];
   }
   if (done) {
-    byList[done] = [make(done, 'Chuẩn bị demo cho khách hàng', 'trung', 'u-linh', '2026-08-01', 0)];
+    byList[done] = [make(done, 'Chuẩn bị demo cho khách hàng', 'medium', 'u-linh', '2026-08-01', 0)];
   }
   return byList;
 }

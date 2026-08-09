@@ -1,43 +1,43 @@
-<div class="picker-list">
+<div class="mb-2 flex max-h-40 flex-col gap-0.5 overflow-y-auto">
   @for (lb of labels(); track lb.id) {
-    <label class="picker-item" [class.checked]="isSelected(lb.id)">
-      <input type="checkbox" [checked]="isSelected(lb.id)" (change)="toggle(lb.id)" />
-      <span class="picker-swatch" [style.background]="lb.color">
+    <label class="flex cursor-pointer items-center gap-2 rounded-md px-1 py-1.5 hover:bg-base-200">
+      <input type="checkbox" class="sr-only" [checked]="isSelected(lb.id)" (change)="toggle(lb.id)" />
+      <span class="flex h-5 w-[30px] shrink-0 items-center justify-center rounded-[5px] text-white" [style.background]="lb.color">
         @if (isSelected(lb.id)) {
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+          <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
         }
       </span>
-      <span class="picker-name">{{ lb.name }}</span>
+      <span class="text-xs font-medium text-base-content">{{ lb.name }}</span>
     </label>
   }
   @if (labels().length === 0) {
-    <div class="picker-empty">Board chưa có nhãn nào — tạo nhãn đầu tiên bên dưới.</div>
+    <div class="px-0.5 py-1.5 text-[11.5px] text-base-content/50">Board chưa có nhãn nào — tạo nhãn đầu tiên bên dưới.</div>
   }
 </div>
 
 @if (!showCreateForm()) {
-  <button type="button" class="create-toggle-btn" (click)="openCreateForm()">
-    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+  <button type="button" class="flex items-center gap-1 rounded-md px-1 py-1.5 text-[11.5px] font-semibold text-base-content/80 hover:bg-base-200 hover:text-base-content" (click)="openCreateForm()">
+    <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
     Tạo nhãn mới
   </button>
 } @else {
-  <div class="create-form">
+  <div class="rounded-md border border-dashed border-base-300 p-2">
     <input
       type="text"
-      class="create-name-input"
+      class="input input-bordered input-sm mb-2 w-full"
       placeholder="Tên nhãn..."
       [ngModel]="newName()"
       (ngModelChange)="newName.set($event)"
       (keydown.enter)="submitCreateForm()"
     />
-    <div class="create-color-row">
+    <div class="mb-2 flex flex-wrap gap-1.5">
       @for (c of palette; track c) {
-        <button type="button" class="create-swatch" [style.background]="c" [class.selected]="newColor() === c" (click)="newColor.set(c)"></button>
+        <button type="button" class="h-5 w-5 rounded-full border-2 border-transparent" [style.background]="c" [class.border-base-content]="newColor() === c" (click)="newColor.set(c)"></button>
       }
     </div>
-    <div class="create-actions">
-      <button type="button" class="create-cancel" (click)="cancelCreateForm()">Huỷ</button>
-      <button type="button" class="create-save" [disabled]="!newName().trim()" (click)="submitCreateForm()">Tạo nhãn</button>
+    <div class="flex justify-end gap-1.5">
+      <button type="button" class="btn btn-ghost btn-xs" (click)="cancelCreateForm()">Huỷ</button>
+      <button type="button" class="btn btn-primary btn-xs" [disabled]="!newName().trim()" (click)="submitCreateForm()">Tạo nhãn</button>
     </div>
   </div>
 }

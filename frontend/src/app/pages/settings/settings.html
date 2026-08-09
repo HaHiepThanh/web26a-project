@@ -1,12 +1,12 @@
-<div class="settings-shell">
+<div class="flex min-h-full flex-1 bg-base-200 text-base-content">
   <!-- ============================== LEFT NAV ============================== -->
-  <aside class="settings-sidebar scroll-slim">
-    <div class="sidebar-header">
-      <h1>Cài đặt</h1>
-      <p>Quản lý tài khoản, workspace và bảo mật</p>
+  <aside class="w-[300px] shrink-0 overflow-y-auto border-r border-base-300 bg-base-100 p-4 max-[900px]:w-full max-[900px]:border-b max-[900px]:border-r-0">
+    <div class="px-3 pb-5 pt-2">
+      <h1 class="text-xl font-bold">Cài đặt</h1>
+      <p class="mt-1 text-[0.8125rem] text-base-content/50">Quản lý tài khoản, workspace và bảo mật</p>
     </div>
 
-    <nav class="sidebar-nav">
+    <nav class="flex flex-col gap-1 max-[900px]:flex-row max-[900px]:overflow-x-auto">
       @for (item of navItems; track item.id) {
         <button
           type="button"
@@ -63,7 +63,7 @@
       }
     </nav>
 
-    <div class="sidebar-divider"></div>
+    <div class="mx-3 my-3 h-px bg-base-300"></div>
 
     <a routerLink="/settings/manage-workspace" routerLinkActive="active" class="nav-item">
       <span class="nav-icon">
@@ -80,107 +80,107 @@
   </aside>
 
   <!-- ============================== CONTENT ============================== -->
-  <main class="settings-content scroll-slim">
+  <main class="flex-1 overflow-y-auto p-8 max-[900px]:p-4">
     @switch (activeTab()) {
 
       <!-- ======================= TAB 1: PROFILE ======================= -->
       @case ('profile') {
-        <section class="panel">
-          <header class="panel-header">
-            <h2>Trang cá nhân</h2>
-            <p>Cập nhật thông tin hiển thị và cách người khác liên hệ với bạn.</p>
+        <section class="mx-auto max-w-[820px]">
+          <header>
+            <h2 class="text-xl font-bold">Trang cá nhân</h2>
+            <p class="mt-1 text-sm text-base-content/50">Cập nhật thông tin hiển thị và cách người khác liên hệ với bạn.</p>
           </header>
 
-          <form [formGroup]="profileForm" (ngSubmit)="onSaveProfile()" class="panel-body">
+          <form [formGroup]="profileForm" (ngSubmit)="onSaveProfile()" class="mt-6 flex flex-col gap-5">
             <!-- Avatar -->
-            <div class="card">
-              <h3 class="card-title">Ảnh đại diện</h3>
-              <div class="avatar-row">
-                <div class="avatar-preview">
+            <div class="rounded-box border border-base-300 bg-base-100 p-5">
+              <h3 class="mb-3 text-[15px] font-bold">Ảnh đại diện</h3>
+              <div class="flex items-center gap-4">
+                <div class="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-base-300">
                   @if (avatarPreview()) {
-                    <img [src]="avatarPreview()" alt="Ảnh đại diện" />
+                    <img [src]="avatarPreview()" alt="Ảnh đại diện" class="h-full w-full object-cover" />
                   } @else {
-                    <span class="avatar-fallback">{{ profileForm.get('fullName')?.value?.charAt(0) || '?' }}</span>
+                    <span class="text-xl font-bold text-base-content/60">{{ profileForm.get('fullName')?.value?.charAt(0) || '?' }}</span>
                   }
                 </div>
-                <div class="avatar-actions">
-                  <label class="btn btn-secondary btn-sm">
+                <div class="flex flex-col items-start gap-2">
+                  <label class="btn btn-outline btn-sm">
                     <input type="file" accept="image/*" class="sr-only" (change)="onUploadAvatar($event)" />
                     Tải ảnh lên
                   </label>
                   <button type="button" class="btn btn-ghost btn-sm" (click)="onRemoveAvatar()" [disabled]="!avatarPreview()">
                     Xoá ảnh
                   </button>
-                  <p class="hint">PNG, JPG tối đa 4MB. Kích thước đề xuất 256x256.</p>
+                  <p class="text-xs text-base-content/50">PNG, JPG tối đa 4MB. Kích thước đề xuất 256x256.</p>
                 </div>
               </div>
             </div>
 
             <!-- Basic info -->
-            <div class="card">
-              <h3 class="card-title">Thông tin cơ bản</h3>
-              <div class="form-grid">
-                <div class="field">
-                  <label for="fullName">Họ và tên</label>
-                  <input id="fullName" type="text" formControlName="fullName" />
+            <div class="rounded-box border border-base-300 bg-base-100 p-5">
+              <h3 class="mb-3 text-[15px] font-bold">Thông tin cơ bản</h3>
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-xs font-semibold text-base-content/80" for="fullName">Họ và tên</label>
+                  <input id="fullName" type="text" class="input input-bordered w-full" formControlName="fullName" />
                   @if (profileForm.get('fullName')?.invalid && profileForm.get('fullName')?.touched) {
-                    <span class="error">Vui lòng nhập họ tên hợp lệ (tối thiểu 2 ký tự).</span>
+                    <span class="text-xs text-error">Vui lòng nhập họ tên hợp lệ (tối thiểu 2 ký tự).</span>
                   }
                 </div>
-                <div class="field">
-                  <label for="username">Username</label>
-                  <input id="username" type="text" formControlName="username" />
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-xs font-semibold text-base-content/80" for="username">Username</label>
+                  <input id="username" type="text" class="input input-bordered w-full" formControlName="username" />
                   @if (profileForm.get('username')?.invalid && profileForm.get('username')?.touched) {
-                    <span class="error">3-20 ký tự: chữ thường, số, "_" hoặc ".".</span>
+                    <span class="text-xs text-error">3-20 ký tự: chữ thường, số, "_" hoặc ".".</span>
                   }
                 </div>
-                <div class="field">
-                  <label for="jobTitle">Tiêu đề công việc</label>
-                  <input id="jobTitle" type="text" formControlName="jobTitle" placeholder="VD: Frontend Engineer" />
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-xs font-semibold text-base-content/80" for="jobTitle">Tiêu đề công việc</label>
+                  <input id="jobTitle" type="text" class="input input-bordered w-full" formControlName="jobTitle" placeholder="VD: Frontend Engineer" />
                 </div>
               </div>
             </div>
 
             <!-- Contact -->
-            <div class="card">
-              <h3 class="card-title">Liên hệ</h3>
-              <div class="form-grid">
-                <div class="field">
-                  <label for="email">Email</label>
-                  <div class="input-with-badge">
-                    <input id="email" type="email" formControlName="email" />
+            <div class="rounded-box border border-base-300 bg-base-100 p-5">
+              <h3 class="mb-3 text-[15px] font-bold">Liên hệ</h3>
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-xs font-semibold text-base-content/80" for="email">Email</label>
+                  <div class="flex items-center gap-2">
+                    <input id="email" type="email" class="input input-bordered w-full" formControlName="email" />
                     @if (emailVerified()) {
-                      <span class="badge badge-success">Đã xác minh</span>
+                      <span class="badge badge-success shrink-0">Đã xác minh</span>
                     } @else {
-                      <span class="badge badge-warning">Chưa xác minh</span>
+                      <span class="badge badge-warning shrink-0">Chưa xác minh</span>
                     }
                   </div>
                 </div>
-                <div class="field">
-                  <label for="phone">Số điện thoại</label>
-                  <input id="phone" type="tel" formControlName="phone" placeholder="+84 9xx xxx xxx" />
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-xs font-semibold text-base-content/80" for="phone">Số điện thoại</label>
+                  <input id="phone" type="tel" class="input input-bordered w-full" formControlName="phone" placeholder="+84 9xx xxx xxx" />
                   @if (profileForm.get('phone')?.invalid && profileForm.get('phone')?.touched) {
-                    <span class="error">Số điện thoại không hợp lệ.</span>
+                    <span class="text-xs text-error">Số điện thoại không hợp lệ.</span>
                   }
                 </div>
               </div>
             </div>
 
             <!-- Language & timezone -->
-            <div class="card">
-              <h3 class="card-title">Ngôn ngữ & Múi giờ</h3>
-              <div class="form-grid">
-                <div class="field">
-                  <label for="language">Ngôn ngữ</label>
-                  <select id="language" formControlName="language">
+            <div class="rounded-box border border-base-300 bg-base-100 p-5">
+              <h3 class="mb-3 text-[15px] font-bold">Ngôn ngữ & Múi giờ</h3>
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-xs font-semibold text-base-content/80" for="language">Ngôn ngữ</label>
+                  <select id="language" class="select select-bordered w-full" formControlName="language">
                     @for (lang of languageOptions; track lang.code) {
                       <option [value]="lang.code">{{ lang.label }}</option>
                     }
                   </select>
                 </div>
-                <div class="field">
-                  <label for="timezone">Múi giờ</label>
-                  <select id="timezone" formControlName="timezone">
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-xs font-semibold text-base-content/80" for="timezone">Múi giờ</label>
+                  <select id="timezone" class="select select-bordered w-full" formControlName="timezone">
                     @for (tz of timezoneOptions; track tz.value) {
                       <option [value]="tz.value">{{ tz.label }}</option>
                     }
@@ -189,7 +189,7 @@
               </div>
             </div>
 
-            <div class="panel-footer">
+            <div class="flex justify-end pt-2">
               <button type="submit" class="btn btn-primary" [disabled]="profileForm.pristine || profileForm.invalid">
                 Lưu thay đổi
               </button>
@@ -200,28 +200,28 @@
 
       <!-- ======================= TAB 2: NOTIFICATIONS ======================= -->
       @case ('notifications') {
-        <section class="panel">
-          <header class="panel-header">
-            <h2>Thông báo</h2>
-            <p>Chọn cách bạn muốn được thông báo về hoạt động trong workspace.</p>
+        <section class="mx-auto max-w-[820px]">
+          <header>
+            <h2 class="text-xl font-bold">Thông báo</h2>
+            <p class="mt-1 text-sm text-base-content/50">Chọn cách bạn muốn được thông báo về hoạt động trong workspace.</p>
           </header>
 
-          <div class="panel-body">
-            <div class="card">
-              <h3 class="card-title">Kênh nhận thông báo</h3>
-              <div class="switch-row">
-                <div class="switch-row-text">
-                  <strong>Email Notifications</strong>
-                  <span>Nhận tổng hợp và thông báo quan trọng qua email.</span>
+          <div class="mt-6 flex flex-col gap-5">
+            <div class="rounded-box border border-base-300 bg-base-100 p-5">
+              <h3 class="mb-3 text-[15px] font-bold">Kênh nhận thông báo</h3>
+              <div class="flex items-center justify-between gap-4 py-2">
+                <div class="flex flex-col">
+                  <strong class="font-semibold">Email Notifications</strong>
+                  <span class="text-sm text-base-content/50">Nhận tổng hợp và thông báo quan trọng qua email.</span>
                 </div>
                 <button type="button" class="toggle" [class.on]="emailNotifications()" (click)="toggleEmailChannel()" role="switch" [attr.aria-checked]="emailNotifications()">
                   <span class="toggle-thumb"></span>
                 </button>
               </div>
-              <div class="switch-row">
-                <div class="switch-row-text">
-                  <strong>Push / In-app Notifications</strong>
-                  <span>Nhận thông báo tức thời trên trình duyệt và ứng dụng.</span>
+              <div class="flex items-center justify-between gap-4 py-2">
+                <div class="flex flex-col">
+                  <strong class="font-semibold">Push / In-app Notifications</strong>
+                  <span class="text-sm text-base-content/50">Nhận thông báo tức thời trên trình duyệt và ứng dụng.</span>
                 </div>
                 <button type="button" class="toggle" [class.on]="pushNotifications()" (click)="togglePushChannel()" role="switch" [attr.aria-checked]="pushNotifications()">
                   <span class="toggle-thumb"></span>
@@ -229,41 +229,41 @@
               </div>
             </div>
 
-            <div class="card">
-              <h3 class="card-title">Tuỳ chỉnh sự kiện</h3>
-              <div class="table-wrap">
-                <table class="rule-table">
+            <div class="rounded-box border border-base-300 bg-base-100 p-5">
+              <h3 class="mb-3 text-[15px] font-bold">Tuỳ chỉnh sự kiện</h3>
+              <div class="overflow-x-auto">
+                <table class="table">
                   <thead>
                     <tr>
                       <th>Sự kiện</th>
-                      <th>Email</th>
-                      <th>Push</th>
+                      <th class="text-center">Email</th>
+                      <th class="text-center">Push</th>
                     </tr>
                   </thead>
                   <tbody>
                     @for (rule of notificationRules(); track rule.key) {
                       <tr>
                         <td>
-                          <strong>{{ rule.label }}</strong>
-                          <span class="row-desc">{{ rule.description }}</span>
+                          <strong class="font-semibold">{{ rule.label }}</strong>
+                          <span class="block text-xs text-base-content/50">{{ rule.description }}</span>
                           @if (rule.key === 'due') {
-                            <div class="lead-time-select">
-                              <label>
-                                <input type="radio" name="leadTime" value="1h" [checked]="dueDateLeadTime() === '1h'" (change)="setDueDateLeadTime('1h')" />
+                            <div class="mt-2 flex gap-4 text-sm">
+                              <label class="flex items-center gap-1.5">
+                                <input type="radio" class="radio radio-sm" name="leadTime" value="1h" [checked]="dueDateLeadTime() === '1h'" (change)="setDueDateLeadTime('1h')" />
                                 Trước 1 giờ
                               </label>
-                              <label>
-                                <input type="radio" name="leadTime" value="1d" [checked]="dueDateLeadTime() === '1d'" (change)="setDueDateLeadTime('1d')" />
+                              <label class="flex items-center gap-1.5">
+                                <input type="radio" class="radio radio-sm" name="leadTime" value="1d" [checked]="dueDateLeadTime() === '1d'" (change)="setDueDateLeadTime('1d')" />
                                 Trước 1 ngày
                               </label>
                             </div>
                           }
                         </td>
-                        <td class="td-center">
-                          <input type="checkbox" class="checkbox" [checked]="rule.email" (change)="toggleNotificationCell(rule.key, 'email')" [disabled]="!emailNotifications()" />
+                        <td class="text-center">
+                          <input type="checkbox" class="checkbox checkbox-sm" [checked]="rule.email" (change)="toggleNotificationCell(rule.key, 'email')" [disabled]="!emailNotifications()" />
                         </td>
-                        <td class="td-center">
-                          <input type="checkbox" class="checkbox" [checked]="rule.push" (change)="toggleNotificationCell(rule.key, 'push')" [disabled]="!pushNotifications()" />
+                        <td class="text-center">
+                          <input type="checkbox" class="checkbox checkbox-sm" [checked]="rule.push" (change)="toggleNotificationCell(rule.key, 'push')" [disabled]="!pushNotifications()" />
                         </td>
                       </tr>
                     }
@@ -272,31 +272,31 @@
               </div>
             </div>
 
-            <div class="card">
-              <div class="switch-row">
-                <div class="switch-row-text">
-                  <strong>Quiet Hours</strong>
-                  <span>Tự động tắt thông báo ngoài giờ làm việc.</span>
+            <div class="rounded-box border border-base-300 bg-base-100 p-5">
+              <div class="flex items-center justify-between gap-4 py-2">
+                <div class="flex flex-col">
+                  <strong class="font-semibold">Quiet Hours</strong>
+                  <span class="text-sm text-base-content/50">Tự động tắt thông báo ngoài giờ làm việc.</span>
                 </div>
                 <button type="button" class="toggle" [class.on]="quietHoursEnabled()" (click)="toggleQuietHours()" role="switch" [attr.aria-checked]="quietHoursEnabled()">
                   <span class="toggle-thumb"></span>
                 </button>
               </div>
               @if (quietHoursEnabled()) {
-                <form [formGroup]="quietHoursForm" class="form-grid quiet-hours-grid">
-                  <div class="field">
-                    <label for="quietFrom">Bắt đầu</label>
-                    <input id="quietFrom" type="time" formControlName="from" />
+                <form [formGroup]="quietHoursForm" class="mt-3 grid max-w-[420px] grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div class="flex flex-col gap-1.5">
+                    <label class="text-xs font-semibold text-base-content/80" for="quietFrom">Bắt đầu</label>
+                    <input id="quietFrom" type="time" class="input input-bordered w-full" formControlName="from" />
                   </div>
-                  <div class="field">
-                    <label for="quietTo">Kết thúc</label>
-                    <input id="quietTo" type="time" formControlName="to" />
+                  <div class="flex flex-col gap-1.5">
+                    <label class="text-xs font-semibold text-base-content/80" for="quietTo">Kết thúc</label>
+                    <input id="quietTo" type="time" class="input input-bordered w-full" formControlName="to" />
                   </div>
                 </form>
               }
             </div>
 
-            <div class="panel-footer">
+            <div class="flex justify-end pt-2">
               <button type="button" class="btn btn-primary" (click)="onSaveNotifications()">Lưu thay đổi</button>
             </div>
           </div>
@@ -305,79 +305,79 @@
 
       <!-- ======================= TAB 3: WORKSPACE ======================= -->
       @case ('workspace') {
-        <section class="panel">
-          <header class="panel-header">
-            <h2>Không gian làm việc</h2>
-            <p>Quản lý thông tin workspace, thương hiệu và thành viên.</p>
+        <section class="mx-auto max-w-[820px]">
+          <header>
+            <h2 class="text-xl font-bold">Không gian làm việc</h2>
+            <p class="mt-1 text-sm text-base-content/50">Quản lý thông tin workspace, thương hiệu và thành viên.</p>
           </header>
 
-          <div class="panel-body">
-            <form [formGroup]="workspaceForm" (ngSubmit)="onSaveWorkspace()">
-              <div class="card">
-                <h3 class="card-title">Thông tin Workspace</h3>
-                <div class="form-grid">
-                  <div class="field">
-                    <label for="wsName">Tên workspace</label>
-                    <input id="wsName" type="text" formControlName="name" />
+          <div class="mt-6 flex flex-col gap-5">
+            <form [formGroup]="workspaceForm" (ngSubmit)="onSaveWorkspace()" class="flex flex-col gap-5">
+              <div class="rounded-box border border-base-300 bg-base-100 p-5">
+                <h3 class="mb-3 text-[15px] font-bold">Thông tin Workspace</h3>
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div class="flex flex-col gap-1.5">
+                    <label class="text-xs font-semibold text-base-content/80" for="wsName">Tên workspace</label>
+                    <input id="wsName" type="text" class="input input-bordered w-full" formControlName="name" />
                   </div>
-                  <div class="field">
-                    <label for="wsSlug">Đường dẫn (Slug)</label>
-                    <div class="input-prefix">
-                      <span>app.teamthanh.io/</span>
-                      <input id="wsSlug" type="text" formControlName="slug" />
+                  <div class="flex flex-col gap-1.5">
+                    <label class="text-xs font-semibold text-base-content/80" for="wsSlug">Đường dẫn (Slug)</label>
+                    <div class="flex items-center overflow-hidden rounded-lg border border-base-300">
+                      <span class="self-stretch bg-base-200 px-3 py-2 text-sm text-base-content/50">app.teamthanh.io/</span>
+                      <input id="wsSlug" type="text" class="w-full border-0 bg-transparent px-2 py-2 outline-none" formControlName="slug" />
                     </div>
                     @if (workspaceForm.get('slug')?.invalid && workspaceForm.get('slug')?.touched) {
-                      <span class="error">3-40 ký tự: chữ thường, số, dấu gạch ngang.</span>
+                      <span class="text-xs text-error">3-40 ký tự: chữ thường, số, dấu gạch ngang.</span>
                     }
                   </div>
-                  <div class="field field-full">
-                    <label for="wsDesc">Mô tả ngắn</label>
-                    <textarea id="wsDesc" rows="2" formControlName="description" maxlength="240"></textarea>
+                  <div class="flex flex-col gap-1.5 sm:col-span-2">
+                    <label class="text-xs font-semibold text-base-content/80" for="wsDesc">Mô tả ngắn</label>
+                    <textarea id="wsDesc" class="textarea textarea-bordered w-full" rows="2" formControlName="description" maxlength="240"></textarea>
                   </div>
                 </div>
               </div>
 
-              <div class="card">
-                <h3 class="card-title">Thương hiệu (Branding)</h3>
-                <div class="avatar-row">
-                  <div class="avatar-preview avatar-square">
+              <div class="rounded-box border border-base-300 bg-base-100 p-5">
+                <h3 class="mb-3 text-[15px] font-bold">Thương hiệu (Branding)</h3>
+                <div class="flex items-center gap-4">
+                  <div class="flex h-16 w-16 items-center justify-center overflow-hidden rounded-box bg-base-300">
                     @if (workspaceLogo()) {
-                      <img [src]="workspaceLogo()" alt="Logo workspace" />
+                      <img [src]="workspaceLogo()" alt="Logo workspace" class="h-full w-full object-cover" />
                     } @else {
-                      <span class="avatar-fallback">{{ workspaceForm.get('name')?.value?.charAt(0) }}</span>
+                      <span class="text-xl font-bold text-base-content/60">{{ workspaceForm.get('name')?.value?.charAt(0) }}</span>
                     }
                   </div>
-                  <div class="avatar-actions">
-                    <label class="btn btn-secondary btn-sm">
+                  <div class="flex flex-col items-start gap-2">
+                    <label class="btn btn-outline btn-sm">
                       <input type="file" accept="image/*" class="sr-only" (change)="onUploadWorkspaceLogo($event)" />
                       Tải logo lên
                     </label>
-                    <p class="hint">Định dạng vuông, tối thiểu 128x128px.</p>
+                    <p class="text-xs text-base-content/50">Định dạng vuông, tối thiểu 128x128px.</p>
                   </div>
                 </div>
-                <div class="field" style="max-width: 240px; margin-top: 1rem;">
-                  <label for="brandColor">Màu nhận diện thương hiệu</label>
-                  <div class="color-input-row">
-                    <input id="brandColor" type="color" [value]="workspaceBrandColor()" (input)="workspaceBrandColor.set($any($event.target).value)" />
-                    <span class="mono">{{ workspaceBrandColor() }}</span>
+                <div class="mt-4 flex max-w-[240px] flex-col gap-1.5">
+                  <label class="text-xs font-semibold text-base-content/80" for="brandColor">Màu nhận diện thương hiệu</label>
+                  <div class="flex items-center gap-2">
+                    <input id="brandColor" type="color" class="h-9 w-14 cursor-pointer rounded border border-base-300 bg-transparent p-1" [value]="workspaceBrandColor()" (input)="workspaceBrandColor.set($any($event.target).value)" />
+                    <span class="font-mono text-sm">{{ workspaceBrandColor() }}</span>
                   </div>
                 </div>
               </div>
 
-              <div class="panel-footer">
+              <div class="flex justify-end pt-2">
                 <button type="submit" class="btn btn-primary" [disabled]="workspaceForm.pristine || workspaceForm.invalid">
                   Lưu thay đổi
                 </button>
               </div>
             </form>
 
-            <div class="card">
-              <div class="card-title-row">
-                <h3 class="card-title">Quản lý thành viên</h3>
+            <div class="rounded-box border border-base-300 bg-base-100 p-5">
+              <div class="mb-3 flex items-center justify-between">
+                <h3 class="text-[15px] font-bold">Quản lý thành viên</h3>
                 <button type="button" class="btn btn-primary btn-sm" (click)="openInviteModal()">+ Mời thành viên</button>
               </div>
-              <div class="table-wrap">
-                <table class="member-table">
+              <div class="overflow-x-auto">
+                <table class="table">
                   <thead>
                     <tr>
                       <th>Thành viên</th>
@@ -388,13 +388,13 @@
                   </thead>
                   <tbody>
                     @for (member of members(); track trackByMemberId($index, member)) {
-                      <tr [class.frozen-row]="member.status === 'frozen'">
+                      <tr [class.opacity-60]="member.status === 'frozen'">
                         <td>
-                          <div class="member-cell">
-                            <img [src]="member.avatarUrl" [alt]="member.name" class="member-avatar" />
+                          <div class="flex items-center gap-3">
+                            <img [src]="member.avatarUrl" [alt]="member.name" class="h-9 w-9 rounded-full object-cover" />
                             <div>
-                              <div class="member-name">{{ member.name }}</div>
-                              <div class="member-email">{{ member.email }}</div>
+                              <div class="font-semibold">{{ member.name }}</div>
+                              <div class="text-xs text-base-content/50">{{ member.email }}</div>
                             </div>
                           </div>
                         </td>
@@ -402,7 +402,7 @@
                           @if (member.role === 'Owner') {
                             <span class="badge badge-accent">Owner</span>
                           } @else {
-                            <select class="role-select" [ngModel]="member.role" (ngModelChange)="onChangeRole(member, $event)">
+                            <select class="select select-bordered select-sm" [ngModel]="member.role" (ngModelChange)="onChangeRole(member, $event)">
                               @for (role of memberRoles; track role) {
                                 <option [value]="role">{{ role }}</option>
                               }
@@ -413,15 +413,15 @@
                           @if (member.status === 'active') {
                             <span class="badge badge-success">Hoạt động</span>
                           } @else {
-                            <span class="badge badge-muted">Đã đóng băng</span>
+                            <span class="badge badge-ghost">Đã đóng băng</span>
                           }
                         </td>
-                        <td class="td-actions">
+                        <td class="whitespace-nowrap text-right">
                           @if (member.role !== 'Owner') {
                             <button type="button" class="btn btn-ghost btn-xs" (click)="onToggleFreeze(member)">
                               {{ member.status === 'active' ? 'Đóng băng' : 'Kích hoạt lại' }}
                             </button>
-                            <button type="button" class="btn btn-ghost btn-xs danger" (click)="onRemoveMember(member)">Xoá</button>
+                            <button type="button" class="btn btn-ghost btn-xs text-error" (click)="onRemoveMember(member)">Xoá</button>
                           }
                         </td>
                       </tr>
@@ -436,17 +436,17 @@
 
       <!-- ======================= TAB 4: APPEARANCE & SECURITY ======================= -->
       @case ('appearance-security') {
-        <section class="panel">
-          <header class="panel-header">
-            <h2>Giao diện & Bảo mật</h2>
-            <p>Tuỳ chỉnh giao diện hiển thị và bảo vệ tài khoản của bạn.</p>
+        <section class="mx-auto max-w-[820px]">
+          <header>
+            <h2 class="text-xl font-bold">Giao diện & Bảo mật</h2>
+            <p class="mt-1 text-sm text-base-content/50">Tuỳ chỉnh giao diện hiển thị và bảo vệ tài khoản của bạn.</p>
           </header>
 
-          <div class="panel-body">
+          <div class="mt-6 flex flex-col gap-5">
             <!-- Theme -->
-            <div class="card">
-              <h3 class="card-title">Giao diện (Theme)</h3>
-              <div class="theme-grid">
+            <div class="rounded-box border border-base-300 bg-base-100 p-5">
+              <h3 class="mb-3 text-[15px] font-bold">Giao diện (Theme)</h3>
+              <div class="grid grid-cols-2 gap-3">
                 <button type="button" class="theme-card" [class.selected]="themeService.theme() === 'light'" (click)="themeService.set('light')">
                   <span class="theme-preview theme-preview-light">
                     <span class="tp-bar"></span><span class="tp-line"></span><span class="tp-line short"></span>
@@ -461,8 +461,8 @@
                 </button>
               </div>
 
-              <h4 class="sub-title">Màu chủ đạo</h4>
-              <div class="accent-row">
+              <h4 class="mb-2 mt-4 text-sm font-semibold">Màu chủ đạo</h4>
+              <div class="flex flex-wrap gap-2">
                 @for (color of accentColors; track color.value) {
                   <button
                     type="button"
@@ -477,59 +477,59 @@
             </div>
 
             <!-- Change password -->
-            <div class="card">
-              <h3 class="card-title">Đổi mật khẩu</h3>
-              <form [formGroup]="passwordForm" (ngSubmit)="onChangePassword()" class="form-grid">
-                <div class="field field-full">
-                  <label for="currentPassword">Mật khẩu hiện tại</label>
-                  <input id="currentPassword" type="password" formControlName="currentPassword" autocomplete="current-password" />
+            <div class="rounded-box border border-base-300 bg-base-100 p-5">
+              <h3 class="mb-3 text-[15px] font-bold">Đổi mật khẩu</h3>
+              <form [formGroup]="passwordForm" (ngSubmit)="onChangePassword()" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div class="flex flex-col gap-1.5 sm:col-span-2">
+                  <label class="text-xs font-semibold text-base-content/80" for="currentPassword">Mật khẩu hiện tại</label>
+                  <input id="currentPassword" type="password" class="input input-bordered w-full" formControlName="currentPassword" autocomplete="current-password" />
                 </div>
-                <div class="field">
-                  <label for="newPassword">Mật khẩu mới</label>
-                  <input id="newPassword" type="password" formControlName="newPassword" autocomplete="new-password" />
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-xs font-semibold text-base-content/80" for="newPassword">Mật khẩu mới</label>
+                  <input id="newPassword" type="password" class="input input-bordered w-full" formControlName="newPassword" autocomplete="new-password" />
                   @if (passwordForm.get('newPassword')?.value) {
-                    <div class="strength-meter">
-                      <div class="strength-track">
-                        <div class="strength-fill" [style.width.%]="passwordStrength.percent" [style.background]="passwordStrength.colorVar"></div>
+                    <div class="mt-1 flex items-center gap-2">
+                      <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-base-300">
+                        <div class="h-full rounded-full transition-all" [style.width.%]="passwordStrength.percent" [style.background]="passwordStrength.colorVar"></div>
                       </div>
-                      <span class="strength-label" [style.color]="passwordStrength.colorVar">{{ passwordStrength.label }}</span>
+                      <span class="text-xs font-semibold" [style.color]="passwordStrength.colorVar">{{ passwordStrength.label }}</span>
                     </div>
                   }
                 </div>
-                <div class="field">
-                  <label for="confirmPassword">Xác nhận mật khẩu mới</label>
-                  <input id="confirmPassword" type="password" formControlName="confirmPassword" autocomplete="new-password" />
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-xs font-semibold text-base-content/80" for="confirmPassword">Xác nhận mật khẩu mới</label>
+                  <input id="confirmPassword" type="password" class="input input-bordered w-full" formControlName="confirmPassword" autocomplete="new-password" />
                   @if (passwordForm.hasError('passwordMismatch') && passwordForm.get('confirmPassword')?.touched) {
-                    <span class="error">Mật khẩu xác nhận không khớp.</span>
+                    <span class="text-xs text-error">Mật khẩu xác nhận không khớp.</span>
                   }
                 </div>
-                <div class="field-full">
+                <div class="sm:col-span-2">
                   <button type="submit" class="btn btn-primary" [disabled]="passwordForm.invalid">Cập nhật mật khẩu</button>
                 </div>
               </form>
             </div>
 
             <!-- 2FA -->
-            <div class="card">
-              <div class="switch-row">
-                <div class="switch-row-text">
-                  <strong>Xác thực 2 lớp (2FA)</strong>
-                  <span>Bảo vệ tài khoản bằng ứng dụng Authenticator.</span>
+            <div class="rounded-box border border-base-300 bg-base-100 p-5">
+              <div class="flex items-center justify-between gap-4 py-2">
+                <div class="flex flex-col">
+                  <strong class="font-semibold">Xác thực 2 lớp (2FA)</strong>
+                  <span class="text-sm text-base-content/50">Bảo vệ tài khoản bằng ứng dụng Authenticator.</span>
                 </div>
                 @if (twoFAEnabled()) {
                   <span class="badge badge-success">Đã kích hoạt</span>
                 } @else {
-                  <button type="button" class="btn btn-secondary btn-sm" (click)="openTwoFASetup()">Thiết lập</button>
+                  <button type="button" class="btn btn-outline btn-sm" (click)="openTwoFASetup()">Thiết lập</button>
                 }
               </div>
               @if (twoFAEnabled()) {
-                <button type="button" class="btn btn-ghost btn-sm danger" (click)="disableTwoFA()">Tắt 2FA</button>
+                <button type="button" class="btn btn-ghost btn-sm text-error" (click)="disableTwoFA()">Tắt 2FA</button>
               }
 
               @if (twoFASetupOpen()) {
-                <div class="inline-panel">
-                  <p class="hint">Quét mã QR bằng ứng dụng Authenticator (Google Authenticator, Authy, ...):</p>
-                  <div class="qr-mock" [attr.aria-label]="twoFAQrSeed()">
+                <div class="mt-3 rounded-box border border-base-300 bg-base-200 p-4">
+                  <p class="text-xs text-base-content/50">Quét mã QR bằng ứng dụng Authenticator (Google Authenticator, Authy, ...):</p>
+                  <div class="my-2 inline-block" [attr.aria-label]="twoFAQrSeed()">
                     <svg viewBox="0 0 100 100" width="140" height="140">
                       <rect width="100" height="100" fill="var(--bg-surface-2)" />
                       @for (row of [0,1,2,3,4,5,6,7,8,9]; track row) {
@@ -541,11 +541,11 @@
                       }
                     </svg>
                   </div>
-                  <p class="hint">Mã minh hoạ — không phải QR thực. Sau khi thêm, nhập mã 6 số để xác nhận.</p>
-                  <div class="field" style="max-width: 160px;">
-                    <input type="text" placeholder="000000" maxlength="6" />
+                  <p class="text-xs text-base-content/50">Mã minh hoạ — không phải QR thực. Sau khi thêm, nhập mã 6 số để xác nhận.</p>
+                  <div class="mt-2 max-w-[160px]">
+                    <input type="text" class="input input-bordered w-full" placeholder="000000" maxlength="6" />
                   </div>
-                  <div class="inline-panel-actions">
+                  <div class="mt-3 flex justify-end gap-2">
                     <button type="button" class="btn btn-ghost btn-sm" (click)="closeTwoFASetup()">Huỷ</button>
                     <button type="button" class="btn btn-primary btn-sm" (click)="confirmTwoFA()">Xác nhận & kích hoạt</button>
                   </div>
@@ -554,17 +554,17 @@
             </div>
 
             <!-- Active sessions -->
-            <div class="card">
-              <div class="card-title-row">
-                <h3 class="card-title">Phiên đăng nhập</h3>
-                <button type="button" class="btn btn-ghost btn-sm danger" (click)="onLogoutAllOtherSessions()">
+            <div class="rounded-box border border-base-300 bg-base-100 p-5">
+              <div class="mb-3 flex items-center justify-between">
+                <h3 class="text-[15px] font-bold">Phiên đăng nhập</h3>
+                <button type="button" class="btn btn-ghost btn-sm text-error" (click)="onLogoutAllOtherSessions()">
                   Đăng xuất khỏi tất cả thiết bị khác
                 </button>
               </div>
-              <ul class="session-list">
+              <ul class="flex flex-col divide-y divide-base-300">
                 @for (session of sessions(); track trackBySessionId($index, session)) {
-                  <li class="session-item">
-                    <span class="session-icon">
+                  <li class="flex items-center gap-3 py-3">
+                    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-base-200 [&>svg]:h-[18px] [&>svg]:w-[18px]">
                       @switch (session.icon) {
                         @case ('desktop') {
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="12" rx="1.5" /><line x1="8" y1="20" x2="16" y2="20" stroke-linecap="round" /><line x1="12" y1="16" x2="12" y2="20" /></svg>
@@ -577,16 +577,16 @@
                         }
                       }
                     </span>
-                    <div class="session-info">
-                      <div class="session-device">
+                    <div class="min-w-0 flex-1">
+                      <div class="flex items-center gap-2 font-semibold">
                         {{ session.device }}
                         @if (session.current) { <span class="badge badge-accent">Thiết bị này</span> }
                       </div>
-                      <div class="session-meta">{{ session.browser }} · {{ session.ip }} · {{ session.location }}</div>
+                      <div class="text-xs text-base-content/50">{{ session.browser }} · {{ session.ip }} · {{ session.location }}</div>
                     </div>
-                    <div class="session-last">{{ session.lastActive }}</div>
+                    <div class="whitespace-nowrap text-xs text-base-content/50">{{ session.lastActive }}</div>
                     @if (!session.current) {
-                      <button type="button" class="btn btn-ghost btn-xs danger" (click)="onRevokeSession(session)">Đăng xuất</button>
+                      <button type="button" class="btn btn-ghost btn-xs text-error" (click)="onRevokeSession(session)">Đăng xuất</button>
                     }
                   </li>
                 }
@@ -598,58 +598,58 @@
 
       <!-- ======================= TAB 5: BILLING & PLAN ======================= -->
       @case ('billing') {
-        <section class="panel">
-          <header class="panel-header">
-            <h2>Gói dịch vụ</h2>
-            <p>Theo dõi mức sử dụng và quản lý gói đăng ký của workspace.</p>
+        <section class="mx-auto max-w-[820px]">
+          <header>
+            <h2 class="text-xl font-bold">Gói dịch vụ</h2>
+            <p class="mt-1 text-sm text-base-content/50">Theo dõi mức sử dụng và quản lý gói đăng ký của workspace.</p>
           </header>
 
-          <div class="panel-body">
-            <div class="card">
-              <div class="card-title-row">
-                <h3 class="card-title">Gói hiện tại</h3>
+          <div class="mt-6 flex flex-col gap-5">
+            <div class="rounded-box border border-base-300 bg-base-100 p-5">
+              <div class="mb-3 flex items-center justify-between">
+                <h3 class="text-[15px] font-bold">Gói hiện tại</h3>
                 <span class="badge badge-accent">{{ currentPlan().toUpperCase() }} PLAN</span>
               </div>
 
-              <div class="usage-grid">
-                <div class="usage-item">
-                  <div class="usage-label">
+              <div class="flex flex-col gap-4">
+                <div>
+                  <div class="mb-1 flex justify-between text-sm">
                     <span>Dung lượng lưu trữ</span>
                     <span>{{ usage.storageUsedGB }}GB / {{ usage.storageLimitGB }}GB</span>
                   </div>
-                  <div class="usage-track"><div class="usage-fill" [style.width.%]="usagePercent(usage.storageUsedGB, usage.storageLimitGB)"></div></div>
+                  <div class="h-2 overflow-hidden rounded-full bg-base-300"><div class="h-full rounded-full bg-primary" [style.width.%]="usagePercent(usage.storageUsedGB, usage.storageLimitGB)"></div></div>
                 </div>
-                <div class="usage-item">
-                  <div class="usage-label">
+                <div>
+                  <div class="mb-1 flex justify-between text-sm">
                     <span>Boards / Projects</span>
                     <span>{{ usage.boardsUsed }} / {{ usage.boardsLimit }}</span>
                   </div>
-                  <div class="usage-track"><div class="usage-fill" [style.width.%]="usagePercent(usage.boardsUsed, usage.boardsLimit)"></div></div>
+                  <div class="h-2 overflow-hidden rounded-full bg-base-300"><div class="h-full rounded-full bg-primary" [style.width.%]="usagePercent(usage.boardsUsed, usage.boardsLimit)"></div></div>
                 </div>
-                <div class="usage-item">
-                  <div class="usage-label">
+                <div>
+                  <div class="mb-1 flex justify-between text-sm">
                     <span>Thành viên</span>
                     <span>{{ usage.membersUsed }} / {{ usage.membersLimit }}</span>
                   </div>
-                  <div class="usage-track"><div class="usage-fill" [style.width.%]="usagePercent(usage.membersUsed, usage.membersLimit)"></div></div>
+                  <div class="h-2 overflow-hidden rounded-full bg-base-300"><div class="h-full rounded-full bg-primary" [style.width.%]="usagePercent(usage.membersUsed, usage.membersLimit)"></div></div>
                 </div>
               </div>
 
-              <button type="button" class="btn btn-secondary btn-sm" style="margin-top: 1rem;">Quản lý thẻ thanh toán</button>
+              <button type="button" class="btn btn-outline btn-sm mt-4">Quản lý thẻ thanh toán</button>
             </div>
 
-            <div class="card">
-              <h3 class="card-title">Nâng cấp gói</h3>
-              <div class="plan-grid">
+            <div class="rounded-box border border-base-300 bg-base-100 p-5">
+              <h3 class="mb-3 text-[15px] font-bold">Nâng cấp gói</h3>
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 @for (plan of plans(); track trackByPlanId($index, plan)) {
-                  <div class="plan-card" [class.highlighted]="plan.highlighted" [class.current]="plan.current">
-                    @if (plan.highlighted) { <span class="plan-badge">Phổ biến nhất</span> }
-                    <h4>{{ plan.name }}</h4>
-                    <div class="plan-price">{{ plan.price }} <span>{{ plan.period }}</span></div>
-                    <ul class="plan-features">
+                  <div class="relative flex flex-col rounded-box border border-base-300 p-5" [class.border-primary]="plan.highlighted" [class.border-2]="plan.highlighted" [class.bg-base-200]="plan.current">
+                    @if (plan.highlighted) { <span class="badge badge-primary absolute -top-3 left-1/2 -translate-x-1/2">Phổ biến nhất</span> }
+                    <h4 class="text-base font-bold">{{ plan.name }}</h4>
+                    <div class="my-2 text-2xl font-extrabold">{{ plan.price }} <span class="text-sm font-normal text-base-content/50">{{ plan.period }}</span></div>
+                    <ul class="mb-4 flex flex-1 flex-col gap-2 text-sm">
                       @for (feature of plan.features; track feature) {
-                        <li>
-                          <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 10l4 4 8-8" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                        <li class="flex items-center gap-2">
+                          <svg viewBox="0 0 20 20" width="16" height="16" class="shrink-0 text-success" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 10l4 4 8-8" stroke-linecap="round" stroke-linejoin="round" /></svg>
                           {{ feature }}
                         </li>
                       }
@@ -658,7 +658,7 @@
                       type="button"
                       class="btn btn-block"
                       [class.btn-primary]="!plan.current"
-                      [class.btn-secondary]="plan.current"
+                      [class.btn-outline]="plan.current"
                       [disabled]="plan.current"
                       (click)="onUpgradePlan(plan.id)"
                     >
@@ -674,22 +674,22 @@
 
       <!-- ======================= TAB 6: INTEGRATIONS & API ======================= -->
       @case ('integrations') {
-        <section class="panel">
-          <header class="panel-header">
-            <h2>Tích hợp & API</h2>
-            <p>Kết nối ứng dụng bên ngoài và quản lý API key cá nhân.</p>
+        <section class="mx-auto max-w-[820px]">
+          <header>
+            <h2 class="text-xl font-bold">Tích hợp & API</h2>
+            <p class="mt-1 text-sm text-base-content/50">Kết nối ứng dụng bên ngoài và quản lý API key cá nhân.</p>
           </header>
 
-          <div class="panel-body">
-            <div class="card">
-              <h3 class="card-title">Ứng dụng kết nối</h3>
-              <ul class="integration-list">
+          <div class="mt-6 flex flex-col gap-5">
+            <div class="rounded-box border border-base-300 bg-base-100 p-5">
+              <h3 class="mb-3 text-[15px] font-bold">Ứng dụng kết nối</h3>
+              <ul class="flex flex-col divide-y divide-base-300">
                 @for (integration of integrations(); track trackByIntegrationId($index, integration)) {
-                  <li class="integration-item">
-                    <span class="integration-icon" [style.background]="integration.colorVar">{{ integration.initials }}</span>
-                    <div class="integration-info">
-                      <strong>{{ integration.name }}</strong>
-                      <span>{{ integration.description }}</span>
+                  <li class="flex items-center gap-3 py-3">
+                    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-bold text-white" [style.background]="integration.colorVar">{{ integration.initials }}</span>
+                    <div class="flex min-w-0 flex-1 flex-col">
+                      <strong class="font-semibold">{{ integration.name }}</strong>
+                      <span class="text-sm text-base-content/50">{{ integration.description }}</span>
                     </div>
                     <button
                       type="button"
@@ -706,13 +706,13 @@
               </ul>
             </div>
 
-            <div class="card">
-              <div class="card-title-row">
-                <h3 class="card-title">Personal Access Tokens</h3>
+            <div class="rounded-box border border-base-300 bg-base-100 p-5">
+              <div class="mb-3 flex items-center justify-between">
+                <h3 class="text-[15px] font-bold">Personal Access Tokens</h3>
                 <button type="button" class="btn btn-primary btn-sm" (click)="openNewTokenModal()">+ Tạo token mới</button>
               </div>
-              <div class="table-wrap">
-                <table class="member-table">
+              <div class="overflow-x-auto">
+                <table class="table">
                   <thead>
                     <tr>
                       <th>Tên</th>
@@ -725,12 +725,12 @@
                   <tbody>
                     @for (token of apiTokens(); track trackByTokenId($index, token)) {
                       <tr>
-                        <td><strong>{{ token.name }}</strong></td>
-                        <td><code class="mono">{{ token.tokenPreview }}</code></td>
+                        <td><strong class="font-semibold">{{ token.name }}</strong></td>
+                        <td><code class="font-mono text-xs">{{ token.tokenPreview }}</code></td>
                         <td>{{ token.createdAt }}</td>
                         <td>{{ token.lastUsedAt ?? 'Chưa sử dụng' }}</td>
-                        <td class="td-actions">
-                          <button type="button" class="btn btn-ghost btn-xs danger" (click)="onRevokeToken(token)">Thu hồi</button>
+                        <td class="whitespace-nowrap text-right">
+                          <button type="button" class="btn btn-ghost btn-xs text-error" (click)="onRevokeToken(token)">Thu hồi</button>
                         </td>
                       </tr>
                     }
@@ -746,26 +746,26 @@
 
   <!-- ============================== MODALS ============================== -->
   @if (showInviteModal()) {
-    <div class="modal-overlay" (click)="closeInviteModal()">
-      <div class="modal" (click)="$event.stopPropagation()">
-        <h3>Mời thành viên mới</h3>
+    <div class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/45 p-4" (click)="closeInviteModal()">
+      <div class="w-full max-w-[420px] rounded-box bg-base-100 p-6 shadow-xl" (click)="$event.stopPropagation()">
+        <h3 class="mb-4 text-lg font-bold">Mời thành viên mới</h3>
         <form [formGroup]="inviteForm" (ngSubmit)="onSendInvite()">
-          <div class="field">
-            <label for="inviteEmail">Địa chỉ email</label>
-            <input id="inviteEmail" type="email" formControlName="email" placeholder="ten@congty.com" />
+          <div class="mb-3 flex flex-col gap-1.5">
+            <label class="text-xs font-semibold text-base-content/80" for="inviteEmail">Địa chỉ email</label>
+            <input id="inviteEmail" type="email" class="input input-bordered w-full" formControlName="email" placeholder="ten@congty.com" />
             @if (inviteForm.get('email')?.invalid && inviteForm.get('email')?.touched) {
-              <span class="error">Vui lòng nhập email hợp lệ.</span>
+              <span class="text-xs text-error">Vui lòng nhập email hợp lệ.</span>
             }
           </div>
-          <div class="field">
-            <label for="inviteRole">Phân quyền ban đầu</label>
-            <select id="inviteRole" formControlName="role">
+          <div class="mb-3 flex flex-col gap-1.5">
+            <label class="text-xs font-semibold text-base-content/80" for="inviteRole">Phân quyền ban đầu</label>
+            <select id="inviteRole" class="select select-bordered w-full" formControlName="role">
               @for (role of memberRoles; track role) {
                 <option [value]="role">{{ role }}</option>
               }
             </select>
           </div>
-          <div class="modal-actions">
+          <div class="mt-5 flex justify-end gap-2">
             <button type="button" class="btn btn-ghost" (click)="closeInviteModal()">Huỷ</button>
             <button type="submit" class="btn btn-primary" [disabled]="inviteForm.invalid">Gửi lời mời</button>
           </div>
@@ -775,25 +775,25 @@
   }
 
   @if (showNewTokenModal()) {
-    <div class="modal-overlay" (click)="closeNewTokenModal()">
-      <div class="modal" (click)="$event.stopPropagation()">
-        <h3>Tạo Personal Access Token</h3>
+    <div class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/45 p-4" (click)="closeNewTokenModal()">
+      <div class="w-full max-w-[420px] rounded-box bg-base-100 p-6 shadow-xl" (click)="$event.stopPropagation()">
+        <h3 class="mb-4 text-lg font-bold">Tạo Personal Access Token</h3>
         @if (!generatedToken()) {
-          <div class="field">
-            <label for="tokenName">Tên token</label>
-            <input id="tokenName" type="text" [ngModel]="newTokenName()" (ngModelChange)="newTokenName.set($event)" placeholder="VD: CI/CD Pipeline" />
+          <div class="mb-3 flex flex-col gap-1.5">
+            <label class="text-xs font-semibold text-base-content/80" for="tokenName">Tên token</label>
+            <input id="tokenName" type="text" class="input input-bordered w-full" [ngModel]="newTokenName()" (ngModelChange)="newTokenName.set($event)" placeholder="VD: CI/CD Pipeline" />
           </div>
-          <div class="modal-actions">
+          <div class="mt-5 flex justify-end gap-2">
             <button type="button" class="btn btn-ghost" (click)="closeNewTokenModal()">Huỷ</button>
             <button type="button" class="btn btn-primary" [disabled]="!newTokenName().trim()" (click)="generateToken()">Tạo token</button>
           </div>
         } @else {
-          <p class="hint">Sao chép token ngay — bạn sẽ không thể xem lại sau khi đóng cửa sổ này.</p>
-          <div class="token-display">
-            <code class="mono">{{ generatedToken() }}</code>
-            <button type="button" class="btn btn-secondary btn-sm" (click)="copyToClipboard(generatedToken()!)">Sao chép</button>
+          <p class="text-xs text-base-content/50">Sao chép token ngay — bạn sẽ không thể xem lại sau khi đóng cửa sổ này.</p>
+          <div class="my-3 flex items-center justify-between gap-2 rounded-lg bg-base-200 p-2">
+            <code class="font-mono text-xs">{{ generatedToken() }}</code>
+            <button type="button" class="btn btn-outline btn-sm" (click)="copyToClipboard(generatedToken()!)">Sao chép</button>
           </div>
-          <div class="modal-actions">
+          <div class="mt-5 flex justify-end gap-2">
             <button type="button" class="btn btn-primary" (click)="closeNewTokenModal()">Xong</button>
           </div>
         }
@@ -803,6 +803,8 @@
 
   <!-- ============================== TOAST ============================== -->
   @if (toastMessage()) {
-    <div class="toast">{{ toastMessage() }}</div>
+    <div class="toast toast-end z-[2000]">
+      <div class="alert">{{ toastMessage() }}</div>
+    </div>
   }
 </div>

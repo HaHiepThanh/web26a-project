@@ -1,30 +1,30 @@
-<div class="app-container">
+<div class="flex min-h-[calc(100vh-52px-44px)] w-full max-lg:flex-col">
 
   <!-- Left Sidebar -->
-  <aside class="sidebar">
-    <div class="sidebar-card">
-      <div class="sidebar-header">
-        <span class="sidebar-title">KHÔNG GIAN LÀM VIỆC</span>
-        <button class="sidebar-add-btn" title="Tạo Workspace mới" (click)="addWorkspace()">+</button>
+  <aside class="flex w-[280px] shrink-0 flex-col gap-3 border-r border-base-300 bg-base-200 p-3 max-lg:w-full max-lg:border-b max-lg:border-r-0">
+    <div class="rounded-box border border-base-300 bg-base-100 p-3 shadow-sm">
+      <div class="mb-2 flex items-center justify-between">
+        <span class="text-[11px] font-bold uppercase tracking-wide text-base-content/50">KHÔNG GIAN LÀM VIỆC</span>
+        <button class="btn btn-square btn-ghost btn-xs text-base" title="Tạo Workspace mới" (click)="addWorkspace()">+</button>
       </div>
 
-      <div class="workspace-list">
+      <div class="flex flex-col gap-1">
         @for (ws of workspaces(); track trackByWorkspaceId($index, ws)) {
-          <a href="javascript:void(0)" class="workspace-item" [class.active]="activeWorkspaceId() === ws.id" (click)="selectWorkspace(ws.id)">
-            <div class="ws-icon-wrap">{{ ws.icon }}</div>
-            <div class="ws-text-wrap">
-              <div class="ws-name">{{ ws.name }}</div>
-              <div class="ws-meta">{{ ws.membersCount }} thành viên</div>
+          <a href="javascript:void(0)" class="workspace-item flex items-center gap-2 rounded-md px-2.5 py-2 text-base-content hover:bg-base-200" [class.active]="activeWorkspaceId() === ws.id" (click)="selectWorkspace(ws.id)">
+            <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-base-300 text-[15px]">{{ ws.icon }}</div>
+            <div class="flex flex-col overflow-hidden">
+              <div class="truncate text-[13px] font-semibold">{{ ws.name }}</div>
+              <div class="text-[11px] text-base-content/50">{{ ws.membersCount }} thành viên</div>
             </div>
           </a>
         }
       </div>
 
-      <a routerLink="/workspace-stats" class="workspace-item">
-        <div class="ws-icon-wrap">📊</div>
-        <div class="ws-text-wrap">
-          <div class="ws-name">Thống kê workspace</div>
-          <div class="ws-meta">Nhật ký hoạt động & tiến độ</div>
+      <a routerLink="/workspace-stats" class="workspace-item mt-1 flex items-center gap-2 rounded-md px-2.5 py-2 text-base-content hover:bg-base-200">
+        <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-base-300 text-[15px]">📊</div>
+        <div class="flex flex-col overflow-hidden">
+          <div class="truncate text-[13px] font-semibold">Thống kê workspace</div>
+          <div class="text-[11px] text-base-content/50">Nhật ký hoạt động & tiến độ</div>
         </div>
       </a>
     </div>
@@ -39,17 +39,17 @@
   </aside>
 
   <!-- Main Workspace Content -->
-  <main class="main-content">
+  <main class="mx-auto flex max-w-[1400px] flex-1 flex-col gap-12 bg-base-100 p-8 max-lg:p-4">
 
     <!-- Hero Welcome Banner -->
-    <section class="hero-banner">
-      <div class="hero-text-area">
-        <h1 class="hero-title">Chào buổi tối! 👋</h1>
-        <p class="hero-desc">
+    <section class="hero-banner max-lg:!flex-col max-lg:!items-start">
+      <div class="max-w-[680px]">
+        <h1 class="mb-2 text-[26px] font-extrabold leading-tight tracking-tight">Chào buổi tối! 👋</h1>
+        <p class="text-sm leading-relaxed text-slate-300">
           Hôm nay bạn muốn hoàn thành mục tiêu gì? Cùng kéo thả, quản lý tiến độ và cùng thảo luận công việc với các thành viên trong nhóm nhé.
         </p>
       </div>
-      <button class="hero-action-btn" (click)="openCreateModal(activeWorkspaceId())">
+      <button class="inline-flex shrink-0 items-center gap-2 rounded-box bg-white px-5 py-3 text-sm font-bold text-slate-900 shadow-md transition hover:-translate-y-0.5 hover:bg-slate-50" (click)="openCreateModal(activeWorkspaceId())">
         <span>+</span>
         <span>Tạo bảng mới</span>
       </button>
@@ -57,26 +57,26 @@
 
     <!-- Section 1: Starred Important Boards -->
     <section>
-      <div class="section-header">
-        <span class="section-icon">⭐</span>
-        <h2 class="section-title">BẢNG QUAN TRỌNG ĐƯỢC ĐÁNH DẤU SAO</h2>
+      <div class="mb-3 flex items-center gap-2">
+        <span class="text-lg">⭐</span>
+        <h2 class="text-base font-extrabold uppercase tracking-wide text-base-content">BẢNG QUAN TRỌNG ĐƯỢC ĐÁNH DẤU SAO</h2>
       </div>
-      <div class="boards-grid">
+      <div class="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-3">
         @if (starredBoards().length === 0) {
-          <div class="empty-note">Không có bảng quan trọng nào được đánh dấu sao.</div>
+          <div class="col-span-full rounded-box border border-dashed border-base-300 bg-base-100 p-5 text-center text-base-content/50">Không có bảng quan trọng nào được đánh dấu sao.</div>
         }
         @for (board of starredBoards(); track board.id) {
-          <div class="board-card" [class]="board.bgClass" (click)="onBoardClick(board)">
+          <div class="relative flex h-[125px] cursor-pointer flex-col justify-between overflow-hidden rounded-box p-3 text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md" [class]="board.bgClass" (click)="onBoardClick(board)">
             <div>
-              <div class="board-top-tag">{{ board.tag }}</div>
-              <div class="board-title" style="margin-top: 4px;">{{ board.title }}</div>
+              <div class="text-[10px] font-extrabold uppercase tracking-wide opacity-90">{{ board.tag }}</div>
+              <div class="mt-1 text-base font-bold leading-tight [text-shadow:0_1px_2px_rgba(0,0,0,0.2)]">{{ board.title }}</div>
             </div>
-            <button class="star-btn" [class.active]="board.starred" title="Đánh dấu sao" (click)="$event.stopPropagation(); toggleStar(board.id)">
+            <button class="absolute right-3 top-3 text-base text-white/60 transition hover:scale-110 hover:text-yellow-400" [class.text-yellow-400]="board.starred" [class.scale-110]="board.starred" title="Đánh dấu sao" (click)="$event.stopPropagation(); toggleStar(board.id)">
               {{ board.starred ? '⭐' : '☆' }}
             </button>
-            <div class="board-footer">
+            <div class="flex items-center justify-between text-[11px] font-semibold opacity-95">
               <span>{{ board.privacy === 'Public' ? '🌐' : '🔒' }} {{ board.privacy }}</span>
-              <span class="board-badge">{{ board.badge }}</span>
+              <span class="rounded bg-black/25 px-1.5 py-0.5 text-[10px] tracking-wide">{{ board.badge }}</span>
             </div>
           </div>
         }
@@ -85,24 +85,24 @@
 
     <!-- Section 2: Templates -->
     <section>
-      <div class="section-header">
-        <span class="section-icon">📖</span>
-        <h2 class="section-title">KHỞI TẠO NHANH THEO MẪU (TEMPLATES)</h2>
+      <div class="mb-3 flex items-center gap-2">
+        <span class="text-lg">📖</span>
+        <h2 class="text-base font-extrabold uppercase tracking-wide text-base-content">KHỞI TẠO NHANH THEO MẪU (TEMPLATES)</h2>
       </div>
 
-      <div class="templates-grid">
+      <div class="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-3">
         @for (tpl of templates; track tpl.title) {
-          <div class="template-card">
-            <div class="template-header">
-              <div class="template-badge" [class]="tpl.badgeClass">{{ tpl.badge }}</div>
-              <div class="template-body">
-                <h3 class="template-title">{{ tpl.title }}</h3>
-                <p class="template-desc">{{ tpl.desc }}</p>
+          <div class="flex min-h-[140px] flex-col justify-between rounded-box border border-base-300 bg-base-100 p-3 shadow-sm transition hover:-translate-y-0.5 hover:border-primary hover:shadow-md">
+            <div class="flex items-start gap-3">
+              <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[15px] font-extrabold text-white" [class]="tpl.badgeClass">{{ tpl.badge }}</div>
+              <div class="flex-1">
+                <h3 class="mb-1 text-[15px] font-bold text-base-content">{{ tpl.title }}</h3>
+                <p class="text-xs leading-normal text-base-content/50">{{ tpl.desc }}</p>
               </div>
             </div>
-            <div class="template-footer">
+            <div class="mt-3 flex items-center justify-between border-t border-base-300 pt-1 text-xs text-base-content/50">
               <span>Cột: {{ tpl.columns }} cột</span>
-              <button class="use-template-btn" (click)="useTemplate(tpl)">Sử dụng &gt;</button>
+              <button class="flex items-center gap-1 text-xs font-bold text-primary transition-all hover:gap-2" (click)="useTemplate(tpl)">Sử dụng &gt;</button>
             </div>
           </div>
         }
@@ -111,43 +111,43 @@
 
     <!-- Section 3: All Workspaces & Boards -->
     <section>
-      <div class="section-header">
-        <span class="section-icon">🥞</span>
-        <h2 class="section-title">TẤT CẢ KHÔNG GIAN LÀM VIỆC CỦA BẠN</h2>
+      <div class="mb-3 flex items-center gap-2">
+        <span class="text-lg">🥞</span>
+        <h2 class="text-base font-extrabold uppercase tracking-wide text-base-content">TẤT CẢ KHÔNG GIAN LÀM VIỆC CỦA BẠN</h2>
       </div>
 
-      <div style="display: flex; flex-direction: column; gap: var(--space-xl);">
+      <div class="flex flex-col gap-8">
         @for (ws of filteredWorkspaces(); track trackByWorkspaceId($index, ws)) {
-          <div class="workspace-block-card">
-            <div class="ws-block-header">
-              <div class="ws-info-group">
-                <div class="ws-avatar-lg">{{ ws.icon }}</div>
+          <div class="rounded-box border border-base-300 bg-base-100 p-6 shadow-sm">
+            <div class="mb-6 flex items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-box bg-base-300 text-[22px]">{{ ws.icon }}</div>
                 <div>
-                  <h3 class="ws-block-title">{{ ws.name }}</h3>
-                  <p class="ws-block-desc">{{ ws.description }}</p>
+                  <h3 class="text-lg font-extrabold text-base-content">{{ ws.name }}</h3>
+                  <p class="mt-0.5 text-xs text-base-content/50">{{ ws.description }}</p>
                 </div>
               </div>
-              <button class="btn-add-board" (click)="openCreateModal(ws.id)">+ Thêm bảng</button>
+              <button class="rounded-box bg-primary/10 px-4 py-2 text-[13px] font-bold text-primary transition hover:bg-primary hover:text-white" (click)="openCreateModal(ws.id)">+ Thêm bảng</button>
             </div>
 
-            <div class="boards-grid">
+            <div class="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-3">
               @for (board of ws.boards; track board.id) {
-                <div class="board-card" [class]="board.bgClass" (click)="onBoardClick(board)">
+                <div class="relative flex h-[125px] cursor-pointer flex-col justify-between overflow-hidden rounded-box p-3 text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md" [class]="board.bgClass" (click)="onBoardClick(board)">
                   <div>
-                    <div class="board-top-tag">{{ board.tag }}</div>
-                    <div class="board-title" style="margin-top: 4px;">{{ board.title }}</div>
+                    <div class="text-[10px] font-extrabold uppercase tracking-wide opacity-90">{{ board.tag }}</div>
+                    <div class="mt-1 text-base font-bold leading-tight [text-shadow:0_1px_2px_rgba(0,0,0,0.2)]">{{ board.title }}</div>
                   </div>
-                  <button class="star-btn" [class.active]="board.starred" title="Đánh dấu sao" (click)="$event.stopPropagation(); toggleStar(board.id)">
+                  <button class="absolute right-3 top-3 text-base text-white/60 transition hover:scale-110 hover:text-yellow-400" [class.text-yellow-400]="board.starred" [class.scale-110]="board.starred" title="Đánh dấu sao" (click)="$event.stopPropagation(); toggleStar(board.id)">
                     {{ board.starred ? '⭐' : '☆' }}
                   </button>
-                  <div class="board-footer">
+                  <div class="flex items-center justify-between text-[11px] font-semibold opacity-95">
                     <span>{{ board.privacy === 'Public' ? '🌐' : '🔒' }} {{ board.privacy }}</span>
-                    <span class="board-badge">{{ board.badge }}</span>
+                    <span class="rounded bg-black/25 px-1.5 py-0.5 text-[10px] tracking-wide">{{ board.badge }}</span>
                   </div>
                 </div>
               }
-              <div class="create-board-card" (click)="openCreateModal(ws.id)">
-                <span style="font-size: 20px;">+</span>
+              <div class="flex h-[125px] cursor-pointer flex-col items-center justify-center gap-1 rounded-box border-2 border-dashed border-base-300 bg-base-100 text-[13px] font-semibold text-base-content/50 transition hover:border-primary hover:bg-base-200 hover:text-primary" (click)="openCreateModal(ws.id)">
+                <span class="text-xl">+</span>
                 <span>Tạo bảng mới</span>
               </div>
             </div>
@@ -161,20 +161,20 @@
 
 <!-- MODAL: Create new board -->
 @if (showCreateModal()) {
-  <div class="modal-overlay active" (click)="closeCreateModal()">
-    <div class="modal-box" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h3 class="modal-title">Tạo bảng làm việc mới</h3>
-        <button class="modal-close-btn" (click)="closeCreateModal()">&times;</button>
+  <div class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-[2px]" (click)="closeCreateModal()">
+    <div class="w-full max-w-[480px] rounded-box border border-base-300 bg-base-100 p-6 shadow-xl" (click)="$event.stopPropagation()">
+      <div class="mb-5 flex items-center justify-between">
+        <h3 class="text-lg font-extrabold text-base-content">Tạo bảng làm việc mới</h3>
+        <button class="btn btn-circle btn-ghost btn-sm text-xl" (click)="closeCreateModal()">&times;</button>
       </div>
 
       <form (ngSubmit)="onCreateBoardSubmit()">
-        <div class="form-group">
-          <label class="form-label" for="board-title-input">Tên bảng dự án</label>
+        <div class="mb-3">
+          <label class="mb-1.5 block text-xs font-bold uppercase text-base-content/80" for="board-title-input">Tên bảng dự án</label>
           <input
             type="text"
             id="board-title-input"
-            class="form-input"
+            class="input input-bordered w-full"
             placeholder="Ví dụ: Quản lý Sprint 12..."
             required
             [ngModel]="newBoardTitle()"
@@ -183,11 +183,11 @@
           />
         </div>
 
-        <div class="form-group">
-          <label class="form-label" for="board-workspace-select">Workspace</label>
+        <div class="mb-3">
+          <label class="mb-1.5 block text-xs font-bold uppercase text-base-content/80" for="board-workspace-select">Workspace</label>
           <select
             id="board-workspace-select"
-            class="form-select"
+            class="select select-bordered w-full"
             [ngModel]="newBoardWorkspaceId()"
             (ngModelChange)="newBoardWorkspaceId.set($event)"
             name="boardWorkspace"
@@ -198,11 +198,11 @@
           </select>
         </div>
 
-        <div class="form-group">
-          <label class="form-label" for="board-privacy-select">Quyền riêng tư</label>
+        <div class="mb-3">
+          <label class="mb-1.5 block text-xs font-bold uppercase text-base-content/80" for="board-privacy-select">Quyền riêng tư</label>
           <select
             id="board-privacy-select"
-            class="form-select"
+            class="select select-bordered w-full"
             [ngModel]="newBoardPrivacy()"
             (ngModelChange)="newBoardPrivacy.set($event)"
             name="boardPrivacy"
@@ -213,26 +213,28 @@
           </select>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Phông màu nền</label>
-          <div class="color-options-grid">
+        <div class="mb-3">
+          <label class="mb-1.5 block text-xs font-bold uppercase text-base-content/80">Phông màu nền</label>
+          <div class="mt-1.5 flex gap-2">
             @for (bg of bgClasses; track bg) {
-              <div class="color-option" [class]="bg" [class.selected]="selectedBgClass() === bg" (click)="selectedBgClass.set(bg)"></div>
+              <div class="h-9 w-9 cursor-pointer rounded-md border-2 border-transparent transition" [class]="bg" [class.border-base-content]="selectedBgClass() === bg" [class.scale-110]="selectedBgClass() === bg" (click)="selectedBgClass.set(bg)"></div>
             }
           </div>
         </div>
 
-        <div class="modal-footer">
-          <button type="button" class="btn-secondary" (click)="closeCreateModal()">Hủy</button>
-          <button type="submit" class="nav-btn btn-primary-nav" style="height: 38px;">Tạo bảng</button>
+        <div class="mt-5 flex justify-end gap-2">
+          <button type="button" class="btn btn-ghost" (click)="closeCreateModal()">Hủy</button>
+          <button type="submit" class="btn btn-primary">Tạo bảng</button>
         </div>
       </form>
     </div>
   </div>
 }
 
-<div class="toast-stack">
+<div class="toast toast-end z-[2000]">
   @for (toast of toasts(); track toast.id) {
-    <div class="toast" [class]="toast.type"><span>✨</span> <span>{{ toast.message }}</span></div>
+    <div class="alert" [class.alert-success]="toast.type === 'success'" [class.alert-error]="toast.type === 'error'" [class.alert-info]="toast.type === 'info'">
+      <span>✨</span> <span>{{ toast.message }}</span>
+    </div>
   }
 </div>

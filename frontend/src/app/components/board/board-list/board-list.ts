@@ -60,7 +60,7 @@ export class BoardList {
 
     if (fromListId !== toListId) {
       const toName = this.listService.lists().find((l) => l.id === toListId)?.name ?? '—';
-      this.activityService.record(this.boardId(), card.id, `đã chuyển thẻ "${card.title}" sang "${toName}"`);
+      this.activityService.record(this.boardId(), card.id, `đã chuyển thẻ "${card.title}" sang "${toName}"`, 'card_moved');
     }
   }
 
