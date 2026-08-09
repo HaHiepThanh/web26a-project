@@ -1,5 +1,6 @@
 import { DOCUMENT } from '@angular/common';
 import { Component, effect, inject, signal } from '@angular/core';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import {
   AbstractControl,
   FormBuilder,
@@ -80,7 +81,7 @@ function computePasswordStrength(password: string): PasswordStrength {
  */
 @Component({
   selector: 'app-settings',
-  imports: [ReactiveFormsModule, FormsModule],
+  imports: [ReactiveFormsModule, FormsModule, RouterLink, RouterLinkActive],
   templateUrl: './settings.html',
   styleUrl: './settings.css',
 })

@@ -45,9 +45,12 @@ export const routes: Routes = [
     children: [
       { path: 'dashboard', loadComponent: () => import('./pages/dashboard/dashboard').then((m) => m.Dashboard) },
       { path: 'workspace', loadComponent: () => import('./pages/workspace/workspace').then((m) => m.Workspace) },
+      { path: 'workspace-stats', loadComponent: () => import('./pages/workspace-stats/workspace-stats').then((m) => m.WorkspaceStats) },
       { path: 'board/:id', loadComponent: () => import('./pages/board/board').then((m) => m.Board) },
       { path: 'members', loadComponent: () => import('./pages/members/members').then((m) => m.Members) /* , canActivate: [roleGuard] */ },
       { path: 'settings', loadComponent: () => import('./pages/settings/settings').then((m) => m.Settings) },
+      { path: 'settings/manage-workspace', loadComponent: () => import('./pages/settings/manage-workspace/project-list/project-list').then((m) => m.ProjectList) },
+      { path: 'settings/manage-workspace/:boardId', loadComponent: () => import('./pages/settings/manage-workspace/project-members/project-members').then((m) => m.ProjectMembers) },
     ],
   },
 

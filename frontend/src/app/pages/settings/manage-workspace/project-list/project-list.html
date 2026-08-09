@@ -1,0 +1,53 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <a routerLink="/settings" class="back-link">← Cài đặt</a>
+      <h1>Manage Workspace</h1>
+      <p>Các dự án bạn đang tham gia trong Workspace.</p>
+    </div>
+  </header>
+
+  <div class="search-row">
+    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="8"></circle>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+    </svg>
+    <input
+      type="text"
+      placeholder="Tìm project..."
+      [value]="searchQuery()"
+      (input)="searchQuery.set($any($event.target).value)"
+    />
+  </div>
+
+  @if (filteredProjects().length === 0) {
+    <div class="empty-state">
+      @if (searchQuery()) {
+        <p>Không tìm thấy project nào khớp với "{{ searchQuery() }}".</p>
+      } @else {
+        <p>Bạn chưa tham gia dự án nào trong workspace này.</p>
+        <a routerLink="/workspace" class="btn-primary">Khám phá Workspace</a>
+      }
+    </div>
+  } @else {
+    <div class="project-grid">
+      @for (project of filteredProjects(); track trackById($index, project)) {
+        <a [routerLink]="['/settings/manage-workspace', project.id]" class="project-card">
+          <div class="project-card-top">
+            <span class="project-name">{{ project.name }}</span>
+            <span class="role-badge" [class]="'role-' + project.myRole">{{ roleLabel(project.myRole) }}</span>
+          </div>
+          <span class="workspace-tag">{{ project.workspaceName }}</span>
+          <div class="project-card-bottom">
+            <div class="avatar-stack">
+              @for (avatarUrl of project.memberAvatars; track avatarUrl) {
+                <img [src]="avatarUrl" alt="" />
+              }
+            </div>
+            <span class="member-count">{{ project.memberCount }} thành viên</span>
+          </div>
+        </a>
+      }
+    </div>
+  }
+</div>
