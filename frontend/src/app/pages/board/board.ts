@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
@@ -15,6 +15,7 @@ import { LabelPicker } from '../../components/board/label-picker/label-picker';
 import { CardItem } from '../../components/board/card-item/card-item';
 import { ChatPanel } from '../../components/chat/chat-panel/chat-panel';
 import { CardDetailModal } from '../../components/board/card-detail-modal/card-detail-modal';
+import { BoardMinimap, MinimapListGeom } from '../../components/board/board-minimap/board-minimap';
 
 type ToastType = 'success' | 'error' | 'info';
 interface Toast {
@@ -66,6 +67,9 @@ const DATE_OPTIONS: { id: DateFilter; label: string }[] = [
   { id: 'today', label: 'Hôm nay' },
   { id: 'week', label: 'Tuần này' },
 ];
+/** Mini Map (#13) chỉ hiện khi board đủ "lớn": nhiều list hoặc nội dung tràn viewport. */
+const MINIMAP_LIST_COUNT_THRESHOLD = 8;
+const MINIMAP_OVERFLOW_RATIO = 1.5;
 
 /**
  * Màn Trello chính. Lớp 🔴: #1 cuộn ngang không rớt dòng, #2 tự tạo list/thẻ,
@@ -76,7 +80,7 @@ const DATE_OPTIONS: { id: DateFilter; label: string }[] = [
  */
 @Component({
   selector: 'app-board',
-  imports: [FormsModule, RouterLink, DragDropModule, BoardList, AddList, LabelPicker, CardItem, ChatPanel, CardDetailModal],
+  imports: [FormsModule, RouterLink, DragDropModule, BoardList, AddList, LabelPicker, CardItem, ChatPanel, CardDetailModal, BoardMinimap],
   templateUrl: './board.html',
   styleUrl: './board.css',
 })
@@ -408,11 +412,101 @@ export class Board {
 
   readonly totalCards = computed(() => Object.values(this.cardsByList()).reduce((sum, arr) => sum + arr.length, 0));
 
+  // ---- Mini Map (#13): thanh điều hướng thu nhỏ nổi góc dưới-phải, chỉ hiện khi
+  // board "lớn" ở chế độ Theo trạng thái. Đo trực tiếp từ DOM khung cuộn ngang thật
+  // (không hardcode lại hằng số layout), Mini Map chỉ vẽ lại từ số liệu đo được. ----
+  private readonly boardScrollRef = viewChild<ElementRef<HTMLDivElement>>('boardScroll');
+
+  readonly minimapItems = signal<MinimapListGeom[]>([]);
+  readonly minimapScrollPos = signal(0);
+  readonly minimapViewportSize = signal(0);
+  readonly minimapContentSize = signal(0);
+
+  readonly showMinimap = computed(() => {
+    if (this.viewMode() !== 'status') return false;
+    const count = this.lists().length;
+    if (count === 0) return false;
+    if (count >= MINIMAP_LIST_COUNT_THRESHOLD) return true;
+    const viewport = this.minimapViewportSize();
+    if (viewport <= 0) return false;
+    return this.minimapContentSize() > viewport * MINIMAP_OVERFLOW_RATIO;
+  });
+
+  private minimapResizeObserver?: ResizeObserver;
+  private minimapScrollRaf = 0;
+
+  private setupMinimapTracking(): void {
+    effect(() => {
+      const el = this.boardScrollRef()?.nativeElement;
+      this.minimapResizeObserver?.disconnect();
+      if (!el) return;
+      this.minimapResizeObserver = new ResizeObserver(() => this.updateMinimapGeometry());
+      this.minimapResizeObserver.observe(el);
+      this.updateMinimapGeometry();
+    });
+
+    // Số lượng/kích thước List đổi (thêm/xoá/thu gọn) hoặc đổi view → đo lại vị trí
+    // thật trên DOM sau khi Angular render xong khung mới.
+    effect(() => {
+      this.lists();
+      this.collapsedListIds();
+      this.viewMode();
+      queueMicrotask(() => this.updateMinimapGeometry());
+    });
+
+    inject(DestroyRef).onDestroy(() => this.minimapResizeObserver?.disconnect());
+  }
+
+  private updateMinimapGeometry(): void {
+    const el = this.boardScrollRef()?.nativeElement;
+    if (!el) return;
+    const containerRect = el.getBoundingClientRect();
+    const items: MinimapListGeom[] = [];
+    el.querySelectorAll<HTMLElement>('[data-list-id]').forEach((node) => {
+      const id = node.dataset['listId'];
+      const list = id ? this.lists().find((l) => l.id === id) : undefined;
+      if (!id || !list) return;
+      const rect = node.getBoundingClientRect();
+      const offset = rect.left - containerRect.left + el.scrollLeft;
+      items.push({ id, name: list.name, cardCount: this.cardsFor(id).length, offset, size: rect.width });
+    });
+    this.minimapItems.set(items);
+    this.updateMinimapScrollMetrics(el);
+  }
+
+  private updateMinimapScrollMetrics(el: HTMLDivElement): void {
+    this.minimapScrollPos.set(el.scrollLeft);
+    this.minimapViewportSize.set(el.clientWidth);
+    this.minimapContentSize.set(el.scrollWidth);
+  }
+
+  /** rAF-throttle: khung cuộn bắn (scroll) rất dày, chỉ đọc lại vị trí — không đo lại
+   *  geometry từng List (chỉ đổi khi lists/collapsed/view đổi, xem effect ở trên). */
+  onBoardScroll(): void {
+    if (this.minimapScrollRaf) return;
+    this.minimapScrollRaf = requestAnimationFrame(() => {
+      this.minimapScrollRaf = 0;
+      const el = this.boardScrollRef()?.nativeElement;
+      if (el) this.updateMinimapScrollMetrics(el);
+    });
+  }
+
+  /** Click 1 List trên Mini Map → cuộn mượt khung Board thật, đưa List đó về gần giữa. */
+  scrollToList(listId: string): void {
+    const el = this.boardScrollRef()?.nativeElement;
+    const item = this.minimapItems().find((i) => i.id === listId);
+    if (!el || !item) return;
+    const maxScroll = Math.max(el.scrollWidth - el.clientWidth, 0);
+    const target = Math.min(Math.max(item.offset - (el.clientWidth - item.size) / 2, 0), maxScroll);
+    el.scrollTo({ left: target, behavior: 'smooth' });
+  }
+
   constructor() {
     void this.bootstrap();
     this.loadSavedFilters();
     this.loadSavedHighlightGroups();
     this.loadCollapsedLists();
+    this.setupMinimapTracking();
 
     effect(() => {
       const err = this.listService.lastError();

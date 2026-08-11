@@ -173,7 +173,7 @@
   </div>
 
   @if (viewMode() === 'status') {
-    <div class="board-body">
+    <div #boardScroll class="board-body" (scroll)="onBoardScroll()">
       <div
         class="board-row"
         cdkDropList
@@ -183,7 +183,7 @@
         (cdkDropListDropped)="onListDrop($event)"
       >
         @for (list of lists(); track trackByListId($index, list)) {
-          <div class="list-drag-wrap" [class.collapsed]="collapsedListIds().has(list.id)" cdkDrag [cdkDragData]="list" cdkDragLockAxis="x">
+          <div class="list-drag-wrap" [attr.data-list-id]="list.id" [class.collapsed]="collapsedListIds().has(list.id)" cdkDrag [cdkDragData]="list" cdkDragLockAxis="x">
             <div class="list-drop-placeholder" *cdkDragPlaceholder></div>
 
             <div class="list-grip" cdkDragHandle title="Kéo để đổi thứ tự danh sách">
@@ -416,6 +416,17 @@
       </div>
     }
   </div>
+
+  @if (showMinimap()) {
+    <app-board-minimap
+      [layoutMode]="'column'"
+      [items]="minimapItems()"
+      [scrollPos]="minimapScrollPos()"
+      [viewportSize]="minimapViewportSize()"
+      [contentSize]="minimapContentSize()"
+      (navigate)="scrollToList($event)"
+    />
+  }
 
   <app-chat-panel [boardId]="boardId" (taskCreated)="onChatTaskCreated($event)" />
 
