@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
+import { Component, DestroyRef, computed, effect, inject, input, output, signal } from '@angular/core';
 import { User } from '../../../models';
 import { ChatService, CURRENT_CHAT_USER_ID } from '../../../services/chat.service';
 import { BoardService } from '../../../services/board.service';
@@ -53,10 +53,17 @@ export class ChatPanel {
     return u?.displayName ?? u?.email ?? null;
   });
 
-  private readonly originalTitle = document.title;
+  // Bóc tiền tố "(số) " nếu tab title đang còn sót từ lần vào board trước — nếu không
+  // sẽ chồng thành "(2) (2) ..." mỗi lần vào lại board (ChatPanel tạo mới mỗi lần).
+  private readonly originalTitle = document.title.replace(/^\(\d+\)\s*/, '');
   private lastSeenCount = 0;
 
   constructor() {
+    // Rời board (ChatPanel bị huỷ) → trả tab title về sạch, không để badge "(n)" dính lại.
+    inject(DestroyRef).onDestroy(() => {
+      document.title = this.originalTitle;
+    });
+
     // effect() (không phải constructor body trực tiếp) vì input.required() chỉ có
     // giá trị SAU khi Angular gán input, không đọc được ngay trong constructor.
     effect(() => {
