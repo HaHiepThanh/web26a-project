@@ -2,6 +2,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { Card, CardPriority } from '../models';
 import { MockNetworkService } from './mock-network.service';
 import { CURRENT_USER_ID } from './board.service';
+import { boardSeed } from './mock-board-data';
 
 /** Số ngày tính là "sắp đến hạn" (#10, Mức 1 — chỉ tính toán tại chỗ, không cron job). */
 const DUE_SOON_WINDOW_DAYS = 3;
@@ -19,42 +20,31 @@ export interface CreateCardInput {
   labelId?: string | null;
 }
 
+/** Sinh card mẫu theo đúng board (nguồn chung mock-board-data.ts): mỗi card seed trỏ
+ *  list qua `listIndex` → map sang list id thật (listIdByIndex) đã sinh khi load lists. */
 function mockCards(boardId: string, listIdByIndex: string[]): Record<string, Card[]> {
   const now = new Date().toISOString();
-  const make = (listId: string, title: string, priority: CardPriority, assigneeId?: string, dueDate?: string, position = 0): Card => ({
-    id: mockId('card'),
-    tenantId: 'tenant-demo',
-    listId,
-    title,
-    priority,
-    assigneeId,
-    dueDate,
-    position,
-    createdBy: 'u-nam',
-    createdAt: now,
-    updatedAt: now,
-  });
-
-  const [todo, doing, review, done] = listIdByIndex;
   const byList: Record<string, Card[]> = {};
-  if (todo) {
-    byList[todo] = [
-      make(todo, 'Thiết kế wireframe trang chủ', 'high', 'u-linh', '2026-08-05', 0),
-      make(todo, 'Viết API xác thực người dùng', 'medium', 'u-khoa', '2026-08-10', 1),
-      make(todo, 'Chuẩn hoá style guide UI', 'low', 'u-my', undefined, 2),
-    ];
-  }
-  if (doing) {
-    byList[doing] = [
-      make(doing, 'Review pull request #482', 'medium', 'u-nam', '2026-08-04', 0),
-      make(doing, 'Tối ưu tốc độ tải trang', 'high', 'u-bao', '2026-08-03', 1),
-    ];
-  }
-  if (review) {
-    byList[review] = [make(review, 'Kiểm thử luồng thanh toán', 'high', 'u-khoa', '2026-08-06', 0)];
-  }
-  if (done) {
-    byList[done] = [make(done, 'Chuẩn bị demo cho khách hàng', 'medium', 'u-linh', '2026-08-01', 0)];
+  const posByList: Record<string, number> = {};
+
+  for (const seed of boardSeed(boardId).cards) {
+    const listId = listIdByIndex[seed.listIndex];
+    if (!listId) continue;
+    const position = posByList[listId] ?? 0;
+    posByList[listId] = position + 1;
+    (byList[listId] ??= []).push({
+      id: mockId('card'),
+      tenantId: 'tenant-demo',
+      listId,
+      title: seed.title,
+      priority: seed.priority,
+      assigneeId: seed.assigneeId,
+      dueDate: seed.dueDate,
+      position,
+      createdBy: 'u-nam',
+      createdAt: now,
+      updatedAt: now,
+    });
   }
   return byList;
 }

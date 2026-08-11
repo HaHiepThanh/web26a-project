@@ -1,5 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { Board, User } from '../models';
+import { ALL_MOCK_BOARD_IDS, MockBoardSeed, boardSeed } from './mock-board-data';
 
 /** Bảng màu avatar cố định theo id — dùng chung cho card assignee + avatar stack. */
 const AVATAR_PALETTE = ['#0284c7', '#7c3aed', '#059669', '#ea580c', '#dc2626', '#0d9488'];
@@ -45,15 +46,18 @@ const MOCK_MEMBERS: User[] = [
   { id: 'u-bao', email: 'bao@trello.dev', displayName: 'Bảo' },
 ];
 
-/** Board giả lập gộp mọi workspace — nguồn cho Dashboard Chat hub (#chat-hub) liệt kê
- *  hội thoại. id b-1..b-4 khớp với MESSAGE_SETS trong chat.service để mỗi board có
- *  preview tin nhắn khác nhau. */
-const MOCK_ALL_BOARDS: Board[] = [
-  { id: 'b-1', name: 'Hệ thống Quản lý Kanban', tenantId: 'tenant-demo', workspaceId: 'ws-1', visibility: 'public', createdBy: 'u-nam', createdAt: new Date().toISOString() },
-  { id: 'b-2', name: 'App Tìm trọ Sinh viên', tenantId: 'tenant-demo', workspaceId: 'ws-1', visibility: 'restricted', createdBy: 'u-nam', createdAt: new Date().toISOString() },
-  { id: 'b-3', name: 'Website Câu lạc bộ', tenantId: 'tenant-demo', workspaceId: 'ws-2', visibility: 'restricted', createdBy: 'u-nam', createdAt: new Date().toISOString() },
-  { id: 'b-4', name: 'Demo MVP cho nhà đầu tư', tenantId: 'tenant-demo', workspaceId: 'ws-2', visibility: 'public', createdBy: 'u-nam', createdAt: new Date().toISOString() },
-];
+/** Dựng Board metadata từ 1 seed board mẫu (nguồn chung mock-board-data.ts). */
+function boardFromSeed(seed: MockBoardSeed): Board {
+  return {
+    id: seed.id,
+    tenantId: 'tenant-demo',
+    workspaceId: seed.workspaceId,
+    name: seed.name,
+    visibility: seed.visibility,
+    createdBy: MOCK_MEMBERS[0].id,
+    createdAt: new Date().toISOString(),
+  };
+}
 
 /** CRUD board + visibility (#3). Hiện dùng dữ liệu giả (chưa nối backend thật). */
 @Injectable({ providedIn: 'root' })
@@ -70,20 +74,13 @@ export class BoardService {
 
   /** Gộp board của TẤT CẢ workspace — cho Dashboard Chat hub liệt kê mọi hội thoại. */
   async loadAllBoards(): Promise<void> {
-    this.allBoards.set(MOCK_ALL_BOARDS);
+    this.allBoards.set(ALL_MOCK_BOARD_IDS.map((id) => boardFromSeed(boardSeed(id))));
   }
 
-  /** Mock: dựng 1 Board tối thiểu từ :id trên route để trang /board/:id có gì đó để hiển thị. */
+  /** Mock: dựng Board từ :id trên route dựa vào dữ liệu board mẫu (mock-board-data.ts)
+   *  nên mỗi board có đúng tên riêng; id lạ rơi về board mặc định nhưng giữ nguyên id. */
   async loadBoard(boardId: string): Promise<void> {
-    this.currentBoard.set({
-      id: boardId,
-      tenantId: 'tenant-demo',
-      workspaceId: 'ws-1',
-      name: 'Hệ thống Quản lý Kanban',
-      visibility: 'public',
-      createdBy: MOCK_MEMBERS[0].id,
-      createdAt: new Date().toISOString(),
-    });
+    this.currentBoard.set(boardFromSeed(boardSeed(boardId)));
   }
 
   async createBoard(workspaceId: string, name: string): Promise<Board | null> {

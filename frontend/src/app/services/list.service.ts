@@ -1,6 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { List } from '../models';
 import { MockNetworkService } from './mock-network.service';
+import { boardSeed } from './mock-board-data';
 
 let idSeq = 1;
 function mockId(prefix: string): string {
@@ -9,13 +10,7 @@ function mockId(prefix: string): string {
 
 function mockLists(boardId: string): List[] {
   const now = new Date().toISOString();
-  const seed: [string, string][] = [
-    ['Cần làm', '#64748b'],
-    ['Đang làm', '#2563eb'],
-    ['Review', '#d97706'],
-    ['Hoàn thành', '#059669'],
-  ];
-  return seed.map(([name, color], i) => ({
+  return boardSeed(boardId).lists.map(({ name, color }, i) => ({
     id: mockId('list'),
     tenantId: 'tenant-demo',
     boardId,
