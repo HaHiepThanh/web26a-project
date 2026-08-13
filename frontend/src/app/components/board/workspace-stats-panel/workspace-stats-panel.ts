@@ -1,10 +1,9 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivityActionType, ActivityLog, CardPriority } from '../../models';
-import { CURRENT_USER_ID } from '../settings/manage-workspace/manage-workspace.models';
-import { MemberWorkloadStat, mockWorkspaceStats } from './workspace-stats.mock';
+import { ActivityActionType, ActivityLog } from '../../../models';
+import { avatarColorFor, CURRENT_USER_ID, initialsOf } from '../../../services/board.service';
+import { MemberWorkloadStat, WorkspaceStatsData } from '../workspace-stats-modal/board-stats.mock';
 
-type DateRange = '7d' | '30d';
 type LogScope = 'mine' | 'team';
 type ActionGroup = 'all' | 'created' | 'moved' | 'assigned' | 'updated' | 'deleted';
 
@@ -37,52 +36,37 @@ const ACTION_GROUP_LABEL: Record<ActionGroup, string> = {
 
 const ACTION_GROUPS: ActionGroup[] = ['all', 'created', 'moved', 'assigned', 'updated', 'deleted'];
 
-// Cao = đỏ (bắt mắt tối đa); Trung bình = vàng dịu; Thấp = xanh dương — dùng màu ngữ nghĩa của daisyUI.
-const PRIORITY_STYLE: Record<CardPriority, { label: string; progressClass: string; textClass: string }> = {
-  high: { label: 'Cao', progressClass: 'progress-error', textClass: 'text-error' },
-  medium: { label: 'Trung bình', progressClass: 'progress-warning', textClass: 'text-warning' },
-  low: { label: 'Thấp', progressClass: 'progress-info', textClass: 'text-info' },
-};
-
 // Không hoạt động từ 3 ngày trở lên (kể cả khi vẫn còn việc đang làm) -> đáng chú ý cho quản lý.
 const INACTIVITY_THRESHOLD_DAYS = 3;
 
-// Chiều cao tối đa (px) của cột trong "Hoạt động theo ngày". Cột đo bằng px thay vì %
-// của container cố định, để phần màu luôn chạm đúng mép trên của chính nó — nhờ vậy
-// góc bo (rounded-t) luôn hiện đúng ở mọi cột, không chỉ cột cao nhất (100%).
-const DAILY_BAR_MAX_PX = 80;
+let instanceSeq = 0;
 
-/** Trang thống kê thành viên workspace (#bonus): nhật ký hoạt động + tổng quan tiến độ.
- *  Dữ liệu lấy từ workspace-stats.mock.ts — xem file đó để biết cách nối API thật sau này. */
+/**
+ * Khối trình bày cho Modal "Thống kê & Báo cáo" mở từ toolbar Board (board.html/board.ts).
+ * Chỉ nhận `data` đã tính sẵn qua input (xem board-stats.mock.ts) — không tự fetch gì, chỉ
+ * lo hiển thị + lọc/tìm kiếm tại chỗ. Đúng 3 khối theo yêu cầu UI: dải chỉ số, cảnh báo +
+ * tiến độ thành viên, bộ lọc + nhật ký hoạt động.
+ */
 @Component({
-  selector: 'app-workspace-stats',
+  selector: 'app-workspace-stats-panel',
   imports: [FormsModule],
-  templateUrl: './workspace-stats.html',
-  styleUrl: './workspace-stats.css',
+  templateUrl: './workspace-stats-panel.html',
 })
-export class WorkspaceStats {
-  private readonly data = mockWorkspaceStats();
+export class WorkspaceStatsPanel {
+  readonly data = input.required<WorkspaceStatsData>();
+  readonly currentUserId = input<string>(CURRENT_USER_ID);
 
-  readonly workspaceName = this.data.workspaceName;
-  readonly overview = this.data.overview;
-  readonly memberWorkload = this.data.memberWorkload;
-  readonly overdueCards = this.data.overdueCards;
+  readonly overdueDrawerId = `wsp-overdue-drawer-${instanceSeq++}`;
 
   readonly actionGroups = ACTION_GROUPS;
   readonly actionGroupLabel = ACTION_GROUP_LABEL;
 
-  readonly maxPriorityCount = computed(() => Math.max(1, ...this.data.priorityBreakdown.map((p) => p.count)));
-
-  readonly priorityBreakdown = computed(() =>
-    this.data.priorityBreakdown.map((p) => ({
-      ...p,
-      ...PRIORITY_STYLE[p.priority],
-      barPct: Math.round((p.count / this.maxPriorityCount()) * 100),
-    })),
-  );
+  readonly overview = computed(() => this.data().overview);
+  readonly overdueCards = computed(() => this.data().overdueCards);
+  readonly memberWorkload = computed(() => this.data().memberWorkload);
 
   readonly inactiveMembers = computed(() =>
-    this.memberWorkload.filter((m) => {
+    this.memberWorkload().filter((m) => {
       if (!m.lastActiveAt) return true;
       const daysSince = (Date.now() - new Date(m.lastActiveAt).getTime()) / (1000 * 60 * 60 * 24);
       return daysSince >= INACTIVITY_THRESHOLD_DAYS;
@@ -91,43 +75,15 @@ export class WorkspaceStats {
 
   readonly inactiveMembersLabel = computed(() => this.inactiveMembers().map((m) => m.name).join(', '));
 
-  readonly dateRange = signal<DateRange>('7d');
   readonly selectedMemberId = signal<'all' | string>('all');
   readonly logScope = signal<LogScope>('team');
   readonly logSearch = signal('');
   readonly actionFilter = signal<ActionGroup>('all');
-  readonly selectedDate = signal<string | null>(null);
 
-  // Mock hiện chỉ seed 7 ngày gần nhất; chọn "30 ngày" sẽ hiển thị toàn bộ dữ liệu
-  // đang có (không bịa thêm điểm dữ liệu giả cho những ngày chưa seed).
-  private readonly rangeDays = computed(() => (this.dateRange() === '7d' ? 7 : 30));
-
-  private readonly visibleDailyActivity = computed(() => {
-    const all = this.data.dailyActivity;
-    const days = Math.min(this.rangeDays(), all.length);
-    return all.slice(all.length - days);
-  });
-
-  readonly maxDailyTotal = computed(() =>
-    Math.max(1, ...this.visibleDailyActivity().map((d) => d.createdCount + d.completedCount)),
-  );
-
-  readonly dailyActivity = computed(() => {
-    const max = this.maxDailyTotal();
-    const px = (count: number) => (count > 0 ? Math.max(2, Math.round((count / max) * DAILY_BAR_MAX_PX)) : 0);
-    return this.visibleDailyActivity().map((d) => ({
-      ...d,
-      createdPx: px(d.createdCount),
-      completedPx: px(d.completedCount),
-    }));
-  });
-
-  readonly selectedDailyPoint = computed(() => this.dailyActivity().find((d) => d.date === this.selectedDate()) ?? null);
-
-  readonly maxAssignedCount = computed(() => Math.max(1, ...this.memberWorkload.map((m) => m.assignedCount)));
+  readonly maxAssignedCount = computed(() => Math.max(1, ...this.memberWorkload().map((m) => m.assignedCount)));
 
   readonly sortedWorkload = computed(() =>
-    [...this.memberWorkload]
+    [...this.memberWorkload()]
       .sort((a, b) => b.assignedCount - a.assignedCount)
       .map((m) => ({
         ...m,
@@ -142,8 +98,9 @@ export class WorkspaceStats {
     const memberId = this.selectedMemberId();
     const group = this.actionFilter();
     const query = this.logSearch().trim().toLowerCase();
-    return this.data.activityLogs.filter((log) => {
-      if (scope === 'mine' && log.userId !== CURRENT_USER_ID) return false;
+    const me = this.currentUserId();
+    return this.data().activityLogs.filter((log) => {
+      if (scope === 'mine' && log.userId !== me) return false;
       if (memberId !== 'all' && log.userId !== memberId) return false;
       if (group !== 'all' && ACTION_GROUP[log.actionType] !== group) return false;
       if (query && !log.actionText.toLowerCase().includes(query)) return false;
@@ -151,26 +108,22 @@ export class WorkspaceStats {
     });
   });
 
+  // Không rơi về "Bạn" như actionText (đã có sẵn "Bạn đã..." trong chính câu log) — dùng
+  // để tô tên thật lên avatar/tooltip, tránh vênh với chữ cái đầu hiển thị trên avatar tròn.
   memberName(userId: string): string {
-    if (userId === CURRENT_USER_ID) return 'Bạn';
-    return this.memberWorkload.find((m) => m.userId === userId)?.name ?? userId;
+    return this.memberWorkload().find((m) => m.userId === userId)?.name ?? userId;
   }
 
-  memberAvatar(userId: string): string {
-    return this.memberWorkload.find((m) => m.userId === userId)?.avatarUrl ?? '';
+  avatarInitials(userId: string): string {
+    return initialsOf(this.memberName(userId));
+  }
+
+  avatarColor(userId: string): string {
+    return avatarColorFor(userId);
   }
 
   actionIcon(actionType: ActivityActionType): string {
     return ACTION_ICON[actionType];
-  }
-
-  initials(name: string): string {
-    return name
-      .split(' ')
-      .filter(Boolean)
-      .slice(-2)
-      .map((part) => part[0]?.toUpperCase())
-      .join('');
   }
 
   relativeTime(iso: string): string {
@@ -205,15 +158,13 @@ export class WorkspaceStats {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `workspace-stats-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.download = `board-stats-${new Date().toISOString().slice(0, 10)}.csv`;
     link.click();
     URL.revokeObjectURL(url);
   }
 
   trackByUserId = (_: number, item: MemberWorkloadStat) => item.userId;
   trackByLogId = (_: number, item: ActivityLog) => item.id;
-  trackByDate = (_: number, item: { date: string }) => item.date;
-  trackByPriority = (_: number, item: { priority: CardPriority }) => item.priority;
   trackByCardId = (_: number, item: { id: string }) => item.id;
   trackByGroup = (_: number, item: ActionGroup) => item;
 }

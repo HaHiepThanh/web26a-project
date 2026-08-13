@@ -1,0 +1,19 @@
+<div class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/45 p-5" (click)="close.emit()">
+  <div class="flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-box bg-base-100 shadow-xl" (click)="$event.stopPropagation()">
+    <div class="flex shrink-0 items-center justify-between border-b border-base-300 px-5 py-3.5">
+      <div class="flex min-w-0 flex-col">
+        <span class="text-[15px] font-bold text-base-content">📊 Thống kê &amp; Báo cáo</span>
+        @if (boardName(); as name) {
+          <span class="truncate text-xs text-base-content/50">{{ name }}</span>
+        }
+      </div>
+      <button type="button" class="btn btn-square btn-ghost btn-sm" (click)="close.emit()" aria-label="Đóng">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="overflow-y-auto px-5 py-5">
+      <app-workspace-stats-panel [data]="data()" />
+    </div>
+  </div>
+</div>

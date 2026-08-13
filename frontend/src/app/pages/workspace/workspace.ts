@@ -1,6 +1,6 @@
 import { Component, HostListener, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { WorkspaceUiService } from '../../services/workspace-ui.service';
 
 type Privacy = 'Workspace' | 'Private' | 'Public';
@@ -78,7 +78,7 @@ const BG_CLASSES: BgClass[] = ['bg-board-blue', 'bg-board-purple', 'bg-board-gre
 /** Bảng grid + workspace dashboard (ported từ trello-workspace prototype). */
 @Component({
   selector: 'app-workspace',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule],
   templateUrl: './workspace.html',
   styleUrl: './workspace.css',
 })

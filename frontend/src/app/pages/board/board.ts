@@ -16,6 +16,7 @@ import { CardItem } from '../../components/board/card-item/card-item';
 import { ChatPanel } from '../../components/chat/chat-panel/chat-panel';
 import { CardDetailModal } from '../../components/board/card-detail-modal/card-detail-modal';
 import { BoardMinimap, MinimapListGeom } from '../../components/board/board-minimap/board-minimap';
+import { WorkspaceStatsModal } from '../../components/board/workspace-stats-modal/workspace-stats-modal';
 
 type ToastType = 'success' | 'error' | 'info';
 interface Toast {
@@ -80,7 +81,7 @@ const MINIMAP_OVERFLOW_RATIO = 1.5;
  */
 @Component({
   selector: 'app-board',
-  imports: [FormsModule, RouterLink, DragDropModule, BoardList, AddList, LabelPicker, CardItem, ChatPanel, CardDetailModal, BoardMinimap],
+  imports: [FormsModule, RouterLink, DragDropModule, BoardList, AddList, LabelPicker, CardItem, ChatPanel, CardDetailModal, BoardMinimap, WorkspaceStatsModal],
   templateUrl: './board.html',
   styleUrl: './board.css',
 })
@@ -151,6 +152,17 @@ export class Board {
   // ---- Board 2 chiều (#6) ----
   readonly viewMode = signal<ViewMode>('status');
   readonly gridCols = computed(() => `repeat(${Math.max(this.lists().length, 1)}, 272px)`);
+
+  // ---- Modal "Thống kê & Báo cáo" (Workspace Stats thu gọn cho riêng board này) ----
+  readonly showStatsModal = signal(false);
+
+  openStatsModal(): void {
+    this.showStatsModal.set(true);
+  }
+
+  closeStatsModal(): void {
+    this.showStatsModal.set(false);
+  }
 
   // ---- Lọc board — highlight/làm mờ (#7) ----
   readonly UNASSIGNED = UNASSIGNED;
