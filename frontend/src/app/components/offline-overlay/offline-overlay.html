@@ -1,0 +1,29 @@
+@if (offline()) {
+  <div class="offline-overlay" role="alert" aria-live="assertive">
+    <div class="offline-card">
+      <div class="signal-rings">
+        <span class="ring ring-1"></span>
+        <span class="ring ring-2"></span>
+        <span class="icon-wrap">
+          <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 8.5c6-5 14-5 20 0" opacity=".35" />
+            <path d="M5 12c4-3.2 10-3.2 14 0" opacity=".6" />
+            <path d="M8.3 15.4c2.2-1.7 5.2-1.7 7.4 0" />
+            <circle cx="12" cy="19" r="1.2" fill="currentColor" stroke="none" />
+            <path d="M2.5 2.5l19 19" stroke="#f87171" stroke-width="2" />
+          </svg>
+        </span>
+      </div>
+
+      <h2 class="mt-6 text-xl font-bold text-base-content">Mất kết nối mạng</h2>
+      <p class="mt-2 max-w-xs text-sm text-base-content/60">
+        Thiết bị của bạn hiện không có Internet. Ứng dụng sẽ tự động trở lại ngay khi kết nối được khôi phục.
+      </p>
+
+      <div class="mt-5 flex items-center gap-2 text-xs font-medium text-base-content/50">
+        <span class="checking-dot"></span>
+        Đang chờ kết nối trở lại...
+      </div>
+    </div>
+  </div>
+}

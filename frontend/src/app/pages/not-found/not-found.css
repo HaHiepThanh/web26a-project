@@ -1,0 +1,623 @@
+/* 404 page — dark showcase background (visual language borrowed from the
+   login page's right-hand board panel). Colors are hardcoded (not
+   text-base-content/btn-ghost) on purpose: this page always sits on a fixed
+   dark backdrop regardless of the app's light/dark theme, so theme-relative
+   utilities would go near-invisible here. */
+
+:host {
+  display: block;
+}
+
+.not-found-frame {
+  --primary: #2563eb;
+  --slate-400: #94a3b8;
+  --slate-500: #64748b;
+  --violet: #a78bfa;
+  --blue: #60a5fa;
+  --cyan: #22d3ee;
+  --emerald: #34d399;
+  --rose: #fb7185;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0f172a;
+  -webkit-font-smoothing: antialiased;
+}
+
+.dot-grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.07;
+  background-image: radial-gradient(#94a3b8 1px, transparent 1px);
+  background-size: 22px 22px;
+  animation: gridDrift 40s linear infinite;
+}
+@keyframes gridDrift {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 220px 220px;
+  }
+}
+
+/* Huge faint "404" watermark — fills the wide dead space either side of the
+   centered card on large screens. */
+.giant-code {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-size: clamp(220px, 48vw, 620px);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: #fff;
+  opacity: 0.035;
+  user-select: none;
+  pointer-events: none;
+  white-space: nowrap;
+  transition: transform 0.3s ease-out;
+}
+
+/* Wrapper-only parallax layers: kept free of any keyframe `animation` so the
+   JS-driven inline `transform` (mouse parallax) never gets fought over by a
+   CSS animation shorthand declared on the same element (that trap is why the
+   compass ring and the 404 gradient used to sit frozen — see git history). */
+.glow-parallax {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transition: transform 0.3s ease-out;
+}
+.parallax-layer {
+  transition: transform 0.3s ease-out;
+}
+
+.glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  pointer-events: none;
+}
+.glow-primary {
+  top: -15%;
+  right: -10%;
+  width: 55%;
+  aspect-ratio: 1;
+  background: rgba(37, 99, 235, 0.22);
+  animation: glowDrift 12s ease-in-out infinite;
+}
+.glow-indigo {
+  bottom: -15%;
+  left: -10%;
+  width: 45%;
+  aspect-ratio: 1;
+  background: rgba(99, 102, 241, 0.12);
+  animation: glowDrift 14s ease-in-out infinite reverse;
+}
+@keyframes glowDrift {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(-3%, 3%) scale(1.08);
+  }
+}
+
+/* ---------- Twinkling star field ---------- */
+.star {
+  position: absolute;
+  z-index: 1;
+  border-radius: 50%;
+  background: #cbd5e1;
+  animation: twinkle 3.5s ease-in-out infinite;
+}
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.3);
+  }
+}
+@media (max-width: 900px) {
+  .star {
+    display: none;
+  }
+}
+
+/* ---------- Decorative drifting cards ---------- */
+.float-card {
+  position: absolute;
+  z-index: 1;
+  width: 100px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(148, 163, 184, 0.05);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  backdrop-filter: blur(2px);
+  animation: cardDrift 10s ease-in-out infinite;
+}
+.fc-tag {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(148, 163, 184, 0.55);
+}
+.fc-line {
+  display: block;
+  margin-top: 6px;
+  height: 5px;
+  width: 70%;
+  border-radius: 3px;
+  background: rgba(148, 163, 184, 0.15);
+}
+.fc-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8px;
+  margin-left: auto;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  font-size: 7px;
+  font-weight: 700;
+  color: #0f172a;
+  opacity: 0.7;
+}
+.fc-avatar-violet {
+  background: var(--violet);
+}
+.fc-avatar-cyan {
+  background: var(--cyan);
+}
+.fc-avatar-rose {
+  background: var(--rose);
+}
+.fc-avatar-emerald {
+  background: var(--emerald);
+}
+
+.float-card-a {
+  top: 13%;
+  left: 6%;
+  transform: rotate(-8deg);
+  animation-delay: 0s;
+}
+.float-card-b {
+  bottom: 16%;
+  right: 6%;
+  transform: rotate(6deg);
+  animation-delay: 1.2s;
+  animation-duration: 12s;
+}
+.float-card-c {
+  top: 10%;
+  left: 25%;
+  transform: rotate(5deg) scale(0.85);
+  animation-delay: 2.4s;
+  animation-duration: 11s;
+  opacity: 0.8;
+}
+.float-card-d {
+  bottom: 10%;
+  left: 10%;
+  transform: rotate(4deg);
+  animation-delay: 0.6s;
+  animation-duration: 13s;
+}
+.float-card-e {
+  top: 42%;
+  right: 4%;
+  transform: rotate(-5deg) scale(0.85);
+  animation-delay: 1.8s;
+  animation-duration: 10.5s;
+  opacity: 0.8;
+}
+@keyframes cardDrift {
+  0%,
+  100% {
+    transform: translateY(0) rotate(var(--rot, -8deg));
+  }
+  50% {
+    transform: translateY(-14px) rotate(var(--rot, -8deg));
+  }
+}
+@media (max-width: 1100px) {
+  .float-card-c,
+  .float-card-e {
+    display: none;
+  }
+}
+@media (max-width: 900px) {
+  .float-card {
+    display: none;
+  }
+}
+
+/* ---------- Floating stat chips ---------- */
+.stat-chip {
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(30, 41, 59, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  padding: 8px 16px 8px 10px;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.25);
+  font-size: 12px;
+  font-weight: 500;
+  color: #cbd5e1;
+  white-space: nowrap;
+  animation: floatY 5s ease-in-out infinite;
+}
+.stat-chip-a {
+  bottom: 14%;
+  left: 4%;
+}
+.stat-chip-b {
+  top: 16%;
+  right: 4%;
+  animation-duration: 5.6s;
+  animation-delay: 0.4s;
+}
+.stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(96, 165, 250, 0.15);
+  font-size: 11px;
+}
+@keyframes floatY {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+@media (max-width: 1280px) {
+  .stat-chip {
+    display: none;
+  }
+}
+
+/* ---------- Collaborator cursor ---------- */
+.collab-cursor {
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  pointer-events: none;
+  animation: cursorDrift 11s ease-in-out infinite;
+}
+.collab-cursor span {
+  font-size: 9px;
+  font-weight: 500;
+  color: #fff;
+  background: #ec4899;
+  padding: 2px 7px;
+  border-radius: 10px 10px 10px 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+@keyframes cursorDrift {
+  0% {
+    left: 8%;
+    top: 30%;
+  }
+  30% {
+    left: 8%;
+    top: 30%;
+  }
+  45% {
+    left: 22%;
+    top: 68%;
+  }
+  70% {
+    left: 22%;
+    top: 68%;
+  }
+  85% {
+    left: 8%;
+    top: 30%;
+  }
+  100% {
+    left: 8%;
+    top: 30%;
+  }
+}
+@media (max-width: 1280px) {
+  .collab-cursor {
+    display: none;
+  }
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  user-select: none;
+}
+.brand-mark {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+}
+.brand-mark .bar {
+  width: 6px;
+  border-radius: 2px;
+  background: #fff;
+}
+.brand-mark .bar-1 {
+  height: 16px;
+}
+.brand-mark .bar-2 {
+  height: 10px;
+  background: rgba(255, 255, 255, 0.6);
+  align-self: flex-start;
+}
+.brand-name {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+.brand-accent {
+  color: #60a5fa;
+  font-weight: 800;
+  font-family: var(--font-mono);
+}
+
+/* ---------- Compass icon ---------- */
+.compass-wrap {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(96, 165, 250, 0.12);
+  color: #93c5fd;
+  animation: compassSpin 7s linear infinite;
+}
+.compass-wrap .ring {
+  position: absolute;
+  inset: -10px;
+  border-radius: 50%;
+  border: 1px dashed rgba(148, 163, 184, 0.25);
+}
+.compass-wrap .orbit {
+  position: absolute;
+  inset: -20px;
+  border-radius: 50%;
+  animation: compassSpin 4s linear infinite;
+}
+.orbit-dot {
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  margin-left: -2.5px;
+  border-radius: 50%;
+  background: #60a5fa;
+  box-shadow: 0 0 8px 2px rgba(96, 165, 250, 0.7);
+}
+@keyframes compassSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.compass-wrap svg {
+  animation: compassSpinReverse 7s linear infinite;
+}
+@keyframes compassSpinReverse {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+/* ---------- Copy ---------- */
+.not-found-code {
+  margin-top: 22px;
+  font-size: clamp(72px, 15vw, 128px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-family: var(--font-mono);
+  background: linear-gradient(135deg, #93c5fd 0%, #60a5fa 45%, #a78bfa 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gradientShift 6s ease-in-out infinite;
+  filter: drop-shadow(0 0 26px rgba(96, 165, 250, 0.25));
+}
+@keyframes gradientShift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+.heading {
+  margin-top: 6px;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #fff;
+}
+.subtitle {
+  margin-top: 10px;
+  max-width: 360px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--slate-400);
+}
+
+.path-chip {
+  margin-top: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.08);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  color: #cbd5e1;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.path-chip:hover {
+  background: rgba(148, 163, 184, 0.12);
+  border-color: rgba(148, 163, 184, 0.28);
+}
+.path-chip code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- Buttons ---------- */
+.btn-glow {
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 20px -6px rgba(37, 99, 235, 0.55);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.btn-glow:hover {
+  transform: translateY(-1.5px);
+  box-shadow: 0 10px 24px -6px rgba(37, 99, 235, 0.7);
+}
+.btn-glow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%);
+  background-size: 250% 100%;
+  background-position: 120% 0;
+  animation: shimmer 3.2s ease-in-out infinite;
+  animation-delay: 1.2s;
+}
+@keyframes shimmer {
+  0% {
+    background-position: 130% 0;
+  }
+  35%,
+  100% {
+    background-position: -30% 0;
+  }
+}
+
+/* Secondary button (btn-ghost/btn-outline would be near-invisible here since
+   they resolve against the app's light-theme base-content) */
+.btn-outline-light {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.04);
+  color: #fff;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+.btn-outline-light:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.28);
+  transform: translateY(-1.5px);
+}
+
+.footer {
+  font-size: 12px;
+  color: var(--slate-500);
+  user-select: none;
+}
+
+/* ---------- Entrance animation ---------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  animation: revealUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.reveal-1 {
+  animation-delay: 0.05s;
+}
+.reveal-2 {
+  animation-delay: 0.15s;
+}
+.reveal-3 {
+  animation-delay: 0.25s;
+}
+.reveal-4 {
+  animation-delay: 0.35s;
+}
+.reveal-5 {
+  animation-delay: 0.45s;
+}
+.reveal-6 {
+  animation-delay: 0.55s;
+}
+@keyframes revealUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot-grid,
+  .glow-primary,
+  .glow-indigo,
+  .float-card,
+  .star,
+  .stat-chip,
+  .collab-cursor,
+  .compass-wrap,
+  .compass-wrap svg,
+  .compass-wrap .orbit,
+  .not-found-code,
+  .btn-glow::after,
+  .reveal {
+    animation: none !important;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}
