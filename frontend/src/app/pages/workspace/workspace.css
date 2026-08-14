@@ -163,22 +163,8 @@
   pointer-events: none;
 }
 
-/* Data-driven board backgrounds ([class]="board.bgClass"). */
-.bg-board-blue {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-}
-.bg-board-purple {
-  background: linear-gradient(135deg, #6d28d9 0%, #4c1d95 100%);
-}
-.bg-board-green {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
-}
-.bg-board-teal {
-  background: linear-gradient(135deg, #0d9488 0%, #115e59 100%);
-}
-.bg-board-orange {
-  background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
-}
+/* .bg-board-* moved to global styles.css — cùng 1 class được Board page (board.html,
+   1 component riêng, view-encapsulated) dùng lại làm nền trang, không chỉ tile ở đây. */
 
 /* Data-driven template badges ([class]="tpl.badgeClass"). */
 .badge-blue {

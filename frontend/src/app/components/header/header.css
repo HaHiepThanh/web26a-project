@@ -1,1 +1,62 @@
-/* Header styling is fully Tailwind + DaisyUI in the template. */
+/* Dùng token màu riêng của app (styles.css --bg-header/--bg-header-chip/--text-*)
+ * thay vì class DaisyUI base-100/200/300 chung chung — daisyUI mặc định (chưa custom
+ * theme) có 2 tông đó quá gần nhau nên header từng bị "chìm", search box khó phân biệt
+ * với nền header, icon không rõ là nút bấm được. Xem ghi chú token trong styles.css. */
+
+.app-header {
+  background: var(--bg-header);
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: var(--shadow-md);
+}
+
+.header-search-input {
+  background: var(--bg-header-chip);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.header-search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.header-search-input:focus {
+  outline: none;
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px var(--accent-blue-soft);
+}
+
+.header-icon-btn {
+  background: var(--bg-header-chip);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  box-shadow: var(--shadow-sm);
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.header-icon-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-md);
+}
+
+.header-icon-btn:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+.header-avatar-chip {
+  background: var(--bg-header-chip);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  transition: background var(--transition-fast);
+}
+
+.header-avatar-chip:hover {
+  background: var(--bg-hover);
+}

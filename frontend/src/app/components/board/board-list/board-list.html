@@ -1,13 +1,21 @@
 @if (collapsed()) {
-  <div class="h-full w-full">
-    <button type="button" class="flex h-full min-h-[120px] w-full flex-col items-center gap-2.5 rounded-box bg-base-200 py-2.5 text-base-content/80 hover:bg-base-300 hover:text-base-content" (click)="toggleCollapse.emit()" title="Mở rộng danh sách">
-      <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"/></svg>
-      <span class="rotate-180 whitespace-nowrap text-xs font-bold [writing-mode:vertical-rl]">{{ list().name }}</span>
-      <span class="badge badge-ghost badge-sm [writing-mode:horizontal-tb]">{{ cards().length }}</span>
+  @if (orientation() === 'row') {
+    <button type="button" class="flex w-full items-center gap-2 rounded-box bg-base-100/90 px-3 py-2 text-left shadow-md backdrop-blur-sm hover:bg-base-300" (click)="toggleCollapse.emit()" title="Mở rộng danh sách">
+      <svg class="h-3.5 w-3.5 shrink-0 text-base-content/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"/></svg>
+      <span class="flex-1 truncate text-xs font-bold text-base-content/80">{{ list().name }}</span>
+      <span class="badge badge-ghost badge-sm">{{ cards().length }}</span>
     </button>
-  </div>
+  } @else {
+    <div class="h-full w-full">
+      <button type="button" class="flex h-full min-h-[120px] w-full flex-col items-center gap-2.5 rounded-box bg-base-100/90 py-2.5 text-base-content/80 shadow-md backdrop-blur-sm hover:bg-base-300 hover:text-base-content" (click)="toggleCollapse.emit()" title="Mở rộng danh sách">
+        <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"/></svg>
+        <span class="rotate-180 whitespace-nowrap text-xs font-bold [writing-mode:vertical-rl]">{{ list().name }}</span>
+        <span class="badge badge-ghost badge-sm [writing-mode:horizontal-tb]">{{ cards().length }}</span>
+      </button>
+    </div>
+  }
 } @else {
-  <div class="flex max-h-full w-full flex-col overflow-hidden rounded-box bg-base-200">
+  <div class="flex max-h-full w-full flex-col overflow-hidden rounded-box bg-base-100/90 shadow-md backdrop-blur-sm">
     <app-list-header
       [list]="list()"
       [cardCount]="cards().length"
@@ -17,15 +25,24 @@
     />
 
     <div
-      class="list-cards flex min-h-[40px] flex-1 flex-col gap-2 overflow-y-auto overflow-x-hidden px-2"
+      class="list-cards flex min-h-[40px] flex-1 gap-2 px-2"
+      [class.flex-col]="orientation() === 'column'"
+      [class.overflow-y-auto]="orientation() === 'column'"
+      [class.overflow-x-hidden]="orientation() === 'column'"
+      [class.flex-row]="orientation() === 'row'"
+      [class.items-start]="orientation() === 'row'"
+      [class.overflow-x-auto]="orientation() === 'row'"
+      [class.overflow-y-hidden]="orientation() === 'row'"
+      [class.py-2]="orientation() === 'row'"
       cdkDropList
       [id]="list().id"
       [cdkDropListData]="cards()"
+      [cdkDropListOrientation]="orientation() === 'row' ? 'horizontal' : 'vertical'"
       [cdkDropListSortingDisabled]="!sortingEnabled()"
       (cdkDropListDropped)="onCardDrop($event)"
     >
       @for (card of cards(); track trackByCardId($index, card)) {
-        <div class="card-drag-wrap cursor-grab active:cursor-grabbing" cdkDrag [cdkDragData]="card" (click)="onCardClick($event, card)">
+        <div class="card-drag-wrap cursor-grab active:cursor-grabbing" [class.row-card]="orientation() === 'row'" cdkDrag [cdkDragData]="card" (click)="onCardClick($event, card)">
           <div class="drag-placeholder" *cdkDragPlaceholder></div>
           <app-card-item
             [card]="card"
@@ -37,13 +54,23 @@
             [isHighlighted]="highlighted().has(card.id)"
             [isSelected]="selectedCardIds().has(card.id)"
             [today]="today()"
+            [checklistProgress]="checklistProgressByCardId()[card.id] ?? null"
+            [commentCount]="commentCountByCardId()[card.id] ?? 0"
           />
+        </div>
+      }
+
+      @if (orientation() === 'row') {
+        <div class="add-card-row shrink-0">
+          <app-add-card (open)="addCard.emit()" />
         </div>
       }
     </div>
 
-    <div class="shrink-0 px-2 pb-2 pt-1">
-      <app-add-card (open)="addCard.emit()" />
-    </div>
+    @if (orientation() === 'column') {
+      <div class="shrink-0 px-2 pb-2 pt-1">
+        <app-add-card (open)="addCard.emit()" />
+      </div>
+    }
   </div>
 }

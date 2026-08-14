@@ -24,3 +24,20 @@
   border: 2px dashed var(--accent-blue);
   background: var(--accent-blue-soft);
 }
+
+/* Row View (#14): thẻ xếp ngang trong 1 hàng — mỗi thẻ cần bề rộng cố định để
+   không bị co lại trong flex-row, và không giãn ra chiếm hết chỗ trống. */
+.row-card {
+  width: 220px;
+  flex: 0 0 220px;
+}
+
+.row-card .drag-placeholder {
+  width: 220px;
+  height: 100%;
+  min-height: 60px;
+}
+
+.add-card-row {
+  width: 160px;
+}

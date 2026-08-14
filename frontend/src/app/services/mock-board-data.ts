@@ -1,4 +1,4 @@
-import { BoardVisibility, CardPriority } from '../models';
+import { BoardBackground, BoardVisibility, CardPriority } from '../models';
 
 /**
  * Nguồn dữ liệu board GIẢ LẬP duy nhất cho toàn frontend (chưa có backend thật).
@@ -21,6 +21,9 @@ export interface MockBoardSeed {
   name: string;
   workspaceId: string;
   visibility: BoardVisibility;
+  /** Màu nền trang Board — board demo cũng có màu (không chỉ board tự tạo) để nền +
+   *  danh sách luôn nổi bật, không chìm vào xám mặc định. */
+  background: BoardBackground;
   lists: { name: string; color: string }[];
   cards: MockCardSeed[];
 }
@@ -31,6 +34,7 @@ export const MOCK_BOARDS: Record<string, MockBoardSeed> = {
     name: 'Hệ thống Quản lý Kanban',
     workspaceId: 'ws-1',
     visibility: 'public',
+    background: 'bg-board-purple',
     lists: [
       { name: 'Cần làm', color: '#64748b' },
       { name: 'Đang làm', color: '#2563eb' },
@@ -52,6 +56,7 @@ export const MOCK_BOARDS: Record<string, MockBoardSeed> = {
     name: 'Ứng dụng tìm trọ thông minh',
     workspaceId: 'ws-1',
     visibility: 'restricted',
+    background: 'bg-board-teal',
     lists: [
       { name: 'Ý tưởng', color: '#7c3aed' },
       { name: 'Đang phát triển', color: '#2563eb' },
@@ -72,6 +77,7 @@ export const MOCK_BOARDS: Record<string, MockBoardSeed> = {
     name: 'Kế hoạch Tuần cá nhân',
     workspaceId: 'ws-1',
     visibility: 'restricted',
+    background: 'bg-board-blue',
     lists: [
       { name: 'Việc cần làm', color: '#64748b' },
       { name: 'Đang làm', color: '#2563eb' },
@@ -90,6 +96,7 @@ export const MOCK_BOARDS: Record<string, MockBoardSeed> = {
     name: 'Sản phẩm MVP v1.0',
     workspaceId: 'ws-2',
     visibility: 'public',
+    background: 'bg-board-orange',
     lists: [
       { name: 'Backlog', color: '#64748b' },
       { name: 'Sprint hiện tại', color: '#2563eb' },

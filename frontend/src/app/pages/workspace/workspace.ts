@@ -2,10 +2,16 @@ import { Component, HostListener, computed, effect, inject, signal } from '@angu
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { WorkspaceUiService } from '../../services/workspace-ui.service';
+import { BoardService } from '../../services/board.service';
+import { BOARD_BACKGROUNDS, BoardBackground, BoardVisibility } from '../../models';
 
 type Privacy = 'Workspace' | 'Private' | 'Public';
-type BgClass = 'bg-board-blue' | 'bg-board-purple' | 'bg-board-green' | 'bg-board-teal' | 'bg-board-orange';
 type ToastType = 'success' | 'error' | 'info';
+
+/** Privacy (nhãn hiển thị tiếng Việt ở modal) → BoardVisibility thật của model Board. */
+function toBoardVisibility(privacy: Privacy): BoardVisibility {
+  return privacy === 'Public' ? 'public' : 'restricted';
+}
 
 interface BoardItem {
   id: string;
@@ -14,7 +20,7 @@ interface BoardItem {
   privacy: Privacy;
   badge: string;
   starred: boolean;
-  bgClass: BgClass;
+  bgClass: BoardBackground;
 }
 
 interface WorkspaceItem {
@@ -59,9 +65,9 @@ function mockWorkspaces(): WorkspaceItem[] {
       membersCount: 4,
       description: 'Workspace quản lý toàn bộ các công việc nghiên cứu và phát triển phần mềm đồ án tốt nghiệp khóa K22.',
       boards: [
-        { id: 'b-1', title: 'Hệ thống Quản lý Kanban', tag: 'ĐỒ ÁN TỐT NGHIỆP CNTT', privacy: 'Workspace', badge: 'KANBAN', starred: true, bgClass: 'bg-board-blue' },
-        { id: 'b-2', title: 'Ứng dụng tìm trọ thông minh', tag: 'ĐỒ ÁN TỐT NGHIỆP CNTT', privacy: 'Private', badge: 'KANBAN', starred: false, bgClass: 'bg-board-green' },
-        { id: 'b-3', title: 'Kế hoạch Tuần cá nhân', tag: 'ĐỒ ÁN TỐT NGHIỆP CNTT', privacy: 'Workspace', badge: 'KANBAN', starred: false, bgClass: 'bg-board-teal' },
+        { id: 'b-1', title: 'Hệ thống Quản lý Kanban', tag: 'ĐỒ ÁN TỐT NGHIỆP CNTT', privacy: 'Workspace', badge: 'KANBAN', starred: true, bgClass: 'bg-board-purple' },
+        { id: 'b-2', title: 'Ứng dụng tìm trọ thông minh', tag: 'ĐỒ ÁN TỐT NGHIỆP CNTT', privacy: 'Private', badge: 'KANBAN', starred: false, bgClass: 'bg-board-teal' },
+        { id: 'b-3', title: 'Kế hoạch Tuần cá nhân', tag: 'ĐỒ ÁN TỐT NGHIỆP CNTT', privacy: 'Workspace', badge: 'KANBAN', starred: false, bgClass: 'bg-board-blue' },
       ],
     },
     {
@@ -72,7 +78,7 @@ function mockWorkspaces(): WorkspaceItem[] {
       membersCount: 2,
       description: 'Không gian làm việc cho dự án SaaS khởi nghiệp sinh viên.',
       boards: [
-        { id: 'b-4', title: 'Sản phẩm MVP v1.0', tag: 'DỰ ÁN KHỞI NGHIỆP SAAS', privacy: 'Public', badge: 'KANBAN', starred: true, bgClass: 'bg-board-purple' },
+        { id: 'b-4', title: 'Sản phẩm MVP v1.0', tag: 'DỰ ÁN KHỞI NGHIỆP SAAS', privacy: 'Public', badge: 'KANBAN', starred: true, bgClass: 'bg-board-orange' },
       ],
     },
   ];
@@ -84,8 +90,6 @@ const TEMPLATES: Template[] = [
   { title: 'Phát hành Marketing Campaign', desc: 'Lên ý tưởng, thiết kế asset và quảng bá sản phẩm.', badge: '3', badgeClass: 'badge-orange', columns: 4 },
 ];
 
-const BG_CLASSES: BgClass[] = ['bg-board-blue', 'bg-board-purple', 'bg-board-green', 'bg-board-teal', 'bg-board-orange'];
-
 /** Bảng grid + workspace dashboard (ported từ trello-workspace prototype). */
 @Component({
   selector: 'app-workspace',
@@ -95,12 +99,13 @@ const BG_CLASSES: BgClass[] = ['bg-board-blue', 'bg-board-purple', 'bg-board-gre
 })
 export class Workspace {
   private readonly workspaceUi = inject(WorkspaceUiService);
+  private readonly boardService = inject(BoardService);
   private readonly router = inject(Router);
 
   readonly workspaces = signal<WorkspaceItem[]>(mockWorkspaces());
   readonly activeWorkspaceId = signal('ws-1');
   readonly templates = TEMPLATES;
-  readonly bgClasses = BG_CLASSES;
+  readonly bgClasses = BOARD_BACKGROUNDS;
 
   readonly searchQuery = this.workspaceUi.searchQuery;
 
@@ -275,7 +280,7 @@ export class Workspace {
   readonly newBoardTitle = signal('');
   readonly newBoardWorkspaceId = signal('ws-1');
   readonly newBoardPrivacy = signal<Privacy>('Workspace');
-  readonly selectedBgClass = signal<BgClass>('bg-board-blue');
+  readonly selectedBgClass = signal<BoardBackground>('bg-board-blue');
 
   openCreateModal(defaultWorkspaceId = 'ws-1'): void {
     this.newBoardTitle.set('');
@@ -295,7 +300,7 @@ export class Workspace {
     this.addToast(`Đang tạo bảng từ mẫu "${template.title}"`);
   }
 
-  onCreateBoardSubmit(): void {
+  async onCreateBoardSubmit(): Promise<void> {
     const title = this.newBoardTitle().trim();
     const wsId = this.newBoardWorkspaceId();
     if (!title) return;
@@ -303,19 +308,24 @@ export class Workspace {
     const targetWorkspace = this.workspaces().find((w) => w.id === wsId);
     if (!targetWorkspace) return;
 
+    const background = this.selectedBgClass();
+    const board = await this.boardService.createBoard(wsId, title, { visibility: toBoardVisibility(this.newBoardPrivacy()), background });
+    if (!board) return;
+
     const newBoard: BoardItem = {
-      id: 'b-' + Date.now(),
+      id: board.id,
       title,
       tag: targetWorkspace.name.toUpperCase(),
       privacy: this.newBoardPrivacy(),
       badge: 'KANBAN',
       starred: false,
-      bgClass: this.selectedBgClass(),
+      bgClass: background,
     };
 
     this.workspaces.update((list) => list.map((ws) => (ws.id === wsId ? { ...ws, boards: [...ws.boards, newBoard] } : ws)));
     this.addToast(`Đã tạo bảng mới "${newBoard.title}"!`);
     this.closeCreateModal();
+    void this.router.navigate(['/board', board.id]);
   }
 
   // ---- Create/edit/delete Workspace modal ----

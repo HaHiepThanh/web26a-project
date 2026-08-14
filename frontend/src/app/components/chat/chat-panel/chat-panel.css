@@ -1,5 +1,10 @@
-:host {
-  display: block;
+/* :host layout (flex/height/width) is set via the component's `host` metadata
+   in chat-panel.ts, not here — keeps the resizable width binding in one place. */
+
+/* Rightward drop-shadow (not a stock Tailwind utility since it's directional) —
+   the panel's main visual separation from the board work area besides the border. */
+.chat-dock-shell {
+  box-shadow: 6px 0 16px -8px rgba(0, 0, 0, 0.25);
 }
 
 /* Animations kept in CSS (keyframes are not utility-friendly). */

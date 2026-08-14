@@ -27,6 +27,9 @@ export class BoardList {
   readonly cards = input<Card[]>([]);
   readonly labelsByCardId = input<Record<string, Label[] | undefined>>({});
   readonly membersById = input<Record<string, User | undefined>>({});
+  /** [BONUS #4] done/total checklist + số bình luận theo card — truyền tiếp cho CardItem. */
+  readonly checklistProgressByCardId = input<Record<string, { done: number; total: number } | undefined>>({});
+  readonly commentCountByCardId = input<Record<string, number | undefined>>({});
   readonly savingCardIds = input<ReadonlySet<string>>(new Set());
   readonly errorCardIds = input<ReadonlySet<string>>(new Set());
   readonly today = input('');
@@ -39,6 +42,8 @@ export class BoardList {
   readonly collapsed = input(false);
   /** Chọn nhiều thẻ bằng Shift+click (#12). */
   readonly selectedCardIds = input<ReadonlySet<string>>(new Set());
+  /** Row View: 'column' = thẻ xếp dọc (mặc định, Trello-style), 'row' = thẻ xếp ngang trong 1 hàng. */
+  readonly orientation = input<'column' | 'row'>('column');
 
   readonly renameList = output<string>();
   readonly deleteList = output<void>();

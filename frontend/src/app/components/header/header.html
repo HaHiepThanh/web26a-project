@@ -1,6 +1,9 @@
-<header class="sticky top-0 z-[100] flex h-[52px] items-center justify-between gap-3 border-b border-base-300 bg-base-200 px-2.5 shadow-sm">
-  <a routerLink="/dashboard" class="flex shrink-0 items-center gap-1.5 rounded-md px-1.5 py-1 font-bold text-base-content hover:bg-base-300">
-    <div class="flex h-5 w-5 items-center justify-center gap-0.5 rounded bg-gradient-to-br from-[#0052cc] to-[#0747a6] p-[3px]">
+<header
+  class="sticky top-0 z-[100] flex h-[52px] items-center justify-between gap-3 border-b border-base-300 bg-base-200 px-2.5 shadow-sm">
+  <a routerLink="/dashboard"
+    class="flex shrink-0 items-center gap-1.5 rounded-md px-1.5 py-1 font-bold text-base-content hover:bg-base-300">
+    <div
+      class="flex h-5 w-5 items-center justify-center gap-0.5 rounded bg-gradient-to-br from-[#0052cc] to-[#0747a6] p-[3px]">
       <div class="h-[12px] w-[6px] rounded-[1px] bg-white"></div>
       <div class="mt-0.5 h-[8px] w-[6px] self-start rounded-[1px] bg-white"></div>
     </div>
@@ -12,11 +15,15 @@
 
   <div class="max-w-[520px] flex-1 max-md:hidden">
     <div class="group relative w-full">
-      <svg class="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-base-content/40 transition-colors group-focus-within:text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <svg
+        class="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-base-content/40 transition-colors group-focus-within:text-primary"
+        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="11" cy="11" r="8"></circle>
         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
       </svg>
-      <input type="text" class="input input-sm h-8 w-full appearance-none rounded-lg border-2 border-base-content/20 !bg-base-100 pl-8 pr-8 text-[13px] shadow transition-colors focus:border-primary" placeholder="Tìm kiếm bảng dự án..." (input)="onSearchInput($event)" />
+      <input type="text"
+        class="input input-sm h-8 w-full appearance-none rounded-lg border-2 border-base-content/20 !bg-base-100 pl-8 pr-8 text-[13px] shadow transition-colors focus:border-primary"
+        placeholder="Tìm kiếm bảng dự án..." (input)="onSearchInput($event)" />
       <span class="kbd kbd-sm pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 opacity-60">/</span>
     </div>
   </div>
@@ -29,34 +36,55 @@
 
     <div class="mx-0.5 h-5 w-px bg-base-300 max-sm:hidden"></div>
 
-    <button class="btn btn-circle btn-sm border border-base-300 bg-base-100 text-[15px] shadow-sm transition-colors hover:border-primary/50 hover:bg-primary/10" (click)="toggleTheme()" [title]="theme() === 'dark' ? 'Chuyển giao diện sáng' : 'Chuyển giao diện tối'">
+    <button
+      class="btn btn-circle btn-sm border border-base-300 bg-base-100 text-[15px] shadow-sm transition-colors hover:border-primary/50 hover:bg-primary/10"
+      (click)="toggleTheme()" [title]="theme() === 'dark' ? 'Chuyển giao diện sáng' : 'Chuyển giao diện tối'">
       {{ theme() === 'dark' ? '☀️' : '🌙' }}
     </button>
 
-    <button class="btn btn-circle btn-sm relative border border-base-300 bg-base-100 text-[15px] shadow-sm transition-colors hover:border-primary/50 hover:bg-primary/10" [title]="dueBadgeCount() > 0 ? dueBadgeCount() + ' thẻ của bạn sắp/đã quá hạn' : 'Thông báo'">
+    <button
+      class="btn btn-circle btn-sm relative border border-base-300 bg-base-100 text-[15px] shadow-sm transition-colors hover:border-primary/50 hover:bg-primary/10"
+      [title]="dueBadgeCount() > 0 ? dueBadgeCount() + ' thẻ của bạn sắp/đã quá hạn' : 'Thông báo'">
       🔔
       @if (dueBadgeCount() > 0) {
-        <span class="badge badge-error absolute -right-1 -top-1 h-[15px] min-w-[15px] rounded-full border-2 border-base-200 px-1 text-[9px] font-bold text-white">{{ dueBadgeCount() }}</span>
+      <span
+        class="badge badge-error absolute -right-1 -top-1 h-[15px] min-w-[15px] rounded-full border-2 border-base-200 px-1 text-[9px] font-bold text-white">{{
+        dueBadgeCount() }}</span>
       }
     </button>
 
-    <a class="btn btn-circle btn-sm border border-base-300 bg-base-100 text-[15px] shadow-sm transition-colors hover:border-primary/50 hover:bg-primary/10" routerLink="/settings" title="Cài đặt">⚙️</a>
+    <a class="btn btn-circle btn-sm border border-base-300 bg-base-100 text-[15px] shadow-sm transition-colors hover:border-primary/50 hover:bg-primary/10"
+      routerLink="/settings" title="Cài đặt">⚙️</a>
 
-    <div class="flex cursor-pointer items-center gap-1 rounded-full border border-base-300 bg-base-100 py-[2px] pl-1 pr-1.5 transition-colors hover:bg-base-300" (click)="toggleUserMenu()">
-      <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#2563eb] to-[#1d4ed8] text-[11px] font-bold text-white">{{ initials() }}</div>
-      <span class="max-w-[120px] truncate text-[12.5px] font-semibold text-base-content max-md:hidden">{{ currentUser()?.displayName ?? currentUser()?.email ?? 'Khách' }}</span>
-      <svg class="h-3 w-3 shrink-0 text-base-content/40 max-md:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div
+      class="flex cursor-pointer items-center gap-1 rounded-full border border-base-300 bg-base-100 py-[2px] pl-1 pr-1.5 transition-colors hover:bg-base-300"
+      (click)="toggleUserMenu()">
+      <div
+        class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#2563eb] to-[#1d4ed8] text-[11px] font-bold text-white">
+        {{ initials() }}</div>
+      <span class="max-w-[120px] truncate text-[12.5px] font-semibold text-base-content max-md:hidden">{{
+        currentUser()?.displayName ?? currentUser()?.email ?? 'Khách' }}</span>
+      <svg class="h-3 w-3 shrink-0 text-base-content/40 max-md:hidden" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2.5">
+        <path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
     </div>
   </div>
 
-  <div class="absolute right-2.5 top-[52px] z-[200] mt-1 w-[260px] rounded-box border border-base-300 bg-base-100 p-2 shadow-lg" [class.hidden]="!menuOpen()">
+  <div
+    class="absolute right-2.5 top-[52px] z-[200] mt-1 w-[260px] rounded-box border border-base-300 bg-base-100 p-2 shadow-lg"
+    [class.hidden]="!menuOpen()">
     <div class="px-3 pt-2 text-[13px] font-bold text-base-content">Tài khoản</div>
     <div class="px-3 pb-2 text-xs text-base-content/50">{{ currentUser()?.email ?? '—' }}</div>
     <div class="my-1 h-px bg-base-300"></div>
-    <a class="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-[13px] text-base-content hover:bg-base-200" routerLink="/settings">👤 Hồ sơ và quyền riêng tư</a>
-    <a class="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-[13px] text-base-content hover:bg-base-200" routerLink="/workspace">🗂️ Không gian làm việc</a>
-    <a class="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-[13px] text-base-content hover:bg-base-200" routerLink="/members">👥 Thành viên</a>
+    <a class="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-[13px] text-base-content hover:bg-base-200"
+      routerLink="/settings">👤 Hồ sơ và quyền riêng tư</a>
+    <a class="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-[13px] text-base-content hover:bg-base-200"
+      routerLink="/workspace">🗂️ Không gian làm việc</a>
+    <a class="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-[13px] text-base-content hover:bg-base-200"
+      routerLink="/members">👥 Thành viên</a>
     <div class="my-1 h-px bg-base-300"></div>
-    <div class="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-[13px] text-error hover:bg-base-200" (click)="logout()">🚪 Đăng xuất</div>
+    <div class="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-[13px] text-error hover:bg-base-200"
+      (click)="logout()">🚪 Đăng xuất</div>
   </div>
 </header>

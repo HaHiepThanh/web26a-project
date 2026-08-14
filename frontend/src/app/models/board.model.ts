@@ -1,12 +1,20 @@
 // Board thuộc một workspace (#3).
 export type BoardVisibility = 'public' | 'restricted';
 
+/** Màu nền trang Board — CSS class định nghĩa trong styles.css (global, không phải
+ *  view-encapsulated, vì cùng 1 class được dùng ở cả tile Workspace lẫn trang Board). */
+export type BoardBackground = 'bg-board-blue' | 'bg-board-purple' | 'bg-board-green' | 'bg-board-teal' | 'bg-board-orange' | 'bg-board-red';
+export const BOARD_BACKGROUNDS: BoardBackground[] = ['bg-board-blue', 'bg-board-purple', 'bg-board-green', 'bg-board-teal', 'bg-board-orange', 'bg-board-red'];
+
 export interface Board {
   id: string; // uuid
   tenantId: string; // FK tenants.id
   workspaceId: string; // FK workspaces.id
   name: string;
   visibility: BoardVisibility; // default 'public'
+  /** Chọn lúc tạo board (Workspace) — để trang Board + các danh sách nổi bật hơn thay
+   *  vì chìm vào nền xám mặc định. undefined = giữ nền mặc định (các board demo cũ). */
+  background?: BoardBackground;
   createdBy: string; // FK auth.users.id
   createdAt: string; // ISO timestamptz
 }

@@ -20,6 +20,11 @@
 
   --bg-app: #f1f5f9;
   --bg-navbar: #ffffff;
+  /* Header band + the "chip" surface floating on it (search/icon buttons/avatar) —
+     tách riêng khỏi --bg-navbar vì token đó (trắng tinh) đã là màu sáng nhất có sẵn,
+     không còn chỗ để search "sáng hơn header" nữa nếu header cũng dùng nó. */
+  --bg-header: #e9eef4;
+  --bg-header-chip: #ffffff;
   --bg-sidebar: #ffffff;
   --bg-surface: #ffffff;
   --bg-surface-hover: #f8fafc;
@@ -78,6 +83,8 @@
 [data-theme='dark'] {
   --bg-app: #22272b;
   --bg-navbar: #1d2125;
+  --bg-header: #14171a;
+  --bg-header-chip: #2c333a;
   --bg-sidebar: #1d2125;
   --bg-surface: #22272b;
   --bg-surface-hover: #2c333a;
@@ -157,4 +164,27 @@
     font-family: inherit;
     font-size: inherit;
   }
+}
+
+/* Board background palette (models/board.model.ts BoardBackground) — global (not
+   component-scoped) vì được dùng lại ở cả tile Workspace lẫn nền trang Board.
+   3-stop diagonal glow (đậm ở góc trên-trái, sáng dần ở góc dưới-phải) thay vì
+   gradient 2-tông phẳng cũ — nhìn có chiều sâu hơn, gần với ảnh Trello tham khảo. */
+.bg-board-blue {
+  background: linear-gradient(135deg, #0f2f66 0%, #1d4ed8 45%, #38bdf8 100%);
+}
+.bg-board-purple {
+  background: linear-gradient(135deg, #3b1768 0%, #9333ea 55%, #f472b6 100%);
+}
+.bg-board-green {
+  background: linear-gradient(135deg, #0f3d24 0%, #16a34a 50%, #86efac 100%);
+}
+.bg-board-teal {
+  background: linear-gradient(135deg, #0a3b39 0%, #0d9488 50%, #5eead4 100%);
+}
+.bg-board-orange {
+  background: linear-gradient(135deg, #6a2109 0%, #ea580c 50%, #fbbf24 100%);
+}
+.bg-board-red {
+  background: linear-gradient(135deg, #4c0a0a 0%, #dc2626 50%, #fb7185 100%);
 }

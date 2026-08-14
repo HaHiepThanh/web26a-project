@@ -1,6 +1,8 @@
 import { Injectable, signal } from '@angular/core';
-import { Board, User } from '../models';
+import { Board, BoardBackground, BoardVisibility, User } from '../models';
 import { ALL_MOCK_BOARD_IDS, MockBoardSeed, boardSeed } from './mock-board-data';
+
+let boardIdSeq = 1;
 
 /** Bảng màu avatar cố định theo id — dùng chung cho card assignee + avatar stack. */
 const AVATAR_PALETTE = ['#0284c7', '#7c3aed', '#059669', '#ea580c', '#dc2626', '#0d9488'];
@@ -54,6 +56,7 @@ function boardFromSeed(seed: MockBoardSeed): Board {
     workspaceId: seed.workspaceId,
     name: seed.name,
     visibility: seed.visibility,
+    background: seed.background,
     createdBy: MOCK_MEMBERS[0].id,
     createdAt: new Date().toISOString(),
   };
@@ -69,6 +72,11 @@ export class BoardService {
   readonly currentBoard = signal<Board | null>(null);
   readonly members = signal<User[]>(MOCK_MEMBERS);
 
+  /** Board tạo mới trong phiên hiện tại (id không nằm trong MOCK_BOARDS tĩnh) — tra ở
+   *  đây trước khi rơi về boardSeed(), để tên/màu nền người dùng vừa chọn không bị mất
+   *  khi điều hướng sang trang Board. */
+  private readonly createdBoards = signal<Record<string, Board>>({});
+
   // TODO: khi có backend thật, gọi ApiService.get(`/workspaces/${workspaceId}/boards`) thay vì mock.
   async loadBoards(workspaceId: string): Promise<void> {}
 
@@ -77,17 +85,39 @@ export class BoardService {
     this.allBoards.set(ALL_MOCK_BOARD_IDS.map((id) => boardFromSeed(boardSeed(id))));
   }
 
-  /** Mock: dựng Board từ :id trên route dựa vào dữ liệu board mẫu (mock-board-data.ts)
-   *  nên mỗi board có đúng tên riêng; id lạ rơi về board mặc định nhưng giữ nguyên id. */
+  /** Mock: dựng Board từ :id — board vừa tạo trong phiên này (createBoard) được ưu tiên
+   *  trước, board demo (b-1..b-4) dựng từ mock-board-data.ts, id lạ khác rơi về mặc định. */
   async loadBoard(boardId: string): Promise<void> {
-    this.currentBoard.set(boardFromSeed(boardSeed(boardId)));
+    this.currentBoard.set(this.createdBoards()[boardId] ?? boardFromSeed(boardSeed(boardId)));
   }
 
-  async createBoard(workspaceId: string, name: string): Promise<Board | null> {
-    return null;
+  async createBoard(workspaceId: string, name: string, options?: { visibility?: BoardVisibility; background?: BoardBackground }): Promise<Board | null> {
+    const title = name.trim();
+    if (!title) return null;
+    const board: Board = {
+      id: `b-new-${Date.now()}-${boardIdSeq++}`,
+      tenantId: 'tenant-demo',
+      workspaceId,
+      name: title,
+      visibility: options?.visibility ?? 'public',
+      background: options?.background,
+      createdBy: CURRENT_USER_ID,
+      createdAt: new Date().toISOString(),
+    };
+    this.createdBoards.update((map) => ({ ...map, [board.id]: board }));
+    return board;
   }
 
-  async updateBoard(id: string, changes: Partial<Pick<Board, 'name' | 'visibility'>>): Promise<void> {}
+  async updateBoard(id: string, changes: Partial<Pick<Board, 'name' | 'visibility' | 'background'>>): Promise<void> {
+    this.createdBoards.update((map) => (map[id] ? { ...map, [id]: { ...map[id], ...changes } } : map));
+    if (this.currentBoard()?.id === id) this.currentBoard.update((b) => (b ? { ...b, ...changes } : b));
+  }
 
-  async deleteBoard(id: string): Promise<void> {}
+  async deleteBoard(id: string): Promise<void> {
+    this.createdBoards.update((map) => {
+      const next = { ...map };
+      delete next[id];
+      return next;
+    });
+  }
 }
