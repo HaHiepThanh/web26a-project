@@ -1,32 +1,47 @@
 <div class="flex min-h-[calc(100vh-52px-44px)] w-full max-lg:flex-col">
 
   <!-- Left Sidebar -->
-  <aside class="flex w-[280px] shrink-0 flex-col gap-3 border-r border-base-300 bg-base-200 p-3 max-lg:w-full max-lg:border-b max-lg:border-r-0">
-    <div class="rounded-box border border-base-300 bg-base-100 p-3 shadow-sm">
-      <div class="mb-2 flex items-center justify-between">
-        <span class="text-[11px] font-bold uppercase tracking-wide text-base-content/50">KHÔNG GIAN LÀM VIỆC</span>
-        <button class="btn btn-square btn-ghost btn-xs text-base" title="Tạo Workspace mới" (click)="addWorkspace()">+</button>
+  <aside class="flex w-64 shrink-0 flex-col gap-2.5 border-r border-base-300 bg-base-200 p-2.5 max-lg:w-full max-lg:border-b max-lg:border-r-0">
+    <div class="rounded-box border border-base-300 bg-base-100 p-2.5 shadow-sm">
+      <div class="mb-1 flex items-center justify-between px-1">
+        <span class="text-[10.5px] font-bold uppercase tracking-wide text-base-content/50">Không gian làm việc</span>
+        <button class="btn btn-square btn-ghost btn-xs text-base" title="Tạo Workspace mới" (click)="openCreateWorkspaceModal()">+</button>
       </div>
 
-      <div class="flex flex-col gap-1">
+      <ul class="menu menu-sm w-full gap-0.5 p-0">
         @for (ws of workspaces(); track trackByWorkspaceId($index, ws)) {
-          <a href="javascript:void(0)" class="workspace-item flex items-center gap-2 rounded-md px-2.5 py-2 text-base-content hover:bg-base-200" [class.active]="activeWorkspaceId() === ws.id" (click)="selectWorkspace(ws.id)">
-            <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-base-300 text-[15px]">{{ ws.icon }}</div>
-            <div class="flex flex-col overflow-hidden">
-              <div class="truncate text-[13px] font-semibold">{{ ws.name }}</div>
-              <div class="text-[11px] text-base-content/50">{{ ws.membersCount }} thành viên</div>
+          <li>
+            <a class="flex items-center gap-2 rounded-md px-2 py-1.5" [class.menu-active]="activeWorkspaceId() === ws.id" [class.text-base-content]="activeWorkspaceId() !== ws.id" (click)="selectWorkspace(ws.id)">
+              <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[13px]" [class]="ws.iconBg">{{ ws.icon }}</div>
+              <div class="flex min-w-0 flex-col overflow-hidden">
+                <span class="truncate text-[12.5px] font-semibold leading-tight">{{ ws.name }}</span>
+                <span class="truncate text-[10.5px] leading-tight text-base-content/50">{{ ws.membersCount }} thành viên</span>
+              </div>
+            </a>
+          </li>
+        }
+        <li>
+          <a routerLink="/workspace-stats" class="flex items-center gap-2 rounded-md px-2 py-1.5 text-base-content">
+            <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-base-300 text-[13px]">📊</div>
+            <div class="flex min-w-0 flex-col overflow-hidden">
+              <span class="truncate text-[12.5px] font-semibold leading-tight">Thống kê workspace</span>
+              <span class="truncate text-[10.5px] leading-tight text-base-content/50">Nhật ký hoạt động & tiến độ</span>
             </div>
           </a>
-        }
-      </div>
-
-      <a routerLink="/workspace-stats" class="workspace-item mt-1 flex items-center gap-2 rounded-md px-2.5 py-2 text-base-content hover:bg-base-200">
-        <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-base-300 text-[15px]">📊</div>
-        <div class="flex flex-col overflow-hidden">
-          <div class="truncate text-[13px] font-semibold">Thống kê workspace</div>
-          <div class="text-[11px] text-base-content/50">Nhật ký hoạt động & tiến độ</div>
-        </div>
-      </a>
+        </li>
+        <li>
+          <a class="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-base-content" (click)="openTrashModal()">
+            <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-base-300 text-[13px]">🗑️</div>
+            <div class="flex min-w-0 flex-1 flex-col overflow-hidden">
+              <span class="truncate text-[12.5px] font-semibold leading-tight">Thùng rác</span>
+              <span class="truncate text-[10.5px] leading-tight text-base-content/50">Bảng đã xóa gần đây</span>
+            </div>
+            @if (trash().length > 0) {
+              <span class="badge badge-error h-[15px] min-w-[15px] shrink-0 rounded-full border-2 border-base-100 px-1 text-[9px] font-bold text-white">{{ trash().length }}</span>
+            }
+          </a>
+        </li>
+      </ul>
     </div>
 
     <div class="tips-card">
@@ -39,17 +54,24 @@
   </aside>
 
   <!-- Main Workspace Content -->
-  <main class="mx-auto flex max-w-[1400px] flex-1 flex-col gap-12 bg-base-100 p-8 max-lg:p-4">
+  <main class="mx-auto flex max-w-[1400px] flex-1 flex-col gap-6 bg-base-100 p-5 max-lg:p-4">
 
     <!-- Hero Welcome Banner -->
     <section class="hero-banner max-lg:!flex-col max-lg:!items-start">
-      <div class="max-w-[680px]">
-        <h1 class="mb-2 text-[26px] font-extrabold leading-tight tracking-tight">Chào buổi tối! 👋</h1>
-        <p class="text-sm leading-relaxed text-slate-300">
+      <div class="hero-dot-grid"></div>
+      <div class="hero-glow"></div>
+      <div class="relative z-10 max-w-[680px]">
+        <h1 class="mb-1.5 text-[21px] font-extrabold leading-tight tracking-tight">Chào buổi tối! 👋</h1>
+        <p class="text-[13px] leading-relaxed text-slate-300">
           Hôm nay bạn muốn hoàn thành mục tiêu gì? Cùng kéo thả, quản lý tiến độ và cùng thảo luận công việc với các thành viên trong nhóm nhé.
         </p>
+        <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11.5px] font-medium text-slate-300/90">
+          <span class="inline-flex items-center gap-1">🗂️ {{ heroStats().boards }} bảng</span>
+          <span class="inline-flex items-center gap-1">👥 {{ heroStats().members }} thành viên</span>
+          <span class="inline-flex items-center gap-1">⭐ {{ heroStats().starred }} đánh dấu sao</span>
+        </div>
       </div>
-      <button class="inline-flex shrink-0 items-center gap-2 rounded-box bg-white px-5 py-3 text-sm font-bold text-slate-900 shadow-md transition hover:-translate-y-0.5 hover:bg-slate-50" (click)="openCreateModal(activeWorkspaceId())">
+      <button class="relative z-10 inline-flex shrink-0 items-center gap-2 rounded-box bg-white px-4 py-2.5 text-[13px] font-bold text-slate-900 shadow-md transition hover:-translate-y-0.5 hover:bg-slate-50" (click)="openCreateModal(activeWorkspaceId())">
         <span>+</span>
         <span>Tạo bảng mới</span>
       </button>
@@ -57,27 +79,44 @@
 
     <!-- Section 1: Starred Important Boards -->
     <section>
-      <div class="mb-3 flex items-center gap-2">
-        <span class="text-lg">⭐</span>
-        <h2 class="text-base font-extrabold uppercase tracking-wide text-base-content">BẢNG QUAN TRỌNG ĐƯỢC ĐÁNH DẤU SAO</h2>
+      <div class="mb-2 flex items-center gap-2">
+        <span class="flex h-6 w-6 items-center justify-center rounded-full bg-warning/15 text-[13px]">⭐</span>
+        <h2 class="text-[13px] font-extrabold uppercase tracking-wide text-base-content">Bảng quan trọng được đánh dấu sao</h2>
       </div>
-      <div class="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-3">
+      <div class="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-2.5">
         @if (starredBoards().length === 0) {
-          <div class="col-span-full rounded-box border border-dashed border-base-300 bg-base-100 p-5 text-center text-base-content/50">Không có bảng quan trọng nào được đánh dấu sao.</div>
+          <div class="col-span-full flex flex-col items-center gap-1.5 rounded-box border border-dashed border-base-300 bg-base-100/60 px-4 py-6 text-center">
+            <div class="flex h-9 w-9 items-center justify-center rounded-full bg-warning/10 text-base">⭐</div>
+            <p class="text-[12.5px] font-semibold text-base-content/70">Chưa có bảng nào được đánh dấu sao</p>
+            <p class="max-w-[280px] text-[11px] leading-relaxed text-base-content/45">Bấm vào biểu tượng ☆ ở góc bất kỳ bảng nào để ghim nhanh vào đây.</p>
+          </div>
         }
         @for (board of starredBoards(); track board.id) {
-          <div class="relative flex h-[125px] cursor-pointer flex-col justify-between overflow-hidden rounded-box p-3 text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md" [class]="board.bgClass" (click)="onBoardClick(board)">
+          <div class="board-tile group relative flex h-[92px] cursor-pointer flex-col justify-between overflow-hidden rounded-box p-2.5 text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md" [class]="board.bgClass" (click)="onBoardClick(board)">
             <div>
-              <div class="text-[10px] font-extrabold uppercase tracking-wide opacity-90">{{ board.tag }}</div>
-              <div class="mt-1 text-base font-bold leading-tight [text-shadow:0_1px_2px_rgba(0,0,0,0.2)]">{{ board.title }}</div>
+              <div class="text-[9px] font-extrabold uppercase tracking-wide opacity-90">{{ board.tag }}</div>
+              <div class="mt-0.5 text-[13px] font-bold leading-tight [text-shadow:0_1px_2px_rgba(0,0,0,0.2)]">{{ board.title }}</div>
             </div>
-            <button class="absolute right-3 top-3 text-base text-white/60 transition hover:scale-110 hover:text-yellow-400" [class.text-yellow-400]="board.starred" [class.scale-110]="board.starred" title="Đánh dấu sao" (click)="$event.stopPropagation(); toggleStar(board.id)">
+            <button class="absolute right-8 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-black/30 text-white opacity-0 transition hover:bg-black/55 group-hover:opacity-100" title="Xóa bảng" (click)="$event.stopPropagation(); confirmDeleteKey.set('starred:' + board.id)">
+              <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>
+            </button>
+            <button class="absolute right-2.5 top-2.5 text-sm text-white/60 transition hover:scale-110 hover:text-yellow-400" [class.text-yellow-400]="board.starred" [class.scale-110]="board.starred" title="Đánh dấu sao" (click)="$event.stopPropagation(); toggleStar(board.id)">
               {{ board.starred ? '⭐' : '☆' }}
             </button>
-            <div class="flex items-center justify-between text-[11px] font-semibold opacity-95">
+            <div class="flex items-center justify-between text-[10px] font-semibold opacity-95">
               <span>{{ board.privacy === 'Public' ? '🌐' : '🔒' }} {{ board.privacy }}</span>
-              <span class="rounded bg-black/25 px-1.5 py-0.5 text-[10px] tracking-wide">{{ board.badge }}</span>
+              <span class="badge badge-xs border-none bg-black/25 text-white">{{ board.badge }}</span>
             </div>
+            @if (confirmDeleteKey() === 'starred:' + board.id) {
+              <div class="fixed inset-0 z-[999] cursor-default" (click)="$event.stopPropagation(); confirmDeleteKey.set(null)"></div>
+              <div class="absolute right-1.5 top-9 z-[1000] w-36 rounded-box border border-base-300 bg-base-100 p-2 text-left shadow-lg" (click)="$event.stopPropagation()">
+                <p class="mb-1.5 text-[11px] font-semibold text-base-content">Xóa bảng này?</p>
+                <div class="flex justify-end gap-1">
+                  <button type="button" class="btn btn-ghost btn-xs" (click)="confirmDeleteKey.set(null)">Hủy</button>
+                  <button type="button" class="btn btn-error btn-xs text-white" (click)="deleteBoard(board.workspaceId, board)">Xóa</button>
+                </div>
+              </div>
+            }
           </div>
         }
       </div>
@@ -85,24 +124,24 @@
 
     <!-- Section 2: Templates -->
     <section>
-      <div class="mb-3 flex items-center gap-2">
-        <span class="text-lg">📖</span>
-        <h2 class="text-base font-extrabold uppercase tracking-wide text-base-content">KHỞI TẠO NHANH THEO MẪU (TEMPLATES)</h2>
+      <div class="mb-2 flex items-center gap-2">
+        <span class="flex h-6 w-6 items-center justify-center rounded-full bg-info/15 text-[13px]">📖</span>
+        <h2 class="text-[13px] font-extrabold uppercase tracking-wide text-base-content">Khởi tạo nhanh theo mẫu (templates)</h2>
       </div>
 
-      <div class="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-3">
+      <div class="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-2.5">
         @for (tpl of templates; track tpl.title) {
-          <div class="flex min-h-[140px] flex-col justify-between rounded-box border border-base-300 bg-base-100 p-3 shadow-sm transition hover:-translate-y-0.5 hover:border-primary hover:shadow-md">
-            <div class="flex items-start gap-3">
-              <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[15px] font-extrabold text-white" [class]="tpl.badgeClass">{{ tpl.badge }}</div>
-              <div class="flex-1">
-                <h3 class="mb-1 text-[15px] font-bold text-base-content">{{ tpl.title }}</h3>
-                <p class="text-xs leading-normal text-base-content/50">{{ tpl.desc }}</p>
+          <div class="flex min-h-[104px] flex-col justify-between rounded-box border border-base-300 bg-base-100 p-2.5 shadow-sm transition hover:-translate-y-0.5 hover:border-primary hover:shadow-md">
+            <div class="flex items-start gap-2.5">
+              <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[13px] font-extrabold text-white" [class]="tpl.badgeClass">{{ tpl.badge }}</div>
+              <div class="min-w-0 flex-1">
+                <h3 class="mb-0.5 truncate text-[13px] font-bold text-base-content">{{ tpl.title }}</h3>
+                <p class="line-clamp-2 text-[11px] leading-snug text-base-content/50">{{ tpl.desc }}</p>
               </div>
             </div>
-            <div class="mt-3 flex items-center justify-between border-t border-base-300 pt-1 text-xs text-base-content/50">
+            <div class="mt-2 flex items-center justify-between border-t border-base-300 pt-1 text-[10.5px] text-base-content/50">
               <span>Cột: {{ tpl.columns }} cột</span>
-              <button class="flex items-center gap-1 text-xs font-bold text-primary transition-all hover:gap-2" (click)="useTemplate(tpl)">Sử dụng &gt;</button>
+              <button class="flex items-center gap-1 text-[10.5px] font-bold text-primary transition-all hover:gap-2" (click)="useTemplate(tpl)">Sử dụng &gt;</button>
             </div>
           </div>
         }
@@ -111,43 +150,59 @@
 
     <!-- Section 3: All Workspaces & Boards -->
     <section>
-      <div class="mb-3 flex items-center gap-2">
-        <span class="text-lg">🥞</span>
-        <h2 class="text-base font-extrabold uppercase tracking-wide text-base-content">TẤT CẢ KHÔNG GIAN LÀM VIỆC CỦA BẠN</h2>
+      <div class="mb-2 flex items-center gap-2">
+        <span class="flex h-6 w-6 items-center justify-center rounded-full bg-secondary/15 text-[13px]">🥞</span>
+        <h2 class="text-[13px] font-extrabold uppercase tracking-wide text-base-content">Tất cả không gian làm việc của bạn</h2>
       </div>
 
-      <div class="flex flex-col gap-8">
+      <div class="flex flex-col gap-4">
         @for (ws of filteredWorkspaces(); track trackByWorkspaceId($index, ws)) {
-          <div class="rounded-box border border-base-300 bg-base-100 p-6 shadow-sm">
-            <div class="mb-6 flex items-center justify-between gap-3">
-              <div class="flex items-center gap-3">
-                <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-box bg-base-300 text-[22px]">{{ ws.icon }}</div>
-                <div>
-                  <h3 class="text-lg font-extrabold text-base-content">{{ ws.name }}</h3>
-                  <p class="mt-0.5 text-xs text-base-content/50">{{ ws.description }}</p>
+          <div class="rounded-box border border-base-300 bg-base-100 p-4 shadow-sm">
+            <div class="mb-3 flex items-center justify-between gap-3">
+              <div class="flex items-center gap-2.5">
+                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-box text-[17px]" [class]="ws.iconBg">{{ ws.icon }}</div>
+                <div class="min-w-0">
+                  <h3 class="truncate text-[14px] font-extrabold text-base-content">{{ ws.name }}</h3>
+                  <p class="mt-0.5 truncate text-[11px] text-base-content/50">{{ ws.description }}</p>
                 </div>
               </div>
-              <button class="rounded-box bg-primary/10 px-4 py-2 text-[13px] font-bold text-primary transition hover:bg-primary hover:text-white" (click)="openCreateModal(ws.id)">+ Thêm bảng</button>
+              <div class="flex shrink-0 items-center gap-1">
+                <button class="btn btn-square btn-ghost btn-xs text-[13px]" title="Sửa Workspace" (click)="openEditWorkspaceModal(ws)">✏️</button>
+                <button class="btn btn-primary btn-xs rounded-box px-3 text-[11.5px] font-bold" (click)="openCreateModal(ws.id)">+ Thêm bảng</button>
+              </div>
             </div>
 
-            <div class="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-3">
+            <div class="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-2.5">
               @for (board of ws.boards; track board.id) {
-                <div class="relative flex h-[125px] cursor-pointer flex-col justify-between overflow-hidden rounded-box p-3 text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md" [class]="board.bgClass" (click)="onBoardClick(board)">
+                <div class="board-tile group relative flex h-[92px] cursor-pointer flex-col justify-between overflow-hidden rounded-box p-2.5 text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md" [class]="board.bgClass" (click)="onBoardClick(board)">
                   <div>
-                    <div class="text-[10px] font-extrabold uppercase tracking-wide opacity-90">{{ board.tag }}</div>
-                    <div class="mt-1 text-base font-bold leading-tight [text-shadow:0_1px_2px_rgba(0,0,0,0.2)]">{{ board.title }}</div>
+                    <div class="text-[9px] font-extrabold uppercase tracking-wide opacity-90">{{ board.tag }}</div>
+                    <div class="mt-0.5 text-[13px] font-bold leading-tight [text-shadow:0_1px_2px_rgba(0,0,0,0.2)]">{{ board.title }}</div>
                   </div>
-                  <button class="absolute right-3 top-3 text-base text-white/60 transition hover:scale-110 hover:text-yellow-400" [class.text-yellow-400]="board.starred" [class.scale-110]="board.starred" title="Đánh dấu sao" (click)="$event.stopPropagation(); toggleStar(board.id)">
+                  <button class="absolute right-8 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-black/30 text-white opacity-0 transition hover:bg-black/55 group-hover:opacity-100" title="Xóa bảng" (click)="$event.stopPropagation(); confirmDeleteKey.set(ws.id + ':' + board.id)">
+                    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>
+                  </button>
+                  <button class="absolute right-2.5 top-2.5 text-sm text-white/60 transition hover:scale-110 hover:text-yellow-400" [class.text-yellow-400]="board.starred" [class.scale-110]="board.starred" title="Đánh dấu sao" (click)="$event.stopPropagation(); toggleStar(board.id)">
                     {{ board.starred ? '⭐' : '☆' }}
                   </button>
-                  <div class="flex items-center justify-between text-[11px] font-semibold opacity-95">
+                  <div class="flex items-center justify-between text-[10px] font-semibold opacity-95">
                     <span>{{ board.privacy === 'Public' ? '🌐' : '🔒' }} {{ board.privacy }}</span>
-                    <span class="rounded bg-black/25 px-1.5 py-0.5 text-[10px] tracking-wide">{{ board.badge }}</span>
+                    <span class="badge badge-xs border-none bg-black/25 text-white">{{ board.badge }}</span>
                   </div>
+                  @if (confirmDeleteKey() === ws.id + ':' + board.id) {
+                    <div class="fixed inset-0 z-[999] cursor-default" (click)="$event.stopPropagation(); confirmDeleteKey.set(null)"></div>
+                    <div class="absolute right-1.5 top-9 z-[1000] w-36 rounded-box border border-base-300 bg-base-100 p-2 text-left shadow-lg" (click)="$event.stopPropagation()">
+                      <p class="mb-1.5 text-[11px] font-semibold text-base-content">Xóa bảng này?</p>
+                      <div class="flex justify-end gap-1">
+                        <button type="button" class="btn btn-ghost btn-xs" (click)="confirmDeleteKey.set(null)">Hủy</button>
+                        <button type="button" class="btn btn-error btn-xs text-white" (click)="deleteBoard(ws.id, board)">Xóa</button>
+                      </div>
+                    </div>
+                  }
                 </div>
               }
-              <div class="flex h-[125px] cursor-pointer flex-col items-center justify-center gap-1 rounded-box border-2 border-dashed border-base-300 bg-base-100 text-[13px] font-semibold text-base-content/50 transition hover:border-primary hover:bg-base-200 hover:text-primary" (click)="openCreateModal(ws.id)">
-                <span class="text-xl">+</span>
+              <div class="flex h-[92px] cursor-pointer flex-col items-center justify-center gap-1 rounded-box border-2 border-dashed border-base-300 bg-base-100 text-[12px] font-semibold text-base-content/50 transition hover:border-primary hover:bg-base-200 hover:text-primary" (click)="openCreateModal(ws.id)">
+                <span class="text-lg">+</span>
                 <span>Tạo bảng mới</span>
               </div>
             </div>
@@ -231,10 +286,122 @@
   </div>
 }
 
+<!-- MODAL: Create/edit Workspace -->
+@if (showWorkspaceModal()) {
+  <div class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-[2px]" (click)="closeWorkspaceModal()">
+    <div class="w-full max-w-[440px] rounded-box border border-base-300 bg-base-100 p-6 shadow-xl" (click)="$event.stopPropagation()">
+      <div class="mb-5 flex items-center justify-between">
+        <h3 class="text-lg font-extrabold text-base-content">{{ workspaceModalMode() === 'create' ? 'Tạo Workspace mới' : 'Sửa Workspace' }}</h3>
+        <button class="btn btn-circle btn-ghost btn-sm text-xl" (click)="closeWorkspaceModal()">&times;</button>
+      </div>
+
+      <form (ngSubmit)="onWorkspaceModalSubmit()">
+        <div class="mb-3">
+          <label class="mb-1.5 block text-xs font-bold uppercase text-base-content/80">Biểu tượng</label>
+          <div class="flex items-center gap-3">
+            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-box border border-base-300 bg-base-200 text-xl">{{ workspaceIconInput() || '📂' }}</div>
+            <input
+              type="text"
+              class="input input-bordered w-20 text-center text-lg"
+              maxlength="4"
+              [ngModel]="workspaceIconInput()"
+              (ngModelChange)="workspaceIconInput.set($event)"
+              name="workspaceIcon"
+            />
+            <div class="flex flex-wrap gap-1">
+              @for (icon of quickIcons; track icon) {
+                <button type="button" class="btn btn-square btn-ghost btn-xs text-base" (click)="workspaceIconInput.set(icon)">{{ icon }}</button>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="mb-1.5 block text-xs font-bold uppercase text-base-content/80" for="workspace-name-input">Tên Workspace</label>
+          <input
+            type="text"
+            id="workspace-name-input"
+            class="input input-bordered w-full"
+            placeholder="Ví dụ: Đồ án Tốt nghiệp CNTT..."
+            required
+            [ngModel]="workspaceNameInput()"
+            (ngModelChange)="workspaceNameInput.set($event)"
+            name="workspaceName"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="mb-1.5 block text-xs font-bold uppercase text-base-content/80" for="workspace-desc-input">Mô tả</label>
+          <textarea
+            id="workspace-desc-input"
+            class="textarea textarea-bordered w-full"
+            rows="2"
+            placeholder="Mô tả ngắn về không gian làm việc này..."
+            [ngModel]="workspaceDescInput()"
+            (ngModelChange)="workspaceDescInput.set($event)"
+            name="workspaceDesc"
+          ></textarea>
+        </div>
+
+        <div class="mt-5 flex items-center justify-between gap-2">
+          @if (workspaceModalMode() === 'edit') {
+            <button type="button" class="btn btn-error btn-outline btn-sm" (click)="confirmDeleteWorkspace()">
+              {{ deleteConfirmArmed() ? 'Bấm lần nữa để xác nhận' : 'Xóa Workspace' }}
+            </button>
+          } @else {
+            <span></span>
+          }
+          <div class="flex gap-2">
+            <button type="button" class="btn btn-ghost" (click)="closeWorkspaceModal()">Hủy</button>
+            <button type="submit" class="btn btn-primary">{{ workspaceModalMode() === 'create' ? 'Tạo Workspace' : 'Lưu thay đổi' }}</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- MODAL: Thùng rác -->
+@if (showTrashModal()) {
+  <div class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-[2px]" (click)="closeTrashModal()">
+    <div class="w-full max-w-[480px] rounded-box border border-base-300 bg-base-100 p-6 shadow-xl" (click)="$event.stopPropagation()">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-extrabold text-base-content">Thùng rác</h3>
+        <button class="btn btn-circle btn-ghost btn-sm text-xl" (click)="closeTrashModal()">&times;</button>
+      </div>
+
+      @if (trash().length === 0) {
+        <p class="py-8 text-center text-[13px] text-base-content/50">Thùng rác trống — chưa có bảng nào bị xóa.</p>
+      } @else {
+        <div class="flex max-h-[360px] flex-col gap-2 overflow-y-auto">
+          @for (entry of trash(); track entry.board.id) {
+            <div class="flex items-center gap-3 rounded-box border border-base-300 p-2.5">
+              <div class="h-8 w-8 shrink-0 rounded-md" [class]="entry.board.bgClass"></div>
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-[13px] font-semibold text-base-content">{{ entry.board.title }}</p>
+                <p class="truncate text-[11px] text-base-content/50">Từ: {{ entry.workspaceName }}</p>
+              </div>
+              <div class="flex shrink-0 gap-1.5">
+                <button type="button" class="btn btn-ghost btn-xs" (click)="restoreFromTrash(entry.board.id)">Khôi phục</button>
+                <button type="button" class="btn btn-error btn-outline btn-xs" (click)="permanentlyDeleteFromTrash(entry.board.id)">
+                  {{ trashPermanentConfirmId() === entry.board.id ? 'Chắc chắn?' : 'Xóa vĩnh viễn' }}
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+}
+
 <div class="toast toast-end z-[2000]">
   @for (toast of toasts(); track toast.id) {
     <div class="alert" [class.alert-success]="toast.type === 'success'" [class.alert-error]="toast.type === 'error'" [class.alert-info]="toast.type === 'info'">
       <span>✨</span> <span>{{ toast.message }}</span>
+      @if (toast.action; as action) {
+        <button type="button" class="btn btn-ghost btn-xs font-bold" (click)="action.handler()">{{ action.label }}</button>
+      }
     </div>
   }
 </div>

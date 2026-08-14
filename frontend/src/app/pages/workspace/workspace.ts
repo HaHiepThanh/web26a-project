@@ -21,6 +21,7 @@ interface WorkspaceItem {
   id: string;
   name: string;
   icon: string;
+  iconBg: BgClass;
   membersCount: number;
   description: string;
   boards: BoardItem[];
@@ -38,6 +39,14 @@ interface Toast {
   id: number;
   message: string;
   type: ToastType;
+  action?: { label: string; handler: () => void };
+}
+
+interface TrashedBoard {
+  board: BoardItem;
+  workspaceId: string;
+  workspaceName: string;
+  originalIndex: number;
 }
 
 function mockWorkspaces(): WorkspaceItem[] {
@@ -46,6 +55,7 @@ function mockWorkspaces(): WorkspaceItem[] {
       id: 'ws-1',
       name: 'Đồ án Tốt nghiệp CNTT',
       icon: '🎓',
+      iconBg: 'bg-board-blue',
       membersCount: 4,
       description: 'Workspace quản lý toàn bộ các công việc nghiên cứu và phát triển phần mềm đồ án tốt nghiệp khóa K22.',
       boards: [
@@ -58,6 +68,7 @@ function mockWorkspaces(): WorkspaceItem[] {
       id: 'ws-2',
       name: 'Dự án Khởi nghiệp SaaS',
       icon: '🚀',
+      iconBg: 'bg-board-purple',
       membersCount: 2,
       description: 'Không gian làm việc cho dự án SaaS khởi nghiệp sinh viên.',
       boards: [
@@ -95,14 +106,29 @@ export class Workspace {
 
   readonly starredBoards = computed(() => {
     const q = this.searchQuery().trim().toLowerCase();
-    const all: (BoardItem & { workspaceName: string })[] = [];
+    const all: (BoardItem & { workspaceName: string; workspaceId: string })[] = [];
     for (const ws of this.workspaces()) {
       for (const board of ws.boards) {
-        if (board.starred) all.push({ ...board, workspaceName: ws.name });
+        if (board.starred) all.push({ ...board, workspaceName: ws.name, workspaceId: ws.id });
       }
     }
     if (!q) return all;
     return all.filter((b) => b.title.toLowerCase().includes(q) || b.tag.toLowerCase().includes(q));
+  });
+
+  /** Số liệu nhanh hiển thị trong hero banner — luôn tính trên toàn bộ dữ liệu, không bị lọc theo ô tìm kiếm. */
+  readonly heroStats = computed(() => {
+    const list = this.workspaces();
+    let boards = 0;
+    let starred = 0;
+    for (const ws of list) {
+      for (const board of ws.boards) {
+        boards++;
+        if (board.starred) starred++;
+      }
+    }
+    const members = list.reduce((sum, ws) => sum + ws.membersCount, 0);
+    return { boards, members, starred };
   });
 
   readonly filteredWorkspaces = computed(() => {
@@ -140,6 +166,102 @@ export class Workspace {
   onBoardClick(board: BoardItem): void {
     this.addToast(`Đang mở bảng: ${board.title}`);
     void this.router.navigate(['/board', board.id]);
+  }
+
+  // ---- Xóa bảng lẻ → chuyển vào Thùng rác (không xóa cả workspace) ----
+  readonly trash = signal<TrashedBoard[]>([]);
+  /**
+   * Key của tile đang hiện popover xác nhận "Xóa bảng này?" (chỉ 1 popover mở tại 1 thời điểm).
+   * Dùng key ghép `scopeId:boardId` thay vì chỉ `boardId` — vì 1 bảng đã đánh dấu sao sẽ render
+   * ở CẢ khu "Đánh dấu sao" lẫn khu workspace gốc của nó cùng lúc; nếu chỉ khoá theo boardId thì
+   * bấm xóa ở 1 chỗ sẽ vô tình bật popover ở cả 2 chỗ (2 tile khác nhau nhưng cùng board.id).
+   */
+  readonly confirmDeleteKey = signal<string | null>(null);
+
+  /** Xác nhận xong (từ popover) mới thật sự xóa. Vẫn cho hoàn tác nhanh qua toast, đồng thời lưu vào Thùng rác để khôi phục về sau — chỉ mất hẳn khi người dùng tự xóa vĩnh viễn trong Thùng rác. */
+  deleteBoard(workspaceId: string, board: BoardItem): void {
+    this.confirmDeleteKey.set(null);
+
+    let removedIndex = -1;
+    let workspaceName = '';
+    this.workspaces.update((list) =>
+      list.map((ws) => {
+        if (ws.id !== workspaceId) return ws;
+        workspaceName = ws.name;
+        removedIndex = ws.boards.findIndex((b) => b.id === board.id);
+        return { ...ws, boards: ws.boards.filter((b) => b.id !== board.id) };
+      }),
+    );
+
+    this.trash.update((list) => [{ board, workspaceId, workspaceName, originalIndex: removedIndex }, ...list]);
+
+    const id = ++this.toastSeq;
+    const dismiss = () => this.toasts.update((list) => list.filter((t) => t.id !== id));
+    this.toasts.update((list) => [
+      ...list,
+      {
+        id,
+        message: `Đã xóa bảng "${board.title}"`,
+        type: 'info',
+        action: {
+          label: 'Hoàn tác',
+          handler: () => {
+            this.restoreFromTrash(board.id);
+            dismiss();
+          },
+        },
+      },
+    ]);
+    setTimeout(dismiss, 4500);
+  }
+
+  restoreFromTrash(boardId: string): void {
+    const entry = this.trash().find((t) => t.board.id === boardId);
+    if (!entry) return;
+
+    const workspaceStillExists = this.workspaces().some((ws) => ws.id === entry.workspaceId);
+    if (!workspaceStillExists) {
+      this.addToast('Workspace gốc của bảng này đã bị xóa, không thể khôi phục.', 'error');
+      return;
+    }
+
+    this.workspaces.update((list) =>
+      list.map((ws) => {
+        if (ws.id !== entry.workspaceId) return ws;
+        const boards = [...ws.boards];
+        const insertAt = Math.max(0, Math.min(entry.originalIndex, boards.length));
+        boards.splice(insertAt, 0, entry.board);
+        return { ...ws, boards };
+      }),
+    );
+    this.trash.update((list) => list.filter((t) => t.board.id !== boardId));
+    this.addToast(`Đã khôi phục bảng "${entry.board.title}"`);
+  }
+
+  // ---- Modal Thùng rác ----
+  readonly showTrashModal = signal(false);
+  readonly trashPermanentConfirmId = signal<string | null>(null);
+
+  openTrashModal(): void {
+    this.trashPermanentConfirmId.set(null);
+    this.showTrashModal.set(true);
+  }
+
+  closeTrashModal(): void {
+    this.showTrashModal.set(false);
+    this.trashPermanentConfirmId.set(null);
+  }
+
+  /** Xóa vĩnh viễn cũng cần bấm 2 lần — đây là hành động không thể hoàn tác. */
+  permanentlyDeleteFromTrash(boardId: string): void {
+    if (this.trashPermanentConfirmId() !== boardId) {
+      this.trashPermanentConfirmId.set(boardId);
+      return;
+    }
+    const entry = this.trash().find((t) => t.board.id === boardId);
+    this.trash.update((list) => list.filter((t) => t.board.id !== boardId));
+    this.trashPermanentConfirmId.set(null);
+    if (entry) this.addToast(`Đã xóa vĩnh viễn bảng "${entry.board.title}"`);
   }
 
   // ---- Create board modal ----
@@ -190,19 +312,89 @@ export class Workspace {
     this.closeCreateModal();
   }
 
-  addWorkspace(): void {
-    const name = window.prompt('Nhập tên Workspace mới:');
-    if (!name?.trim()) return;
-    const newWs: WorkspaceItem = {
-      id: 'ws-' + Date.now(),
-      name: name.trim(),
-      icon: '📂',
-      membersCount: 1,
-      description: 'Không gian làm việc mới vừa được khởi tạo.',
-      boards: [],
-    };
-    this.workspaces.update((list) => [...list, newWs]);
-    this.addToast(`Đã tạo Workspace mới: "${newWs.name}"`);
+  // ---- Create/edit/delete Workspace modal ----
+  readonly showWorkspaceModal = signal(false);
+  readonly workspaceModalMode = signal<'create' | 'edit'>('create');
+  readonly editingWorkspaceId = signal<string | null>(null);
+  readonly workspaceNameInput = signal('');
+  readonly workspaceIconInput = signal('📂');
+  readonly workspaceDescInput = signal('');
+  readonly deleteConfirmArmed = signal(false);
+  readonly quickIcons = ['📂', '🎯', '🚀', '🎓', '💡', '📊', '🛠️', '🎨'];
+
+  openCreateWorkspaceModal(): void {
+    this.workspaceModalMode.set('create');
+    this.editingWorkspaceId.set(null);
+    this.workspaceNameInput.set('');
+    this.workspaceIconInput.set('📂');
+    this.workspaceDescInput.set('');
+    this.deleteConfirmArmed.set(false);
+    this.showWorkspaceModal.set(true);
+  }
+
+  openEditWorkspaceModal(ws: WorkspaceItem): void {
+    this.workspaceModalMode.set('edit');
+    this.editingWorkspaceId.set(ws.id);
+    this.workspaceNameInput.set(ws.name);
+    this.workspaceIconInput.set(ws.icon);
+    this.workspaceDescInput.set(ws.description);
+    this.deleteConfirmArmed.set(false);
+    this.showWorkspaceModal.set(true);
+  }
+
+  closeWorkspaceModal(): void {
+    this.showWorkspaceModal.set(false);
+    this.deleteConfirmArmed.set(false);
+  }
+
+  onWorkspaceModalSubmit(): void {
+    const name = this.workspaceNameInput().trim();
+    if (!name) return;
+    const icon = this.workspaceIconInput().trim() || '📂';
+    const description = this.workspaceDescInput().trim();
+
+    if (this.workspaceModalMode() === 'create') {
+      const newWs: WorkspaceItem = {
+        id: 'ws-' + Date.now(),
+        name,
+        icon,
+        iconBg: BG_CLASSES[this.workspaces().length % BG_CLASSES.length],
+        membersCount: 1,
+        description: description || 'Không gian làm việc mới vừa được khởi tạo.',
+        boards: [],
+      };
+      this.workspaces.update((list) => [...list, newWs]);
+      this.activeWorkspaceId.set(newWs.id);
+      this.addToast(`Đã tạo Workspace mới: "${newWs.name}"`);
+    } else {
+      const id = this.editingWorkspaceId();
+      this.workspaces.update((list) => list.map((ws) => (ws.id === id ? { ...ws, name, icon, description } : ws)));
+      this.addToast(`Đã cập nhật Workspace "${name}"`);
+    }
+    this.closeWorkspaceModal();
+  }
+
+  /** Xóa cần bấm 2 lần liên tiếp (nút đổi sang trạng thái "Bấm lần nữa để xác nhận") — tránh xóa nhầm mà không cần popup confirm() thô của trình duyệt. */
+  confirmDeleteWorkspace(): void {
+    if (!this.deleteConfirmArmed()) {
+      this.deleteConfirmArmed.set(true);
+      return;
+    }
+    const id = this.editingWorkspaceId();
+    if (!id) return;
+    const list = this.workspaces();
+    if (list.length <= 1) {
+      this.addToast('Không thể xóa Workspace cuối cùng.', 'error');
+      return;
+    }
+    const removed = list.find((w) => w.id === id);
+    const remaining = list.filter((w) => w.id !== id);
+    this.workspaces.set(remaining);
+    if (this.activeWorkspaceId() === id) {
+      this.activeWorkspaceId.set(remaining[0].id);
+    }
+    this.addToast(removed ? `Đã xóa Workspace "${removed.name}"` : 'Đã xóa Workspace');
+    this.closeWorkspaceModal();
   }
 
   // ---- Header "+ Tạo" button (via WorkspaceUiService) opens the modal too ----
@@ -220,6 +412,9 @@ export class Workspace {
   onKeydown(event: KeyboardEvent): void {
     if (event.key === 'Escape') {
       this.closeCreateModal();
+      this.closeWorkspaceModal();
+      this.closeTrashModal();
+      this.confirmDeleteKey.set(null);
       return;
     }
     const target = event.target as HTMLElement;

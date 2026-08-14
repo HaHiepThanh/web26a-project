@@ -1,21 +1,11 @@
 /* Layout/structure moved to Tailwind + DaisyUI in the template.
-   Kept here: theme-aware active state, decorative gradients, and the
-   data-driven board/template color classes referenced via [class] bindings. */
+   Kept here: decorative gradients and the data-driven board/template color
+   classes referenced via [class] bindings. Sidebar active state now uses
+   DaisyUI's own `menu-active` (theme-aware out of the box, no override
+   needed). */
 
 :host {
   display: block;
-}
-
-/* Active workspace item (theme-aware). */
-.workspace-item.active {
-  background-color: var(--accent-blue-soft);
-  color: var(--accent-blue);
-  font-weight: 600;
-}
-
-[data-theme='dark'] .workspace-item.active {
-  background-color: rgba(87, 157, 255, 0.2);
-  color: #85b8ff;
 }
 
 /* Tips card — decorative purple gradient (light + dark). */
@@ -23,7 +13,7 @@
   background: linear-gradient(135deg, #f3e8ff 0%, #e0e7ff 100%);
   border: 1px solid #d8b4fe;
   border-radius: var(--radius-md);
-  padding: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
   position: relative;
   overflow: hidden;
 }
@@ -83,14 +73,14 @@
 /* Hero banner — decorative gradient + glow. */
 .hero-banner {
   background: linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #1e3a8a 100%);
-  border-radius: var(--radius-xl);
-  padding: var(--space-xl) var(--space-xxl);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg) var(--space-xl);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-xl);
-  box-shadow: var(--shadow-lg);
+  gap: var(--space-lg);
+  box-shadow: var(--shadow-md);
   position: relative;
   overflow: hidden;
 }
@@ -104,6 +94,61 @@
   height: 250px;
   background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 70%);
   pointer-events: none;
+}
+
+.hero-dot-grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.08;
+  background-image: radial-gradient(#ffffff 1px, transparent 1px);
+  background-size: 18px 18px;
+  pointer-events: none;
+}
+
+.hero-glow {
+  position: absolute;
+  bottom: -70px;
+  left: -30px;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(96, 165, 250, 0.28) 0%, rgba(96, 165, 250, 0) 70%);
+  pointer-events: none;
+}
+
+/* Colored glow shadow on hover — matches each board's own gradient color
+   instead of a generic gray shadow. Wins over the `hover:shadow-md` Tailwind
+   utility since this component stylesheet sits outside Tailwind's cascade
+   layers (unlayered CSS always beats layered utilities). */
+.bg-board-blue.board-tile:hover {
+  box-shadow: 0 12px 26px -8px rgba(37, 99, 235, 0.5);
+}
+.bg-board-purple.board-tile:hover {
+  box-shadow: 0 12px 26px -8px rgba(109, 40, 217, 0.5);
+}
+.bg-board-green.board-tile:hover {
+  box-shadow: 0 12px 26px -8px rgba(5, 150, 105, 0.5);
+}
+.bg-board-teal.board-tile:hover {
+  box-shadow: 0 12px 26px -8px rgba(13, 148, 136, 0.5);
+}
+.bg-board-orange.board-tile:hover {
+  box-shadow: 0 12px 26px -8px rgba(234, 88, 12, 0.5);
+}
+
+/* Diagonal shine sweep on board tile hover. */
+.board-tile::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.22) 50%, transparent 70%);
+  background-size: 220% 100%;
+  background-position: 150% 0;
+  transition: background-position 0.6s ease;
+  pointer-events: none;
+}
+.board-tile:hover::after {
+  background-position: -60% 0;
 }
 
 /* Data-driven board backgrounds ([class]="board.bgClass"). */
