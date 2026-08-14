@@ -140,6 +140,12 @@ export class Workspace {
     }));
   });
 
+  /** Đang gõ tìm kiếm nhưng không khớp board nào ở workspace nào cả. */
+  readonly searchHasNoResults = computed(() => {
+    if (!this.searchQuery().trim()) return false;
+    return this.filteredWorkspaces().every((ws) => ws.boards.length === 0);
+  });
+
   selectWorkspace(id: string): void {
     this.activeWorkspaceId.set(id);
     const ws = this.workspaces().find((w) => w.id === id);

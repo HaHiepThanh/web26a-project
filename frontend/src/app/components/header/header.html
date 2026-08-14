@@ -16,7 +16,7 @@
         <circle cx="11" cy="11" r="8"></circle>
         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
       </svg>
-      <input type="text" class="input input-bordered input-sm h-8 w-full rounded-lg bg-base-100 pl-8 pr-8 text-[13px]" placeholder="Tìm kiếm bảng dự án..." (input)="onSearchInput($event)" />
+      <input type="text" class="input input-sm h-8 w-full appearance-none rounded-lg border-2 border-base-content/20 !bg-base-100 pl-8 pr-8 text-[13px] shadow transition-colors focus:border-primary" placeholder="Tìm kiếm bảng dự án..." (input)="onSearchInput($event)" />
       <span class="kbd kbd-sm pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 opacity-60">/</span>
     </div>
   </div>
@@ -29,18 +29,18 @@
 
     <div class="mx-0.5 h-5 w-px bg-base-300 max-sm:hidden"></div>
 
-    <button class="btn btn-circle btn-ghost btn-sm text-[15px]" (click)="toggleTheme()" [title]="theme() === 'dark' ? 'Chuyển giao diện sáng' : 'Chuyển giao diện tối'">
+    <button class="btn btn-circle btn-sm border border-base-300 bg-base-100 text-[15px] shadow-sm transition-colors hover:border-primary/50 hover:bg-primary/10" (click)="toggleTheme()" [title]="theme() === 'dark' ? 'Chuyển giao diện sáng' : 'Chuyển giao diện tối'">
       {{ theme() === 'dark' ? '☀️' : '🌙' }}
     </button>
 
-    <button class="btn btn-circle btn-ghost btn-sm relative text-[15px]" [title]="dueBadgeCount() > 0 ? dueBadgeCount() + ' thẻ của bạn sắp/đã quá hạn' : 'Thông báo'">
+    <button class="btn btn-circle btn-sm relative border border-base-300 bg-base-100 text-[15px] shadow-sm transition-colors hover:border-primary/50 hover:bg-primary/10" [title]="dueBadgeCount() > 0 ? dueBadgeCount() + ' thẻ của bạn sắp/đã quá hạn' : 'Thông báo'">
       🔔
       @if (dueBadgeCount() > 0) {
-        <span class="badge badge-error absolute -right-0.5 -top-0.5 h-[15px] min-w-[15px] rounded-full border-2 border-base-200 px-1 text-[9px] font-bold text-white">{{ dueBadgeCount() }}</span>
+        <span class="badge badge-error absolute -right-1 -top-1 h-[15px] min-w-[15px] rounded-full border-2 border-base-200 px-1 text-[9px] font-bold text-white">{{ dueBadgeCount() }}</span>
       }
     </button>
 
-    <a class="btn btn-circle btn-ghost btn-sm text-[15px]" routerLink="/settings" title="Cài đặt">⚙️</a>
+    <a class="btn btn-circle btn-sm border border-base-300 bg-base-100 text-[15px] shadow-sm transition-colors hover:border-primary/50 hover:bg-primary/10" routerLink="/settings" title="Cài đặt">⚙️</a>
 
     <div class="flex cursor-pointer items-center gap-1 rounded-full border border-base-300 bg-base-100 py-[2px] pl-1 pr-1.5 transition-colors hover:bg-base-300" (click)="toggleUserMenu()">
       <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#2563eb] to-[#1d4ed8] text-[11px] font-bold text-white">{{ initials() }}</div>

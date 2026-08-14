@@ -70,29 +70,30 @@
   color: #f3e8ff;
 }
 
-/* Hero banner — decorative gradient + glow. */
-.hero-banner {
+/* Hero bar — gọn 1 dòng (chào + số liệu + CTA), thay cho banner minh hoạ to
+   chiếm hẳn 1 khối. Vẫn giữ gradient + glow cho có chiều sâu, chỉ nén chiều cao. */
+.hero-banner-slim {
   background: linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #1e3a8a 100%);
-  border-radius: var(--radius-lg);
-  padding: var(--space-lg) var(--space-xl);
+  border-radius: var(--radius-md);
+  padding: 10px 16px;
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-lg);
-  box-shadow: var(--shadow-md);
+  gap: var(--space-md);
+  box-shadow: var(--shadow-sm);
   position: relative;
   overflow: hidden;
 }
 
-.hero-banner::before {
+.hero-banner-slim::before {
   content: '';
   position: absolute;
-  top: -50px;
-  right: -50px;
-  width: 250px;
-  height: 250px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 70%);
+  top: -40px;
+  right: -40px;
+  width: 140px;
+  height: 140px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 70%);
   pointer-events: none;
 }
 
@@ -107,12 +108,12 @@
 
 .hero-glow {
   position: absolute;
-  bottom: -70px;
-  left: -30px;
-  width: 200px;
-  height: 200px;
+  bottom: -50px;
+  left: -20px;
+  width: 130px;
+  height: 130px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(96, 165, 250, 0.28) 0%, rgba(96, 165, 250, 0) 70%);
+  background: radial-gradient(circle, rgba(96, 165, 250, 0.32) 0%, rgba(96, 165, 250, 0) 70%);
   pointer-events: none;
 }
 
@@ -136,19 +137,30 @@
   box-shadow: 0 12px 26px -8px rgba(234, 88, 12, 0.5);
 }
 
-/* Diagonal shine sweep on board tile hover. */
-.board-tile::after {
+/* Subtle dot texture on every board tile — gives the flat gradient fill a bit
+   of depth/print-like grain instead of a plain flat color block. Sits behind
+   the real content (which is bumped to z-10 in the template). This is the
+   only always-on decoration; the hover state is deliberately just "lift +
+   colored shadow" (see rules above) — an earlier version stacked a 3rd
+   diagonal shine-sweep effect on top too, which read as too busy, so it was
+   dropped rather than layering a 4th effect on.
+
+   NOTE: don't add more `animation:`-driven effects on this page until the
+   NG0100 change-detection loop (tracked separately — appears to originate in
+   Header/AppLayout, reproduces on every app-layout route) is fixed. Verified
+   firsthand: any CSS `animation` added here gets stuck at currentTime 0
+   (Element.getAnimations() confirms `playState: running` but frozen) because
+   the loop keeps re-patching the DOM and restarting the timeline before it
+   can advance — a `.reveal` fade-in and a board-tile creation pulse both
+   silently never ran and were removed for this reason. Hover-driven
+   `transition`s (not `animation`) are unaffected and safe to use. */
+.board-tile::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.22) 50%, transparent 70%);
-  background-size: 220% 100%;
-  background-position: 150% 0;
-  transition: background-position 0.6s ease;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.16) 1px, transparent 1px);
+  background-size: 9px 9px;
   pointer-events: none;
-}
-.board-tile:hover::after {
-  background-position: -60% 0;
 }
 
 /* Data-driven board backgrounds ([class]="board.bgClass"). */
