@@ -6,7 +6,11 @@ import { CardService } from '../../../services/card.service';
 import { LabelService } from '../../../services/label.service';
 import { BoardService } from '../../../services/board.service';
 import { ActivityService } from '../../../services/activity.service';
+import { ChecklistService } from '../../../services/checklist.service';
+import { CommentService } from '../../../services/comment.service';
 import { LabelPicker } from '../label-picker/label-picker';
+import { Checklist } from '../checklist/checklist';
+import { CommentList } from '../comment-list/comment-list';
 
 const PRIORITIES: { id: CardPriority; label: string }[] = [
   { id: 'high', label: 'Cao' },
@@ -28,7 +32,7 @@ const PRESENCE_POOL = [
  *  Mục 11: audit trail (ghi log mỗi lần sửa) + presence giả lập (ai đang xem cùng). */
 @Component({
   selector: 'app-card-detail-modal',
-  imports: [FormsModule, DatePipe, LabelPicker],
+  imports: [FormsModule, DatePipe, LabelPicker, Checklist, CommentList],
   templateUrl: './card-detail-modal.html',
   styleUrl: './card-detail-modal.css',
 })
@@ -37,6 +41,8 @@ export class CardDetailModal {
   private readonly labelService = inject(LabelService);
   private readonly boardService = inject(BoardService);
   private readonly activityService = inject(ActivityService);
+  private readonly checklistService = inject(ChecklistService);
+  private readonly commentService = inject(CommentService);
 
   readonly card = input.required<Card>();
   readonly boardId = input.required<string>();
@@ -145,6 +151,8 @@ export class CardDetailModal {
   requestDelete(): void {
     if (!window.confirm(`Xoá thẻ "${this.card().title}"? Không thể hoàn tác.`)) return;
     void this.cardService.deleteCard(this.card().id, this.card().listId);
+    this.checklistService.clearCard(this.card().id);
+    this.commentService.clearCard(this.card().id);
     this.deleted.emit();
   }
 }

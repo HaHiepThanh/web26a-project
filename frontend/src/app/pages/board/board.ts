@@ -7,8 +7,9 @@ import { BoardService } from '../../services/board.service';
 import { ListService } from '../../services/list.service';
 import { CardService } from '../../services/card.service';
 import { LabelService } from '../../services/label.service';
-import { MockNetworkService } from '../../services/mock-network.service';
 import { ActivityService } from '../../services/activity.service';
+import { ChecklistService } from '../../services/checklist.service';
+import { CommentService } from '../../services/comment.service';
 import { BoardList } from '../../components/board/board-list/board-list';
 import { AddList } from '../../components/board/add-list/add-list';
 import { LabelPicker } from '../../components/board/label-picker/label-picker';
@@ -25,6 +26,9 @@ interface Toast {
 }
 type SortMode = 'manual' | 'priority' | 'due' | 'new';
 type ViewMode = 'status' | 'matrix';
+/** Row View (#14): cách trình bày khác của view "Theo trạng thái" — Lists xếp
+ *  dọc, Cards trong mỗi List xếp ngang. Không phải 1 grouping mới (khác matrix). */
+type LayoutMode = 'column' | 'row';
 type DateFilter = 'overdue' | 'today' | 'week';
 /** Ký tự nối listId + priority thành 1 id cdkDropList duy nhất cho từng ô swimlane (#6). */
 const CELL_SEP = '__';
@@ -90,19 +94,25 @@ export class Board {
   private readonly listService = inject(ListService);
   private readonly cardService = inject(CardService);
   private readonly labelService = inject(LabelService);
-  private readonly net = inject(MockNetworkService);
   private readonly activityService = inject(ActivityService);
+  private readonly checklistService = inject(ChecklistService);
+  private readonly commentService = inject(CommentService);
 
   readonly boardId = this.route.snapshot.paramMap.get('id') ?? 'demo-board';
 
   readonly board = this.boardService.currentBoard;
+  /** Màu nền trang chọn lúc tạo board (Workspace) — không có thì giữ nền xám mặc định
+   *  (board demo cũ). Nền màu để trang Board + danh sách nổi bật hơn, không bị chìm. */
+  readonly pageBgClass = computed(() => this.board()?.background ?? 'bg-base-200');
   readonly members = this.boardService.members;
   readonly lists = computed(() => [...this.listService.lists()].sort((a, b) => a.position - b.position));
   readonly cardsByList = this.cardService.cardsByList;
   readonly savingCardIds = this.cardService.savingCardIds;
   readonly errorCardIds = this.cardService.errorCardIds;
   readonly labels = this.labelService.labels;
-  readonly networkArmed = this.net.armed;
+  /** [BONUS #4] done/total checklist + số bình luận theo card — cho badge ở mặt thẻ. */
+  readonly checklistProgressByCardId = this.checklistService.progressByCard;
+  readonly commentCountByCardId = this.commentService.countByCard;
 
   readonly today = new Date().toISOString().slice(0, 10);
   readonly listColors = LIST_COLORS;
@@ -151,6 +161,23 @@ export class Board {
   // ---- Board 2 chiều (#6) ----
   readonly viewMode = signal<ViewMode>('status');
   readonly gridCols = computed(() => `repeat(${Math.max(this.lists().length, 1)}, 272px)`);
+
+  // ---- Row View (#14): Lists xếp dọc, Cards xếp ngang — chỉ áp dụng cho view "Theo trạng thái" ----
+  readonly layoutMode = signal<LayoutMode>('column');
+
+  private layoutModeKey(): string {
+    return `trello_layout_mode_${this.boardId}`;
+  }
+
+  private loadLayoutMode(): void {
+    const raw = localStorage.getItem(this.layoutModeKey());
+    this.layoutMode.set(raw === 'row' ? 'row' : 'column');
+  }
+
+  setLayoutMode(mode: LayoutMode): void {
+    this.layoutMode.set(mode);
+    localStorage.setItem(this.layoutModeKey(), mode);
+  }
 
   // ---- Lọc board — highlight/làm mờ (#7) ----
   readonly UNASSIGNED = UNASSIGNED;
@@ -445,21 +472,27 @@ export class Board {
       this.updateMinimapGeometry();
     });
 
-    // Số lượng/kích thước List đổi (thêm/xoá/thu gọn) hoặc đổi view → đo lại vị trí
-    // thật trên DOM sau khi Angular render xong khung mới.
+    // Số lượng/kích thước List đổi (thêm/xoá/thu gọn) hoặc đổi view/layout → đo lại
+    // vị trí thật trên DOM sau khi Angular render xong khung mới. Đổi layoutMode cũng
+    // phải đo lại vì trục đo (ngang/dọc) đổi hoàn toàn.
     effect(() => {
       this.lists();
       this.collapsedListIds();
       this.viewMode();
+      this.layoutMode();
       queueMicrotask(() => this.updateMinimapGeometry());
     });
 
     inject(DestroyRef).onDestroy(() => this.minimapResizeObserver?.disconnect());
   }
 
+  /** Column View đo theo trục ngang (scrollLeft/clientWidth/rect.left), Row View đo
+   *  theo trục dọc (scrollTop/clientHeight/rect.top) — cùng 1 khung #boardScroll,
+   *  chỉ 1 trong 2 branch tồn tại trong DOM tại 1 thời điểm (xem board.html). */
   private updateMinimapGeometry(): void {
     const el = this.boardScrollRef()?.nativeElement;
     if (!el) return;
+    const horizontal = this.layoutMode() === 'column';
     const containerRect = el.getBoundingClientRect();
     const items: MinimapListGeom[] = [];
     el.querySelectorAll<HTMLElement>('[data-list-id]').forEach((node) => {
@@ -467,17 +500,19 @@ export class Board {
       const list = id ? this.lists().find((l) => l.id === id) : undefined;
       if (!id || !list) return;
       const rect = node.getBoundingClientRect();
-      const offset = rect.left - containerRect.left + el.scrollLeft;
-      items.push({ id, name: list.name, cardCount: this.cardsFor(id).length, offset, size: rect.width });
+      const offset = horizontal ? rect.left - containerRect.left + el.scrollLeft : rect.top - containerRect.top + el.scrollTop;
+      const size = horizontal ? rect.width : rect.height;
+      items.push({ id, name: list.name, cardCount: this.cardsFor(id).length, offset, size });
     });
     this.minimapItems.set(items);
     this.updateMinimapScrollMetrics(el);
   }
 
   private updateMinimapScrollMetrics(el: HTMLDivElement): void {
-    this.minimapScrollPos.set(el.scrollLeft);
-    this.minimapViewportSize.set(el.clientWidth);
-    this.minimapContentSize.set(el.scrollWidth);
+    const horizontal = this.layoutMode() === 'column';
+    this.minimapScrollPos.set(horizontal ? el.scrollLeft : el.scrollTop);
+    this.minimapViewportSize.set(horizontal ? el.clientWidth : el.clientHeight);
+    this.minimapContentSize.set(horizontal ? el.scrollWidth : el.scrollHeight);
   }
 
   /** rAF-throttle: khung cuộn bắn (scroll) rất dày, chỉ đọc lại vị trí — không đo lại
@@ -491,14 +526,18 @@ export class Board {
     });
   }
 
-  /** Click 1 List trên Mini Map → cuộn mượt khung Board thật, đưa List đó về gần giữa. */
+  /** Click 1 List trên Mini Map → cuộn mượt khung Board thật, đưa List đó về gần giữa
+   *  (theo trục ngang ở Column View, trục dọc ở Row View). */
   scrollToList(listId: string): void {
     const el = this.boardScrollRef()?.nativeElement;
     const item = this.minimapItems().find((i) => i.id === listId);
     if (!el || !item) return;
-    const maxScroll = Math.max(el.scrollWidth - el.clientWidth, 0);
-    const target = Math.min(Math.max(item.offset - (el.clientWidth - item.size) / 2, 0), maxScroll);
-    el.scrollTo({ left: target, behavior: 'smooth' });
+    const horizontal = this.layoutMode() === 'column';
+    const viewportSize = horizontal ? el.clientWidth : el.clientHeight;
+    const contentSize = horizontal ? el.scrollWidth : el.scrollHeight;
+    const maxScroll = Math.max(contentSize - viewportSize, 0);
+    const target = Math.min(Math.max(item.offset - (viewportSize - item.size) / 2, 0), maxScroll);
+    el.scrollTo(horizontal ? { left: target, behavior: 'smooth' } : { top: target, behavior: 'smooth' });
   }
 
   constructor() {
@@ -506,6 +545,7 @@ export class Board {
     this.loadSavedFilters();
     this.loadSavedHighlightGroups();
     this.loadCollapsedLists();
+    this.loadLayoutMode();
     this.setupMinimapTracking();
 
     effect(() => {
@@ -582,11 +622,6 @@ export class Board {
     const [moved] = ordered.splice(event.previousIndex, 1);
     ordered.splice(event.currentIndex, 0, moved);
     void this.listService.reorderListOptimistic(ordered.map((l) => l.id));
-  }
-
-  armNetworkFailure(): void {
-    this.net.armFailure();
-    this.addToast('Lần kéo-thả tiếp theo sẽ giả lập lỗi mạng để xem hoàn tác.', 'info');
   }
 
   // ---- Modal tạo danh sách (#2) ----

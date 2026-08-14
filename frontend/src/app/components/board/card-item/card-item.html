@@ -1,5 +1,5 @@
 <div
-  class="card-face relative rounded-md border border-base-300 bg-base-100 px-2.5 py-2 shadow-sm transition-shadow hover:shadow-md"
+  class="card-face relative rounded-md border border-base-300 bg-base-100 px-2.5 py-2 shadow-sm transition-all hover:-translate-y-px hover:border-base-content/20 hover:shadow-md"
   [class.saving]="isSaving()"
   [class.error-flash]="isError()"
   [class.dimmed]="isDimmed()"
@@ -36,7 +36,31 @@
     </div>
   }
 
-  <div class="mb-1.5 break-words text-xs font-medium leading-snug text-base-content">{{ card().title }}</div>
+  <div class="mb-1.5 line-clamp-6 break-words text-xs font-medium leading-snug text-base-content">{{ card().title }}</div>
+
+  @if (hasMeta()) {
+    <div class="mb-1.5 flex flex-wrap items-center gap-2.5 text-[10px] text-base-content/50">
+      @if (card().description) {
+        <span class="inline-flex items-center gap-1" title="Thẻ có mô tả">
+          <svg class="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+        </span>
+      }
+      @if (checklistProgress(); as cp) {
+        @if (cp.total > 0) {
+          <span class="inline-flex items-center gap-1" [class.text-success]="cp.done === cp.total" [title]="'Checklist: ' + cp.done + '/' + cp.total">
+            <svg class="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 12l3 3 5-6"/></svg>
+            {{ cp.done }}/{{ cp.total }}
+          </span>
+        }
+      }
+      @if (commentCount() > 0) {
+        <span class="inline-flex items-center gap-1" [title]="commentCount() + ' bình luận'">
+          <svg class="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          {{ commentCount() }}
+        </span>
+      }
+    </div>
+  }
 
   <div class="flex items-center justify-between">
     @if (dueText(); as due) {

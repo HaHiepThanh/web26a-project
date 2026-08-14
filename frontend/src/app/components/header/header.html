@@ -1,4 +1,4 @@
-<header class="sticky top-0 z-[100] flex h-[52px] items-center justify-between border-b border-base-300 bg-base-200 px-3 shadow-sm">
+<header class="app-header sticky top-0 z-[100] flex h-[52px] items-center justify-between px-3">
   <div class="flex items-center gap-2">
     <a routerLink="/dashboard" class="flex items-center gap-2 rounded-md px-2 py-1 font-bold text-base-content hover:bg-base-300">
       <div class="flex h-6 w-6 items-center justify-center gap-0.5 rounded bg-gradient-to-br from-[#0052cc] to-[#0747a6] p-[3px]">
@@ -18,7 +18,12 @@
         <circle cx="11" cy="11" r="8"></circle>
         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
       </svg>
-      <input type="text" class="input input-bordered h-9 w-full rounded-lg pl-9 pr-9" placeholder="Tìm kiếm bảng dự án..." (input)="onSearchInput($event)" />
+      <input
+        type="text"
+        class="header-search-input h-9 w-full rounded-lg pl-9 pr-9 text-sm"
+        placeholder="Tìm kiếm bảng dự án..."
+        (input)="onSearchInput($event)"
+      />
       <span class="kbd kbd-sm pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">/</span>
     </div>
   </div>
@@ -29,23 +34,49 @@
       <span>Tạo</span>
     </button>
 
-    <button class="btn btn-circle btn-ghost btn-sm text-base" (click)="toggleTheme()" [title]="theme() === 'dark' ? 'Chuyển giao diện sáng' : 'Chuyển giao diện tối'">
-      {{ theme() === 'dark' ? '☀️' : '🌙' }}
+    <button
+      class="header-icon-btn flex h-8 w-8 items-center justify-center rounded-full"
+      (click)="toggleTheme()"
+      [title]="theme() === 'dark' ? 'Chuyển giao diện sáng' : 'Chuyển giao diện tối'"
+    >
+      @if (theme() === 'dark') {
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+        </svg>
+      } @else {
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+        </svg>
+      }
     </button>
 
-    <button class="btn btn-circle btn-ghost btn-sm relative text-base" [title]="dueBadgeCount() > 0 ? dueBadgeCount() + ' thẻ của bạn sắp/đã quá hạn' : 'Thông báo'">
-      🔔
+    <button
+      class="header-icon-btn relative flex h-8 w-8 items-center justify-center rounded-full"
+      [title]="dueBadgeCount() > 0 ? dueBadgeCount() + ' thẻ của bạn sắp/đã quá hạn' : 'Thông báo'"
+    >
+      <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+        <path d="M13.73 21a2 2 0 01-3.46 0" />
+      </svg>
       @if (dueBadgeCount() > 0) {
         <span class="badge badge-error absolute -right-0.5 -top-0.5 h-[15px] min-w-[15px] rounded-full border-2 border-base-200 px-1 text-[9px] font-bold text-white">{{ dueBadgeCount() }}</span>
       }
     </button>
 
-    <a class="btn btn-circle btn-ghost btn-sm text-base" routerLink="/settings" title="Cài đặt">⚙️</a>
+    <a class="header-icon-btn flex h-8 w-8 items-center justify-center rounded-full" routerLink="/settings" title="Cài đặt">
+      <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3" />
+        <path
+          d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"
+        />
+      </svg>
+    </a>
 
-    <div class="flex cursor-pointer items-center gap-2 rounded-[20px] border border-base-300 bg-base-100 py-[3px] pl-1 pr-2.5 hover:bg-base-300" (click)="toggleUserMenu()">
+    <div class="header-avatar-chip flex cursor-pointer items-center gap-2 rounded-[20px] py-[3px] pl-1 pr-2.5" (click)="toggleUserMenu()">
       <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#2563eb] to-[#1d4ed8] text-xs font-bold text-white">{{ initials() }}</div>
       <div class="flex items-center gap-1.5 text-left max-md:hidden">
-        <span class="max-w-[140px] truncate text-[13px] font-semibold text-base-content">{{ currentUser()?.displayName ?? currentUser()?.email ?? 'Khách' }}</span>
+        <span class="max-w-[140px] truncate text-[13px] font-semibold">{{ currentUser()?.displayName ?? currentUser()?.email ?? 'Khách' }}</span>
       </div>
     </div>
   </div>

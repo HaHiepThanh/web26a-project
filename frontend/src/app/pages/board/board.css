@@ -90,6 +90,73 @@ app-board-list {
   min-height: 0;
 }
 
+/* -------------------- Row View (#14): lists stacked vertically, cards horizontal -------------------- */
+.row-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 14px 16px;
+}
+
+.row-list-column {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-height: min-content;
+}
+
+.row-list-wrap {
+  flex: 0 0 220px;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+  transition: flex-basis 150ms ease;
+}
+
+.row-list-wrap.collapsed {
+  flex: 0 0 44px;
+}
+
+.row-list-drop-placeholder {
+  flex: 0 0 220px;
+  width: 100%;
+  border-radius: var(--radius-md);
+  border: 2px dashed var(--accent-blue);
+  background: var(--accent-blue-soft);
+}
+
+.row-list-grip {
+  flex-shrink: 0;
+  width: 100%;
+  height: 14px;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  background: var(--bg-surface-hover);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  cursor: grab;
+}
+
+.row-list-grip:hover {
+  color: var(--text-secondary);
+}
+
+.row-list-grip:active {
+  cursor: grabbing;
+}
+
+/* app-add-list defaults to a fixed 272px-wide column tile (Column View); in Row
+   View it should span the full row width like every other list instead. */
+.row-list-column > app-add-list {
+  flex: 0 0 auto;
+  width: 100%;
+}
+
 /* -------------------- 2D matrix (#6): priority rows x list columns -------------------- */
 .matrix-body {
   overflow: auto;

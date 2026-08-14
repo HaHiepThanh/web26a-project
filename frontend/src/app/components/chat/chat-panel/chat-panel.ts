@@ -8,16 +8,29 @@ import { ActivityService } from '../../../services/activity.service';
 import { MessageList } from '../message-list/message-list';
 import { ChatInput } from '../chat-input/chat-input';
 
+const MIN_WIDTH = 260;
+const MAX_WIDTH = 480;
+const DEFAULT_WIDTH = 300;
+const COLLAPSED_WIDTH = 44;
+const WIDTH_KEY = 'trello_chat_panel_width';
+const COLLAPSED_KEY = 'trello_chat_panel_collapsed';
+const RESIZE_STEP = 16;
+
 /**
- * Khung chat nổi (#8, phương án B đã chốt — bong bóng góc dưới-phải, không phải
- * panel cố định bên cạnh). Đóng chat vẫn biết có tin mới qua badge + icon rung +
- * toast preview (cùng góc) + đổi tiêu đề tab.
+ * Khung chat dạng panel cố định bên trái trang Board (thay cho bong bóng nổi góc
+ * dưới-phải trước đây), kéo được để đổi bề rộng, thu gọn được để trả lại chỗ cho
+ * Board. Thu gọn vẫn biết có tin mới qua badge + icon rung + toast preview + đổi
+ * tiêu đề tab — chỉ đổi CÁCH TRÌNH BÀY, toàn bộ logic chat dùng lại ChatService.
  */
 @Component({
   selector: 'app-chat-panel',
   imports: [MessageList, ChatInput],
   templateUrl: './chat-panel.html',
   styleUrl: './chat-panel.css',
+  host: {
+    class: 'flex h-full shrink-0',
+    '[style.width.px]': 'panelWidth()',
+  },
 })
 export class ChatPanel {
   private readonly chat = inject(ChatService);
@@ -29,7 +42,15 @@ export class ChatPanel {
   readonly boardId = input.required<string>();
   readonly taskCreated = output<string>();
 
-  readonly isOpen = signal(false);
+  readonly collapsedWidth = COLLAPSED_WIDTH;
+  readonly minWidth = MIN_WIDTH;
+  readonly maxWidth = MAX_WIDTH;
+
+  readonly collapsed = signal(this.loadCollapsed());
+  readonly width = signal(this.loadWidth());
+  readonly panelWidth = computed(() => (this.collapsed() ? COLLAPSED_WIDTH : this.width()));
+  readonly resizing = signal(false);
+
   readonly unreadCount = signal(0);
   readonly pulse = signal(false);
   readonly toastMessage = signal<{ name: string; text: string } | null>(null);
@@ -79,7 +100,7 @@ export class ChatPanel {
       const newOnes = list.slice(this.lastSeenCount);
       this.lastSeenCount = list.length;
       const fromOthers = newOnes.filter((m) => m.userId !== CURRENT_CHAT_USER_ID);
-      if (!fromOthers.length || this.isOpen()) return;
+      if (!fromOthers.length || !this.collapsed()) return;
 
       this.unreadCount.update((n) => n + fromOthers.length);
       this.updateTitle();
@@ -98,9 +119,19 @@ export class ChatPanel {
     document.title = n > 0 ? `(${n}) ${this.originalTitle}` : this.originalTitle;
   }
 
-  toggleOpen(): void {
-    this.isOpen.update((v) => !v);
-    if (this.isOpen()) {
+  private loadWidth(): number {
+    const raw = Number(localStorage.getItem(WIDTH_KEY));
+    return Number.isFinite(raw) && raw > 0 ? Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, raw)) : DEFAULT_WIDTH;
+  }
+
+  private loadCollapsed(): boolean {
+    return localStorage.getItem(COLLAPSED_KEY) === '1';
+  }
+
+  toggleCollapsed(): void {
+    this.collapsed.update((v) => !v);
+    localStorage.setItem(COLLAPSED_KEY, this.collapsed() ? '1' : '0');
+    if (!this.collapsed()) {
       this.unreadCount.set(0);
       this.toastMessage.set(null);
       this.updateTitle();
@@ -109,7 +140,37 @@ export class ChatPanel {
 
   openFromToast(): void {
     this.toastMessage.set(null);
-    if (!this.isOpen()) this.toggleOpen();
+    if (this.collapsed()) this.toggleCollapsed();
+  }
+
+  /** Kéo cạnh phải panel để đổi bề rộng — chỉ đọc clientX, không dùng CDK Drag (không
+   *  cần cdkDropList/DragDrop ở đây, đây là resize UI thuần, khác hẳn CDK card/list DnD). */
+  onResizeStart(event: PointerEvent): void {
+    event.preventDefault();
+    const startX = event.clientX;
+    const startWidth = this.width();
+    this.resizing.set(true);
+
+    const onMove = (e: PointerEvent) => {
+      const next = startWidth + (e.clientX - startX);
+      this.width.set(Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, next)));
+    };
+    const onUp = () => {
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      this.resizing.set(false);
+      localStorage.setItem(WIDTH_KEY, String(this.width()));
+    };
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+  }
+
+  onResizeKeydown(event: KeyboardEvent): void {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    event.preventDefault();
+    const delta = event.key === 'ArrowRight' ? RESIZE_STEP : -RESIZE_STEP;
+    this.width.update((w) => Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, w + delta)));
+    localStorage.setItem(WIDTH_KEY, String(this.width()));
   }
 
   async onSend(content: string): Promise<void> {

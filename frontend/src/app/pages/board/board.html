@@ -1,4 +1,4 @@
-<div class="flex h-[calc(100vh-52px-44px)] flex-col bg-base-200">
+<div class="flex h-[calc(100vh-52px-44px)] flex-col" [class]="pageBgClass()">
 
   <div class="flex shrink-0 items-center justify-between border-b border-base-300 bg-base-100 px-4 py-2.5">
     <div class="flex min-w-0 items-center gap-2.5">
@@ -10,13 +10,6 @@
         <span class="truncate text-[15px] font-bold text-base-content">{{ board()?.name ?? 'Đang tải bảng...' }}</span>
         <span class="text-[11px] text-base-content/50">{{ lists().length }} danh sách · {{ totalCards() }} thẻ</span>
       </div>
-    </div>
-
-    <div class="flex items-center gap-3">
-      <button type="button" class="btn btn-outline btn-sm gap-1.5" [class.btn-error]="networkArmed()" (click)="armNetworkFailure()" title="Giả lập lỗi mạng ở lần kéo-thả tiếp theo (demo optimistic UI)">
-        <svg class="h-[15px] w-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-        {{ networkArmed() ? 'Sẽ lỗi ở lần kéo tới' : 'Giả lập lỗi mạng' }}
-      </button>
     </div>
   </div>
 
@@ -42,13 +35,27 @@
     </div>
   }
 
-  <div class="flex shrink-0 items-center justify-between border-b border-base-300 bg-base-100 px-4 py-2">
-    <div class="join">
-      <button type="button" class="btn btn-sm join-item" [class.btn-active]="viewMode() === 'status'" (click)="viewMode.set('status')">Theo trạng thái</button>
-      <button type="button" class="btn btn-sm join-item" [class.btn-active]="viewMode() === 'matrix'" (click)="viewMode.set('matrix')">Theo ưu tiên (2 chiều)</button>
+  <div class="flex shrink-0 flex-wrap items-center justify-between gap-y-2 border-b border-base-300 bg-base-100 px-4 py-2">
+    <div class="flex flex-wrap items-center gap-3">
+      <div class="join">
+        <button type="button" class="btn btn-sm join-item" [class.btn-active]="viewMode() === 'status'" (click)="viewMode.set('status')">Theo trạng thái</button>
+        <button type="button" class="btn btn-sm join-item" [class.btn-active]="viewMode() === 'matrix'" (click)="viewMode.set('matrix')">Theo ưu tiên (2 chiều)</button>
+      </div>
+
+      @if (viewMode() === 'status') {
+        <span class="text-[11px] font-semibold text-base-content/50">Layout</span>
+        <div class="join">
+          <button type="button" class="btn btn-sm join-item gap-1.5" [class.btn-active]="layoutMode() === 'column'" (click)="setLayoutMode('column')" title="Danh sách xếp ngang, thẻ xếp dọc trong mỗi danh sách">
+            Column View
+          </button>
+          <button type="button" class="btn btn-sm join-item gap-1.5" [class.btn-active]="layoutMode() === 'row'" (click)="setLayoutMode('row')" title="Danh sách xếp dọc, thẻ xếp ngang trong mỗi danh sách">
+            Row View
+          </button>
+        </div>
+      }
     </div>
 
-    <div class="flex items-center gap-3">
+    <div class="flex flex-wrap items-center justify-end gap-3">
       @if (viewMode() === 'matrix') {
         <span class="flex items-center gap-2.5 text-[11px] text-base-content/50">
           @for (p of priorities; track p.id) {
@@ -172,7 +179,11 @@
     </div>
   </div>
 
-  @if (viewMode() === 'status') {
+  <div class="flex min-h-0 flex-1">
+    <app-chat-panel [boardId]="boardId" (taskCreated)="onChatTaskCreated($event)" />
+
+    <div class="flex min-w-0 flex-1 flex-col">
+  @if (viewMode() === 'status' && layoutMode() === 'column') {
     <div #boardScroll class="board-body" (scroll)="onBoardScroll()">
       <div
         class="board-row"
@@ -196,6 +207,8 @@
               [cards]="cardsFor(list.id)"
               [labelsByCardId]="labelsByCardId()"
               [membersById]="membersById()"
+              [checklistProgressByCardId]="checklistProgressByCardId()"
+              [commentCountByCardId]="commentCountByCardId()"
               [savingCardIds]="savingCardIds()"
               [errorCardIds]="errorCardIds()"
               [sortingEnabled]="sortMode() === 'manual'"
@@ -204,6 +217,56 @@
               [collapsed]="collapsedListIds().has(list.id)"
               [selectedCardIds]="selectedCardIds()"
               [today]="today"
+              (renameList)="renameList(list, $event)"
+              (deleteList)="requestDeleteList(list)"
+              (addCard)="openCardModal(list.id)"
+              (cardClick)="onCardActivate($event.card, $event.shiftKey)"
+              (toggleCollapse)="toggleListCollapse(list.id)"
+            />
+          </div>
+        }
+
+        <app-add-list (open)="openListModal()" />
+      </div>
+    </div>
+  } @else if (viewMode() === 'status' && layoutMode() === 'row') {
+    <!-- Row View (#14): Lists xếp dọc (mỗi List = 1 hàng), Cards trong List xếp ngang.
+         Cùng dữ liệu (lists()/cardsFor()), cùng cdkDropListGroup + handlers (onListDrop/
+         BoardList.onCardDrop) như Column View — chỉ đổi hướng trình bày qua [orientation]. -->
+    <div #boardScroll class="board-body row-body" (scroll)="onBoardScroll()">
+      <div
+        class="row-list-column"
+        cdkDropList
+        cdkDropListGroup
+        cdkDropListOrientation="vertical"
+        [cdkDropListData]="lists()"
+        (cdkDropListDropped)="onListDrop($event)"
+      >
+        @for (list of lists(); track trackByListId($index, list)) {
+          <div class="row-list-wrap" [attr.data-list-id]="list.id" [class.collapsed]="collapsedListIds().has(list.id)" cdkDrag [cdkDragData]="list" cdkDragLockAxis="y">
+            <div class="row-list-drop-placeholder" *cdkDragPlaceholder></div>
+
+            <div class="row-list-grip" cdkDragHandle title="Kéo để đổi thứ tự danh sách">
+              <svg class="h-3.5 w-2.5" viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="7" r="1.3"/><circle cx="6" cy="13" r="1.3"/><circle cx="6" cy="19" r="1.3"/><circle cx="12" cy="7" r="1.3"/><circle cx="12" cy="13" r="1.3"/><circle cx="12" cy="19" r="1.3"/></svg>
+            </div>
+
+            <app-board-list
+              [list]="list"
+              [boardId]="boardId"
+              [cards]="cardsFor(list.id)"
+              [labelsByCardId]="labelsByCardId()"
+              [membersById]="membersById()"
+              [checklistProgressByCardId]="checklistProgressByCardId()"
+              [commentCountByCardId]="commentCountByCardId()"
+              [savingCardIds]="savingCardIds()"
+              [errorCardIds]="errorCardIds()"
+              [sortingEnabled]="sortMode() === 'manual'"
+              [dimmed]="dimmedCardIds()"
+              [highlighted]="highlightedCardIds()"
+              [collapsed]="collapsedListIds().has(list.id)"
+              [selectedCardIds]="selectedCardIds()"
+              [today]="today"
+              [orientation]="'row'"
               (renameList)="renameList(list, $event)"
               (deleteList)="requestDeleteList(list)"
               (addCard)="openCardModal(list.id)"
@@ -258,6 +321,8 @@
                         [isHighlighted]="highlightedCardIds().has(card.id)"
                         [isSelected]="selectedCardIds().has(card.id)"
                         [today]="today"
+                        [checklistProgress]="checklistProgressByCardId()[card.id] ?? null"
+                        [commentCount]="commentCountByCardId()[card.id] ?? 0"
                       />
                     </div>
                   }
@@ -269,6 +334,8 @@
       </div>
     </div>
   }
+    </div>
+  </div>
 
   <!-- Modal: tạo danh sách -->
   @if (showListModal()) {
@@ -419,7 +486,7 @@
 
   @if (showMinimap()) {
     <app-board-minimap
-      [layoutMode]="'column'"
+      [layoutMode]="layoutMode()"
       [items]="minimapItems()"
       [scrollPos]="minimapScrollPos()"
       [viewportSize]="minimapViewportSize()"
@@ -427,7 +494,5 @@
       (navigate)="scrollToList($event)"
     />
   }
-
-  <app-chat-panel [boardId]="boardId" (taskCreated)="onChatTaskCreated($event)" />
 
 </div>
