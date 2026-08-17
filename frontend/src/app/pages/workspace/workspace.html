@@ -1,52 +1,77 @@
 <div class="flex w-full flex-col lg:h-[calc(100vh-52px-44px)] lg:flex-row lg:overflow-hidden">
 
-  <!-- Left Sidebar -->
+  <!-- Left Sidebar (Khung làm việc bên trái) -->
   <aside
-    class="flex w-64 shrink-0 flex-col gap-2.5 border-r border-base-300 bg-base-200 p-2.5 max-lg:w-full max-lg:border-b max-lg:border-r-0 lg:overflow-y-auto">
-    <div class="rounded-box border border-base-300 bg-base-100 p-2.5 shadow-sm">
-      <div class="mb-1 flex items-center justify-between px-1">
-        <span class="text-[10.5px] font-bold uppercase tracking-wide text-base-content/50">Không gian làm việc</span>
+    class="flex w-64 shrink-0 flex-col gap-3 border-r border-base-300 bg-base-200/50 p-3 max-lg:w-full max-lg:border-b max-lg:border-r-0 lg:overflow-y-auto">
+    <div class="rounded-2xl border border-base-300 bg-base-100 p-2.5 shadow-xs">
+      <!-- Sidebar Header -->
+      <div class="mb-2 flex items-center justify-between px-1.5 pt-0.5">
+        <span class="text-[11px] font-black uppercase tracking-wider text-base-content/50">Không gian làm việc</span>
         <button
-          class="btn btn-ghost btn-xs gap-0.5 rounded-md border border-base-300 px-1.5 text-[11px] font-bold text-primary hover:bg-primary hover:text-primary-content"
+          class="btn btn-primary btn-xs gap-1 rounded-lg px-2 text-[11px] font-bold shadow-xs hover:scale-105 transition-transform"
           title="Tạo Workspace mới" (click)="openCreateWorkspaceModal()">
           <span class="text-[13px] leading-none">+</span> Mới
         </button>
       </div>
 
-      <ul class="menu menu-sm w-full gap-0.5 p-0">
+      <div class="flex flex-col gap-1">
+        <!-- ALL WORKSPACES BUTTON -->
+        <div class="flex cursor-pointer items-center gap-2.5 rounded-xl px-2.5 py-2 transition-all duration-150"
+          [class.bg-primary/10]="activeWorkspaceId() === null" [class.text-primary]="activeWorkspaceId() === null"
+          [class.border]="activeWorkspaceId() === null" [class.border-primary/30]="activeWorkspaceId() === null"
+          [class.shadow-xs]="activeWorkspaceId() === null" [class.hover:bg-base-200]="activeWorkspaceId() !== null"
+          [class.text-base-content]="activeWorkspaceId() !== null" (click)="selectWorkspace(null)"
+          title="Xem tất cả không gian làm việc">
+          <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-sm transition-transform"
+            [class.bg-primary]="activeWorkspaceId() === null"
+            [class.text-primary-content]="activeWorkspaceId() === null"
+            [class.bg-base-200]="activeWorkspaceId() !== null">
+            🗂️
+          </div>
+          <div class="flex min-w-0 flex-1 flex-col overflow-hidden">
+            <span class="truncate text-[12.5px] font-bold leading-tight">Tất cả Workspace</span>
+            <span class="truncate text-[10.5px] leading-tight" [class.text-primary/75]="activeWorkspaceId() === null"
+              [class.text-base-content/50]="activeWorkspaceId() !== null">
+              {{ workspaces().length }} workspace • {{ totalBoardsCount() }} bảng
+            </span>
+          </div>
+          @if (activeWorkspaceId() === null) {
+          <span class="h-2 w-2 rounded-full bg-primary shrink-0"></span>
+          }
+        </div>
+
+        <div class="my-1 border-t border-base-200"></div>
+
+        <!-- INDIVIDUAL WORKSPACE ITEMS -->
         @for (ws of workspaces(); track trackByWorkspaceId($index, ws)) {
-        <li>
-          <a class="flex items-center gap-2 rounded-md px-2 py-1.5" [class.menu-active]="activeWorkspaceId() === ws.id"
-            [class.text-base-content]="activeWorkspaceId() !== ws.id" (click)="selectWorkspace(ws.id)">
-            <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[13px]" [class]="ws.iconBg">{{
-              ws.icon }}</div>
-            <div class="flex min-w-0 flex-col overflow-hidden">
-              <span class="truncate text-[12.5px] font-semibold leading-tight">{{ ws.name }}</span>
-              <span class="truncate text-[10.5px] leading-tight text-base-content/50">{{ ws.membersCount }} thành
-                viên</span>
-            </div>
-          </a>
-        </li>
+        <div class="group flex cursor-pointer items-center gap-2.5 rounded-xl px-2.5 py-2 transition-all duration-150"
+          [class.bg-primary/10]="activeWorkspaceId() === ws.id" [class.text-primary]="activeWorkspaceId() === ws.id"
+          [class.border]="activeWorkspaceId() === ws.id" [class.border-primary/30]="activeWorkspaceId() === ws.id"
+          [class.shadow-xs]="activeWorkspaceId() === ws.id" [class.hover:bg-base-200]="activeWorkspaceId() !== ws.id"
+          [class.text-base-content]="activeWorkspaceId() !== ws.id" (click)="selectWorkspace(ws.id)"
+          [title]="'Lọc riêng: ' + ws.name">
+          <div
+            class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-sm shadow-xs transition-transform group-hover:scale-105"
+            [class]="ws.iconBg">
+            {{ ws.icon }}
+          </div>
+          <div class="flex min-w-0 flex-1 flex-col overflow-hidden">
+            <span class="truncate text-[12.5px] font-bold leading-tight">{{ ws.name }}</span>
+            <span class="truncate text-[10.5px] leading-tight" [class.text-primary/75]="activeWorkspaceId() === ws.id"
+              [class.text-base-content/50]="activeWorkspaceId() !== ws.id">
+              {{ ws.members.length }} thành viên • {{ ws.boards.length }} bảng
+            </span>
+          </div>
+          @if (activeWorkspaceId() === ws.id) {
+          <span class="h-2 w-2 rounded-full bg-primary shrink-0"></span>
+          }
+        </div>
         }
-        <li>
-          <a class="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-base-content"
-            (click)="openTrashModal()">
-            <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-base-300 text-[13px]">🗑️</div>
-            <div class="flex min-w-0 flex-1 flex-col overflow-hidden">
-              <span class="truncate text-[12.5px] font-semibold leading-tight">Thùng rác</span>
-              <span class="truncate text-[10.5px] leading-tight text-base-content/50">Bảng đã xóa gần đây</span>
-            </div>
-            @if (trash().length > 0) {
-            <span
-              class="badge badge-error h-[15px] min-w-[15px] shrink-0 rounded-full border-2 border-base-100 px-1 text-[9px] font-bold text-white">{{
-              trash().length }}</span>
-            }
-          </a>
-        </li>
-      </ul>
+      </div>
     </div>
 
-    <div class="tips-card">
+    <!-- TIPS CARD -->
+    <div class="tips-card shadow-xs">
       <span class="tips-badge">MẸO NHỎ</span>
       <h4 class="tips-title">Hỗ trợ đầy đủ phím tắt</h4>
       <p class="tips-desc">
@@ -62,7 +87,7 @@
 
     <!-- Đánh dấu sao — đưa lên đầu cho nổi bật, dạng lưới board tile (bỏ rail bên phải) -->
     @if (starredBoards().length > 0) {
-    <section class="mb-5">
+    <section class="mb-4">
       <div class="mb-2 flex items-center gap-2">
         <span class="flex h-6 w-6 items-center justify-center rounded-full bg-warning/15 text-[13px]">⭐</span>
         <h2 class="text-[13px] font-extrabold uppercase tracking-wide text-base-content">Bảng có đánh dấu sao</h2>
@@ -94,11 +119,23 @@
 
       <!-- MAIN: Tất cả không gian làm việc -->
       <div class="min-w-0 flex-1">
-        <div class="mb-2.5 flex items-center justify-between">
+        <div class="mb-2.5 flex items-center justify-between gap-2 flex-wrap">
           <div class="flex items-center gap-2">
             <span class="flex h-6 w-6 items-center justify-center rounded-full bg-secondary/15 text-[13px]">🥞</span>
-            <h2 class="text-[13px] font-extrabold uppercase tracking-wide text-base-content">Tất cả không gian làm việc
-              của bạn</h2>
+            <h2 class="text-[13px] font-extrabold uppercase tracking-wide text-base-content">
+              @if (activeWorkspaceId(); as activeId) {
+              Không gian làm việc đang lọc
+              } @else {
+              Tất cả không gian làm việc của bạn
+              }
+            </h2>
+            @if (activeWorkspaceId()) {
+            <button type="button"
+              class="badge badge-primary badge-outline badge-sm font-bold gap-1 cursor-pointer hover:bg-primary hover:text-white transition-all"
+              (click)="selectWorkspace(null)" title="Bấm để xem lại tất cả Workspace">
+              ✕ Hiện tất cả
+            </button>
+            }
           </div>
           <button type="button" class="btn btn-primary btn-xs rounded-box px-3 font-bold gap-1 shadow-sm"
             (click)="openCreateWorkspaceModal()">
@@ -385,26 +422,30 @@
 @if (showCreateModal()) {
 <div class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-[2px]"
   (click)="closeCreateModal()">
-  <div class="w-full max-w-[480px] rounded-box border border-base-300 bg-base-100 p-6 shadow-xl"
+  <div class="w-full max-w-[480px] rounded-2xl border-2 border-slate-300 dark:border-slate-600 bg-base-100 p-6 shadow-2xl"
     (click)="$event.stopPropagation()">
     <div class="mb-5 flex items-center justify-between">
-      <h3 class="text-lg font-extrabold text-base-content">Tạo bảng làm việc mới</h3>
+      <h3 class="text-lg font-black text-slate-900 dark:text-white">Tạo bảng làm việc mới</h3>
       <button class="btn btn-circle btn-ghost btn-sm text-xl" (click)="closeCreateModal()">&times;</button>
     </div>
 
     <form (ngSubmit)="onCreateBoardSubmit()">
-      <div class="mb-3">
-        <label class="mb-1.5 block text-xs font-bold uppercase text-base-content/80" for="board-title-input">Tên bảng dự
-          án</label>
-        <input type="text" id="board-title-input" class="input input-bordered w-full"
+      <div class="mb-4">
+        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200" for="board-title-input">
+          Tên bảng dự án
+        </label>
+        <input type="text" id="board-title-input"
+          class="input input-bordered border-2 border-slate-300 dark:border-slate-600 focus:border-primary focus:ring-2 focus:ring-primary/20 w-full rounded-xl font-bold text-slate-900 dark:text-white bg-white dark:bg-slate-800 shadow-xs text-sm"
           placeholder="Ví dụ: Quản lý Sprint 12..." required [ngModel]="newBoardTitle()"
           (ngModelChange)="newBoardTitle.set($event)" name="boardTitle" />
       </div>
 
-      <div class="mb-3">
-        <label class="mb-1.5 block text-xs font-bold uppercase text-base-content/80"
+      <div class="mb-4">
+        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200"
           for="board-workspace-select">Workspace</label>
-        <select id="board-workspace-select" class="select select-bordered w-full" [ngModel]="newBoardWorkspaceId()"
+        <select id="board-workspace-select"
+          class="select select-bordered border-2 border-slate-300 dark:border-slate-600 focus:border-primary focus:ring-2 focus:ring-primary/20 w-full rounded-xl font-bold text-slate-900 dark:text-white bg-white dark:bg-slate-800 shadow-xs text-sm"
+          [ngModel]="newBoardWorkspaceId()"
           (ngModelChange)="newBoardWorkspaceId.set($event)" name="boardWorkspace">
           @for (ws of workspaces(); track ws.id) {
           <option [value]="ws.id">{{ ws.name }}</option>
@@ -412,44 +453,46 @@
         </select>
       </div>
 
-      <div class="mb-3">
-        <label class="mb-1.5 block text-xs font-bold uppercase text-base-content/80">Quyền riêng tư</label>
-        <div class="grid grid-cols-2 gap-2">
+      <div class="mb-4">
+        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Quyền riêng tư</label>
+        <div class="grid grid-cols-2 gap-2.5">
           <label
-            class="flex cursor-pointer items-center gap-2 rounded-box border border-base-300 p-2.5 transition hover:bg-base-200">
+            class="flex cursor-pointer items-center gap-2.5 rounded-xl border-2 border-slate-300 dark:border-slate-600 p-3 transition hover:bg-base-200/80 bg-base-100 shadow-xs"
+            [class.border-primary]="newBoardPrivacy() === 'Workspace'">
             <input type="radio" name="privacy" value="Workspace" class="radio radio-primary radio-sm"
               [checked]="newBoardPrivacy() === 'Workspace'" (change)="newBoardPrivacy.set('Workspace')" />
             <div class="text-[12.5px] leading-tight">
-              <span class="font-bold">🔒 Workspace</span>
-              <p class="text-[10.5px] text-base-content/50">Chỉ thành viên xem</p>
+              <span class="font-bold text-slate-900 dark:text-white">🔒 Workspace</span>
+              <p class="text-[10.5px] text-slate-500 dark:text-slate-400 mt-0.5">Chỉ thành viên xem</p>
             </div>
           </label>
           <label
-            class="flex cursor-pointer items-center gap-2 rounded-box border border-base-300 p-2.5 transition hover:bg-base-200">
+            class="flex cursor-pointer items-center gap-2.5 rounded-xl border-2 border-slate-300 dark:border-slate-600 p-3 transition hover:bg-base-200/80 bg-base-100 shadow-xs"
+            [class.border-primary]="newBoardPrivacy() === 'Public'">
             <input type="radio" name="privacy" value="Public" class="radio radio-primary radio-sm"
               [checked]="newBoardPrivacy() === 'Public'" (change)="newBoardPrivacy.set('Public')" />
             <div class="text-[12.5px] leading-tight">
-              <span class="font-bold">🌐 Công khai</span>
-              <p class="text-[10.5px] text-base-content/50">Mọi người đều xem được</p>
+              <span class="font-bold text-slate-900 dark:text-white">🌐 Công khai</span>
+              <p class="text-[10.5px] text-slate-500 dark:text-slate-400 mt-0.5">Mọi người đều xem được</p>
             </div>
           </label>
         </div>
       </div>
 
       <div class="mb-5">
-        <label class="mb-1.5 block text-xs font-bold uppercase text-base-content/80">Màu nền bảng</label>
+        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Màu nền bảng</label>
         <div class="flex gap-2">
           @for (bg of bgClasses; track bg) {
-          <div class="h-8 w-8 cursor-pointer rounded-md transition hover:scale-110" [class]="bg"
+          <div class="h-8 w-8 cursor-pointer rounded-xl transition hover:scale-110 shadow-xs" [class]="bg"
             [class.ring-2]="selectedBgClass() === bg" [class.ring-primary]="selectedBgClass() === bg"
             [class.ring-offset-2]="selectedBgClass() === bg" (click)="selectedBgClass.set(bg)"></div>
           }
         </div>
       </div>
 
-      <div class="flex justify-end gap-2">
-        <button type="button" class="btn btn-ghost" (click)="closeCreateModal()">Hủy</button>
-        <button type="submit" class="btn btn-primary">Tạo bảng</button>
+      <div class="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-700">
+        <button type="button" class="btn btn-ghost rounded-xl font-bold" (click)="closeCreateModal()">Hủy</button>
+        <button type="submit" class="btn btn-primary rounded-xl font-black px-5 shadow-sm">Tạo bảng</button>
       </div>
     </form>
   </div>
@@ -461,73 +504,139 @@
 <div class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-[2px]"
   (click)="closeWorkspaceModal()">
   <div
-    class="w-full max-w-[560px] max-h-[90vh] overflow-y-auto rounded-box border border-base-300 bg-base-100 p-6 shadow-2xl"
+    class="w-full max-w-[560px] max-h-[90vh] overflow-y-auto rounded-2xl border-2 border-slate-300 dark:border-slate-600 bg-base-100 p-6 shadow-2xl"
     (click)="$event.stopPropagation()">
-    <div class="mb-4 flex items-center justify-between">
-      <h3 class="text-lg font-extrabold text-base-content">
+    <div class="mb-5 flex items-center justify-between">
+      <h3 class="text-lg font-black text-slate-900 dark:text-white">
         {{ workspaceModalMode() === 'create' ? 'Tạo Không gian làm việc mới' : 'Chỉnh sửa Không gian làm việc' }}
       </h3>
       <button class="btn btn-circle btn-ghost btn-sm text-xl" (click)="closeWorkspaceModal()">&times;</button>
     </div>
 
     <form (ngSubmit)="onWorkspaceModalSubmit()">
-      <!-- Icon & Name -->
-      <div class="mb-3">
-        <label class="mb-1.5 block text-xs font-bold uppercase text-base-content/80">Biểu tượng & Tên Workspace</label>
-        <div class="flex items-center gap-2">
+      <!-- Icon & Name & Color Theme -->
+      <div class="mb-4">
+        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+          Biểu tượng, Màu nền & Tên Workspace
+        </label>
+        <div class="flex items-center gap-3">
+          <!-- Live Preview of Workspace Icon with Selected Background -->
           <div
-            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-box border border-base-300 bg-base-200 text-xl">
-            {{ workspaceIconInput() || '📂' }}</div>
-          <input type="text" class="input input-bordered w-16 text-center text-lg" maxlength="4"
-            [ngModel]="workspaceIconInput()" (ngModelChange)="workspaceIconInput.set($event)" name="workspaceIcon" />
-          <input type="text" id="workspace-name-input" class="input input-bordered flex-1 font-semibold"
-            placeholder="Ví dụ: Đồ án Tốt nghiệp CNTT..." required [ngModel]="workspaceNameInput()"
-            (ngModelChange)="workspaceNameInput.set($event)" name="workspaceName" />
+            class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-2xl shadow-md transition-transform hover:scale-105"
+            [class]="workspaceIconBgInput()">
+            {{ workspaceIconInput() || '📂' }}
+          </div>
+
+          <!-- Name input -->
+          <div class="flex-1">
+            <input type="text" id="workspace-name-input"
+              class="input input-bordered border-2 border-slate-300 dark:border-slate-600 focus:border-primary focus:ring-2 focus:ring-primary/20 w-full rounded-xl font-bold text-slate-900 dark:text-white bg-white dark:bg-slate-800 shadow-xs text-sm"
+              placeholder="Ví dụ: Đồ án Tốt nghiệp CNTT, Dự án SaaS..." required [ngModel]="workspaceNameInput()"
+              (ngModelChange)="workspaceNameInput.set($event)" name="workspaceName" />
+          </div>
         </div>
-        <div class="mt-1.5 flex flex-wrap gap-1">
-          @for (icon of quickIcons; track icon) {
-          <button type="button" class="btn btn-square btn-ghost btn-xs text-base"
-            (click)="workspaceIconInput.set(icon)">{{ icon }}</button>
-          }
+
+        <!-- Color Palette for Workspace Icon Background -->
+        <div class="mt-3">
+          <span class="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 block mb-1.5">Màu nền biểu tượng:</span>
+          <div class="flex flex-wrap gap-2">
+            @for (bg of bgClasses; track bg) {
+            <div
+              class="h-7 w-7 cursor-pointer rounded-xl transition-all hover:scale-110 shadow-xs"
+              [class]="bg"
+              [class.ring-2]="workspaceIconBgInput() === bg"
+              [class.ring-primary]="workspaceIconBgInput() === bg"
+              [class.ring-offset-2]="workspaceIconBgInput() === bg"
+              [class.scale-110]="workspaceIconBgInput() === bg"
+              (click)="workspaceIconBgInput.set(bg)"></div>
+            }
+          </div>
+        </div>
+
+        <!-- Categorized Icon Selector Grid -->
+        <div class="mt-3 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 p-3">
+          <!-- Category Tabs -->
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-2 border-b border-slate-200 dark:border-slate-700 mb-2.5">
+            @for (cat of iconCategories; track $index) {
+            <button
+              type="button"
+              class="btn btn-xs rounded-lg font-bold text-[11px] transition-all"
+              [class.btn-primary]="selectedIconCategory() === $index"
+              [class.btn-ghost]="selectedIconCategory() !== $index"
+              (click)="selectedIconCategory.set($index)">
+              {{ cat.name }}
+            </button>
+            }
+          </div>
+
+          <!-- Icons Grid -->
+          <div class="grid grid-cols-7 gap-1.5">
+            @for (icon of iconCategories[selectedIconCategory()].icons; track icon) {
+            <button
+              type="button"
+              class="flex h-9 w-9 items-center justify-center rounded-xl text-lg transition-all hover:scale-120 hover:bg-slate-200 dark:hover:bg-slate-700 shadow-xs"
+              [class.ring-2]="workspaceIconInput() === icon"
+              [class.ring-primary]="workspaceIconInput() === icon"
+              [class.bg-white]="workspaceIconInput() === icon"
+              [class.dark:bg-slate-700]="workspaceIconInput() === icon"
+              [class.scale-110]="workspaceIconInput() === icon"
+              (click)="workspaceIconInput.set(icon)">
+              {{ icon }}
+            </button>
+            }
+          </div>
+
+          <!-- Custom Icon Input -->
+          <div class="mt-2.5 pt-2 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs">
+            <span class="text-slate-500 font-medium text-[11px]">Hoặc nhập biểu tượng bất kỳ:</span>
+            <input type="text"
+              class="input input-bordered input-xs border-2 border-slate-300 dark:border-slate-600 w-16 text-center text-sm font-bold rounded-lg bg-white dark:bg-slate-800"
+              maxlength="4"
+              [ngModel]="workspaceIconInput()"
+              (ngModelChange)="workspaceIconInput.set($event)"
+              name="customWorkspaceIcon" />
+          </div>
         </div>
       </div>
 
-      <div class="mb-3">
-        <label class="mb-1.5 block text-xs font-bold uppercase text-base-content/80" for="workspace-desc-input">Mô
-          tả</label>
-        <textarea id="workspace-desc-input" class="textarea textarea-bordered w-full text-xs" rows="2"
+      <div class="mb-4">
+        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200" for="workspace-desc-input">
+          Mô tả
+        </label>
+        <textarea id="workspace-desc-input"
+          class="textarea textarea-bordered border-2 border-slate-300 dark:border-slate-600 focus:border-primary focus:ring-2 focus:ring-primary/20 w-full rounded-xl font-medium text-slate-900 dark:text-white bg-white dark:bg-slate-800 shadow-xs text-sm leading-relaxed"
+          rows="3"
           placeholder="Mô tả mục tiêu của không gian làm việc này..." [ngModel]="workspaceDescInput()"
           (ngModelChange)="workspaceDescInput.set($event)" name="workspaceDesc"></textarea>
       </div>
 
       <!-- MEMBER MANAGEMENT VIA UUID / SEARCH -->
-      <div class="my-4 rounded-box border border-base-300 bg-base-200/50 p-3.5">
-        <div class="mb-2 flex items-center justify-between">
+      <div class="my-4 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 p-4 shadow-xs">
+        <div class="mb-3 flex items-center justify-between">
           <div class="flex items-center gap-1.5">
             <span class="text-sm font-bold text-primary">👥</span>
-            <span class="text-xs font-extrabold uppercase tracking-wide text-base-content">Thành viên Workspace (Nhập
-              UUID)</span>
+            <span class="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Thành viên Workspace</span>
           </div>
-          <span class="badge badge-primary badge-sm font-bold">{{ workspaceMembers().length }} người</span>
+          <span class="badge badge-primary badge-sm font-black">{{ workspaceMembers().length }} người</span>
         </div>
 
         <!-- UUID Search / Input bar -->
-        <div class="relative mb-2">
-          <div class="flex gap-1.5">
+        <div class="relative mb-3">
+          <div class="flex gap-2">
             <div class="relative flex-1">
               <svg
-                class="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-base-content/40"
+                class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="11" cy="11" r="8"></circle>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               </svg>
               <input type="text"
-                class="input input-sm w-full rounded-lg border border-base-300 bg-base-100 pl-8 text-xs focus:border-primary"
+                class="input input-sm w-full rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 pl-9 text-xs font-medium text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 shadow-xs"
                 placeholder="Nhập UUID, Email hoặc Tên người dùng..." [ngModel]="uuidSearchInput()"
                 (ngModelChange)="uuidSearchInput.set($event); searchDropdownOpen.set(true)"
                 (keydown.enter)="$event.preventDefault(); addMemberByInput()" name="uuidSearch" />
             </div>
-            <button type="button" class="btn btn-primary btn-sm rounded-lg px-3 text-xs font-bold"
+            <button type="button" class="btn btn-primary btn-sm rounded-xl px-4 text-xs font-black shadow-xs"
               (click)="addMemberByInput()">
               + Thêm
             </button>
@@ -536,12 +645,12 @@
           <!-- Search dropdown suggestions -->
           @if (searchResults().length > 0 && searchDropdownOpen()) {
           <div
-            class="absolute left-0 right-0 top-full z-50 mt-1 max-h-48 overflow-y-auto rounded-box border border-base-300 bg-base-100 p-1.5 shadow-xl">
-            <div class="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-base-content/40">Kết quả tìm kiếm
+            class="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-48 overflow-y-auto rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-2 shadow-2xl">
+            <div class="px-2 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400">Kết quả tìm kiếm
               phù hợp:</div>
             @for (user of searchResults(); track user.id) {
             <div
-              class="flex cursor-pointer items-center justify-between gap-2 rounded-md p-2 transition hover:bg-base-200"
+              class="flex cursor-pointer items-center justify-between gap-2 rounded-lg p-2 transition hover:bg-slate-100 dark:hover:bg-slate-700"
               (click)="addMember(user)">
               <div class="flex items-center gap-2 min-w-0">
                 <div
@@ -560,23 +669,6 @@
             }
           </div>
           }
-        </div>
-
-        <!-- Quick Mock User Chips -->
-        <div class="mb-3">
-          <div class="mb-1 text-[10.5px] font-semibold text-base-content/60">💡 Gợi ý user mẫu có UUID (bấm để thêm
-            nhanh):</div>
-          <div class="flex flex-wrap gap-1.5">
-            @for (mockUser of mockSearchableUsers; track mockUser.id) {
-            <button type="button"
-              class="btn btn-xs rounded-full border border-base-300 bg-base-100 hover:border-primary hover:bg-primary/10 text-[11px] gap-1 font-medium transition-all"
-              (click)="addMember(mockUser)" [title]="'UUID: ' + mockUser.id + '\nEmail: ' + mockUser.email">
-              <span class="h-2 w-2 rounded-full" [style.background-color]="avatarBgFor(mockUser.id)"></span>
-              <span>+ {{ mockUser.displayName }}</span>
-              <span class="font-mono text-[9px] opacity-60">({{ mockUser.id.slice(0, 8) }}...)</span>
-            </button>
-            }
-          </div>
         </div>
 
         <!-- Selected Members List in Workspace -->
@@ -637,44 +729,6 @@
         </div>
       </div>
     </form>
-  </div>
-</div>
-}
-
-<!-- MODAL: Thùng rác -->
-@if (showTrashModal()) {
-<div class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-[2px]"
-  (click)="closeTrashModal()">
-  <div class="w-full max-w-[480px] rounded-box border border-base-300 bg-base-100 p-6 shadow-xl"
-    (click)="$event.stopPropagation()">
-    <div class="mb-4 flex items-center justify-between">
-      <h3 class="text-lg font-extrabold text-base-content">Thùng rác</h3>
-      <button class="btn btn-circle btn-ghost btn-sm text-xl" (click)="closeTrashModal()">&times;</button>
-    </div>
-
-    @if (trash().length === 0) {
-    <p class="py-8 text-center text-[13px] text-base-content/50">Thùng rác trống — chưa có bảng nào bị xóa.</p>
-    } @else {
-    <div class="flex max-h-[360px] flex-col gap-2 overflow-y-auto">
-      @for (entry of trash(); track entry.board.id) {
-      <div class="flex items-center gap-3 rounded-box border border-base-300 p-2.5">
-        <div class="h-8 w-8 shrink-0 rounded-md" [class]="entry.board.bgClass"></div>
-        <div class="min-w-0 flex-1">
-          <p class="truncate text-[13px] font-semibold text-base-content">{{ entry.board.title }}</p>
-          <p class="truncate text-[11px] text-base-content/50">Từ: {{ entry.workspaceName }}</p>
-        </div>
-        <div class="flex shrink-0 gap-1.5">
-          <button type="button" class="btn btn-ghost btn-xs" (click)="restoreFromTrash(entry.board.id)">Khôi
-            phục</button>
-          <button type="button" class="btn btn-error btn-outline btn-xs"
-            (click)="permanentlyDeleteFromTrash(entry.board.id)">
-            {{ trashPermanentConfirmId() === entry.board.id ? 'Chắc chắn?' : 'Xóa vĩnh viễn' }}
-          </button>
-        </div>
-      </div>
-      }
-    </div>
-    }
   </div>
 </div>
 }

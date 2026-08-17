@@ -5,173 +5,28 @@ import { WorkspaceUiService } from '../../services/workspace-ui.service';
 import { BoardService } from '../../services/board.service';
 import { AuthService } from '../../services/auth.service';
 import { BOARD_BACKGROUNDS, BoardBackground, BoardVisibility, User, MOCK_SEARCHABLE_USERS } from '../../models';
-
-type Privacy = 'Workspace' | 'Private' | 'Public';
-type ToastType = 'success' | 'error' | 'info';
+import {
+  WorkspaceItem,
+  WorkspaceMember,
+  BoardItem,
+  TrashedBoard,
+  Template,
+  Toast,
+  ToastType,
+  Privacy,
+  initialMockWorkspaces,
+  loadStoredWorkspaces,
+  persistWorkspaces,
+  WORKSPACE_TEMPLATES,
+  initialsOf,
+  avatarBgFor,
+} from '../../mocks';
 
 /** Privacy (nhãn hiển thị tiếng Việt ở modal) → BoardVisibility thật của model Board. */
 function toBoardVisibility(privacy: Privacy): BoardVisibility {
   return privacy === 'Public' ? 'public' : 'restricted';
 }
 
-export interface WorkspaceMember {
-  id: string; // uuid
-  displayName: string;
-  email: string;
-  role: 'owner' | 'member';
-  avatarUrl?: string;
-}
-
-interface BoardItem {
-  id: string;
-  title: string;
-  tag: string;
-  privacy: Privacy;
-  badge: string;
-  starred: boolean;
-  bgClass: BoardBackground;
-}
-
-interface WorkspaceItem {
-  id: string;
-  name: string;
-  icon: string;
-  iconBg: BoardBackground;
-  membersCount: number;
-  members: WorkspaceMember[];
-  description: string;
-  boards: BoardItem[];
-}
-
-interface Template {
-  title: string;
-  desc: string;
-  badge: string;
-  badgeClass: string;
-  columns: number;
-}
-
-interface Toast {
-  id: number;
-  message: string;
-  type: ToastType;
-  action?: { label: string; handler: () => void };
-}
-
-interface TrashedBoard {
-  board: BoardItem;
-  workspaceId: string;
-  workspaceName: string;
-  originalIndex: number;
-}
-
-export function initialsOf(name: string): string {
-  const parts = name.trim().split(/\s+/);
-  const first = parts[0]?.[0] ?? '?';
-  const last = parts.length > 1 ? parts[parts.length - 1][0] : '';
-  return (first + last).toUpperCase();
-}
-
-const AVATAR_COLORS = ['#0284c7', '#7c3aed', '#059669', '#ea580c', '#dc2626', '#0d9488', '#4f46e5'];
-export function avatarBgFor(id: string): string {
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
-  return AVATAR_COLORS[hash % AVATAR_COLORS.length];
-}
-
-const STORAGE_KEY_WORKSPACES = 'trello_workspaces_data';
-
-function initialMockWorkspaces(): WorkspaceItem[] {
-  return [
-    {
-      id: 'ws-1',
-      name: 'Đồ án Tốt nghiệp CNTT',
-      icon: '🎓',
-      iconBg: 'bg-board-blue',
-      membersCount: 3,
-      members: [
-        {
-          id: '8f4c2e10-9b3a-4e2a-871d-5b3a1a2e3f40',
-          displayName: 'Nguyễn Văn Nam',
-          email: 'nam.nguyen@trello.dev',
-          role: 'owner',
-        },
-        {
-          id: '3c7d1e45-8a2f-4c9b-b01e-7f6d5c4b3a21',
-          displayName: 'Trần Thị Linh',
-          email: 'linh.tran@trello.dev',
-          role: 'member',
-        },
-        {
-          id: 'e2b5c710-4d8a-493e-91c2-6a8b0e5d4f12',
-          displayName: 'Lê Hoàng Khoa',
-          email: 'khoa.le@trello.dev',
-          role: 'member',
-        },
-      ],
-      description: 'Workspace quản lý toàn bộ các công việc nghiên cứu và phát triển phần mềm đồ án tốt nghiệp khóa K22.',
-      boards: [
-        { id: 'b-1', title: 'Hệ thống Quản lý Kanban', tag: 'ĐỒ ÁN TỐT NGHIỆP CNTT', privacy: 'Workspace', badge: 'KANBAN', starred: true, bgClass: 'bg-board-purple' },
-        { id: 'b-2', title: 'Ứng dụng tìm trọ thông minh', tag: 'ĐỒ ÁN TỐT NGHIỆP CNTT', privacy: 'Private', badge: 'KANBAN', starred: false, bgClass: 'bg-board-teal' },
-        { id: 'b-3', title: 'Kế hoạch Tuần cá nhân', tag: 'ĐỒ ÁN TỐT NGHIỆP CNTT', privacy: 'Workspace', badge: 'KANBAN', starred: false, bgClass: 'bg-board-blue' },
-      ],
-    },
-    {
-      id: 'ws-2',
-      name: 'Dự án Khởi nghiệp SaaS',
-      icon: '🚀',
-      iconBg: 'bg-board-purple',
-      membersCount: 2,
-      members: [
-        {
-          id: '8f4c2e10-9b3a-4e2a-871d-5b3a1a2e3f40',
-          displayName: 'Nguyễn Văn Nam',
-          email: 'nam.nguyen@trello.dev',
-          role: 'owner',
-        },
-        {
-          id: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
-          displayName: 'Phạm Thảo My',
-          email: 'my.pham@trello.dev',
-          role: 'member',
-        },
-      ],
-      description: 'Không gian làm việc cho dự án SaaS khởi nghiệp sinh viên.',
-      boards: [
-        { id: 'b-4', title: 'Sản phẩm MVP v1.0', tag: 'DỰ ÁN KHỞI NGHIỆP SAAS', privacy: 'Public', badge: 'KANBAN', starred: true, bgClass: 'bg-board-orange' },
-      ],
-    },
-  ];
-}
-
-function loadStoredWorkspaces(): WorkspaceItem[] {
-  if (typeof localStorage !== 'undefined') {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY_WORKSPACES);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
-        }
-      }
-    } catch {}
-  }
-  return initialMockWorkspaces();
-}
-
-function persistWorkspaces(list: WorkspaceItem[]): void {
-  if (typeof localStorage !== 'undefined') {
-    try {
-      localStorage.setItem(STORAGE_KEY_WORKSPACES, JSON.stringify(list));
-    } catch {}
-  }
-}
-
-const TEMPLATES: Template[] = [
-  { title: 'Quản lý Dự án Agile', desc: 'Quy trình chuẩn Backlog, Doing, Review, Done cho phần mềm.', badge: '1', badgeClass: 'badge-blue', columns: 4 },
-  { title: 'Kế hoạch Tuần cá nhân', desc: 'Quản lý các đầu việc từ Thứ 2 đến Chủ nhật.', badge: '2', badgeClass: 'badge-green', columns: 5 },
-  { title: 'Phát hành Marketing Campaign', desc: 'Lên ý tưởng, thiết kế asset và quảng bá sản phẩm.', badge: '3', badgeClass: 'badge-orange', columns: 4 },
-];
 
 /** Bảng grid + workspace dashboard (ported từ trello-workspace prototype). */
 @Component({
@@ -193,11 +48,16 @@ export class Workspace {
   readonly copiedMyUuid = signal(false);
 
   readonly workspaces = signal<WorkspaceItem[]>(loadStoredWorkspaces());
-  readonly activeWorkspaceId = signal<string | null>(loadStoredWorkspaces()[0]?.id ?? 'ws-1');
-  readonly templates = TEMPLATES;
+  /** activeWorkspaceId: null nghĩa là hiển thị tất cả, hoặc string id để lọc riêng workspace đó */
+  readonly activeWorkspaceId = signal<string | null>(null);
+  readonly templates = WORKSPACE_TEMPLATES;
   readonly bgClasses = BOARD_BACKGROUNDS;
 
   readonly searchQuery = this.workspaceUi.searchQuery;
+
+  readonly totalBoardsCount = computed(() => {
+    return this.workspaces().reduce((sum, ws) => sum + ws.boards.length, 0);
+  });
 
   copyMyUuid(): void {
     const uid = this.currentUser()?.id;
@@ -214,7 +74,7 @@ export class Workspace {
     const samples = initialMockWorkspaces();
     this.workspaces.set(samples);
     persistWorkspaces(samples);
-    this.activeWorkspaceId.set(samples[0]?.id ?? null);
+    this.activeWorkspaceId.set(null);
     this.addToast('🎉 Đã tải Không gian làm việc mẫu thành công!', 'success');
   }
 
@@ -248,8 +108,15 @@ export class Workspace {
 
   readonly filteredWorkspaces = computed(() => {
     const q = this.searchQuery().trim().toLowerCase();
-    if (!q) return this.workspaces();
-    return this.workspaces().map((ws) => ({
+    const filterId = this.activeWorkspaceId();
+    let list = this.workspaces();
+
+    if (filterId) {
+      list = list.filter((ws) => ws.id === filterId);
+    }
+
+    if (!q) return list;
+    return list.map((ws) => ({
       ...ws,
       boards: ws.boards.filter((b) => b.title.toLowerCase().includes(q) || b.tag.toLowerCase().includes(q)),
     }));
@@ -261,11 +128,22 @@ export class Workspace {
     return this.filteredWorkspaces().every((ws) => ws.boards.length === 0);
   });
 
-  selectWorkspace(id: string): void {
+  selectWorkspace(id: string | null): void {
+    if (this.activeWorkspaceId() === id && id !== null) {
+      // Bấm lần 2 vào workspace đang chọn thì bỏ lọc (hiện lại tất cả)
+      this.activeWorkspaceId.set(null);
+      this.addToast('Đang hiển thị tất cả Không gian làm việc', 'info');
+      return;
+    }
     this.activeWorkspaceId.set(id);
-    const ws = this.workspaces().find((w) => w.id === id);
-    if (ws) this.addToast(`Đã chọn Workspace: ${ws.name}`);
+    if (id === null) {
+      this.addToast('Đang hiển thị tất cả Không gian làm việc', 'info');
+    } else {
+      const ws = this.workspaces().find((w) => w.id === id);
+      if (ws) this.addToast(`Đang lọc Không gian làm việc: "${ws.name}"`, 'info');
+    }
   }
+
 
   toggleStar(boardId: string): void {
     let title = '';
@@ -359,37 +237,13 @@ export class Workspace {
     this.addToast(`Đã khôi phục bảng "${entry.board.title}"`);
   }
 
-  // ---- Modal Thùng rác ----
-  readonly showTrashModal = signal(false);
-  readonly trashPermanentConfirmId = signal<string | null>(null);
-
-  openTrashModal(): void {
-    this.trashPermanentConfirmId.set(null);
-    this.showTrashModal.set(true);
-  }
-
-  closeTrashModal(): void {
-    this.showTrashModal.set(false);
-    this.trashPermanentConfirmId.set(null);
-  }
-
-  permanentlyDeleteFromTrash(boardId: string): void {
-    if (this.trashPermanentConfirmId() !== boardId) {
-      this.trashPermanentConfirmId.set(boardId);
-      return;
-    }
-    const entry = this.trash().find((t) => t.board.id === boardId);
-    this.trash.update((list) => list.filter((t) => t.board.id !== boardId));
-    this.trashPermanentConfirmId.set(null);
-    if (entry) this.addToast(`Đã xóa vĩnh viễn bảng "${entry.board.title}"`);
-  }
-
   // ---- Create board modal ----
   readonly showCreateModal = signal(false);
   readonly newBoardTitle = signal('');
   readonly newBoardWorkspaceId = signal('ws-1');
   readonly newBoardPrivacy = signal<Privacy>('Workspace');
   readonly selectedBgClass = signal<BoardBackground>('bg-board-blue');
+
 
   openCreateModal(defaultWorkspaceId: string | null = null): void {
     if (this.workspaces().length === 0) {
@@ -453,9 +307,29 @@ export class Workspace {
   readonly editingWorkspaceId = signal<string | null>(null);
   readonly workspaceNameInput = signal('');
   readonly workspaceIconInput = signal('📂');
+  readonly workspaceIconBgInput = signal<BoardBackground>('bg-board-blue');
   readonly workspaceDescInput = signal('');
   readonly deleteConfirmArmed = signal(false);
-  readonly quickIcons = ['📂', '🎯', '🚀', '🎓', '💡', '📊', '🛠️', '🎨'];
+
+  readonly iconCategories = [
+    {
+      name: '💼 Dự án',
+      icons: ['📂', '📁', '🚀', '🎯', '⚡', '🔥', '📊', '📈', '🏢', '🏗️', '📋', '💼', '📌', '🏷️'],
+    },
+    {
+      name: '💻 Công nghệ',
+      icons: ['💻', '⚙️', '🛠️', '🤖', '🔒', '🌐', '🎮', '📱', '🕹️', '🧪', '🧬', '🖥️', '⌨️', '🛰️'],
+    },
+    {
+      name: '🎓 Học tập',
+      icons: ['🎓', '📚', '✏️', '📖', '💡', '🧠', '🔬', '📝', '🏫', '📐', '🏅', '🏆', '🎨', '🖌️'],
+    },
+    {
+      name: '✨ Sáng tạo',
+      icons: ['✨', '💎', '🌟', '☕', '🍀', '🌈', '🍕', '🎉', '✈️', '🎵', '❤️', '🏖️', '🌍', '⛺'],
+    },
+  ];
+  readonly selectedIconCategory = signal<number>(0);
 
   // Member management inside Workspace modal
   readonly workspaceMembers = signal<WorkspaceMember[]>([]);
@@ -482,10 +356,12 @@ export class Workspace {
     this.editingWorkspaceId.set(null);
     this.workspaceNameInput.set('');
     this.workspaceIconInput.set('📂');
+    this.workspaceIconBgInput.set('bg-board-blue');
     this.workspaceDescInput.set('');
     this.deleteConfirmArmed.set(false);
     this.uuidSearchInput.set('');
     this.searchDropdownOpen.set(false);
+    this.selectedIconCategory.set(0);
 
     // Creator is added as Owner
     const cur = this.auth.currentUser();
@@ -511,13 +387,16 @@ export class Workspace {
     this.editingWorkspaceId.set(ws.id);
     this.workspaceNameInput.set(ws.name);
     this.workspaceIconInput.set(ws.icon);
+    this.workspaceIconBgInput.set(ws.iconBg || 'bg-board-blue');
     this.workspaceDescInput.set(ws.description);
     this.deleteConfirmArmed.set(false);
     this.uuidSearchInput.set('');
     this.searchDropdownOpen.set(false);
+    this.selectedIconCategory.set(0);
     this.workspaceMembers.set([...(ws.members || [])]);
     this.showWorkspaceModal.set(true);
   }
+
 
   closeWorkspaceModal(): void {
     this.showWorkspaceModal.set(false);
@@ -611,7 +490,7 @@ export class Workspace {
         id: 'ws-' + Date.now(),
         name,
         icon,
-        iconBg: BOARD_BACKGROUNDS[this.workspaces().length % BOARD_BACKGROUNDS.length],
+        iconBg: this.workspaceIconBgInput(),
         membersCount: members.length,
         members,
         description: description || 'Không gian làm việc mới vừa được khởi tạo.',
@@ -629,7 +508,7 @@ export class Workspace {
       this.workspaces.update((list) => {
         const updated = list.map((ws) =>
           ws.id === id
-            ? { ...ws, name, icon, description, members, membersCount: members.length }
+            ? { ...ws, name, icon, iconBg: this.workspaceIconBgInput(), description, members, membersCount: members.length }
             : ws,
         );
         persistWorkspaces(updated);
@@ -685,7 +564,6 @@ export class Workspace {
     if (event.key === 'Escape') {
       this.closeCreateModal();
       this.closeWorkspaceModal();
-      this.closeTrashModal();
       this.confirmDeleteKey.set(null);
       return;
     }
