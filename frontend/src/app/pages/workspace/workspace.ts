@@ -54,7 +54,7 @@ export class Workspace {
   readonly currentUser = this.auth.currentUser;
   readonly copiedMyUuid = signal(false);
 
-  readonly workspaces = signal<WorkspaceItem[]>(loadStoredWorkspaces());
+  readonly workspaces = signal<WorkspaceItem[]>(loadStoredWorkspaces(this.currentUser()?.id));
   readonly activeWorkspaceId = signal<string | null>(null);
   readonly templates = WORKSPACE_TEMPLATES;
   readonly searchQuery = this.workspaceUi.searchQuery;
@@ -148,6 +148,12 @@ export class Workspace {
     this.confirmDeleteKey.set(null);
   }
 
+  /** Lưu workspace vào đúng key của tài khoản đang đăng nhập — tránh account khác
+   *  đăng nhập vào lại thấy dữ liệu của account này (localStorage tách theo userId). */
+  private persist(list: WorkspaceItem[]): void {
+    persistWorkspaces(list, this.currentUser()?.id);
+  }
+
   copyMyUuid(): void {
     const uid = this.currentUser()?.id;
     if (!uid) return;
@@ -166,7 +172,7 @@ export class Workspace {
   loadSampleWorkspaces(): void {
     const samples = initialMockWorkspaces();
     this.workspaces.set(samples);
-    persistWorkspaces(samples);
+    this.persist(samples);
     this.activeWorkspaceId.set(null);
     this.addToast('Đã tải lại toàn bộ Workspace mẫu thành công!', 'success');
   }
@@ -181,7 +187,7 @@ export class Workspace {
         ...ws,
         boards: ws.boards.map((b) => (b.id === boardId ? { ...b, starred: !b.starred } : b)),
       }));
-      persistWorkspaces(updated);
+      this.persist(updated);
       return updated;
     });
   }
@@ -192,7 +198,7 @@ export class Workspace {
       const updated = list.map((ws) =>
         ws.id === workspaceId ? { ...ws, boards: ws.boards.filter((b) => b.id !== board.id) } : ws,
       );
-      persistWorkspaces(updated);
+      this.persist(updated);
       return updated;
     });
     this.addToast(`Đã xóa bảng "${board.title}"`, 'info');
@@ -250,7 +256,7 @@ export class Workspace {
 
     this.workspaces.update((list) => {
       const updated = list.map((ws) => (ws.id === workspaceId ? { ...ws, boards: [...ws.boards, newBoard] } : ws));
-      persistWorkspaces(updated);
+      this.persist(updated);
       return updated;
     });
 
@@ -294,7 +300,7 @@ export class Workspace {
       };
       this.workspaces.update((list) => {
         const updated = [...list, newWs];
-        persistWorkspaces(updated);
+        this.persist(updated);
         return updated;
       });
       this.activeWorkspaceId.set(newWs.id);
@@ -309,7 +315,7 @@ export class Workspace {
             ? { ...ws, name, icon, iconBg, description, members, membersCount: members.length }
             : ws,
         );
-        persistWorkspaces(updated);
+        this.persist(updated);
         return updated;
       });
       this.addToast(`Đã cập nhật Workspace "${name}"`, 'success');
@@ -321,7 +327,7 @@ export class Workspace {
     const ws = this.workspaces().find((w) => w.id === wsId);
     this.workspaces.update((list) => {
       const updated = list.filter((w) => w.id !== wsId);
-      persistWorkspaces(updated);
+      this.persist(updated);
       return updated;
     });
     if (this.activeWorkspaceId() === wsId) {

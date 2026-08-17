@@ -42,11 +42,12 @@ export const CURRENT_USER_ID = 'u-nam';
  *  Export để các mock khác (vd: components/board/workspace-stats-modal/board-stats.mock.ts)
  *  dùng chung đúng 1 roster, tránh lệch id/tên giữa các màn. */
 export const MOCK_MEMBERS: User[] = [
-  { id: 'u-nam', email: 'nam@trello.dev', displayName: 'Nam' },
-  { id: 'u-linh', email: 'linh@trello.dev', displayName: 'Linh' },
-  { id: 'u-khoa', email: 'khoa@trello.dev', displayName: 'Khoa' },
-  { id: 'u-my', email: 'my@trello.dev', displayName: 'My' },
-  { id: 'u-bao', email: 'bao@trello.dev', displayName: 'Bảo' },
+  // -- Dữ liệu mẫu đã comment để test từ tài khoản trắng hoàn toàn — bỏ comment để khôi phục --
+  // { id: 'u-nam', email: 'nam@trello.dev', displayName: 'Nam' },
+  // { id: 'u-linh', email: 'linh@trello.dev', displayName: 'Linh' },
+  // { id: 'u-khoa', email: 'khoa@trello.dev', displayName: 'Khoa' },
+  // { id: 'u-my', email: 'my@trello.dev', displayName: 'My' },
+  // { id: 'u-bao', email: 'bao@trello.dev', displayName: 'Bảo' },
 ];
 
 /** CRUD board + visibility (#3). Hiện dùng dữ liệu giả (chưa nối backend thật). */

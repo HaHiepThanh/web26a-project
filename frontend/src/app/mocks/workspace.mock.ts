@@ -71,73 +71,82 @@ export function avatarBgFor(id: string): string {
 
 export const STORAGE_KEY_WORKSPACES = 'trello_workspaces_data';
 
-export function initialMockWorkspaces(): WorkspaceItem[] {
-  return [
-    {
-      id: 'ws-1',
-      name: 'Đồ án Tốt nghiệp CNTT',
-      icon: '🎓',
-      iconBg: 'bg-board-blue',
-      membersCount: 3,
-      members: [
-        {
-          id: '8f4c2e10-9b3a-4e2a-871d-5b3a1a2e3f40',
-          displayName: 'Nguyễn Văn Nam',
-          email: 'nam.nguyen@trello.dev',
-          role: 'owner',
-        },
-        {
-          id: '3c7d1e45-8a2f-4c9b-b01e-7f6d5c4b3a21',
-          displayName: 'Trần Thị Linh',
-          email: 'linh.tran@trello.dev',
-          role: 'member',
-        },
-        {
-          id: 'e2b5c710-4d8a-493e-91c2-6a8b0e5d4f12',
-          displayName: 'Lê Hoàng Khoa',
-          email: 'khoa.le@trello.dev',
-          role: 'member',
-        },
-      ],
-      description: 'Workspace quản lý toàn bộ các công việc nghiên cứu và phát triển phần mềm đồ án tốt nghiệp khóa K22.',
-      boards: [
-        { id: 'b-1', title: 'Hệ thống Quản lý Kanban', tag: 'ĐỒ ÁN TỐT NGHIỆP CNTT', privacy: 'Workspace', badge: 'KANBAN', starred: true, bgClass: 'bg-board-purple' },
-        { id: 'b-2', title: 'Ứng dụng tìm trọ thông minh', tag: 'ĐỒ ÁN TỐT NGHIỆP CNTT', privacy: 'Private', badge: 'KANBAN', starred: false, bgClass: 'bg-board-teal' },
-        { id: 'b-3', title: 'Kế hoạch Tuần cá nhân', tag: 'ĐỒ ÁN TỐT NGHIỆP CNTT', privacy: 'Workspace', badge: 'KANBAN', starred: false, bgClass: 'bg-board-blue' },
-      ],
-    },
-    {
-      id: 'ws-2',
-      name: 'Dự án Khởi nghiệp SaaS',
-      icon: '🚀',
-      iconBg: 'bg-board-purple',
-      membersCount: 2,
-      members: [
-        {
-          id: '8f4c2e10-9b3a-4e2a-871d-5b3a1a2e3f40',
-          displayName: 'Nguyễn Văn Nam',
-          email: 'nam.nguyen@trello.dev',
-          role: 'owner',
-        },
-        {
-          id: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
-          displayName: 'Phạm Thảo My',
-          email: 'my.pham@trello.dev',
-          role: 'member',
-        },
-      ],
-      description: 'Không gian làm việc cho dự án SaaS khởi nghiệp sinh viên.',
-      boards: [
-        { id: 'b-4', title: 'Sản phẩm MVP v1.0', tag: 'DỰ ÁN KHỞI NGHIỆP SAAS', privacy: 'Public', badge: 'KANBAN', starred: true, bgClass: 'bg-board-orange' },
-      ],
-    },
-  ];
+/** Mỗi tài khoản có 1 key riêng — tránh account A đăng nhập vào lại thấy Workspace
+ *  account B vừa tạo (trước đây dùng chung 1 key cho cả trình duyệt). Chưa đăng
+ *  nhập (guest) dùng chung 1 key riêng, tách khỏi mọi tài khoản thật. */
+function storageKeyFor(userId?: string | null): string {
+  return userId ? `${STORAGE_KEY_WORKSPACES}_${userId}` : `${STORAGE_KEY_WORKSPACES}_guest`;
 }
 
-export function loadStoredWorkspaces(): WorkspaceItem[] {
+export function initialMockWorkspaces(): WorkspaceItem[] {
+  // -- Dữ liệu mẫu đã comment để test từ tài khoản trắng hoàn toàn — bỏ comment để khôi phục --
+  // return [
+  //   {
+  //     id: 'ws-1',
+  //     name: 'Đồ án Tốt nghiệp CNTT',
+  //     icon: '🎓',
+  //     iconBg: 'bg-board-blue',
+  //     membersCount: 3,
+  //     members: [
+  //       {
+  //         id: '8f4c2e10-9b3a-4e2a-871d-5b3a1a2e3f40',
+  //         displayName: 'Nguyễn Văn Nam',
+  //         email: 'nam.nguyen@trello.dev',
+  //         role: 'owner',
+  //       },
+  //       {
+  //         id: '3c7d1e45-8a2f-4c9b-b01e-7f6d5c4b3a21',
+  //         displayName: 'Trần Thị Linh',
+  //         email: 'linh.tran@trello.dev',
+  //         role: 'member',
+  //       },
+  //       {
+  //         id: 'e2b5c710-4d8a-493e-91c2-6a8b0e5d4f12',
+  //         displayName: 'Lê Hoàng Khoa',
+  //         email: 'khoa.le@trello.dev',
+  //         role: 'member',
+  //       },
+  //     ],
+  //     description: 'Workspace quản lý toàn bộ các công việc nghiên cứu và phát triển phần mềm đồ án tốt nghiệp khóa K22.',
+  //     boards: [
+  //       { id: 'b-1', title: 'Hệ thống Quản lý Kanban', tag: 'ĐỒ ÁN TỐT NGHIỆP CNTT', privacy: 'Workspace', badge: 'KANBAN', starred: true, bgClass: 'bg-board-purple' },
+  //       { id: 'b-2', title: 'Ứng dụng tìm trọ thông minh', tag: 'ĐỒ ÁN TỐT NGHIỆP CNTT', privacy: 'Private', badge: 'KANBAN', starred: false, bgClass: 'bg-board-teal' },
+  //       { id: 'b-3', title: 'Kế hoạch Tuần cá nhân', tag: 'ĐỒ ÁN TỐT NGHIỆP CNTT', privacy: 'Workspace', badge: 'KANBAN', starred: false, bgClass: 'bg-board-blue' },
+  //     ],
+  //   },
+  //   {
+  //     id: 'ws-2',
+  //     name: 'Dự án Khởi nghiệp SaaS',
+  //     icon: '🚀',
+  //     iconBg: 'bg-board-purple',
+  //     membersCount: 2,
+  //     members: [
+  //       {
+  //         id: '8f4c2e10-9b3a-4e2a-871d-5b3a1a2e3f40',
+  //         displayName: 'Nguyễn Văn Nam',
+  //         email: 'nam.nguyen@trello.dev',
+  //         role: 'owner',
+  //       },
+  //       {
+  //         id: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+  //         displayName: 'Phạm Thảo My',
+  //         email: 'my.pham@trello.dev',
+  //         role: 'member',
+  //       },
+  //     ],
+  //     description: 'Không gian làm việc cho dự án SaaS khởi nghiệp sinh viên.',
+  //     boards: [
+  //       { id: 'b-4', title: 'Sản phẩm MVP v1.0', tag: 'DỰ ÁN KHỞI NGHIỆP SAAS', privacy: 'Public', badge: 'KANBAN', starred: true, bgClass: 'bg-board-orange' },
+  //     ],
+  //   },
+  // ];
+  return [];
+}
+
+export function loadStoredWorkspaces(userId?: string | null): WorkspaceItem[] {
   if (typeof localStorage !== 'undefined') {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY_WORKSPACES);
+      const saved = localStorage.getItem(storageKeyFor(userId));
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -149,10 +158,10 @@ export function loadStoredWorkspaces(): WorkspaceItem[] {
   return initialMockWorkspaces();
 }
 
-export function persistWorkspaces(list: WorkspaceItem[]): void {
+export function persistWorkspaces(list: WorkspaceItem[], userId?: string | null): void {
   if (typeof localStorage !== 'undefined') {
     try {
-      localStorage.setItem(STORAGE_KEY_WORKSPACES, JSON.stringify(list));
+      localStorage.setItem(storageKeyFor(userId), JSON.stringify(list));
     } catch {}
   }
 }

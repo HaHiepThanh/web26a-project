@@ -13,22 +13,23 @@ export const CURRENT_CHAT_USER_ID = 'u-nam';
 /** Vài cặp tin nhắn mẫu khác nhau theo board (#chat-hub) — để Dashboard Chat không
  *  hiện y hệt 1 dòng preview cho mọi board; board không khớp id nào rơi về cặp mặc định. */
 const MESSAGE_SETS: Record<string, { userId: string; content: string; minutesAgo: number }[]> = {
-  'b-1': [
-    { userId: 'u-linh', content: 'Mọi người check lại API xác thực trước chiều nay giúp mình nhé', minutesAgo: 40 },
-    { userId: 'u-khoa', content: '@Nam làm giúp mình phần fix bug thanh toán trước thứ 6 nhé, gấp lắm', minutesAgo: 35 },
-  ],
-  'b-2': [
-    { userId: 'u-my', content: 'Mình vừa đẩy xong bản UI tìm trọ mới, mọi người xem giúp', minutesAgo: 12 },
-    { userId: 'u-nam', content: 'Ok để mình review trong hôm nay', minutesAgo: 10 },
-  ],
-  'b-3': [{ userId: 'u-bao', content: 'Tuần này còn 2 task deadline thứ 6, ai rảnh nhận giúp mình với', minutesAgo: 1440 }],
-  'b-4': [
-    { userId: 'u-khoa', content: 'Demo MVP cho nhà đầu tư dời sang 10h sáng mai nhé cả nhà', minutesAgo: 5 },
-    { userId: 'u-linh', content: 'Rõ, mình chuẩn bị lại slide', minutesAgo: 3 },
-  ],
+  // -- Dữ liệu mẫu đã comment để test từ tài khoản trắng hoàn toàn — bỏ comment để khôi phục --
+  // 'b-1': [
+  //   { userId: 'u-linh', content: 'Mọi người check lại API xác thực trước chiều nay giúp mình nhé', minutesAgo: 40 },
+  //   { userId: 'u-khoa', content: '@Nam làm giúp mình phần fix bug thanh toán trước thứ 6 nhé, gấp lắm', minutesAgo: 35 },
+  // ],
+  // 'b-2': [
+  //   { userId: 'u-my', content: 'Mình vừa đẩy xong bản UI tìm trọ mới, mọi người xem giúp', minutesAgo: 12 },
+  //   { userId: 'u-nam', content: 'Ok để mình review trong hôm nay', minutesAgo: 10 },
+  // ],
+  // 'b-3': [{ userId: 'u-bao', content: 'Tuần này còn 2 task deadline thứ 6, ai rảnh nhận giúp mình với', minutesAgo: 1440 }],
+  // 'b-4': [
+  //   { userId: 'u-khoa', content: 'Demo MVP cho nhà đầu tư dời sang 10h sáng mai nhé cả nhà', minutesAgo: 5 },
+  //   { userId: 'u-linh', content: 'Rõ, mình chuẩn bị lại slide', minutesAgo: 3 },
+  // ],
 };
 
-const DEFAULT_MESSAGE_SET = MESSAGE_SETS['b-1'];
+const DEFAULT_MESSAGE_SET = MESSAGE_SETS['b-1'] ?? [];
 
 function mockMessages(boardId: string): Message[] {
   const now = Date.now();

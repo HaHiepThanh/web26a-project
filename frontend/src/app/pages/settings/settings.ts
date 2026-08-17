@@ -146,7 +146,7 @@ export class Settings {
     });
 
     // Load initial workspaces
-    this.workspaces.set(loadStoredWorkspaces());
+    this.workspaces.set(loadStoredWorkspaces(this.auth.currentUser()?.id));
     if (this.workspaces().length > 0) {
       this.selectedWorkspaceId.set(this.workspaces()[0].id);
     }
@@ -272,6 +272,11 @@ export class Settings {
     });
   });
 
+  /** Lưu workspace vào đúng key của tài khoản đang đăng nhập (localStorage tách theo userId). */
+  private persistWorkspaceList(list: WorkspaceItem[]): void {
+    persistWorkspaces(list, this.auth.currentUser()?.id);
+  }
+
   selectWorkspace(id: string): void {
     this.selectedWorkspaceId.set(id);
   }
@@ -317,7 +322,7 @@ export class Settings {
     });
 
     this.workspaces.set(updatedWorkspaces);
-    persistWorkspaces(updatedWorkspaces);
+    this.persistWorkspaceList(updatedWorkspaces);
     this.closeAddMember();
     this.flash(`Đã thêm ${newMember.displayName} vào Workspace.`);
   }
@@ -335,7 +340,7 @@ export class Settings {
     });
 
     this.workspaces.set(updatedWorkspaces);
-    persistWorkspaces(updatedWorkspaces);
+    this.persistWorkspaceList(updatedWorkspaces);
     this.flash('Đã cập nhật vai trò thành viên.');
   }
 
@@ -357,7 +362,7 @@ export class Settings {
     });
 
     this.workspaces.set(updatedWorkspaces);
-    persistWorkspaces(updatedWorkspaces);
+    this.persistWorkspaceList(updatedWorkspaces);
     this.flash(`Đã xóa ${member.displayName} khỏi Workspace.`);
   }
 }

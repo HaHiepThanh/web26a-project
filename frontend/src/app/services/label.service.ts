@@ -11,11 +11,12 @@ function mockId(prefix: string): string {
 export const LABEL_COLOR_PALETTE = ['#2563eb', '#059669', '#7c3aed', '#0d9488', '#db2777', '#4f46e5', '#0891b2', '#65a30d'];
 
 function mockLabels(boardId: string): Label[] {
+  // -- Dữ liệu mẫu đã comment để test từ tài khoản trắng hoàn toàn — bỏ comment để khôi phục --
   const seed: [string, string][] = [
-    ['Bug', '#2563eb'],
-    ['Khách VIP', '#7c3aed'],
-    ['Cần review', '#0d9488'],
-    ['Feature mới', '#059669'],
+    // ['Bug', '#2563eb'],
+    // ['Khách VIP', '#7c3aed'],
+    // ['Cần review', '#0d9488'],
+    // ['Feature mới', '#059669'],
   ];
   return seed.map(([name, color]) => ({ id: mockId('label'), tenantId: 'tenant-demo', boardId, name, color }));
 }

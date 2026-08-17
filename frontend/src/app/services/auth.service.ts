@@ -43,7 +43,7 @@ export class AuthService {
     }
   }
 
-  private getInitialUser(): User {
+  private getInitialUser(): User | null {
     if (typeof localStorage !== 'undefined') {
       try {
         const saved = localStorage.getItem(STORAGE_KEY_USER);
@@ -52,8 +52,9 @@ export class AuthService {
         }
       } catch {}
     }
-    // Mặc định khởi tạo user demo với UUID chuẩn
-    return MOCK_SEARCHABLE_USERS[0];
+    // Test trắng hoàn toàn: không tự đăng nhập user demo — MOCK_SEARCHABLE_USERS đang
+    // comment nên rỗng, chưa đăng nhập thì thật sự là null (phải qua /login hoặc /register).
+    return MOCK_SEARCHABLE_USERS[0] ?? null;
   }
 
   /** Thiết lập user hiện tại & lưu vào localStorage */
