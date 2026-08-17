@@ -9,35 +9,11 @@ interface Toast {
   message: string;
   type: ToastType;
 }
-interface DemoUser {
-  name: string;
-  email: string;
-  initials: string;
-}
-
-function toFormattedName(raw: string): string {
-  const username = raw.includes('@') ? raw.split('@')[0] : raw;
-  return (
-    username
-      .split(/[._-]/)
-      .filter(Boolean)
-      .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
-      .join(' ') || 'Khách Demo'
-  );
-}
-
-function initialsOf(name: string): string {
-  const parts = name.trim().split(/\s+/);
-  const first = parts[0]?.[0] ?? 'K';
-  const last = parts.length > 1 ? parts[parts.length - 1][0] : '';
-  return (first + last).toUpperCase();
-}
 
 /**
  * Trang đăng nhập (ported từ prototype login/ — vanilla HTML/CSS/TS).
  * Google = xác thực thật qua AuthService (Firebase). Mật khẩu là phương thức demo
- * (chưa có backend tương ứng) — giữ nguyên hiệu ứng gốc nhưng không tạo phiên đăng
- * nhập thật, không điều hướng đi.
+ * (chưa có backend tương ứng) — vào thẳng Workspace, không hiển thị bước trung gian.
  */
 @Component({
   selector: 'app-login',
@@ -54,7 +30,6 @@ export class Login {
   password = '';
   remember = true;
   readonly passwordVisible = signal(false);
-  readonly submitting = signal(false);
 
   togglePasswordVisible(): void {
     this.passwordVisible.update((v) => !v);
@@ -69,16 +44,8 @@ export class Login {
       this.addToast('Vui lòng nhập mật khẩu!', 'error');
       return;
     }
-
-    this.submitting.set(true);
-    setTimeout(() => {
-      const name = toFormattedName(this.username);
-      const email = this.username.includes('@') ? this.username : `${this.username}@trello.com`;
-      this.submitting.set(false);
-      this.showDemoSuccess({ name, email, initials: initialsOf(name) });
-      this.addToast(`Chào mừng quay trở lại, ${name}!`, 'success');
-      setTimeout(() => this.router.navigateByUrl('/workspace'), 600);
-    }, 900);
+    // Demo: vào thẳng Workspace, không delay/không hiển thị màn chào trung gian.
+    void this.router.navigateByUrl('/workspace');
   }
 
   // ---- Forgot password ----
@@ -88,22 +55,9 @@ export class Login {
     }
   }
 
-  // ---- Demo success view (password) ----
-  readonly demoUser = signal<DemoUser | null>(null);
-
-  private showDemoSuccess(user: DemoUser): void {
-    this.demoUser.set(user);
-  }
-
-  resetToAuthView(): void {
-    this.demoUser.set(null);
-    this.addToast('Đã đăng xuất khỏi bản demo.', 'info');
-  }
-
   // ---- Guest bypass (dev/demo — Firebase chưa cấu hình nên chưa đăng nhập thật được) ----
   continueAsGuest(): void {
-    this.addToast('Đang vào chế độ khách...', 'info');
-    this.router.navigateByUrl('/workspace');
+    void this.router.navigateByUrl('/workspace');
   }
 
   // ---- Google (real Firebase auth) ----
@@ -113,9 +67,7 @@ export class Login {
     this.googleLoading.set(true);
     try {
       await this.auth.loginWithGoogle();
-      const user = this.auth.currentUser();
-      this.addToast(`Đã đăng nhập bằng Google${user?.displayName ? ' — chào ' + user.displayName : ''}!`, 'success');
-      setTimeout(() => this.router.navigateByUrl('/workspace'), 500);
+      void this.router.navigateByUrl('/workspace');
     } catch {
       this.addToast('Đăng nhập Google thất bại. Vui lòng thử lại.', 'error');
     } finally {

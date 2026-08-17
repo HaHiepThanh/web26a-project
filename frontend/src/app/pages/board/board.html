@@ -37,11 +37,6 @@
 
   <div class="flex shrink-0 flex-wrap items-center justify-between gap-y-2 border-b border-base-300 bg-base-100 px-4 py-2">
     <div class="flex flex-wrap items-center gap-3">
-      <div class="join">
-        <button type="button" class="btn btn-sm join-item" [class.btn-active]="viewMode() === 'status'" (click)="viewMode.set('status')">Theo trạng thái</button>
-        <button type="button" class="btn btn-sm join-item" [class.btn-active]="viewMode() === 'matrix'" (click)="viewMode.set('matrix')">Theo ưu tiên (2 chiều)</button>
-      </div>
-
       @if (viewMode() === 'status') {
         <span class="text-[11px] font-semibold text-base-content/50">Layout</span>
         <div class="join">
@@ -60,20 +55,6 @@
     </div>
 
     <div class="flex flex-wrap items-center justify-end gap-3">
-      @if (viewMode() === 'matrix') {
-        <span class="flex items-center gap-2.5 text-[11px] text-base-content/50">
-          @for (p of priorities; track p.id) {
-            <span class="legend-item flex items-center gap-1 font-semibold" [class]="'p-' + p.id"><span class="legend-dot inline-block h-[7px] w-[7px] rounded-full"></span>{{ p.label }}</span>
-          }
-        </span>
-      }
-
-      <select class="select select-bordered select-sm" [ngModel]="sortMode()" (ngModelChange)="sortMode.set($event)" title="Sắp xếp thẻ trong từng danh sách">
-        @for (opt of sortOptions; track opt.id) {
-          <option [ngValue]="opt.id">{{ opt.label }}</option>
-        }
-      </select>
-
       <div class="relative">
         <button type="button" class="btn btn-outline btn-sm gap-1.5" [class.btn-active]="isFilteringActive()" (click)="toggleFilterPanel()">
           <svg class="h-[15px] w-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>

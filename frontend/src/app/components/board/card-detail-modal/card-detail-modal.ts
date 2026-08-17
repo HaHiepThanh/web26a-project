@@ -8,6 +8,7 @@ import { BoardService } from '../../../services/board.service';
 import { ActivityService } from '../../../services/activity.service';
 import { ChecklistService } from '../../../services/checklist.service';
 import { CommentService } from '../../../services/comment.service';
+import { AttachmentService } from '../../../services/attachment.service';
 import { LabelPicker } from '../label-picker/label-picker';
 import { Checklist } from '../checklist/checklist';
 import { CommentList } from '../comment-list/comment-list';
@@ -43,6 +44,7 @@ export class CardDetailModal {
   private readonly activityService = inject(ActivityService);
   private readonly checklistService = inject(ChecklistService);
   private readonly commentService = inject(CommentService);
+  private readonly attachmentService = inject(AttachmentService);
 
   readonly card = input.required<Card>();
   readonly boardId = input.required<string>();
@@ -148,11 +150,57 @@ export class CardDetailModal {
     this.log('đã cập nhật nhãn');
   }
 
+  // ---- Đính kèm tệp/hình ----
+  readonly attachments = computed(() => this.attachmentService.attachmentsFor(this.card().id));
+  readonly cover = computed(() => this.attachmentService.coverFor(this.card().id));
+  /** Toggle mở khối mô tả sang chế độ chỉnh sửa — Trello ẩn textarea tới khi bấm "Chỉnh sửa". */
+  readonly editingDesc = signal(false);
+
+  toggleEditDesc(): void {
+    this.editingDesc.update((v) => !v);
+  }
+
+  async onFilesSelected(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const files = input.files ? Array.from(input.files) : [];
+    if (!files.length) return;
+    const added = await this.attachmentService.addFiles(this.card().id, files);
+    input.value = ''; // cho phép chọn lại cùng tệp
+    for (const a of added) this.log(`đã đính kèm "${a.name}"`);
+  }
+
+  removeAttachment(id: string, name: string): void {
+    this.attachmentService.remove(this.card().id, id);
+    this.log(`đã gỡ đính kèm "${name}"`);
+  }
+
+  toggleCover(id: string): void {
+    this.attachmentService.toggleCover(this.card().id, id);
+  }
+
+  openAttachment(dataUrl: string): void {
+    window.open(dataUrl, '_blank');
+  }
+
+  /** Nhãn ngắn theo loại tệp cho ô placeholder (PDF/RTF/DOC...). */
+  fileBadge(att: { name: string; mimeType: string }): string {
+    const ext = att.name.split('.').pop()?.toUpperCase();
+    if (ext && ext.length <= 4) return ext;
+    return att.mimeType.split('/').pop()?.slice(0, 4).toUpperCase() ?? 'TỆP';
+  }
+
+  formatSize(bytes: number): string {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
   requestDelete(): void {
     if (!window.confirm(`Xoá thẻ "${this.card().title}"? Không thể hoàn tác.`)) return;
     void this.cardService.deleteCard(this.card().id, this.card().listId);
     this.checklistService.clearCard(this.card().id);
     this.commentService.clearCard(this.card().id);
+    this.attachmentService.clearCard(this.card().id);
     this.deleted.emit();
   }
 }

@@ -1,111 +1,224 @@
-<div class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/45 p-5" (click)="close.emit()">
-  <div class="max-h-[88vh] w-[420px] max-w-full overflow-y-auto rounded-box bg-base-100 shadow-xl" (click)="$event.stopPropagation()">
-    <div class="flex items-start gap-2 px-4 pb-1 pt-4">
-      <input class="min-w-0 flex-1 rounded-md bg-transparent px-1.5 py-1 text-base font-bold text-base-content outline-none hover:bg-base-200 focus:bg-base-200" [value]="card().title" spellcheck="false" (change)="onTitleChange($event)" />
+<div class="fixed inset-0 z-[1000] flex items-start justify-center overflow-y-auto bg-black/50 p-4 md:p-8" (click)="close.emit()">
+  <div class="my-auto flex w-full max-w-[880px] flex-col overflow-hidden rounded-2xl bg-base-100 shadow-2xl" (click)="$event.stopPropagation()">
 
-      <span class="mt-1 flex shrink-0 items-center">
-        @for (v of viewers(); track v.name) {
-          <span class="relative -ml-2 flex h-6 w-6 items-center justify-center rounded-full border-2 border-base-100 text-[9px] font-bold text-white first:ml-0" [style.background]="v.color" [title]="v.name + ' đang xem'">
-            {{ v.name.slice(0, 2).toUpperCase() }}
-            <span class="absolute -bottom-px -right-px h-[7px] w-[7px] rounded-full border-2 border-base-100 bg-[#22c55e]"></span>
-          </span>
-        }
-      </span>
+    <!-- ===== Ảnh bìa ===== -->
+    @if (cover(); as cov) {
+      <div class="relative h-40 w-full bg-base-200">
+        <img [src]="cov.dataUrl" [alt]="cov.name" class="h-full w-full object-cover" />
+        <button type="button" class="btn btn-sm absolute bottom-3 right-3 gap-1.5 bg-base-100/90 text-base-content shadow hover:bg-base-100" (click)="toggleCover(cov.id)">
+          <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          Xoá ảnh bìa
+        </button>
+      </div>
+    }
+
+    <!-- ===== Header: tiêu đề + presence + đóng ===== -->
+    <div class="flex items-start gap-2 border-b border-base-200 px-5 pb-3 pt-4">
+      <svg class="mt-2 h-5 w-5 shrink-0 text-base-content/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
+      <input class="min-w-0 flex-1 rounded-md bg-transparent px-1.5 py-1 text-lg font-bold text-base-content outline-none hover:bg-base-200 focus:bg-base-200" [value]="card().title" spellcheck="false" (change)="onTitleChange($event)" />
+
+      @if (viewers().length) {
+        <span class="mt-1.5 flex shrink-0 items-center">
+          @for (v of viewers(); track v.name) {
+            <span class="relative -ml-2 flex h-7 w-7 items-center justify-center rounded-full border-2 border-base-100 text-[10px] font-bold text-white first:ml-0" [style.background]="v.color" [title]="v.name + ' đang xem'">
+              {{ v.name.slice(0, 2).toUpperCase() }}
+              <span class="absolute -bottom-px -right-px h-2 w-2 rounded-full border-2 border-base-100 bg-success"></span>
+            </span>
+          }
+        </span>
+      }
 
       <button type="button" class="btn btn-circle btn-ghost btn-sm shrink-0" (click)="close.emit()" aria-label="Đóng">
-        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </button>
     </div>
 
-    <div class="px-4 pb-4 pt-2">
-      @if (viewers().length > 0) {
-        <div class="mb-2.5 flex items-center gap-2 rounded-md border border-warning bg-warning/10 px-2.5 py-2 text-[11.5px] text-base-content">
-          🟡
-          @if (viewers().length === 1) {
-            <span><strong>{{ viewers()[0].name }}</strong> cũng đang xem thẻ này — cẩn thận ghi đè nhé.</span>
-          } @else {
-            <span><strong>{{ viewers().length }} người khác</strong> cũng đang xem thẻ này — cẩn thận ghi đè nhé.</span>
-          }
-        </div>
-      }
+    <!-- ===== Thân: 2 cột ===== -->
+    <div class="grid max-h-[calc(92vh-8rem)] gap-0 overflow-y-auto md:grid-cols-[1fr_340px]">
 
-      <div class="mb-4 flex gap-1.5">
-        <button type="button" class="btn btn-outline btn-xs flex-1" (click)="addSimulatedViewer()">+ Giả lập có người mở thẻ này</button>
-        <button type="button" class="btn btn-outline btn-xs flex-1" (click)="removeSimulatedViewer()">− Giả lập có người đóng thẻ</button>
-      </div>
+      <!-- ---------- CỘT TRÁI: nội dung công việc ---------- -->
+      <div class="flex flex-col gap-5 p-5">
 
-      <div class="mb-4">
-        <label class="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-base-content/50">Mức độ ưu tiên</label>
-        <div class="flex gap-1.5">
-          @for (p of priorities; track p.id) {
-            <button type="button" [class]="priorityChoiceClass(p.id)" (click)="onPriorityChange(p.id)">
-              {{ p.label }}
-            </button>
-          }
-        </div>
-      </div>
-
-      <div class="mb-4">
-        <label class="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-base-content/50">Nhãn</label>
-        <app-label-picker [boardId]="boardId()" [selectedIds]="selectedLabelIds()" (selectionChange)="onLabelsChange($event)" />
-      </div>
-
-      <div class="flex gap-3">
-        <div class="mb-4 min-w-0 flex-1">
-          <label class="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-base-content/50" for="detail-assignee-select">Người phụ trách</label>
-          <select id="detail-assignee-select" class="select select-bordered select-sm w-full" [ngModel]="card().assigneeId ?? null" (ngModelChange)="onAssigneeChange($event)">
-            <option [ngValue]="null">Chưa gán</option>
-            @for (m of members(); track m.id) {
-              <option [ngValue]="m.id">{{ m.displayName ?? m.email }}</option>
-            }
-          </select>
+        <!-- Hàng nút hành động nhanh -->
+        <div class="flex flex-wrap gap-2">
+          <label class="btn btn-sm gap-1.5">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a5 5 0 01-7.07-7.07l9.19-9.19a3.5 3.5 0 014.95 4.95L9.88 18.56a1.5 1.5 0 01-2.12-2.12l8.49-8.49"/></svg>
+            Đính kèm
+            <input type="file" multiple class="hidden" (change)="onFilesSelected($event)" />
+          </label>
         </div>
 
-        <div class="mb-4 min-w-0 flex-1">
-          <label class="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-base-content/50" for="detail-due-input">Ngày hết hạn</label>
-          <input type="date" id="detail-due-input" class="input input-bordered input-sm w-full" [value]="card().dueDate ?? ''" (change)="onDueChange($event)" />
+        <!-- Meta: người phụ trách + hạn + ưu tiên -->
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div class="min-w-0">
+            <label class="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-base-content/50" for="detail-assignee-select">
+              <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.4"/><path d="M4.5 20c1.6-3.6 4.6-5.4 7.5-5.4s5.9 1.8 7.5 5.4"/></svg>
+              Phụ trách
+            </label>
+            <select id="detail-assignee-select" class="select select-bordered select-sm w-full" [ngModel]="card().assigneeId ?? null" (ngModelChange)="onAssigneeChange($event)">
+              <option [ngValue]="null">Chưa gán</option>
+              @for (m of members(); track m.id) {
+                <option [ngValue]="m.id">{{ m.displayName ?? m.email }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="min-w-0">
+            <label class="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-base-content/50" for="detail-due-input">
+              <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+              Ngày hết hạn
+            </label>
+            <input type="date" id="detail-due-input" class="input input-bordered input-sm w-full" [value]="card().dueDate ?? ''" (change)="onDueChange($event)" />
+          </div>
+
+          <div class="min-w-0">
+            <label class="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-base-content/50">
+              <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 21V4a1 1 0 011-1h11.4a1 1 0 01.8 1.6L15 9l3.2 4.4a1 1 0 01-.8 1.6H6"/></svg>
+              Ưu tiên
+            </label>
+            <div class="flex gap-1">
+              @for (p of priorities; track p.id) {
+                <button type="button" [class]="priorityChoiceClass(p.id)" (click)="onPriorityChange(p.id)">{{ p.label }}</button>
+              }
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div class="mb-4">
-        <label class="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-base-content/50" for="detail-desc">Mô tả</label>
-        <textarea id="detail-desc" class="textarea textarea-bordered w-full text-[12.5px]" rows="4" placeholder="Thêm mô tả chi tiết hơn..." [value]="card().description ?? ''" (change)="onDescriptionChange($event)"></textarea>
-      </div>
+        <!-- Nhãn -->
+        <div>
+          <label class="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-base-content/50">
+            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><circle cx="7" cy="7" r="1.2" fill="currentColor"/></svg>
+            Nhãn
+          </label>
+          <app-label-picker [boardId]="boardId()" [selectedIds]="selectedLabelIds()" (selectionChange)="onLabelsChange($event)" />
+        </div>
 
-      <div class="mb-4 border-t border-base-300 pt-3">
-        <app-checklist [cardId]="card().id" [boardId]="boardId()" />
-      </div>
-
-      <div class="mb-4 border-t border-base-300 pt-3">
-        <app-comment-list [cardId]="card().id" [boardId]="boardId()" />
-      </div>
-
-      <div class="mb-4 border-t border-base-300 pt-3">
-        <button type="button" class="flex w-full items-center justify-between" (click)="toggleHistory()">
-          <span class="text-[11px] font-bold uppercase tracking-wide text-base-content/80">Lịch sử thay đổi ({{ activityLogs().length }})</span>
-          <svg class="h-3.5 w-3.5 text-base-content/50 transition-transform" [class.rotate-90]="historyOpen()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
-        </button>
-
-        @if (historyOpen()) {
-          <div class="mt-2.5 flex max-h-[200px] flex-col gap-2 overflow-y-auto">
-            @if (activityLogs().length === 0) {
-              <div class="text-[11.5px] text-base-content/50">Chưa có thay đổi nào được ghi lại.</div>
-            }
-            @for (h of activityLogs(); track h.id) {
-              <div class="text-xs">
-                <div class="leading-normal text-base-content">{{ h.actionText }}</div>
-                <div class="mt-px text-[10px] text-base-content/50">{{ h.createdAt | date: 'HH:mm dd/MM/yyyy' }}</div>
-              </div>
+        <!-- Mô tả -->
+        <div>
+          <div class="mb-1.5 flex items-center justify-between">
+            <label class="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-base-content/50">
+              <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+              Mô tả
+            </label>
+            @if (!editingDesc()) {
+              <button type="button" class="btn btn-ghost btn-xs" (click)="toggleEditDesc()">Chỉnh sửa</button>
             }
           </div>
-        }
+          @if (editingDesc()) {
+            <textarea id="detail-desc" class="textarea textarea-bordered w-full text-[13px]" rows="4" placeholder="Thêm mô tả chi tiết hơn..." [value]="card().description ?? ''" (change)="onDescriptionChange($event)" (blur)="toggleEditDesc()"></textarea>
+          } @else if (card().description) {
+            <div class="cursor-text whitespace-pre-wrap break-words rounded-lg bg-base-200/60 px-3 py-2.5 text-[13px] text-base-content" (click)="toggleEditDesc()">{{ card().description }}</div>
+          } @else {
+            <button type="button" class="w-full rounded-lg bg-base-200/60 px-3 py-2.5 text-left text-[13px] text-base-content/50 hover:bg-base-200" (click)="toggleEditDesc()">Thêm mô tả chi tiết hơn...</button>
+          }
+        </div>
+
+        <!-- Việc cần làm (checklist) -->
+        <div class="border-t border-base-200 pt-4">
+          <app-checklist [cardId]="card().id" [boardId]="boardId()" />
+        </div>
+
+        <!-- Các tập tin đính kèm -->
+        <div class="border-t border-base-200 pt-4">
+          <div class="mb-2 flex items-center justify-between">
+            <label class="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-base-content/50">
+              <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a5 5 0 01-7.07-7.07l9.19-9.19a3.5 3.5 0 014.95 4.95L9.88 18.56a1.5 1.5 0 01-2.12-2.12l8.49-8.49"/></svg>
+              Các tập tin đính kèm
+            </label>
+            <label class="btn btn-ghost btn-xs">
+              Thêm
+              <input type="file" multiple class="hidden" (change)="onFilesSelected($event)" />
+            </label>
+          </div>
+
+          @if (attachments().length === 0) {
+            <p class="text-[12px] text-base-content/40">Chưa có tập tin nào — bấm "Đính kèm" để thêm ảnh hoặc tài liệu.</p>
+          } @else {
+            <div class="flex flex-col gap-2">
+              @for (att of attachments(); track att.id) {
+                <div class="group flex items-center gap-3 rounded-lg border border-base-200 p-2 hover:bg-base-200/50">
+                  <button type="button" class="h-12 w-16 shrink-0 overflow-hidden rounded-md" (click)="openAttachment(att.dataUrl)" [title]="'Mở ' + att.name">
+                    @if (att.isImage) {
+                      <img [src]="att.dataUrl" [alt]="att.name" class="h-full w-full object-cover" />
+                    } @else {
+                      <span class="flex h-full w-full items-center justify-center bg-base-300 text-[11px] font-bold text-base-content/60">{{ fileBadge(att) }}</span>
+                    }
+                  </button>
+                  <div class="min-w-0 flex-1">
+                    <div class="truncate text-[13px] font-semibold text-base-content" [title]="att.name">{{ att.name }}</div>
+                    <div class="flex items-center gap-1.5 text-[11px] text-base-content/50">
+                      <span>{{ formatSize(att.size) }}</span>
+                      @if (att.isCover) {
+                        <span class="badge badge-primary badge-xs gap-0.5">Ảnh bìa</span>
+                      }
+                    </div>
+                  </div>
+                  <div class="flex shrink-0 items-center gap-0.5">
+                    @if (att.isImage) {
+                      <button type="button" class="btn btn-ghost btn-xs btn-square" [class.text-primary]="att.isCover" (click)="toggleCover(att.id)" [title]="att.isCover ? 'Bỏ làm ảnh bìa' : 'Đặt làm ảnh bìa'">
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                      </button>
+                    }
+                    <button type="button" class="btn btn-ghost btn-xs btn-square" (click)="openAttachment(att.dataUrl)" title="Mở trong tab mới">
+                      <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+                    </button>
+                    <button type="button" class="btn btn-ghost btn-xs btn-square text-base-content/50 hover:text-error" (click)="removeAttachment(att.id, att.name)" title="Gỡ đính kèm">
+                      <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Presence demo + Xoá thẻ -->
+        <div class="mt-1 flex flex-wrap items-center gap-2 border-t border-dashed border-base-200 pt-3">
+          <button type="button" class="btn btn-ghost btn-xs" (click)="addSimulatedViewer()">🎲 Giả lập người xem</button>
+          @if (viewers().length) {
+            <button type="button" class="btn btn-ghost btn-xs" (click)="removeSimulatedViewer()">− Bớt</button>
+          }
+          <button type="button" class="btn btn-ghost btn-sm ml-auto gap-1.5 text-error hover:bg-error/10" (click)="requestDelete()">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>
+            Xoá thẻ
+          </button>
+        </div>
       </div>
 
-      <div class="border-t border-dashed border-base-300 pt-1.5">
-        <button type="button" class="btn btn-ghost btn-sm gap-1.5 text-error hover:bg-error/10" (click)="requestDelete()">
-          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>
-          Xoá thẻ
-        </button>
+      <!-- ---------- CỘT PHẢI: nhận xét & hoạt động ---------- -->
+      <div class="flex flex-col gap-4 border-t border-base-200 bg-base-200/40 p-5 md:border-l md:border-t-0">
+        <div class="flex items-center gap-1.5">
+          <svg class="h-4 w-4 text-base-content/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          <h3 class="text-[13px] font-bold text-base-content">Nhận xét và hoạt động</h3>
+        </div>
+
+        <!-- Bình luận -->
+        <app-comment-list [cardId]="card().id" [boardId]="boardId()" />
+
+        <!-- Lịch sử thay đổi -->
+        <div class="border-t border-base-300 pt-3">
+          <button type="button" class="flex w-full items-center justify-between" (click)="toggleHistory()">
+            <span class="text-[11px] font-bold uppercase tracking-wide text-base-content/60">Lịch sử thay đổi ({{ activityLogs().length }})</span>
+            <svg class="h-3.5 w-3.5 text-base-content/50 transition-transform" [class.rotate-90]="historyOpen()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+
+          @if (historyOpen()) {
+            <div class="mt-2.5 flex flex-col gap-2.5">
+              @if (activityLogs().length === 0) {
+                <div class="text-[11.5px] text-base-content/50">Chưa có thay đổi nào được ghi lại.</div>
+              }
+              @for (h of activityLogs(); track h.id) {
+                <div class="flex gap-2 text-xs">
+                  <svg class="mt-0.5 h-3.5 w-3.5 shrink-0 text-base-content/30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                  <div class="min-w-0">
+                    <div class="leading-normal text-base-content">{{ h.actionText }}</div>
+                    <div class="mt-px text-[10px] text-base-content/40">{{ h.createdAt | date: 'HH:mm dd/MM/yyyy' }}</div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
       </div>
     </div>
   </div>

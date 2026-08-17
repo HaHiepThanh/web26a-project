@@ -12,9 +12,8 @@
 
     <div class="form-card">
 
-      <!-- Default state: heading + tabs + forms -->
-      @if (!demoUser()) {
-        <div>
+      <!-- Heading + form -->
+      <div>
           <div class="heading-block">
             <h2 class="text-2xl font-bold tracking-tight">Chào bạn quay lại</h2>
             <p class="mt-1.5 text-sm text-base-content/60">Đăng nhập để tiếp tục với không gian làm việc của bạn.</p>
@@ -54,13 +53,9 @@
               <span class="label-text text-xs">Ghi nhớ đăng nhập trong 30 ngày</span>
             </label>
 
-            <button type="submit" class="btn btn-primary btn-block" [disabled]="submitting()">
-              @if (!submitting()) {
-                <span>Đăng nhập</span>
-                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-              } @else {
-                <span class="loading loading-spinner loading-sm"></span>
-              }
+            <button type="submit" class="btn btn-primary btn-block">
+              <span>Đăng nhập</span>
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
             </button>
           </form>
 
@@ -91,23 +86,7 @@
             Chưa có tài khoản?
             <a routerLink="/register" class="link link-primary font-semibold">Đăng ký miễn phí</a>
           </p>
-        </div>
-      }
-
-      <!-- Success state (demo methods only — Google navigates away for real) -->
-      @if (demoUser(); as user) {
-        <div class="success-view py-8 text-center">
-          <div class="avatar avatar-placeholder mb-4">
-            <div class="w-16 rounded-full bg-primary text-primary-content">
-              <span class="text-xl font-bold">{{ user.initials }}</span>
-            </div>
-          </div>
-          <h2 class="text-xl font-bold">Chào mừng, {{ user.name }}!</h2>
-          <p class="mt-1 text-sm text-base-content/60">{{ user.email }}</p>
-          <p class="mx-auto mt-2 mb-6 max-w-[280px] text-xs leading-relaxed text-base-content/50">Đây là phiên demo (chưa có backend cho phương thức này) — đang chuyển vào Workspace...</p>
-          <button type="button" class="btn btn-ghost btn-sm" (click)="resetToAuthView()">Đăng xuất và thử lại</button>
-        </div>
-      }
+      </div>
 
     </div>
 

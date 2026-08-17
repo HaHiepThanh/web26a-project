@@ -11,6 +11,7 @@ export * from './label.model';
 // --- Bonus ---
 export * from './checklist-item.model';
 export * from './comment.model';
+export * from './attachment.model';
 export * from './activity-log.model';
 // --- AI chat ---
 export * from './message.model';

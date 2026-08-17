@@ -70,10 +70,33 @@
       </button>
     </section>
 
-    <!-- Bố cục dashboard 2 cột: danh sách board là trọng tâm (trái), "Đánh dấu sao" +
-         "Mẫu nhanh" gom thành 1 dải bên phải dạng danh sách gọn (thay vì 2 khối lưới
-         to chiếm hẳn chiều ngang như trước) — khác hẳn cấu trúc "xếp chồng 3 khối" cũ. -->
-    <div class="flex flex-col gap-4 lg:flex-row lg:items-start">
+    <!-- Đánh dấu sao — đưa lên đầu cho nổi bật, dạng lưới board tile (bỏ rail bên phải) -->
+    @if (starredBoards().length > 0) {
+      <section class="mb-5">
+        <div class="mb-2 flex items-center gap-2">
+          <span class="flex h-6 w-6 items-center justify-center rounded-full bg-warning/15 text-[13px]">⭐</span>
+          <h2 class="text-[13px] font-extrabold uppercase tracking-wide text-base-content">Bảng có đánh dấu sao</h2>
+        </div>
+        <div class="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2.5">
+          @for (board of starredBoards(); track board.id) {
+            <div class="board-tile group relative flex h-[92px] cursor-pointer flex-col justify-between overflow-hidden rounded-box p-2.5 text-white shadow-sm transition hover:-translate-y-1.5 hover:brightness-110" [class]="board.bgClass" (click)="onBoardClick(board)">
+              <div class="relative z-10">
+                <div class="text-[9px] font-extrabold uppercase tracking-wide opacity-90">{{ board.workspaceName }}</div>
+                <div class="mt-0.5 text-[13px] font-bold leading-tight [text-shadow:0_1px_2px_rgba(0,0,0,0.2)]">{{ board.title }}</div>
+              </div>
+              <button class="absolute right-2.5 top-2.5 z-10 text-sm text-yellow-400 transition hover:scale-110" title="Bỏ đánh dấu sao" (click)="$event.stopPropagation(); toggleStar(board.id)">⭐</button>
+              <div class="relative z-10 flex items-center justify-between text-[10px] font-semibold opacity-95">
+                <span>{{ board.privacy === 'Public' ? '🌐' : '🔒' }} {{ board.privacy }}</span>
+                <span class="badge badge-xs border-none bg-black/25 text-white">{{ board.badge }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+    }
+
+    <!-- Tất cả không gian làm việc (full-width) -->
+    <div>
 
       <!-- MAIN: Tất cả không gian làm việc -->
       <div class="min-w-0 flex-1">
@@ -144,50 +167,6 @@
           }
         </div>
         }
-      </div>
-
-      <!-- RAIL: Đánh dấu sao + Mẫu nhanh — dạng danh sách dọc gọn, không còn là 2 khối lưới riêng -->
-      <div class="flex w-full flex-col gap-3.5 lg:w-[280px] lg:shrink-0">
-        <div class="rounded-box border border-base-300 bg-base-100 p-3 shadow-sm">
-          <div class="mb-1.5 flex items-center gap-2">
-            <span class="flex h-6 w-6 items-center justify-center rounded-full bg-warning/15 text-[13px]">⭐</span>
-            <h2 class="text-[12px] font-extrabold uppercase tracking-wide text-base-content">Đánh dấu sao</h2>
-          </div>
-          @if (starredBoards().length === 0) {
-            <p class="px-1 py-3 text-center text-[11px] leading-relaxed text-base-content/45">Bấm ☆ trên bất kỳ bảng nào để ghim nhanh vào đây.</p>
-          } @else {
-            <div class="flex flex-col gap-0.5">
-              @for (board of starredBoards(); track board.id) {
-                <div class="flex cursor-pointer items-center gap-2 rounded-md p-1.5 transition hover:bg-base-200" (click)="onBoardClick(board)">
-                  <div class="h-7 w-7 shrink-0 rounded-md" [class]="board.bgClass"></div>
-                  <div class="min-w-0 flex-1">
-                    <p class="truncate text-[12px] font-semibold text-base-content">{{ board.title }}</p>
-                    <p class="truncate text-[10px] text-base-content/50">{{ board.workspaceName }}</p>
-                  </div>
-                  <button class="shrink-0 text-sm text-yellow-400 transition hover:scale-110" title="Bỏ đánh dấu sao" (click)="$event.stopPropagation(); toggleStar(board.id)">⭐</button>
-                </div>
-              }
-            </div>
-          }
-        </div>
-
-        <div class="rounded-box border border-base-300 bg-base-100 p-3 shadow-sm">
-          <div class="mb-1.5 flex items-center gap-2">
-            <span class="flex h-6 w-6 items-center justify-center rounded-full bg-info/15 text-[13px]">📖</span>
-            <h2 class="text-[12px] font-extrabold uppercase tracking-wide text-base-content">Mẫu nhanh</h2>
-          </div>
-          <div class="flex flex-col gap-0.5">
-            @for (tpl of templates; track tpl.title) {
-              <button type="button" class="flex w-full items-center gap-2 rounded-md p-1.5 text-left transition hover:bg-base-200" [title]="tpl.desc" (click)="useTemplate(tpl)">
-                <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[11px] font-extrabold text-white" [class]="tpl.badgeClass">{{ tpl.badge }}</div>
-                <div class="min-w-0 flex-1">
-                  <p class="truncate text-[12px] font-semibold text-base-content">{{ tpl.title }}</p>
-                  <p class="truncate text-[10px] text-base-content/50">{{ tpl.columns }} cột</p>
-                </div>
-              </button>
-            }
-          </div>
-        </div>
       </div>
 
     </div>
