@@ -53,6 +53,10 @@
           </button>
         </div>
       }
+      <button type="button" class="btn btn-outline btn-sm gap-1.5" (click)="openStatsModal()">
+        <svg class="h-[15px] w-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg>
+        Thống kê &amp; Báo cáo
+      </button>
     </div>
 
     <div class="flex flex-wrap items-center justify-end gap-3">
@@ -438,6 +442,11 @@
   <!-- Modal: chi tiết thẻ (appRequirement #4) -->
   @if (selectedCard(); as card) {
     <app-card-detail-modal [card]="card" [boardId]="boardId" (close)="closeCardDetail()" (deleted)="onCardDetailDeleted()" />
+  }
+
+  <!-- Modal: Thống kê & Báo cáo -->
+  @if (showStatsModal()) {
+    <app-workspace-stats-modal [boardId]="boardId" [boardName]="board()?.name ?? null" (close)="closeStatsModal()" />
   }
 
   <!-- Thanh hành động hàng loạt (#12) -->

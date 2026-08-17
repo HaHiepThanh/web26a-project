@@ -1,6 +1,6 @@
 import { Component, HostListener, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { WorkspaceUiService } from '../../services/workspace-ui.service';
 import { BoardService } from '../../services/board.service';
 import { BOARD_BACKGROUNDS, BoardBackground, BoardVisibility } from '../../models';
@@ -27,7 +27,7 @@ interface WorkspaceItem {
   id: string;
   name: string;
   icon: string;
-  iconBg: BgClass;
+  iconBg: BoardBackground;
   membersCount: number;
   description: string;
   boards: BoardItem[];
@@ -93,7 +93,7 @@ const TEMPLATES: Template[] = [
 /** Bảng grid + workspace dashboard (ported từ trello-workspace prototype). */
 @Component({
   selector: 'app-workspace',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule],
   templateUrl: './workspace.html',
   styleUrl: './workspace.css',
 })
@@ -374,7 +374,7 @@ export class Workspace {
         id: 'ws-' + Date.now(),
         name,
         icon,
-        iconBg: BG_CLASSES[this.workspaces().length % BG_CLASSES.length],
+        iconBg: BOARD_BACKGROUNDS[this.workspaces().length % BOARD_BACKGROUNDS.length],
         membersCount: 1,
         description: description || 'Không gian làm việc mới vừa được khởi tạo.',
         boards: [],

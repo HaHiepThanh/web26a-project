@@ -39,8 +39,10 @@ export function relativeTimeFrom(iso: string): string {
  *  tới khi AuthService/Firebase thật được bật, dùng tạm 1 thành viên mock cố định. */
 export const CURRENT_USER_ID = 'u-nam';
 
-/** Thành viên tenant giả lập — dùng làm nguồn chọn "Người phụ trách" (#2) tới khi có API thật. */
-const MOCK_MEMBERS: User[] = [
+/** Thành viên tenant giả lập — dùng làm nguồn chọn "Người phụ trách" (#2) tới khi có API thật.
+ *  Export để các mock khác (vd: components/board/workspace-stats-modal/board-stats.mock.ts)
+ *  dùng chung đúng 1 roster, tránh lệch id/tên giữa các màn. */
+export const MOCK_MEMBERS: User[] = [
   { id: 'u-nam', email: 'nam@trello.dev', displayName: 'Nam' },
   { id: 'u-linh', email: 'linh@trello.dev', displayName: 'Linh' },
   { id: 'u-khoa', email: 'khoa@trello.dev', displayName: 'Khoa' },

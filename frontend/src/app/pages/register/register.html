@@ -1,1 +1,203 @@
-<!-- TODO: Form đăng ký: email + password. Đăng ký xong -> tạo tenant / sang /onboarding (#1). -->
+<div class="flex min-h-screen items-center justify-center bg-base-200 px-4 py-10">
+  <div class="flex w-full max-w-2xl flex-col gap-5">
+
+    <!-- Simulation Toolbar: chỉ phục vụ QA/Demo, tách biệt hẳn về hình thức với form thật -->
+    <div class="rounded-box border-2 border-dashed border-warning/50 bg-warning/5 p-4">
+      <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2 text-warning">
+          <span class="text-base">🧪</span>
+          <span class="text-xs font-bold uppercase tracking-wide">Thanh công cụ giả lập</span>
+        </div>
+        <span class="badge badge-warning badge-outline badge-sm">Chỉ dùng khi test/demo</span>
+      </div>
+
+      <div class="flex flex-col gap-2.5">
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="w-full text-[11px] font-semibold uppercase text-base-content/50 sm:w-[132px] sm:shrink-0">Luồng thành công</span>
+          <button type="button" class="btn btn-success btn-outline btn-sm" (click)="autoFillValid()">🎲 Auto-fill hợp lệ</button>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="w-full text-[11px] font-semibold uppercase text-base-content/50 sm:w-[132px] sm:shrink-0">Edge cases</span>
+          <button type="button" class="btn btn-error btn-outline btn-sm" (click)="fillDuplicate()">❌ Trùng Username/Email</button>
+          <button type="button" class="btn btn-error btn-outline btn-sm" (click)="fillInvalidFormat()">❌ Sai định dạng</button>
+          <button type="button" class="btn btn-error btn-outline btn-sm" (click)="fillPasswordMismatch()">❌ Mật khẩu không khớp</button>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="w-full text-[11px] font-semibold uppercase text-base-content/50 sm:w-[132px] sm:shrink-0">Trạng thái hệ thống</span>
+          <button
+            type="button"
+            class="btn btn-sm"
+            [class.btn-warning]="systemSimMode() === 'slow'"
+            [class.btn-outline]="systemSimMode() !== 'slow'"
+            (click)="armSlowNetwork()"
+            title="Bấm Đăng ký lần tới sẽ hiển thị loading 3 giây"
+          >
+            🐢 Mạng chậm 3s
+            @if (systemSimMode() === 'slow') { <span class="badge badge-sm badge-neutral ml-1">Đã bật ✓</span> }
+          </button>
+          <button
+            type="button"
+            class="btn btn-sm"
+            [class.btn-error]="systemSimMode() === 'server-error'"
+            [class.btn-outline]="systemSimMode() !== 'server-error'"
+            (click)="armServerError()"
+            title="Bấm Đăng ký lần tới sẽ báo lỗi hệ thống 500"
+          >
+            💥 Lỗi Server 500
+            @if (systemSimMode() === 'server-error') { <span class="badge badge-sm badge-neutral ml-1">Đã bật ✓</span> }
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form đăng ký -->
+    <div class="card border border-base-300 bg-base-100 shadow-sm">
+      <form class="card-body gap-4" (ngSubmit)="onSubmit()">
+        <div class="text-center">
+          <h1 class="text-xl font-bold text-base-content">Đăng ký tài khoản</h1>
+          <p class="mt-1 text-sm text-base-content/60">Tạo tài khoản để bắt đầu quản lý công việc cùng đội nhóm.</p>
+        </div>
+
+        <div class="form-control w-full">
+          <label class="label pb-1.5" for="fullName"><span class="label-text text-xs font-semibold">Họ và tên</span></label>
+          <input
+            id="fullName"
+            type="text"
+            class="input input-bordered w-full"
+            [class.input-error]="errors().fullName"
+            placeholder="Nguyễn Văn A"
+            autocomplete="name"
+            [(ngModel)]="fullName"
+            name="fullName"
+          />
+          @if (errors().fullName) { <span class="mt-1 text-xs text-error">{{ errors().fullName }}</span> }
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div class="form-control w-full">
+            <label class="label pb-1.5" for="username"><span class="label-text text-xs font-semibold">Tên đăng nhập</span></label>
+            <input
+              id="username"
+              type="text"
+              class="input input-bordered w-full"
+              [class.input-error]="errors().username"
+              placeholder="vd: minhkhoa"
+              autocomplete="username"
+              [(ngModel)]="username"
+              name="username"
+            />
+            @if (errors().username) { <span class="mt-1 text-xs text-error">{{ errors().username }}</span> }
+          </div>
+
+          <div class="form-control w-full">
+            <label class="label pb-1.5" for="phone"><span class="label-text text-xs font-semibold">Số điện thoại</span></label>
+            <input
+              id="phone"
+              type="tel"
+              class="input input-bordered w-full"
+              [class.input-error]="errors().phone"
+              placeholder="0912345678"
+              autocomplete="tel"
+              [(ngModel)]="phone"
+              name="phone"
+            />
+            @if (errors().phone) { <span class="mt-1 text-xs text-error">{{ errors().phone }}</span> }
+          </div>
+        </div>
+
+        <div class="form-control w-full">
+          <label class="label pb-1.5" for="email"><span class="label-text text-xs font-semibold">Email</span></label>
+          <input
+            id="email"
+            type="email"
+            class="input input-bordered w-full"
+            [class.input-error]="errors().email"
+            placeholder="ban@congty.com"
+            autocomplete="email"
+            [(ngModel)]="email"
+            name="email"
+          />
+          @if (errors().email) { <span class="mt-1 text-xs text-error">{{ errors().email }}</span> }
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div class="form-control w-full">
+            <label class="label pb-1.5" for="password"><span class="label-text text-xs font-semibold">Mật khẩu</span></label>
+            <label class="input input-bordered flex w-full items-center gap-2" [class.input-error]="errors().password">
+              <input
+                [type]="passwordVisible() ? 'text' : 'password'"
+                id="password"
+                class="grow"
+                placeholder="••••••••"
+                autocomplete="new-password"
+                [(ngModel)]="password"
+                name="password"
+              />
+              <button type="button" class="cursor-pointer opacity-50 hover:opacity-80" (click)="passwordVisible.set(!passwordVisible())" [attr.aria-label]="passwordVisible() ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'">
+                @if (!passwordVisible()) {
+                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                } @else {
+                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M17.94 17.94A10.94 10.94 0 0112 19c-7 0-11-7-11-7a20.3 20.3 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 7 11 7a20.5 20.5 0 01-2.16 3.19M14.12 14.12a3 3 0 11-4.24-4.24" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 1l22 22" stroke-linecap="round"/></svg>
+                }
+              </button>
+            </label>
+            @if (errors().password) { <span class="mt-1 text-xs text-error">{{ errors().password }}</span> }
+          </div>
+
+          <div class="form-control w-full">
+            <label class="label pb-1.5" for="confirmPassword"><span class="label-text text-xs font-semibold">Nhập lại mật khẩu</span></label>
+            <label class="input input-bordered flex w-full items-center gap-2" [class.input-error]="errors().confirmPassword">
+              <input
+                [type]="confirmVisible() ? 'text' : 'password'"
+                id="confirmPassword"
+                class="grow"
+                placeholder="••••••••"
+                autocomplete="new-password"
+                [(ngModel)]="confirmPassword"
+                name="confirmPassword"
+              />
+              <button type="button" class="cursor-pointer opacity-50 hover:opacity-80" (click)="confirmVisible.set(!confirmVisible())" [attr.aria-label]="confirmVisible() ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'">
+                @if (!confirmVisible()) {
+                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                } @else {
+                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M17.94 17.94A10.94 10.94 0 0112 19c-7 0-11-7-11-7a20.3 20.3 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 7 11 7a20.5 20.5 0 01-2.16 3.19M14.12 14.12a3 3 0 11-4.24-4.24" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 1l22 22" stroke-linecap="round"/></svg>
+                }
+              </button>
+            </label>
+            @if (errors().confirmPassword) { <span class="mt-1 text-xs text-error">{{ errors().confirmPassword }}</span> }
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block mt-1" [disabled]="submitting()">
+          @if (!submitting()) {
+            <span>Đăng ký tài khoản</span>
+          } @else {
+            <span class="loading loading-spinner loading-sm"></span>
+            <span>Đang xử lý...</span>
+          }
+        </button>
+
+        <p class="text-center text-xs text-base-content/60">
+          Đã có tài khoản?
+          <a routerLink="/login" class="link link-primary font-semibold">Đăng nhập</a>
+        </p>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast toast-top toast-end z-[999]">
+  @for (toast of toasts(); track toast.id) {
+    <div
+      class="alert shadow-lg"
+      [class.alert-success]="toast.type === 'success'"
+      [class.alert-error]="toast.type === 'error'"
+      [class.alert-info]="toast.type === 'info'"
+    >
+      <span>{{ toast.message }}</span>
+    </div>
+  }
+</div>
