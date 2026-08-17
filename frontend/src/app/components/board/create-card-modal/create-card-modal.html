@@ -1,0 +1,84 @@
+@if (isOpen()) {
+<div class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/45 backdrop-blur-[2px]" (click)="close.emit()">
+  <div class="max-h-[88vh] w-80 max-w-[90%] overflow-y-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-base-100 p-5 shadow-2xl" (click)="$event.stopPropagation()">
+    <div class="mb-3.5 text-base font-black text-slate-900 dark:text-white">Tạo thẻ mới</div>
+
+    <form (ngSubmit)="onSubmit()">
+      <!-- Card Title -->
+      <div class="mb-3.5">
+        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300" for="card-title-input">
+          Tên thẻ <span class="text-error">*</span>
+        </label>
+        <input
+          type="text"
+          id="card-title-input"
+          class="input input-bordered border-2 border-slate-300 dark:border-slate-600 focus:border-primary focus:ring-2 focus:ring-primary/20 input-sm w-full rounded-xl font-bold"
+          placeholder="Vd: Thiết kế wireframe, Sửa lỗi..."
+          [ngModel]="cardTitle()"
+          (ngModelChange)="cardTitle.set($event)"
+          name="cardTitle"
+          autofocus
+        />
+      </div>
+
+      <!-- Labels -->
+      <div class="mb-3.5">
+        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Nhãn (chọn nhiều)</label>
+        <app-label-picker [boardId]="boardId()" [selectedIds]="labelIds()" (selectionChange)="labelIds.set($event)" />
+      </div>
+
+      <!-- Priority -->
+      <div class="mb-3.5">
+        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Mức độ ưu tiên</label>
+        <div class="grid grid-cols-3 gap-1.5">
+          @for (p of priorities; track p.id) {
+            <button
+              type="button"
+              class="btn btn-xs rounded-xl font-bold"
+              [class.btn-primary]="priority() === p.id"
+              [class.btn-ghost]="priority() !== p.id"
+              [class.border]="priority() !== p.id"
+              [class.border-slate-300]="priority() !== p.id"
+              (click)="priority.set(p.id)">
+              {{ p.label }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Assignee -->
+      <div class="mb-3.5">
+        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300" for="card-assignee-select">
+          Người phụ trách
+        </label>
+        <select id="card-assignee-select"
+          class="select select-bordered border-2 border-slate-300 dark:border-slate-600 select-sm w-full rounded-xl font-semibold text-xs"
+          [ngModel]="assigneeId()" (ngModelChange)="assigneeId.set($event)" name="cardAssignee">
+          <option [ngValue]="null">Chưa gán ai</option>
+          @for (m of members(); track m.id) {
+            <option [ngValue]="m.id">{{ m.displayName ?? m.email }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Due Date -->
+      <div class="mb-4">
+        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300" for="card-due-input">
+          Ngày hết hạn
+        </label>
+        <input type="date" id="card-due-input"
+          class="input input-bordered border-2 border-slate-300 dark:border-slate-600 input-sm w-full rounded-xl font-medium text-xs"
+          [ngModel]="dueDate()" (ngModelChange)="dueDate.set($event)" name="cardDueDate" />
+      </div>
+
+      <!-- Actions -->
+      <div class="mt-4 flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+        <button type="button" class="btn btn-ghost btn-sm rounded-xl font-bold" (click)="close.emit()">Huỷ</button>
+        <button type="submit" class="btn btn-primary btn-sm rounded-xl font-black px-4 shadow-sm" [disabled]="!cardTitle().trim()">
+          Tạo thẻ
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+}

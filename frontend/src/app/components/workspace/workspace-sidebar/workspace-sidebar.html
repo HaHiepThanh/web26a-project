@@ -1,0 +1,83 @@
+<div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-base-100 p-3 shadow-xs">
+  <div class="mb-2.5 flex items-center justify-between px-2 pt-1">
+    <div class="flex items-center gap-1.5">
+      <span class="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Không gian làm việc</span>
+      <span class="badge badge-primary badge-xs font-bold">{{ workspaces().length }}</span>
+    </div>
+    <button
+      type="button"
+      class="btn btn-ghost btn-square btn-xs text-primary font-bold text-base hover:bg-primary/10 rounded-lg"
+      title="Tạo Workspace mới"
+      (click)="createWorkspace.emit()">
+      +
+    </button>
+  </div>
+
+  <div class="space-y-1">
+    <!-- Option: Tất cả Workspace -->
+    <button
+      type="button"
+      class="w-full flex items-center justify-between rounded-xl px-2.5 py-2 text-left text-xs font-bold transition-all"
+      [class.bg-primary/10]="activeWorkspaceId() === null"
+      [class.text-primary]="activeWorkspaceId() === null"
+      [class.border]="activeWorkspaceId() === null"
+      [class.border-primary/30]="activeWorkspaceId() === null"
+      [class.text-slate-700]="activeWorkspaceId() !== null"
+      [class.dark:text-slate-300]="activeWorkspaceId() !== null"
+      [class.hover:bg-slate-100]="activeWorkspaceId() !== null"
+      [class.dark:hover:bg-slate-800]="activeWorkspaceId() !== null"
+      (click)="onSelectWorkspace(null)">
+      <div class="flex items-center gap-2 min-w-0">
+        <span class="text-base shrink-0">🗂️</span>
+        <span class="truncate">Tất cả Workspace</span>
+      </div>
+      <span
+        class="badge badge-xs font-bold shrink-0"
+        [class.badge-primary]="activeWorkspaceId() === null"
+        [class.badge-ghost]="activeWorkspaceId() !== null">
+        {{ totalBoardsCount() }}
+      </span>
+    </button>
+
+    <!-- Workspace items list -->
+    @for (ws of workspaces(); track ws.id) {
+    <button
+      type="button"
+      class="w-full flex items-center justify-between rounded-xl px-2.5 py-2 text-left text-xs font-bold transition-all"
+      [class.bg-primary/10]="activeWorkspaceId() === ws.id"
+      [class.text-primary]="activeWorkspaceId() === ws.id"
+      [class.border]="activeWorkspaceId() === ws.id"
+      [class.border-primary/30]="activeWorkspaceId() === ws.id"
+      [class.text-slate-700]="activeWorkspaceId() !== ws.id"
+      [class.dark:text-slate-300]="activeWorkspaceId() !== ws.id"
+      [class.hover:bg-slate-100]="activeWorkspaceId() !== ws.id"
+      [class.dark:hover:bg-slate-800]="activeWorkspaceId() !== ws.id"
+      (click)="onSelectWorkspace(ws.id)">
+      <div class="flex items-center gap-2 min-w-0">
+        <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-lg text-xs" [class]="ws.iconBg">
+          {{ ws.icon }}
+        </span>
+        <span class="truncate">{{ ws.name }}</span>
+      </div>
+      <div class="flex items-center gap-1 shrink-0">
+        <span
+          class="badge badge-xs font-bold"
+          [class.badge-primary]="activeWorkspaceId() === ws.id"
+          [class.badge-ghost]="activeWorkspaceId() !== ws.id">
+          {{ ws.boards.length }}
+        </span>
+      </div>
+    </button>
+    }
+  </div>
+
+  <div class="mt-3 pt-2.5 border-t border-slate-200 dark:border-slate-800">
+    <button
+      type="button"
+      class="btn btn-ghost btn-xs w-full justify-start gap-2 rounded-xl text-primary font-bold hover:bg-primary/10"
+      (click)="createWorkspace.emit()">
+      <span class="text-sm">+</span>
+      <span>Tạo Không gian mới</span>
+    </button>
+  </div>
+</div>

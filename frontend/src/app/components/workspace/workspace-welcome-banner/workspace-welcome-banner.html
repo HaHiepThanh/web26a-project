@@ -1,0 +1,61 @@
+<div class="relative overflow-hidden rounded-2xl border border-base-300 bg-base-100 p-6 shadow-sm">
+  <div class="absolute -right-12 -top-12 h-44 w-44 rounded-full bg-primary/10 blur-3xl pointer-events-none"></div>
+  <div class="absolute -left-12 -bottom-12 h-44 w-44 rounded-full bg-secondary/10 blur-3xl pointer-events-none"></div>
+
+  <div class="relative z-10 max-w-2xl">
+    <div class="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-black text-primary mb-3">
+      <span>🚀</span>
+      <span>Chào mừng bạn đến với TrelloPro</span>
+    </div>
+    
+    <h2 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white leading-snug">
+      Bắt đầu xây dựng không gian làm việc của bạn
+    </h2>
+    <p class="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+      Quản lý dự án, phân chia công việc theo các cột Kanban trực quan và cộng tác mượt mà cùng các thành viên nhóm.
+    </p>
+
+    <!-- 3-Step Guide Cards -->
+    <div class="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 p-3.5 shadow-xs">
+        <div class="flex items-center gap-2 mb-1.5">
+          <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-primary text-white text-xs font-black">1</span>
+          <h4 class="text-xs font-bold text-slate-900 dark:text-white">Tạo Workspace</h4>
+        </div>
+        <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">Đặt tên và biểu tượng theo từng dự án hoặc môn học.</p>
+      </div>
+
+      <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 p-3.5 shadow-xs">
+        <div class="flex items-center gap-2 mb-1.5">
+          <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-secondary text-white text-xs font-black">2</span>
+          <h4 class="text-xs font-bold text-slate-900 dark:text-white">Thêm thành viên</h4>
+        </div>
+        <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">Nhập mã UUID hoặc email để mời cộng tác viên.</p>
+      </div>
+
+      <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 p-3.5 shadow-xs">
+        <div class="flex items-center gap-2 mb-1.5">
+          <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-accent text-slate-900 text-xs font-black">3</span>
+          <h4 class="text-xs font-bold text-slate-900 dark:text-white">Tạo Bảng Kanban</h4>
+        </div>
+        <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">Tạo bảng với các cột Việc cần làm, Đang làm, Hoàn thành.</p>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="mt-6 flex flex-wrap items-center gap-3">
+      <button
+        type="button"
+        class="btn btn-primary btn-sm rounded-xl font-black px-5 shadow-sm"
+        (click)="createWorkspace.emit()">
+        ✨ Tạo Không gian làm việc đầu tiên
+      </button>
+      <button
+        type="button"
+        class="btn btn-outline btn-sm rounded-xl font-bold px-4"
+        (click)="loadSamples.emit()">
+        ⚡ Tải dữ liệu mẫu
+      </button>
+    </div>
+  </div>
+</div>

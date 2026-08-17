@@ -18,6 +18,10 @@ import { ChatPanel } from '../../components/chat/chat-panel/chat-panel';
 import { CardDetailModal } from '../../components/board/card-detail-modal/card-detail-modal';
 import { BoardMinimap, MinimapListGeom } from '../../components/board/board-minimap/board-minimap';
 import { WorkspaceStatsModal } from '../../components/board/workspace-stats-modal/workspace-stats-modal';
+import { BoardHeaderBar } from '../../components/board/board-header-bar/board-header-bar';
+import { CreateListModal } from '../../components/board/create-list-modal/create-list-modal';
+import { CreateCardModal } from '../../components/board/create-card-modal/create-card-modal';
+import { BoardBulkActions } from '../../components/board/board-bulk-actions/board-bulk-actions';
 
 type ToastType = 'success' | 'error' | 'info';
 interface Toast {
@@ -85,7 +89,21 @@ const MINIMAP_OVERFLOW_RATIO = 1.5;
  */
 @Component({
   selector: 'app-board',
-  imports: [FormsModule, RouterLink, DragDropModule, BoardList, AddList, LabelPicker, CardItem, ChatPanel, CardDetailModal, BoardMinimap, WorkspaceStatsModal],
+  imports: [
+    FormsModule,
+    DragDropModule,
+    BoardList,
+    AddList,
+    CardItem,
+    ChatPanel,
+    CardDetailModal,
+    BoardMinimap,
+    WorkspaceStatsModal,
+    BoardHeaderBar,
+    CreateListModal,
+    CreateCardModal,
+    BoardBulkActions,
+  ],
   templateUrl: './board.html',
   styleUrl: './board.css',
 })
@@ -638,12 +656,8 @@ export class Board {
 
   // ---- Modal tạo danh sách (#2) ----
   readonly showListModal = signal(false);
-  readonly newListName = signal('');
-  readonly newListColor = signal(LIST_COLORS[0]);
 
   openListModal(): void {
-    this.newListName.set('');
-    this.newListColor.set(LIST_COLORS[0]);
     this.showListModal.set(true);
   }
 
@@ -651,52 +665,48 @@ export class Board {
     this.showListModal.set(false);
   }
 
-  async submitListModal(): Promise<void> {
-    const name = this.newListName().trim();
-    if (!name) return;
-    await this.listService.createList(this.boardId, name, this.newListColor());
+  async handleCreateList(data: { name: string; color: string }): Promise<void> {
+    await this.listService.createList(this.boardId, data.name, data.color);
     this.closeListModal();
+    this.addToast(`Đã tạo danh sách "${data.name}"`, 'success');
   }
 
   // ---- Modal tạo thẻ (#2, #4, #5) ----
   readonly showCardModal = signal(false);
   readonly targetListId = signal<string | null>(null);
-  readonly newCardTitle = signal('');
-  readonly newCardPriority = signal<CardPriority>('medium');
-  readonly newCardAssigneeId = signal<string | null>(null);
-  readonly newCardDue = signal('');
-  readonly newCardLabelIds = signal<string[]>([]);
 
   openCardModal(listId: string): void {
     this.targetListId.set(listId);
-    this.newCardTitle.set('');
-    this.newCardPriority.set('medium');
-    this.newCardAssigneeId.set(null);
-    this.newCardDue.set('');
-    this.newCardLabelIds.set([]);
     this.showCardModal.set(true);
   }
 
   closeCardModal(): void {
     this.showCardModal.set(false);
+    this.targetListId.set(null);
   }
 
-  async submitCardModal(): Promise<void> {
+  async handleCreateCard(data: {
+    title: string;
+    labelIds: string[];
+    priority: CardPriority;
+    assigneeId: string | null;
+    dueDate: string | null;
+  }): Promise<void> {
     const listId = this.targetListId();
-    const title = this.newCardTitle().trim();
-    if (!listId || !title) return;
+    if (!listId) return;
 
     const card = await this.cardService.createCard(listId, {
-      title,
-      priority: this.newCardPriority(),
-      assigneeId: this.newCardAssigneeId() ?? undefined,
-      dueDate: this.newCardDue() || undefined,
+      title: data.title,
+      priority: data.priority,
+      assigneeId: data.assigneeId ?? undefined,
+      dueDate: data.dueDate || undefined,
     });
-    if (card && this.newCardLabelIds().length) {
-      this.labelService.setCardLabels(card.id, this.newCardLabelIds());
+    if (card && data.labelIds.length) {
+      this.labelService.setCardLabels(card.id, data.labelIds);
     }
     if (card) this.activityService.record(this.boardId, card.id, 'đã tạo thẻ này', 'card_created');
     this.closeCardModal();
+    this.addToast(`Đã tạo thẻ "${data.title}"`, 'success');
   }
 
   // ---- Xoá / đổi tên danh sách ----
@@ -765,15 +775,10 @@ export class Board {
 
   clearSelection(): void {
     this.selectedCardIds.set(new Set());
-    this.showBulkLabelPicker.set(false);
   }
 
-  onBulkMoveSelect(event: Event): void {
-    const select = event.target as HTMLSelectElement;
-    const toListId = select.value;
-    select.value = '';
+  handleBulkMove(toListId: string): void {
     if (!toListId) return;
-
     const ids = [...this.selectedCardIds()];
     for (const cardId of ids) {
       const card = this.allCards().find((c) => c.id === cardId);
@@ -784,18 +789,14 @@ export class Board {
     this.clearSelection();
   }
 
-  toggleBulkLabelPicker(): void {
-    this.showBulkLabelPicker.update((v) => !v);
-  }
-
-  applyBulkLabel(labelId: string): void {
+  handleBulkLabel(labelId: string): void {
     const ids = [...this.selectedCardIds()];
     for (const cardId of ids) void this.labelService.attachLabel(cardId, labelId);
     this.addToast(`Đã gắn nhãn cho ${ids.length} thẻ.`, 'success');
     this.clearSelection();
   }
 
-  bulkDelete(): void {
+  handleBulkDelete(): void {
     const ids = [...this.selectedCardIds()];
     if (!window.confirm(`Xoá ${ids.length} thẻ đã chọn? Không thể hoàn tác.`)) return;
     for (const cardId of ids) {

@@ -1,112 +1,45 @@
-<div class="flex w-full flex-col lg:h-[calc(100vh-52px-44px)] lg:flex-row lg:overflow-hidden">
-
-  <!-- Left Sidebar (Khung làm việc bên trái) -->
-  <aside
-    class="flex w-64 shrink-0 flex-col gap-3 border-r border-base-300 bg-base-200/50 p-3 max-lg:w-full max-lg:border-b max-lg:border-r-0 lg:overflow-y-auto">
-    <div class="rounded-2xl border border-base-300 bg-base-100 p-2.5 shadow-xs">
-      <!-- Sidebar Header -->
-      <div class="mb-2 flex items-center justify-between px-1.5 pt-0.5">
-        <span class="text-[11px] font-black uppercase tracking-wider text-base-content/50">Không gian làm việc</span>
-        <button
-          class="btn btn-primary btn-xs gap-1 rounded-lg px-2 text-[11px] font-bold shadow-xs hover:scale-105 transition-transform"
-          title="Tạo Workspace mới" (click)="openCreateWorkspaceModal()">
-          <span class="text-[13px] leading-none">+</span> Mới
-        </button>
-      </div>
-
-      <div class="flex flex-col gap-1">
-        <!-- ALL WORKSPACES BUTTON -->
-        <div class="flex cursor-pointer items-center gap-2.5 rounded-xl px-2.5 py-2 transition-all duration-150"
-          [class.bg-primary/10]="activeWorkspaceId() === null" [class.text-primary]="activeWorkspaceId() === null"
-          [class.border]="activeWorkspaceId() === null" [class.border-primary/30]="activeWorkspaceId() === null"
-          [class.shadow-xs]="activeWorkspaceId() === null" [class.hover:bg-base-200]="activeWorkspaceId() !== null"
-          [class.text-base-content]="activeWorkspaceId() !== null" (click)="selectWorkspace(null)"
-          title="Xem tất cả không gian làm việc">
-          <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-sm transition-transform"
-            [class.bg-primary]="activeWorkspaceId() === null"
-            [class.text-primary-content]="activeWorkspaceId() === null"
-            [class.bg-base-200]="activeWorkspaceId() !== null">
-            🗂️
-          </div>
-          <div class="flex min-w-0 flex-1 flex-col overflow-hidden">
-            <span class="truncate text-[12.5px] font-bold leading-tight">Tất cả Workspace</span>
-            <span class="truncate text-[10.5px] leading-tight" [class.text-primary/75]="activeWorkspaceId() === null"
-              [class.text-base-content/50]="activeWorkspaceId() !== null">
-              {{ workspaces().length }} workspace • {{ totalBoardsCount() }} bảng
-            </span>
-          </div>
-          @if (activeWorkspaceId() === null) {
-          <span class="h-2 w-2 rounded-full bg-primary shrink-0"></span>
-          }
-        </div>
-
-        <div class="my-1 border-t border-base-200"></div>
-
-        <!-- INDIVIDUAL WORKSPACE ITEMS -->
-        @for (ws of workspaces(); track trackByWorkspaceId($index, ws)) {
-        <div class="group flex cursor-pointer items-center gap-2.5 rounded-xl px-2.5 py-2 transition-all duration-150"
-          [class.bg-primary/10]="activeWorkspaceId() === ws.id" [class.text-primary]="activeWorkspaceId() === ws.id"
-          [class.border]="activeWorkspaceId() === ws.id" [class.border-primary/30]="activeWorkspaceId() === ws.id"
-          [class.shadow-xs]="activeWorkspaceId() === ws.id" [class.hover:bg-base-200]="activeWorkspaceId() !== ws.id"
-          [class.text-base-content]="activeWorkspaceId() !== ws.id" (click)="selectWorkspace(ws.id)"
-          [title]="'Lọc riêng: ' + ws.name">
-          <div
-            class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-sm shadow-xs transition-transform group-hover:scale-105"
-            [class]="ws.iconBg">
-            {{ ws.icon }}
-          </div>
-          <div class="flex min-w-0 flex-1 flex-col overflow-hidden">
-            <span class="truncate text-[12.5px] font-bold leading-tight">{{ ws.name }}</span>
-            <span class="truncate text-[10.5px] leading-tight" [class.text-primary/75]="activeWorkspaceId() === ws.id"
-              [class.text-base-content/50]="activeWorkspaceId() !== ws.id">
-              {{ ws.members.length }} thành viên • {{ ws.boards.length }} bảng
-            </span>
-          </div>
-          @if (activeWorkspaceId() === ws.id) {
-          <span class="h-2 w-2 rounded-full bg-primary shrink-0"></span>
-          }
-        </div>
-        }
-      </div>
+<div class="workspace-page mx-auto max-w-[1400px] px-3.5 py-4">
+  <!-- Toast container -->
+  <div class="toast toast-top toast-end z-[9999] pointer-events-none">
+    @for (t of toasts(); track t.id) {
+    <div
+      class="alert text-xs shadow-lg pointer-events-auto flex items-center justify-between gap-3 py-2 px-3.5 rounded-xl border border-white/10 text-white font-bold"
+      [class.alert-success]="t.type === 'success'" [class.bg-emerald-600]="t.type === 'success'"
+      [class.alert-error]="t.type === 'error'" [class.bg-rose-600]="t.type === 'error'"
+      [class.alert-info]="t.type === 'info'" [class.bg-slate-800]="t.type === 'info'">
+      <span>{{ t.message }}</span>
+      @if (t.action) {
+      <button class="btn btn-xs btn-outline text-white border-white/50 hover:bg-white/20" (click)="t.action.handler()">{{
+        t.action.label }}</button>
+      }
+      <button class="btn btn-ghost btn-xs btn-circle text-white/70 hover:text-white"
+        (click)="removeToast(t.id)">&times;</button>
     </div>
+    }
+  </div>
 
-    <!-- TIPS CARD -->
-    <div class="tips-card shadow-xs">
-      <span class="tips-badge">MẸO NHỎ</span>
-      <h4 class="tips-title">Hỗ trợ đầy đủ phím tắt</h4>
-      <p class="tips-desc">
-        Nhấn <kbd class="tips-kbd">N</kbd> để tạo nhanh thẻ công việc mới, <kbd class="tips-kbd">/</kbd> để tập trung
-        tìm kiếm, hoặc <kbd class="tips-kbd">Esc</kbd> để đóng nhanh các hộp thoại.
-      </p>
-    </div>
-  </aside>
-
-  <!-- Main Workspace Content -->
-  <main
-    class="mx-auto flex max-w-[1400px] flex-1 flex-col gap-5 bg-base-100 p-4 max-lg:p-4 lg:min-h-0 lg:overflow-y-auto">
-
-    <!-- Đánh dấu sao — đưa lên đầu cho nổi bật, dạng lưới board tile (bỏ rail bên phải) -->
+  <main class="space-y-4">
+    <!-- Starred boards section (if any) -->
     @if (starredBoards().length > 0) {
-    <section class="mb-4">
-      <div class="mb-2 flex items-center gap-2">
-        <span class="flex h-6 w-6 items-center justify-center rounded-full bg-warning/15 text-[13px]">⭐</span>
-        <h2 class="text-[13px] font-extrabold uppercase tracking-wide text-base-content">Bảng có đánh dấu sao</h2>
+    <section class="rounded-2xl border border-base-300 bg-base-100 p-4 shadow-xs">
+      <div class="mb-3 flex items-center gap-2">
+        <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-warning/15 text-[13px]">⭐</span>
+        <h2 class="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Bảng có đánh dấu sao</h2>
       </div>
       <div class="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2.5">
         @for (board of starredBoards(); track board.id) {
         <div
-          class="board-tile group relative flex h-[92px] cursor-pointer flex-col justify-between overflow-hidden rounded-box p-2.5 text-white shadow-sm transition hover:-translate-y-1.5 hover:brightness-110"
+          class="board-tile group relative flex h-[92px] cursor-pointer flex-col justify-between overflow-hidden rounded-xl p-2.5 text-white shadow-xs transition hover:-translate-y-1 hover:brightness-110"
           [class]="board.bgClass" (click)="onBoardClick(board)">
           <div class="relative z-10">
             <div class="text-[9px] font-extrabold uppercase tracking-wide opacity-90">{{ board.workspaceName }}</div>
-            <div class="mt-0.5 text-[13px] font-bold leading-tight [text-shadow:0_1px_2px_rgba(0,0,0,0.2)]">{{
-              board.title }}</div>
+            <div class="mt-0.5 text-[13px] font-bold leading-tight [text-shadow:0_1px_2px_rgba(0,0,0,0.2)]">{{ board.title }}</div>
           </div>
           <button class="absolute right-2.5 top-2.5 z-10 text-sm text-yellow-400 transition hover:scale-110"
             title="Bỏ đánh dấu sao" (click)="$event.stopPropagation(); toggleStar(board.id)">⭐</button>
           <div class="relative z-10 flex items-center justify-between text-[10px] font-semibold opacity-95">
-            <span>{{ board.privacy === 'Public' ? '🌐' : '🔒' }} {{ board.privacy }}</span>
-            <span class="badge badge-xs border-none bg-black/25 text-white">{{ board.badge }}</span>
+            <span>{{ board.privacy === 'Private' ? '🔒 Riêng tư' : (board.privacy === 'Public' ? '🌐 Công khai' : '🏢 Workspace') }}</span>
+            <span class="badge badge-xs border-none bg-black/25 text-white font-bold">{{ board.badge }}</span>
           </div>
         </div>
         }
@@ -114,19 +47,52 @@
     </section>
     }
 
-    <!-- Tất cả không gian làm việc (full-width) -->
-    <div>
+    <!-- Main Section: Left Sidebar & Workspaces Content -->
+    <div class="flex flex-col lg:flex-row gap-4 items-start">
+      <!-- Left Sidebar Component -->
+      <aside class="w-full lg:w-64 shrink-0">
+        <app-workspace-sidebar
+          [workspaces]="workspaces()"
+          [activeWorkspaceId]="activeWorkspaceId()"
+          [totalBoardsCount]="totalBoardsCount()"
+          (selectWorkspace)="selectWorkspace($event)"
+          (createWorkspace)="openCreateWorkspace()">
+        </app-workspace-sidebar>
 
-      <!-- MAIN: Tất cả không gian làm việc -->
-      <div class="min-w-0 flex-1">
-        <div class="mb-2.5 flex items-center justify-between gap-2 flex-wrap">
+        <!-- Templates Quick Widget -->
+        <div class="mt-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-base-100 p-3.5 shadow-xs">
+          <div class="mb-2 flex items-center gap-1.5 px-1">
+            <span class="text-sm">⚡</span>
+            <span class="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400">Mẫu bảng phổ biến</span>
+          </div>
+          <div class="space-y-1.5">
+            @for (tpl of templates; track tpl.title) {
+            <button
+              type="button"
+              class="w-full text-left p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-all flex items-start gap-2"
+              (click)="useTemplate(tpl)">
+              <span class="badge badge-xs font-bold shrink-0 mt-0.5" [class]="tpl.badgeClass">{{ tpl.badge }}</span>
+              <div class="min-w-0 flex-1">
+                <div class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{{ tpl.title }}</div>
+                <div class="text-[10px] text-slate-500 truncate">{{ tpl.desc }}</div>
+              </div>
+            </button>
+            }
+          </div>
+        </div>
+      </aside>
+
+      <!-- Right Content Area -->
+      <div class="min-w-0 flex-1 w-full space-y-4">
+        <!-- Header Controls / Filter Indicator -->
+        <div class="flex items-center justify-between gap-2 flex-wrap pb-1">
           <div class="flex items-center gap-2">
-            <span class="flex h-6 w-6 items-center justify-center rounded-full bg-secondary/15 text-[13px]">🥞</span>
-            <h2 class="text-[13px] font-extrabold uppercase tracking-wide text-base-content">
-              @if (activeWorkspaceId(); as activeId) {
-              Không gian làm việc đang lọc
+            <span class="text-lg">🥞</span>
+            <h2 class="text-sm font-black uppercase tracking-wide text-slate-800 dark:text-slate-200">
+              @if (activeWorkspaceId()) {
+                Không gian làm việc đang lọc
               } @else {
-              Tất cả không gian làm việc của bạn
+                Tất cả không gian làm việc của bạn
               }
             </h2>
             @if (activeWorkspaceId()) {
@@ -137,710 +103,69 @@
             </button>
             }
           </div>
-          <button type="button" class="btn btn-primary btn-xs rounded-box px-3 font-bold gap-1 shadow-sm"
-            (click)="openCreateWorkspaceModal()">
-            <span class="text-[13px] leading-none">+</span> Tạo Workspace mới
+
+          <button type="button" class="btn btn-primary btn-xs rounded-xl px-3.5 font-black gap-1 shadow-xs"
+            (click)="openCreateWorkspace()">
+            <span>+ Tạo Workspace</span>
           </button>
         </div>
 
+        <!-- 1. Zero state: Show Welcome Banner Component -->
         @if (workspaces().length === 0) {
-        <div class="overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-xl transition-all">
-          <!-- Hero Header Banner with Gradient & Glow -->
-          <div
-            class="relative overflow-hidden bg-gradient-to-r from-primary/95 via-primary to-secondary/90 px-6 py-10 text-white md:px-10">
-            <!-- Glow & mesh effects -->
-            <div class="pointer-events-none absolute -right-10 -top-10 h-64 w-64 rounded-full bg-white/15 blur-3xl">
-            </div>
-            <div
-              class="pointer-events-none absolute -bottom-10 -left-10 h-64 w-64 rounded-full bg-secondary/30 blur-2xl">
-            </div>
+        <app-workspace-welcome-banner
+          (createWorkspace)="openCreateWorkspace()"
+          (loadSamples)="loadSampleWorkspaces()">
+        </app-workspace-welcome-banner>
+        }
 
-            <div class="relative z-10 flex flex-col items-center text-center md:items-start md:text-left">
-              <div
-                class="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/15 px-3.5 py-1 text-xs font-extrabold tracking-wide backdrop-blur-md shadow-sm">
-                <span>✨</span>
-                <span>CHÀO MỪNG BẠN ĐẾN VỚI HỆ THỐNG WORKSPACE</span>
-              </div>
-
-              <h1
-                class="mt-3.5 text-2xl font-black tracking-tight sm:text-3xl lg:text-4xl text-white [text-shadow:0_2px_4px_rgba(0,0,0,0.15)]">
-                Xin chào, {{ currentUser()?.displayName || 'bạn' }}! 👋
-              </h1>
-              <p class="mt-2 max-w-2xl text-xs sm:text-sm text-white/90 leading-relaxed font-medium">
-                Hiện tại bạn chưa có Không gian làm việc nào. Hãy cùng thiết lập Không gian làm việc đầu tiên để tổ chức
-                các dự án Kanban, quản lý công việc và cộng tác cùng đồng đội nhé!
-              </p>
-
-              <!-- Current User UUID Highlight Bar -->
-              @if (currentUser(); as user) {
-              <div
-                class="mt-5 flex flex-wrap items-center gap-2.5 rounded-xl border border-white/25 bg-black/25 p-2.5 px-3.5 backdrop-blur-md shadow-inner">
-                <div class="flex items-center gap-2 text-xs font-semibold text-white/95">
-                  <span class="text-base">🔑</span>
-                  <span>UUID của bạn:</span>
-                  <code
-                    class="rounded-md bg-black/50 px-2 py-1 font-mono text-[11px] font-bold text-yellow-300 tracking-wider select-all">{{ user.id }}</code>
-                </div>
-                <button type="button"
-                  class="btn btn-xs rounded-lg border border-white/40 bg-white/20 text-white hover:bg-white hover:text-slate-900 transition-all font-bold gap-1 shadow-sm"
-                  (click)="copyMyUuid()">
-                  <span>{{ copiedMyUuid() ? '✓ Đã chép!' : '📋 Sao chép UUID' }}</span>
-                </button>
-              </div>
-              }
-            </div>
-          </div>
-
-          <!-- 3-Step Guided Onboarding -->
-          <div class="p-6 md:p-8">
-            <div class="mb-6 flex items-center justify-between">
-              <div>
-                <h2 class="text-base font-black uppercase tracking-wide text-base-content flex items-center gap-2">
-                  <span
-                    class="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary text-base font-bold">🚀</span>
-                  3 Bước bắt đầu nhanh
-                </h2>
-                <p class="text-xs text-base-content/60 mt-0.5">Làm quen với quy trình tổ chức và quản lý công việc hiệu
-                  quả</p>
-              </div>
-              <span class="badge badge-primary badge-outline badge-sm font-bold">Dễ dàng & Nhanh chóng</span>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <!-- Step 1 -->
-              <div
-                class="group relative flex flex-col justify-between rounded-xl border border-base-300 bg-base-200/50 p-4.5 transition-all hover:border-primary/50 hover:bg-base-200 hover:shadow-md">
-                <div>
-                  <div class="flex items-center justify-between mb-3">
-                    <span
-                      class="flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-primary-content text-sm font-extrabold shadow-sm">1</span>
-                    <span
-                      class="rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-extrabold text-primary uppercase">Bước
-                      1</span>
-                  </div>
-                  <h3 class="text-sm font-bold text-base-content">Tạo Không gian làm việc</h3>
-                  <p class="mt-1.5 text-xs text-base-content/65 leading-relaxed">
-                    Đặt tên và chọn biểu tượng riêng cho từng đồ án, môn học hoặc dự án thực tế.
-                  </p>
-                </div>
-                <div
-                  class="mt-4 pt-3 border-t border-base-300/60 flex items-center gap-1.5 text-[11px] font-semibold text-primary">
-                  <span>📂 Phân loại theo từng dự án</span>
-                </div>
-              </div>
-
-              <!-- Step 2 -->
-              <div
-                class="group relative flex flex-col justify-between rounded-xl border border-base-300 bg-base-200/50 p-4.5 transition-all hover:border-secondary/50 hover:bg-base-200 hover:shadow-md">
-                <div>
-                  <div class="flex items-center justify-between mb-3">
-                    <span
-                      class="flex h-8 w-8 items-center justify-center rounded-xl bg-secondary text-secondary-content text-sm font-extrabold shadow-sm">2</span>
-                    <span
-                      class="rounded-full bg-secondary/10 px-2.5 py-0.5 text-[10px] font-extrabold text-secondary uppercase">Bước
-                      2</span>
-                  </div>
-                  <h3 class="text-sm font-bold text-base-content">Thêm thành viên bằng UUID</h3>
-                  <p class="mt-1.5 text-xs text-base-content/65 leading-relaxed">
-                    Nhập mã UUID của bạn bè hoặc chọn nhanh từ danh sách người dùng mẫu có sẵn.
-                  </p>
-                </div>
-                <div
-                  class="mt-4 pt-3 border-t border-base-300/60 flex items-center gap-1.5 text-[11px] font-semibold text-secondary">
-                  <span>👥 Cộng tác và phân công thẻ</span>
-                </div>
-              </div>
-
-              <!-- Step 3 -->
-              <div
-                class="group relative flex flex-col justify-between rounded-xl border border-base-300 bg-base-200/50 p-4.5 transition-all hover:border-accent/50 hover:bg-base-200 hover:shadow-md">
-                <div>
-                  <div class="flex items-center justify-between mb-3">
-                    <span
-                      class="flex h-8 w-8 items-center justify-center rounded-xl bg-accent text-accent-content text-sm font-extrabold shadow-sm">3</span>
-                    <span
-                      class="rounded-full bg-accent/10 px-2.5 py-0.5 text-[10px] font-extrabold text-accent uppercase">Bước
-                      3</span>
-                  </div>
-                  <h3 class="text-sm font-bold text-base-content">Tạo Bảng Kanban</h3>
-                  <p class="mt-1.5 text-xs text-base-content/65 leading-relaxed">
-                    Kéo thả thẻ công việc, gán hạn chót, checklist và theo dõi tiến độ công việc mượt mà.
-                  </p>
-                </div>
-                <div
-                  class="mt-4 pt-3 border-t border-base-300/60 flex items-center gap-1.5 text-[11px] font-semibold text-accent">
-                  <span>📋 Kéo thả thẻ Kanban mượt mà</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div
-              class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-6 border-t border-base-300">
-              <button type="button"
-                class="btn btn-primary btn-md w-full sm:w-auto px-7 font-extrabold shadow-lg shadow-primary/25 gap-2 rounded-xl text-xs sm:text-sm"
-                (click)="openCreateWorkspaceModal()">
-                <span class="text-base">✨</span>
-                <span>Tạo Không gian làm việc đầu tiên</span>
-              </button>
-              <button type="button"
-                class="btn btn-outline btn-md w-full sm:w-auto px-6 font-bold gap-2 rounded-xl text-xs sm:text-sm hover:bg-base-300"
-                (click)="loadSampleWorkspaces()">
-                <span class="text-base">⚡</span>
-                <span>Tải dữ liệu Workspace Mẫu</span>
-              </button>
-            </div>
-
-            <!-- Pro tips bar -->
-            <div
-              class="mt-6 rounded-xl border border-base-300/80 bg-base-200/60 p-3.5 text-center sm:flex sm:items-center sm:justify-between sm:text-left">
-              <div class="flex items-center justify-center sm:justify-start gap-2.5 text-xs text-base-content/75">
-                <span class="text-base">💡</span>
-                <span><strong>Mẹo nhanh:</strong> Nhấn phím <kbd class="kbd kbd-xs">Esc</kbd> để đóng nhanh các hộp
-                  thoại, hoặc bấm nút <strong>+ Tạo</strong> trên thanh Header bất kỳ lúc nào.</span>
-              </div>
-            </div>
-          </div>
+        <!-- 2. Search has no results -->
+        @else if (searchHasNoResults()) {
+        <div class="flex flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-base-300 bg-base-100/60 px-4 py-12 text-center">
+          <div class="flex h-12 w-12 items-center justify-center rounded-full bg-base-200 text-xl">🔍</div>
+          <p class="text-sm font-bold text-slate-800 dark:text-slate-200">Không tìm thấy bảng nào khớp với "{{ searchQuery() }}"</p>
+          <p class="text-xs text-slate-500">Thử từ khóa khác hoặc kiểm tra lại chính tả.</p>
         </div>
-        } @else if (searchHasNoResults()) {
-        <div
-          class="flex flex-col items-center gap-2 rounded-box border border-dashed border-base-300 bg-base-100/60 px-4 py-10 text-center">
-          <div class="flex h-10 w-10 items-center justify-center rounded-full bg-base-200 text-lg">🔍</div>
-          <p class="text-[13px] font-semibold text-base-content/70">Không tìm thấy bảng nào khớp với "{{ searchQuery()
-            }}"</p>
-          <p class="text-[11px] text-base-content/45">Thử từ khóa khác hoặc kiểm tra lại chính tả.</p>
-        </div>
-        } @else {
-        <div class="flex flex-col gap-3.5">
-          @for (ws of filteredWorkspaces(); track trackByWorkspaceId($index, ws)) {
-          <div class="rounded-2xl border border-base-300 bg-base-100 p-4 shadow-xs overflow-hidden">
-            <!-- Header Section -->
-            <div class="mb-3.5 flex items-start justify-between gap-3 min-w-0">
-              <div class="flex items-start gap-3 min-w-0 flex-1">
-                <!-- Workspace Icon -->
-                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xl shadow-xs"
-                  [class]="ws.iconBg">{{ ws.icon }}</div>
+        }
 
-                <div class="min-w-0 flex-1">
-                  <div class="flex items-center gap-2 flex-wrap">
-                    <h3 class="truncate text-[15px] font-black text-slate-900 dark:text-white" [title]="ws.name">{{ ws.name }}</h3>
-                    <span class="badge badge-sm border-none bg-slate-200/80 dark:bg-slate-700/80 text-[11px] font-bold text-slate-700 dark:text-slate-200">
-                      {{ ws.boards.length }} bảng
-                    </span>
-                  </div>
-
-                  <!-- Workspace Description (Clean Line-Clamp & Break-Words) -->
-                  @if (ws.description) {
-                  <p class="mt-1 text-xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed break-words" [title]="ws.description">
-                    {{ ws.description }}
-                  </p>
-                  }
-
-                  <!-- Member Avatar Stack & Count -->
-                  <div class="mt-2 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-                    <div class="flex items-center -space-x-1.5 overflow-hidden">
-                      @for (mem of ws.members.slice(0, 4); track mem.id) {
-                      <div
-                        class="inline-flex h-5 w-5 items-center justify-center rounded-full border-2 border-white dark:border-slate-800 text-[8px] font-bold text-white shadow-xs"
-                        [style.background-color]="avatarBgFor(mem.id)"
-                        [title]="mem.displayName + ' (UUID: ' + mem.id + ')'">
-                        {{ initialsOf(mem.displayName || mem.email) }}
-                      </div>
-                      }
-                      @if (ws.members.length > 4) {
-                      <div
-                        class="inline-flex h-5 w-5 items-center justify-center rounded-full border-2 border-white dark:border-slate-800 bg-slate-200 dark:bg-slate-700 text-[8px] font-bold text-slate-700 dark:text-slate-200 shadow-xs">
-                        +{{ ws.members.length - 4 }}
-                      </div>
-                      }
-                    </div>
-                    <span class="text-[11px] font-semibold text-slate-600 dark:text-slate-400">{{ ws.members.length }} thành viên</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Action buttons -->
-              <div class="flex shrink-0 items-center gap-1.5 pt-0.5">
-                <button class="btn btn-ghost btn-xs text-xs rounded-lg font-bold hover:bg-slate-200 dark:hover:bg-slate-700"
-                  title="Chỉnh sửa & Thành viên" (click)="openEditWorkspaceModal(ws)">
-                  ✏️ Sửa
-                </button>
-                <button class="btn btn-primary btn-xs rounded-lg px-3 text-[11.5px] font-bold shadow-xs"
-                  (click)="openCreateModal(ws.id)">
-                  + Thêm bảng
-                </button>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2.5">
-              @for (board of ws.boards; track board.id) {
-              <div
-                class="board-tile group relative flex h-[92px] cursor-pointer flex-col justify-between overflow-hidden rounded-box p-2.5 text-white shadow-sm transition hover:-translate-y-1.5 hover:brightness-110"
-                [class]="board.bgClass" (click)="onBoardClick(board)">
-                <div class="relative z-10">
-                  <div class="text-[9px] font-extrabold uppercase tracking-wide opacity-90">{{ board.tag }}</div>
-                  <div class="mt-0.5 text-[13px] font-bold leading-tight [text-shadow:0_1px_2px_rgba(0,0,0,0.2)]">{{
-                    board.title }}</div>
-                </div>
-                <button
-                  class="absolute right-8 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-black/30 text-white opacity-0 transition hover:bg-black/55 group-hover:opacity-100"
-                  title="Xóa bảng" (click)="$event.stopPropagation(); confirmDeleteKey.set(ws.id + ':' + board.id)">
-                  <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 6h18" />
-                    <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6" />
-                    <line x1="10" y1="11" x2="10" y2="17" />
-                    <line x1="14" y1="11" x2="14" y2="17" />
-                  </svg>
-                </button>
-                <button
-                  class="absolute right-2.5 top-2.5 z-10 text-sm text-white/60 transition hover:scale-110 hover:text-yellow-400"
-                  [class.text-yellow-400]="board.starred" [class.scale-110]="board.starred" title="Đánh dấu sao"
-                  (click)="$event.stopPropagation(); toggleStar(board.id)">
-                  {{ board.starred ? '⭐' : '☆' }}
-                </button>
-                <div class="relative z-10 flex items-center justify-between text-[10px] font-semibold opacity-95">
-                  <span>{{ board.privacy === 'Private' ? '🔒 Riêng tư' : (board.privacy === 'Public' ? '🌐 Công khai' : '🏢 Workspace') }}</span>
-                  <span class="badge badge-xs border-none bg-black/25 text-white">{{ board.badge }}</span>
-                </div>
-                @if (confirmDeleteKey() === ws.id + ':' + board.id) {
-                <div class="fixed inset-0 z-[999] cursor-default"
-                  (click)="$event.stopPropagation(); confirmDeleteKey.set(null)"></div>
-                <div
-                  class="absolute right-1.5 top-9 z-[1000] w-36 rounded-box border border-base-300 bg-base-100 p-2 text-left shadow-lg"
-                  (click)="$event.stopPropagation()">
-                  <p class="mb-1.5 text-[11px] font-semibold text-base-content">Xóa bảng này?</p>
-                  <div class="flex justify-end gap-1">
-                    <button type="button" class="btn btn-ghost btn-xs" (click)="confirmDeleteKey.set(null)">Hủy</button>
-                    <button type="button" class="btn btn-error btn-xs text-white"
-                      (click)="deleteBoard(ws.id, board)">Xóa</button>
-                  </div>
-                </div>
-                }
-              </div>
-              }
-              <div
-                class="flex h-[92px] cursor-pointer flex-col items-center justify-center gap-1 rounded-box border-2 border-dashed border-base-300 bg-base-100 text-[12px] font-semibold text-base-content/50 transition hover:border-primary hover:bg-base-200 hover:text-primary"
-                (click)="openCreateModal(ws.id)">
-                <span class="text-lg">+</span>
-                <span>Tạo bảng mới</span>
-              </div>
-            </div>
-          </div>
+        <!-- 3. Workspaces Card List Components -->
+        @else {
+        <div class="space-y-4">
+          @for (ws of filteredWorkspaces(); track ws.id) {
+          <app-workspace-card-item
+            [workspace]="ws"
+            [confirmDeleteKey]="confirmDeleteKey()"
+            (confirmDeleteKeyChange)="confirmDeleteKey.set($event)"
+            (editWorkspace)="openEditWorkspace($event)"
+            (createBoard)="openCreateBoard($event)"
+            (boardClick)="onBoardClick($event)"
+            (toggleStar)="toggleStar($event)"
+            (deleteBoard)="deleteBoard($event)">
+          </app-workspace-card-item>
           }
         </div>
         }
       </div>
-
     </div>
-
   </main>
 </div>
 
-<!-- MODAL: Create new board -->
-@if (showCreateModal()) {
-<div class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-[2px]"
-  (click)="closeCreateModal()">
-  <div class="w-full max-w-[480px] rounded-2xl border-2 border-slate-300 dark:border-slate-600 bg-base-100 p-6 shadow-2xl"
-    (click)="$event.stopPropagation()">
-    <div class="mb-5 flex items-center justify-between">
-      <h3 class="text-lg font-black text-slate-900 dark:text-white">Tạo bảng làm việc mới</h3>
-      <button class="btn btn-circle btn-ghost btn-sm text-xl" (click)="closeCreateModal()">&times;</button>
-    </div>
+<!-- MODAL: Create Board Component -->
+<app-create-board-modal
+  [isOpen]="showCreateBoardModal()"
+  [workspaces]="workspaces()"
+  [initialWorkspaceId]="createBoardInitialWorkspaceId()"
+  [initialTitle]="createBoardInitialTitle()"
+  (close)="showCreateBoardModal.set(false)"
+  (submitBoard)="handleBoardSubmit($event)">
+</app-create-board-modal>
 
-    <form (ngSubmit)="onCreateBoardSubmit()">
-      <div class="mb-4">
-        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200" for="board-title-input">
-          Tên bảng dự án <span class="text-error">*</span>
-        </label>
-        <input type="text" id="board-title-input"
-          class="input input-bordered border-2 w-full rounded-xl font-bold text-slate-900 dark:text-white bg-white dark:bg-slate-800 shadow-xs text-sm transition-all"
-          [class.border-error]="boardTitleError()"
-          [class.focus:border-error]="boardTitleError()"
-          [class.focus:ring-error/20]="boardTitleError()"
-          [class.border-slate-300]="!boardTitleError()"
-          [class.dark:border-slate-600]="!boardTitleError()"
-          [class.focus:border-primary]="!boardTitleError()"
-          placeholder="Ví dụ: Quản lý Sprint 12, Phát triển MVP..." [ngModel]="newBoardTitle()"
-          (ngModelChange)="newBoardTitle.set($event); boardTitleError.set(null)" name="boardTitle" />
-        @if (boardTitleError()) {
-        <p class="mt-1.5 text-xs font-bold text-error flex items-center gap-1 animate-pulse">
-          <span>⚠️</span> {{ boardTitleError() }}
-        </p>
-        }
-      </div>
-
-      <div class="mb-4">
-        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200"
-          for="board-workspace-select">Workspace</label>
-        <select id="board-workspace-select"
-          class="select select-bordered border-2 border-slate-300 dark:border-slate-600 focus:border-primary focus:ring-2 focus:ring-primary/20 w-full rounded-xl font-bold text-slate-900 dark:text-white bg-white dark:bg-slate-800 shadow-xs text-sm"
-          [ngModel]="newBoardWorkspaceId()"
-          (ngModelChange)="onNewBoardWorkspaceChange($event)" name="boardWorkspace">
-          @for (ws of workspaces(); track ws.id) {
-          <option [value]="ws.id">{{ ws.name }}</option>
-          }
-        </select>
-      </div>
-
-      <div class="mb-4">
-        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-          Quyền riêng tư & Quyền truy cập
-        </label>
-        <div class="grid grid-cols-2 gap-2.5">
-          <!-- Option 1: Tất cả thành viên Workspace -->
-          <label
-            class="flex cursor-pointer items-start gap-2.5 rounded-xl border-2 border-slate-300 dark:border-slate-600 p-3 transition hover:bg-base-200/80 bg-base-100 shadow-xs"
-            [class.border-primary]="newBoardPrivacy() === 'Workspace'"
-            [class.bg-primary/5]="newBoardPrivacy() === 'Workspace'">
-            <input type="radio" name="privacy" value="Workspace" class="radio radio-primary radio-sm mt-0.5"
-              [checked]="newBoardPrivacy() === 'Workspace'" (change)="newBoardPrivacy.set('Workspace')" />
-            <div class="text-[12.5px] leading-tight">
-              <span class="font-bold text-slate-900 dark:text-white">🏢 Tất cả thành viên</span>
-              <p class="text-[10.5px] text-slate-500 dark:text-slate-400 mt-1">Toàn bộ {{ currentWorkspaceMembers().length }} thành viên trong workspace đều xem được</p>
-            </div>
-          </label>
-
-          <!-- Option 2: Thành viên được chọn -->
-          <label
-            class="flex cursor-pointer items-start gap-2.5 rounded-xl border-2 border-slate-300 dark:border-slate-600 p-3 transition hover:bg-base-200/80 bg-base-100 shadow-xs"
-            [class.border-primary]="newBoardPrivacy() === 'Private'"
-            [class.bg-primary/5]="newBoardPrivacy() === 'Private'">
-            <input type="radio" name="privacy" value="Private" class="radio radio-primary radio-sm mt-0.5"
-              [checked]="newBoardPrivacy() === 'Private'" (change)="newBoardPrivacy.set('Private')" />
-            <div class="text-[12.5px] leading-tight">
-              <span class="font-bold text-slate-900 dark:text-white">🔒 Thành viên được chọn</span>
-              <p class="text-[10.5px] text-slate-500 dark:text-slate-400 mt-1">Chỉ những người được tích chọn trong workspace này</p>
-            </div>
-          </label>
-        </div>
-
-        <!-- Custom Member Selection List (Shown when 'Private' is active) -->
-        @if (newBoardPrivacy() === 'Private') {
-        <div class="mt-3 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-3.5 shadow-xs transition-all">
-          <div class="mb-2.5 flex items-center justify-between">
-            <span class="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-              Chọn thành viên trong Workspace ({{ newBoardSelectedMemberIds().length }}/{{ currentWorkspaceMembers().length }}):
-            </span>
-            <div class="flex gap-1.5">
-              <button type="button" class="btn btn-ghost btn-xs text-[10.5px] font-bold text-primary hover:bg-primary/10" (click)="selectAllBoardMembers()">Tất cả</button>
-              <button type="button" class="btn btn-ghost btn-xs text-[10.5px] font-bold text-slate-500 hover:bg-slate-200" (click)="deselectAllBoardMembers()">Bỏ chọn</button>
-            </div>
-          </div>
-
-          <div class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
-            @for (mem of currentWorkspaceMembers(); track mem.id) {
-            <label
-              class="flex cursor-pointer items-center justify-between gap-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2 transition hover:bg-slate-100 dark:hover:bg-slate-700"
-              [class.ring-1]="newBoardSelectedMemberIds().includes(mem.id)"
-              [class.ring-primary]="newBoardSelectedMemberIds().includes(mem.id)">
-              <div class="flex items-center gap-2.5 min-w-0">
-                <div
-                  class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white shadow-xs"
-                  [style.background-color]="avatarBgFor(mem.id)">
-                  {{ initialsOf(mem.displayName || mem.email) }}
-                </div>
-                <div class="min-w-0 flex-1">
-                  <div class="flex items-center gap-1.5">
-                    <span class="truncate text-[12px] font-bold text-slate-900 dark:text-white">{{ mem.displayName }}</span>
-                    @if (mem.role === 'owner') {
-                    <span class="badge badge-warning badge-xs font-bold text-[8.5px]">Trưởng nhóm</span>
-                    }
-                  </div>
-                  <span class="truncate text-[10px] text-slate-500 dark:text-slate-400 block font-mono">UUID: {{ mem.id.slice(0, 8) }}...</span>
-                </div>
-              </div>
-              <input
-                type="checkbox"
-                class="checkbox checkbox-primary checkbox-sm"
-                [checked]="newBoardSelectedMemberIds().includes(mem.id)"
-                (change)="toggleBoardMember(mem.id)" />
-            </label>
-            }
-          </div>
-        </div>
-        }
-      </div>
-
-      <div class="mb-5">
-        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Màu nền bảng</label>
-        <div class="flex gap-2">
-          @for (bg of bgClasses; track bg) {
-          <div class="h-8 w-8 cursor-pointer rounded-xl transition hover:scale-110 shadow-xs" [class]="bg"
-            [class.ring-2]="selectedBgClass() === bg" [class.ring-primary]="selectedBgClass() === bg"
-            [class.ring-offset-2]="selectedBgClass() === bg" (click)="selectedBgClass.set(bg)"></div>
-          }
-        </div>
-      </div>
-
-      <div class="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-700">
-        <button type="button" class="btn btn-ghost rounded-xl font-bold" (click)="closeCreateModal()">Hủy</button>
-        <button type="submit" class="btn btn-primary rounded-xl font-black px-5 shadow-sm">Tạo bảng</button>
-      </div>
-    </form>
-  </div>
-</div>
-}
-
-<!-- MODAL: Create / Edit Workspace (With UUID Member Management) -->
-@if (showWorkspaceModal()) {
-<div class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-[2px]"
-  (click)="closeWorkspaceModal()">
-  <div
-    class="w-full max-w-[560px] max-h-[90vh] overflow-y-auto rounded-2xl border-2 border-slate-300 dark:border-slate-600 bg-base-100 p-6 shadow-2xl"
-    (click)="$event.stopPropagation()">
-    <div class="mb-5 flex items-center justify-between">
-      <h3 class="text-lg font-black text-slate-900 dark:text-white">
-        {{ workspaceModalMode() === 'create' ? 'Tạo Không gian làm việc mới' : 'Chỉnh sửa Không gian làm việc' }}
-      </h3>
-      <button class="btn btn-circle btn-ghost btn-sm text-xl" (click)="closeWorkspaceModal()">&times;</button>
-    </div>
-
-    <form (ngSubmit)="onWorkspaceModalSubmit()">
-      <!-- Icon & Name & Color Theme -->
-      <div class="mb-4">
-        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-          Biểu tượng, Màu nền & Tên Workspace
-        </label>
-        <div class="flex items-center gap-3">
-          <!-- Live Preview of Workspace Icon with Selected Background -->
-          <div
-            class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-2xl shadow-md transition-transform hover:scale-105"
-            [class]="workspaceIconBgInput()">
-            {{ workspaceIconInput() || '📂' }}
-          </div>
-
-          <!-- Name input -->
-          <div class="flex-1">
-            <input type="text" id="workspace-name-input"
-              class="input input-bordered border-2 w-full rounded-xl font-bold text-slate-900 dark:text-white bg-white dark:bg-slate-800 shadow-xs text-sm transition-all"
-              [class.border-error]="workspaceNameError()"
-              [class.focus:border-error]="workspaceNameError()"
-              [class.focus:ring-error/20]="workspaceNameError()"
-              [class.border-slate-300]="!workspaceNameError()"
-              [class.dark:border-slate-600]="!workspaceNameError()"
-              [class.focus:border-primary]="!workspaceNameError()"
-              placeholder="Ví dụ: Đồ án Tốt nghiệp CNTT, Dự án SaaS..." [ngModel]="workspaceNameInput()"
-              (ngModelChange)="workspaceNameInput.set($event); workspaceNameError.set(null)" name="workspaceName" />
-            @if (workspaceNameError()) {
-            <p class="mt-1.5 text-xs font-bold text-error flex items-center gap-1 animate-pulse">
-              <span>⚠️</span> {{ workspaceNameError() }}
-            </p>
-            }
-          </div>
-        </div>
-
-        <!-- Color Palette for Workspace Icon Background -->
-        <div class="mt-3">
-          <span class="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 block mb-1.5">Màu nền biểu tượng:</span>
-          <div class="flex flex-wrap gap-2">
-            @for (bg of bgClasses; track bg) {
-            <div
-              class="h-7 w-7 cursor-pointer rounded-xl transition-all hover:scale-110 shadow-xs"
-              [class]="bg"
-              [class.ring-2]="workspaceIconBgInput() === bg"
-              [class.ring-primary]="workspaceIconBgInput() === bg"
-              [class.ring-offset-2]="workspaceIconBgInput() === bg"
-              [class.scale-110]="workspaceIconBgInput() === bg"
-              (click)="workspaceIconBgInput.set(bg)"></div>
-            }
-          </div>
-        </div>
-
-        <!-- Categorized Icon Selector Grid -->
-        <div class="mt-3 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 p-3">
-          <!-- Category Tabs -->
-          <div class="flex items-center gap-1.5 overflow-x-auto pb-2 border-b border-slate-200 dark:border-slate-700 mb-2.5">
-            @for (cat of iconCategories; track $index) {
-            <button
-              type="button"
-              class="btn btn-xs rounded-lg font-bold text-[11px] transition-all"
-              [class.btn-primary]="selectedIconCategory() === $index"
-              [class.btn-ghost]="selectedIconCategory() !== $index"
-              (click)="selectedIconCategory.set($index)">
-              {{ cat.name }}
-            </button>
-            }
-          </div>
-
-          <!-- Icons Grid -->
-          <div class="grid grid-cols-7 gap-1.5">
-            @for (icon of iconCategories[selectedIconCategory()].icons; track icon) {
-            <button
-              type="button"
-              class="flex h-9 w-9 items-center justify-center rounded-xl text-lg transition-all hover:scale-120 hover:bg-slate-200 dark:hover:bg-slate-700 shadow-xs"
-              [class.ring-2]="workspaceIconInput() === icon"
-              [class.ring-primary]="workspaceIconInput() === icon"
-              [class.bg-white]="workspaceIconInput() === icon"
-              [class.dark:bg-slate-700]="workspaceIconInput() === icon"
-              [class.scale-110]="workspaceIconInput() === icon"
-              (click)="workspaceIconInput.set(icon)">
-              {{ icon }}
-            </button>
-            }
-          </div>
-
-          <!-- Custom Icon Input -->
-          <div class="mt-2.5 pt-2 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs">
-            <span class="text-slate-500 font-medium text-[11px]">Hoặc nhập biểu tượng bất kỳ:</span>
-            <input type="text"
-              class="input input-bordered input-xs border-2 border-slate-300 dark:border-slate-600 w-16 text-center text-sm font-bold rounded-lg bg-white dark:bg-slate-800"
-              maxlength="4"
-              [ngModel]="workspaceIconInput()"
-              (ngModelChange)="workspaceIconInput.set($event)"
-              name="customWorkspaceIcon" />
-          </div>
-        </div>
-      </div>
-
-      <div class="mb-4">
-        <div class="flex items-center justify-between mb-1.5">
-          <label class="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200" for="workspace-desc-input">
-            Mô tả
-          </label>
-          <span class="text-[11px] font-semibold text-slate-400">
-            {{ workspaceDescInput().length }}/300 ký tự
-          </span>
-        </div>
-        <textarea id="workspace-desc-input"
-          maxlength="300"
-          class="textarea textarea-bordered border-2 border-slate-300 dark:border-slate-600 focus:border-primary focus:ring-2 focus:ring-primary/20 w-full rounded-xl font-medium text-slate-900 dark:text-white bg-white dark:bg-slate-800 shadow-xs text-sm leading-relaxed"
-          rows="3"
-          placeholder="Mô tả mục tiêu của không gian làm việc này..." [ngModel]="workspaceDescInput()"
-          (ngModelChange)="workspaceDescInput.set($event)" name="workspaceDesc"></textarea>
-      </div>
-
-      <!-- MEMBER MANAGEMENT VIA UUID / SEARCH -->
-      <div class="my-4 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 p-4 shadow-xs">
-        <div class="mb-3 flex items-center justify-between">
-          <div class="flex items-center gap-1.5">
-            <span class="text-sm font-bold text-primary">👥</span>
-            <span class="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Thành viên Workspace</span>
-          </div>
-          <span class="badge badge-primary badge-sm font-black">{{ workspaceMembers().length }} người</span>
-        </div>
-
-        <!-- UUID Search / Input bar -->
-        <div class="relative mb-3">
-          <div class="flex gap-2">
-            <div class="relative flex-1">
-              <svg
-                class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
-              <input type="text"
-                class="input input-sm w-full rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 pl-9 text-xs font-medium text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 shadow-xs"
-                placeholder="Nhập UUID, Email hoặc Tên người dùng..." [ngModel]="uuidSearchInput()"
-                (ngModelChange)="uuidSearchInput.set($event); searchDropdownOpen.set(true)"
-                (keydown.enter)="$event.preventDefault(); addMemberByInput()" name="uuidSearch" />
-            </div>
-            <button type="button" class="btn btn-primary btn-sm rounded-xl px-4 text-xs font-black shadow-xs"
-              (click)="addMemberByInput()">
-              + Thêm
-            </button>
-          </div>
-
-          <!-- Search dropdown suggestions -->
-          @if (searchResults().length > 0 && searchDropdownOpen()) {
-          <div
-            class="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-48 overflow-y-auto rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-2 shadow-2xl">
-            <div class="px-2 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400">Kết quả tìm kiếm
-              phù hợp:</div>
-            @for (user of searchResults(); track user.id) {
-            <div
-              class="flex cursor-pointer items-center justify-between gap-2 rounded-lg p-2 transition hover:bg-slate-100 dark:hover:bg-slate-700"
-              (click)="addMember(user)">
-              <div class="flex items-center gap-2 min-w-0">
-                <div
-                  class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10.5px] font-bold text-white"
-                  [style.background-color]="avatarBgFor(user.id)">
-                  {{ initialsOf(user.displayName || user.email) }}
-                </div>
-                <div class="min-w-0 flex-1">
-                  <div class="truncate text-[12px] font-bold text-base-content">{{ user.displayName || user.email }}
-                  </div>
-                  <div class="truncate font-mono text-[10px] text-base-content/60">UUID: {{ user.id }}</div>
-                </div>
-              </div>
-              <button type="button" class="btn btn-primary btn-xs font-bold shrink-0">+ Thêm</button>
-            </div>
-            }
-          </div>
-          }
-        </div>
-
-        <!-- Selected Members List in Workspace -->
-        <div class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-          @for (mem of workspaceMembers(); track mem.id) {
-          <div
-            class="flex items-center justify-between gap-2 rounded-lg border border-base-300 bg-base-100 p-2 shadow-sm">
-            <div class="flex items-center gap-2.5 min-w-0">
-              <div
-                class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white shadow-inner"
-                [style.background-color]="avatarBgFor(mem.id)">
-                {{ initialsOf(mem.displayName || mem.email) }}
-              </div>
-              <div class="min-w-0 flex-1">
-                <div class="flex items-center gap-1.5">
-                  <span class="truncate text-[12.5px] font-bold text-base-content">{{ mem.displayName }}</span>
-                  @if (mem.role === 'owner') {
-                  <span class="badge badge-warning badge-xs font-bold text-[9px]">👑 Trưởng nhóm</span>
-                  } @else {
-                  <span class="badge badge-ghost badge-xs font-medium text-[9px]">Thành viên</span>
-                  }
-                </div>
-                <div class="flex items-center gap-1.5 mt-0.5">
-                  <span class="truncate text-[10.5px] text-base-content/50">{{ mem.email }}</span>
-                  <span class="text-base-content/30">•</span>
-                  <span class="cursor-pointer font-mono text-[10px] text-primary hover:underline"
-                    [title]="'Bấm để sao chép UUID: ' + mem.id" (click)="copyMemberUuid(mem.id)">
-                    UUID: {{ mem.id.slice(0, 8) }}... 📋
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            @if (mem.role !== 'owner') {
-            <button type="button" class="btn btn-ghost btn-circle btn-xs text-error hover:bg-error/10"
-              title="Gỡ khỏi Workspace" (click)="removeMember(mem.id)">
-              ✕
-            </button>
-            }
-          </div>
-          }
-        </div>
-      </div>
-
-      <div class="mt-5 flex items-center justify-between gap-2 border-t border-base-300 pt-4">
-        @if (workspaceModalMode() === 'edit') {
-        <button type="button" class="btn btn-error btn-outline btn-sm" (click)="confirmDeleteWorkspace()">
-          {{ deleteConfirmArmed() ? 'Bấm lần nữa để xác nhận' : 'Xóa Workspace' }}
-        </button>
-        } @else {
-        <span></span>
-        }
-        <div class="flex gap-2">
-          <button type="button" class="btn btn-ghost btn-sm" (click)="closeWorkspaceModal()">Hủy</button>
-          <button type="submit" class="btn btn-primary btn-sm px-4">
-            {{ workspaceModalMode() === 'create' ? 'Tạo Workspace' : 'Lưu thay đổi' }}
-          </button>
-        </div>
-      </div>
-    </form>
-  </div>
-</div>
-}
-
-<div class="toast toast-end z-[2000]">
-  @for (toast of toasts(); track toast.id) {
-  <div class="alert" [class.alert-success]="toast.type === 'success'" [class.alert-error]="toast.type === 'error'"
-    [class.alert-info]="toast.type === 'info'">
-    <span>✨</span> <span>{{ toast.message }}</span>
-    @if (toast.action; as action) {
-    <button type="button" class="btn btn-ghost btn-xs font-bold" (click)="action.handler()">{{ action.label }}</button>
-    }
-  </div>
-  }
-</div>
+<!-- MODAL: Workspace Form Component (Create & Edit) -->
+<app-workspace-form-modal
+  [isOpen]="showWorkspaceModal()"
+  [mode]="workspaceModalMode()"
+  [workspace]="selectedWorkspaceForEdit()"
+  [currentUser]="currentUser()"
+  (close)="showWorkspaceModal.set(false)"
+  (save)="handleWorkspaceSave($event)"
+  (delete)="handleWorkspaceDelete($event)">
+</app-workspace-form-modal>

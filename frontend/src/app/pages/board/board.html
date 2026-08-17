@@ -1,18 +1,47 @@
 <div class="flex h-[calc(100vh-52px)] flex-col" [class]="pageBgClass()">
 
-  <div class="flex shrink-0 items-center justify-between border-b border-base-300 bg-base-100 px-4 py-2.5">
-    <div class="flex min-w-0 items-center gap-2.5">
-      <a routerLink="/workspace" class="btn btn-square btn-ghost btn-sm shrink-0" aria-label="Quay lại không gian làm việc">
-        <svg class="h-[15px] w-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-      </a>
-      <span class="shrink-0 text-base">🗂️</span>
-      <div class="flex min-w-0 flex-col">
-        <span class="truncate text-[15px] font-bold text-base-content">{{ board()?.name ?? 'Đang tải bảng...' }}</span>
-        <span class="text-[11px] text-base-content/50">{{ lists().length }} danh sách · {{ totalCards() }} thẻ</span>
-      </div>
-    </div>
-  </div>
+  <!-- Board Header & Filter Controls Subcomponent -->
+  <app-board-header-bar
+    [board]="board()"
+    [listsCount]="lists().length"
+    [totalCards]="totalCards()"
+    [viewMode]="viewMode()"
+    [layoutMode]="layoutMode()"
+    [isFilteringActive]="isFilteringActive()"
+    [filterMatchCount]="filterMatchCount()"
+    [showFilterPanel]="showFilterPanel()"
+    [savedFilters]="savedFilters()"
+    [savedHighlightGroups]="savedHighlightGroups()"
+    [activeSavedFilterId]="activeSavedFilterId()"
+    [activeHighlightGroupId]="activeHighlightGroupId()"
+    [members]="members()"
+    [filterAssigneeIds]="filterAssigneeIds()"
+    [labels]="labels()"
+    [filterLabelIds]="filterLabelIds()"
+    [filterPriorities]="filterPriorities()"
+    [filterDate]="filterDate()"
+    [hasActiveFilter]="hasActiveFilter()"
+    [showSaveFilterForm]="showSaveFilterForm()"
+    [newFilterName]="newFilterName()"
+    (layoutModeChange)="setLayoutMode($event)"
+    (openStats)="openStatsModal()"
+    (toggleFilter)="toggleFilterPanel()"
+    (applySavedFilterEvent)="applySavedFilter($event)"
+    (removeSavedFilterEvent)="removeSavedFilter($event.id, $event.event)"
+    (applyHighlightGroupEvent)="applyHighlightGroup($event)"
+    (removeHighlightGroupEvent)="removeHighlightGroup($event.id, $event.event)"
+    (toggleFilterAssigneeEvent)="toggleFilterAssignee($event)"
+    (toggleFilterLabelEvent)="toggleFilterLabel($event)"
+    (toggleFilterPriorityEvent)="toggleFilterPriority($event)"
+    (toggleFilterDateEvent)="toggleFilterDate($event)"
+    (clearFiltersEvent)="clearFilters()"
+    (openSaveFilterFormEvent)="openSaveFilterForm()"
+    (newFilterNameChange)="newFilterName.set($event)"
+    (saveCurrentFilterEvent)="saveCurrentFilter()"
+    (cancelSaveFilterFormEvent)="cancelSaveFilterForm()">
+  </app-board-header-bar>
 
+  <!-- Due date banner -->
   @if (showDueBanner()) {
     <div class="flex shrink-0 items-center gap-2 border-b border-base-300 bg-warning/10 px-4 py-2 text-[12.5px] text-warning">
       <svg class="h-[15px] w-[15px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
@@ -35,392 +64,179 @@
     </div>
   }
 
-  <div class="flex shrink-0 flex-wrap items-center justify-between gap-y-2 border-b border-base-300 bg-base-100 px-4 py-2">
-    <div class="flex flex-wrap items-center gap-3">
-      @if (viewMode() === 'status') {
-        <span class="text-[11px] font-semibold text-base-content/50">Layout</span>
-        <div class="join">
-          <button type="button" class="btn btn-sm join-item gap-1.5" [class.btn-active]="layoutMode() === 'column'" (click)="setLayoutMode('column')" title="Danh sách xếp ngang, thẻ xếp dọc trong mỗi danh sách">
-            Column View
-          </button>
-          <button type="button" class="btn btn-sm join-item gap-1.5" [class.btn-active]="layoutMode() === 'row'" (click)="setLayoutMode('row')" title="Danh sách xếp dọc, thẻ xếp ngang trong mỗi danh sách">
-            Row View
-          </button>
-        </div>
-      }
-      <button type="button" class="btn btn-outline btn-sm gap-1.5" (click)="openStatsModal()">
-        <svg class="h-[15px] w-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg>
-        Thống kê &amp; Báo cáo
-      </button>
-    </div>
-
-    <div class="flex flex-wrap items-center justify-end gap-3">
-      <div class="relative">
-        <button type="button" class="btn btn-outline btn-sm gap-1.5" [class.btn-active]="isFilteringActive()" (click)="toggleFilterPanel()">
-          <svg class="h-[15px] w-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
-          Lọc
-          @if (isFilteringActive()) {
-            <span class="badge badge-primary badge-sm">{{ filterMatchCount().matched }}/{{ filterMatchCount().total }}</span>
-          }
-        </button>
-
-        @if (showFilterPanel()) {
-          <div class="absolute right-0 top-[38px] z-50 max-h-[80vh] w-[300px] overflow-y-auto rounded-box border border-base-300 bg-base-100 p-3.5 shadow-lg">
-            @if (savedFilters().length || savedHighlightGroups().length) {
-              <div class="mb-3 flex flex-wrap gap-1.5 border-b border-dashed border-base-300 pb-3">
-                @for (f of savedFilters(); track f.id) {
-                  <button type="button" class="btn btn-outline btn-xs gap-1.5 rounded-full" [class.btn-active]="activeSavedFilterId() === f.id" (click)="applySavedFilter(f)" title="Bộ lọc theo điều kiện">
-                    ⭐ {{ f.name }}
-                    <span class="opacity-60 hover:opacity-100" (click)="removeSavedFilter(f.id, $event)">✕</span>
-                  </button>
-                }
-                @for (g of savedHighlightGroups(); track g.id) {
-                  <button type="button" class="btn btn-outline btn-xs gap-1.5 rounded-full" [class.btn-active]="activeHighlightGroupId() === g.id" (click)="applyHighlightGroup(g)" title="Bộ highlight chọn tay ({{ g.cardIds.length }} thẻ)">
-                    📌 {{ g.name }}
-                    <span class="opacity-60 hover:opacity-100" (click)="removeHighlightGroup(g.id, $event)">✕</span>
-                  </button>
-                }
-              </div>
-            }
-
-            <div class="mb-3">
-              <div class="mb-1.5 text-[10.5px] font-bold uppercase tracking-wide text-base-content/50">Người phụ trách</div>
-              <div class="flex flex-wrap gap-1.5">
-                @for (m of members(); track m.id) {
-                  <button type="button" class="btn btn-outline btn-xs rounded-full" [class.btn-active]="filterAssigneeIds().includes(m.id)" (click)="toggleFilterAssignee(m.id)">
-                    {{ m.displayName ?? m.email }}
-                  </button>
-                }
-                <button type="button" class="btn btn-outline btn-xs rounded-full" [class.btn-active]="filterAssigneeIds().includes(UNASSIGNED)" (click)="toggleFilterAssignee(UNASSIGNED)">
-                  Chưa gán ai
-                </button>
-              </div>
-            </div>
-
-            <div class="mb-3">
-              <div class="mb-1.5 text-[10.5px] font-bold uppercase tracking-wide text-base-content/50">Nhãn</div>
-              <div class="flex flex-wrap gap-1.5">
-                @for (lb of labels(); track lb.id) {
-                  <button type="button" class="btn btn-outline btn-xs gap-1.5 rounded-full" [class.btn-active]="filterLabelIds().includes(lb.id)" (click)="toggleFilterLabel(lb.id)">
-                    <span class="h-2 w-2 shrink-0 rounded-full" [style.background]="lb.color"></span>{{ lb.name }}
-                  </button>
-                }
-                <button type="button" class="btn btn-outline btn-xs rounded-full" [class.btn-active]="filterLabelIds().includes(NO_LABEL)" (click)="toggleFilterLabel(NO_LABEL)">
-                  Chưa có nhãn nào
-                </button>
-              </div>
-            </div>
-
-            <div class="mb-3">
-              <div class="mb-1.5 text-[10.5px] font-bold uppercase tracking-wide text-base-content/50">Mức ưu tiên</div>
-              <div class="flex flex-wrap gap-1.5">
-                @for (p of priorities; track p.id) {
-                  <button type="button" class="btn btn-outline btn-xs rounded-full" [class.btn-active]="filterPriorities().includes(p.id)" (click)="toggleFilterPriority(p.id)">
-                    {{ p.label }}
-                  </button>
-                }
-              </div>
-            </div>
-
-            <div class="mb-3">
-              <div class="mb-1.5 text-[10.5px] font-bold uppercase tracking-wide text-base-content/50">Ngày</div>
-              <div class="flex flex-wrap gap-1.5">
-                @for (d of dateOptions; track d.id) {
-                  <button type="button" class="btn btn-outline btn-xs rounded-full" [class.btn-active]="filterDate() === d.id" (click)="toggleFilterDate(d.id)">
-                    {{ d.label }}
-                  </button>
-                }
-              </div>
-            </div>
-
-            <div class="mt-3 flex items-center justify-between gap-2 border-t border-dashed border-base-300 pt-3 text-[11px] text-base-content/50">
-              <span>{{ hasActiveFilter() ? filterMatchCount().matched + '/' + filterMatchCount().total + ' thẻ khớp' : 'Chưa lọc gì — hiện tất cả ' + totalCards() + ' thẻ' }}</span>
-              @if (hasActiveFilter()) {
-                <button type="button" class="link link-primary text-[11px] font-semibold" (click)="clearFilters()">Xoá lọc</button>
-              }
-            </div>
-
-            @if (hasActiveFilter()) {
-              @if (!showSaveFilterForm()) {
-                <button type="button" class="mt-2.5 w-full rounded-md border border-dashed border-base-300 bg-base-200 py-1.5 text-[11.5px] font-semibold text-base-content/80 hover:border-primary hover:text-primary" (click)="openSaveFilterForm()">⭐ Lưu thành nút nhanh</button>
-              } @else {
-                <div class="mt-2.5 flex gap-1.5">
-                  <input
-                    type="text"
-                    class="input input-bordered input-sm flex-1"
-                    placeholder="Đặt tên cho bộ lọc..."
-                    [ngModel]="newFilterName()"
-                    (ngModelChange)="newFilterName.set($event)"
-                    (keydown.enter)="saveCurrentFilter()"
-                  />
-                  <button type="button" class="btn btn-primary btn-sm" [disabled]="!newFilterName().trim()" (click)="saveCurrentFilter()">Lưu</button>
-                  <button type="button" class="btn btn-ghost btn-sm" (click)="cancelSaveFilterForm()">Huỷ</button>
-                </div>
-              }
-            }
-          </div>
-        }
-      </div>
-    </div>
-  </div>
-
+  <!-- Main Board Canvas -->
   <div class="flex min-h-0 flex-1">
     <app-chat-panel [boardId]="boardId" (taskCreated)="onChatTaskCreated($event)" />
 
     <div class="flex min-w-0 flex-1 flex-col">
-  @if (viewMode() === 'status' && layoutMode() === 'column') {
-    <div #boardScroll class="board-body" (scroll)="onBoardScroll()">
-      <div
-        class="board-row"
-        cdkDropList
-        cdkDropListGroup
-        cdkDropListOrientation="horizontal"
-        [cdkDropListData]="lists()"
-        (cdkDropListDropped)="onListDrop($event)"
-      >
-        @for (list of lists(); track trackByListId($index, list)) {
-          <div class="list-drag-wrap" [attr.data-list-id]="list.id" [class.collapsed]="collapsedListIds().has(list.id)" cdkDrag [cdkDragData]="list" cdkDragLockAxis="x">
-            <div class="list-drop-placeholder" *cdkDragPlaceholder></div>
-
-            <div class="list-grip" cdkDragHandle title="Kéo để đổi thứ tự danh sách">
-              <svg class="h-2.5 w-3.5" viewBox="0 0 24 24" fill="currentColor"><circle cx="7" cy="6" r="1.3"/><circle cx="13" cy="6" r="1.3"/><circle cx="7" cy="12" r="1.3"/><circle cx="13" cy="12" r="1.3"/><circle cx="7" cy="18" r="1.3"/><circle cx="13" cy="18" r="1.3"/></svg>
-            </div>
-
-            <app-board-list
-              [list]="list"
-              [boardId]="boardId"
-              [cards]="cardsFor(list.id)"
-              [labelsByCardId]="labelsByCardId()"
-              [membersById]="membersById()"
-              [checklistProgressByCardId]="checklistProgressByCardId()"
-              [commentCountByCardId]="commentCountByCardId()"
-              [savingCardIds]="savingCardIds()"
-              [errorCardIds]="errorCardIds()"
-              [sortingEnabled]="sortMode() === 'manual'"
-              [dimmed]="dimmedCardIds()"
-              [highlighted]="highlightedCardIds()"
-              [collapsed]="collapsedListIds().has(list.id)"
-              [selectedCardIds]="selectedCardIds()"
-              [today]="today"
-              (renameList)="renameList(list, $event)"
-              (deleteList)="requestDeleteList(list)"
-              (addCard)="openCardModal(list.id)"
-              (cardClick)="onCardActivate($event.card, $event.shiftKey)"
-              (toggleCollapse)="toggleListCollapse(list.id)"
-            />
-          </div>
-        }
-
-        <app-add-list (open)="openListModal()" />
-      </div>
-    </div>
-  } @else if (viewMode() === 'status' && layoutMode() === 'row') {
-    <!-- Row View (#14): Lists xếp dọc (mỗi List = 1 hàng), Cards trong List xếp ngang.
-         Cùng dữ liệu (lists()/cardsFor()), cùng cdkDropListGroup + handlers (onListDrop/
-         BoardList.onCardDrop) như Column View — chỉ đổi hướng trình bày qua [orientation]. -->
-    <div #boardScroll class="board-body row-body" (scroll)="onBoardScroll()">
-      <div
-        class="row-list-column"
-        cdkDropList
-        cdkDropListGroup
-        cdkDropListOrientation="vertical"
-        [cdkDropListData]="lists()"
-        (cdkDropListDropped)="onListDrop($event)"
-      >
-        @for (list of lists(); track trackByListId($index, list)) {
-          <div class="row-list-wrap" [attr.data-list-id]="list.id" [class.collapsed]="collapsedListIds().has(list.id)" cdkDrag [cdkDragData]="list" cdkDragLockAxis="y">
-            <div class="row-list-drop-placeholder" *cdkDragPlaceholder></div>
-
-            <div class="row-list-grip" cdkDragHandle title="Kéo để đổi thứ tự danh sách">
-              <svg class="h-3.5 w-2.5" viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="7" r="1.3"/><circle cx="6" cy="13" r="1.3"/><circle cx="6" cy="19" r="1.3"/><circle cx="12" cy="7" r="1.3"/><circle cx="12" cy="13" r="1.3"/><circle cx="12" cy="19" r="1.3"/></svg>
-            </div>
-
-            <app-board-list
-              [list]="list"
-              [boardId]="boardId"
-              [cards]="cardsFor(list.id)"
-              [labelsByCardId]="labelsByCardId()"
-              [membersById]="membersById()"
-              [checklistProgressByCardId]="checklistProgressByCardId()"
-              [commentCountByCardId]="commentCountByCardId()"
-              [savingCardIds]="savingCardIds()"
-              [errorCardIds]="errorCardIds()"
-              [sortingEnabled]="sortMode() === 'manual'"
-              [dimmed]="dimmedCardIds()"
-              [highlighted]="highlightedCardIds()"
-              [collapsed]="collapsedListIds().has(list.id)"
-              [selectedCardIds]="selectedCardIds()"
-              [today]="today"
-              [orientation]="'row'"
-              (renameList)="renameList(list, $event)"
-              (deleteList)="requestDeleteList(list)"
-              (addCard)="openCardModal(list.id)"
-              (cardClick)="onCardActivate($event.card, $event.shiftKey)"
-              (toggleCollapse)="toggleListCollapse(list.id)"
-            />
-          </div>
-        }
-
-        <app-add-list (open)="openListModal()" />
-      </div>
-    </div>
-  } @else {
-    <!-- Board 2 chiều (#6): hàng = mức ưu tiên, cột = danh sách, kéo tự do cả 2 trục -->
-    <div class="board-body matrix-body">
-      <div class="matrix-scroll" cdkDropListGroup>
-        <div class="matrix-row matrix-header-row">
-          <div class="matrix-row-label"></div>
-          <div class="matrix-row-grid" [style.grid-template-columns]="gridCols()">
+      @if (viewMode() === 'status' && layoutMode() === 'column') {
+        <div #boardScroll class="board-body" (scroll)="onBoardScroll()">
+          <div
+            class="board-row"
+            cdkDropList
+            cdkDropListGroup
+            cdkDropListOrientation="horizontal"
+            [cdkDropListData]="lists()"
+            (cdkDropListDropped)="onListDrop($event)"
+          >
             @for (list of lists(); track trackByListId($index, list)) {
-              <div class="matrix-col-head">
-                <span class="col-color-dot" [style.background]="list.color || 'var(--text-muted)'"></span>
-                {{ list.name }}
+              <div class="list-drag-wrap" [attr.data-list-id]="list.id" [class.collapsed]="collapsedListIds().has(list.id)" cdkDrag [cdkDragData]="list" cdkDragLockAxis="x">
+                <div class="list-drop-placeholder" *cdkDragPlaceholder></div>
+
+                <div class="list-grip" cdkDragHandle title="Kéo để đổi thứ tự danh sách">
+                  <svg class="h-2.5 w-3.5" viewBox="0 0 24 24" fill="currentColor"><circle cx="7" cy="6" r="1.3"/><circle cx="13" cy="6" r="1.3"/><circle cx="7" cy="12" r="1.3"/><circle cx="13" cy="12" r="1.3"/><circle cx="7" cy="18" r="1.3"/><circle cx="13" cy="18" r="1.3"/></svg>
+                </div>
+
+                <app-board-list
+                  [list]="list"
+                  [boardId]="boardId"
+                  [cards]="cardsFor(list.id)"
+                  [labelsByCardId]="labelsByCardId()"
+                  [membersById]="membersById()"
+                  [checklistProgressByCardId]="checklistProgressByCardId()"
+                  [commentCountByCardId]="commentCountByCardId()"
+                  [savingCardIds]="savingCardIds()"
+                  [errorCardIds]="errorCardIds()"
+                  [sortingEnabled]="sortMode() === 'manual'"
+                  [dimmed]="dimmedCardIds()"
+                  [highlighted]="highlightedCardIds()"
+                  [collapsed]="collapsedListIds().has(list.id)"
+                  [selectedCardIds]="selectedCardIds()"
+                  [today]="today"
+                  (renameList)="renameList(list, $event)"
+                  (deleteList)="requestDeleteList(list)"
+                  (addCard)="openCardModal(list.id)"
+                  (cardClick)="onCardActivate($event.card, $event.shiftKey)"
+                  (toggleCollapse)="toggleListCollapse(list.id)"
+                />
+              </div>
+            }
+
+            <app-add-list (open)="openListModal()" />
+          </div>
+        </div>
+      } @else if (viewMode() === 'status' && layoutMode() === 'row') {
+        <div #boardScroll class="board-body row-body" (scroll)="onBoardScroll()">
+          <div
+            class="row-list-column"
+            cdkDropList
+            cdkDropListGroup
+            cdkDropListOrientation="vertical"
+            [cdkDropListData]="lists()"
+            (cdkDropListDropped)="onListDrop($event)"
+          >
+            @for (list of lists(); track trackByListId($index, list)) {
+              <div class="row-list-wrap" [attr.data-list-id]="list.id" [class.collapsed]="collapsedListIds().has(list.id)" cdkDrag [cdkDragData]="list" cdkDragLockAxis="y">
+                <div class="row-list-drop-placeholder" *cdkDragPlaceholder></div>
+
+                <div class="row-list-grip" cdkDragHandle title="Kéo để đổi thứ tự danh sách">
+                  <svg class="h-3.5 w-2.5" viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="7" r="1.3"/><circle cx="6" cy="13" r="1.3"/><circle cx="6" cy="19" r="1.3"/><circle cx="12" cy="7" r="1.3"/><circle cx="12" cy="13" r="1.3"/><circle cx="12" cy="19" r="1.3"/></svg>
+                </div>
+
+                <app-board-list
+                  [list]="list"
+                  [boardId]="boardId"
+                  [cards]="cardsFor(list.id)"
+                  [labelsByCardId]="labelsByCardId()"
+                  [membersById]="membersById()"
+                  [checklistProgressByCardId]="checklistProgressByCardId()"
+                  [commentCountByCardId]="commentCountByCardId()"
+                  [savingCardIds]="savingCardIds()"
+                  [errorCardIds]="errorCardIds()"
+                  [sortingEnabled]="sortMode() === 'manual'"
+                  [dimmed]="dimmedCardIds()"
+                  [highlighted]="highlightedCardIds()"
+                  [collapsed]="collapsedListIds().has(list.id)"
+                  [selectedCardIds]="selectedCardIds()"
+                  [today]="today"
+                  [orientation]="'row'"
+                  (renameList)="renameList(list, $event)"
+                  (deleteList)="requestDeleteList(list)"
+                  (addCard)="openCardModal(list.id)"
+                  (cardClick)="onCardActivate($event.card, $event.shiftKey)"
+                  (toggleCollapse)="toggleListCollapse(list.id)"
+                />
+              </div>
+            }
+
+            <app-add-list (open)="openListModal()" />
+          </div>
+        </div>
+      } @else {
+        <!-- Board 2 chiều (#6): hàng = mức ưu tiên, cột = danh sách -->
+        <div class="board-body matrix-body">
+          <div class="matrix-scroll" cdkDropListGroup>
+            <div class="matrix-row matrix-header-row">
+              <div class="matrix-row-label"></div>
+              <div class="matrix-row-grid" [style.grid-template-columns]="gridCols()">
+                @for (list of lists(); track trackByListId($index, list)) {
+                  <div class="matrix-col-head">
+                    <span class="col-color-dot" [style.background]="list.color || 'var(--text-muted)'"></span>
+                    {{ list.name }}
+                  </div>
+                }
+              </div>
+            </div>
+
+            @for (lane of priorities; track lane.id) {
+              <div class="matrix-row">
+                <div class="matrix-row-label" [class]="'p-' + lane.id">{{ lane.label }}</div>
+                <div class="matrix-row-grid" [style.grid-template-columns]="gridCols()">
+                  @for (list of lists(); track trackByListId($index, list)) {
+                    <div
+                      class="matrix-cell"
+                      cdkDropList
+                      [id]="matrixCellId(list.id, lane.id)"
+                      [cdkDropListData]="cardsForCell(list.id, lane.id)"
+                      [cdkDropListSortingDisabled]="sortMode() !== 'manual'"
+                      (cdkDropListDropped)="onMatrixCardDrop($event)"
+                    >
+                      @for (card of cardsForCell(list.id, lane.id); track card.id) {
+                        <div class="matrix-card-drag" cdkDrag [cdkDragData]="card" (click)="onCardActivate(card, $event.shiftKey)">
+                          <div class="drag-placeholder" *cdkDragPlaceholder></div>
+                          <app-card-item
+                            [card]="card"
+                            [labels]="labelsByCardId()[card.id] ?? []"
+                            [assignee]="card.assigneeId ? (membersById()[card.assigneeId] ?? null) : null"
+                            [isSaving]="savingCardIds().has(card.id)"
+                            [isError]="errorCardIds().has(card.id)"
+                            [isDimmed]="dimmedCardIds().has(card.id)"
+                            [isHighlighted]="highlightedCardIds().has(card.id)"
+                            [isSelected]="selectedCardIds().has(card.id)"
+                            [today]="today"
+                            [checklistProgress]="checklistProgressByCardId()[card.id] ?? null"
+                            [commentCount]="commentCountByCardId()[card.id] ?? 0"
+                          />
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
               </div>
             }
           </div>
         </div>
-
-        @for (lane of priorities; track lane.id) {
-          <div class="matrix-row">
-            <div class="matrix-row-label" [class]="'p-' + lane.id">{{ lane.label }}</div>
-            <div class="matrix-row-grid" [style.grid-template-columns]="gridCols()">
-              @for (list of lists(); track trackByListId($index, list)) {
-                <div
-                  class="matrix-cell"
-                  cdkDropList
-                  [id]="matrixCellId(list.id, lane.id)"
-                  [cdkDropListData]="cardsForCell(list.id, lane.id)"
-                  [cdkDropListSortingDisabled]="sortMode() !== 'manual'"
-                  (cdkDropListDropped)="onMatrixCardDrop($event)"
-                >
-                  @for (card of cardsForCell(list.id, lane.id); track card.id) {
-                    <div class="matrix-card-drag" cdkDrag [cdkDragData]="card" (click)="onCardActivate(card, $event.shiftKey)">
-                      <div class="drag-placeholder" *cdkDragPlaceholder></div>
-                      <app-card-item
-                        [card]="card"
-                        [labels]="labelsByCardId()[card.id] ?? []"
-                        [assignee]="card.assigneeId ? (membersById()[card.assigneeId] ?? null) : null"
-                        [isSaving]="savingCardIds().has(card.id)"
-                        [isError]="errorCardIds().has(card.id)"
-                        [isDimmed]="dimmedCardIds().has(card.id)"
-                        [isHighlighted]="highlightedCardIds().has(card.id)"
-                        [isSelected]="selectedCardIds().has(card.id)"
-                        [today]="today"
-                        [checklistProgress]="checklistProgressByCardId()[card.id] ?? null"
-                        [commentCount]="commentCountByCardId()[card.id] ?? 0"
-                      />
-                    </div>
-                  }
-                </div>
-              }
-            </div>
-          </div>
-        }
-      </div>
-    </div>
-  }
+      }
     </div>
   </div>
 
-  <!-- Modal: tạo danh sách -->
-  @if (showListModal()) {
-    <div class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/45" (click)="closeListModal()">
-      <div class="max-h-[88vh] w-80 max-w-[90%] overflow-y-auto rounded-box bg-base-100 p-[18px] shadow-xl" (click)="$event.stopPropagation()">
-        <div class="mb-3.5 text-[15px] font-bold text-base-content">Tạo danh sách mới</div>
+  <!-- Modal: Tạo danh sách mới -->
+  <app-create-list-modal
+    [isOpen]="showListModal()"
+    (close)="closeListModal()"
+    (create)="handleCreateList($event)">
+  </app-create-list-modal>
 
-        <div class="mb-3.5">
-          <label class="mb-1.5 block text-[11px] font-semibold text-base-content/80" for="list-name-input">Tên danh sách</label>
-          <input
-            type="text"
-            id="list-name-input"
-            class="input input-bordered input-sm w-full"
-            placeholder="Vd: Chờ kiểm thử"
-            [ngModel]="newListName()"
-            (ngModelChange)="newListName.set($event)"
-            (keydown.enter)="submitListModal()"
-          />
-        </div>
+  <!-- Modal: Tạo thẻ mới -->
+  <app-create-card-modal
+    [isOpen]="showCardModal()"
+    [boardId]="boardId"
+    [members]="members()"
+    (close)="closeCardModal()"
+    (create)="handleCreateCard($event)">
+  </app-create-card-modal>
 
-        <div class="mb-3.5">
-          <label class="mb-1.5 block text-[11px] font-semibold text-base-content/80">Màu</label>
-          <div class="flex flex-wrap gap-2">
-            @for (c of listColors; track c) {
-              <button type="button" class="flex h-6 w-6 items-center justify-center rounded-full border-2 border-transparent text-white" [style.background]="c" [class.border-base-content]="newListColor() === c" (click)="newListColor.set(c)">
-                @if (newListColor() === c) {
-                  <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
-                }
-              </button>
-            }
-          </div>
-        </div>
-
-        <div class="mt-4 flex justify-end gap-2">
-          <button type="button" class="btn btn-ghost btn-sm" (click)="closeListModal()">Huỷ</button>
-          <button type="button" class="btn btn-primary btn-sm" [disabled]="!newListName().trim()" (click)="submitListModal()">Tạo danh sách</button>
-        </div>
-      </div>
-    </div>
-  }
-
-  <!-- Modal: tạo thẻ -->
-  @if (showCardModal()) {
-    <div class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/45" (click)="closeCardModal()">
-      <div class="max-h-[88vh] w-80 max-w-[90%] overflow-y-auto rounded-box bg-base-100 p-[18px] shadow-xl" (click)="$event.stopPropagation()">
-        <div class="mb-3.5 text-[15px] font-bold text-base-content">Tạo thẻ mới</div>
-
-        <div class="mb-3.5">
-          <label class="mb-1.5 block text-[11px] font-semibold text-base-content/80" for="card-title-input">Tên thẻ</label>
-          <input
-            type="text"
-            id="card-title-input"
-            class="input input-bordered input-sm w-full"
-            placeholder="Vd: Sửa lỗi đăng nhập"
-            [ngModel]="newCardTitle()"
-            (ngModelChange)="newCardTitle.set($event)"
-            (keydown.enter)="submitCardModal()"
-          />
-        </div>
-
-        <div class="mb-3.5">
-          <label class="mb-1.5 block text-[11px] font-semibold text-base-content/80">Nhãn (chọn nhiều)</label>
-          <app-label-picker [boardId]="boardId" [selectedIds]="newCardLabelIds()" (selectionChange)="newCardLabelIds.set($event)" />
-        </div>
-
-        <div class="mb-3.5">
-          <label class="mb-1.5 block text-[11px] font-semibold text-base-content/80">Mức độ ưu tiên</label>
-          <div class="priority-row">
-            @for (p of priorities; track p.id) {
-              <button type="button" class="priority-choice" [class]="'p-' + p.id" [class.selected]="newCardPriority() === p.id" (click)="newCardPriority.set(p.id)">
-                {{ p.label }}
-              </button>
-            }
-          </div>
-        </div>
-
-        <div class="mb-3.5">
-          <label class="mb-1.5 block text-[11px] font-semibold text-base-content/80" for="card-assignee-select">Người phụ trách</label>
-          <select id="card-assignee-select" class="select select-bordered select-sm w-full" [ngModel]="newCardAssigneeId()" (ngModelChange)="newCardAssigneeId.set($event)">
-            <option [ngValue]="null">Chưa gán</option>
-            @for (m of members(); track m.id) {
-              <option [ngValue]="m.id">{{ m.displayName ?? m.email }}</option>
-            }
-          </select>
-        </div>
-
-        <div class="mb-3.5">
-          <label class="mb-1.5 block text-[11px] font-semibold text-base-content/80" for="card-due-input">Ngày hết hạn</label>
-          <input type="date" id="card-due-input" class="input input-bordered input-sm w-full" [ngModel]="newCardDue()" (ngModelChange)="newCardDue.set($event)" />
-        </div>
-
-        <div class="mt-4 flex justify-end gap-2">
-          <button type="button" class="btn btn-ghost btn-sm" (click)="closeCardModal()">Huỷ</button>
-          <button type="button" class="btn btn-primary btn-sm" [disabled]="!newCardTitle().trim()" (click)="submitCardModal()">Tạo thẻ</button>
-        </div>
-      </div>
-    </div>
-  }
-
-  <!-- Modal: chi tiết thẻ (appRequirement #4) -->
+  <!-- Modal: Chi tiết thẻ (appRequirement #4) -->
   @if (selectedCard(); as card) {
     <app-card-detail-modal [card]="card" [boardId]="boardId" (close)="closeCardDetail()" (deleted)="onCardDetailDeleted()" />
   }
@@ -431,49 +247,27 @@
   }
 
   <!-- Thanh hành động hàng loạt (#12) -->
-  @if (selectedCardIds().size > 0) {
-    <div class="fixed bottom-6 left-1/2 z-[900] flex -translate-x-1/2 items-center gap-2.5 rounded-box bg-neutral px-3.5 py-2.5 text-neutral-content shadow-xl">
-      <span class="whitespace-nowrap border-r border-white/20 pr-1 text-[12.5px] font-semibold">Đã chọn {{ selectedCardIds().size }} thẻ</span>
+  <app-board-bulk-actions
+    [selectedCount]="selectedCardIds().size"
+    [lists]="lists()"
+    [labels]="labels()"
+    (moveToList)="handleBulkMove($event)"
+    (applyLabel)="handleBulkLabel($event)"
+    (saveHighlight)="saveSelectionAsHighlightGroup()"
+    (deleteSelected)="handleBulkDelete()"
+    (clearSelection)="clearSelection()">
+  </app-board-bulk-actions>
 
-      <select class="select select-sm border-white/25 bg-white/10 text-neutral-content" (change)="onBulkMoveSelect($event)">
-        <option value="" selected disabled>Chuyển cột...</option>
-        @for (list of lists(); track list.id) {
-          <option [value]="list.id">{{ list.name }}</option>
-        }
-      </select>
-
-      <div class="relative">
-        <button type="button" class="btn btn-sm border-none bg-white/10 text-neutral-content hover:bg-white/20" (click)="toggleBulkLabelPicker()">Gắn nhãn</button>
-        @if (showBulkLabelPicker()) {
-          <div class="absolute bottom-full left-0 mb-2 max-h-[220px] w-[180px] overflow-y-auto rounded-box border border-base-300 bg-base-100 p-1.5 text-base-content shadow-lg">
-            @for (lb of labels(); track lb.id) {
-              <button type="button" class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-base-content hover:bg-base-200" (click)="applyBulkLabel(lb.id)">
-                <span class="h-2.5 w-2.5 shrink-0 rounded-full" [style.background]="lb.color"></span>{{ lb.name }}
-              </button>
-            }
-            @if (labels().length === 0) {
-              <div class="px-2 py-1.5 text-[11px] text-base-content/50">Board chưa có nhãn nào.</div>
-            }
-          </div>
-        }
-      </div>
-
-      <button type="button" class="btn btn-sm border-none bg-white/10 text-neutral-content hover:bg-white/20" (click)="saveSelectionAsHighlightGroup()" title="Lưu đúng những thẻ đang chọn thành 1 chip highlight nhanh">📌 Lưu highlight</button>
-      <button type="button" class="btn btn-sm border-none bg-white/10 text-red-300 hover:bg-red-600/25" (click)="bulkDelete()">Xoá</button>
-      <button type="button" class="btn btn-circle btn-ghost btn-xs text-white/70" (click)="clearSelection()" aria-label="Bỏ chọn">
-        <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-      </button>
-    </div>
-  }
-
+  <!-- Toast notifications -->
   <div class="toast toast-end z-[2000]">
     @for (toast of toasts(); track toast.id) {
-      <div class="alert" [class.alert-error]="toast.type === 'error'" [class.alert-success]="toast.type === 'success'" [class.alert-info]="toast.type === 'info'">
+      <div class="alert font-bold" [class.alert-error]="toast.type === 'error'" [class.alert-success]="toast.type === 'success'" [class.alert-info]="toast.type === 'info'">
         <span>{{ toast.message }}</span>
       </div>
     }
   </div>
 
+  <!-- Mini Map -->
   @if (showMinimap()) {
     <app-board-minimap
       [layoutMode]="layoutMode()"

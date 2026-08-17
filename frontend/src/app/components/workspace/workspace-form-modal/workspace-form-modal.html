@@ -1,0 +1,243 @@
+@if (isOpen()) {
+<div class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-[2px]"
+  (click)="close.emit()">
+  <div
+    class="w-full max-w-[560px] max-h-[90vh] overflow-y-auto rounded-2xl border-2 border-slate-300 dark:border-slate-600 bg-base-100 p-6 shadow-2xl"
+    (click)="$event.stopPropagation()">
+    <div class="mb-5 flex items-center justify-between">
+      <h3 class="text-lg font-black text-slate-900 dark:text-white">
+        {{ mode() === 'create' ? 'Tạo Không gian làm việc mới' : 'Chỉnh sửa Không gian làm việc' }}
+      </h3>
+      <button class="btn btn-circle btn-ghost btn-sm text-xl" (click)="close.emit()">&times;</button>
+    </div>
+
+    <form (ngSubmit)="onSubmit()">
+      <!-- Icon & Name & Color Theme -->
+      <div class="mb-4">
+        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+          Biểu tượng, Màu nền & Tên Workspace <span class="text-error">*</span>
+        </label>
+        <div class="flex items-center gap-3">
+          <!-- Live Preview of Workspace Icon with Selected Background -->
+          <div
+            class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-2xl shadow-md transition-transform hover:scale-105"
+            [class]="iconBgInput()">
+            {{ iconInput() || '📂' }}
+          </div>
+
+          <!-- Name input -->
+          <div class="flex-1">
+            <input type="text" id="workspace-name-input"
+              class="input input-bordered border-2 w-full rounded-xl font-bold text-slate-900 dark:text-white bg-white dark:bg-slate-800 shadow-xs text-sm transition-all"
+              [class.border-error]="nameError()"
+              [class.focus:border-error]="nameError()"
+              [class.border-slate-300]="!nameError()"
+              [class.dark:border-slate-600]="!nameError()"
+              placeholder="Ví dụ: Đồ án Tốt nghiệp CNTT, Dự án SaaS..." [ngModel]="nameInput()"
+              (ngModelChange)="nameInput.set($event); nameError.set(null)" name="workspaceName" />
+            @if (nameError()) {
+            <p class="mt-1.5 text-xs font-bold text-error flex items-center gap-1 animate-pulse">
+              <span>⚠️</span> {{ nameError() }}
+            </p>
+            }
+          </div>
+        </div>
+
+        <!-- Color Palette for Workspace Icon Background -->
+        <div class="mt-3">
+          <span class="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 block mb-1.5">Màu nền biểu tượng:</span>
+          <div class="flex flex-wrap gap-2">
+            @for (bg of bgClasses; track bg) {
+            <div
+              class="h-7 w-7 cursor-pointer rounded-xl transition-all hover:scale-110 shadow-xs"
+              [class]="bg"
+              [class.ring-2]="iconBgInput() === bg"
+              [class.ring-primary]="iconBgInput() === bg"
+              [class.ring-offset-2]="iconBgInput() === bg"
+              [class.scale-110]="iconBgInput() === bg"
+              (click)="iconBgInput.set(bg)"></div>
+            }
+          </div>
+        </div>
+
+        <!-- Categorized Icon Selector Grid -->
+        <div class="mt-3 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 p-3">
+          <!-- Category Tabs -->
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-2 border-b border-slate-200 dark:border-slate-700 mb-2.5">
+            @for (cat of iconCategories; track $index) {
+            <button
+              type="button"
+              class="btn btn-xs rounded-lg font-bold text-[11px] transition-all"
+              [class.btn-primary]="selectedIconCategory() === $index"
+              [class.btn-ghost]="selectedIconCategory() !== $index"
+              (click)="selectedIconCategory.set($index)">
+              {{ cat.name }}
+            </button>
+            }
+          </div>
+
+          <!-- Icons Grid -->
+          <div class="grid grid-cols-7 gap-1.5">
+            @for (icon of iconCategories[selectedIconCategory()].icons; track icon) {
+            <button
+              type="button"
+              class="flex h-9 w-9 items-center justify-center rounded-xl text-lg transition-all hover:scale-120 hover:bg-slate-200 dark:hover:bg-slate-700 shadow-xs"
+              [class.ring-2]="iconInput() === icon"
+              [class.ring-primary]="iconInput() === icon"
+              [class.bg-white]="iconInput() === icon"
+              [class.dark:bg-slate-700]="iconInput() === icon"
+              [class.scale-110]="iconInput() === icon"
+              (click)="iconInput.set(icon)">
+              {{ icon }}
+            </button>
+            }
+          </div>
+
+          <!-- Custom Icon Input -->
+          <div class="mt-2.5 pt-2 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs">
+            <span class="text-slate-500 font-medium text-[11px]">Hoặc nhập biểu tượng bất kỳ:</span>
+            <input type="text"
+              class="input input-bordered input-xs border-2 border-slate-300 dark:border-slate-600 w-16 text-center text-sm font-bold rounded-lg bg-white dark:bg-slate-800"
+              maxlength="4"
+              [ngModel]="iconInput()"
+              (ngModelChange)="iconInput.set($event)"
+              name="customWorkspaceIcon" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Description Input -->
+      <div class="mb-4">
+        <div class="flex items-center justify-between mb-1.5">
+          <label class="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200" for="workspace-desc-input">
+            Mô tả
+          </label>
+          <span class="text-[11px] font-semibold text-slate-400">
+            {{ descInput().length }}/300 ký tự
+          </span>
+        </div>
+        <textarea id="workspace-desc-input"
+          maxlength="300"
+          class="textarea textarea-bordered border-2 border-slate-300 dark:border-slate-600 focus:border-primary focus:ring-2 focus:ring-primary/20 w-full rounded-xl font-medium text-slate-900 dark:text-white bg-white dark:bg-slate-800 shadow-xs text-sm leading-relaxed"
+          rows="3"
+          placeholder="Mô tả mục tiêu của không gian làm việc này..." [ngModel]="descInput()"
+          (ngModelChange)="descInput.set($event)" name="workspaceDesc"></textarea>
+      </div>
+
+      <!-- MEMBER MANAGEMENT VIA UUID / SEARCH -->
+      <div class="my-4 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 p-4 shadow-xs">
+        <div class="mb-3 flex items-center justify-between">
+          <div class="flex items-center gap-1.5">
+            <span class="text-sm font-bold text-primary">👥</span>
+            <span class="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Thành viên Workspace</span>
+          </div>
+          <span class="badge badge-primary badge-sm font-black">{{ members().length }} người</span>
+        </div>
+
+        <!-- UUID Search / Input bar -->
+        <div class="relative mb-3">
+          <div class="flex gap-2">
+            <div class="relative flex-1">
+              <svg
+                class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input type="text"
+                class="input input-sm w-full rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 pl-9 text-xs font-medium text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 shadow-xs"
+                placeholder="Nhập UUID, Email hoặc Tên người dùng..." [ngModel]="uuidSearchInput()"
+                (ngModelChange)="uuidSearchInput.set($event); searchDropdownOpen.set(true)"
+                (keydown.enter)="$event.preventDefault(); addMemberByInput()" name="uuidSearch" />
+            </div>
+            <button type="button" class="btn btn-primary btn-sm rounded-xl px-4 text-xs font-black shadow-xs"
+              (click)="addMemberByInput()">
+              + Thêm
+            </button>
+          </div>
+
+          <!-- Search dropdown suggestions -->
+          @if (searchResults().length > 0 && searchDropdownOpen()) {
+          <div
+            class="absolute left-0 right-0 top-full z-50 mt-1 max-h-48 overflow-y-auto rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-1 shadow-xl">
+            @for (user of searchResults(); track user.id) {
+            <button type="button"
+              class="w-full flex items-center justify-between rounded-lg p-2 text-left transition hover:bg-primary/10 hover:text-primary"
+              (click)="addMember(user)">
+              <div class="flex items-center gap-2 min-w-0">
+                <div
+                  class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white shadow-xs"
+                  [style.background-color]="avatarBgFor(user.id)">
+                  {{ initialsOf(user.displayName || user.email) }}
+                </div>
+                <div class="min-w-0">
+                  <div class="truncate text-xs font-bold text-slate-900 dark:text-white">{{ user.displayName }}</div>
+                  <div class="truncate text-[10px] text-slate-500 dark:text-slate-400">{{ user.email }}</div>
+                </div>
+              </div>
+              <span class="text-[10px] font-mono text-slate-400 shrink-0 ml-2">UUID: {{ user.id.slice(0, 8) }}...</span>
+            </button>
+            }
+          </div>
+          }
+        </div>
+
+        <!-- Members list -->
+        <div class="space-y-1.5 max-h-44 overflow-y-auto pr-1">
+          @for (m of members(); track m.id) {
+          <div
+            class="flex items-center justify-between rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2 shadow-2xs">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <div
+                class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white shadow-xs"
+                [style.background-color]="avatarBgFor(m.id)">
+                {{ initialsOf(m.displayName || m.email) }}
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center gap-1.5">
+                  <span class="truncate text-xs font-bold text-slate-900 dark:text-white">{{ m.displayName }}</span>
+                  @if (m.role === 'owner') {
+                  <span class="badge badge-warning badge-xs font-black text-[9px]">Trưởng nhóm</span>
+                  }
+                </div>
+                <div class="truncate text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+                  UUID: {{ m.id }}
+                </div>
+              </div>
+            </div>
+
+            @if (m.role !== 'owner') {
+            <button type="button"
+              class="btn btn-ghost btn-circle btn-xs text-error hover:bg-error/10"
+              title="Gỡ thành viên"
+              (click)="removeMember(m.id)">
+              &times;
+            </button>
+            }
+          </div>
+          }
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-700">
+        @if (mode() === 'edit') {
+        <button type="button" class="btn btn-error btn-outline btn-sm rounded-xl font-bold"
+          (click)="confirmDelete()">
+          {{ deleteConfirmArmed() ? '⚠️ Xác nhận xóa?' : '🗑️ Xóa Workspace' }}
+        </button>
+        } @else {
+        <div></div>
+        }
+
+        <div class="flex gap-2">
+          <button type="button" class="btn btn-ghost btn-sm rounded-xl font-bold" (click)="close.emit()">Hủy</button>
+          <button type="submit" class="btn btn-primary btn-sm rounded-xl font-black px-5 shadow-sm">
+            {{ mode() === 'create' ? 'Tạo Workspace' : 'Lưu thay đổi' }}
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+}

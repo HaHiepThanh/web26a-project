@@ -1,37 +1,46 @@
 import { Component, HostListener, computed, effect, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { WorkspaceUiService } from '../../services/workspace-ui.service';
 import { BoardService } from '../../services/board.service';
 import { AuthService } from '../../services/auth.service';
-import { BOARD_BACKGROUNDS, BoardBackground, BoardVisibility, User, MOCK_SEARCHABLE_USERS } from '../../models';
+import { BoardBackground, BoardVisibility, User } from '../../models';
 import {
   WorkspaceItem,
   WorkspaceMember,
   BoardItem,
-  TrashedBoard,
-  Template,
-  Toast,
-  ToastType,
   Privacy,
   initialMockWorkspaces,
   loadStoredWorkspaces,
   persistWorkspaces,
   WORKSPACE_TEMPLATES,
-  initialsOf,
-  avatarBgFor,
+  Template,
 } from '../../mocks';
+import { WorkspaceSidebar } from '../../components/workspace/workspace-sidebar/workspace-sidebar';
+import { WorkspaceWelcomeBanner } from '../../components/workspace/workspace-welcome-banner/workspace-welcome-banner';
+import { WorkspaceCardItem } from '../../components/workspace/workspace-card-item/workspace-card-item';
+import { CreateBoardModal } from '../../components/workspace/create-board-modal/create-board-modal';
+import { WorkspaceFormModal } from '../../components/workspace/workspace-form-modal/workspace-form-modal';
 
-/** Privacy (nhãn hiển thị tiếng Việt ở modal) → BoardVisibility thật của model Board. */
+interface Toast {
+  id: number;
+  message: string;
+  type: 'success' | 'error' | 'info';
+  action?: { label: string; handler: () => void };
+}
+
 function toBoardVisibility(privacy: Privacy): BoardVisibility {
   return privacy === 'Public' ? 'public' : 'restricted';
 }
 
-
-/** Bảng grid + workspace dashboard (ported từ trello-workspace prototype). */
 @Component({
   selector: 'app-workspace',
-  imports: [FormsModule],
+  imports: [
+    WorkspaceSidebar,
+    WorkspaceWelcomeBanner,
+    WorkspaceCardItem,
+    CreateBoardModal,
+    WorkspaceFormModal,
+  ],
   templateUrl: './workspace.html',
   styleUrl: './workspace.css',
 })
@@ -41,23 +50,102 @@ export class Workspace {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
-  readonly initialsOf = initialsOf;
-  readonly avatarBgFor = avatarBgFor;
-  readonly mockSearchableUsers = MOCK_SEARCHABLE_USERS;
   readonly currentUser = this.auth.currentUser;
   readonly copiedMyUuid = signal(false);
 
   readonly workspaces = signal<WorkspaceItem[]>(loadStoredWorkspaces());
-  /** activeWorkspaceId: null nghĩa là hiển thị tất cả, hoặc string id để lọc riêng workspace đó */
   readonly activeWorkspaceId = signal<string | null>(null);
   readonly templates = WORKSPACE_TEMPLATES;
-  readonly bgClasses = BOARD_BACKGROUNDS;
-
   readonly searchQuery = this.workspaceUi.searchQuery;
 
+  // Confirm delete key for board popover
+  readonly confirmDeleteKey = signal<string | null>(null);
+
+  // Modals state
+  readonly showCreateBoardModal = signal(false);
+  readonly createBoardInitialWorkspaceId = signal<string | null>(null);
+  readonly createBoardInitialTitle = signal('');
+
+  readonly showWorkspaceModal = signal(false);
+  readonly workspaceModalMode = signal<'create' | 'edit'>('create');
+  readonly selectedWorkspaceForEdit = signal<WorkspaceItem | null>(null);
+
+  // Computed views
   readonly totalBoardsCount = computed(() => {
     return this.workspaces().reduce((sum, ws) => sum + ws.boards.length, 0);
   });
+
+  readonly starredBoards = computed(() => {
+    const query = this.searchQuery().trim().toLowerCase();
+    const activeId = this.activeWorkspaceId();
+    const result: (BoardItem & { workspaceId: string; workspaceName: string })[] = [];
+
+    for (const ws of this.workspaces()) {
+      if (activeId && ws.id !== activeId) continue;
+      for (const b of ws.boards) {
+        if (b.starred) {
+          if (!query || b.title.toLowerCase().includes(query) || ws.name.toLowerCase().includes(query)) {
+            result.push({ ...b, workspaceId: ws.id, workspaceName: ws.name });
+          }
+        }
+      }
+    }
+    return result;
+  });
+
+  readonly filteredWorkspaces = computed(() => {
+    const query = this.searchQuery().trim().toLowerCase();
+    const activeId = this.activeWorkspaceId();
+
+    let list = this.workspaces();
+    if (activeId) {
+      list = list.filter((ws) => ws.id === activeId);
+    }
+    if (!query) return list;
+
+    return list
+      .map((ws) => {
+        const matchesWs = ws.name.toLowerCase().includes(query);
+        const matchedBoards = ws.boards.filter((b) => b.title.toLowerCase().includes(query));
+        if (matchesWs) return ws;
+        if (matchedBoards.length > 0) return { ...ws, boards: matchedBoards };
+        return null;
+      })
+      .filter((ws): ws is WorkspaceItem => ws !== null);
+  });
+
+  readonly searchHasNoResults = computed(() => {
+    const q = this.searchQuery().trim();
+    if (!q) return false;
+    return this.filteredWorkspaces().length === 0 && this.starredBoards().length === 0;
+  });
+
+  constructor() {
+    effect(() => {
+      const boardTrigger = this.workspaceUi.createBoardRequests();
+      if (boardTrigger > 0) {
+        this.openCreateBoard();
+      }
+    });
+
+    effect(() => {
+      const wsTrigger = this.workspaceUi.createWorkspaceRequests();
+      if (wsTrigger > 0) {
+        this.openCreateWorkspace();
+      }
+    });
+  }
+
+  @HostListener('window:keydown.escape')
+  onEsc(): void {
+    this.closeAllModals();
+  }
+
+  closeAllModals(): void {
+    this.showCreateBoardModal.set(false);
+    this.showWorkspaceModal.set(false);
+    this.confirmDeleteKey.set(null);
+  }
 
   copyMyUuid(): void {
     const uid = this.currentUser()?.id;
@@ -70,486 +158,134 @@ export class Workspace {
     }
   }
 
+  selectWorkspace(id: string | null): void {
+    this.activeWorkspaceId.set(id);
+  }
+
   loadSampleWorkspaces(): void {
     const samples = initialMockWorkspaces();
     this.workspaces.set(samples);
     persistWorkspaces(samples);
     this.activeWorkspaceId.set(null);
-    this.addToast('🎉 Đã tải Không gian làm việc mẫu thành công!', 'success');
+    this.addToast('Đã tải lại toàn bộ Workspace mẫu thành công!', 'success');
   }
 
-
-  readonly starredBoards = computed(() => {
-    const q = this.searchQuery().trim().toLowerCase();
-    const all: (BoardItem & { workspaceName: string; workspaceId: string })[] = [];
-    for (const ws of this.workspaces()) {
-      for (const board of ws.boards) {
-        if (board.starred) all.push({ ...board, workspaceName: ws.name, workspaceId: ws.id });
-      }
-    }
-    if (!q) return all;
-    return all.filter((b) => b.title.toLowerCase().includes(q) || b.tag.toLowerCase().includes(q));
-  });
-
-  /** Số liệu nhanh hiển thị trong hero banner — luôn tính trên toàn bộ dữ liệu, không bị lọc theo ô tìm kiếm. */
-  readonly heroStats = computed(() => {
-    const list = this.workspaces();
-    let boards = 0;
-    let starred = 0;
-    for (const ws of list) {
-      for (const board of ws.boards) {
-        boards++;
-        if (board.starred) starred++;
-      }
-    }
-    const members = list.reduce((sum, ws) => sum + (ws.members?.length || ws.membersCount || 0), 0);
-    return { boards, members, starred };
-  });
-
-  readonly filteredWorkspaces = computed(() => {
-    const q = this.searchQuery().trim().toLowerCase();
-    const filterId = this.activeWorkspaceId();
-    let list = this.workspaces();
-
-    if (filterId) {
-      list = list.filter((ws) => ws.id === filterId);
-    }
-
-    if (!q) return list;
-    return list.map((ws) => ({
-      ...ws,
-      boards: ws.boards.filter((b) => b.title.toLowerCase().includes(q) || b.tag.toLowerCase().includes(q)),
-    }));
-  });
-
-  /** Đang gõ tìm kiếm nhưng không khớp board nào ở workspace nào cả. */
-  readonly searchHasNoResults = computed(() => {
-    if (!this.searchQuery().trim()) return false;
-    return this.filteredWorkspaces().every((ws) => ws.boards.length === 0);
-  });
-
-  selectWorkspace(id: string | null): void {
-    if (this.activeWorkspaceId() === id && id !== null) {
-      // Bấm lần 2 vào workspace đang chọn thì bỏ lọc (hiện lại tất cả)
-      this.activeWorkspaceId.set(null);
-      this.addToast('Đang hiển thị tất cả Không gian làm việc', 'info');
-      return;
-    }
-    this.activeWorkspaceId.set(id);
-    if (id === null) {
-      this.addToast('Đang hiển thị tất cả Không gian làm việc', 'info');
-    } else {
-      const ws = this.workspaces().find((w) => w.id === id);
-      if (ws) this.addToast(`Đang lọc Không gian làm việc: "${ws.name}"`, 'info');
-    }
+  onBoardClick(board: BoardItem): void {
+    void this.router.navigate(['/board', board.id]);
   }
-
 
   toggleStar(boardId: string): void {
-    let title = '';
-    let starred = false;
     this.workspaces.update((list) => {
       const updated = list.map((ws) => ({
         ...ws,
-        boards: ws.boards.map((b) => {
-          if (b.id !== boardId) return b;
-          starred = !b.starred;
-          title = b.title;
-          return { ...b, starred };
-        }),
+        boards: ws.boards.map((b) => (b.id === boardId ? { ...b, starred: !b.starred } : b)),
       }));
       persistWorkspaces(updated);
       return updated;
     });
-    if (title) this.addToast(starred ? `Đã đánh dấu sao bảng "${title}"` : `Đã bỏ đánh dấu sao bảng "${title}"`);
   }
 
-  onBoardClick(board: BoardItem): void {
-    this.addToast(`Đang mở bảng: ${board.title}`);
-    void this.router.navigate(['/board', board.id]);
-  }
-
-  // ---- Xóa bảng lẻ → chuyển vào Thùng rác (không xóa cả workspace) ----
-  readonly trash = signal<TrashedBoard[]>([]);
-  readonly confirmDeleteKey = signal<string | null>(null);
-
-  /** Xác nhận xong (từ popover) mới thật sự xóa. Vẫn cho hoàn tác nhanh qua toast, đồng thời lưu vào Thùng rác để khôi phục về sau — chỉ mất hẳn khi người dùng tự xóa vĩnh viễn trong Thùng rác. */
-  deleteBoard(workspaceId: string, board: BoardItem): void {
-    this.confirmDeleteKey.set(null);
-
-    let removedIndex = -1;
-    let workspaceName = '';
+  deleteBoard(payload: { workspaceId: string; board: BoardItem }): void {
+    const { workspaceId, board } = payload;
     this.workspaces.update((list) => {
-      const updated = list.map((ws) => {
-        if (ws.id !== workspaceId) return ws;
-        workspaceName = ws.name;
-        removedIndex = ws.boards.findIndex((b) => b.id === board.id);
-        return { ...ws, boards: ws.boards.filter((b) => b.id !== board.id) };
-      });
+      const updated = list.map((ws) =>
+        ws.id === workspaceId ? { ...ws, boards: ws.boards.filter((b) => b.id !== board.id) } : ws,
+      );
       persistWorkspaces(updated);
       return updated;
     });
-
-    this.trash.update((list) => [{ board, workspaceId, workspaceName, originalIndex: removedIndex }, ...list]);
-
-    const id = ++this.toastSeq;
-    const dismiss = () => this.toasts.update((list) => list.filter((t) => t.id !== id));
-    this.toasts.update((list) => [
-      ...list,
-      {
-        id,
-        message: `Đã xóa bảng "${board.title}"`,
-        type: 'info',
-        action: {
-          label: 'Hoàn tác',
-          handler: () => {
-            this.restoreFromTrash(board.id);
-            dismiss();
-          },
-        },
-      },
-    ]);
-    setTimeout(dismiss, 4500);
+    this.addToast(`Đã xóa bảng "${board.title}"`, 'info');
   }
 
-  restoreFromTrash(boardId: string): void {
-    const entry = this.trash().find((t) => t.board.id === boardId);
-    if (!entry) return;
-
-    const workspaceStillExists = this.workspaces().some((ws) => ws.id === entry.workspaceId);
-    if (!workspaceStillExists) {
-      this.addToast('Workspace gốc của bảng này đã bị xóa, không thể khôi phục.', 'error');
-      return;
-    }
-
-    this.workspaces.update((list) => {
-      const updated = list.map((ws) => {
-        if (ws.id !== entry.workspaceId) return ws;
-        const boards = [...ws.boards];
-        const insertAt = Math.max(0, Math.min(entry.originalIndex, boards.length));
-        boards.splice(insertAt, 0, entry.board);
-        return { ...ws, boards };
-      });
-      persistWorkspaces(updated);
-      return updated;
-    });
-    this.trash.update((list) => list.filter((t) => t.board.id !== boardId));
-    this.addToast(`Đã khôi phục bảng "${entry.board.title}"`);
-  }
-
-  // ---- Create board modal ----
-  readonly showCreateModal = signal(false);
-  readonly newBoardTitle = signal('');
-  readonly boardTitleError = signal<string | null>(null);
-  readonly newBoardWorkspaceId = signal('ws-1');
-  readonly newBoardPrivacy = signal<Privacy>('Workspace');
-  readonly newBoardSelectedMemberIds = signal<string[]>([]);
-  readonly selectedBgClass = signal<BoardBackground>('bg-board-blue');
-
-
-
-  readonly currentWorkspaceMembers = computed(() => {
-    const wsId = this.newBoardWorkspaceId();
-    const ws = this.workspaces().find((w) => w.id === wsId);
-    return ws?.members || [];
-  });
-
-  onNewBoardWorkspaceChange(wsId: string): void {
-    this.newBoardWorkspaceId.set(wsId);
-    const ws = this.workspaces().find((w) => w.id === wsId);
-    this.newBoardSelectedMemberIds.set(ws ? ws.members.map((m) => m.id) : []);
-  }
-
-  toggleBoardMember(memberId: string): void {
-    this.newBoardSelectedMemberIds.update((ids) => {
-      if (ids.includes(memberId)) {
-        if (ids.length <= 1) {
-          this.addToast('Bảng cần có ít nhất 1 thành viên truy cập.', 'info');
-          return ids;
-        }
-        return ids.filter((id) => id !== memberId);
-      } else {
-        return [...ids, memberId];
-      }
-    });
-  }
-
-  selectAllBoardMembers(): void {
-    const members = this.currentWorkspaceMembers();
-    this.newBoardSelectedMemberIds.set(members.map((m) => m.id));
-  }
-
-  deselectAllBoardMembers(): void {
-    const curUser = this.currentUser();
-    const members = this.currentWorkspaceMembers();
-    if (curUser && members.some((m) => m.id === curUser.id)) {
-      this.newBoardSelectedMemberIds.set([curUser.id]);
-    } else if (members.length > 0) {
-      this.newBoardSelectedMemberIds.set([members[0].id]);
-    }
-  }
-
-  openCreateModal(defaultWorkspaceId: string | null = null): void {
+  // ---- Board Modal Actions ----
+  openCreateBoard(defaultWorkspaceId: string | null = null): void {
     if (this.workspaces().length === 0) {
       this.addToast('Bạn cần tạo Workspace trước khi tạo bảng.', 'info');
-      this.openCreateWorkspaceModal();
+      this.openCreateWorkspace();
       return;
     }
-    const wsId = defaultWorkspaceId && this.workspaces().some((w) => w.id === defaultWorkspaceId) ? defaultWorkspaceId : this.workspaces()[0].id;
-    this.newBoardTitle.set('');
-    this.boardTitleError.set(null);
-    this.newBoardWorkspaceId.set(wsId);
-    this.newBoardPrivacy.set('Workspace');
-    const ws = this.workspaces().find((w) => w.id === wsId);
-    this.newBoardSelectedMemberIds.set(ws ? ws.members.map((m) => m.id) : []);
-    this.selectedBgClass.set('bg-board-blue');
-    this.showCreateModal.set(true);
-  }
-
-  closeCreateModal(): void {
-    this.showCreateModal.set(false);
-    this.boardTitleError.set(null);
+    this.createBoardInitialWorkspaceId.set(defaultWorkspaceId);
+    this.createBoardInitialTitle.set('');
+    this.showCreateBoardModal.set(true);
   }
 
   useTemplate(template: Template): void {
-    this.openCreateModal();
-    this.newBoardTitle.set(template.title);
-    this.boardTitleError.set(null);
+    if (this.workspaces().length === 0) {
+      this.openCreateWorkspace();
+      return;
+    }
+    this.createBoardInitialWorkspaceId.set(null);
+    this.createBoardInitialTitle.set(template.title);
+    this.showCreateBoardModal.set(true);
     this.addToast(`Đang tạo bảng từ mẫu "${template.title}"`);
   }
 
-  async onCreateBoardSubmit(): Promise<void> {
-    const title = this.newBoardTitle().trim();
-    if (!title) {
-      this.boardTitleError.set('Vui lòng nhập tên bảng dự án!');
-      this.addToast('⚠️ Vui lòng nhập tên bảng dự án trước khi tạo!', 'error');
-      return;
-    }
-    this.boardTitleError.set(null);
-
-    const wsId = this.newBoardWorkspaceId();
-    const targetWorkspace = this.workspaces().find((w) => w.id === wsId);
+  async handleBoardSubmit(data: {
+    title: string;
+    workspaceId: string;
+    privacy: Privacy;
+    background: BoardBackground;
+    selectedMemberIds: string[];
+  }): Promise<void> {
+    const { title, workspaceId, privacy, background } = data;
+    const targetWorkspace = this.workspaces().find((w) => w.id === workspaceId);
     if (!targetWorkspace) return;
 
-    const background = this.selectedBgClass();
-    const board = await this.boardService.createBoard(wsId, title, { visibility: toBoardVisibility(this.newBoardPrivacy()), background });
+    const board = await this.boardService.createBoard(workspaceId, title, {
+      visibility: toBoardVisibility(privacy),
+      background,
+    });
     if (!board) return;
 
     const newBoard: BoardItem = {
       id: board.id,
       title,
       tag: targetWorkspace.name.toUpperCase(),
-      privacy: this.newBoardPrivacy(),
+      privacy,
       badge: 'KANBAN',
       starred: false,
       bgClass: background,
     };
 
     this.workspaces.update((list) => {
-      const updated = list.map((ws) => (ws.id === wsId ? { ...ws, boards: [...ws.boards, newBoard] } : ws));
+      const updated = list.map((ws) => (ws.id === workspaceId ? { ...ws, boards: [...ws.boards, newBoard] } : ws));
       persistWorkspaces(updated);
       return updated;
     });
-    this.addToast(`Đã tạo bảng mới "${newBoard.title}"!`);
-    this.closeCreateModal();
+
+    this.addToast(`Đã tạo bảng mới "${newBoard.title}"!`, 'success');
+    this.showCreateBoardModal.set(false);
     void this.router.navigate(['/board', board.id]);
   }
 
-  // ---- Create/edit/delete Workspace modal & Member management ----
-  readonly showWorkspaceModal = signal(false);
-  readonly workspaceModalMode = signal<'create' | 'edit'>('create');
-  readonly editingWorkspaceId = signal<string | null>(null);
-  readonly workspaceNameInput = signal('');
-  readonly workspaceNameError = signal<string | null>(null);
-  readonly workspaceIconInput = signal('📂');
-  readonly workspaceIconBgInput = signal<BoardBackground>('bg-board-blue');
-  readonly workspaceDescInput = signal('');
-  readonly deleteConfirmArmed = signal(false);
-
-  readonly iconCategories = [
-    {
-      name: '💼 Dự án',
-      icons: ['📂', '📁', '🚀', '🎯', '⚡', '🔥', '📊', '📈', '🏢', '🏗️', '📋', '💼', '📌', '🏷️'],
-    },
-    {
-      name: '💻 Công nghệ',
-      icons: ['💻', '⚙️', '🛠️', '🤖', '🔒', '🌐', '🎮', '📱', '🕹️', '🧪', '🧬', '🖥️', '⌨️', '🛰️'],
-    },
-    {
-      name: '🎓 Học tập',
-      icons: ['🎓', '📚', '✏️', '📖', '💡', '🧠', '🔬', '📝', '🏫', '📐', '🏅', '🏆', '🎨', '🖌️'],
-    },
-    {
-      name: '✨ Sáng tạo',
-      icons: ['✨', '💎', '🌟', '☕', '🍀', '🌈', '🍕', '🎉', '✈️', '🎵', '❤️', '🏖️', '🌍', '⛺'],
-    },
-  ];
-  readonly selectedIconCategory = signal<number>(0);
-
-  // Member management inside Workspace modal
-  readonly workspaceMembers = signal<WorkspaceMember[]>([]);
-  readonly uuidSearchInput = signal('');
-  readonly searchDropdownOpen = signal(false);
-
-  /** Search users by UUID, Name, or Email */
-  readonly searchResults = computed(() => {
-    const q = this.uuidSearchInput().trim().toLowerCase();
-    if (!q) return [];
-    const all = this.auth.getSearchableUsers();
-    const currentMemberIds = new Set(this.workspaceMembers().map((m) => m.id.toLowerCase()));
-    return all.filter(
-      (u) =>
-        !currentMemberIds.has(u.id.toLowerCase()) &&
-        (u.id.toLowerCase().includes(q) ||
-          (u.displayName && u.displayName.toLowerCase().includes(q)) ||
-          u.email.toLowerCase().includes(q)),
-    );
-  });
-
-  openCreateWorkspaceModal(): void {
+  // ---- Workspace Modal Actions ----
+  openCreateWorkspace(): void {
     this.workspaceModalMode.set('create');
-    this.editingWorkspaceId.set(null);
-    this.workspaceNameInput.set('');
-    this.workspaceNameError.set(null);
-    this.workspaceIconInput.set('📂');
-    this.workspaceIconBgInput.set('bg-board-blue');
-    this.workspaceDescInput.set('');
-    this.deleteConfirmArmed.set(false);
-    this.uuidSearchInput.set('');
-    this.searchDropdownOpen.set(false);
-    this.selectedIconCategory.set(0);
-
-    // Creator is added as Owner
-    const cur = this.auth.currentUser();
-    const owner: WorkspaceMember = cur
-      ? {
-          id: cur.id,
-          displayName: cur.displayName || cur.email.split('@')[0] || 'Bạn',
-          email: cur.email,
-          role: 'owner',
-        }
-      : {
-          id: '8f4c2e10-9b3a-4e2a-871d-5b3a1a2e3f40',
-          displayName: 'Nguyễn Văn Nam',
-          email: 'nam.nguyen@trello.dev',
-          role: 'owner',
-        };
-    this.workspaceMembers.set([owner]);
+    this.selectedWorkspaceForEdit.set(null);
     this.showWorkspaceModal.set(true);
   }
 
-  openEditWorkspaceModal(ws: WorkspaceItem): void {
+  openEditWorkspace(ws: WorkspaceItem): void {
     this.workspaceModalMode.set('edit');
-    this.editingWorkspaceId.set(ws.id);
-    this.workspaceNameInput.set(ws.name);
-    this.workspaceNameError.set(null);
-    this.workspaceIconInput.set(ws.icon);
-    this.workspaceIconBgInput.set(ws.iconBg || 'bg-board-blue');
-    this.workspaceDescInput.set(ws.description);
-    this.deleteConfirmArmed.set(false);
-    this.uuidSearchInput.set('');
-    this.searchDropdownOpen.set(false);
-    this.selectedIconCategory.set(0);
-    this.workspaceMembers.set([...(ws.members || [])]);
+    this.selectedWorkspaceForEdit.set(ws);
     this.showWorkspaceModal.set(true);
   }
 
-  closeWorkspaceModal(): void {
-    this.showWorkspaceModal.set(false);
-    this.workspaceNameError.set(null);
-    this.deleteConfirmArmed.set(false);
-    this.searchDropdownOpen.set(false);
-  }
-
-  addMember(user: User): void {
-    const members = this.workspaceMembers();
-    if (members.some((m) => m.id.toLowerCase() === user.id.toLowerCase())) {
-      this.addToast('Thành viên này đã có trong danh sách.', 'info');
-      return;
-    }
-    const newMember: WorkspaceMember = {
-      id: user.id,
-      displayName: user.displayName || user.email.split('@')[0],
-      email: user.email,
-      role: 'member',
-      avatarUrl: user.avatarUrl,
-    };
-    this.workspaceMembers.update((list) => [...list, newMember]);
-    this.uuidSearchInput.set('');
-    this.searchDropdownOpen.set(false);
-    this.addToast(`Đã thêm thành viên "${newMember.displayName}" (UUID: ${newMember.id.slice(0, 8)}...)`, 'success');
-  }
-
-  addMemberByInput(): void {
-    const input = this.uuidSearchInput().trim();
-    if (!input) return;
-
-    // Check if matching any known user
-    const found = this.auth.findUserByUuid(input) ?? this.auth.getSearchableUsers().find(
-      (u) => u.email.toLowerCase() === input.toLowerCase() || (u.displayName && u.displayName.toLowerCase() === input.toLowerCase()),
-    );
-
-    if (found) {
-      this.addMember(found);
-      return;
-    }
-
-    // Direct UUID addition
-    const members = this.workspaceMembers();
-    if (members.some((m) => m.id.toLowerCase() === input.toLowerCase())) {
-      this.addToast('Thành viên với UUID này đã có trong danh sách.', 'info');
-      return;
-    }
-
-    const shortId = input.length > 8 ? input.slice(0, 8) : input;
-    const isEmail = input.includes('@');
-    const newMember: WorkspaceMember = {
-      id: input,
-      displayName: isEmail ? input.split('@')[0] : `Thành viên (${shortId})`,
-      email: isEmail ? input : `${shortId}@trello.dev`,
-      role: 'member',
-    };
-    this.workspaceMembers.update((list) => [...list, newMember]);
-    this.uuidSearchInput.set('');
-    this.searchDropdownOpen.set(false);
-    this.addToast(`Đã thêm thành viên theo UUID: ${shortId}...`, 'success');
-  }
-
-  removeMember(memberId: string): void {
-    const member = this.workspaceMembers().find((m) => m.id === memberId);
-    if (member?.role === 'owner') {
-      this.addToast('Không thể gỡ Trưởng nhóm (Owner) khỏi Workspace.', 'error');
-      return;
-    }
-    this.workspaceMembers.update((list) => list.filter((m) => m.id !== memberId));
-    if (member) this.addToast(`Đã gỡ thành viên "${member.displayName}"`, 'info');
-  }
-
-  copyMemberUuid(uuid: string): void {
-    if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      void navigator.clipboard.writeText(uuid);
-      this.addToast(`Đã sao chép UUID: ${uuid}`, 'success');
-    }
-  }
-
-  onWorkspaceModalSubmit(): void {
-    const name = this.workspaceNameInput().trim();
-    if (!name) {
-      this.workspaceNameError.set('Vui lòng nhập tên Không gian làm việc!');
-      this.addToast('⚠️ Vui lòng nhập tên Không gian làm việc trước khi lưu!', 'error');
-      return;
-    }
-    this.workspaceNameError.set(null);
-    const icon = this.workspaceIconInput().trim() || '📂';
-    const description = this.workspaceDescInput().trim();
-    const members = this.workspaceMembers();
+  handleWorkspaceSave(data: {
+    name: string;
+    icon: string;
+    iconBg: BoardBackground;
+    description: string;
+    members: WorkspaceMember[];
+  }): void {
+    const { name, icon, iconBg, description, members } = data;
 
     if (this.workspaceModalMode() === 'create') {
       const newWs: WorkspaceItem = {
         id: 'ws-' + Date.now(),
         name,
         icon,
-        iconBg: this.workspaceIconBgInput(),
+        iconBg,
         membersCount: members.length,
         members,
         description: description || 'Không gian làm việc mới vừa được khởi tạo.',
@@ -561,13 +297,15 @@ export class Workspace {
         return updated;
       });
       this.activeWorkspaceId.set(newWs.id);
-      this.addToast(`🎉 Đã tạo Không gian làm việc "${newWs.name}" với ${members.length} thành viên!`, 'success');
+      this.addToast(`🎉 Đã tạo Không gian làm việc "${newWs.name}"!`, 'success');
     } else {
-      const id = this.editingWorkspaceId();
+      const editingWs = this.selectedWorkspaceForEdit();
+      if (!editingWs) return;
+
       this.workspaces.update((list) => {
         const updated = list.map((ws) =>
-          ws.id === id
-            ? { ...ws, name, icon, iconBg: this.workspaceIconBgInput(), description, members, membersCount: members.length }
+          ws.id === editingWs.id
+            ? { ...ws, name, icon, iconBg, description, members, membersCount: members.length }
             : ws,
         );
         persistWorkspaces(updated);
@@ -575,80 +313,36 @@ export class Workspace {
       });
       this.addToast(`Đã cập nhật Workspace "${name}"`, 'success');
     }
-    this.closeWorkspaceModal();
+    this.showWorkspaceModal.set(false);
   }
 
-  /** Xóa cần bấm 2 lần liên tiếp */
-  confirmDeleteWorkspace(): void {
-    if (!this.deleteConfirmArmed()) {
-      this.deleteConfirmArmed.set(true);
-      return;
+  handleWorkspaceDelete(wsId: string): void {
+    const ws = this.workspaces().find((w) => w.id === wsId);
+    this.workspaces.update((list) => {
+      const updated = list.filter((w) => w.id !== wsId);
+      persistWorkspaces(updated);
+      return updated;
+    });
+    if (this.activeWorkspaceId() === wsId) {
+      this.activeWorkspaceId.set(null);
     }
-    const id = this.editingWorkspaceId();
-    if (!id) return;
-    const list = this.workspaces();
-    const removed = list.find((w) => w.id === id);
-    const remaining = list.filter((w) => w.id !== id);
-    this.workspaces.set(remaining);
-    persistWorkspaces(remaining);
-    if (this.activeWorkspaceId() === id) {
-      this.activeWorkspaceId.set(remaining[0]?.id ?? null);
-    }
-    this.addToast(removed ? `Đã xóa Workspace "${removed.name}"` : 'Đã xóa Workspace');
-    this.closeWorkspaceModal();
+    this.showWorkspaceModal.set(false);
+    this.addToast(`Đã xóa Workspace "${ws?.name || ''}"`, 'info');
   }
 
-  // ---- Header "+ Tạo" button & dropdown (via WorkspaceUiService) opens the modals ----
-  private lastCreateBoardRequestSeen = 0;
-  private readonly openOnHeaderBoardRequest = effect(() => {
-    const n = this.workspaceUi.createBoardRequests();
-    if (n > this.lastCreateBoardRequestSeen) {
-      this.lastCreateBoardRequestSeen = n;
-      if (n > 0) this.openCreateModal(this.activeWorkspaceId());
-    }
-  });
-
-  private lastCreateWorkspaceRequestSeen = 0;
-  private readonly openOnHeaderWorkspaceRequest = effect(() => {
-    const n = this.workspaceUi.createWorkspaceRequests();
-    if (n > this.lastCreateWorkspaceRequestSeen) {
-      this.lastCreateWorkspaceRequestSeen = n;
-      if (n > 0) this.openCreateWorkspaceModal();
-    }
-  });
-
-  // ---- Keyboard shortcuts ----
-  @HostListener('document:keydown', ['$event'])
-  onKeydown(event: KeyboardEvent): void {
-    if (event.key === 'Escape') {
-      this.closeCreateModal();
-      this.closeWorkspaceModal();
-      this.confirmDeleteKey.set(null);
-      return;
-    }
-
-    const target = event.target as HTMLElement;
-    if (target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) return;
-
-    if (event.key === 'n' || event.key === 'N') {
-      event.preventDefault();
-      this.openCreateModal(this.activeWorkspaceId());
-    }
-  }
-
-  // ---- Toasts ----
+  // ---- Toast notifications ----
   private toastSeq = 0;
   readonly toasts = signal<Toast[]>([]);
 
-  private addToast(message: string, type: ToastType = 'info'): void {
+  addToast(message: string, type: 'success' | 'error' | 'info' = 'info', action?: { label: string; handler: () => void }): void {
     const id = ++this.toastSeq;
-    this.toasts.update((list) => [...list, { id, message, type }]);
+    this.toasts.update((list) => [...list, { id, message, type, action }]);
     setTimeout(() => {
       this.toasts.update((list) => list.filter((t) => t.id !== id));
-    }, 2500);
+    }, 3800);
   }
 
-  trackByWorkspaceId = (_: number, item: WorkspaceItem) => item.id;
-  trackByBoardId = (_: number, item: BoardItem) => item.id;
+  removeToast(id: number): void {
+    this.toasts.update((list) => list.filter((t) => t.id !== id));
+  }
 }
-

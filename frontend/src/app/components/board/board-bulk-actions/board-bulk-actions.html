@@ -1,0 +1,44 @@
+@if (selectedCount() > 0) {
+<div class="fixed bottom-6 left-1/2 z-[900] flex -translate-x-1/2 items-center gap-2.5 rounded-2xl bg-neutral px-4 py-2.5 text-neutral-content shadow-2xl border border-white/10 backdrop-blur-md">
+  <span class="whitespace-nowrap border-r border-white/20 pr-2 text-xs font-bold">
+    Đã chọn {{ selectedCount() }} thẻ
+  </span>
+
+  <select
+    class="select select-xs rounded-lg border-white/25 bg-white/10 text-neutral-content font-bold focus:bg-slate-800"
+    (change)="onMoveSelect($event)">
+    <option value="" selected disabled>Chuyển cột...</option>
+    @for (list of lists(); track list.id) {
+      <option [value]="list.id">{{ list.name }}</option>
+    }
+  </select>
+
+  <div class="relative">
+    <button type="button" class="btn btn-xs rounded-lg border-none bg-white/10 text-neutral-content hover:bg-white/20 font-bold" (click)="toggleBulkLabelPicker()">
+      🏷️ Gắn nhãn
+    </button>
+    @if (showBulkLabelPicker()) {
+      <div class="absolute bottom-full left-0 mb-2 max-h-[220px] w-[180px] overflow-y-auto rounded-xl border border-base-300 bg-base-100 p-1.5 text-base-content shadow-2xl">
+        @for (lb of labels(); track lb.id) {
+          <button type="button" class="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs font-bold text-base-content hover:bg-base-200" (click)="onApplyLabel(lb.id)">
+            <span class="h-2.5 w-2.5 shrink-0 rounded-full" [style.background]="lb.color"></span>{{ lb.name }}
+          </button>
+        }
+        @if (labels().length === 0) {
+          <div class="px-2 py-1.5 text-[11px] text-base-content/50">Board chưa có nhãn nào.</div>
+        }
+      </div>
+    }
+  </div>
+
+  <button type="button" class="btn btn-xs rounded-lg border-none bg-white/10 text-neutral-content hover:bg-white/20 font-bold" (click)="saveHighlight.emit()" title="Lưu đúng những thẻ đang chọn thành 1 chip highlight nhanh">
+    📌 Lưu highlight
+  </button>
+  <button type="button" class="btn btn-xs rounded-lg border-none bg-red-500/30 text-red-200 hover:bg-red-600/60 font-bold" (click)="deleteSelected.emit()">
+    🗑️ Xoá
+  </button>
+  <button type="button" class="btn btn-circle btn-ghost btn-xs text-white/70 hover:text-white" (click)="clearSelection.emit()" aria-label="Bỏ chọn">
+    &times;
+  </button>
+</div>
+}
