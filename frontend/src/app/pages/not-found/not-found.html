@@ -8,7 +8,8 @@
 
   <!-- Twinkling star field (fills the wide dead space at both edges) -->
   @for (s of stars; track $index) {
-    <span class="star" [style.top]="s.top" [style.left]="s.left" [style.width.px]="s.size" [style.height.px]="s.size" [style.animation-delay]="s.delay" [style.animation-duration]="s.duration"></span>
+  <span class="star" [style.top]="s.top" [style.left]="s.left" [style.width.px]="s.size" [style.height.px]="s.size"
+    [style.animation-delay]="s.delay" [style.animation-duration]="s.duration"></span>
   }
 
   <!-- Decorative drifting cards (brand tie-in, background layer only) -->
@@ -50,7 +51,9 @@
 
   <!-- Collaborator cursor drifting past, same motif as login page -->
   <div class="collab-cursor">
-    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="#f472b6" stroke="#f472b6"><path d="M4 2l16 8-6.5 2L11 19z" stroke-width="1"/></svg>
+    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="#f472b6" stroke="#f472b6">
+      <path d="M4 2l16 8-6.5 2L11 19z" stroke-width="1" />
+    </svg>
     <span>Linh cũng đang lạc...</span>
   </div>
 
@@ -70,7 +73,8 @@
             <span class="orbit-dot"></span>
           </span>
           <span class="ring"></span>
-          <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+            stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="9.25" />
             <path d="M15.5 8.5l-2 5-5 2 2-5z" fill="currentColor" stroke="none" opacity=".9" />
           </svg>
@@ -90,18 +94,21 @@
     </div>
 
     <div class="path-chip reveal reveal-5">
-      <svg class="h-3.5 w-3.5 shrink-0 opacity-60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17H7a5 5 0 010-10h2M15 7h2a5 5 0 010 10h-2M8 12h8" /></svg>
+      <svg class="h-3.5 w-3.5 shrink-0 opacity-60" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 17H7a5 5 0 010-10h2M15 7h2a5 5 0 010 10h-2M8 12h8" />
+      </svg>
       <code>{{ path }}</code>
     </div>
 
     <div class="mt-8 flex flex-wrap items-center justify-center gap-3 reveal reveal-6">
-      <a routerLink="/dashboard" class="btn btn-primary btn-glow">
-        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 10v10h14V10" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Về Dashboard
-      </a>
-      <a routerLink="/login" class="btn btn-outline-light">Về trang đăng nhập</a>
+      <button type="button" class="btn btn-primary btn-glow gap-2 px-6 font-bold shadow-lg" (click)="goBack()">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5M12 19l-7-7 7-7" />
+        </svg>
+        Quay lại trang chính
+      </button>
     </div>
-
-    <div class="footer mt-10 reveal reveal-6">© 2026 TrelloPro Inc.</div>
   </div>
 </div>

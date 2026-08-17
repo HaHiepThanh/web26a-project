@@ -240,10 +240,54 @@ export class Workspace {
   // ---- Create board modal ----
   readonly showCreateModal = signal(false);
   readonly newBoardTitle = signal('');
+  readonly boardTitleError = signal<string | null>(null);
   readonly newBoardWorkspaceId = signal('ws-1');
   readonly newBoardPrivacy = signal<Privacy>('Workspace');
+  readonly newBoardSelectedMemberIds = signal<string[]>([]);
   readonly selectedBgClass = signal<BoardBackground>('bg-board-blue');
 
+
+
+  readonly currentWorkspaceMembers = computed(() => {
+    const wsId = this.newBoardWorkspaceId();
+    const ws = this.workspaces().find((w) => w.id === wsId);
+    return ws?.members || [];
+  });
+
+  onNewBoardWorkspaceChange(wsId: string): void {
+    this.newBoardWorkspaceId.set(wsId);
+    const ws = this.workspaces().find((w) => w.id === wsId);
+    this.newBoardSelectedMemberIds.set(ws ? ws.members.map((m) => m.id) : []);
+  }
+
+  toggleBoardMember(memberId: string): void {
+    this.newBoardSelectedMemberIds.update((ids) => {
+      if (ids.includes(memberId)) {
+        if (ids.length <= 1) {
+          this.addToast('Bảng cần có ít nhất 1 thành viên truy cập.', 'info');
+          return ids;
+        }
+        return ids.filter((id) => id !== memberId);
+      } else {
+        return [...ids, memberId];
+      }
+    });
+  }
+
+  selectAllBoardMembers(): void {
+    const members = this.currentWorkspaceMembers();
+    this.newBoardSelectedMemberIds.set(members.map((m) => m.id));
+  }
+
+  deselectAllBoardMembers(): void {
+    const curUser = this.currentUser();
+    const members = this.currentWorkspaceMembers();
+    if (curUser && members.some((m) => m.id === curUser.id)) {
+      this.newBoardSelectedMemberIds.set([curUser.id]);
+    } else if (members.length > 0) {
+      this.newBoardSelectedMemberIds.set([members[0].id]);
+    }
+  }
 
   openCreateModal(defaultWorkspaceId: string | null = null): void {
     if (this.workspaces().length === 0) {
@@ -251,28 +295,39 @@ export class Workspace {
       this.openCreateWorkspaceModal();
       return;
     }
+    const wsId = defaultWorkspaceId && this.workspaces().some((w) => w.id === defaultWorkspaceId) ? defaultWorkspaceId : this.workspaces()[0].id;
     this.newBoardTitle.set('');
-    this.newBoardWorkspaceId.set(defaultWorkspaceId && this.workspaces().some((w) => w.id === defaultWorkspaceId) ? defaultWorkspaceId : this.workspaces()[0].id);
+    this.boardTitleError.set(null);
+    this.newBoardWorkspaceId.set(wsId);
     this.newBoardPrivacy.set('Workspace');
+    const ws = this.workspaces().find((w) => w.id === wsId);
+    this.newBoardSelectedMemberIds.set(ws ? ws.members.map((m) => m.id) : []);
     this.selectedBgClass.set('bg-board-blue');
     this.showCreateModal.set(true);
   }
 
   closeCreateModal(): void {
     this.showCreateModal.set(false);
+    this.boardTitleError.set(null);
   }
 
   useTemplate(template: Template): void {
     this.openCreateModal();
     this.newBoardTitle.set(template.title);
+    this.boardTitleError.set(null);
     this.addToast(`Đang tạo bảng từ mẫu "${template.title}"`);
   }
 
   async onCreateBoardSubmit(): Promise<void> {
     const title = this.newBoardTitle().trim();
-    const wsId = this.newBoardWorkspaceId();
-    if (!title) return;
+    if (!title) {
+      this.boardTitleError.set('Vui lòng nhập tên bảng dự án!');
+      this.addToast('⚠️ Vui lòng nhập tên bảng dự án trước khi tạo!', 'error');
+      return;
+    }
+    this.boardTitleError.set(null);
 
+    const wsId = this.newBoardWorkspaceId();
     const targetWorkspace = this.workspaces().find((w) => w.id === wsId);
     if (!targetWorkspace) return;
 
@@ -300,12 +355,12 @@ export class Workspace {
     void this.router.navigate(['/board', board.id]);
   }
 
-
   // ---- Create/edit/delete Workspace modal & Member management ----
   readonly showWorkspaceModal = signal(false);
   readonly workspaceModalMode = signal<'create' | 'edit'>('create');
   readonly editingWorkspaceId = signal<string | null>(null);
   readonly workspaceNameInput = signal('');
+  readonly workspaceNameError = signal<string | null>(null);
   readonly workspaceIconInput = signal('📂');
   readonly workspaceIconBgInput = signal<BoardBackground>('bg-board-blue');
   readonly workspaceDescInput = signal('');
@@ -355,6 +410,7 @@ export class Workspace {
     this.workspaceModalMode.set('create');
     this.editingWorkspaceId.set(null);
     this.workspaceNameInput.set('');
+    this.workspaceNameError.set(null);
     this.workspaceIconInput.set('📂');
     this.workspaceIconBgInput.set('bg-board-blue');
     this.workspaceDescInput.set('');
@@ -386,6 +442,7 @@ export class Workspace {
     this.workspaceModalMode.set('edit');
     this.editingWorkspaceId.set(ws.id);
     this.workspaceNameInput.set(ws.name);
+    this.workspaceNameError.set(null);
     this.workspaceIconInput.set(ws.icon);
     this.workspaceIconBgInput.set(ws.iconBg || 'bg-board-blue');
     this.workspaceDescInput.set(ws.description);
@@ -397,9 +454,9 @@ export class Workspace {
     this.showWorkspaceModal.set(true);
   }
 
-
   closeWorkspaceModal(): void {
     this.showWorkspaceModal.set(false);
+    this.workspaceNameError.set(null);
     this.deleteConfirmArmed.set(false);
     this.searchDropdownOpen.set(false);
   }
@@ -478,9 +535,11 @@ export class Workspace {
   onWorkspaceModalSubmit(): void {
     const name = this.workspaceNameInput().trim();
     if (!name) {
-      this.addToast('Vui lòng nhập tên Không gian làm việc!', 'error');
+      this.workspaceNameError.set('Vui lòng nhập tên Không gian làm việc!');
+      this.addToast('⚠️ Vui lòng nhập tên Không gian làm việc trước khi lưu!', 'error');
       return;
     }
+    this.workspaceNameError.set(null);
     const icon = this.workspaceIconInput().trim() || '📂';
     const description = this.workspaceDescInput().trim();
     const members = this.workspaceMembers();

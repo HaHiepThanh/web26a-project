@@ -33,9 +33,7 @@ export const routes: Routes = [
     ],
   },
 
-  // --- Onboarding + nhận invite (đứng riêng, không trong app-layout) ---
-  { path: 'onboarding', loadComponent: () => import('./pages/onboarding/onboarding').then((m) => m.Onboarding) /* , canActivate: [authGuard] */ },
-  { path: 'join/:token', loadComponent: () => import('./pages/join/join').then((m) => m.Join) },
+
 
   // --- Phần app đã đăng nhập (#3, #4, #8, #9) ---
   {
@@ -43,10 +41,8 @@ export const routes: Routes = [
     loadComponent: () => import('./layouts/app-layout/app-layout').then((m) => m.AppLayout),
     // canActivate: [authGuard, onboardingGuard], // TODO: bật khi sẵn sàng
     children: [
-      { path: 'dashboard', loadComponent: () => import('./pages/dashboard/dashboard').then((m) => m.Dashboard) },
       { path: 'workspace', loadComponent: () => import('./pages/workspace/workspace').then((m) => m.Workspace) },
       { path: 'board/:id', loadComponent: () => import('./pages/board/board').then((m) => m.Board) },
-      { path: 'members', loadComponent: () => import('./pages/members/members').then((m) => m.Members) /* , canActivate: [roleGuard] */ },
       { path: 'settings', loadComponent: () => import('./pages/settings/settings').then((m) => m.Settings) },
       { path: 'settings/manage-workspace', loadComponent: () => import('./pages/settings/manage-workspace/project-list/project-list').then((m) => m.ProjectList) },
       { path: 'settings/manage-workspace/:boardId', loadComponent: () => import('./pages/settings/manage-workspace/project-members/project-members').then((m) => m.ProjectMembers) },

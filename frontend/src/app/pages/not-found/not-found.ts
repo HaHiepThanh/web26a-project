@@ -1,5 +1,6 @@
-import { Component, HostListener, computed, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, HostListener, computed, inject, signal } from '@angular/core';
+import { Location } from '@angular/common';
+import { Router } from '@angular/router';
 
 interface Star {
   top: string;
@@ -21,11 +22,14 @@ function makeStars(count: number): Star[] {
 
 @Component({
   selector: 'app-not-found',
-  imports: [RouterLink],
+  imports: [],
   templateUrl: './not-found.html',
   styleUrl: './not-found.css',
 })
 export class NotFound {
+  private readonly location = inject(Location);
+  private readonly router = inject(Router);
+
   readonly path = window.location.pathname;
   readonly stars = makeStars(18);
 
@@ -44,4 +48,9 @@ export class NotFound {
     this.tiltX.set(event.clientX / window.innerWidth - 0.5);
     this.tiltY.set(event.clientY / window.innerHeight - 0.5);
   }
+
+  goBack(): void {
+    void this.router.navigate(['/workspace']);
+  }
 }
+

@@ -313,21 +313,35 @@
         } @else {
         <div class="flex flex-col gap-3.5">
           @for (ws of filteredWorkspaces(); track trackByWorkspaceId($index, ws)) {
-          <div class="rounded-box border border-base-300 bg-base-100 p-3.5 shadow-sm">
-            <div class="mb-2.5 flex items-center justify-between gap-3">
-              <div class="flex items-center gap-2.5">
-                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-box text-[17px]"
+          <div class="rounded-2xl border border-base-300 bg-base-100 p-4 shadow-xs overflow-hidden">
+            <!-- Header Section -->
+            <div class="mb-3.5 flex items-start justify-between gap-3 min-w-0">
+              <div class="flex items-start gap-3 min-w-0 flex-1">
+                <!-- Workspace Icon -->
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xl shadow-xs"
                   [class]="ws.iconBg">{{ ws.icon }}</div>
-                <div class="min-w-0">
-                  <h3 class="truncate text-[14px] font-extrabold text-base-content">{{ ws.name }}</h3>
-                  <div class="mt-0.5 flex flex-wrap items-center gap-2">
-                    <p class="truncate text-[11px] text-base-content/50">{{ ws.description }}</p>
-                    <span class="text-base-content/30">•</span>
-                    <!-- Member avatar stack -->
+
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <h3 class="truncate text-[15px] font-black text-slate-900 dark:text-white" [title]="ws.name">{{ ws.name }}</h3>
+                    <span class="badge badge-sm border-none bg-slate-200/80 dark:bg-slate-700/80 text-[11px] font-bold text-slate-700 dark:text-slate-200">
+                      {{ ws.boards.length }} bảng
+                    </span>
+                  </div>
+
+                  <!-- Workspace Description (Clean Line-Clamp & Break-Words) -->
+                  @if (ws.description) {
+                  <p class="mt-1 text-xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed break-words" [title]="ws.description">
+                    {{ ws.description }}
+                  </p>
+                  }
+
+                  <!-- Member Avatar Stack & Count -->
+                  <div class="mt-2 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                     <div class="flex items-center -space-x-1.5 overflow-hidden">
                       @for (mem of ws.members.slice(0, 4); track mem.id) {
                       <div
-                        class="inline-flex h-5 w-5 items-center justify-center rounded-full border border-base-100 text-[8.5px] font-bold text-white shadow-sm"
+                        class="inline-flex h-5 w-5 items-center justify-center rounded-full border-2 border-white dark:border-slate-800 text-[8px] font-bold text-white shadow-xs"
                         [style.background-color]="avatarBgFor(mem.id)"
                         [title]="mem.displayName + ' (UUID: ' + mem.id + ')'">
                         {{ initialsOf(mem.displayName || mem.email) }}
@@ -335,21 +349,26 @@
                       }
                       @if (ws.members.length > 4) {
                       <div
-                        class="inline-flex h-5 w-5 items-center justify-center rounded-full border border-base-100 bg-base-300 text-[8.5px] font-bold text-base-content shadow-sm">
+                        class="inline-flex h-5 w-5 items-center justify-center rounded-full border-2 border-white dark:border-slate-800 bg-slate-200 dark:bg-slate-700 text-[8px] font-bold text-slate-700 dark:text-slate-200 shadow-xs">
                         +{{ ws.members.length - 4 }}
                       </div>
                       }
                     </div>
-                    <span class="text-[11px] font-semibold text-base-content/60">{{ ws.members.length }} thành
-                      viên</span>
+                    <span class="text-[11px] font-semibold text-slate-600 dark:text-slate-400">{{ ws.members.length }} thành viên</span>
                   </div>
                 </div>
               </div>
-              <div class="flex shrink-0 items-center gap-1">
-                <button class="btn btn-square btn-ghost btn-xs text-[13px]" title="Sửa & Quản lý thành viên Workspace"
-                  (click)="openEditWorkspaceModal(ws)">✏️</button>
-                <button class="btn btn-primary btn-xs rounded-box px-3 text-[11.5px] font-bold"
-                  (click)="openCreateModal(ws.id)">+ Thêm bảng</button>
+
+              <!-- Action buttons -->
+              <div class="flex shrink-0 items-center gap-1.5 pt-0.5">
+                <button class="btn btn-ghost btn-xs text-xs rounded-lg font-bold hover:bg-slate-200 dark:hover:bg-slate-700"
+                  title="Chỉnh sửa & Thành viên" (click)="openEditWorkspaceModal(ws)">
+                  ✏️ Sửa
+                </button>
+                <button class="btn btn-primary btn-xs rounded-lg px-3 text-[11.5px] font-bold shadow-xs"
+                  (click)="openCreateModal(ws.id)">
+                  + Thêm bảng
+                </button>
               </div>
             </div>
 
@@ -381,7 +400,7 @@
                   {{ board.starred ? '⭐' : '☆' }}
                 </button>
                 <div class="relative z-10 flex items-center justify-between text-[10px] font-semibold opacity-95">
-                  <span>{{ board.privacy === 'Public' ? '🌐' : '🔒' }} {{ board.privacy }}</span>
+                  <span>{{ board.privacy === 'Private' ? '🔒 Riêng tư' : (board.privacy === 'Public' ? '🌐 Công khai' : '🏢 Workspace') }}</span>
                   <span class="badge badge-xs border-none bg-black/25 text-white">{{ board.badge }}</span>
                 </div>
                 @if (confirmDeleteKey() === ws.id + ':' + board.id) {
@@ -432,12 +451,23 @@
     <form (ngSubmit)="onCreateBoardSubmit()">
       <div class="mb-4">
         <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200" for="board-title-input">
-          Tên bảng dự án
+          Tên bảng dự án <span class="text-error">*</span>
         </label>
         <input type="text" id="board-title-input"
-          class="input input-bordered border-2 border-slate-300 dark:border-slate-600 focus:border-primary focus:ring-2 focus:ring-primary/20 w-full rounded-xl font-bold text-slate-900 dark:text-white bg-white dark:bg-slate-800 shadow-xs text-sm"
-          placeholder="Ví dụ: Quản lý Sprint 12..." required [ngModel]="newBoardTitle()"
-          (ngModelChange)="newBoardTitle.set($event)" name="boardTitle" />
+          class="input input-bordered border-2 w-full rounded-xl font-bold text-slate-900 dark:text-white bg-white dark:bg-slate-800 shadow-xs text-sm transition-all"
+          [class.border-error]="boardTitleError()"
+          [class.focus:border-error]="boardTitleError()"
+          [class.focus:ring-error/20]="boardTitleError()"
+          [class.border-slate-300]="!boardTitleError()"
+          [class.dark:border-slate-600]="!boardTitleError()"
+          [class.focus:border-primary]="!boardTitleError()"
+          placeholder="Ví dụ: Quản lý Sprint 12, Phát triển MVP..." [ngModel]="newBoardTitle()"
+          (ngModelChange)="newBoardTitle.set($event); boardTitleError.set(null)" name="boardTitle" />
+        @if (boardTitleError()) {
+        <p class="mt-1.5 text-xs font-bold text-error flex items-center gap-1 animate-pulse">
+          <span>⚠️</span> {{ boardTitleError() }}
+        </p>
+        }
       </div>
 
       <div class="mb-4">
@@ -446,7 +476,7 @@
         <select id="board-workspace-select"
           class="select select-bordered border-2 border-slate-300 dark:border-slate-600 focus:border-primary focus:ring-2 focus:ring-primary/20 w-full rounded-xl font-bold text-slate-900 dark:text-white bg-white dark:bg-slate-800 shadow-xs text-sm"
           [ngModel]="newBoardWorkspaceId()"
-          (ngModelChange)="newBoardWorkspaceId.set($event)" name="boardWorkspace">
+          (ngModelChange)="onNewBoardWorkspaceChange($event)" name="boardWorkspace">
           @for (ws of workspaces(); track ws.id) {
           <option [value]="ws.id">{{ ws.name }}</option>
           }
@@ -454,29 +484,82 @@
       </div>
 
       <div class="mb-4">
-        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Quyền riêng tư</label>
+        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+          Quyền riêng tư & Quyền truy cập
+        </label>
         <div class="grid grid-cols-2 gap-2.5">
+          <!-- Option 1: Tất cả thành viên Workspace -->
           <label
-            class="flex cursor-pointer items-center gap-2.5 rounded-xl border-2 border-slate-300 dark:border-slate-600 p-3 transition hover:bg-base-200/80 bg-base-100 shadow-xs"
-            [class.border-primary]="newBoardPrivacy() === 'Workspace'">
-            <input type="radio" name="privacy" value="Workspace" class="radio radio-primary radio-sm"
+            class="flex cursor-pointer items-start gap-2.5 rounded-xl border-2 border-slate-300 dark:border-slate-600 p-3 transition hover:bg-base-200/80 bg-base-100 shadow-xs"
+            [class.border-primary]="newBoardPrivacy() === 'Workspace'"
+            [class.bg-primary/5]="newBoardPrivacy() === 'Workspace'">
+            <input type="radio" name="privacy" value="Workspace" class="radio radio-primary radio-sm mt-0.5"
               [checked]="newBoardPrivacy() === 'Workspace'" (change)="newBoardPrivacy.set('Workspace')" />
             <div class="text-[12.5px] leading-tight">
-              <span class="font-bold text-slate-900 dark:text-white">🔒 Workspace</span>
-              <p class="text-[10.5px] text-slate-500 dark:text-slate-400 mt-0.5">Chỉ thành viên xem</p>
+              <span class="font-bold text-slate-900 dark:text-white">🏢 Tất cả thành viên</span>
+              <p class="text-[10.5px] text-slate-500 dark:text-slate-400 mt-1">Toàn bộ {{ currentWorkspaceMembers().length }} thành viên trong workspace đều xem được</p>
             </div>
           </label>
+
+          <!-- Option 2: Thành viên được chọn -->
           <label
-            class="flex cursor-pointer items-center gap-2.5 rounded-xl border-2 border-slate-300 dark:border-slate-600 p-3 transition hover:bg-base-200/80 bg-base-100 shadow-xs"
-            [class.border-primary]="newBoardPrivacy() === 'Public'">
-            <input type="radio" name="privacy" value="Public" class="radio radio-primary radio-sm"
-              [checked]="newBoardPrivacy() === 'Public'" (change)="newBoardPrivacy.set('Public')" />
+            class="flex cursor-pointer items-start gap-2.5 rounded-xl border-2 border-slate-300 dark:border-slate-600 p-3 transition hover:bg-base-200/80 bg-base-100 shadow-xs"
+            [class.border-primary]="newBoardPrivacy() === 'Private'"
+            [class.bg-primary/5]="newBoardPrivacy() === 'Private'">
+            <input type="radio" name="privacy" value="Private" class="radio radio-primary radio-sm mt-0.5"
+              [checked]="newBoardPrivacy() === 'Private'" (change)="newBoardPrivacy.set('Private')" />
             <div class="text-[12.5px] leading-tight">
-              <span class="font-bold text-slate-900 dark:text-white">🌐 Công khai</span>
-              <p class="text-[10.5px] text-slate-500 dark:text-slate-400 mt-0.5">Mọi người đều xem được</p>
+              <span class="font-bold text-slate-900 dark:text-white">🔒 Thành viên được chọn</span>
+              <p class="text-[10.5px] text-slate-500 dark:text-slate-400 mt-1">Chỉ những người được tích chọn trong workspace này</p>
             </div>
           </label>
         </div>
+
+        <!-- Custom Member Selection List (Shown when 'Private' is active) -->
+        @if (newBoardPrivacy() === 'Private') {
+        <div class="mt-3 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-3.5 shadow-xs transition-all">
+          <div class="mb-2.5 flex items-center justify-between">
+            <span class="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+              Chọn thành viên trong Workspace ({{ newBoardSelectedMemberIds().length }}/{{ currentWorkspaceMembers().length }}):
+            </span>
+            <div class="flex gap-1.5">
+              <button type="button" class="btn btn-ghost btn-xs text-[10.5px] font-bold text-primary hover:bg-primary/10" (click)="selectAllBoardMembers()">Tất cả</button>
+              <button type="button" class="btn btn-ghost btn-xs text-[10.5px] font-bold text-slate-500 hover:bg-slate-200" (click)="deselectAllBoardMembers()">Bỏ chọn</button>
+            </div>
+          </div>
+
+          <div class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+            @for (mem of currentWorkspaceMembers(); track mem.id) {
+            <label
+              class="flex cursor-pointer items-center justify-between gap-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2 transition hover:bg-slate-100 dark:hover:bg-slate-700"
+              [class.ring-1]="newBoardSelectedMemberIds().includes(mem.id)"
+              [class.ring-primary]="newBoardSelectedMemberIds().includes(mem.id)">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <div
+                  class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white shadow-xs"
+                  [style.background-color]="avatarBgFor(mem.id)">
+                  {{ initialsOf(mem.displayName || mem.email) }}
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-1.5">
+                    <span class="truncate text-[12px] font-bold text-slate-900 dark:text-white">{{ mem.displayName }}</span>
+                    @if (mem.role === 'owner') {
+                    <span class="badge badge-warning badge-xs font-bold text-[8.5px]">Trưởng nhóm</span>
+                    }
+                  </div>
+                  <span class="truncate text-[10px] text-slate-500 dark:text-slate-400 block font-mono">UUID: {{ mem.id.slice(0, 8) }}...</span>
+                </div>
+              </div>
+              <input
+                type="checkbox"
+                class="checkbox checkbox-primary checkbox-sm"
+                [checked]="newBoardSelectedMemberIds().includes(mem.id)"
+                (change)="toggleBoardMember(mem.id)" />
+            </label>
+            }
+          </div>
+        </div>
+        }
       </div>
 
       <div class="mb-5">
@@ -530,9 +613,20 @@
           <!-- Name input -->
           <div class="flex-1">
             <input type="text" id="workspace-name-input"
-              class="input input-bordered border-2 border-slate-300 dark:border-slate-600 focus:border-primary focus:ring-2 focus:ring-primary/20 w-full rounded-xl font-bold text-slate-900 dark:text-white bg-white dark:bg-slate-800 shadow-xs text-sm"
-              placeholder="Ví dụ: Đồ án Tốt nghiệp CNTT, Dự án SaaS..." required [ngModel]="workspaceNameInput()"
-              (ngModelChange)="workspaceNameInput.set($event)" name="workspaceName" />
+              class="input input-bordered border-2 w-full rounded-xl font-bold text-slate-900 dark:text-white bg-white dark:bg-slate-800 shadow-xs text-sm transition-all"
+              [class.border-error]="workspaceNameError()"
+              [class.focus:border-error]="workspaceNameError()"
+              [class.focus:ring-error/20]="workspaceNameError()"
+              [class.border-slate-300]="!workspaceNameError()"
+              [class.dark:border-slate-600]="!workspaceNameError()"
+              [class.focus:border-primary]="!workspaceNameError()"
+              placeholder="Ví dụ: Đồ án Tốt nghiệp CNTT, Dự án SaaS..." [ngModel]="workspaceNameInput()"
+              (ngModelChange)="workspaceNameInput.set($event); workspaceNameError.set(null)" name="workspaceName" />
+            @if (workspaceNameError()) {
+            <p class="mt-1.5 text-xs font-bold text-error flex items-center gap-1 animate-pulse">
+              <span>⚠️</span> {{ workspaceNameError() }}
+            </p>
+            }
           </div>
         </div>
 
@@ -600,10 +694,16 @@
       </div>
 
       <div class="mb-4">
-        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200" for="workspace-desc-input">
-          Mô tả
-        </label>
+        <div class="flex items-center justify-between mb-1.5">
+          <label class="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200" for="workspace-desc-input">
+            Mô tả
+          </label>
+          <span class="text-[11px] font-semibold text-slate-400">
+            {{ workspaceDescInput().length }}/300 ký tự
+          </span>
+        </div>
         <textarea id="workspace-desc-input"
+          maxlength="300"
           class="textarea textarea-bordered border-2 border-slate-300 dark:border-slate-600 focus:border-primary focus:ring-2 focus:ring-primary/20 w-full rounded-xl font-medium text-slate-900 dark:text-white bg-white dark:bg-slate-800 shadow-xs text-sm leading-relaxed"
           rows="3"
           placeholder="Mô tả mục tiêu của không gian làm việc này..." [ngModel]="workspaceDescInput()"
