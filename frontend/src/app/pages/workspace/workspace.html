@@ -107,16 +107,163 @@
         </div>
 
         @if (workspaces().length === 0) {
-        <div
-          class="flex flex-col items-center gap-3 rounded-box border border-dashed border-base-300 bg-base-100/60 px-4 py-14 text-center">
-          <div class="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-2xl">🗂️</div>
-          <div>
-            <p class="text-[14px] font-bold text-base-content">Chưa có không gian làm việc nào</p>
-            <p class="mt-1 text-[12px] text-base-content/50">Tạo Workspace đầu tiên để bắt đầu thêm bảng và thẻ công
-              việc.</p>
+        <div class="overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-xl transition-all">
+          <!-- Hero Header Banner with Gradient & Glow -->
+          <div
+            class="relative overflow-hidden bg-gradient-to-r from-primary/95 via-primary to-secondary/90 px-6 py-10 text-white md:px-10">
+            <!-- Glow & mesh effects -->
+            <div class="pointer-events-none absolute -right-10 -top-10 h-64 w-64 rounded-full bg-white/15 blur-3xl">
+            </div>
+            <div
+              class="pointer-events-none absolute -bottom-10 -left-10 h-64 w-64 rounded-full bg-secondary/30 blur-2xl">
+            </div>
+
+            <div class="relative z-10 flex flex-col items-center text-center md:items-start md:text-left">
+              <div
+                class="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/15 px-3.5 py-1 text-xs font-extrabold tracking-wide backdrop-blur-md shadow-sm">
+                <span>✨</span>
+                <span>CHÀO MỪNG BẠN ĐẾN VỚI HỆ THỐNG WORKSPACE</span>
+              </div>
+
+              <h1
+                class="mt-3.5 text-2xl font-black tracking-tight sm:text-3xl lg:text-4xl text-white [text-shadow:0_2px_4px_rgba(0,0,0,0.15)]">
+                Xin chào, {{ currentUser()?.displayName || 'bạn' }}! 👋
+              </h1>
+              <p class="mt-2 max-w-2xl text-xs sm:text-sm text-white/90 leading-relaxed font-medium">
+                Hiện tại bạn chưa có Không gian làm việc nào. Hãy cùng thiết lập Không gian làm việc đầu tiên để tổ chức
+                các dự án Kanban, quản lý công việc và cộng tác cùng đồng đội nhé!
+              </p>
+
+              <!-- Current User UUID Highlight Bar -->
+              @if (currentUser(); as user) {
+              <div
+                class="mt-5 flex flex-wrap items-center gap-2.5 rounded-xl border border-white/25 bg-black/25 p-2.5 px-3.5 backdrop-blur-md shadow-inner">
+                <div class="flex items-center gap-2 text-xs font-semibold text-white/95">
+                  <span class="text-base">🔑</span>
+                  <span>UUID của bạn:</span>
+                  <code
+                    class="rounded-md bg-black/50 px-2 py-1 font-mono text-[11px] font-bold text-yellow-300 tracking-wider select-all">{{ user.id }}</code>
+                </div>
+                <button type="button"
+                  class="btn btn-xs rounded-lg border border-white/40 bg-white/20 text-white hover:bg-white hover:text-slate-900 transition-all font-bold gap-1 shadow-sm"
+                  (click)="copyMyUuid()">
+                  <span>{{ copiedMyUuid() ? '✓ Đã chép!' : '📋 Sao chép UUID' }}</span>
+                </button>
+              </div>
+              }
+            </div>
           </div>
-          <button type="button" class="btn btn-primary btn-sm rounded-box" (click)="openCreateWorkspaceModal()">+ Tạo
-            Workspace đầu tiên</button>
+
+          <!-- 3-Step Guided Onboarding -->
+          <div class="p-6 md:p-8">
+            <div class="mb-6 flex items-center justify-between">
+              <div>
+                <h2 class="text-base font-black uppercase tracking-wide text-base-content flex items-center gap-2">
+                  <span
+                    class="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary text-base font-bold">🚀</span>
+                  3 Bước bắt đầu nhanh
+                </h2>
+                <p class="text-xs text-base-content/60 mt-0.5">Làm quen với quy trình tổ chức và quản lý công việc hiệu
+                  quả</p>
+              </div>
+              <span class="badge badge-primary badge-outline badge-sm font-bold">Dễ dàng & Nhanh chóng</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <!-- Step 1 -->
+              <div
+                class="group relative flex flex-col justify-between rounded-xl border border-base-300 bg-base-200/50 p-4.5 transition-all hover:border-primary/50 hover:bg-base-200 hover:shadow-md">
+                <div>
+                  <div class="flex items-center justify-between mb-3">
+                    <span
+                      class="flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-primary-content text-sm font-extrabold shadow-sm">1</span>
+                    <span
+                      class="rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-extrabold text-primary uppercase">Bước
+                      1</span>
+                  </div>
+                  <h3 class="text-sm font-bold text-base-content">Tạo Không gian làm việc</h3>
+                  <p class="mt-1.5 text-xs text-base-content/65 leading-relaxed">
+                    Đặt tên và chọn biểu tượng riêng cho từng đồ án, môn học hoặc dự án thực tế.
+                  </p>
+                </div>
+                <div
+                  class="mt-4 pt-3 border-t border-base-300/60 flex items-center gap-1.5 text-[11px] font-semibold text-primary">
+                  <span>📂 Phân loại theo từng dự án</span>
+                </div>
+              </div>
+
+              <!-- Step 2 -->
+              <div
+                class="group relative flex flex-col justify-between rounded-xl border border-base-300 bg-base-200/50 p-4.5 transition-all hover:border-secondary/50 hover:bg-base-200 hover:shadow-md">
+                <div>
+                  <div class="flex items-center justify-between mb-3">
+                    <span
+                      class="flex h-8 w-8 items-center justify-center rounded-xl bg-secondary text-secondary-content text-sm font-extrabold shadow-sm">2</span>
+                    <span
+                      class="rounded-full bg-secondary/10 px-2.5 py-0.5 text-[10px] font-extrabold text-secondary uppercase">Bước
+                      2</span>
+                  </div>
+                  <h3 class="text-sm font-bold text-base-content">Thêm thành viên bằng UUID</h3>
+                  <p class="mt-1.5 text-xs text-base-content/65 leading-relaxed">
+                    Nhập mã UUID của bạn bè hoặc chọn nhanh từ danh sách người dùng mẫu có sẵn.
+                  </p>
+                </div>
+                <div
+                  class="mt-4 pt-3 border-t border-base-300/60 flex items-center gap-1.5 text-[11px] font-semibold text-secondary">
+                  <span>👥 Cộng tác và phân công thẻ</span>
+                </div>
+              </div>
+
+              <!-- Step 3 -->
+              <div
+                class="group relative flex flex-col justify-between rounded-xl border border-base-300 bg-base-200/50 p-4.5 transition-all hover:border-accent/50 hover:bg-base-200 hover:shadow-md">
+                <div>
+                  <div class="flex items-center justify-between mb-3">
+                    <span
+                      class="flex h-8 w-8 items-center justify-center rounded-xl bg-accent text-accent-content text-sm font-extrabold shadow-sm">3</span>
+                    <span
+                      class="rounded-full bg-accent/10 px-2.5 py-0.5 text-[10px] font-extrabold text-accent uppercase">Bước
+                      3</span>
+                  </div>
+                  <h3 class="text-sm font-bold text-base-content">Tạo Bảng Kanban</h3>
+                  <p class="mt-1.5 text-xs text-base-content/65 leading-relaxed">
+                    Kéo thả thẻ công việc, gán hạn chót, checklist và theo dõi tiến độ công việc mượt mà.
+                  </p>
+                </div>
+                <div
+                  class="mt-4 pt-3 border-t border-base-300/60 flex items-center gap-1.5 text-[11px] font-semibold text-accent">
+                  <span>📋 Kéo thả thẻ Kanban mượt mà</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div
+              class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-6 border-t border-base-300">
+              <button type="button"
+                class="btn btn-primary btn-md w-full sm:w-auto px-7 font-extrabold shadow-lg shadow-primary/25 gap-2 rounded-xl text-xs sm:text-sm"
+                (click)="openCreateWorkspaceModal()">
+                <span class="text-base">✨</span>
+                <span>Tạo Không gian làm việc đầu tiên</span>
+              </button>
+              <button type="button"
+                class="btn btn-outline btn-md w-full sm:w-auto px-6 font-bold gap-2 rounded-xl text-xs sm:text-sm hover:bg-base-300"
+                (click)="loadSampleWorkspaces()">
+                <span class="text-base">⚡</span>
+                <span>Tải dữ liệu Workspace Mẫu</span>
+              </button>
+            </div>
+
+            <!-- Pro tips bar -->
+            <div
+              class="mt-6 rounded-xl border border-base-300/80 bg-base-200/60 p-3.5 text-center sm:flex sm:items-center sm:justify-between sm:text-left">
+              <div class="flex items-center justify-center sm:justify-start gap-2.5 text-xs text-base-content/75">
+                <span class="text-base">💡</span>
+                <span><strong>Mẹo nhanh:</strong> Nhấn phím <kbd class="kbd kbd-xs">Esc</kbd> để đóng nhanh các hộp
+                  thoại, hoặc bấm nút <strong>+ Tạo</strong> trên thanh Header bất kỳ lúc nào.</span>
+              </div>
+            </div>
+          </div>
         </div>
         } @else if (searchHasNoResults()) {
         <div

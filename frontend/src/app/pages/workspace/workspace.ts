@@ -189,14 +189,35 @@ export class Workspace {
   readonly initialsOf = initialsOf;
   readonly avatarBgFor = avatarBgFor;
   readonly mockSearchableUsers = MOCK_SEARCHABLE_USERS;
+  readonly currentUser = this.auth.currentUser;
+  readonly copiedMyUuid = signal(false);
 
   readonly workspaces = signal<WorkspaceItem[]>(loadStoredWorkspaces());
   readonly activeWorkspaceId = signal<string | null>(loadStoredWorkspaces()[0]?.id ?? 'ws-1');
   readonly templates = TEMPLATES;
   readonly bgClasses = BOARD_BACKGROUNDS;
 
-
   readonly searchQuery = this.workspaceUi.searchQuery;
+
+  copyMyUuid(): void {
+    const uid = this.currentUser()?.id;
+    if (!uid) return;
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      void navigator.clipboard.writeText(uid);
+      this.copiedMyUuid.set(true);
+      this.addToast(`Đã sao chép UUID của bạn: ${uid}`, 'success');
+      setTimeout(() => this.copiedMyUuid.set(false), 2500);
+    }
+  }
+
+  loadSampleWorkspaces(): void {
+    const samples = initialMockWorkspaces();
+    this.workspaces.set(samples);
+    persistWorkspaces(samples);
+    this.activeWorkspaceId.set(samples[0]?.id ?? null);
+    this.addToast('🎉 Đã tải Không gian làm việc mẫu thành công!', 'success');
+  }
+
 
   readonly starredBoards = computed(() => {
     const q = this.searchQuery().trim().toLowerCase();
