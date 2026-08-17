@@ -1,4 +1,4 @@
-<div class="workspace-page mx-auto max-w-[1400px] px-3.5 py-4">
+<div class="workspace-page mx-auto max-w-[1440px] sm:px-3 py-2 w-full h-full min-h-0 flex flex-col overflow-hidden">
   <!-- Toast container -->
   <div class="toast toast-top toast-end z-[9999] pointer-events-none">
     @for (t of toasts(); track t.id) {
@@ -9,7 +9,8 @@
       [class.alert-info]="t.type === 'info'" [class.bg-slate-800]="t.type === 'info'">
       <span>{{ t.message }}</span>
       @if (t.action) {
-      <button class="btn btn-xs btn-outline text-white border-white/50 hover:bg-white/20" (click)="t.action.handler()">{{
+      <button class="btn btn-xs btn-outline text-white border-white/50 hover:bg-white/20"
+        (click)="t.action.handler()">{{
         t.action.label }}</button>
       }
       <button class="btn btn-ghost btn-xs btn-circle text-white/70 hover:text-white"
@@ -18,154 +19,115 @@
     }
   </div>
 
-  <main class="space-y-4">
-    <!-- Starred boards section (if any) -->
-    @if (starredBoards().length > 0) {
-    <section class="rounded-2xl border border-base-300 bg-base-100 p-4 shadow-xs">
-      <div class="mb-3 flex items-center gap-2">
-        <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-warning/15 text-[13px]">⭐</span>
-        <h2 class="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Bảng có đánh dấu sao</h2>
-      </div>
-      <div class="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2.5">
-        @for (board of starredBoards(); track board.id) {
-        <div
-          class="board-tile group relative flex h-[92px] cursor-pointer flex-col justify-between overflow-hidden rounded-xl p-2.5 text-white shadow-xs transition hover:-translate-y-1 hover:brightness-110"
-          [class]="board.bgClass" (click)="onBoardClick(board)">
-          <div class="relative z-10">
-            <div class="text-[9px] font-extrabold uppercase tracking-wide opacity-90">{{ board.workspaceName }}</div>
-            <div class="mt-0.5 text-[13px] font-bold leading-tight [text-shadow:0_1px_2px_rgba(0,0,0,0.2)]">{{ board.title }}</div>
-          </div>
-          <button class="absolute right-2.5 top-2.5 z-10 text-sm text-yellow-400 transition hover:scale-110"
-            title="Bỏ đánh dấu sao" (click)="$event.stopPropagation(); toggleStar(board.id)">⭐</button>
-          <div class="relative z-10 flex items-center justify-between text-[10px] font-semibold opacity-95">
-            <span>{{ board.privacy === 'Private' ? '🔒 Riêng tư' : (board.privacy === 'Public' ? '🌐 Công khai' : '🏢 Workspace') }}</span>
-            <span class="badge badge-xs border-none bg-black/25 text-white font-bold">{{ board.badge }}</span>
-          </div>
+  <main
+    class="flex flex-col lg:flex-row gap-4 lg:gap-5 items-stretch flex-1 min-h-0 h-full max-lg:overflow-y-auto lg:overflow-hidden">
+    <!-- Left Sidebar Component (Fixed on desktop / Natural stack on mobile) -->
+    <aside class="w-full lg:w-64 shrink-0 max-lg:h-auto lg:h-full lg:overflow-y-auto lg:pr-1 space-y-4">
+      <app-workspace-sidebar [workspaces]="workspaces()" [activeWorkspaceId]="activeWorkspaceId()"
+        [totalBoardsCount]="totalBoardsCount()" (selectWorkspace)="selectWorkspace($event)"
+        (createWorkspace)="openCreateWorkspace()">
+      </app-workspace-sidebar>
+    </aside>
+
+    <!-- Right Content Area (Independently scrollable on desktop / Natural stack on mobile) -->
+    <div class="min-w-0 flex-1 w-full max-lg:h-auto lg:h-full lg:overflow-y-auto lg:pr-2 space-y-4">
+      <!-- Starred boards section (Placed inside the right workspace area) -->
+      @if (starredBoards().length > 0) {
+      <section class="rounded-2xl border border-base-300 bg-base-100 p-4 shadow-xs">
+        <div class="mb-3 flex items-center gap-2">
+          <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-warning/15 text-[13px]">⭐</span>
+          <h2 class="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Bảng có đánh dấu
+            sao</h2>
         </div>
-        }
-      </div>
-    </section>
-    }
-
-    <!-- Main Section: Left Sidebar & Workspaces Content -->
-    <div class="flex flex-col lg:flex-row gap-4 items-start">
-      <!-- Left Sidebar Component -->
-      <aside class="w-full lg:w-64 shrink-0">
-        <app-workspace-sidebar
-          [workspaces]="workspaces()"
-          [activeWorkspaceId]="activeWorkspaceId()"
-          [totalBoardsCount]="totalBoardsCount()"
-          (selectWorkspace)="selectWorkspace($event)"
-          (createWorkspace)="openCreateWorkspace()">
-        </app-workspace-sidebar>
-
-        <!-- Templates Quick Widget -->
-        <div class="mt-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-base-100 p-3.5 shadow-xs">
-          <div class="mb-2 flex items-center gap-1.5 px-1">
-            <span class="text-sm">⚡</span>
-            <span class="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400">Mẫu bảng phổ biến</span>
+        <div class="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2.5">
+          @for (board of starredBoards(); track board.id) {
+          <div
+            class="board-tile group relative flex h-[92px] cursor-pointer flex-col justify-between overflow-hidden rounded-xl p-2.5 text-white shadow-xs transition hover:-translate-y-1 hover:brightness-110"
+            [class]="board.bgClass" (click)="onBoardClick(board)">
+            <div class="relative z-10">
+              <div class="text-[9px] font-extrabold uppercase tracking-wide opacity-90">{{ board.workspaceName }}</div>
+              <div class="mt-0.5 text-[13px] font-bold leading-tight [text-shadow:0_1px_2px_rgba(0,0,0,0.2)]">{{
+                board.title }}</div>
+            </div>
+            <button class="absolute right-2.5 top-2.5 z-10 text-sm text-yellow-400 transition hover:scale-110"
+              title="Bỏ đánh dấu sao" (click)="$event.stopPropagation(); toggleStar(board.id)">⭐</button>
+            <div class="relative z-10 flex items-center justify-between text-[10px] font-semibold opacity-95">
+              <span>{{ board.privacy === 'Private' ? '🔒 Riêng tư' : (board.privacy === 'Public' ? '🌐 Công khai' : '🏢
+                Workspace') }}</span>
+              <span class="badge badge-xs border-none bg-black/25 text-white font-bold">{{ board.badge }}</span>
+            </div>
           </div>
-          <div class="space-y-1.5">
-            @for (tpl of templates; track tpl.title) {
-            <button
-              type="button"
-              class="w-full text-left p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-all flex items-start gap-2"
-              (click)="useTemplate(tpl)">
-              <span class="badge badge-xs font-bold shrink-0 mt-0.5" [class]="tpl.badgeClass">{{ tpl.badge }}</span>
-              <div class="min-w-0 flex-1">
-                <div class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{{ tpl.title }}</div>
-                <div class="text-[10px] text-slate-500 truncate">{{ tpl.desc }}</div>
-              </div>
-            </button>
-            }
-          </div>
-        </div>
-      </aside>
-
-      <!-- Right Content Area -->
-      <div class="min-w-0 flex-1 w-full space-y-4">
-        <!-- Header Controls / Filter Indicator -->
-        <div class="flex items-center justify-between gap-2 flex-wrap pb-1">
-          <div class="flex items-center gap-2">
-            <span class="text-lg">🥞</span>
-            <h2 class="text-sm font-black uppercase tracking-wide text-slate-800 dark:text-slate-200">
-              @if (activeWorkspaceId()) {
-                Không gian làm việc đang lọc
-              } @else {
-                Tất cả không gian làm việc của bạn
-              }
-            </h2>
-            @if (activeWorkspaceId()) {
-            <button type="button"
-              class="badge badge-primary badge-outline badge-sm font-bold gap-1 cursor-pointer hover:bg-primary hover:text-white transition-all"
-              (click)="selectWorkspace(null)" title="Bấm để xem lại tất cả Workspace">
-              ✕ Hiện tất cả
-            </button>
-            }
-          </div>
-
-          <button type="button" class="btn btn-primary btn-xs rounded-xl px-3.5 font-black gap-1 shadow-xs"
-            (click)="openCreateWorkspace()">
-            <span>+ Tạo Workspace</span>
-          </button>
-        </div>
-
-        <!-- 1. Zero state: Show Welcome Banner Component -->
-        @if (workspaces().length === 0) {
-        <app-workspace-welcome-banner
-          (createWorkspace)="openCreateWorkspace()"
-          (loadSamples)="loadSampleWorkspaces()">
-        </app-workspace-welcome-banner>
-        }
-
-        <!-- 2. Search has no results -->
-        @else if (searchHasNoResults()) {
-        <div class="flex flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-base-300 bg-base-100/60 px-4 py-12 text-center">
-          <div class="flex h-12 w-12 items-center justify-center rounded-full bg-base-200 text-xl">🔍</div>
-          <p class="text-sm font-bold text-slate-800 dark:text-slate-200">Không tìm thấy bảng nào khớp với "{{ searchQuery() }}"</p>
-          <p class="text-xs text-slate-500">Thử từ khóa khác hoặc kiểm tra lại chính tả.</p>
-        </div>
-        }
-
-        <!-- 3. Workspaces Card List Components -->
-        @else {
-        <div class="space-y-4">
-          @for (ws of filteredWorkspaces(); track ws.id) {
-          <app-workspace-card-item
-            [workspace]="ws"
-            [confirmDeleteKey]="confirmDeleteKey()"
-            (confirmDeleteKeyChange)="confirmDeleteKey.set($event)"
-            (editWorkspace)="openEditWorkspace($event)"
-            (createBoard)="openCreateBoard($event)"
-            (boardClick)="onBoardClick($event)"
-            (toggleStar)="toggleStar($event)"
-            (deleteBoard)="deleteBoard($event)">
-          </app-workspace-card-item>
           }
         </div>
+      </section>
+      }
+
+      <!-- Header Controls / Filter Indicator -->
+      <div class="flex items-center justify-between gap-2 flex-wrap pb-1">
+        <div class="flex items-center gap-2">
+          <h2 class="text-sm font-black uppercase tracking-wide text-slate-800 dark:text-slate-200">
+            @if (activeWorkspaceId()) {
+            Không gian làm việc đang lọc
+            } @else {
+            Tất cả không gian làm việc của bạn
+            }
+          </h2>
+          @if (activeWorkspaceId()) {
+          <button type="button"
+            class="badge badge-primary badge-outline badge-sm font-bold gap-1 cursor-pointer hover:bg-primary hover:text-white transition-all"
+            (click)="selectWorkspace(null)" title="Bấm để xem lại tất cả Workspace">
+            ✕ Hiện tất cả
+          </button>
+          }
+        </div>
+
+        <button type="button" class="btn btn-primary btn-xs rounded-xl px-3.5 font-black gap-1 shadow-xs"
+          (click)="openCreateWorkspace()">
+          <span>+ Tạo Workspace</span>
+        </button>
+      </div>
+
+      <!-- 1. Zero state: Show Welcome Banner Component -->
+      @if (workspaces().length === 0) {
+      <app-workspace-welcome-banner (createWorkspace)="openCreateWorkspace()" (loadSamples)="loadSampleWorkspaces()">
+      </app-workspace-welcome-banner>
+      }
+
+      <!-- 2. Search has no results -->
+      @else if (searchHasNoResults()) {
+      <div
+        class="flex flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-base-300 bg-base-100/60 px-4 py-12 text-center">
+        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-base-200 text-xl">🔍</div>
+        <p class="text-sm font-bold text-slate-800 dark:text-slate-200">Không tìm thấy bảng nào khớp với "{{
+          searchQuery() }}"</p>
+        <p class="text-xs text-slate-500">Thử từ khóa khác hoặc kiểm tra lại chính tả.</p>
+      </div>
+      }
+
+      <!-- 3. Workspaces Card List Components -->
+      @else {
+      <div class="flex flex-col gap-6 pb-12">
+        @for (ws of filteredWorkspaces(); track ws.id) {
+        <app-workspace-card-item [workspace]="ws" [confirmDeleteKey]="confirmDeleteKey()"
+          (confirmDeleteKeyChange)="confirmDeleteKey.set($event)" (editWorkspace)="openEditWorkspace($event)"
+          (createBoard)="openCreateBoard($event)" (boardClick)="onBoardClick($event)" (toggleStar)="toggleStar($event)"
+          (deleteBoard)="deleteBoard($event)">
+        </app-workspace-card-item>
         }
       </div>
+      }
     </div>
   </main>
 </div>
 
 <!-- MODAL: Create Board Component -->
-<app-create-board-modal
-  [isOpen]="showCreateBoardModal()"
-  [workspaces]="workspaces()"
-  [initialWorkspaceId]="createBoardInitialWorkspaceId()"
-  [initialTitle]="createBoardInitialTitle()"
-  (close)="showCreateBoardModal.set(false)"
-  (submitBoard)="handleBoardSubmit($event)">
+<app-create-board-modal [isOpen]="showCreateBoardModal()" [workspaces]="workspaces()"
+  [initialWorkspaceId]="createBoardInitialWorkspaceId()" [initialTitle]="createBoardInitialTitle()"
+  (close)="showCreateBoardModal.set(false)" (submitBoard)="handleBoardSubmit($event)">
 </app-create-board-modal>
 
 <!-- MODAL: Workspace Form Component (Create & Edit) -->
-<app-workspace-form-modal
-  [isOpen]="showWorkspaceModal()"
-  [mode]="workspaceModalMode()"
-  [workspace]="selectedWorkspaceForEdit()"
-  [currentUser]="currentUser()"
-  (close)="showWorkspaceModal.set(false)"
-  (save)="handleWorkspaceSave($event)"
-  (delete)="handleWorkspaceDelete($event)">
+<app-workspace-form-modal [isOpen]="showWorkspaceModal()" [mode]="workspaceModalMode()"
+  [workspace]="selectedWorkspaceForEdit()" [currentUser]="currentUser()" (close)="showWorkspaceModal.set(false)"
+  (save)="handleWorkspaceSave($event)" (delete)="handleWorkspaceDelete($event)">
 </app-workspace-form-modal>

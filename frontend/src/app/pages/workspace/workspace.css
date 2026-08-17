@@ -6,6 +6,10 @@
 
 :host {
   display: block;
+  height: 100%;
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
 }
 
 /* Tips card — decorative purple gradient (light + dark). */

@@ -190,7 +190,10 @@ export class Register {
     const newUser: User = {
       id: newUserId,
       displayName: this.fullName.trim(),
+      username: this.username.trim(),
+      phone: this.phone.trim(),
       email: this.email.trim(),
+      password: this.password,
       avatarUrl: '',
     };
     this.auth.setUser(newUser);

@@ -4,6 +4,7 @@ import { WorkspaceItem } from '../../../mocks';
 @Component({
   selector: 'app-workspace-sidebar',
   templateUrl: './workspace-sidebar.html',
+  host: { class: 'block' },
 })
 export class WorkspaceSidebar {
   readonly workspaces = input<WorkspaceItem[]>([]);

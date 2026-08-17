@@ -1,20 +1,25 @@
-<div class="rounded-2xl border border-base-300 bg-base-100 p-4 shadow-xs overflow-hidden">
+<div class="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/95 p-5 shadow-xs hover:shadow-md transition-all duration-200">
   <!-- Header Section -->
-  <div class="mb-3.5 flex items-start justify-between gap-3 min-w-0">
-    <div class="flex items-start gap-3 min-w-0 flex-1">
-      <!-- Workspace Icon -->
-      <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xl shadow-xs"
-        [class]="workspace().iconBg">{{ workspace().icon }}</div>
+  <div class="flex items-start justify-between gap-4 min-w-0">
+    <div class="flex items-start gap-3.5 min-w-0 flex-1">
+      <!-- Workspace Icon Squircle -->
+      <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-xl shadow-xs ring-1 ring-black/5 dark:ring-white/10"
+        [class]="workspace().iconBg">
+        {{ workspace().icon }}
+      </div>
 
       <div class="min-w-0 flex-1">
-        <div class="flex items-center gap-2 flex-wrap">
-          <h3 class="truncate text-[15px] font-black text-slate-900 dark:text-white" [title]="workspace().name">{{ workspace().name }}</h3>
-          <span class="badge badge-sm border-none bg-slate-200/80 dark:bg-slate-700/80 text-[11px] font-bold text-slate-700 dark:text-slate-200">
+        <!-- Name & Badge -->
+        <div class="flex items-center gap-2.5 flex-wrap">
+          <h3 class="truncate text-[16px] font-black text-slate-900 dark:text-white tracking-tight" [title]="workspace().name">
+            {{ workspace().name }}
+          </h3>
+          <span class="inline-flex items-center rounded-full bg-primary/10 dark:bg-primary/20 px-2.5 py-0.5 text-[11px] font-black text-primary border border-primary/20">
             {{ workspace().boards.length }} bảng
           </span>
         </div>
 
-        <!-- Description (Line-Clamp & Break-Words) -->
+        <!-- Description -->
         @if (workspace().description) {
         <p class="mt-1 text-xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed break-words" [title]="workspace().description">
           {{ workspace().description }}
@@ -22,57 +27,68 @@
         }
 
         <!-- Member Avatar Stack & Count -->
-        <div class="mt-2 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+        <div class="mt-2.5 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
           <div class="flex items-center -space-x-1.5 overflow-hidden">
-            @for (mem of workspace().members.slice(0, 4); track mem.id) {
+            @for (mem of workspace().members.slice(0, 5); track mem.id) {
             <div
-              class="inline-flex h-5 w-5 items-center justify-center rounded-full border-2 border-white dark:border-slate-800 text-[8px] font-bold text-white shadow-xs"
+              class="inline-flex h-5 w-5 items-center justify-center rounded-full border-2 border-white dark:border-slate-800 text-[8.5px] font-black text-white shadow-xs"
               [style.background-color]="avatarBgFor(mem.id)"
               [title]="mem.displayName + ' (UUID: ' + mem.id + ')'">
               {{ initialsOf(mem.displayName || mem.email) }}
             </div>
             }
-            @if (workspace().members.length > 4) {
+            @if (workspace().members.length > 5) {
             <div
               class="inline-flex h-5 w-5 items-center justify-center rounded-full border-2 border-white dark:border-slate-800 bg-slate-200 dark:bg-slate-700 text-[8px] font-bold text-slate-700 dark:text-slate-200 shadow-xs">
-              +{{ workspace().members.length - 4 }}
+              +{{ workspace().members.length - 5 }}
             </div>
             }
           </div>
-          <span class="text-[11px] font-semibold text-slate-600 dark:text-slate-400">{{ workspace().members.length }} thành viên</span>
+          <span class="text-slate-400 dark:text-slate-600">•</span>
+          <span class="text-[11.5px] font-bold text-slate-600 dark:text-slate-400">{{ workspace().members.length }} thành viên</span>
         </div>
       </div>
     </div>
 
     <!-- Action buttons -->
-    <div class="flex shrink-0 items-center gap-1.5 pt-0.5">
-      <button class="btn btn-ghost btn-xs text-xs rounded-lg font-bold hover:bg-slate-200 dark:hover:bg-slate-700"
-        title="Chỉnh sửa & Thành viên" (click)="editWorkspace.emit(workspace())">
-        ✏️ Sửa
+    <div class="flex shrink-0 items-center gap-2 pt-0.5">
+      <button
+        type="button"
+        class="btn btn-ghost btn-xs text-xs rounded-xl font-bold hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 gap-1 px-2.5"
+        title="Chỉnh sửa & Thành viên"
+        (click)="editWorkspace.emit(workspace())">
+        <span>✏️</span>
+        <span>Sửa</span>
       </button>
-      <button class="btn btn-primary btn-xs rounded-lg px-3 text-[11.5px] font-bold shadow-xs"
+      <button
+        type="button"
+        class="btn btn-primary btn-xs rounded-xl px-3 font-black text-[11.5px] shadow-xs hover:shadow-sm gap-1"
         (click)="createBoard.emit(workspace().id)">
-        + Thêm bảng
+        <span>+</span>
+        <span>Thêm bảng</span>
       </button>
     </div>
   </div>
 
+  <!-- Divider -->
+  <div class="my-3.5 border-t border-slate-100 dark:border-slate-800/80"></div>
+
   <!-- Boards Grid -->
-  <div class="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2.5">
+  <div class="grid grid-cols-[repeat(auto-fill,minmax(205px,1fr))] gap-3">
     @for (board of workspace().boards; track board.id) {
     <div
-      class="board-tile group relative flex h-[92px] cursor-pointer flex-col justify-between overflow-hidden rounded-xl p-2.5 text-white shadow-xs transition hover:-translate-y-1 hover:brightness-110"
+      class="board-tile group relative flex h-[96px] cursor-pointer flex-col justify-between overflow-hidden rounded-2xl p-3 text-white shadow-xs transition-all duration-200 hover:-translate-y-1 hover:shadow-md hover:brightness-105"
       [class]="board.bgClass" (click)="boardClick.emit(board)">
       <div class="relative z-10">
-        <div class="text-[9px] font-extrabold uppercase tracking-wide opacity-90">{{ board.tag }}</div>
-        <div class="mt-0.5 text-[13px] font-bold leading-tight [text-shadow:0_1px_2px_rgba(0,0,0,0.2)]">
+        <div class="text-[9px] font-black uppercase tracking-wider opacity-90 truncate pr-6">{{ board.tag }}</div>
+        <div class="mt-0.5 text-[13.5px] font-bold leading-tight line-clamp-2 [text-shadow:0_1px_2px_rgba(0,0,0,0.25)]">
           {{ board.title }}
         </div>
       </div>
 
       <!-- Delete board button -->
       <button
-        class="absolute right-8 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-black/30 text-white opacity-0 transition hover:bg-black/55 group-hover:opacity-100"
+        class="absolute right-8 top-2.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-black/30 text-white opacity-0 transition hover:bg-black/55 group-hover:opacity-100"
         title="Xóa bảng"
         (click)="$event.stopPropagation(); confirmDeleteKeyChange.emit(workspace().id + ':' + board.id)">
         <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -83,7 +99,7 @@
 
       <!-- Star button -->
       <button
-        class="absolute right-2.5 top-2.5 z-10 text-sm text-white/60 transition hover:scale-110 hover:text-yellow-400"
+        class="absolute right-2.5 top-2.5 z-10 text-sm text-white/70 transition hover:scale-125 hover:text-yellow-400"
         [class.text-yellow-400]="board.starred" [class.scale-110]="board.starred" title="Đánh dấu sao"
         (click)="$event.stopPropagation(); toggleStar.emit(board.id)">
         {{ board.starred ? '⭐' : '☆' }}
@@ -91,8 +107,8 @@
 
       <!-- Footer Privacy badge -->
       <div class="relative z-10 flex items-center justify-between text-[10px] font-semibold opacity-95">
-        <span>{{ board.privacy === 'Private' ? '🔒 Riêng tư' : (board.privacy === 'Public' ? '🌐 Công khai' : '🏢 Workspace') }}</span>
-        <span class="badge badge-xs border-none bg-black/25 text-white font-bold">{{ board.badge }}</span>
+        <span class="truncate max-w-[120px]">{{ board.privacy === 'Private' ? '🔒 Riêng tư' : (board.privacy === 'Public' ? '🌐 Công khai' : '🏢 Workspace') }}</span>
+        <span class="badge badge-xs border-none bg-black/30 text-white font-black px-1.5">{{ board.badge }}</span>
       </div>
 
       <!-- Popover Confirm Delete -->
@@ -100,12 +116,12 @@
       <div class="fixed inset-0 z-[999] cursor-default"
         (click)="$event.stopPropagation(); confirmDeleteKeyChange.emit(null)"></div>
       <div
-        class="absolute right-1.5 top-9 z-[1000] w-36 rounded-xl border border-base-300 bg-base-100 p-2.5 text-left shadow-xl"
+        class="absolute right-2 top-9 z-[1000] w-36 rounded-2xl border border-base-300 bg-base-100 p-2.5 text-left shadow-2xl"
         (click)="$event.stopPropagation()">
         <p class="mb-2 text-[11px] font-bold text-slate-800 dark:text-slate-200">Xóa bảng này?</p>
-        <div class="flex justify-end gap-1">
-          <button type="button" class="btn btn-ghost btn-xs rounded-lg" (click)="confirmDeleteKeyChange.emit(null)">Hủy</button>
-          <button type="button" class="btn btn-error btn-xs text-white rounded-lg font-bold"
+        <div class="flex justify-end gap-1.5">
+          <button type="button" class="btn btn-ghost btn-xs rounded-xl" (click)="confirmDeleteKeyChange.emit(null)">Hủy</button>
+          <button type="button" class="btn btn-error btn-xs text-white rounded-xl font-black"
             (click)="onDeleteBoard(workspace().id, board)">Xóa</button>
         </div>
       </div>
@@ -115,9 +131,9 @@
 
     <!-- Tile: Create new board -->
     <div
-      class="flex h-[92px] cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-base-300 bg-base-100 text-[12px] font-bold text-slate-500 transition hover:border-primary hover:bg-base-200/80 hover:text-primary"
+      class="flex h-[96px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700/80 bg-slate-50/60 dark:bg-slate-800/30 text-[12px] font-bold text-slate-500 transition-all duration-200 hover:border-primary hover:bg-primary/5 hover:text-primary hover:scale-[1.02]"
       (click)="createBoard.emit(workspace().id)">
-      <span class="text-xl leading-none">+</span>
+      <span class="flex h-7 w-7 items-center justify-center rounded-full bg-slate-200/70 dark:bg-slate-700/70 text-base font-bold leading-none">+</span>
       <span>Tạo bảng mới</span>
     </div>
   </div>

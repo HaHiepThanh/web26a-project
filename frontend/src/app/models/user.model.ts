@@ -3,8 +3,14 @@
 export interface User {
   id: string; // uuid
   email: string;
-  displayName?: string; // tên hiển thị (settings #9)
+  displayName?: string; // tên hiển thị
+  username?: string; // tên đăng nhập
+  phone?: string; // số điện thoại
+  jobTitle?: string; // chức vụ/tiêu đề công việc
+  password?: string; // mật khẩu tài khoản
   avatarUrl?: string; // ảnh đại diện
+  language?: string;
+  timezone?: string;
 }
 
 /** Tạo UUID v4 chuẩn */

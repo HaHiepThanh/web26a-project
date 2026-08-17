@@ -43,6 +43,7 @@ function toBoardVisibility(privacy: Privacy): BoardVisibility {
   ],
   templateUrl: './workspace.html',
   styleUrl: './workspace.css',
+  host: { class: 'block h-full min-h-0 flex-1 overflow-hidden' },
 })
 export class Workspace {
   private readonly workspaceUi = inject(WorkspaceUiService);

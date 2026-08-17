@@ -4,6 +4,7 @@ import { BoardItem, WorkspaceItem, avatarBgFor, initialsOf } from '../../../mock
 @Component({
   selector: 'app-workspace-card-item',
   templateUrl: './workspace-card-item.html',
+  host: { class: 'block' },
 })
 export class WorkspaceCardItem {
   readonly workspace = input.required<WorkspaceItem>();

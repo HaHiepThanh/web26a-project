@@ -2,10 +2,10 @@
      nội dung ở giữa qua router-outlet, Footer dưới cùng. -->
 <app-header />
 
-<main class="flex flex-1 flex-col">
+<main class="flex flex-1 flex-col min-h-0 overflow-hidden">
   <router-outlet />
 </main>
 
 @if (!hideFooter()) {
-  <app-footer />
+  <app-footer class="shrink-0" />
 }
