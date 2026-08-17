@@ -1,6 +1,7 @@
 import { Component, output } from '@angular/core';
 
-/** Nút "+ Thêm thẻ" cuối cột — mở modal đầy đủ (tên, nhãn, ưu tiên, phụ trách, hạn) ở board.ts (#2). */
+/** Nút "+ Thêm thẻ" cuối cột — bấm là tạo thẻ ngay (tên mặc định) và mở thẳng
+ *  app-card-detail-modal (cùng 1 UI đầy đủ dùng chung với sửa thẻ) để chỉnh sửa. */
 @Component({
   selector: 'app-add-card',
   imports: [],

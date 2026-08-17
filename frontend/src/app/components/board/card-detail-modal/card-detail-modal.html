@@ -15,7 +15,7 @@
     <!-- ===== Header: tiêu đề + presence + đóng ===== -->
     <div class="flex items-start gap-2 border-b border-base-200 px-5 pb-3 pt-4">
       <svg class="mt-2 h-5 w-5 shrink-0 text-base-content/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
-      <input class="min-w-0 flex-1 rounded-md bg-transparent px-1.5 py-1 text-lg font-bold text-base-content outline-none hover:bg-base-200 focus:bg-base-200" [value]="card().title" spellcheck="false" (change)="onTitleChange($event)" />
+      <input #titleInput class="min-w-0 flex-1 rounded-md bg-transparent px-1.5 py-1 text-lg font-bold text-base-content outline-none hover:bg-base-200 focus:bg-base-200" [value]="card().title" spellcheck="false" (change)="onTitleChange($event)" />
 
       @if (viewers().length) {
         <span class="mt-1.5 flex shrink-0 items-center">

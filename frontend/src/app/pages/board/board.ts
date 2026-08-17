@@ -19,8 +19,6 @@ import { CardDetailModal } from '../../components/board/card-detail-modal/card-d
 import { BoardMinimap, MinimapListGeom } from '../../components/board/board-minimap/board-minimap';
 import { WorkspaceStatsModal } from '../../components/board/workspace-stats-modal/workspace-stats-modal';
 import { BoardHeaderBar } from '../../components/board/board-header-bar/board-header-bar';
-import { CreateListModal } from '../../components/board/create-list-modal/create-list-modal';
-import { CreateCardModal } from '../../components/board/create-card-modal/create-card-modal';
 import { BoardBulkActions } from '../../components/board/board-bulk-actions/board-bulk-actions';
 
 type ToastType = 'success' | 'error' | 'info';
@@ -58,7 +56,6 @@ interface SavedHighlightGroup {
   cardIds: string[];
 }
 
-const LIST_COLORS = ['#64748b', '#2563eb', '#059669', '#d97706', '#7c3aed', '#dc2626'];
 const PRIORITIES: { id: CardPriority; label: string }[] = [
   { id: 'high', label: 'Cao' },
   { id: 'medium', label: 'Trung bình' },
@@ -100,8 +97,6 @@ const MINIMAP_OVERFLOW_RATIO = 1.5;
     BoardMinimap,
     WorkspaceStatsModal,
     BoardHeaderBar,
-    CreateListModal,
-    CreateCardModal,
     BoardBulkActions,
   ],
   templateUrl: './board.html',
@@ -134,7 +129,6 @@ export class Board {
   readonly commentCountByCardId = this.commentService.countByCard;
 
   readonly today = new Date().toISOString().slice(0, 10);
-  readonly listColors = LIST_COLORS;
   readonly priorities = PRIORITIES;
   readonly sortOptions = SORT_OPTIONS;
   readonly sortMode = signal<SortMode>('manual');
@@ -654,59 +648,22 @@ export class Board {
     void this.listService.reorderListOptimistic(ordered.map((l) => l.id));
   }
 
-  // ---- Modal tạo danh sách (#2) ----
-  readonly showListModal = signal(false);
-
-  openListModal(): void {
-    this.showListModal.set(true);
+  // ---- Tạo danh sách inline (bấm "+ Thêm danh sách" → gõ tên → Enter, kiểu Trello) ----
+  async createList(name: string): Promise<void> {
+    const list = await this.listService.createList(this.boardId, name);
+    if (list) this.addToast(`Đã tạo danh sách "${name}"`, 'success');
   }
 
-  closeListModal(): void {
-    this.showListModal.set(false);
-  }
+  // ---- Tạo thẻ (bấm "+ Thêm thẻ" → tạo ngay với tên mặc định, mở thẳng
+  // app-card-detail-modal — dùng chung 1 UI đầy đủ với sửa thẻ — để chỉnh sửa,
+  // tiêu đề sẽ tự bôi đen sẵn để gõ đè tên ngay, không cần điền tên trước. ----
+  readonly justCreatedCardId = signal<string | null>(null);
 
-  async handleCreateList(data: { name: string; color: string }): Promise<void> {
-    await this.listService.createList(this.boardId, data.name, data.color);
-    this.closeListModal();
-    this.addToast(`Đã tạo danh sách "${data.name}"`, 'success');
-  }
-
-  // ---- Modal tạo thẻ (#2, #4, #5) ----
-  readonly showCardModal = signal(false);
-  readonly targetListId = signal<string | null>(null);
-
-  openCardModal(listId: string): void {
-    this.targetListId.set(listId);
-    this.showCardModal.set(true);
-  }
-
-  closeCardModal(): void {
-    this.showCardModal.set(false);
-    this.targetListId.set(null);
-  }
-
-  async handleCreateCard(data: {
-    title: string;
-    labelIds: string[];
-    priority: CardPriority;
-    assigneeId: string | null;
-    dueDate: string | null;
-  }): Promise<void> {
-    const listId = this.targetListId();
-    if (!listId) return;
-
-    const card = await this.cardService.createCard(listId, {
-      title: data.title,
-      priority: data.priority,
-      assigneeId: data.assigneeId ?? undefined,
-      dueDate: data.dueDate || undefined,
-    });
-    if (card && data.labelIds.length) {
-      this.labelService.setCardLabels(card.id, data.labelIds);
-    }
-    if (card) this.activityService.record(this.boardId, card.id, 'đã tạo thẻ này', 'card_created');
-    this.closeCardModal();
-    this.addToast(`Đã tạo thẻ "${data.title}"`, 'success');
+  async createCard(listId: string): Promise<void> {
+    const card = await this.cardService.createCard(listId, { title: 'Thẻ mới', priority: 'medium' });
+    if (!card) return;
+    this.justCreatedCardId.set(card.id);
+    this.openCardDetail(card);
   }
 
   // ---- Xoá / đổi tên danh sách ----
@@ -743,6 +700,7 @@ export class Board {
 
   closeCardDetail(): void {
     this.selectedCardId.set(null);
+    this.justCreatedCardId.set(null);
   }
 
   onCardDetailDeleted(): void {

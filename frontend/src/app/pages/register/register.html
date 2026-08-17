@@ -1,65 +1,22 @@
-<div class="flex min-h-screen items-center justify-center bg-base-200 px-4 py-10">
-  <div class="flex w-full max-w-2xl flex-col gap-5">
+<div class="register-frame">
 
-    <!-- Simulation Toolbar: chỉ phục vụ QA/Demo, tách biệt hẳn về hình thức với form thật -->
-    <div class="rounded-box border-2 border-dashed border-warning/50 bg-warning/5 p-4">
-      <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <div class="flex items-center gap-2 text-warning">
-          <span class="text-base">🧪</span>
-          <span class="text-xs font-bold uppercase tracking-wide">Thanh công cụ giả lập</span>
-        </div>
-        <span class="badge badge-warning badge-outline badge-sm">Chỉ dùng khi test/demo</span>
+  <!-- LEFT: form panel -->
+  <div class="form-panel">
+    <a routerLink="/login" class="brand">
+      <div class="brand-mark">
+        <span class="bar bar-1"></span>
+        <span class="bar bar-2"></span>
+      </div>
+      <span class="brand-name">Trello<span class="brand-accent">Pro</span></span>
+    </a>
+
+    <div class="form-card">
+      <div class="text-center">
+        <h1 class="text-2xl font-bold tracking-tight">Tạo tài khoản mới</h1>
+        <p class="mt-1.5 text-sm text-base-content/60">Đăng ký để bắt đầu quản lý công việc cùng đội nhóm.</p>
       </div>
 
-      <div class="flex flex-col gap-2.5">
-        <div class="flex flex-wrap items-center gap-2">
-          <span class="w-full text-[11px] font-semibold uppercase text-base-content/50 sm:w-[132px] sm:shrink-0">Luồng thành công</span>
-          <button type="button" class="btn btn-success btn-outline btn-sm" (click)="autoFillValid()">🎲 Auto-fill hợp lệ</button>
-        </div>
-
-        <div class="flex flex-wrap items-center gap-2">
-          <span class="w-full text-[11px] font-semibold uppercase text-base-content/50 sm:w-[132px] sm:shrink-0">Edge cases</span>
-          <button type="button" class="btn btn-error btn-outline btn-sm" (click)="fillDuplicate()">❌ Trùng Username/Email</button>
-          <button type="button" class="btn btn-error btn-outline btn-sm" (click)="fillInvalidFormat()">❌ Sai định dạng</button>
-          <button type="button" class="btn btn-error btn-outline btn-sm" (click)="fillPasswordMismatch()">❌ Mật khẩu không khớp</button>
-        </div>
-
-        <div class="flex flex-wrap items-center gap-2">
-          <span class="w-full text-[11px] font-semibold uppercase text-base-content/50 sm:w-[132px] sm:shrink-0">Trạng thái hệ thống</span>
-          <button
-            type="button"
-            class="btn btn-sm"
-            [class.btn-warning]="systemSimMode() === 'slow'"
-            [class.btn-outline]="systemSimMode() !== 'slow'"
-            (click)="armSlowNetwork()"
-            title="Bấm Đăng ký lần tới sẽ hiển thị loading 3 giây"
-          >
-            🐢 Mạng chậm 3s
-            @if (systemSimMode() === 'slow') { <span class="badge badge-sm badge-neutral ml-1">Đã bật ✓</span> }
-          </button>
-          <button
-            type="button"
-            class="btn btn-sm"
-            [class.btn-error]="systemSimMode() === 'server-error'"
-            [class.btn-outline]="systemSimMode() !== 'server-error'"
-            (click)="armServerError()"
-            title="Bấm Đăng ký lần tới sẽ báo lỗi hệ thống 500"
-          >
-            💥 Lỗi Server 500
-            @if (systemSimMode() === 'server-error') { <span class="badge badge-sm badge-neutral ml-1">Đã bật ✓</span> }
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Form đăng ký -->
-    <div class="card border border-base-300 bg-base-100 shadow-sm">
-      <form class="card-body gap-4" (ngSubmit)="onSubmit()">
-        <div class="text-center">
-          <h1 class="text-xl font-bold text-base-content">Đăng ký tài khoản</h1>
-          <p class="mt-1 text-sm text-base-content/60">Tạo tài khoản để bắt đầu quản lý công việc cùng đội nhóm.</p>
-        </div>
-
+      <form class="mt-5 flex flex-col gap-4" (ngSubmit)="onSubmit()">
         <div class="form-control w-full">
           <label class="label pb-1.5" for="fullName"><span class="label-text text-xs font-semibold">Họ và tên</span></label>
           <input
@@ -173,6 +130,7 @@
         <button type="submit" class="btn btn-primary btn-block mt-1" [disabled]="submitting()">
           @if (!submitting()) {
             <span>Đăng ký tài khoản</span>
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           } @else {
             <span class="loading loading-spinner loading-sm"></span>
             <span>Đang xử lý...</span>
@@ -184,9 +142,104 @@
           <a routerLink="/login" class="link link-primary font-semibold">Đăng nhập</a>
         </p>
       </form>
+
+      <!-- Bộ công cụ giả lập QA/Demo — thu gọn, tách hẳn hình thức khỏi form thật -->
+      <details class="sim-toolbar collapse collapse-arrow mt-5 rounded-box border border-dashed border-warning/50 bg-warning/5">
+        <summary class="collapse-title min-h-0 py-2.5 text-xs font-bold uppercase tracking-wide text-warning">
+          🧪 Thanh công cụ giả lập (QA/Demo)
+        </summary>
+        <div class="collapse-content">
+          <div class="flex flex-col gap-2.5 pt-1">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="w-full text-[11px] font-semibold uppercase text-base-content/50 sm:w-[132px] sm:shrink-0">Luồng thành công</span>
+              <button type="button" class="btn btn-success btn-outline btn-xs" (click)="autoFillValid()">🎲 Auto-fill hợp lệ</button>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="w-full text-[11px] font-semibold uppercase text-base-content/50 sm:w-[132px] sm:shrink-0">Edge cases</span>
+              <button type="button" class="btn btn-error btn-outline btn-xs" (click)="fillDuplicate()">❌ Trùng Username/Email</button>
+              <button type="button" class="btn btn-error btn-outline btn-xs" (click)="fillInvalidFormat()">❌ Sai định dạng</button>
+              <button type="button" class="btn btn-error btn-outline btn-xs" (click)="fillPasswordMismatch()">❌ Mật khẩu không khớp</button>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="w-full text-[11px] font-semibold uppercase text-base-content/50 sm:w-[132px] sm:shrink-0">Trạng thái hệ thống</span>
+              <button
+                type="button"
+                class="btn btn-xs"
+                [class.btn-warning]="systemSimMode() === 'slow'"
+                [class.btn-outline]="systemSimMode() !== 'slow'"
+                (click)="armSlowNetwork()"
+                title="Bấm Đăng ký lần tới sẽ hiển thị loading 3 giây"
+              >
+                🐢 Mạng chậm 3s
+                @if (systemSimMode() === 'slow') { <span class="badge badge-xs badge-neutral ml-1">Đã bật ✓</span> }
+              </button>
+              <button
+                type="button"
+                class="btn btn-xs"
+                [class.btn-error]="systemSimMode() === 'server-error'"
+                [class.btn-outline]="systemSimMode() !== 'server-error'"
+                (click)="armServerError()"
+                title="Bấm Đăng ký lần tới sẽ báo lỗi hệ thống 500"
+              >
+                💥 Lỗi Server 500
+                @if (systemSimMode() === 'server-error') { <span class="badge badge-xs badge-neutral ml-1">Đã bật ✓</span> }
+              </button>
+            </div>
+          </div>
+        </div>
+      </details>
     </div>
 
+    <div class="footer">© 2026 TrelloPro Inc.</div>
   </div>
+
+  <!-- RIGHT: showcase panel -->
+  <div class="showcase-panel">
+    <div class="dot-grid"></div>
+    <div class="glow glow-primary"></div>
+    <div class="glow glow-indigo"></div>
+
+    <div class="showcase-heading">
+      <h1>Bắt đầu hành trình<br />quản lý công việc</h1>
+      <p>Tạo tài khoản miễn phí, mời cả đội và cùng theo dõi tiến độ trên một bảng Kanban duy nhất.</p>
+    </div>
+
+    <div class="perk-list">
+      <div class="perk-item">
+        <span class="perk-icon">🗂️</span>
+        <div>
+          <div class="perk-title">Không gian làm việc không giới hạn</div>
+          <div class="perk-desc">Tạo bao nhiêu Workspace, Board tùy thích cho từng dự án.</div>
+        </div>
+      </div>
+      <div class="perk-item">
+        <span class="perk-icon">👥</span>
+        <div>
+          <div class="perk-title">Cộng tác cùng đội nhóm</div>
+          <div class="perk-desc">Gán việc, bình luận và theo dõi hoạt động theo thời gian thực.</div>
+        </div>
+      </div>
+      <div class="perk-item">
+        <span class="perk-icon">📊</span>
+        <div>
+          <div class="perk-title">Thống kê tiến độ trực quan</div>
+          <div class="perk-desc">Theo dõi hạn chót, ưu tiên công việc và báo cáo Workspace.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-chip stat-chip-a">
+      <span class="stat-icon stat-icon-orange">🔥</span>
+      128 việc hoàn thành hôm nay
+    </div>
+    <div class="stat-chip stat-chip-b">
+      <span class="stat-icon stat-icon-cyan">👥</span>
+      12 thành viên đang trực tuyến
+    </div>
+  </div>
+
 </div>
 
 <div class="toast toast-top toast-end z-[999]">

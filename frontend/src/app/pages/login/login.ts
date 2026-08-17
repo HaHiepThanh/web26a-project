@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
 type ToastType = 'success' | 'error' | 'info';
@@ -24,12 +24,22 @@ interface Toast {
 export class Login {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   // ---- Password form ----
   username = '';
   password = '';
   remember = true;
   readonly passwordVisible = signal(false);
+
+  constructor() {
+    const params = this.route.snapshot.queryParamMap;
+    const prefillUsername = params.get('username');
+    if (prefillUsername) this.username = prefillUsername;
+    if (params.get('registered')) {
+      this.addToast('Đăng ký thành công! Vui lòng đăng nhập để tiếp tục.', 'success');
+    }
+  }
 
   togglePasswordVisible(): void {
     this.passwordVisible.update((v) => !v);
@@ -47,7 +57,10 @@ export class Login {
     const input = this.username.trim();
     // Check if user already exists in searchable users
     const existing = this.auth.getSearchableUsers().find(
-      (u) => u.email.toLowerCase() === input.toLowerCase() || (u.displayName && u.displayName.toLowerCase() === input.toLowerCase()),
+      (u) =>
+        u.email.toLowerCase() === input.toLowerCase() ||
+        (u.username && u.username.toLowerCase() === input.toLowerCase()) ||
+        (u.displayName && u.displayName.toLowerCase() === input.toLowerCase()),
     );
     if (existing) {
       this.auth.setUser(existing);

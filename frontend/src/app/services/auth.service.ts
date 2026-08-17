@@ -68,6 +68,12 @@ export class AuthService {
     }
   }
 
+  /** Đăng ký tài khoản mới vào danh sách user (KHÔNG tự đăng nhập — dùng cho trang Register,
+   *  người dùng phải tự bấm Đăng nhập ở trang Login sau khi đăng ký thành công). */
+  registerUser(user: User): void {
+    this.saveToRegisteredUsers(user);
+  }
+
   /** Lưu user vào danh sách người dùng trong hệ thống (để tìm kiếm theo UUID) */
   private saveToRegisteredUsers(user: User): void {
     if (typeof localStorage === 'undefined') return;

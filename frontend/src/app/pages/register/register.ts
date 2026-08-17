@@ -196,11 +196,11 @@ export class Register {
       password: this.password,
       avatarUrl: '',
     };
-    this.auth.setUser(newUser);
+    this.auth.registerUser(newUser);
 
     this.submitting.set(false);
-    this.addToast(`Chào mừng ${this.fullName.trim()}! Đã tạo tài khoản (UUID: ${newUserId.slice(0, 8)}...)`, 'success');
-    setTimeout(() => this.router.navigateByUrl('/workspace'), 800);
+    this.addToast(`Chào mừng ${this.fullName.trim()}! Tài khoản đã được tạo, hãy đăng nhập để tiếp tục.`, 'success');
+    setTimeout(() => this.router.navigate(['/login'], { queryParams: { registered: 1, username: this.username.trim() } }), 800);
   }
 
   // ---- Toasts ----

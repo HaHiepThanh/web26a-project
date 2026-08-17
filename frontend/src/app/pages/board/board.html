@@ -105,14 +105,14 @@
                   [today]="today"
                   (renameList)="renameList(list, $event)"
                   (deleteList)="requestDeleteList(list)"
-                  (addCard)="openCardModal(list.id)"
+                  (addCard)="createCard(list.id)"
                   (cardClick)="onCardActivate($event.card, $event.shiftKey)"
                   (toggleCollapse)="toggleListCollapse(list.id)"
                 />
               </div>
             }
 
-            <app-add-list (open)="openListModal()" />
+            <app-add-list (create)="createList($event)" />
           </div>
         </div>
       } @else if (viewMode() === 'status' && layoutMode() === 'row') {
@@ -152,14 +152,14 @@
                   [orientation]="'row'"
                   (renameList)="renameList(list, $event)"
                   (deleteList)="requestDeleteList(list)"
-                  (addCard)="openCardModal(list.id)"
+                  (addCard)="createCard(list.id)"
                   (cardClick)="onCardActivate($event.card, $event.shiftKey)"
                   (toggleCollapse)="toggleListCollapse(list.id)"
                 />
               </div>
             }
 
-            <app-add-list (open)="openListModal()" />
+            <app-add-list (create)="createList($event)" />
           </div>
         </div>
       } @else {
@@ -220,25 +220,9 @@
     </div>
   </div>
 
-  <!-- Modal: Tạo danh sách mới -->
-  <app-create-list-modal
-    [isOpen]="showListModal()"
-    (close)="closeListModal()"
-    (create)="handleCreateList($event)">
-  </app-create-list-modal>
-
-  <!-- Modal: Tạo thẻ mới -->
-  <app-create-card-modal
-    [isOpen]="showCardModal()"
-    [boardId]="boardId"
-    [members]="members()"
-    (close)="closeCardModal()"
-    (create)="handleCreateCard($event)">
-  </app-create-card-modal>
-
   <!-- Modal: Chi tiết thẻ (appRequirement #4) -->
   @if (selectedCard(); as card) {
-    <app-card-detail-modal [card]="card" [boardId]="boardId" (close)="closeCardDetail()" (deleted)="onCardDetailDeleted()" />
+    <app-card-detail-modal [card]="card" [boardId]="boardId" [autoFocusTitle]="card.id === justCreatedCardId()" (close)="closeCardDetail()" (deleted)="onCardDetailDeleted()" />
   }
 
   <!-- Modal: Thống kê & Báo cáo -->

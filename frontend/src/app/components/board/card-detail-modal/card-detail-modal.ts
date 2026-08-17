@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, output, signal } from '@angular/core';
+import { Component, ElementRef, computed, inject, input, output, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { Card, CardPriority, User } from '../../../models';
@@ -48,9 +48,23 @@ export class CardDetailModal {
 
   readonly card = input.required<Card>();
   readonly boardId = input.required<string>();
+  /** Thẻ vừa tạo (chưa đặt tên) — tự bôi đen ô tiêu đề để gõ đè ngay, không cần
+   *  đóng modal rồi mở lại mới sửa được tên. */
+  readonly autoFocusTitle = input(false);
 
   readonly close = output<void>();
   readonly deleted = output<void>();
+
+  private readonly titleInputRef = viewChild<ElementRef<HTMLInputElement>>('titleInput');
+
+  constructor() {
+    setTimeout(() => {
+      if (!this.autoFocusTitle()) return;
+      const el = this.titleInputRef()?.nativeElement;
+      el?.focus();
+      el?.select();
+    });
+  }
 
   readonly priorities = PRIORITIES;
   readonly members = this.boardService.members;
@@ -69,7 +83,11 @@ export class CardDetailModal {
     return m?.displayName ?? m?.email ?? id;
   }
 
+  /** Thẻ vừa tạo (đang ở lần mở đầu tiên, tự động bung ra) — sửa gì trong lần mở
+   *  này KHÔNG ghi lịch sử; chỉ khi đóng modal rồi mở lại (autoFocusTitle() = false)
+   *  mới bắt đầu ghi nhận thay đổi. */
   private log(text: string): void {
+    if (this.autoFocusTitle()) return;
     this.activityService.record(this.boardId(), this.card().id, text);
   }
 

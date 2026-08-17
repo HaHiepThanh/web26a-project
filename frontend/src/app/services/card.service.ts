@@ -13,6 +13,7 @@ function mockId(prefix: string): string {
 
 export interface CreateCardInput {
   title: string;
+  description?: string;
   priority: CardPriority;
   assigneeId?: string;
   dueDate?: string;
@@ -77,6 +78,7 @@ export class CardService {
       tenantId: 'tenant-demo',
       listId,
       title,
+      description: input.description?.trim() || undefined,
       priority: input.priority,
       assigneeId: input.assigneeId,
       dueDate: input.dueDate,
