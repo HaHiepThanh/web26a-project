@@ -1,6 +1,5 @@
 import { Injectable, signal } from '@angular/core';
 import { Board, BoardBackground, BoardVisibility, User } from '../models';
-import { ALL_MOCK_BOARD_IDS, MockBoardSeed, boardSeed } from './mock-board-data';
 
 let boardIdSeq = 1;
 
@@ -50,20 +49,6 @@ export const MOCK_MEMBERS: User[] = [
   { id: 'u-bao', email: 'bao@trello.dev', displayName: 'Bảo' },
 ];
 
-/** Dựng Board metadata từ 1 seed board mẫu (nguồn chung mock-board-data.ts). */
-function boardFromSeed(seed: MockBoardSeed): Board {
-  return {
-    id: seed.id,
-    tenantId: 'tenant-demo',
-    workspaceId: seed.workspaceId,
-    name: seed.name,
-    visibility: seed.visibility,
-    background: seed.background,
-    createdBy: MOCK_MEMBERS[0].id,
-    createdAt: new Date().toISOString(),
-  };
-}
-
 /** CRUD board + visibility (#3). Hiện dùng dữ liệu giả (chưa nối backend thật). */
 @Injectable({ providedIn: 'root' })
 export class BoardService {
@@ -84,13 +69,12 @@ export class BoardService {
 
   /** Gộp board của TẤT CẢ workspace — cho Dashboard Chat hub liệt kê mọi hội thoại. */
   async loadAllBoards(): Promise<void> {
-    this.allBoards.set(ALL_MOCK_BOARD_IDS.map((id) => boardFromSeed(boardSeed(id))));
+    this.allBoards.set(Object.values(this.createdBoards()));
   }
 
-  /** Mock: dựng Board từ :id — board vừa tạo trong phiên này (createBoard) được ưu tiên
-   *  trước, board demo (b-1..b-4) dựng từ mock-board-data.ts, id lạ khác rơi về mặc định. */
+  /** Dựng Board từ :id — chỉ board đã tạo trong phiên này (createBoard); id lạ → null. */
   async loadBoard(boardId: string): Promise<void> {
-    this.currentBoard.set(this.createdBoards()[boardId] ?? boardFromSeed(boardSeed(boardId)));
+    this.currentBoard.set(this.createdBoards()[boardId] ?? null);
   }
 
   async createBoard(workspaceId: string, name: string, options?: { visibility?: BoardVisibility; background?: BoardBackground }): Promise<Board | null> {

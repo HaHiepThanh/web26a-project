@@ -44,6 +44,21 @@ export class Login {
       this.addToast('Vui lòng nhập mật khẩu!', 'error');
       return;
     }
+    const input = this.username.trim();
+    // Check if user already exists in searchable users
+    const existing = this.auth.getSearchableUsers().find(
+      (u) => u.email.toLowerCase() === input.toLowerCase() || (u.displayName && u.displayName.toLowerCase() === input.toLowerCase()),
+    );
+    if (existing) {
+      this.auth.setUser(existing);
+    } else {
+      const isEmail = input.includes('@');
+      this.auth.setUser({
+        id: this.auth.findUserByUuid(input)?.id ?? this.auth.currentUser()?.id ?? '8f4c2e10-9b3a-4e2a-871d-5b3a1a2e3f40',
+        displayName: isEmail ? input.split('@')[0] : input,
+        email: isEmail ? input : `${input}@trello.dev`,
+      });
+    }
     // Demo: vào thẳng Workspace, không delay/không hiển thị màn chào trung gian.
     void this.router.navigateByUrl('/workspace');
   }
@@ -57,6 +72,13 @@ export class Login {
 
   // ---- Guest bypass (dev/demo — Firebase chưa cấu hình nên chưa đăng nhập thật được) ----
   continueAsGuest(): void {
+    if (!this.auth.currentUser()) {
+      this.auth.setUser({
+        id: '8f4c2e10-9b3a-4e2a-871d-5b3a1a2e3f40',
+        displayName: 'Nguyễn Văn Nam',
+        email: 'nam.nguyen@trello.dev',
+      });
+    }
     void this.router.navigateByUrl('/workspace');
   }
 

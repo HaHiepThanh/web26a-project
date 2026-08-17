@@ -2,7 +2,6 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { Card, CardPriority } from '../models';
 import { MockNetworkService } from './mock-network.service';
 import { CURRENT_USER_ID } from './board.service';
-import { boardSeed } from './mock-board-data';
 
 /** Số ngày tính là "sắp đến hạn" (#10, Mức 1 — chỉ tính toán tại chỗ, không cron job). */
 const DUE_SOON_WINDOW_DAYS = 3;
@@ -18,35 +17,6 @@ export interface CreateCardInput {
   assigneeId?: string;
   dueDate?: string;
   labelId?: string | null;
-}
-
-/** Sinh card mẫu theo đúng board (nguồn chung mock-board-data.ts): mỗi card seed trỏ
- *  list qua `listIndex` → map sang list id thật (listIdByIndex) đã sinh khi load lists. */
-function mockCards(boardId: string, listIdByIndex: string[]): Record<string, Card[]> {
-  const now = new Date().toISOString();
-  const byList: Record<string, Card[]> = {};
-  const posByList: Record<string, number> = {};
-
-  for (const seed of boardSeed(boardId).cards) {
-    const listId = listIdByIndex[seed.listIndex];
-    if (!listId) continue;
-    const position = posByList[listId] ?? 0;
-    posByList[listId] = position + 1;
-    (byList[listId] ??= []).push({
-      id: mockId('card'),
-      tenantId: 'tenant-demo',
-      listId,
-      title: seed.title,
-      priority: seed.priority,
-      assigneeId: seed.assigneeId,
-      dueDate: seed.dueDate,
-      position,
-      createdBy: 'u-nam',
-      createdAt: now,
-      updatedAt: now,
-    });
-  }
-  return byList;
 }
 
 /** CRUD card + kéo thả giữa/trong list (#4), optimistic update khi kéo-thả (#3):
@@ -94,7 +64,7 @@ export class CardService {
   async loadCards(boardId: string, listIdByIndex: string[]): Promise<void> {
     if (this.loadedBoardId() === boardId) return;
     this.loadedBoardId.set(boardId);
-    this.cardsByList.set(mockCards(boardId, listIdByIndex));
+    this.cardsByList.set({});
   }
 
   async createCard(listId: string, input: CreateCardInput): Promise<Card | null> {

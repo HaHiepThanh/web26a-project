@@ -23,6 +23,7 @@ export class Header {
   readonly currentUser = this.auth.currentUser;
   readonly theme = this.themeService.theme;
   readonly menuOpen = signal(false);
+  readonly createMenuOpen = signal(false);
 
   /** Nhắc hạn Mức 1 (#10): đếm thẻ của "tôi" quá hạn/sắp đến hạn ở board vừa mở gần
    *  nhất (CardService là singleton, còn dữ liệu ngay cả khi rời board qua trang khác). */
@@ -42,8 +43,9 @@ export class Header {
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
-    if (this.menuOpen() && !this.host.nativeElement.contains(event.target as Node)) {
+    if (!this.host.nativeElement.contains(event.target as Node)) {
       this.menuOpen.set(false);
+      this.createMenuOpen.set(false);
     }
   }
 
@@ -52,7 +54,13 @@ export class Header {
   }
 
   toggleUserMenu(): void {
+    this.createMenuOpen.set(false);
     this.menuOpen.update((v) => !v);
+  }
+
+  toggleCreateMenu(): void {
+    this.menuOpen.set(false);
+    this.createMenuOpen.update((v) => !v);
   }
 
   onSearchInput(event: Event): void {
@@ -61,8 +69,28 @@ export class Header {
   }
 
   requestCreateBoard(): void {
+    this.createMenuOpen.set(false);
     this.workspaceUi.requestCreateBoard();
-    this.router.navigateByUrl('/workspace');
+    void this.router.navigateByUrl('/workspace');
+  }
+
+  requestCreateWorkspace(): void {
+    this.createMenuOpen.set(false);
+    this.workspaceUi.requestCreateWorkspace();
+    void this.router.navigateByUrl('/workspace');
+  }
+
+
+  readonly copiedUuid = signal(false);
+
+  copyUuid(): void {
+    const uid = this.currentUser()?.id;
+    if (!uid) return;
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      void navigator.clipboard.writeText(uid);
+      this.copiedUuid.set(true);
+      setTimeout(() => this.copiedUuid.set(false), 2500);
+    }
   }
 
   async logout(): Promise<void> {
@@ -71,3 +99,4 @@ export class Header {
     this.router.navigateByUrl('/login');
   }
 }
+

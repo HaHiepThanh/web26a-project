@@ -2,6 +2,8 @@ import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { MOCK_MEMBERS } from '../../services/board.service';
+import { AuthService } from '../../services/auth.service';
+import { User, generateUuid } from '../../models';
 
 type ToastType = 'success' | 'error' | 'info';
 interface Toast {
@@ -60,7 +62,7 @@ const TAKEN_USERNAMES = new Set(MOCK_MEMBERS.map((m) => (m.displayName ?? m.emai
  * Trang đăng ký tài khoản, kèm Bộ công cụ Giả lập (Simulation Toolbar) phục vụ
  * QA/demo: điền nhanh các kịch bản hợp lệ/lỗi thay vì gõ tay, cộng 2 nút "cài đặt
  * sẵn" trạng thái hệ thống (mạng chậm / lỗi 500) cho LẦN bấm "Đăng ký" kế tiếp.
- * Chưa có backend thật — validate + mô phỏng hoàn toàn phía frontend.
+ * Tự động cấp mã UUID v4 và lưu hồ sơ người dùng.
  */
 @Component({
   selector: 'app-register',
@@ -70,6 +72,8 @@ const TAKEN_USERNAMES = new Set(MOCK_MEMBERS.map((m) => (m.displayName ?? m.emai
 })
 export class Register {
   private readonly router = inject(Router);
+  private readonly auth = inject(AuthService);
+
 
   // ---- Form fields ----
   fullName = '';
@@ -182,9 +186,18 @@ export class Register {
       return;
     }
 
+    const newUserId = generateUuid();
+    const newUser: User = {
+      id: newUserId,
+      displayName: this.fullName.trim(),
+      email: this.email.trim(),
+      avatarUrl: '',
+    };
+    this.auth.setUser(newUser);
+
     this.submitting.set(false);
-    this.addToast(`Chào mừng ${this.fullName.trim()}! Tài khoản đã được tạo.`, 'success');
-    setTimeout(() => this.router.navigateByUrl('/onboarding'), 500);
+    this.addToast(`Chào mừng ${this.fullName.trim()}! Đã tạo tài khoản (UUID: ${newUserId.slice(0, 8)}...)`, 'success');
+    setTimeout(() => this.router.navigateByUrl('/workspace'), 800);
   }
 
   // ---- Toasts ----

@@ -29,12 +29,42 @@
   </div>
 
   <div class="flex shrink-0 items-center gap-1.5">
-    <button class="btn btn-primary btn-sm gap-1.5 px-3" (click)="requestCreateBoard()">
-      <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-      <span class="max-sm:hidden">Tạo</span>
-    </button>
+    <div class="relative">
+      <button class="btn btn-primary btn-sm gap-1.5 px-3" (click)="toggleCreateMenu()">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        <span class="max-sm:hidden">Tạo</span>
+        <svg class="h-3 w-3 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+
+      <!-- Create Dropdown Menu -->
+      @if (createMenuOpen()) {
+        <div class="absolute left-0 top-[38px] z-[200] mt-1 w-[240px] rounded-box border border-base-300 bg-base-100 p-1.5 shadow-xl">
+          <button
+            type="button"
+            class="flex w-full cursor-pointer items-center gap-2.5 rounded-md p-2 text-left transition hover:bg-base-200"
+            (click)="requestCreateBoard()">
+            <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary text-sm font-bold">📋</div>
+            <div class="min-w-0">
+              <div class="text-[12.5px] font-bold text-base-content leading-tight">Tạo bảng mới</div>
+              <div class="text-[10.5px] text-base-content/50 leading-tight">Bảng dự án Kanban</div>
+            </div>
+          </button>
+          <button
+            type="button"
+            class="flex w-full cursor-pointer items-center gap-2.5 rounded-md p-2 text-left transition hover:bg-base-200 mt-1"
+            (click)="requestCreateWorkspace()">
+            <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-secondary/10 text-secondary text-sm font-bold">🗂️</div>
+            <div class="min-w-0">
+              <div class="text-[12.5px] font-bold text-base-content leading-tight">Tạo Workspace mới</div>
+              <div class="text-[10.5px] text-base-content/50 leading-tight">Thêm thành viên qua UUID</div>
+            </div>
+          </button>
+        </div>
+      }
+    </div>
 
     <div class="mx-0.5 h-5 w-px bg-base-300 max-sm:hidden"></div>
+
 
     <button class="btn btn-ghost btn-circle btn-sm" (click)="toggleTheme()"
       [title]="theme() === 'dark' ? 'Chuyển giao diện sáng' : 'Chuyển giao diện tối'">
@@ -69,13 +99,18 @@
     </a>
 
     <div
-      class="ml-0.5 flex cursor-pointer items-center gap-1 rounded-full border border-base-300 bg-base-100 py-[2px] pl-1 pr-1.5 transition-colors hover:bg-base-300"
+      class="ml-0.5 flex cursor-pointer items-center gap-1.5 rounded-full border border-base-300 bg-base-100 py-[2px] pl-1 pr-2 transition-all hover:border-primary/40 hover:bg-base-200"
       (click)="toggleUserMenu()">
       <div
-        class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#2563eb] to-[#1d4ed8] text-[11px] font-bold text-white">
+        class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#2563eb] to-[#1d4ed8] text-[11px] font-bold text-white shadow-sm">
         {{ initials() }}</div>
-      <span class="max-w-[120px] truncate text-[12.5px] font-semibold text-base-content max-md:hidden">{{
-        currentUser()?.displayName ?? currentUser()?.email ?? 'Khách' }}</span>
+      <div class="flex max-w-[160px] flex-col leading-tight max-md:hidden">
+        <span class="truncate text-[12.5px] font-bold text-base-content">{{
+          currentUser()?.displayName ?? 'Người dùng' }}</span>
+        @if (currentUser()?.id; as uid) {
+          <span class="truncate text-[9.5px] font-mono text-base-content/50">ID: {{ uid.slice(0, 8) }}...</span>
+        }
+      </div>
       <svg class="h-3 w-3 shrink-0 text-base-content/40 max-md:hidden" viewBox="0 0 24 24" fill="none"
         stroke="currentColor" stroke-width="2.5">
         <path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
@@ -84,19 +119,57 @@
   </div>
 
   <div
-    class="absolute right-2.5 top-[52px] z-[200] mt-1 w-[260px] rounded-box border border-base-300 bg-base-100 p-2 shadow-lg"
+    class="absolute right-2.5 top-[52px] z-[200] mt-1 w-[290px] rounded-box border border-base-300 bg-base-100 p-2.5 shadow-xl"
     [class.hidden]="!menuOpen()">
-    <div class="px-3 pt-2 text-[13px] font-bold text-base-content">Tài khoản</div>
-    <div class="px-3 pb-2 text-xs text-base-content/50">{{ currentUser()?.email ?? '—' }}</div>
+    <div class="flex items-center gap-2.5 px-1.5 py-1">
+      <div
+        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#2563eb] to-[#1d4ed8] text-[13px] font-extrabold text-white shadow-sm">
+        {{ initials() }}</div>
+      <div class="min-w-0 flex-1">
+        <div class="truncate text-[13.5px] font-bold text-base-content">{{ currentUser()?.displayName ?? 'Người dùng' }}</div>
+        <div class="truncate text-[11.5px] text-base-content/60">{{ currentUser()?.email ?? '—' }}</div>
+      </div>
+    </div>
+
+    <!-- UUID Box with 1-click Copy -->
+    <div class="my-2 rounded-lg border border-primary/20 bg-primary/5 p-2 text-left">
+      <div class="flex items-center justify-between">
+        <span class="text-[10px] font-extrabold uppercase tracking-wider text-primary">🔑 UUID CỦA BẠN</span>
+        <button
+          type="button"
+          class="btn btn-xs rounded px-1.5 text-[10.5px] font-bold transition-all"
+          [class.btn-success]="copiedUuid()"
+          [class.btn-primary]="!copiedUuid()"
+          [class.btn-outline]="!copiedUuid()"
+          (click)="$event.stopPropagation(); copyUuid()"
+          title="Sao chép mã UUID">
+          @if (copiedUuid()) {
+            ✓ Đã chép!
+          } @else {
+            📋 Sao chép
+          }
+        </button>
+      </div>
+      <div class="mt-1 flex items-center gap-1">
+        <code class="block w-full select-all truncate rounded bg-base-100 px-1.5 py-1 font-mono text-[11px] text-base-content/85 shadow-inner" [title]="currentUser()?.id ?? ''">
+          {{ currentUser()?.id ?? 'Chưa cấp UUID' }}
+        </code>
+      </div>
+      <p class="mt-1 text-[9.5px] leading-tight text-base-content/50">
+        Dùng UUID này để thêm vào Không gian làm việc.
+      </p>
+    </div>
+
     <div class="my-1 h-px bg-base-300"></div>
     <a class="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-[13px] text-base-content hover:bg-base-200"
-      routerLink="/settings">👤 Hồ sơ và quyền riêng tư</a>
+      routerLink="/settings" (click)="menuOpen.set(false)">👤 Hồ sơ và cài đặt</a>
     <a class="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-[13px] text-base-content hover:bg-base-200"
-      routerLink="/workspace">🗂️ Không gian làm việc</a>
+      routerLink="/workspace" (click)="menuOpen.set(false)">🗂️ Không gian làm việc</a>
     <a class="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-[13px] text-base-content hover:bg-base-200"
-      routerLink="/members">👥 Thành viên</a>
+      routerLink="/members" (click)="menuOpen.set(false)">👥 Thành viên</a>
     <div class="my-1 h-px bg-base-300"></div>
-    <div class="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-[13px] text-error hover:bg-base-200"
+    <div class="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-[13px] font-semibold text-error hover:bg-error/10"
       (click)="logout()">🚪 Đăng xuất</div>
   </div>
 </header>
+

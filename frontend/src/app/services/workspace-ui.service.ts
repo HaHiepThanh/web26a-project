@@ -9,6 +9,7 @@ import { Injectable, signal } from '@angular/core';
 export class WorkspaceUiService {
   readonly searchQuery = signal('');
   readonly createBoardRequests = signal(0);
+  readonly createWorkspaceRequests = signal(0);
 
   setSearchQuery(value: string): void {
     this.searchQuery.set(value);
@@ -17,4 +18,9 @@ export class WorkspaceUiService {
   requestCreateBoard(): void {
     this.createBoardRequests.update((n) => n + 1);
   }
+
+  requestCreateWorkspace(): void {
+    this.createWorkspaceRequests.update((n) => n + 1);
+  }
 }
+

@@ -1,24 +1,10 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { List } from '../models';
 import { MockNetworkService } from './mock-network.service';
-import { boardSeed } from './mock-board-data';
 
 let idSeq = 1;
 function mockId(prefix: string): string {
   return `${prefix}-${Date.now()}-${idSeq++}`;
-}
-
-function mockLists(boardId: string): List[] {
-  const now = new Date().toISOString();
-  return boardSeed(boardId).lists.map(({ name, color }, i) => ({
-    id: mockId('list'),
-    tenantId: 'tenant-demo',
-    boardId,
-    name,
-    color,
-    position: i,
-    createdAt: now,
-  }));
 }
 
 /** CRUD list + sắp xếp thứ tự list (kéo thả ngang) (#4). Dữ liệu giả tại chỗ, có
@@ -38,7 +24,7 @@ export class ListService {
   async loadLists(boardId: string): Promise<void> {
     if (this.loadedBoardId === boardId) return;
     this.loadedBoardId = boardId;
-    this.lists.set(mockLists(boardId));
+    this.lists.set([]);
   }
 
   async createList(boardId: string, name: string, color?: string): Promise<List | null> {
