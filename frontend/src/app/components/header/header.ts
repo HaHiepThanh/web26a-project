@@ -1,14 +1,47 @@
 import { Component, ElementRef, HostListener, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import {
+  LucideBell,
+  LucideCheck,
+  LucideChevronDown,
+  LucideCopy,
+  LucideFolderKanban,
+  LucideKanban,
+  LucideKeyRound,
+  LucideLogOut,
+  LucidePlus,
+  LucideSearch,
+  LucideSettings,
+  LucideUser,
+  LucideUserPlus,
+  LucideX,
+} from '@lucide/angular';
 import { AuthService } from '../../services/auth.service';
 import { ThemeService } from '../../services/theme.service';
 import { WorkspaceUiService } from '../../services/workspace-ui.service';
 import { CardService } from '../../services/card.service';
+import { OrganizationService } from '../../services/organization.service';
 
 /** Top navbar shared by every page inside app-layout (ported from trello-workspace prototype). */
 @Component({
   selector: 'app-header',
-  imports: [RouterLink],
+  imports: [
+    RouterLink,
+    LucideBell,
+    LucideCheck,
+    LucideChevronDown,
+    LucideCopy,
+    LucideFolderKanban,
+    LucideKanban,
+    LucideKeyRound,
+    LucideLogOut,
+    LucidePlus,
+    LucideSearch,
+    LucideSettings,
+    LucideUser,
+    LucideUserPlus,
+    LucideX,
+  ],
   templateUrl: './header.html',
   styleUrl: './header.css',
 })
@@ -19,11 +52,16 @@ export class Header {
   private readonly router = inject(Router);
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly cardService = inject(CardService);
+  private readonly orgService = inject(OrganizationService);
 
   readonly currentUser = this.auth.currentUser;
   readonly theme = this.themeService.theme;
   readonly menuOpen = signal(false);
   readonly createMenuOpen = signal(false);
+  readonly inviteMenuOpen = signal(false);
+
+  readonly myInvites = this.orgService.myInvites;
+  readonly pendingInviteCount = this.orgService.pendingInviteCount;
 
   /** Nhắc hạn Mức 1 (#10): đếm thẻ của "tôi" quá hạn/sắp đến hạn ở board vừa mở gần
    *  nhất (CardService là singleton, còn dữ liệu ngay cả khi rời board qua trang khác). */
@@ -46,7 +84,22 @@ export class Header {
     if (!this.host.nativeElement.contains(event.target as Node)) {
       this.menuOpen.set(false);
       this.createMenuOpen.set(false);
+      this.inviteMenuOpen.set(false);
     }
+  }
+
+  toggleInviteMenu(): void {
+    this.menuOpen.set(false);
+    this.createMenuOpen.set(false);
+    this.inviteMenuOpen.update((v) => !v);
+  }
+
+  acceptInvite(inviteId: string): void {
+    this.orgService.respondInvite(inviteId, true);
+  }
+
+  declineInvite(inviteId: string): void {
+    this.orgService.respondInvite(inviteId, false);
   }
 
   toggleTheme(): void {

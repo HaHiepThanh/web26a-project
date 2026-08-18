@@ -1,4 +1,4 @@
-import { Component, computed, input, output, signal } from '@angular/core';
+import { Component, ElementRef, computed, input, output, signal, viewChild } from '@angular/core';
 import { User } from '../../../models';
 
 /** Ô nhập chat: gõ "@" để autocomplete tên thành viên board (#8), Enter để gửi. */
@@ -14,6 +14,18 @@ export class ChatInput {
 
   readonly value = signal('');
   private readonly mentionQuery = signal<string | null>(null);
+  /** Angular's [value] binding doesn't reliably re-apply to <textarea> after the
+   *  first render (unlike <input>) — mọi chỗ set `value` bằng code (không phải do
+   *  người dùng gõ) phải tự đồng bộ lại DOM .value qua ref này. */
+  private readonly textareaRef = viewChild<ElementRef<HTMLTextAreaElement>>('msgInput');
+
+  private syncTextarea(text: string): void {
+    const el = this.textareaRef()?.nativeElement;
+    if (el) {
+      el.value = text;
+      this.autoGrow(el);
+    }
+  }
 
   readonly mentionOpen = computed(() => this.mentionQuery() !== null);
   readonly mentionMatches = computed(() => {
@@ -26,8 +38,9 @@ export class ChatInput {
   });
 
   onInput(event: Event): void {
-    const el = event.target as HTMLInputElement;
+    const el = event.target as HTMLTextAreaElement;
     this.value.set(el.value);
+    this.autoGrow(el);
     const caret = el.selectionStart ?? el.value.length;
     const upToCaret = el.value.slice(0, caret);
     const atIndex = upToCaret.lastIndexOf('@');
@@ -43,7 +56,21 @@ export class ChatInput {
     this.mentionQuery.set(term);
   }
 
-  pickMention(member: User, inputEl: HTMLInputElement): void {
+  /** Textarea tự cao dần theo số dòng đang gõ (thay vì cuộn ngang như 1 input 1 dòng). */
+  private autoGrow(el: HTMLTextAreaElement): void {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  }
+
+  /** Enter để gửi, Shift+Enter để xuống dòng — không chặn IME (gõ tiếng Việt/Nhật...). */
+  onKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
+      event.preventDefault();
+      this.onSend();
+    }
+  }
+
+  pickMention(member: User, inputEl: HTMLTextAreaElement): void {
     const name = member.displayName ?? member.email;
     const caret = inputEl.selectionStart ?? this.value().length;
     const upToCaret = this.value().slice(0, caret);
@@ -54,6 +81,7 @@ export class ChatInput {
     const after = this.value().slice(caret);
     const next = `${before}@${name} ${after}`;
     this.value.set(next);
+    this.syncTextarea(next);
     this.mentionQuery.set(null);
 
     const caretPos = (before + '@' + name + ' ').length;
@@ -68,6 +96,7 @@ export class ChatInput {
     if (!text) return;
     this.send.emit(text);
     this.value.set('');
+    this.syncTextarea('');
     this.mentionQuery.set(null);
   }
 }

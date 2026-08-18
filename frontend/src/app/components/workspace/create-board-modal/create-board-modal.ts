@@ -1,11 +1,12 @@
 import { Component, computed, effect, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { LucideBuilding2, LucideLock, LucideTriangleAlert, LucideX } from '@lucide/angular';
 import { BOARD_BACKGROUNDS, BoardBackground } from '../../../models';
 import { Privacy, WorkspaceItem, avatarBgFor, initialsOf } from '../../../mocks';
 
 @Component({
   selector: 'app-create-board-modal',
-  imports: [FormsModule],
+  imports: [FormsModule, LucideBuilding2, LucideLock, LucideTriangleAlert, LucideX],
   templateUrl: './create-board-modal.html',
 })
 export class CreateBoardModal {

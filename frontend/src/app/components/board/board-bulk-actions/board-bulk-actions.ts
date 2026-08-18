@@ -1,8 +1,10 @@
 import { Component, input, output, signal } from '@angular/core';
+import { LucidePin, LucideTag, LucideTrash2, LucideX } from '@lucide/angular';
 import { Label, List } from '../../../models';
 
 @Component({
   selector: 'app-board-bulk-actions',
+  imports: [LucidePin, LucideTag, LucideTrash2, LucideX],
   templateUrl: './board-bulk-actions.html',
 })
 export class BoardBulkActions {

@@ -30,6 +30,7 @@ export class BoardList {
   /** [BONUS #4] done/total checklist + số bình luận theo card — truyền tiếp cho CardItem. */
   readonly checklistProgressByCardId = input<Record<string, { done: number; total: number } | undefined>>({});
   readonly commentCountByCardId = input<Record<string, number | undefined>>({});
+  readonly coverUrlByCardId = input<Record<string, string | undefined>>({});
   readonly savingCardIds = input<ReadonlySet<string>>(new Set());
   readonly errorCardIds = input<ReadonlySet<string>>(new Set());
   readonly today = input('');

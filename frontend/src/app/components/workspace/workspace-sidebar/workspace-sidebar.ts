@@ -1,8 +1,10 @@
 import { Component, input, output } from '@angular/core';
+import { LucideFolderKanban, LucidePlus } from '@lucide/angular';
 import { WorkspaceItem } from '../../../mocks';
 
 @Component({
   selector: 'app-workspace-sidebar',
+  imports: [LucideFolderKanban, LucidePlus],
   templateUrl: './workspace-sidebar.html',
   host: { class: 'block' },
 })

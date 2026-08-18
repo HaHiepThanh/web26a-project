@@ -23,6 +23,8 @@ export class CardItem {
   readonly card = input.required<Card>();
   readonly labels = input<Label[]>([]);
   readonly assignee = input<User | null>(null);
+  /** URL ảnh bìa (base64) — hiển thị ngay trên mặt thẻ nếu có, lấy từ AttachmentService. */
+  readonly coverUrl = input<string | null>(null);
   readonly isSaving = input(false);
   readonly isError = input(false);
   readonly isDimmed = input(false);

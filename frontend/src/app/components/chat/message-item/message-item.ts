@@ -35,8 +35,8 @@ export class MessageItem {
 
   readonly bubbleClass = computed(() =>
     this.isOwn()
-      ? 'break-words rounded-xl rounded-tr-[3px] bg-primary/10 px-2.5 py-1.5 text-xs leading-relaxed text-base-content'
-      : 'break-words rounded-xl rounded-tl-[3px] bg-base-200 px-2.5 py-1.5 text-xs leading-relaxed text-base-content',
+      ? 'w-fit max-w-full min-w-0 break-words rounded-xl rounded-tr-[3px] bg-primary/10 px-2.5 py-1.5 text-xs leading-relaxed text-base-content'
+      : 'w-fit max-w-full min-w-0 break-words rounded-xl rounded-tl-[3px] bg-base-200 px-2.5 py-1.5 text-xs leading-relaxed text-base-content',
   );
 
   readonly timeLabel = computed(() => {

@@ -71,11 +71,16 @@ export function avatarBgFor(id: string): string {
 
 export const STORAGE_KEY_WORKSPACES = 'trello_workspaces_data';
 
-/** Mỗi tài khoản có 1 key riêng — tránh account A đăng nhập vào lại thấy Workspace
- *  account B vừa tạo (trước đây dùng chung 1 key cho cả trình duyệt). Chưa đăng
- *  nhập (guest) dùng chung 1 key riêng, tách khỏi mọi tài khoản thật. */
-function storageKeyFor(userId?: string | null): string {
-  return userId ? `${STORAGE_KEY_WORKSPACES}_${userId}` : `${STORAGE_KEY_WORKSPACES}_guest`;
+/** Từ khi có Organization (multi-tenant nhiều thành viên): Workspace được lưu
+ *  DÙNG CHUNG theo orgId (không còn tách theo userId) — vì 1 Organization có thể
+ *  có nhiều thành viên và tất cả phải thấy chung 1 bộ Workspace/Board của tổ
+ *  chức đó, giống cách Supabase chia dữ liệu theo tenant. orgId luôn là duy nhất
+ *  toàn cục nên việc bỏ userId khỏi key không làm mất tính cô lập giữa các
+ *  Organization — chỉ khi chưa đăng nhập/chưa có org mới rơi về key "guest".
+ *  Tham số userId được giữ lại trong chữ ký hàm để không phải sửa các nơi gọi. */
+function storageKeyFor(userId?: string | null, orgId?: string | null): string {
+  const orgPart = orgId ?? `guest_${userId ?? 'anon'}`;
+  return `${STORAGE_KEY_WORKSPACES}_${orgPart}`;
 }
 
 export function initialMockWorkspaces(): WorkspaceItem[] {
@@ -143,10 +148,10 @@ export function initialMockWorkspaces(): WorkspaceItem[] {
   return [];
 }
 
-export function loadStoredWorkspaces(userId?: string | null): WorkspaceItem[] {
+export function loadStoredWorkspaces(userId?: string | null, orgId?: string | null): WorkspaceItem[] {
   if (typeof localStorage !== 'undefined') {
     try {
-      const saved = localStorage.getItem(storageKeyFor(userId));
+      const saved = localStorage.getItem(storageKeyFor(userId, orgId));
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -158,10 +163,10 @@ export function loadStoredWorkspaces(userId?: string | null): WorkspaceItem[] {
   return initialMockWorkspaces();
 }
 
-export function persistWorkspaces(list: WorkspaceItem[], userId?: string | null): void {
+export function persistWorkspaces(list: WorkspaceItem[], userId?: string | null, orgId?: string | null): void {
   if (typeof localStorage !== 'undefined') {
     try {
-      localStorage.setItem(storageKeyFor(userId), JSON.stringify(list));
+      localStorage.setItem(storageKeyFor(userId, orgId), JSON.stringify(list));
     } catch {}
   }
 }

@@ -3,6 +3,19 @@
 @import 'tailwindcss';
 @plugin 'daisyui';
 
+/* Type scale additions — the app's compact UI needs sizes smaller than
+ * Tailwind's default text-xs (12px). Before this, components hand-tuned
+ * one-off arbitrary sizes (text-[10.5px], text-[11.5px], text-[9px]...) —
+ * 14 distinct values across the app. These 2 tokens absorb the tiny end of
+ * that range into 2 named, greppable sizes; the 12–16px end reuses
+ * Tailwind's existing text-xs/text-sm/text-base (no redefinition needed). */
+@theme {
+  --text-3xs: 0.625rem; /* 10px — micro labels, timestamps, tiny counters */
+  --text-3xs--line-height: 1.35;
+  --text-2xs: 0.6875rem; /* 11px — secondary meta text, section labels */
+  --text-2xs--line-height: 1.35;
+}
+
 /* ==========================================================================
    Design tokens — canonical theme (merged from trello-workspace prototype).
    Toggled by ThemeService via [data-theme] attribute + .dark class on <html>.

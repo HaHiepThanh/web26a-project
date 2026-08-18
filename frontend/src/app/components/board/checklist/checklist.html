@@ -1,5 +1,5 @@
 <div class="mb-1.5 flex items-center justify-between">
-  <label class="text-[11px] font-bold uppercase tracking-wide text-base-content/50">
+  <label class="text-2xs font-bold uppercase tracking-wide text-base-content/50">
     Checklist
     @if (progress().total > 0) {
       <span class="normal-case tracking-normal text-base-content/40">({{ progress().done }}/{{ progress().total }})</span>
@@ -18,7 +18,7 @@
     @for (item of items(); track item.id) {
       <div class="group flex items-center gap-2 rounded-md px-1.5 py-1 hover:bg-base-200">
         <input type="checkbox" class="checkbox checkbox-sm" [checked]="item.isDone" (change)="toggleItem(item.id)" [attr.aria-label]="'Đánh dấu \'' + item.content + '\' đã xong'" />
-        <span class="min-w-0 flex-1 break-words text-[12.5px] text-base-content" [class.line-through]="item.isDone" [class.text-base-content]="!item.isDone" [class.text-base-content/40]="item.isDone">{{ item.content }}</span>
+        <span class="min-w-0 flex-1 break-words text-xs text-base-content" [class.line-through]="item.isDone" [class.text-base-content]="!item.isDone" [class.text-base-content/40]="item.isDone">{{ item.content }}</span>
         <button type="button" class="btn btn-square btn-ghost btn-xs opacity-0 transition-opacity group-hover:opacity-100" (click)="deleteItem(item.id)" aria-label="Xoá mục checklist">
           <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>

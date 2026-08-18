@@ -1,32 +1,28 @@
-<div class="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-base-100 p-4 shadow-sm">
-  <!-- Title Header -->
-  <div class="mb-3 flex items-center justify-between px-1 pt-0.5">
+<div class="p-3.5">
+  <!-- Section header -->
+  <div class="mb-2.5 flex items-center justify-between px-0.5">
     <div class="flex items-center gap-1.5">
-      <span class="text-[12px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">Không gian làm
-        việc</span>
+      <span class="flex h-5 w-5 items-center justify-center rounded-md bg-primary/10 text-primary">
+        <svg lucideFolderKanban class="h-3 w-3" [strokeWidth]="2.4"></svg>
+      </span>
+      <span class="text-2xs font-bold uppercase tracking-wide text-base-content/45">Không gian làm việc</span>
     </div>
   </div>
 
-  <div class="space-y-1.5">
+  <div class="space-y-1">
     <!-- Option: Tất cả Workspace -->
     <button type="button"
-      class="w-full flex items-center justify-between rounded-2xl px-3 py-2.5 text-left text-[13px] font-black transition-all"
-      [class.bg-purple-100/80]="activeWorkspaceId() === null"
-      [class.dark:bg-purple-950/40]="activeWorkspaceId() === null" [class.border-2]="activeWorkspaceId() === null"
-      [class.border-purple-300]="activeWorkspaceId() === null"
-      [class.dark:border-purple-700]="activeWorkspaceId() === null"
-      [class.text-purple-700]="activeWorkspaceId() === null" [class.dark:text-purple-300]="activeWorkspaceId() === null"
-      [class.text-slate-800]="activeWorkspaceId() !== null" [class.dark:text-slate-200]="activeWorkspaceId() !== null"
-      [class.hover:bg-slate-100]="activeWorkspaceId() !== null"
-      [class.dark:hover:bg-slate-800]="activeWorkspaceId() !== null" (click)="onSelectWorkspace(null)">
-      <div class="flex items-center gap-2.5 min-w-0">
-        <span class="text-base shrink-0">🗂️</span>
-        <span class="truncate font-black">Tất cả Workspace</span>
+      class="flex w-full items-center justify-between rounded-xl px-2 py-1.5 text-left transition-all"
+      [class]="activeWorkspaceId() === null ? 'bg-primary shadow-sm text-primary-content' : 'hover:bg-base-200'"
+      (click)="onSelectWorkspace(null)">
+      <div class="flex min-w-0 items-center gap-2.5">
+        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-base-300/70">
+          <svg lucideFolderKanban class="h-4 w-4" [strokeWidth]="2"></svg>
+        </span>
+        <span class="truncate text-xs font-bold">Tất cả Workspace</span>
       </div>
-      <span class="flex h-5 min-w-5 px-1.5 items-center justify-center rounded-full text-[11px] font-black shrink-0"
-        [class.bg-purple-700]="activeWorkspaceId() === null" [class.text-white]="activeWorkspaceId() === null"
-        [class.text-slate-600]="activeWorkspaceId() !== null"
-        [class.dark:text-slate-400]="activeWorkspaceId() !== null">
+      <span class="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-2xs font-bold"
+        [class]="activeWorkspaceId() === null ? 'bg-white/20' : 'bg-base-300/70 text-base-content/60'">
         {{ totalBoardsCount() }}
       </span>
     </button>
@@ -34,45 +30,28 @@
     <!-- Workspace items list -->
     @for (ws of workspaces(); track ws.id) {
     <button type="button"
-      class="w-full flex items-center justify-between rounded-2xl px-3 py-2 text-left text-[13px] font-bold transition-all"
-      [class.bg-purple-100/80]="activeWorkspaceId() === ws.id"
-      [class.dark:bg-purple-950/40]="activeWorkspaceId() === ws.id" [class.border-2]="activeWorkspaceId() === ws.id"
-      [class.border-purple-300]="activeWorkspaceId() === ws.id"
-      [class.dark:border-purple-700]="activeWorkspaceId() === ws.id"
-      [class.text-purple-700]="activeWorkspaceId() === ws.id"
-      [class.dark:text-purple-300]="activeWorkspaceId() === ws.id"
-      [class.text-slate-800]="activeWorkspaceId() !== ws.id" [class.dark:text-slate-200]="activeWorkspaceId() !== ws.id"
-      [class.hover:bg-slate-100]="activeWorkspaceId() !== ws.id"
-      [class.dark:hover:bg-slate-800]="activeWorkspaceId() !== ws.id" (click)="onSelectWorkspace(ws.id)">
-      <div class="flex items-center gap-2.5 min-w-0">
-        <!-- Circular avatar colored icon -->
-        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs shadow-xs"
+      class="flex w-full items-center justify-between rounded-xl px-2 py-1.5 text-left transition-all"
+      [class]="activeWorkspaceId() === ws.id ? 'bg-primary shadow-sm text-primary-content' : 'hover:bg-base-200'"
+      (click)="onSelectWorkspace(ws.id)">
+      <div class="flex min-w-0 items-center gap-2.5">
+        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm text-white shadow-xs"
           [class]="ws.iconBg">
           {{ ws.icon }}
         </span>
-        <span class="truncate font-bold text-[13px]">{{ ws.name }}</span>
+        <span class="truncate text-xs font-bold">{{ ws.name }}</span>
       </div>
-      <span class="flex h-5 min-w-5 px-1.5 items-center justify-center rounded-full text-[11px] font-bold shrink-0"
-        [class.bg-purple-700]="activeWorkspaceId() === ws.id" [class.text-white]="activeWorkspaceId() === ws.id"
-        [class.text-slate-600]="activeWorkspaceId() !== ws.id"
-        [class.dark:text-slate-400]="activeWorkspaceId() !== ws.id">
+      <span class="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-2xs font-bold"
+        [class]="activeWorkspaceId() === ws.id ? 'bg-white/20' : 'bg-base-300/70 text-base-content/60'">
         {{ ws.boards.length }}
       </span>
     </button>
     }
   </div>
 
-  <div class="my-2.5 border-t border-slate-100 dark:border-slate-800"></div>
-
-  <div class="flex w-full items-center">
-    <button type="button"
-      class="inline-flex items-center gap-1.5 px-1 py-1 text-xs font-black text-primary hover:underline transition-all"
-      (click)="createWorkspace.emit()">
-      <svg class="h-3.5 w-3.5 shrink-0 stroke-[2.5]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="12" y1="5" x2="12" y2="19"></line>
-        <line x1="5" y1="12" x2="19" y2="12"></line>
-      </svg>
-      <span>Tạo Không gian mới</span>
-    </button>
-  </div>
+  <button type="button"
+    class="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-base-300 py-1.5 text-2xs font-bold text-primary transition-all hover:border-primary hover:bg-primary/5"
+    (click)="createWorkspace.emit()">
+    <svg lucidePlus class="h-3 w-3 shrink-0" [strokeWidth]="3"></svg>
+    <span>Tạo Không gian mới</span>
+  </button>
 </div>

@@ -1,8 +1,10 @@
-import { Component, HostListener, computed, effect, inject, signal } from '@angular/core';
+import { Component, HostListener, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
+import { LucideBuilding2, LucideGlobe, LucideLock, LucideSearch, LucideStar, LucideX } from '@lucide/angular';
 import { WorkspaceUiService } from '../../services/workspace-ui.service';
 import { BoardService } from '../../services/board.service';
 import { AuthService } from '../../services/auth.service';
+import { OrganizationService } from '../../services/organization.service';
 import { BoardBackground, BoardVisibility, User } from '../../models';
 import {
   WorkspaceItem,
@@ -15,6 +17,7 @@ import {
   WORKSPACE_TEMPLATES,
   Template,
 } from '../../mocks';
+import { OrgSwitcher } from '../../components/workspace/org-switcher/org-switcher';
 import { WorkspaceSidebar } from '../../components/workspace/workspace-sidebar/workspace-sidebar';
 import { WorkspaceWelcomeBanner } from '../../components/workspace/workspace-welcome-banner/workspace-welcome-banner';
 import { WorkspaceCardItem } from '../../components/workspace/workspace-card-item/workspace-card-item';
@@ -35,11 +38,18 @@ function toBoardVisibility(privacy: Privacy): BoardVisibility {
 @Component({
   selector: 'app-workspace',
   imports: [
+    OrgSwitcher,
     WorkspaceSidebar,
     WorkspaceWelcomeBanner,
     WorkspaceCardItem,
     CreateBoardModal,
     WorkspaceFormModal,
+    LucideBuilding2,
+    LucideGlobe,
+    LucideLock,
+    LucideSearch,
+    LucideStar,
+    LucideX,
   ],
   templateUrl: './workspace.html',
   styleUrl: './workspace.css',
@@ -49,12 +59,19 @@ export class Workspace {
   private readonly workspaceUi = inject(WorkspaceUiService);
   private readonly boardService = inject(BoardService);
   private readonly auth = inject(AuthService);
+  private readonly orgService = inject(OrganizationService);
   private readonly router = inject(Router);
+
+  private readonly orgSwitcher = viewChild(OrgSwitcher);
 
   readonly currentUser = this.auth.currentUser;
   readonly copiedMyUuid = signal(false);
 
-  readonly workspaces = signal<WorkspaceItem[]>(loadStoredWorkspaces(this.currentUser()?.id));
+  // ---- Organization (multi-tenant): mỗi Organization có Workspace/Board riêng ----
+  readonly organizations = this.orgService.organizations;
+  readonly activeOrg = this.orgService.activeOrg;
+
+  readonly workspaces = signal<WorkspaceItem[]>([]);
   readonly activeWorkspaceId = signal<string | null>(null);
   readonly templates = WORKSPACE_TEMPLATES;
   readonly searchQuery = this.workspaceUi.searchQuery;
@@ -122,6 +139,16 @@ export class Workspace {
   });
 
   constructor() {
+    // Nạp lại danh sách Workspace mỗi khi user đăng nhập/đổi tài khoản HOẶC chuyển
+    // Organization — đây là chỗ khiến việc switch Organization thực sự đổi dữ liệu
+    // hiển thị (mỗi Organization có key localStorage Workspace riêng).
+    effect(() => {
+      const userId = this.currentUser()?.id;
+      const orgId = this.orgService.activeOrgId();
+      this.workspaces.set(loadStoredWorkspaces(userId, orgId));
+      this.activeWorkspaceId.set(null);
+    });
+
     effect(() => {
       const boardTrigger = this.workspaceUi.createBoardRequests();
       if (boardTrigger > 0) {
@@ -151,7 +178,23 @@ export class Workspace {
   /** Lưu workspace vào đúng key của tài khoản đang đăng nhập — tránh account khác
    *  đăng nhập vào lại thấy dữ liệu của account này (localStorage tách theo userId). */
   private persist(list: WorkspaceItem[]): void {
-    persistWorkspaces(list, this.currentUser()?.id);
+    persistWorkspaces(list, this.currentUser()?.id, this.orgService.activeOrgId());
+  }
+
+  // ---- Organization (multi-tenant) actions ----
+  switchOrg(orgId: string): void {
+    this.orgService.switchOrg(orgId);
+  }
+
+  createOrg(data: { name: string; icon: string }): void {
+    const org = this.orgService.createOrg(data.name, data.icon);
+    if (org) this.addToast(`🏢 Đã tạo tổ chức "${org.name}"!`, 'success');
+  }
+
+  inviteMember(data: { orgId: string; uuid: string }): void {
+    const error = this.orgService.inviteMemberByUuid(data.orgId, data.uuid);
+    this.orgSwitcher()?.showInviteResult(error);
+    if (!error) this.addToast('📨 Đã gửi lời mời tham gia tổ chức!', 'success');
   }
 
   copyMyUuid(): void {

@@ -5,7 +5,9 @@
     (click)="$event.stopPropagation()">
     <div class="mb-5 flex items-center justify-between">
       <h3 class="text-lg font-black text-slate-900 dark:text-white">Tạo bảng làm việc mới</h3>
-      <button class="btn btn-circle btn-ghost btn-sm text-xl" (click)="close.emit()">&times;</button>
+      <button class="btn btn-circle btn-ghost btn-sm" (click)="close.emit()">
+        <svg lucideX class="h-4 w-4" [strokeWidth]="2.4"></svg>
+      </button>
     </div>
 
     <form (ngSubmit)="onSubmit()">
@@ -25,7 +27,7 @@
           (ngModelChange)="titleInput.set($event); titleError.set(null)" name="boardTitle" />
         @if (titleError()) {
         <p class="mt-1.5 text-xs font-bold text-error flex items-center gap-1 animate-pulse">
-          <span>⚠️</span> {{ titleError() }}
+          <svg lucideTriangleAlert class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg> {{ titleError() }}
         </p>
         }
       </div>
@@ -57,9 +59,10 @@
             [class.bg-primary/5]="privacyInput() === 'Workspace'">
             <input type="radio" name="privacy" value="Workspace" class="radio radio-primary radio-sm mt-0.5"
               [checked]="privacyInput() === 'Workspace'" (change)="privacyInput.set('Workspace')" />
-            <div class="text-[12.5px] leading-tight">
-              <span class="font-bold text-slate-900 dark:text-white">🏢 Tất cả thành viên</span>
-              <p class="text-[10.5px] text-slate-500 dark:text-slate-400 mt-1">Toàn bộ {{ currentWorkspaceMembers().length }} thành viên trong workspace đều xem được</p>
+            <div class="text-xs leading-tight">
+              <span class="flex items-center gap-1 font-bold text-slate-900 dark:text-white">
+                <svg lucideBuilding2 class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg> Tất cả thành viên</span>
+              <p class="text-2xs text-slate-500 dark:text-slate-400 mt-1">Toàn bộ {{ currentWorkspaceMembers().length }} thành viên trong workspace đều xem được</p>
             </div>
           </label>
 
@@ -70,9 +73,10 @@
             [class.bg-primary/5]="privacyInput() === 'Private'">
             <input type="radio" name="privacy" value="Private" class="radio radio-primary radio-sm mt-0.5"
               [checked]="privacyInput() === 'Private'" (change)="privacyInput.set('Private')" />
-            <div class="text-[12.5px] leading-tight">
-              <span class="font-bold text-slate-900 dark:text-white">🔒 Thành viên được chọn</span>
-              <p class="text-[10.5px] text-slate-500 dark:text-slate-400 mt-1">Chỉ những người được tích chọn trong workspace này</p>
+            <div class="text-xs leading-tight">
+              <span class="flex items-center gap-1 font-bold text-slate-900 dark:text-white">
+                <svg lucideLock class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg> Thành viên được chọn</span>
+              <p class="text-2xs text-slate-500 dark:text-slate-400 mt-1">Chỉ những người được tích chọn trong workspace này</p>
             </div>
           </label>
         </div>
@@ -81,12 +85,12 @@
         @if (privacyInput() === 'Private') {
         <div class="mt-3 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-3.5 shadow-xs transition-all">
           <div class="mb-2.5 flex items-center justify-between">
-            <span class="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+            <span class="text-2xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
               Chọn thành viên trong Workspace ({{ selectedMemberIds().length }}/{{ currentWorkspaceMembers().length }}):
             </span>
             <div class="flex gap-1.5">
-              <button type="button" class="btn btn-ghost btn-xs text-[10.5px] font-bold text-primary hover:bg-primary/10" (click)="selectAllMembers()">Tất cả</button>
-              <button type="button" class="btn btn-ghost btn-xs text-[10.5px] font-bold text-slate-500 hover:bg-slate-200" (click)="deselectAllMembers()">Bỏ chọn</button>
+              <button type="button" class="btn btn-ghost btn-xs text-2xs font-bold text-primary hover:bg-primary/10" (click)="selectAllMembers()">Tất cả</button>
+              <button type="button" class="btn btn-ghost btn-xs text-2xs font-bold text-slate-500 hover:bg-slate-200" (click)="deselectAllMembers()">Bỏ chọn</button>
             </div>
           </div>
 
@@ -98,18 +102,18 @@
               [class.ring-primary]="selectedMemberIds().includes(mem.id)">
               <div class="flex items-center gap-2.5 min-w-0">
                 <div
-                  class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white shadow-xs"
+                  class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-3xs font-bold text-white shadow-xs"
                   [style.background-color]="avatarBgFor(mem.id)">
                   {{ initialsOf(mem.displayName || mem.email) }}
                 </div>
                 <div class="min-w-0 flex-1">
                   <div class="flex items-center gap-1.5">
-                    <span class="truncate text-[12px] font-bold text-slate-900 dark:text-white">{{ mem.displayName }}</span>
+                    <span class="truncate text-xs font-bold text-slate-900 dark:text-white">{{ mem.displayName }}</span>
                     @if (mem.role === 'owner') {
-                    <span class="badge badge-warning badge-xs font-bold text-[8.5px]">Trưởng nhóm</span>
+                    <span class="badge badge-warning badge-xs font-bold text-3xs">Trưởng nhóm</span>
                     }
                   </div>
-                  <span class="truncate text-[10px] text-slate-500 dark:text-slate-400 block font-mono">UUID: {{ mem.id.slice(0, 8) }}...</span>
+                  <span class="truncate text-3xs text-slate-500 dark:text-slate-400 block font-mono">UUID: {{ mem.id.slice(0, 8) }}...</span>
                 </div>
               </div>
               <input

@@ -10,6 +10,7 @@ import { LabelService } from '../../services/label.service';
 import { ActivityService } from '../../services/activity.service';
 import { ChecklistService } from '../../services/checklist.service';
 import { CommentService } from '../../services/comment.service';
+import { AttachmentService } from '../../services/attachment.service';
 import { BoardList } from '../../components/board/board-list/board-list';
 import { AddList } from '../../components/board/add-list/add-list';
 import { LabelPicker } from '../../components/board/label-picker/label-picker';
@@ -111,6 +112,7 @@ export class Board {
   private readonly activityService = inject(ActivityService);
   private readonly checklistService = inject(ChecklistService);
   private readonly commentService = inject(CommentService);
+  private readonly attachmentService = inject(AttachmentService);
 
   readonly boardId = this.route.snapshot.paramMap.get('id') ?? 'demo-board';
 
@@ -127,6 +129,7 @@ export class Board {
   /** [BONUS #4] done/total checklist + số bình luận theo card — cho badge ở mặt thẻ. */
   readonly checklistProgressByCardId = this.checklistService.progressByCard;
   readonly commentCountByCardId = this.commentService.countByCard;
+  readonly coverUrlByCardId = this.attachmentService.coverUrlByCard;
 
   readonly today = new Date().toISOString().slice(0, 10);
   readonly priorities = PRIORITIES;

@@ -1,5 +1,6 @@
 import { Component, computed, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { LucideTriangleAlert, LucideX } from '@lucide/angular';
 import { ActivityActionType, ActivityLog } from '../../../models';
 import { avatarColorFor, CURRENT_USER_ID, initialsOf } from '../../../services/board.service';
 import { MemberWorkloadStat, WorkspaceStatsData } from '../workspace-stats-modal/board-stats.mock';
@@ -49,7 +50,7 @@ let instanceSeq = 0;
  */
 @Component({
   selector: 'app-workspace-stats-panel',
-  imports: [FormsModule],
+  imports: [FormsModule, LucideTriangleAlert, LucideX],
   templateUrl: './workspace-stats-panel.html',
 })
 export class WorkspaceStatsPanel {

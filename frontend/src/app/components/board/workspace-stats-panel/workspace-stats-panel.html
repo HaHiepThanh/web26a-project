@@ -38,7 +38,7 @@
     <!-- Khối 2: cảnh báo thành viên vắng mặt -->
     @if (inactiveMembers().length > 0) {
       <div role="alert" class="alert alert-warning alert-soft text-sm">
-        <span>⚠️</span>
+        <svg lucideTriangleAlert class="h-4 w-4" [strokeWidth]="2"></svg>
         <span>{{ inactiveMembers().length }} thành viên chưa hoạt động từ 3 ngày trở lên: {{ inactiveMembersLabel() }}</span>
       </div>
     }
@@ -55,7 +55,7 @@
         @for (m of sortedWorkload(); track trackByUserId($index, m)) {
           <div class="flex items-center gap-3">
             <span
-              class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white"
+              class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-2xs font-bold text-white"
               [style.background]="avatarColor(m.userId)"
               [title]="m.name"
             >{{ avatarInitials(m.userId) }}</span>
@@ -108,7 +108,7 @@
         @for (log of filteredActivityLogs(); track trackByLogId($index, log)) {
           <div class="flex items-start gap-3 p-3">
             <span
-              class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
+              class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-3xs font-bold text-white"
               [style.background]="avatarColor(log.userId)"
               [title]="memberName(log.userId)"
             >{{ avatarInitials(log.userId) }}</span>
@@ -130,7 +130,9 @@
     <div class="min-h-full w-80 bg-base-100">
       <div class="flex items-center justify-between border-b border-base-300 p-4">
         <h3 class="text-base font-semibold">{{ overdueCards().length }} công việc quá hạn</h3>
-        <label [attr.for]="overdueDrawerId" class="btn btn-circle btn-ghost btn-sm" aria-label="Đóng">✕</label>
+        <label [attr.for]="overdueDrawerId" class="btn btn-circle btn-ghost btn-sm" aria-label="Đóng">
+          <svg lucideX class="h-4 w-4" [strokeWidth]="2.4"></svg>
+        </label>
       </div>
       <div class="divide-y divide-base-300 overflow-y-auto p-4">
         @for (card of overdueCards(); track trackByCardId($index, card)) {

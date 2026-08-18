@@ -1,11 +1,22 @@
 import { Component, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { LucideArrowLeft, LucideFolderKanban, LucideListFilter, LucidePin, LucideStar, LucideX, LucideChartLine } from '@lucide/angular';
 import { Board, CardPriority, Label, List, User } from '../../../models';
+import { FLAG_PATH } from '../card-item/card-item';
+
+/** Cùng bảng màu với card-item.ts (PRIORITY_TEXT) — để nút lọc "Mức ưu tiên" khớp
+ *  màu với cờ ưu tiên hiển thị trên mặt thẻ, tránh lệch màu giữa 2 nơi. */
+const PRIORITY_TEXT: Record<CardPriority, string> = { high: 'text-error', medium: 'text-warning', low: 'text-base-content/60' };
+const PRIORITY_ACTIVE: Record<CardPriority, string> = {
+  high: 'bg-error text-error-content border-error',
+  medium: 'bg-warning text-warning-content border-warning',
+  low: 'bg-base-content/70 text-base-100 border-base-content/70',
+};
 
 @Component({
   selector: 'app-board-header-bar',
-  imports: [RouterLink, FormsModule],
+  imports: [RouterLink, FormsModule, LucideArrowLeft, LucideFolderKanban, LucideListFilter, LucidePin, LucideStar, LucideX, LucideChartLine],
   templateUrl: './board-header-bar.html',
 })
 export class BoardHeaderBar {
@@ -36,7 +47,7 @@ export class BoardHeaderBar {
 
   readonly priorities: { id: CardPriority; label: string }[] = [
     { id: 'high', label: 'Cao' },
-    { id: 'medium', label: 'Vừa' },
+    { id: 'medium', label: 'Trung bình' },
     { id: 'low', label: 'Thấp' },
   ];
 
@@ -49,6 +60,15 @@ export class BoardHeaderBar {
 
   readonly UNASSIGNED = '__UNASSIGNED__';
   readonly NO_LABEL = '__NO_LABEL__';
+  readonly flagPath = FLAG_PATH;
+
+  priorityTextClass(id: CardPriority): string {
+    return PRIORITY_TEXT[id];
+  }
+
+  priorityActiveClass(id: CardPriority): string {
+    return PRIORITY_ACTIVE[id];
+  }
 
   readonly layoutModeChange = output<'column' | 'row'>();
   readonly openStats = output<void>();

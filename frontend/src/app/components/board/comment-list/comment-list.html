@@ -1,4 +1,4 @@
-<label class="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-base-content/50">
+<label class="mb-1.5 block text-2xs font-bold uppercase tracking-wide text-base-content/50">
   Bình luận
   @if (comments().length > 0) {
     <span class="normal-case tracking-normal text-base-content/40">({{ comments().length }})</span>
@@ -9,29 +9,29 @@
   <div class="mb-2.5 flex max-h-[220px] flex-col gap-2.5 overflow-y-auto">
     @for (c of comments(); track c.id) {
       <div class="group flex gap-2">
-        <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white" [style.background]="userColor(c.userId)">{{ userInitials(c.userId) }}</span>
+        <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-3xs font-bold text-white" [style.background]="userColor(c.userId)">{{ userInitials(c.userId) }}</span>
         <div class="min-w-0 flex-1">
           <div class="flex items-baseline gap-1.5">
-            <span class="text-[11px] font-semibold text-base-content/80">{{ userLabel(c.userId) }}</span>
-            <span class="text-[9.5px] text-base-content/40">{{ timeLabel(c.createdAt) }}</span>
+            <span class="text-2xs font-semibold text-base-content/80">{{ userLabel(c.userId) }}</span>
+            <span class="text-3xs text-base-content/40">{{ timeLabel(c.createdAt) }}</span>
             @if (c.userId === currentUserId) {
-              <button type="button" class="ml-auto text-[10px] text-base-content/40 opacity-0 transition-opacity hover:text-error group-hover:opacity-100" (click)="deleteComment(c.id)">
+              <button type="button" class="ml-auto text-3xs text-base-content/40 opacity-0 transition-opacity hover:text-error group-hover:opacity-100" (click)="deleteComment(c.id)">
                 Xoá
               </button>
             }
           </div>
-          <div class="mt-0.5 whitespace-pre-wrap break-words rounded-md rounded-tl-sm bg-base-200 px-2.5 py-1.5 text-[12px] text-base-content">{{ c.content }}</div>
+          <div class="mt-0.5 whitespace-pre-wrap break-words rounded-md rounded-tl-sm bg-base-200 px-2.5 py-1.5 text-xs text-base-content">{{ c.content }}</div>
         </div>
       </div>
     }
   </div>
 } @else {
-  <div class="mb-2.5 text-[11.5px] text-base-content/50">Chưa có bình luận nào.</div>
+  <div class="mb-2.5 text-2xs text-base-content/50">Chưa có bình luận nào.</div>
 }
 
 <div class="flex gap-1.5">
   <textarea
-    class="textarea textarea-bordered min-w-0 flex-1 text-[12.5px]"
+    class="textarea textarea-bordered min-w-0 flex-1 text-xs"
     rows="2"
     placeholder="Viết bình luận..."
     [value]="newCommentText()"

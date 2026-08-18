@@ -1,8 +1,10 @@
 import { Component, input, output } from '@angular/core';
+import { LucideBuilding2, LucideGlobe, LucideLock, LucidePencil, LucideStar } from '@lucide/angular';
 import { BoardItem, WorkspaceItem, avatarBgFor, initialsOf } from '../../../mocks';
 
 @Component({
   selector: 'app-workspace-card-item',
+  imports: [LucideBuilding2, LucideGlobe, LucideLock, LucidePencil, LucideStar],
   templateUrl: './workspace-card-item.html',
   host: { class: 'block' },
 })

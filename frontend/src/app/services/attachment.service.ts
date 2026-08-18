@@ -38,6 +38,16 @@ export class AttachmentService {
     return (this.byCard()[cardId] ?? []).find((a) => a.isCover && a.isImage) ?? null;
   }
 
+  /** URL ảnh bìa theo card — dùng để hiện ảnh bìa ngay trên mặt thẻ ngoài danh sách. */
+  readonly coverUrlByCard = computed(() => {
+    const result: Record<string, string | undefined> = {};
+    for (const [cardId, list] of Object.entries(this.byCard())) {
+      const cover = list.find((a) => a.isCover && a.isImage);
+      if (cover) result[cardId] = cover.dataUrl;
+    }
+    return result;
+  });
+
   /** Đọc từng File thành base64, thêm vào card. Ảnh đầu tiên tự làm bìa nếu chưa có bìa. */
   async addFiles(cardId: string, files: File[]): Promise<Attachment[]> {
     const added: Attachment[] = [];

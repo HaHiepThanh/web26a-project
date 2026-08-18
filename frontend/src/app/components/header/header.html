@@ -1,168 +1,208 @@
 <header
-  class="sticky top-0 z-[100] flex h-[52px] items-center justify-between gap-3 border-b border-base-300 bg-base-200 px-2.5 shadow-sm">
+  class="sticky top-0 z-[100] flex h-14 items-center justify-between gap-4 border-b border-base-300/70 bg-base-100 px-4 shadow-sm">
   <a routerLink="/workspace"
-    class="flex shrink-0 items-center gap-1.5 rounded-md px-1.5 py-1 font-bold text-base-content hover:bg-base-300">
+    class="flex shrink-0 items-center gap-2 rounded-lg px-1.5 py-1 font-bold text-base-content transition-colors hover:bg-base-200">
     <div
-      class="flex h-5 w-5 items-center justify-center gap-0.5 rounded bg-gradient-to-br from-[#0052cc] to-[#0747a6] p-[3px]">
-      <div class="h-[12px] w-[6px] rounded-[1px] bg-white"></div>
-      <div class="mt-0.5 h-[8px] w-[6px] self-start rounded-[1px] bg-white"></div>
+      class="flex h-7 w-7 items-center justify-center gap-0.5 rounded-lg bg-gradient-to-br from-[#0052cc] to-[#0747a6] p-[4px] shadow-sm">
+      <div class="h-[14px] w-[7px] rounded-[1px] bg-white"></div>
+      <div class="mt-0.5 h-[9px] w-[7px] self-start rounded-[1px] bg-white"></div>
     </div>
     <div class="flex flex-col leading-[1.05]">
-      <span class="text-[15px] tracking-[-0.3px] text-primary">Trello</span>
-      <span class="text-[8px] font-extrabold tracking-[0.6px] text-base-content/50">WORKSPACE</span>
+      <span class="text-base tracking-[-0.3px] text-primary">Trello</span>
+      <span class="text-3xs font-extrabold tracking-[0.6px] text-base-content/40">WORKSPACE</span>
     </div>
   </a>
 
-  <div class="max-w-[520px] flex-1 max-md:hidden">
+  <div class="max-w-[480px] flex-1 max-md:hidden">
     <div class="group relative w-full">
-      <svg
-        class="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-base-content/40 transition-colors group-focus-within:text-primary"
-        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="11" cy="11" r="8"></circle>
-        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-      </svg>
+      <svg lucideSearch
+        class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-base-content/35 transition-colors group-focus-within:text-primary"
+        [strokeWidth]="2"></svg>
       <input type="text"
-        class="input input-sm h-8 w-full appearance-none rounded-lg border-2 border-base-content/20 !bg-base-100 pl-8 pr-8 text-[13px] shadow transition-colors focus:border-primary"
+        class="input input-sm h-9 w-full appearance-none rounded-full border-none bg-base-200/70 pl-10 pr-9 text-sm text-base-content shadow-none transition-all placeholder:text-base-content/40 hover:bg-base-200 focus:bg-base-100 focus:shadow-sm focus:ring-2 focus:ring-primary/25 focus:outline-none"
         placeholder="Tìm kiếm bảng dự án..." (input)="onSearchInput($event)" />
-      <span class="kbd kbd-sm pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 opacity-60">/</span>
+      <span
+        class="kbd kbd-sm pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 border-none bg-base-300/70 text-base-content/50 opacity-0 transition-opacity group-focus-within:opacity-0 group-hover:opacity-100">/</span>
     </div>
   </div>
 
-  <div class="flex shrink-0 items-center gap-1.5">
+  <div class="flex shrink-0 items-center gap-2">
     <div class="relative">
-      <button class="btn btn-primary btn-sm gap-1.5 px-3" (click)="toggleCreateMenu()">
-        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
-          stroke-linecap="round">
-          <path d="M12 5v14M5 12h14" />
-        </svg>
+      <button class="btn btn-primary btn-sm gap-1.5 rounded-full px-3.5 shadow-sm" (click)="toggleCreateMenu()">
+        <svg lucidePlus class="h-4 w-4" [strokeWidth]="2.4"></svg>
         <span class="max-sm:hidden">Tạo</span>
-        <svg class="h-3 w-3 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <path d="M6 9l6 6 6-6" />
-        </svg>
+        <svg lucideChevronDown class="h-3 w-3 opacity-70" [strokeWidth]="2.5"></svg>
       </button>
 
       <!-- Create Dropdown Menu -->
       @if (createMenuOpen()) {
       <div
-        class="absolute left-0 top-[38px] z-[200] mt-1 w-[240px] rounded-box border border-base-300 bg-base-100 p-1.5 shadow-xl">
+        class="absolute left-0 top-[42px] z-[200] w-[240px] rounded-2xl border border-base-300/70 bg-base-100 p-1.5 shadow-xl">
         <button type="button"
           class="flex w-full cursor-pointer items-center gap-2.5 rounded-md p-2 text-left transition hover:bg-base-200"
           (click)="requestCreateBoard()">
           <div
-            class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary text-sm font-bold">
-            📋</div>
+            class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+            <svg lucideKanban class="h-4 w-4" [strokeWidth]="2"></svg>
+          </div>
           <div class="min-w-0">
-            <div class="text-[12.5px] font-bold text-base-content leading-tight">Tạo bảng mới</div>
-            <div class="text-[10.5px] text-base-content/50 leading-tight">Bảng dự án Kanban</div>
+            <div class="text-xs font-bold text-base-content leading-tight">Tạo bảng mới</div>
+            <div class="text-2xs text-base-content/50 leading-tight">Bảng dự án Kanban</div>
           </div>
         </button>
         <button type="button"
           class="flex w-full cursor-pointer items-center gap-2.5 rounded-md p-2 text-left transition hover:bg-base-200 mt-1"
           (click)="requestCreateWorkspace()">
           <div
-            class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-secondary/10 text-secondary text-sm font-bold">
-            🗂️</div>
+            class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-secondary/10 text-secondary">
+            <svg lucideFolderKanban class="h-4 w-4" [strokeWidth]="2"></svg>
+          </div>
           <div class="min-w-0">
-            <div class="text-[12.5px] font-bold text-base-content leading-tight">Tạo Workspace mới</div>
-            <div class="text-[10.5px] text-base-content/50 leading-tight">Thêm thành viên qua UUID</div>
+            <div class="text-xs font-bold text-base-content leading-tight">Tạo Workspace mới</div>
+            <div class="text-2xs text-base-content/50 leading-tight">Thêm thành viên qua UUID</div>
           </div>
         </button>
       </div>
       }
     </div>
 
-    <div class="mx-0.5 h-5 w-px bg-base-300 max-sm:hidden"></div>
+    <div class="mx-0.5 h-5 w-px bg-base-300/70 max-sm:hidden"></div>
 
+    <!-- Segmented icon toolbar -->
+    <div class="flex items-center gap-0.5 rounded-full bg-base-200/60 p-1">
+      <button class="btn btn-ghost btn-circle btn-sm relative hover:bg-base-100"
+        [title]="dueBadgeCount() > 0 ? dueBadgeCount() + ' thẻ của bạn sắp/đã quá hạn' : 'Thông báo'">
+        <svg lucideBell class="h-[17px] w-[17px]" [strokeWidth]="2"></svg>
+        @if (dueBadgeCount() > 0) {
+        <span
+          class="badge badge-error absolute right-0 top-0 h-4 min-w-4 rounded-full border-2 border-base-100 px-1.5 text-3xs font-bold text-white">{{
+          dueBadgeCount() }}</span>
+        }
+      </button>
 
+      <!-- Lời mời tham gia Organization -->
+      <div class="relative">
+        <button type="button" class="btn btn-ghost btn-circle btn-sm relative hover:bg-base-100"
+          [title]="pendingInviteCount() > 0 ? pendingInviteCount() + ' lời mời tổ chức đang chờ' : 'Lời mời tổ chức'"
+          (click)="toggleInviteMenu()">
+          <svg lucideUserPlus class="h-[17px] w-[17px]" [strokeWidth]="2"></svg>
+          @if (pendingInviteCount() > 0) {
+          <span
+            class="badge badge-error absolute right-0 top-0 h-4 min-w-4 rounded-full border-2 border-base-100 px-1.5 text-3xs font-bold text-white">{{
+            pendingInviteCount() }}</span>
+          }
+        </button>
 
-    <button class="btn btn-ghost btn-circle btn-sm relative"
-      [title]="dueBadgeCount() > 0 ? dueBadgeCount() + ' thẻ của bạn sắp/đã quá hạn' : 'Thông báo'">
-      <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-        stroke-linecap="round" stroke-linejoin="round">
-        <path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
-        <path d="M13.7 21a2 2 0 01-3.4 0" />
-      </svg>
-      @if (dueBadgeCount() > 0) {
-      <span
-        class="badge badge-error absolute -right-0.5 -top-0.5 h-[15px] min-w-[15px] rounded-full border-2 border-base-200 px-1 text-[9px] font-bold text-white">{{
-        dueBadgeCount() }}</span>
-      }
-    </button>
-
-    <a class="btn btn-ghost btn-circle btn-sm" routerLink="/settings" title="Cài đặt">
-      <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-        stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="3" />
-        <path
-          d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
-      </svg>
-    </a>
-
-    <div
-      class="ml-0.5 flex cursor-pointer items-center gap-1.5 rounded-full border border-base-300 bg-base-100 py-[2px] pl-1 pr-2 transition-all hover:border-primary/40 hover:bg-base-200"
-      (click)="toggleUserMenu()">
-      <div
-        class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#2563eb] to-[#1d4ed8] text-[11px] font-bold text-white shadow-sm">
-        {{ initials() }}</div>
-      <div class="flex max-w-[160px] flex-col leading-tight max-md:hidden">
-        <span class="truncate text-[12.5px] font-bold text-base-content">{{
-          currentUser()?.displayName ?? 'Người dùng' }}</span>
-        @if (currentUser()?.id; as uid) {
-        <span class="truncate text-[9.5px] font-mono text-base-content/50">ID: {{ uid.slice(0, 8) }}...</span>
+        @if (inviteMenuOpen()) {
+        <div
+          class="absolute right-0 top-[42px] z-[200] w-[300px] rounded-2xl border border-base-300/70 bg-base-100 p-2 shadow-xl">
+          <div class="px-1.5 pb-1.5 pt-1 text-2xs font-black uppercase tracking-wider text-base-content/45">Lời mời tổ
+            chức</div>
+          @if (myInvites().length === 0) {
+          <div class="px-1.5 py-4 text-center text-xs text-base-content/50">Chưa có lời mời nào.</div>
+          } @else {
+          <div class="flex flex-col gap-1.5">
+            @for (inv of myInvites(); track inv.id) {
+            <div class="rounded-xl border border-base-300/70 bg-base-200/40 p-2.5">
+              <div class="flex items-center gap-2">
+                <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-sm">{{
+                  inv.orgIcon }}</span>
+                <div class="min-w-0">
+                  <div class="truncate text-xs font-bold text-base-content leading-tight">{{ inv.fromUserName }}</div>
+                  <div class="truncate text-2xs text-base-content/55 leading-tight">mời bạn vào "{{ inv.orgName }}"</div>
+                </div>
+              </div>
+              <div class="mt-2 flex items-center gap-1.5">
+                <button type="button" class="btn btn-success btn-xs flex-1 gap-1 rounded-lg text-white" (click)="acceptInvite(inv.id)">
+                  <svg lucideCheck class="h-3 w-3" [strokeWidth]="3"></svg>
+                  Đồng ý</button>
+                <button type="button" class="btn btn-ghost btn-xs flex-1 gap-1 rounded-lg" (click)="declineInvite(inv.id)">
+                  <svg lucideX class="h-3 w-3" [strokeWidth]="3"></svg>
+                  Từ chối</button>
+              </div>
+            </div>
+            }
+          </div>
+          }
+        </div>
         }
       </div>
-      <svg class="h-3 w-3 shrink-0 text-base-content/40 max-md:hidden" viewBox="0 0 24 24" fill="none"
-        stroke="currentColor" stroke-width="2.5">
-        <path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
-      </svg>
+
+      <a class="btn btn-ghost btn-circle btn-sm hover:bg-base-100" routerLink="/settings" title="Cài đặt">
+        <svg lucideSettings class="h-[17px] w-[17px]" [strokeWidth]="2"></svg>
+      </a>
+    </div>
+
+    <div
+      class="ml-0.5 flex cursor-pointer items-center gap-1.5 rounded-full bg-base-200/60 py-[3px] pl-1 pr-2.5 transition-all hover:bg-base-200"
+      (click)="toggleUserMenu()">
+      <div
+        class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#4f46e5] to-[#7c3aed] text-2xs font-bold text-white shadow-sm">
+        {{ initials() }}</div>
+      <div class="flex max-w-[160px] flex-col leading-tight max-md:hidden">
+        <span class="truncate text-xs font-bold text-base-content">{{
+          currentUser()?.displayName ?? 'Người dùng' }}</span>
+        @if (currentUser()?.id; as uid) {
+        <span class="truncate text-3xs font-mono text-base-content/45">ID: {{ uid.slice(0, 8) }}...</span>
+        }
+      </div>
+      <svg lucideChevronDown class="h-3 w-3 shrink-0 text-base-content/35 max-md:hidden transition-transform"
+        [class]="menuOpen() ? '-rotate-180' : ''" [strokeWidth]="2.5"></svg>
     </div>
   </div>
 
   <div
-    class="absolute right-2.5 top-[52px] z-[200] mt-1 w-[290px] rounded-box border border-base-300 bg-base-100 p-2.5 shadow-xl"
+    class="absolute right-4 top-[54px] z-[200] mt-1 w-[290px] rounded-2xl border border-base-300/70 bg-base-100 p-2.5 shadow-xl"
     [class.hidden]="!menuOpen()">
     <div class="flex items-center gap-2.5 px-1.5 py-1">
       <div
-        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#2563eb] to-[#1d4ed8] text-[13px] font-extrabold text-white shadow-sm">
+        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#4f46e5] to-[#7c3aed] text-sm font-extrabold text-white shadow-sm">
         {{ initials() }}</div>
       <div class="min-w-0 flex-1">
-        <div class="truncate text-[13.5px] font-bold text-base-content">{{ currentUser()?.displayName ?? 'Người dùng' }}
+        <div class="truncate text-sm font-bold text-base-content">{{ currentUser()?.displayName ?? 'Người dùng' }}
         </div>
-        <div class="truncate text-[11.5px] text-base-content/60">{{ currentUser()?.email ?? '—' }}</div>
+        <div class="truncate text-2xs text-base-content/60">{{ currentUser()?.email ?? '—' }}</div>
       </div>
     </div>
 
     <!-- UUID Box with 1-click Copy -->
     <div class="my-2 rounded-lg border border-primary/20 bg-primary/5 p-2 text-left">
       <div class="flex items-center justify-between">
-        <span class="text-[10px] font-extrabold uppercase tracking-wider text-primary">🔑 UUID CỦA BẠN</span>
-        <button type="button" class="btn btn-xs rounded px-1.5 text-[10.5px] font-bold transition-all"
+        <span class="flex items-center gap-1 text-3xs font-extrabold uppercase tracking-wider text-primary">
+          <svg lucideKeyRound class="h-3 w-3" [strokeWidth]="2.4"></svg>
+          UUID CỦA BẠN
+        </span>
+        <button type="button" class="btn btn-xs gap-1 rounded px-1.5 text-2xs font-bold transition-all"
           [class.btn-success]="copiedUuid()" [class.btn-primary]="!copiedUuid()" [class.btn-outline]="!copiedUuid()"
           (click)="$event.stopPropagation(); copyUuid()" title="Sao chép mã UUID">
           @if (copiedUuid()) {
-          ✓ Đã chép!
+          <svg lucideCheck class="h-3 w-3" [strokeWidth]="3"></svg> Đã chép!
           } @else {
-          📋 Sao chép
+          <svg lucideCopy class="h-3 w-3" [strokeWidth]="2.4"></svg> Sao chép
           }
         </button>
       </div>
       <div class="mt-1 flex items-center gap-1">
         <code
-          class="block w-full select-all truncate rounded bg-base-100 px-1.5 py-1 font-mono text-[11px] text-base-content/85 shadow-inner"
+          class="block w-full select-all truncate rounded bg-base-100 px-1.5 py-1 font-mono text-2xs text-base-content/85 shadow-inner"
           [title]="currentUser()?.id ?? ''">
           {{ currentUser()?.id ?? 'Chưa cấp UUID' }}
         </code>
       </div>
-      <p class="mt-1 text-[9.5px] leading-tight text-base-content/50">
+      <p class="mt-1 text-3xs leading-tight text-base-content/50">
         Dùng UUID này để thêm vào Không gian làm việc.
       </p>
     </div>
 
     <div class="my-1 h-px bg-base-300"></div>
-    <a class="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-[13px] text-base-content hover:bg-base-200"
-      routerLink="/settings" (click)="menuOpen.set(false)">👤 Hồ sơ và cài đặt</a>
+    <a class="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm text-base-content hover:bg-base-200"
+      routerLink="/settings" (click)="menuOpen.set(false)">
+      <svg lucideUser class="h-4 w-4" [strokeWidth]="2"></svg>
+      Hồ sơ và cài đặt</a>
     <div
-      class="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-[13px] font-semibold text-error hover:bg-error/10"
-      (click)="logout()">🚪 Đăng xuất</div>
+      class="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold text-error hover:bg-error/10"
+      (click)="logout()">
+      <svg lucideLogOut class="h-4 w-4" [strokeWidth]="2"></svg>
+      Đăng xuất</div>
   </div>
 </header>

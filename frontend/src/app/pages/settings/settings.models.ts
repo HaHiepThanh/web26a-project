@@ -3,13 +3,13 @@
  * Kept concise & focused on Profile & Manage Workspace.
  */
 
-export type SettingsTab = 'profile' | 'manage-workspace';
+export type SettingsTab = 'profile' | 'manage-workspace' | 'manage-organization';
 
 export interface NavItem {
   id: SettingsTab;
   label: string;
   description: string;
-  icon: 'user' | 'building';
+  icon: 'user' | 'building' | 'org';
 }
 
 export const NAV_ITEMS: NavItem[] = [
@@ -24,6 +24,12 @@ export const NAV_ITEMS: NavItem[] = [
     label: 'Manage Workspace',
     description: 'Quản lý thành viên trong các Workspace của bạn',
     icon: 'building',
+  },
+  {
+    id: 'manage-organization',
+    label: 'Quản lý Organization',
+    description: 'Thành viên, lời mời & chuyển đổi tổ chức',
+    icon: 'org',
   },
 ];
 

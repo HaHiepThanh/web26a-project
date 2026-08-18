@@ -5,11 +5,11 @@
     class="msg-toast absolute left-full top-3 z-20 ml-2 flex w-[250px] cursor-pointer gap-2 rounded-box border border-base-300 bg-base-100 p-2.5 shadow-lg"
     (click)="openFromToast()">
     <span
-      class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--accent-purple)] text-[11px] font-bold text-white">{{
+      class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--accent-purple)] text-2xs font-bold text-white">{{
       toast.name.charAt(0) }}</span>
     <div class="min-w-0">
-      <div class="text-[11px] font-bold text-base-content">{{ toast.name }}</div>
-      <div class="mt-px truncate text-[11px] text-base-content/80">{{ toast.text }}</div>
+      <div class="text-2xs font-bold text-base-content">{{ toast.name }}</div>
+      <div class="mt-px truncate text-2xs text-base-content/80">{{ toast.text }}</div>
     </div>
   </div>
   }
@@ -26,10 +26,10 @@
     </span>
     @if (unreadCount() > 0) {
     <span
-      class="badge badge-error h-[17px] min-w-[17px] rounded-full border-2 border-base-100 px-1 text-[10px] font-bold text-white">{{
+      class="badge badge-error h-[18px] min-w-[18px] rounded-full border-2 border-base-100 px-1.5 text-3xs font-bold text-white">{{
       unreadCount() }}</span>
     }
-    <span class="rotate-180 whitespace-nowrap text-[10px] font-bold [writing-mode:vertical-rl]">Chat</span>
+    <span class="rotate-180 whitespace-nowrap text-3xs font-bold [writing-mode:vertical-rl]">Chat</span>
   </button>
   } @else {
   <div

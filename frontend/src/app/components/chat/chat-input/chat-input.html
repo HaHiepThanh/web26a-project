@@ -9,17 +9,17 @@
     </div>
   }
 
-  <div class="flex gap-1.5 border-t border-base-300 px-2.5 py-2">
-    <input
+  <div class="flex items-end gap-1.5 border-t border-base-300 px-2.5 py-2">
+    <textarea
       #msgInput
-      type="text"
-      class="input input-bordered input-sm min-w-0 flex-1"
+      rows="1"
+      class="textarea textarea-bordered textarea-sm min-w-0 flex-1 resize-none overflow-y-auto break-words py-1.5 leading-snug"
       placeholder="Nhắn gì đó cho cả nhóm... (gõ @ để nhắc tên)"
       [value]="value()"
       (input)="onInput($event)"
-      (keydown.enter)="onSend()"
-    />
-    <button type="button" class="btn btn-square btn-primary btn-sm" (click)="onSend()" aria-label="Gửi">
+      (keydown)="onKeydown($event)"
+    ></textarea>
+    <button type="button" class="btn btn-square btn-primary btn-sm shrink-0" (click)="onSend()" aria-label="Gửi">
       <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg>
     </button>
   </div>

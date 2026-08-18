@@ -11,12 +11,12 @@
     </label>
   }
   @if (labels().length === 0) {
-    <div class="px-0.5 py-1.5 text-[11.5px] text-base-content/50">Board chưa có nhãn nào — tạo nhãn đầu tiên bên dưới.</div>
+    <div class="px-0.5 py-1.5 text-2xs text-base-content/50">Board chưa có nhãn nào — tạo nhãn đầu tiên bên dưới.</div>
   }
 </div>
 
 @if (!showCreateForm()) {
-  <button type="button" class="flex items-center gap-1 rounded-md px-1 py-1.5 text-[11.5px] font-semibold text-base-content/80 hover:bg-base-200 hover:text-base-content" (click)="openCreateForm()">
+  <button type="button" class="flex items-center gap-1 rounded-md px-1 py-1.5 text-2xs font-semibold text-base-content/80 hover:bg-base-200 hover:text-base-content" (click)="openCreateForm()">
     <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
     Tạo nhãn mới
   </button>

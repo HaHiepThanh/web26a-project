@@ -45,7 +45,7 @@
 
         <!-- Color Palette for Workspace Icon Background -->
         <div class="mt-3">
-          <span class="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 block mb-1.5">Màu nền biểu tượng:</span>
+          <span class="text-2xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 block mb-1.5">Màu nền biểu tượng:</span>
           <div class="flex flex-wrap gap-2">
             @for (bg of bgClasses; track bg) {
             <div
@@ -67,7 +67,7 @@
             @for (cat of iconCategories; track $index) {
             <button
               type="button"
-              class="btn btn-xs rounded-lg font-bold text-[11px] transition-all"
+              class="btn btn-xs rounded-lg font-bold text-2xs transition-all"
               [class.btn-primary]="selectedIconCategory() === $index"
               [class.btn-ghost]="selectedIconCategory() !== $index"
               (click)="selectedIconCategory.set($index)">
@@ -95,7 +95,7 @@
 
           <!-- Custom Icon Input -->
           <div class="mt-2.5 pt-2 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs">
-            <span class="text-slate-500 font-medium text-[11px]">Hoặc nhập biểu tượng bất kỳ:</span>
+            <span class="text-slate-500 font-medium text-2xs">Hoặc nhập biểu tượng bất kỳ:</span>
             <input type="text"
               class="input input-bordered input-xs border-2 border-slate-300 dark:border-slate-600 w-16 text-center text-sm font-bold rounded-lg bg-white dark:bg-slate-800"
               maxlength="4"
@@ -112,7 +112,7 @@
           <label class="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200" for="workspace-desc-input">
             Mô tả
           </label>
-          <span class="text-[11px] font-semibold text-slate-400">
+          <span class="text-2xs font-semibold text-slate-400">
             {{ descInput().length }}/300 ký tự
           </span>
         </div>
@@ -166,16 +166,16 @@
               (click)="addMember(user)">
               <div class="flex items-center gap-2 min-w-0">
                 <div
-                  class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white shadow-xs"
+                  class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-3xs font-bold text-white shadow-xs"
                   [style.background-color]="avatarBgFor(user.id)">
                   {{ initialsOf(user.displayName || user.email) }}
                 </div>
                 <div class="min-w-0">
                   <div class="truncate text-xs font-bold text-slate-900 dark:text-white">{{ user.displayName }}</div>
-                  <div class="truncate text-[10px] text-slate-500 dark:text-slate-400">{{ user.email }}</div>
+                  <div class="truncate text-3xs text-slate-500 dark:text-slate-400">{{ user.email }}</div>
                 </div>
               </div>
-              <span class="text-[10px] font-mono text-slate-400 shrink-0 ml-2">UUID: {{ user.id.slice(0, 8) }}...</span>
+              <span class="text-3xs font-mono text-slate-400 shrink-0 ml-2">UUID: {{ user.id.slice(0, 8) }}...</span>
             </button>
             }
           </div>
@@ -189,7 +189,7 @@
             class="flex items-center justify-between rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2 shadow-2xs">
             <div class="flex items-center gap-2.5 min-w-0">
               <div
-                class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white shadow-xs"
+                class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-3xs font-bold text-white shadow-xs"
                 [style.background-color]="avatarBgFor(m.id)">
                 {{ initialsOf(m.displayName || m.email) }}
               </div>
@@ -197,10 +197,10 @@
                 <div class="flex items-center gap-1.5">
                   <span class="truncate text-xs font-bold text-slate-900 dark:text-white">{{ m.displayName }}</span>
                   @if (m.role === 'owner') {
-                  <span class="badge badge-warning badge-xs font-black text-[9px]">Trưởng nhóm</span>
+                  <span class="badge badge-warning badge-xs font-black text-3xs">Trưởng nhóm</span>
                   }
                 </div>
-                <div class="truncate text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+                <div class="truncate text-3xs text-slate-500 dark:text-slate-400 font-mono">
                   UUID: {{ m.id }}
                 </div>
               </div>

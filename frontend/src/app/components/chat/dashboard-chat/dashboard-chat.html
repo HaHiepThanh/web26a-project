@@ -41,11 +41,11 @@
           </div>
           <div class="mt-0.5 flex items-center justify-between gap-2">
             @if (row.lastSenderLabel && row.lastMessageText) {
-              <span [class]="'truncate text-[13px] ' + (row.unreadCount > 0 ? 'font-semibold text-base-content' : 'text-base-content/60')">
+              <span [class]="'truncate text-sm ' + (row.unreadCount > 0 ? 'font-semibold text-base-content' : 'text-base-content/60')">
                 <span class="text-base-content/60">{{ row.lastSenderLabel }}:</span> {{ row.lastMessageText }}
               </span>
             } @else {
-              <span class="truncate text-[13px] text-base-content/50">Chưa có tin nhắn</span>
+              <span class="truncate text-sm text-base-content/50">Chưa có tin nhắn</span>
             }
             @if (row.unreadCount > 0) {
               <span class="badge badge-primary badge-sm flex-shrink-0 text-white">{{ row.unreadCount }}</span>

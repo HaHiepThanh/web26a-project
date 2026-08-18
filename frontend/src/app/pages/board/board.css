@@ -108,7 +108,7 @@ app-board-list {
 }
 
 .row-list-wrap {
-  flex: 0 0 220px;
+  flex: 0 0 260px;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -121,7 +121,7 @@ app-board-list {
 }
 
 .row-list-drop-placeholder {
-  flex: 0 0 220px;
+  flex: 0 0 260px;
   width: 100%;
   border-radius: var(--radius-md);
   border: 2px dashed var(--accent-blue);
