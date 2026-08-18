@@ -1,0 +1,163 @@
+@if (isOpen()) {
+@if (org(); as o) {
+<div class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-[2px]" (click)="close.emit()">
+  <div class="flex max-h-[88vh] w-full max-w-[520px] flex-col overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-2xl"
+    (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="flex shrink-0 items-center justify-between border-b border-base-200 px-5 py-4">
+      <div class="flex min-w-0 items-center gap-2.5">
+        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-lg">{{ o.icon }}</span>
+        <div class="min-w-0">
+          <h3 class="truncate text-base font-black text-base-content">Quản lý tổ chức</h3>
+          <p class="truncate text-2xs text-base-content/50">{{ o.name }} · {{ members().length }} thành viên</p>
+        </div>
+      </div>
+      <button type="button" class="btn btn-ghost btn-circle btn-sm" (click)="close.emit()" aria-label="Đóng">
+        <svg lucideX class="h-4 w-4" [strokeWidth]="2.4"></svg>
+      </button>
+    </div>
+
+    <!-- Body (scroll riêng) -->
+    <div class="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+
+      @if (feedback(); as fb) {
+      <p class="mb-3 rounded-lg px-3 py-2 text-2xs font-semibold"
+        [class]="fb.ok ? 'bg-success/10 text-success' : 'bg-error/10 text-error'">{{ fb.text }}</p>
+      }
+
+      <!-- 1. Thông tin tổ chức -->
+      @if (isOwner()) {
+      <section class="mb-5">
+        <h4 class="mb-2 text-2xs font-black uppercase tracking-wide text-base-content/45">Thông tin tổ chức</h4>
+        <div class="flex flex-wrap gap-1.5">
+          @for (ic of iconChoices; track ic) {
+          <button type="button"
+            class="flex h-8 w-8 items-center justify-center rounded-lg border text-base transition-all"
+            [class]="iconInput() === ic ? 'border-primary bg-primary/10' : 'border-base-300 hover:bg-base-200'"
+            (click)="iconInput.set(ic)">{{ ic }}</button>
+          }
+        </div>
+        <div class="mt-2 flex items-center gap-2">
+          <input type="text" class="input input-bordered input-sm w-full rounded-xl border-2 font-semibold"
+            placeholder="Tên tổ chức..." [ngModel]="nameInput()" (ngModelChange)="nameInput.set($event)"
+            (keydown.enter)="onSaveName()" />
+          <button type="button" class="btn btn-primary btn-sm shrink-0 gap-1 rounded-xl" [disabled]="!nameDirty()"
+            (click)="onSaveName()">
+            <svg lucideCheck class="h-3.5 w-3.5" [strokeWidth]="3"></svg> Lưu
+          </button>
+        </div>
+      </section>
+      }
+
+      <!-- 2. Mời thành viên -->
+      <section class="mb-5">
+        <h4 class="mb-2 text-2xs font-black uppercase tracking-wide text-base-content/45">Mời thành viên</h4>
+        <div class="relative">
+          <svg lucideSearch class="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-base-content/35" [strokeWidth]="2.2"></svg>
+          <input type="text" class="input input-bordered input-sm w-full rounded-xl border-2 pl-9 font-semibold"
+            placeholder="Tìm theo tên, email hoặc dán UUID..." [ngModel]="searchInput()"
+            (ngModelChange)="searchInput.set($event)" (keydown.enter)="onInviteRaw()" />
+        </div>
+
+        @if (searchInput().trim()) {
+        <div class="mt-1.5 overflow-hidden rounded-xl border border-base-300 bg-base-200/40">
+          @for (u of searchResults(); track u.id) {
+          <button type="button" class="flex w-full items-center gap-2.5 px-2.5 py-2 text-left transition-colors hover:bg-base-200"
+            (click)="onInvite(u)">
+            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-3xs font-black text-white"
+              [style.background-color]="avatarBgFor(u.id)">{{ initialsOf(u.displayName || u.email) }}</span>
+            <span class="min-w-0 flex-1">
+              <span class="block truncate text-2xs font-bold text-base-content">{{ u.displayName || 'Người dùng' }}</span>
+              <span class="block truncate text-3xs text-base-content/50">{{ u.email }}</span>
+            </span>
+            <span class="flex shrink-0 items-center gap-1 text-3xs font-bold text-primary">
+              <svg lucideUserPlus class="h-3 w-3" [strokeWidth]="2.4"></svg> Mời
+            </span>
+          </button>
+          } @empty {
+          <button type="button" class="flex w-full items-center gap-2 px-2.5 py-2.5 text-left transition-colors hover:bg-base-200"
+            (click)="onInviteRaw()">
+            <svg lucideUserPlus class="h-3.5 w-3.5 shrink-0 text-primary" [strokeWidth]="2.4"></svg>
+            <span class="min-w-0 flex-1 truncate text-2xs font-semibold text-base-content/70">
+              Gửi lời mời tới "<span class="font-mono">{{ searchInput().trim() }}</span>"
+            </span>
+          </button>
+          }
+        </div>
+        }
+      </section>
+
+      <!-- 3. Lời mời đang chờ -->
+      @if (pendingInvites().length) {
+      <section class="mb-5">
+        <h4 class="mb-2 text-2xs font-black uppercase tracking-wide text-base-content/45">
+          Đang chờ đồng ý ({{ pendingInvites().length }})
+        </h4>
+        <div class="flex flex-col gap-1">
+          @for (inv of pendingInvites(); track inv.id) {
+          <div class="flex items-center gap-2.5 rounded-xl border border-dashed border-base-300 px-2.5 py-2">
+            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-3xs font-black text-white opacity-60"
+              [style.background-color]="avatarBgFor(inv.toUserId)">?</span>
+            <span class="min-w-0 flex-1">
+              <span class="block truncate font-mono text-3xs text-base-content/70">{{ inv.toUserId }}</span>
+              <span class="block text-3xs text-base-content/45">Chờ người này bấm đồng ý ở chuông thông báo</span>
+            </span>
+            @if (isOwner()) {
+            <button type="button" class="btn btn-ghost btn-xs shrink-0 rounded-lg text-2xs font-bold text-error"
+              (click)="cancelInvite.emit(inv.id)">Huỷ</button>
+            }
+          </div>
+          }
+        </div>
+      </section>
+      }
+
+      <!-- 4. Danh sách thành viên -->
+      <section>
+        <h4 class="mb-2 text-2xs font-black uppercase tracking-wide text-base-content/45">
+          Thành viên ({{ members().length }})
+        </h4>
+        <div class="flex flex-col gap-1">
+          @for (mem of members(); track mem.id) {
+          <div class="flex items-center gap-2.5 rounded-xl border border-base-300 px-2.5 py-2">
+            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-2xs font-black text-white"
+              [style.background-color]="avatarBgFor(mem.id)">{{ initialsOf(mem.displayName || mem.email) }}</span>
+            <span class="min-w-0 flex-1">
+              <span class="block truncate text-xs font-bold text-base-content">{{ mem.displayName || mem.email }}</span>
+              <span class="block truncate text-3xs text-base-content/50">{{ mem.email }}</span>
+            </span>
+
+            @if (mem.id === o.ownerId) {
+            <span class="badge badge-primary badge-sm shrink-0 gap-1 font-black">
+              <svg lucideCrown class="h-3 w-3" [strokeWidth]="2.2"></svg> Trưởng nhóm
+            </span>
+            } @else if (isOwner()) {
+            <button type="button" class="btn btn-ghost btn-xs shrink-0 gap-1 rounded-lg font-bold text-error"
+              title="Xoá khỏi tổ chức" (click)="onRemove(mem.id)">
+              <svg lucideTrash2 class="h-3 w-3" [strokeWidth]="2.2"></svg> Xoá
+            </button>
+            } @else {
+            <span class="badge badge-ghost badge-sm shrink-0 font-bold">Thành viên</span>
+            }
+          </div>
+          }
+        </div>
+
+        @if (!isOwner()) {
+        <p class="mt-2 flex items-center gap-1.5 text-3xs text-base-content/45">
+          <svg lucideBuilding2 class="h-3 w-3 shrink-0" [strokeWidth]="2.2"></svg>
+          Chỉ Trưởng nhóm mới đổi được thông tin tổ chức và xoá thành viên.
+        </p>
+        }
+      </section>
+    </div>
+
+    <!-- Footer -->
+    <div class="flex shrink-0 justify-end border-t border-base-200 px-5 py-3">
+      <button type="button" class="btn btn-ghost btn-sm rounded-xl font-bold" (click)="close.emit()">Đóng</button>
+    </div>
+  </div>
+</div>
+}
+}

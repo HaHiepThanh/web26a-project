@@ -29,22 +29,37 @@
 
     <!-- Workspace items list -->
     @for (ws of workspaces(); track ws.id) {
-    <button type="button"
-      class="flex w-full items-center justify-between rounded-xl px-2 py-1.5 text-left transition-all"
-      [class]="activeWorkspaceId() === ws.id ? 'bg-primary shadow-sm text-primary-content' : 'hover:bg-base-200'"
-      (click)="onSelectWorkspace(ws.id)">
-      <div class="flex min-w-0 items-center gap-2.5">
+    <div class="group relative flex w-full items-center rounded-xl transition-all"
+      [class]="activeWorkspaceId() === ws.id ? 'bg-primary shadow-sm text-primary-content' : 'hover:bg-base-200'">
+      <button type="button" class="flex min-w-0 flex-1 items-center gap-2.5 px-2 py-1.5 text-left"
+        (click)="onSelectWorkspace(ws.id)">
         <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm text-white shadow-xs"
           [class]="ws.iconBg">
           {{ ws.icon }}
         </span>
-        <span class="truncate text-xs font-bold">{{ ws.name }}</span>
+        <span class="min-w-0 flex-1">
+          <span class="block truncate text-xs font-bold leading-tight">{{ ws.name }}</span>
+          <span class="block truncate text-2xs font-medium leading-tight"
+            [class]="activeWorkspaceId() === ws.id ? 'text-primary-content/70' : 'text-base-content/45'">
+            {{ ws.members.length }} thành viên
+          </span>
+        </span>
+      </button>
+
+      <div class="flex shrink-0 items-center pr-1.5">
+        <span class="flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-2xs font-bold transition-opacity group-hover:opacity-0"
+          [class]="activeWorkspaceId() === ws.id ? 'bg-white/20' : 'bg-base-300/70 text-base-content/60'">
+          {{ ws.boards.length }}
+        </span>
+        <!-- 3 chấm: mở modal quản lý workspace (đổi tên/icon, thành viên, xoá) -->
+        <button type="button"
+          class="absolute right-1.5 flex h-6 w-6 items-center justify-center rounded-lg opacity-0 transition-all focus-visible:opacity-100 group-hover:opacity-100"
+          [class]="activeWorkspaceId() === ws.id ? 'hover:bg-white/20' : 'hover:bg-base-300'"
+          title="Quản lý Workspace" [attr.aria-label]="'Quản lý ' + ws.name" (click)="onManage(ws, $event)">
+          <svg lucideEllipsisVertical class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg>
+        </button>
       </div>
-      <span class="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-2xs font-bold"
-        [class]="activeWorkspaceId() === ws.id ? 'bg-white/20' : 'bg-base-300/70 text-base-content/60'">
-        {{ ws.boards.length }}
-      </span>
-    </button>
+    </div>
     }
   </div>
 

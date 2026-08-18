@@ -18,6 +18,7 @@ import {
   Template,
 } from '../../mocks';
 import { OrgSwitcher } from '../../components/workspace/org-switcher/org-switcher';
+import { OrgManageModal } from '../../components/workspace/org-manage-modal/org-manage-modal';
 import { WorkspaceSidebar } from '../../components/workspace/workspace-sidebar/workspace-sidebar';
 import { WorkspaceWelcomeBanner } from '../../components/workspace/workspace-welcome-banner/workspace-welcome-banner';
 import { WorkspaceCardItem } from '../../components/workspace/workspace-card-item/workspace-card-item';
@@ -39,6 +40,7 @@ function toBoardVisibility(privacy: Privacy): BoardVisibility {
   selector: 'app-workspace',
   imports: [
     OrgSwitcher,
+    OrgManageModal,
     WorkspaceSidebar,
     WorkspaceWelcomeBanner,
     WorkspaceCardItem,
@@ -62,7 +64,7 @@ export class Workspace {
   private readonly orgService = inject(OrganizationService);
   private readonly router = inject(Router);
 
-  private readonly orgSwitcher = viewChild(OrgSwitcher);
+  private readonly orgManageModal = viewChild(OrgManageModal);
 
   readonly currentUser = this.auth.currentUser;
   readonly copiedMyUuid = signal(false);
@@ -172,6 +174,7 @@ export class Workspace {
   closeAllModals(): void {
     this.showCreateBoardModal.set(false);
     this.showWorkspaceModal.set(false);
+    this.closeManageOrg();
     this.confirmDeleteKey.set(null);
   }
 
@@ -191,10 +194,62 @@ export class Workspace {
     if (org) this.addToast(`🏢 Đã tạo tổ chức "${org.name}"!`, 'success');
   }
 
+  // ---- Modal quản lý Organization (mở từ nút 3 chấm ở sidebar) ----
+  readonly showOrgManageModal = signal(false);
+  readonly managingOrgId = signal<string | null>(null);
+
+  readonly managingOrg = computed(
+    () => this.organizations().find((o) => o.id === this.managingOrgId()) ?? null,
+  );
+
+  /** Thành viên (đã resolve tên/email) của Organization đang mở trong modal. */
+  readonly managingOrgMembers = computed<User[]>(() => {
+    const org = this.managingOrg();
+    if (!org) return [];
+    const allUsers = this.auth.getSearchableUsers();
+    return org.memberIds.map(
+      (id) => allUsers.find((u) => u.id === id) ?? ({ id, displayName: 'Người dùng ẩn danh', email: '—' } as User),
+    );
+  });
+
+  readonly managingOrgInvites = computed(() => {
+    const org = this.managingOrg();
+    return org ? this.orgService.pendingInvitesFor(org.id) : [];
+  });
+
+  openManageOrg(orgId: string): void {
+    this.managingOrgId.set(orgId);
+    this.showOrgManageModal.set(true);
+  }
+
+  closeManageOrg(): void {
+    this.showOrgManageModal.set(false);
+    this.managingOrgId.set(null);
+  }
+
   inviteMember(data: { orgId: string; uuid: string }): void {
     const error = this.orgService.inviteMemberByUuid(data.orgId, data.uuid);
-    this.orgSwitcher()?.showInviteResult(error);
+    this.orgManageModal()?.showResult(error, 'Đã gửi lời mời! Chờ họ đồng ý ở chuông thông báo.');
     if (!error) this.addToast('📨 Đã gửi lời mời tham gia tổ chức!', 'success');
+  }
+
+  removeOrgMember(data: { orgId: string; userId: string }): void {
+    const member = this.managingOrgMembers().find((m) => m.id === data.userId);
+    const name = member?.displayName ?? member?.email ?? 'thành viên';
+    const error = this.orgService.removeMember(data.orgId, data.userId);
+    this.orgManageModal()?.showResult(error, `Đã xoá ${name} khỏi tổ chức.`);
+    if (!error) this.addToast(`Đã xoá ${name} khỏi tổ chức.`, 'info');
+  }
+
+  cancelOrgInvite(inviteId: string): void {
+    this.orgService.cancelInvite(inviteId);
+    this.orgManageModal()?.showResult(null, 'Đã huỷ lời mời.');
+  }
+
+  renameOrg(data: { orgId: string; name: string; icon: string }): void {
+    const error = this.orgService.updateOrg(data.orgId, { name: data.name, icon: data.icon });
+    this.orgManageModal()?.showResult(error, 'Đã cập nhật thông tin tổ chức.');
+    if (!error) this.addToast(`Đã cập nhật tổ chức "${data.name}".`, 'success');
   }
 
   copyMyUuid(): void {

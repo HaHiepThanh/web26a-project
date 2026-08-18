@@ -1,11 +1,16 @@
 import { Component, ElementRef, input, output, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { LucideBuilding2, LucideCheck, LucidePlus, LucideUserPlus } from '@lucide/angular';
+import { LucideBuilding2, LucideCheck, LucideEllipsisVertical, LucidePlus } from '@lucide/angular';
 import { Organization } from '../../../mocks';
 
+/** Danh sách Organization ở sidebar — CHỈ chuyển đổi + tạo mới.
+ *  Mọi thao tác quản lý (mời/xoá thành viên, đổi tên) nằm trong modal riêng
+ *  (app-org-manage-modal), mở qua nút 3 chấm — sidebar có bề rộng cố định và
+ *  phải luôn giữ nút "Tạo tổ chức mới" trong tầm nhìn, không thể chứa danh
+ *  sách thành viên dài tuỳ ý. */
 @Component({
   selector: 'app-org-switcher',
-  imports: [FormsModule, LucideBuilding2, LucideCheck, LucidePlus, LucideUserPlus],
+  imports: [FormsModule, LucideBuilding2, LucideCheck, LucideEllipsisVertical, LucidePlus],
   templateUrl: './org-switcher.html',
   styleUrl: './org-switcher.css',
   host: { class: 'block' },
@@ -17,17 +22,12 @@ export class OrgSwitcher {
 
   readonly switchOrg = output<string>();
   readonly createOrg = output<{ name: string; icon: string }>();
-  readonly inviteMember = output<{ orgId: string; uuid: string }>();
+  readonly manageOrg = output<string>();
 
   private readonly nameInput = viewChild<ElementRef<HTMLInputElement>>('nameInput');
-  private readonly uuidInput = viewChild<ElementRef<HTMLInputElement>>('uuidInput');
 
   readonly creating = signal(false);
   readonly newName = signal('');
-
-  readonly inviting = signal(false);
-  readonly inviteUuid = signal('');
-  readonly inviteFeedback = signal<{ ok: boolean; text: string } | null>(null);
 
   private static readonly ICON_PALETTE = [
     'bg-board-blue',
@@ -50,6 +50,11 @@ export class OrgSwitcher {
     this.switchOrg.emit(orgId);
   }
 
+  onManage(orgId: string, event: Event): void {
+    event.stopPropagation();
+    this.manageOrg.emit(orgId);
+  }
+
   startCreate(): void {
     this.creating.set(true);
     this.newName.set('');
@@ -70,35 +75,5 @@ export class OrgSwitcher {
   cancelCreate(): void {
     this.creating.set(false);
     this.newName.set('');
-  }
-
-  startInvite(): void {
-    this.inviting.set(true);
-    this.inviteUuid.set('');
-    this.inviteFeedback.set(null);
-    setTimeout(() => this.uuidInput()?.nativeElement.focus());
-  }
-
-  submitInvite(): void {
-    const org = this.activeOrg();
-    const uuid = this.inviteUuid().trim();
-    if (!org || !uuid) return;
-    this.inviteMember.emit({ orgId: org.id, uuid });
-  }
-
-  cancelInvite(): void {
-    this.inviting.set(false);
-    this.inviteUuid.set('');
-    this.inviteFeedback.set(null);
-  }
-
-  /** Gọi từ component cha sau khi service xử lý xong lời mời, để hiển thị kết quả ngay tại đây. */
-  showInviteResult(errorMessage: string | null): void {
-    if (errorMessage) {
-      this.inviteFeedback.set({ ok: false, text: errorMessage });
-    } else {
-      this.inviteFeedback.set({ ok: true, text: 'Đã gửi lời mời! Chờ họ đồng ý ở icon 🔔 trên header.' });
-      this.inviteUuid.set('');
-    }
   }
 }

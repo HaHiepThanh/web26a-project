@@ -32,6 +32,9 @@ export class OrganizationService {
   readonly organizations = signal<Organization[]>([]);
   readonly activeOrgId = signal<string | null>(null);
   readonly myInvites = signal<OrgInvite[]>([]);
+  /** Toàn bộ lời mời (mọi Organization) — để modal quản lý hiện danh sách "đang chờ
+   *  đồng ý" của tổ chức đang mở, biết ai đã được mời mà chưa vào. */
+  readonly allInvites = signal<OrgInvite[]>([]);
 
   readonly activeOrg = computed(() => this.organizations().find((o) => o.id === this.activeOrgId()) ?? null);
   readonly pendingInviteCount = computed(() => this.myInvites().length);
@@ -70,6 +73,19 @@ export class OrganizationService {
     const active = loadActiveOrgId(userId, orgs);
     this.activeOrgId.set(active);
     this.myInvites.set(loadPendingInvitesForUser(userId));
+    this.allInvites.set(loadAllInvites());
+  }
+
+  /** Lời mời đang chờ đồng ý của 1 Organization (dùng cho modal quản lý thành viên). */
+  pendingInvitesFor(orgId: string): OrgInvite[] {
+    return this.allInvites().filter((i) => i.orgId === orgId && i.status === 'pending');
+  }
+
+  /** Huỷ 1 lời mời chưa được trả lời. */
+  cancelInvite(inviteId: string): void {
+    const invites = loadAllInvites().filter((i) => i.id !== inviteId);
+    saveAllInvites(invites);
+    this.allInvites.set(invites);
   }
 
   switchOrg(orgId: string): void {
@@ -127,7 +143,9 @@ export class OrganizationService {
       status: 'pending',
       createdAt: new Date().toISOString(),
     };
-    saveAllInvites([...invites, invite]);
+    const updated = [...invites, invite];
+    saveAllInvites(updated);
+    this.allInvites.set(updated);
     return null;
   }
 
@@ -149,6 +167,22 @@ export class OrganizationService {
     }
 
     this.reload(userId);
+  }
+
+  /** Đổi tên/icon Organization — chỉ chủ sở hữu mới được đổi. */
+  updateOrg(orgId: string, changes: { name?: string; icon?: string }): string | null {
+    const me = this.auth.currentUser();
+    if (!me) return 'Bạn cần đăng nhập.';
+    const registry = loadOrgRegistry();
+    const org = registry[orgId];
+    if (!org) return 'Không tìm thấy Organization.';
+    if (org.ownerId !== me.id) return 'Chỉ Trưởng nhóm mới được chỉnh sửa tổ chức.';
+
+    const name = changes.name?.trim();
+    if (name !== undefined && !name) return 'Tên tổ chức không được để trống.';
+    upsertOrganization({ ...org, name: name || org.name, icon: changes.icon?.trim() || org.icon });
+    this.reload(me.id);
+    return null;
   }
 
   /** Xoá 1 thành viên khỏi Organization (không cho xoá Owner). Trả về thông báo

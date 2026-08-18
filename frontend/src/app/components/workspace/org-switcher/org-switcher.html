@@ -12,25 +12,36 @@
 
   <div class="space-y-1">
     @for (org of organizations(); track org.id) {
-    <button type="button"
-      class="group flex w-full items-center gap-2.5 rounded-xl px-2 py-1.5 text-left transition-all"
-      [class]="org.id === activeOrg()?.id ? 'bg-primary shadow-sm text-primary-content' : 'hover:bg-base-200'"
-      (click)="onSelect(org.id)">
-      <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm text-white shadow-xs"
-        [class]="iconClassFor(org.id)">
-        {{ org.icon }}
-      </span>
-      <span class="min-w-0 flex-1">
-        <span class="block truncate text-xs font-bold leading-tight">{{ org.name }}</span>
-        <span class="block truncate text-2xs font-medium leading-tight"
-          [class]="org.id === activeOrg()?.id ? 'text-primary-content/70' : 'text-base-content/45'">
-          {{ org.memberIds.length }} thành viên
+    <div class="group relative flex w-full items-center rounded-xl transition-all"
+      [class]="org.id === activeOrg()?.id ? 'bg-primary shadow-sm text-primary-content' : 'hover:bg-base-200'">
+      <button type="button" class="flex min-w-0 flex-1 items-center gap-2.5 px-2 py-1.5 text-left"
+        (click)="onSelect(org.id)">
+        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm text-white shadow-xs"
+          [class]="iconClassFor(org.id)">
+          {{ org.icon }}
         </span>
-      </span>
-      @if (org.id === activeOrg()?.id) {
-      <svg lucideCheck class="h-3.5 w-3.5 shrink-0" [strokeWidth]="3"></svg>
-      }
-    </button>
+        <span class="min-w-0 flex-1">
+          <span class="block truncate text-xs font-bold leading-tight">{{ org.name }}</span>
+          <span class="block truncate text-2xs font-medium leading-tight"
+            [class]="org.id === activeOrg()?.id ? 'text-primary-content/70' : 'text-base-content/45'">
+            {{ org.memberIds.length }} thành viên
+          </span>
+        </span>
+      </button>
+
+      <div class="flex shrink-0 items-center gap-0.5 pr-1.5">
+        @if (org.id === activeOrg()?.id) {
+        <svg lucideCheck class="h-3.5 w-3.5 shrink-0 transition-opacity group-hover:opacity-0" [strokeWidth]="3"></svg>
+        }
+        <!-- 3 chấm: mở modal quản lý (mời/xoá thành viên, đổi tên) -->
+        <button type="button"
+          class="absolute right-1.5 flex h-6 w-6 items-center justify-center rounded-lg opacity-0 transition-all focus-visible:opacity-100 group-hover:opacity-100"
+          [class]="org.id === activeOrg()?.id ? 'hover:bg-white/20' : 'hover:bg-base-300'"
+          title="Quản lý tổ chức" [attr.aria-label]="'Quản lý ' + org.name" (click)="onManage(org.id, $event)">
+          <svg lucideEllipsisVertical class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg>
+        </button>
+      </div>
+    </div>
     }
   </div>
 
@@ -51,34 +62,6 @@
       <button type="button" class="btn btn-primary btn-sm flex-1 rounded-lg" (click)="submitCreate()">Tạo</button>
       <button type="button" class="btn btn-ghost btn-sm rounded-lg" (click)="cancelCreate()">Huỷ</button>
     </div>
-  </div>
-  }
-
-  <!-- Mời thành viên vào Organization đang chọn -->
-  @if (activeOrg(); as org) {
-  <div class="mt-1">
-    @if (!inviting()) {
-    <button type="button"
-      class="flex w-full items-center gap-1.5 rounded-xl px-2 py-1.5 text-left text-2xs font-semibold text-base-content/55 transition-all hover:bg-base-200 hover:text-base-content"
-      (click)="startInvite()">
-      <svg lucideUserPlus class="h-3.5 w-3.5 shrink-0" [strokeWidth]="2.4"></svg>
-      <span class="truncate">Mời thành viên vào "{{ org.name }}"</span>
-    </button>
-    } @else {
-    <div class="mt-1 flex flex-col gap-1.5 rounded-xl border border-base-300 bg-base-200/40 p-2">
-      <label class="px-0.5 text-3xs font-bold uppercase tracking-wide text-base-content/45">UUID người dùng</label>
-      <input #uuidInput type="text" class="input input-bordered input-sm w-full rounded-lg bg-base-100 font-mono text-2xs"
-        placeholder="vd: 8f4c2e10-9b3a-..." [ngModel]="inviteUuid()" (ngModelChange)="inviteUuid.set($event)"
-        (keydown.enter)="submitInvite()" (keydown.escape)="cancelInvite()" />
-      @if (inviteFeedback(); as fb) {
-      <p class="px-0.5 text-2xs font-semibold" [class.text-success]="fb.ok" [class.text-error]="!fb.ok">{{ fb.text }}</p>
-      }
-      <div class="flex items-center gap-1.5">
-        <button type="button" class="btn btn-primary btn-sm flex-1 rounded-lg" (click)="submitInvite()">Gửi lời mời</button>
-        <button type="button" class="btn btn-ghost btn-sm rounded-lg" (click)="cancelInvite()">Đóng</button>
-      </div>
-    </div>
-    }
   </div>
   }
 </div>
