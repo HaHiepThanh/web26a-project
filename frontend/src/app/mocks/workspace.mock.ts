@@ -19,6 +19,8 @@ export interface BoardItem {
   badge: string;
   starred: boolean;
   bgClass: BoardBackground;
+  // Ảnh nền KHÔNG lưu ở đây: base64 rất nặng, giữ 1 bản duy nhất trong BoardService
+  // (key `trello_boards`) và tra theo board.id — xem `backgroundImageByBoardId`.
 }
 
 export interface WorkspaceItem {

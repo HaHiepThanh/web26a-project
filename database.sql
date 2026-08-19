@@ -82,6 +82,8 @@ create extension if not exists "pgcrypto";
 -- ⚠️ KHÔNG có cột `password`: Firebase Auth giữ mật khẩu (băm scrypt + salt riêng
 --    mỗi user). Hệ thống của ta không bao giờ nhìn thấy mật khẩu gốc.
 
+-- Không có cột language/timezone: app cố định English + UTC+7, không cho người
+-- dùng đổi nên lưu vào DB là thừa.
 create table users (
   id            text primary key,              -- Firebase uid
   email         text not null,
@@ -90,8 +92,6 @@ create table users (
   phone         text,
   job_title     text,
   avatar_url    text,
-  language      text default 'vi',             -- 'vi' | 'en' | 'ja' | 'ko' | 'zh'
-  timezone      text default 'UTC+7',
   created_at    timestamptz not null default now(),
   updated_at    timestamptz not null default now()
 );
@@ -109,23 +109,51 @@ create table organizations (
   id          uuid primary key default gen_random_uuid(),
   name        text not null,
   icon        text not null default '🏢',      -- emoji hiển thị ở sidebar
-  slug        text unique,                     -- nullable, dùng cho URL đẹp (tuỳ chọn)
+  -- Đường dẫn riêng của tổ chức, dùng làm tiền tố mọi URL:
+  --   /thanh-organization/board/<uuid>
+  -- BẮT BUỘC nhập lúc tạo, DUY NHẤT toàn hệ thống, và KHÔNG cho đổi về sau
+  -- (đổi slug = mọi link đã chia sẻ chết ngay).
+  -- Ràng buộc: chỉ chữ thường + số + gạch ngang, 3-40 ký tự, không bắt đầu/kết
+  -- thúc bằng gạch ngang, không có 2 gạch ngang liền nhau.
+  slug        text not null unique
+                check (slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$' and length(slug) between 3 and 40),
   owner_id    text not null references users(id),
   created_at  timestamptz not null default now()
 );
 
 create index idx_organizations_owner on organizations (owner_id);
 
+-- ⚠️ Backend PHẢI chặn thêm các slug trùng route hệ thống, DB không tự biết:
+--    login, register, settings, workspace, board, api, admin, auth, static,
+--    assets, public, new, join, invite, help, about, terms, privacy, 404
+--    → thêm danh sách này vào validator lúc tạo tổ chức.
+
 
 -- Bảng backend đọc để PHÂN QUYỀN (authorization).
+--
+-- 3 mức quyền:
+--   owner  — chủ tổ chức. Làm được MỌI THỨ. Giữ riêng 2 quyền sống còn:
+--            xoá cả tổ chức, và chuyển quyền owner cho người khác.
+--   admin  — người được uỷ quyền (vd trưởng nhóm IT/BA). Làm được mọi thứ của
+--            owner TRỪ 2 quyền trên: tạo/xoá workspace, tạo/xoá board,
+--            mời & xoá thành viên, phong admin cho người khác.
+--   member — thành viên thường: chỉ dùng workspace/board được cho vào.
+--
+-- ⚠️ DB chỉ lưu giá trị role. Việc CHẶN thao tác là do backend guard làm.
 create table organization_members (
   id         uuid primary key default gen_random_uuid(),
   org_id     uuid not null references organizations(id) on delete cascade,
   user_id    text not null references users(id) on delete cascade,
-  role       text not null default 'member' check (role in ('owner', 'member')),
+  role       text not null default 'member'
+               check (role in ('owner', 'admin', 'member')),
   joined_at  timestamptz not null default now(),
   unique (org_id, user_id)
 );
+
+-- Mỗi tổ chức chỉ có ĐÚNG 1 owner — chuyển quyền owner phải hạ owner cũ xuống
+-- admin trong cùng 1 transaction.
+create unique index uniq_org_single_owner
+  on organization_members (org_id) where role = 'owner';
 
 create index idx_org_members_user on organization_members (user_id);
 create index idx_org_members_org  on organization_members (org_id);
@@ -205,6 +233,13 @@ create table boards (
                  check (visibility in ('workspace', 'private', 'public')),
   background   text check (background in ('bg-board-blue','bg-board-purple','bg-board-green',
                                           'bg-board-teal','bg-board-orange','bg-board-red')),
+  -- Ảnh nền tuỳ chọn người dùng tự tải lên lúc tạo board. File THẬT nằm trên
+  -- Supabase Storage (giống card_attachments), DB chỉ giữ đường dẫn.
+  -- Có ảnh thì ảnh được ưu tiên; `background` ở trên vẫn giữ nguyên làm màu dự
+  -- phòng cho lúc ảnh lỗi/chưa tải xong — nên KHÔNG cấm điền cả hai cột.
+  -- ⚠️ Frontend phải nén ảnh (thu nhỏ ≤1600px, JPEG ~q0.82) TRƯỚC khi upload:
+  --    ảnh máy ảnh gốc vài MB là quá nặng cho một tấm nền.
+  background_image_path text,
   created_by   text not null references users(id),
   created_at   timestamptz not null default now()
 );
@@ -239,12 +274,13 @@ create index idx_board_stars_user on board_stars (user_id);
 -- `position` dùng float chứ không phải int: kéo-thả 1 thẻ vào giữa 2 thẻ khác chỉ
 -- cần lấy trung bình 2 position (1.0 và 2.0 → 1.5), không phải đánh số lại cả list.
 
+-- Không có cột color: app chưa có tính năng cho người dùng đổi màu cột,
+-- chấm tròn trên tiêu đề cột dùng màu xám cố định.
 create table lists (
   id         uuid primary key default gen_random_uuid(),
   org_id     uuid not null references organizations(id) on delete cascade,
   board_id   uuid not null references boards(id) on delete cascade,
   name       text not null,
-  color      text,                             -- hex, chấm màu nhỏ trên tiêu đề cột
   position   double precision not null,
   created_at timestamptz not null default now()
 );
@@ -548,12 +584,13 @@ insert into users (id, email, display_name, username) values
   ('fb-alpha', 'alpha@test.dev', 'Nguyễn Văn Alpha', 'alpha'),
   ('fb-beta',  'beta@test.dev',  'Trần Thị Beta',    'beta');
 
-insert into organizations (id, name, icon, owner_id) values
-  ('11111111-1111-1111-1111-111111111111', 'Công ty Demo', '🏢', 'fb-alpha');
+insert into organizations (id, name, icon, slug, owner_id) values
+  ('11111111-1111-1111-1111-111111111111', 'Công ty Demo', '🏢', 'cong-ty-demo', 'fb-alpha');
 
+-- Beta để role 'admin' cho thấy vai trò uỷ quyền (tạo workspace/board, mời người)
 insert into organization_members (org_id, user_id, role) values
   ('11111111-1111-1111-1111-111111111111', 'fb-alpha', 'owner'),
-  ('11111111-1111-1111-1111-111111111111', 'fb-beta',  'member');
+  ('11111111-1111-1111-1111-111111111111', 'fb-beta',  'admin');
 
 insert into workspaces (id, org_id, name, icon, icon_bg, description, created_by) values
   ('22222222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111',
@@ -570,13 +607,13 @@ insert into boards (id, org_id, workspace_id, name, visibility, background, crea
 insert into board_stars (board_id, user_id) values
   ('33333333-3333-3333-3333-333333333333', 'fb-alpha');
 
-insert into lists (id, org_id, board_id, name, color, position) values
+insert into lists (id, org_id, board_id, name, position) values
   ('44444444-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111',
-   '33333333-3333-3333-3333-333333333333', 'Việc cần làm', '#64748b', 1),
+   '33333333-3333-3333-3333-333333333333', 'Việc cần làm', 1),
   ('44444444-0000-0000-0000-000000000002', '11111111-1111-1111-1111-111111111111',
-   '33333333-3333-3333-3333-333333333333', 'Đang làm',     '#f59e0b', 2),
+   '33333333-3333-3333-3333-333333333333', 'Đang làm',     2),
   ('44444444-0000-0000-0000-000000000003', '11111111-1111-1111-1111-111111111111',
-   '33333333-3333-3333-3333-333333333333', 'Hoàn thành',   '#22c55e', 3);
+   '33333333-3333-3333-3333-333333333333', 'Hoàn thành',   3);
 
 insert into cards (org_id, list_id, title, assignee_id, due_date, priority, completed_at, position, created_by) values
   -- 1. Xong ĐÚNG hạn

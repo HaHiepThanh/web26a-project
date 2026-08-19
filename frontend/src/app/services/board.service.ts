@@ -1,7 +1,24 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, computed, signal } from '@angular/core';
 import { Board, BoardBackground, BoardVisibility, User } from '../models';
 
 let boardIdSeq = 1;
+
+/** Board người dùng tạo được lưu lại để F5 không mất tên/nền/quyền riêng tư.
+ *  Đây là nơi DUY NHẤT giữ ảnh nền (base64) — trang Workspace đọc lại qua
+ *  `backgroundImageByBoardId` chứ không lưu thêm bản sao, tránh nhân đôi dung lượng. */
+const STORAGE_KEY_BOARDS = 'trello_boards';
+
+function loadStoredBoards(): Record<string, Board> {
+  if (typeof localStorage === 'undefined') return {};
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY_BOARDS);
+    if (!saved) return {};
+    const parsed = JSON.parse(saved);
+    return parsed && typeof parsed === 'object' ? (parsed as Record<string, Board>) : {};
+  } catch {
+    return {};
+  }
+}
 
 /** Bảng màu avatar cố định theo id — dùng chung cho card assignee + avatar stack. */
 const AVATAR_PALETTE = ['#0284c7', '#7c3aed', '#059669', '#ea580c', '#dc2626', '#0d9488'];
@@ -58,12 +75,35 @@ export class BoardService {
    *  tách riêng khỏi `boards` (scope 1-workspace) để không đè lẫn nhau. */
   readonly allBoards = signal<Board[]>([]);
   readonly currentBoard = signal<Board | null>(null);
+  /** Cảnh báo lưu trữ gần nhất (vỡ quota localStorage) — trang Workspace đọc để hiện toast. */
+  readonly storageWarning = signal<string | null>(null);
   readonly members = signal<User[]>(MOCK_MEMBERS);
 
-  /** Board tạo mới trong phiên hiện tại (id không nằm trong MOCK_BOARDS tĩnh) — tra ở
-   *  đây trước khi rơi về boardSeed(), để tên/màu nền người dùng vừa chọn không bị mất
-   *  khi điều hướng sang trang Board. */
-  private readonly createdBoards = signal<Record<string, Board>>({});
+  /** Board người dùng đã tạo, khôi phục từ localStorage lúc khởi động — để tên/nền/quyền
+   *  riêng tư không bị mất khi điều hướng sang trang Board HAY khi F5. */
+  private readonly createdBoards = signal<Record<string, Board>>(loadStoredBoards());
+
+  /** Ảnh nền theo boardId — trang Workspace dùng để vẽ tile mà không phải lưu thêm
+   *  một bản base64 thứ hai trong danh sách workspace. */
+  readonly backgroundImageByBoardId = computed(() => {
+    const result: Record<string, string | undefined> = {};
+    for (const [id, board] of Object.entries(this.createdBoards())) {
+      if (board.backgroundImageUrl) result[id] = board.backgroundImageUrl;
+    }
+    return result;
+  });
+
+  /** Ghi xuống localStorage. Trả về false khi vỡ quota (ảnh nền base64 rất nặng) để
+   *  phía gọi còn báo cho người dùng, thay vì nuốt lỗi rồi mất dữ liệu âm thầm. */
+  private persist(): boolean {
+    if (typeof localStorage === 'undefined') return true;
+    try {
+      localStorage.setItem(STORAGE_KEY_BOARDS, JSON.stringify(this.createdBoards()));
+      return true;
+    } catch {
+      return false;
+    }
+  }
 
   // TODO: khi có backend thật, gọi ApiService.get(`/workspaces/${workspaceId}/boards`) thay vì mock.
   async loadBoards(workspaceId: string): Promise<void> {}
@@ -78,7 +118,11 @@ export class BoardService {
     this.currentBoard.set(this.createdBoards()[boardId] ?? null);
   }
 
-  async createBoard(workspaceId: string, name: string, options?: { visibility?: BoardVisibility; background?: BoardBackground }): Promise<Board | null> {
+  async createBoard(
+    workspaceId: string,
+    name: string,
+    options?: { visibility?: BoardVisibility; background?: BoardBackground; backgroundImageUrl?: string },
+  ): Promise<Board | null> {
     const title = name.trim();
     if (!title) return null;
     const board: Board = {
@@ -88,16 +132,28 @@ export class BoardService {
       name: title,
       visibility: options?.visibility ?? 'public',
       background: options?.background,
+      backgroundImageUrl: options?.backgroundImageUrl,
       createdBy: CURRENT_USER_ID,
       createdAt: new Date().toISOString(),
     };
     this.createdBoards.update((map) => ({ ...map, [board.id]: board }));
+
+    // Ảnh nền base64 có thể làm vỡ quota localStorage (~5MB). Nếu vỡ, bỏ ảnh rồi lưu
+    // lại: thà mất ảnh nền còn hơn mất luôn cả board.
+    this.storageWarning.set(null);
+    if (!this.persist() && board.backgroundImageUrl) {
+      this.createdBoards.update((map) => ({ ...map, [board.id]: { ...map[board.id], backgroundImageUrl: undefined } }));
+      this.persist();
+      this.storageWarning.set('Bộ nhớ trình duyệt đã đầy — board được tạo nhưng ảnh nền không lưu được.');
+      return this.createdBoards()[board.id];
+    }
     return board;
   }
 
-  async updateBoard(id: string, changes: Partial<Pick<Board, 'name' | 'visibility' | 'background'>>): Promise<void> {
+  async updateBoard(id: string, changes: Partial<Pick<Board, 'name' | 'visibility' | 'background' | 'backgroundImageUrl'>>): Promise<void> {
     this.createdBoards.update((map) => (map[id] ? { ...map, [id]: { ...map[id], ...changes } } : map));
     if (this.currentBoard()?.id === id) this.currentBoard.update((b) => (b ? { ...b, ...changes } : b));
+    this.persist();
   }
 
   async deleteBoard(id: string): Promise<void> {
@@ -106,5 +162,6 @@ export class BoardService {
       delete next[id];
       return next;
     });
+    this.persist();
   }
 }

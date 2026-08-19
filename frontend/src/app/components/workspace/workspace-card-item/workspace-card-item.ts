@@ -10,6 +10,8 @@ import { BoardItem, WorkspaceItem, avatarBgFor, initialsOf } from '../../../mock
 })
 export class WorkspaceCardItem {
   readonly workspace = input.required<WorkspaceItem>();
+  /** Ảnh nền theo boardId (nguồn: BoardService) — tile chỉ tra để vẽ, không tự lưu. */
+  readonly bgImageByBoardId = input<Record<string, string | undefined>>({});
   readonly confirmDeleteKey = input<string | null>(null);
 
   readonly editWorkspace = output<WorkspaceItem>();

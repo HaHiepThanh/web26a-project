@@ -102,11 +102,13 @@ users
 ├── phone         text null -- Số điện thoại
 ├── job_title     text null -- Chức vụ, vd 'Trưởng nhóm phát triển'
 ├── avatar_url    text null -- Link ảnh đại diện
-├── language      text      -- Ngôn ngữ giao diện: 'vi' | 'en' | 'ja' | 'ko' | 'zh'
-├── timezone      text      -- Múi giờ, vd 'UTC+7'
 ├── created_at    timestamptz -- Lúc tạo tài khoản
 └── updated_at    timestamptz -- Lúc sửa hồ sơ gần nhất
 ```
+
+> 📌 **Không có `language` và `timezone`.** App cố định English + UTC+7, không cho
+> người dùng đổi → lưu vào DB là thừa. (2 dropdown tương ứng trong trang Settings
+> cũng đã gỡ bỏ.)
 
 ---
 
@@ -120,10 +122,32 @@ organizations
 ├── id          uuid PK
 ├── name        text      -- Tên tổ chức, vd 'Công ty ABC'
 ├── icon        text      -- Emoji hiện ở sidebar, mặc định '🏢'
-├── slug        text uniq null -- Tên rút gọn cho URL đẹp (chưa dùng)
+├── slug        text uniq -- Đường dẫn riêng, vd 'thanh-organization'
+│                         -- BẮT BUỘC nhập, DUY NHẤT, KHÔNG đổi được sau khi tạo
 ├── owner_id    text FK → users.id  -- Người tạo, có toàn quyền
 └── created_at  timestamptz
 ```
+
+> 📌 **`slug` dùng làm tiền tố cho mọi URL của tổ chức:**
+> ```
+> /thanh-organization                    → trang workspace của tổ chức
+> /thanh-organization/board/<uuid>       → 1 board cụ thể
+> ```
+>
+> **Quy tắc DB tự kiểm tra:** chỉ chữ thường + số + gạch ngang, dài 3–40 ký tự,
+> không bắt đầu/kết thúc bằng gạch ngang, không có 2 gạch ngang liền nhau.
+> ✅ `thanh-organization`, `team-ba`, `cong-ty-abc-2026`
+> ❌ `My Org` (chữ hoa + khoảng trắng), `-abc` (đầu là gạch), `ab` (quá ngắn)
+>
+> **Vì sao không cho đổi slug sau khi tạo?** Đổi slug = **mọi link đã chia sẻ chết
+> ngay** (404). Muốn cho đổi thì phải thêm bảng lưu slug cũ để redirect — phức tạp
+> hơn nhiều, chưa cần cho đồ án.
+>
+> ⚠️ **Backend phải chặn thêm các slug trùng route hệ thống** (DB không tự biết):
+> `login`, `register`, `settings`, `workspace`, `board`, `api`, `admin`, `auth`,
+> `static`, `assets`, `public`, `new`, `join`, `invite`, `help`, `about`, `terms`,
+> `privacy`, `404`. Nếu user đặt slug là `settings` thì `/settings` sẽ không biết
+> đang trỏ vào trang cài đặt hay tổ chức tên "settings".
 
 ### 4.3. `organization_members` — Ai thuộc tổ chức nào
 
@@ -135,10 +159,34 @@ organization_members
 ├── id         uuid PK
 ├── org_id     uuid FK → organizations.id
 ├── user_id    text FK → users.id
-├── role       text      -- 'owner' (toàn quyền) | 'member' (thường)
+├── role       text      -- 'owner' | 'admin' | 'member'  (xem bảng quyền bên dưới)
 ├── joined_at  timestamptz -- Lúc vào tổ chức
 └── uniq (org_id, user_id)  -- 1 người chỉ có 1 dòng trong 1 tổ chức
 ```
+
+**Bảng phân quyền — ai làm được gì:**
+
+| Việc | owner | admin | member |
+|---|:---:|:---:|:---:|
+| Xem workspace/board được cho vào | ✅ | ✅ | ✅ |
+| Tạo / xoá workspace | ✅ | ✅ | ❌ |
+| Tạo / xoá board | ✅ | ✅ | ❌ |
+| Mời & xoá thành viên tổ chức | ✅ | ✅ | ❌ |
+| Phong người khác làm admin | ✅ | ✅ | ❌ |
+| **Xoá cả tổ chức** | ✅ | ❌ | ❌ |
+| **Chuyển quyền owner** | ✅ | ❌ | ❌ |
+
+> 📌 **Vì sao cần `admin`?** Sếp làm owner nhưng bận, không thể tự tay tạo hết
+> workspace và duyệt hết thành viên. Uỷ quyền admin cho trưởng nhóm IT/BA để họ
+> tự vận hành, còn owner chỉ giữ 2 quyền sống còn (xoá tổ chức, chuyển quyền owner)
+> để không ai lỡ tay xoá mất công ty.
+>
+> 📌 **Mỗi tổ chức chỉ có ĐÚNG 1 owner** — DB tự chặn bằng ràng buộc riêng.
+> Chuyển quyền owner phải hạ owner cũ xuống `admin` **trong cùng 1 transaction**,
+> nếu không sẽ bị chặn giữa chừng.
+>
+> ⚠️ DB chỉ *lưu* giá trị role. Việc **chặn thao tác** là do backend guard làm —
+> DB không tự biết "admin thì không được xoá tổ chức".
 
 ### 4.4. `organization_invites` — Lời mời vào tổ chức
 
@@ -203,9 +251,31 @@ boards
 │                          --   'private'   = chỉ người trong board_members
 │                          --   'public'    = ai trong tổ chức cũng xem được
 ├── background   text null -- Màu nền trang board: 'bg-board-blue' | purple | ...
+├── background_image_path text null
+│                          -- Ảnh nền tuỳ chọn người dùng tự tải lên.
+│                          -- Đường dẫn trên Supabase Storage, KHÔNG lưu ảnh vào DB.
+│                          -- vd 'boards/<board_id>/bg.jpg'
 ├── created_by   text FK → users.id
 └── created_at   timestamptz
 ```
+
+**Nền board: màu có sẵn hay ảnh tự tải lên?**
+
+Chọn 1 trong 6 màu có sẵn, hoặc tự tải ảnh riêng. Hai cột cùng tồn tại, quy tắc:
+
+| Tình huống | Hiển thị |
+|---|---|
+| `background_image_path` có giá trị | Dùng **ảnh** |
+| Chỉ có `background` | Dùng **màu** |
+| Cả hai đều `null` | Nền xám mặc định |
+
+Cố ý **không** cấm điền cả hai cột: màu vẫn được giữ làm nền dự phòng cho lúc ảnh
+lỗi hoặc chưa tải xong, nên board không bao giờ trắng trơn.
+
+⚠️ **Bắt buộc nén ảnh ở frontend trước khi upload** — thu nhỏ về tối đa 1600px rồi
+encode JPEG (~q0.82). Đo thực tế: một ảnh 1200×900 chưa nén nặng **1.09MB**, nén xong
+còn **30KB** (giảm 36 lần). Không nén thì vừa tốn dung lượng Storage vừa làm trang
+board tải chậm.
 
 ### 4.8. `board_members` — Ai xem được board riêng tư
 
@@ -241,10 +311,12 @@ lists
 ├── org_id     uuid FK → organizations.id
 ├── board_id   uuid FK → boards.id  -- Thuộc board nào
 ├── name       text      -- Tên cột
-├── color      text null -- Mã màu hex cho chấm tròn nhỏ trên tiêu đề cột, vd '#f59e0b'
 ├── position   float     -- Thứ tự cột từ trái sang (xem ghi chú bên dưới)
 └── created_at timestamptz
 ```
+
+> 📌 **Không có cột `color`.** App chưa có tính năng cho người dùng đổi màu cột,
+> nên chấm tròn trên tiêu đề cột dùng luôn màu xám cố định.
 
 > 📌 **Vì sao `position` là số thực (float) chứ không phải số nguyên?**
 > Khi kéo 1 thẻ vào giữa thẻ có position `1.0` và `2.0`, ta chỉ cần đặt nó thành
@@ -394,7 +466,12 @@ messages
 
 ### 4.19. `board_saved_filters` — Bộ lọc đã lưu
 
-Người dùng lọc board rồi bấm "Lưu thành nút nhanh". **Riêng từng người, từng board.**
+Người dùng lọc board (theo người phụ trách / nhãn / ưu tiên / ngày) rồi bấm
+**"Lưu thành nút nhanh"** → thành 1 chip trên thanh công cụ, bấm chip là áp lại
+bộ lọc đó ngay.
+
+🔒 **Riêng tư tuyệt đối:** bộ lọc của ai chỉ người đó thấy. Backend luôn phải lọc
+`where board_id = ? and user_id = <người đang đăng nhập>`.
 
 ```
 board_saved_filters
@@ -413,8 +490,20 @@ board_saved_filters
 
 ### 4.20. `board_highlight_groups` — Nhóm thẻ tô sáng
 
-Khác bảng trên: lưu **thẳng danh sách id thẻ** (chọn tay bằng Shift+click),
-không lọc theo điều kiện.
+**Tính năng này làm gì?** Trên board, giữ **Shift + click** để chọn tay nhiều thẻ
+(vd 5 thẻ liên quan nhau nhưng khác nhãn, khác người làm — không có tiêu chí chung
+nào để lọc ra được). Bấm **"Lưu highlight"**, đặt tên → thành 1 chip. Sau này bấm
+chip đó là **đúng 5 thẻ ấy sáng lên**, các thẻ khác mờ đi.
+
+**Khác `board_saved_filters` ở chỗ nào?**
+
+| | `board_saved_filters` | `board_highlight_groups` |
+|---|---|---|
+| Lưu cái gì | **Điều kiện lọc** (nhãn X, ưu tiên cao…) | **Danh sách id thẻ cụ thể** |
+| Thêm thẻ mới khớp điều kiện | Tự động xuất hiện | Không — vẫn đúng bộ thẻ đã chọn |
+| Dùng khi | "Cho tôi xem mọi việc gấp của tôi" | "Nhóm 5 thẻ này tôi cần làm trong hôm nay" |
+
+🔒 **Riêng tư tuyệt đối:** nhóm highlight của ai chỉ người đó thấy.
 
 ```
 board_highlight_groups
@@ -476,6 +565,15 @@ Trạng thái giao diện thuần cục bộ → để ở `localStorage` trên 
 | Tổ chức đang chọn | `trello_active_org_<userId>` |
 | Giao diện sáng/tối | `trello_theme` |
 
+> ⚠️ **Đừng nhầm**: bản demo hiện tại còn vài key localStorage **giả lập bảng DB**
+> (`trello_boards`, `trello_workspaces_data_*`, `trello_org_registry`…) chỉ vì chưa nối
+> backend thật. Chúng là **hàng tạm**, không phải "state giao diện" như bảng trên —
+> khi có API thật thì xoá hết, dữ liệu về đúng bảng trong Postgres.
+>
+> Riêng ảnh nền board: bản demo nhét base64 vào `trello_boards` nên phải nén mạnh
+> (localStorage chỉ ~5MB). Bản thật upload file lên Supabase Storage rồi chỉ lưu đường
+> dẫn vào `boards.background_image_path` — không còn giới hạn ngặt nghèo này.
+
 Vài giá trị **tự tính khi hiển thị**, không cần cột trong DB:
 
 | Hiện trên màn hình | Lấy từ đâu |
@@ -522,11 +620,11 @@ alter table cards add constraint cards_priority_check
 
 | Bảng | Thêm cột |
 |---|---|
-| `users` | `username`, `phone`, `job_title`, `language`, `timezone`, `updated_at` |
-| `organizations` | `icon` |
+| `users` | `username`, `phone`, `job_title`, `updated_at` |
+| `organizations` | `icon`, `slug` (bắt buộc + duy nhất) |
+| `organization_members` | role thêm mức `admin` |
 | `workspaces` | `icon`, `icon_bg`, `description`, `created_by` |
-| `boards` | `background` |
-| `lists` | `color` |
+| `boards` | `background`, `background_image_path` (ảnh nền tự tải lên) |
 | `activity_logs` | `card_id` |
 
 ### 🔄 Đổi tên cho khớp frontend
@@ -543,6 +641,8 @@ alter table cards add constraint cards_priority_check
 |---|---|
 | Bảng `invites` (mời bằng token) | Thay bằng `organization_invites` (mời trực tiếp, chờ đồng ý) |
 | Cột `password` | Firebase giữ mật khẩu — **không bao giờ** lưu vào DB |
+| `users.language`, `users.timezone` | App cố định English + UTC+7 → không cần lưu. **Đã gỡ luôn 2 dropdown** trong trang Settings |
+| `lists.color` | Chưa có tính năng đổi màu cột. **Đã gỡ luôn chấm tròn màu** ở tiêu đề cột (cả Column View lẫn Matrix View), tiêu đề cột chỉnh to hơn cho dễ đọc |
 
 ---
 
@@ -550,6 +650,7 @@ alter table cards add constraint cards_priority_check
 
 - [ ] Chạy [`database.sql`](database.sql) trong Supabase SQL Editor
 - [ ] Tạo Storage bucket `card-attachments`, để **private**
+- [ ] Tạo Storage bucket `board-backgrounds` cho ảnh nền board (`boards/<board_id>/bg.jpg`)
 - [ ] (tuỳ chọn) Bỏ comment mục 13 trong `database.sql` để có dữ liệu mẫu test
 - [ ] Đặt `SUPABASE_URL` và `SUPABASE_SERVICE_ROLE_KEY` trong `.env` của backend
 - [ ] **Không** chạy `backend/migrations/0001` & `0002` — các cột đó đã có sẵn

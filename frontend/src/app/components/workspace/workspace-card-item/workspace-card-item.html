@@ -78,7 +78,14 @@
     @for (board of workspace().boards; track board.id) {
     <div
       class="board-tile group relative flex h-[96px] cursor-pointer flex-col justify-between overflow-hidden rounded-2xl p-3 text-white shadow-xs transition-all duration-200 hover:-translate-y-1 hover:shadow-md hover:brightness-105"
-      [class]="board.bgClass" (click)="boardClick.emit(board)">
+      [class]="board.bgClass"
+      [style.background-image]="bgImageByBoardId()[board.id] ? 'url(' + bgImageByBoardId()[board.id] + ')' : null"
+      [style.background-size]="bgImageByBoardId()[board.id] ? 'cover' : null"
+      [style.background-position]="bgImageByBoardId()[board.id] ? 'center' : null"
+      (click)="boardClick.emit(board)">
+      @if (bgImageByBoardId()[board.id]) {
+      <div class="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent"></div>
+      }
       <div class="relative z-10">
         <div class="text-3xs font-black uppercase tracking-wider opacity-90 truncate pr-6">{{ board.tag }}</div>
         <div class="mt-0.5 text-sm font-bold leading-tight line-clamp-2 [text-shadow:0_1px_2px_rgba(0,0,0,0.25)]">

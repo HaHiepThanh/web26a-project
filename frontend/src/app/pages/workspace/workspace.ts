@@ -95,6 +95,9 @@ export class Workspace {
     return this.workspaces().reduce((sum, ws) => sum + ws.boards.length, 0);
   });
 
+  /** Ảnh nền theo boardId — nguồn duy nhất là BoardService, tile chỉ tra để vẽ. */
+  readonly bgImageByBoardId = this.boardService.backgroundImageByBoardId;
+
   readonly starredBoards = computed(() => {
     const query = this.searchQuery().trim().toLowerCase();
     const activeId = this.activeWorkspaceId();
@@ -330,15 +333,17 @@ export class Workspace {
     workspaceId: string;
     privacy: Privacy;
     background: BoardBackground;
+    backgroundImageUrl?: string;
     selectedMemberIds: string[];
   }): Promise<void> {
-    const { title, workspaceId, privacy, background } = data;
+    const { title, workspaceId, privacy, background, backgroundImageUrl } = data;
     const targetWorkspace = this.workspaces().find((w) => w.id === workspaceId);
     if (!targetWorkspace) return;
 
     const board = await this.boardService.createBoard(workspaceId, title, {
       visibility: toBoardVisibility(privacy),
       background,
+      backgroundImageUrl,
     });
     if (!board) return;
 
@@ -359,6 +364,8 @@ export class Workspace {
     });
 
     this.addToast(`Đã tạo bảng mới "${newBoard.title}"!`, 'success');
+    const warning = this.boardService.storageWarning();
+    if (warning) this.addToast(warning, 'error');
     this.showCreateBoardModal.set(false);
     void this.router.navigate(['/board', board.id]);
   }

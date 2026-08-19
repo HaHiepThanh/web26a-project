@@ -128,16 +128,42 @@
         }
       </div>
 
-      <!-- Color Palette -->
+      <!-- Background: color palette or custom image -->
       <div class="mb-5">
-        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Màu nền bảng</label>
-        <div class="flex gap-2 flex-wrap">
+        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Nền bảng</label>
+        <div class="flex flex-wrap items-center gap-2">
           @for (bg of bgClasses; track bg) {
           <div class="h-8 w-8 cursor-pointer rounded-xl transition hover:scale-110 shadow-xs" [class]="bg"
-            [class.ring-2]="selectedBgClass() === bg" [class.ring-primary]="selectedBgClass() === bg"
-            [class.ring-offset-2]="selectedBgClass() === bg" (click)="selectedBgClass.set(bg)"></div>
+            [class.ring-2]="!bgImageUrl() && selectedBgClass() === bg" [class.ring-primary]="!bgImageUrl() && selectedBgClass() === bg"
+            [class.ring-offset-2]="!bgImageUrl() && selectedBgClass() === bg" (click)="clearBgImage(); selectedBgClass.set(bg)"></div>
+          }
+
+          @if (bgImageUrl(); as img) {
+          <div class="group relative h-8 w-8 shrink-0 overflow-hidden rounded-xl ring-2 ring-primary ring-offset-2 shadow-xs">
+            <img [src]="img" alt="Ảnh nền tuỳ chọn" class="h-full w-full object-cover" />
+            <button type="button"
+              class="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition group-hover:opacity-100"
+              title="Bỏ ảnh nền" (click)="clearBgImage()">
+              <svg lucideX class="h-3.5 w-3.5 text-white" [strokeWidth]="2.6"></svg>
+            </button>
+          </div>
+          } @else {
+          <label
+            class="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-slate-300 text-slate-400 transition hover:border-primary hover:text-primary dark:border-slate-600"
+            title="Tải ảnh nền lên">
+            <svg lucideImage class="h-4 w-4" [strokeWidth]="2.2"></svg>
+            <input type="file" accept="image/*" class="hidden" (change)="onBgImageSelected($event)" />
+          </label>
           }
         </div>
+        @if (bgImageError()) {
+        <p class="mt-1.5 text-xs font-bold text-error flex items-center gap-1">
+          <svg lucideTriangleAlert class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg> {{ bgImageError() }}
+        </p>
+        }
+        @if (bgImageUrl()) {
+        <p class="mt-1.5 text-2xs text-slate-500 dark:text-slate-400">Đang dùng ảnh tuỳ chọn thay cho màu nền có sẵn.</p>
+        }
       </div>
 
       <!-- Actions -->

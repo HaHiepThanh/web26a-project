@@ -1,8 +1,7 @@
 <div class="flex items-center justify-between gap-1.5 px-2 pb-1.5 pt-2">
   <span class="flex min-w-0 flex-1 items-center">
-    <span class="mr-1.5 h-2 w-2 shrink-0 rounded-full" [style.background]="list().color || 'var(--text-muted)'"></span>
     <input
-      class="w-full min-w-0 rounded bg-transparent px-1 py-0.5 text-xs font-bold text-base-content/80 outline-none hover:bg-base-300 hover:text-base-content focus:bg-base-300 focus:text-base-content"
+      class="w-full min-w-0 rounded bg-transparent px-1 py-0.5 text-sm font-bold text-base-content/80 outline-none hover:bg-base-300 hover:text-base-content focus:bg-base-300 focus:text-base-content"
       [value]="list().name"
       spellcheck="false"
       (change)="onNameChange($event)"

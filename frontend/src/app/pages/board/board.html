@@ -1,4 +1,5 @@
-<div class="flex h-[calc(100vh-52px)] flex-col" [class]="pageBgClass()">
+<div class="flex h-[calc(100vh-52px)] flex-col bg-cover bg-center" [class]="pageBgClass()"
+  [style.background-image]="pageBgImageUrl() ? 'url(' + pageBgImageUrl() + ')' : null">
 
   <!-- Board Header & Filter Controls Subcomponent -->
   <app-board-header-bar
@@ -173,7 +174,6 @@
               <div class="matrix-row-grid" [style.grid-template-columns]="gridCols()">
                 @for (list of lists(); track trackByListId($index, list)) {
                   <div class="matrix-col-head">
-                    <span class="col-color-dot" [style.background]="list.color || 'var(--text-muted)'"></span>
                     {{ list.name }}
                   </div>
                 }

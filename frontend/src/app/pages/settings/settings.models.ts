@@ -33,20 +33,5 @@ export const NAV_ITEMS: NavItem[] = [
   },
 ];
 
-export const LANGUAGE_OPTIONS = [
-  { code: 'vi', label: 'Tiếng Việt' },
-  { code: 'en', label: 'English' },
-  { code: 'ja', label: '日本語 (Japanese)' },
-  { code: 'ko', label: '한국어 (Korean)' },
-  { code: 'zh', label: '中文 (Chinese)' },
-];
-
-export const TIMEZONE_OPTIONS = [
-  { value: 'UTC+7', label: '(GMT+07:00) Hà Nội, Bangkok, Jakarta' },
-  { value: 'UTC+8', label: '(GMT+08:00) Singapore, Hong Kong' },
-  { value: 'UTC+9', label: '(GMT+09:00) Tokyo, Seoul' },
-  { value: 'UTC+0', label: '(GMT+00:00) London' },
-  { value: 'UTC+1', label: '(GMT+01:00) Paris, Berlin' },
-  { value: 'UTC-5', label: '(GMT-05:00) Eastern Time — New York' },
-  { value: 'UTC-8', label: '(GMT-08:00) Pacific Time — Los Angeles' },
-];
+// LANGUAGE_OPTIONS / TIMEZONE_OPTIONS đã bỏ: app cố định English + UTC+7 nên
+// không cần cho người dùng chọn, và DB cũng không còn cột users.language/timezone.

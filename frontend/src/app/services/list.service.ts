@@ -27,7 +27,7 @@ export class ListService {
     this.lists.set([]);
   }
 
-  async createList(boardId: string, name: string, color?: string): Promise<List | null> {
+  async createList(boardId: string, name: string): Promise<List | null> {
     const trimmed = name.trim();
     if (!trimmed) return null;
     const maxPos = this.lists().reduce((max, l) => Math.max(max, l.position), -1);
@@ -36,7 +36,6 @@ export class ListService {
       tenantId: 'tenant-demo',
       boardId,
       name: trimmed,
-      color,
       position: maxPos + 1,
       createdAt: new Date().toISOString(),
     };

@@ -54,7 +54,14 @@
           @for (board of starredBoards(); track board.id) {
           <div
             class="board-tile group relative flex h-[92px] cursor-pointer flex-col justify-between overflow-hidden rounded-xl p-2.5 text-white shadow-xs transition hover:-translate-y-1 hover:brightness-110"
-            [class]="board.bgClass" (click)="onBoardClick(board)">
+            [class]="board.bgClass"
+            [style.background-image]="bgImageByBoardId()[board.id] ? 'url(' + bgImageByBoardId()[board.id] + ')' : null"
+            [style.background-size]="bgImageByBoardId()[board.id] ? 'cover' : null"
+            [style.background-position]="bgImageByBoardId()[board.id] ? 'center' : null"
+            (click)="onBoardClick(board)">
+            @if (bgImageByBoardId()[board.id]) {
+            <div class="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent"></div>
+            }
             <div class="relative z-10">
               <div class="text-3xs font-extrabold uppercase tracking-wide opacity-90">{{ board.workspaceName }}</div>
               <div class="mt-0.5 text-sm font-bold leading-tight [text-shadow:0_1px_2px_rgba(0,0,0,0.2)]">{{
@@ -130,7 +137,7 @@
       @else {
       <div class="flex flex-col gap-6 pb-12">
         @for (ws of filteredWorkspaces(); track ws.id) {
-        <app-workspace-card-item [workspace]="ws" [confirmDeleteKey]="confirmDeleteKey()"
+        <app-workspace-card-item [workspace]="ws" [bgImageByBoardId]="bgImageByBoardId()" [confirmDeleteKey]="confirmDeleteKey()"
           (confirmDeleteKeyChange)="confirmDeleteKey.set($event)" (editWorkspace)="openEditWorkspace($event)"
           (createBoard)="openCreateBoard($event)" (boardClick)="onBoardClick($event)" (toggleStar)="toggleStar($event)"
           (deleteBoard)="deleteBoard($event)">

@@ -15,6 +15,9 @@ export interface Board {
   /** Chọn lúc tạo board (Workspace) — để trang Board + các danh sách nổi bật hơn thay
    *  vì chìm vào nền xám mặc định. undefined = giữ nền mặc định (các board demo cũ). */
   background?: BoardBackground;
+  /** Ảnh nền tuỳ chọn (base64, demo lưu tại chỗ như AttachmentService) — có thì ưu tiên
+   *  hiển thị thay cho `background` (màu có sẵn). */
+  backgroundImageUrl?: string;
   createdBy: string; // FK auth.users.id
   createdAt: string; // ISO timestamptz
 }

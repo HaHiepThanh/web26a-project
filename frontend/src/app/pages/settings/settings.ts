@@ -26,12 +26,7 @@ import {
 import { AuthService } from '../../services/auth.service';
 import { OrganizationService } from '../../services/organization.service';
 import { User } from '../../models';
-import {
-  LANGUAGE_OPTIONS,
-  NAV_ITEMS,
-  SettingsTab,
-  TIMEZONE_OPTIONS,
-} from './settings.models';
+import { NAV_ITEMS, SettingsTab } from './settings.models';
 import {
   WorkspaceItem,
   WorkspaceMember,
@@ -136,8 +131,6 @@ export class Settings {
   // ---------------------------------------------------------------------
   // TAB 1: Trang cá nhân (Profile)
   // ---------------------------------------------------------------------
-  readonly languageOptions = LANGUAGE_OPTIONS;
-  readonly timezoneOptions = TIMEZONE_OPTIONS;
   readonly emailVerified = signal(true);
   readonly avatarPreview = signal<string | null>(null);
   readonly copiedUuid = signal(false);
@@ -148,8 +141,6 @@ export class Settings {
     jobTitle: [''],
     email: [{ value: '', disabled: true }],
     phone: ['', [Validators.pattern(/^(0|\+84)[0-9]{9,10}$/)]],
-    language: ['vi', [Validators.required]],
-    timezone: ['UTC+7', [Validators.required]],
   });
 
   // Password change form (Old password verification)
@@ -175,8 +166,6 @@ export class Settings {
       jobTitle: user?.jobTitle ?? '',
       email: user?.email ?? '',
       phone: user?.phone ?? '',
-      language: user?.language ?? 'vi',
-      timezone: user?.timezone ?? 'UTC+7',
     });
 
     // Load initial workspaces
@@ -240,8 +229,6 @@ export class Settings {
         username: val.username.trim(),
         jobTitle: val.jobTitle?.trim() || undefined,
         phone: val.phone?.trim() || undefined,
-        language: val.language,
-        timezone: val.timezone,
         avatarUrl: this.avatarPreview() || undefined,
       };
       this.auth.setUser(updated);

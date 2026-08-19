@@ -119,7 +119,9 @@ export class Board {
   readonly board = this.boardService.currentBoard;
   /** Màu nền trang chọn lúc tạo board (Workspace) — không có thì giữ nền xám mặc định
    *  (board demo cũ). Nền màu để trang Board + danh sách nổi bật hơn, không bị chìm. */
-  readonly pageBgClass = computed(() => this.board()?.background ?? 'bg-base-200');
+  readonly pageBgClass = computed(() => (this.board()?.backgroundImageUrl ? 'bg-base-200' : this.board()?.background ?? 'bg-base-200'));
+  /** Ảnh nền tuỳ chọn chọn lúc tạo board — có thì ưu tiên hơn màu nền `pageBgClass`. */
+  readonly pageBgImageUrl = computed(() => this.board()?.backgroundImageUrl ?? null);
   readonly members = this.boardService.members;
   readonly lists = computed(() => [...this.listService.lists()].sort((a, b) => a.position - b.position));
   readonly cardsByList = this.cardService.cardsByList;
