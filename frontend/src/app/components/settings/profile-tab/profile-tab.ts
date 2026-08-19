@@ -112,7 +112,9 @@ export class ProfileTab {
       this.avatarPreview.set(user.avatarUrl ?? null);
       this.profileForm.patchValue({
         fullName: user.displayName ?? '',
-        username: user.username ?? (user.email ? user.email.split('@')[0] : ''),
+        // Hiện đúng giá trị trong DB. Trước đây chỗ này lấy tạm phần trước @ của
+        // email khi username rỗng — nhìn như đã có nhưng thực tế chưa hề được lưu.
+        username: user.username ?? '',
         jobTitle: user.jobTitle ?? '',
         email: user.email ?? '',
         phone: user.phone ?? '',
@@ -176,9 +178,10 @@ export class ProfileTab {
         phone: val.phone?.trim() || undefined,
         avatarUrl: this.avatarPreview() || undefined,
       };
+      // Chỉ phát sự kiện; thông báo thành công/thất bại do trang cha báo SAU KHI
+      // backend trả lời. Báo "thành công" ngay tại đây là nói dối khi lưu hỏng.
       this.saveProfile.emit(updated);
       this.profileForm.markAsPristine();
-      this.flashMessage.emit({ message: 'Đã cập nhật thông tin cá nhân thành công!', type: 'success' });
     }
   }
 

@@ -1,10 +1,11 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Patch, Post, UseGuards } from '@nestjs/common';
 import { FirebaseAuthGuard } from '../../common/firebase/firebase-auth.guard';
 import { CurrentUser } from '../../common/firebase/current-user.decorator';
 import type { CurrentUserInfo } from '../../common/firebase/current-user.decorator';
 import { AuthService } from './auth.service';
 import type { MeResponse, UserRow } from './auth.service';
 import { SyncProfileDto } from './dto/sync-profile.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 /**
  * Mọi route ở đây đều yêu cầu 'Authorization: Bearer <Firebase ID token>'.
@@ -24,6 +25,15 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   sync(@CurrentUser() user: CurrentUserInfo, @Body() body: SyncProfileDto): Promise<UserRow> {
     return this.auth.syncProfile(user, body);
+  }
+
+  /** PATCH /auth/profile — lưu thay đổi từ trang Cài đặt xuống database. */
+  @Patch('profile')
+  updateProfile(
+    @CurrentUser() user: CurrentUserInfo,
+    @Body() body: UpdateProfileDto,
+  ): Promise<UserRow> {
+    return this.auth.updateProfile(user, body);
   }
 
   /** GET /auth/me — hồ sơ + danh sách tổ chức + cờ needsOnboarding. */

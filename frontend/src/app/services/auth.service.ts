@@ -215,6 +215,29 @@ export class AuthService {
     return this.syncFromBackend();
   }
 
+  /**
+   * Lưu hồ sơ xuống DATABASE qua backend (không chỉ localStorage).
+   * Trước đây trang Cài đặt chỉ gọi setUser() nên bấm Lưu xong, F5 là mất.
+   */
+  async updateProfile(changes: {
+    displayName?: string;
+    username?: string;
+    phone?: string;
+    jobTitle?: string;
+    avatarUrl?: string;
+  }): Promise<void> {
+    const row = await this.api.patch<MeResponse['user']>('/auth/profile', changes);
+    this.setUser({
+      id: row.id,
+      email: row.email,
+      displayName: row.display_name ?? undefined,
+      avatarUrl: row.avatar_url ?? undefined,
+      username: row.username ?? undefined,
+      phone: row.phone ?? undefined,
+      jobTitle: row.job_title ?? undefined,
+    });
+  }
+
   /** Gọi backend để upsert hồ sơ vào DB + biết đã có tổ chức chưa. */
   private async syncFromBackend(): Promise<{ needsOnboarding: boolean }> {
     const me = await this.api.get<MeResponse>('/auth/me');

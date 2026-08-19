@@ -69,9 +69,28 @@ export class Settings {
   // ---------------------------------------------------------------------
   // TAB 1: Profile handlers
   // ---------------------------------------------------------------------
-  onSaveProfile(user: User): void {
-    this.auth.setUser(user);
-    this.flash('Đã cập nhật thông tin cá nhân thành công!');
+  async onSaveProfile(user: User): Promise<void> {
+    try {
+      await this.auth.updateProfile({
+        displayName: user.displayName ?? '',
+        username: user.username ?? '',
+        phone: user.phone ?? '',
+        jobTitle: user.jobTitle ?? '',
+        avatarUrl: user.avatarUrl ?? '',
+      });
+      this.flash('Đã cập nhật thông tin cá nhân thành công!');
+    } catch (err) {
+      const status = (err as { status?: number })?.status;
+      if (status === 409) {
+        this.flash('Tên đăng nhập này đã có người dùng, chọn tên khác nhé.', 'error');
+        return;
+      }
+      const detail = (err as { error?: { message?: string | string[] } })?.error?.message;
+      this.flash(
+        Array.isArray(detail) ? detail[0] : (detail ?? 'Lưu hồ sơ thất bại. Vui lòng thử lại.'),
+        'error',
+      );
+    }
   }
 
   onChangePassword(event: { currentPassword: string; newPassword: string }): void {
