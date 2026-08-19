@@ -1,38 +1,23 @@
 <section class="mx-auto max-w-[920px] space-y-6">
-  <header class="flex flex-wrap items-center justify-between gap-3">
-    <div>
-      <h2 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Quản lý Organization</h2>
-      <p class="mt-1 text-sm text-slate-500">Chuyển đổi tổ chức, xem thành viên và mời người mới qua UUID.</p>
-    </div>
-
-    @if (activeOrg()) {
-    <button type="button" class="btn btn-primary btn-sm gap-1.5 rounded-xl px-4 font-black shadow-xs" (click)="openInviteOrgMember()">
-      <svg lucideUserPlus class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg>
-      <span>Mời thành viên</span>
-    </button>
-    }
+  <header>
+    <h2 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Quản lý Organization</h2>
+    <p class="mt-1 text-sm text-slate-500">Chuyển đổi tổ chức, xem thành viên và mời người mới qua UUID.</p>
   </header>
 
   <!-- Organization Selector Pills -->
   @if (organizations().length > 0) {
   <div class="flex items-center gap-2 overflow-x-auto pb-1 max-w-full">
     @for (org of organizations(); track org.id) {
-    <button
-      type="button"
+    <button type="button"
       class="flex items-center gap-2 rounded-2xl px-3.5 py-2 text-xs font-bold transition-all shrink-0 border-2 max-w-[220px]"
-      [class.bg-primary]="activeOrgId() === org.id"
-      [class.text-white]="activeOrgId() === org.id"
-      [class.border-primary]="activeOrgId() === org.id"
-      [class.bg-white]="activeOrgId() !== org.id"
-      [class.dark:bg-slate-900]="activeOrgId() !== org.id"
-      [class.border-slate-300]="activeOrgId() !== org.id"
-      [class.dark:border-slate-700]="activeOrgId() !== org.id"
-      [class.hover:bg-slate-100]="activeOrgId() !== org.id"
+      [class.bg-primary]="activeOrgId() === org.id" [class.text-white]="activeOrgId() === org.id"
+      [class.border-primary]="activeOrgId() === org.id" [class.bg-white]="activeOrgId() !== org.id"
+      [class.dark:bg-slate-900]="activeOrgId() !== org.id" [class.border-slate-300]="activeOrgId() !== org.id"
+      [class.dark:border-slate-700]="activeOrgId() !== org.id" [class.hover:bg-slate-100]="activeOrgId() !== org.id"
       (click)="switchOrg.emit(org.id)">
       <span class="text-base leading-none shrink-0">{{ org.icon }}</span>
       <span class="font-black truncate min-w-0 flex-1 text-left">{{ org.name }}</span>
-      <span class="badge badge-xs font-bold ml-1 shrink-0"
-        [class.bg-white/20]="activeOrgId() === org.id"
+      <span class="badge badge-xs font-bold ml-1 shrink-0" [class.bg-white/20]="activeOrgId() === org.id"
         [class.text-white]="activeOrgId() === org.id">
         {{ org.memberIds.length }}
       </span>
@@ -43,7 +28,8 @@
 
   <!-- Selected Organization Detail & Member Roster -->
   @if (activeOrg(); as curOrg) {
-  <div class="rounded-3xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 shadow-xs space-y-5">
+  <div
+    class="rounded-3xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 shadow-xs space-y-5">
     <!-- Organization Overview -->
     <div class="flex items-start justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800 min-w-0">
       <div class="flex items-start gap-3.5 min-w-0 flex-1">
@@ -51,28 +37,39 @@
           {{ curOrg.icon }}
         </div>
         <div class="min-w-0 flex-1">
-          <h3 class="text-lg font-black text-slate-900 dark:text-white truncate block max-w-full" [title]="curOrg.name">{{ curOrg.name }}</h3>
-          <p class="text-xs text-slate-500 mt-0.5 font-mono truncate block max-w-full" [title]="curOrg.id">ID: {{ curOrg.id }}</p>
+          <h3 class="text-lg font-black text-slate-900 dark:text-white truncate block max-w-full" [title]="curOrg.name">
+            {{ curOrg.name }}</h3>
+          <p class="text-xs text-slate-500 mt-0.5 font-mono truncate block max-w-full" [title]="curOrg.id">ID: {{
+            curOrg.id }}</p>
         </div>
       </div>
 
       <div class="text-right shrink-0">
-        <span class="badge badge-primary badge-outline badge-sm font-black">{{ curOrg.memberIds.length }} thành viên</span>
+        <span class="badge badge-primary badge-outline badge-sm font-black">{{ curOrg.memberIds.length }} thành
+          viên</span>
       </div>
     </div>
 
     <!-- Members Table -->
     <div>
-      <div class="flex items-center justify-between mb-3">
+      <div class="flex items-center justify-between mb-3 gap-3">
         <h4 class="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
           Danh sách thành viên ({{ orgMembers().length }})
         </h4>
+
+        <button type="button"
+          class="btn btn-primary btn-xs gap-1 rounded-xl px-3 font-black shadow-xs hover:scale-105 transition-all"
+          (click)="openInviteOrgMember()">
+          <svg lucideUserPlus class="h-3 w-3" [strokeWidth]="2.4"></svg>
+          <span>Mời thành viên</span>
+        </button>
       </div>
 
       <div class="overflow-x-auto rounded-2xl border-2 border-slate-200 dark:border-slate-800">
         <table class="table w-full text-left">
           <thead>
-            <tr class="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 text-xs uppercase font-black">
+            <tr
+              class="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 text-xs uppercase font-black">
               <th class="py-3 px-4">Thành viên</th>
               <th class="py-3 px-4">Mã UUID</th>
               <th class="py-3 px-4">Vai trò</th>
@@ -85,7 +82,8 @@
               <!-- Member info -->
               <td class="py-3 px-4">
                 <div class="flex items-center gap-3">
-                  <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white text-2xs font-black shadow-xs"
+                  <div
+                    class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white text-2xs font-black shadow-xs"
                     [style.background-color]="avatarBgFor(mem.id)">
                     {{ initialsOf(mem.displayName || mem.email) }}
                   </div>
@@ -104,19 +102,17 @@
               <!-- Role -->
               <td class="py-3 px-4">
                 @if (mem.id === curOrg.ownerId) {
-                  <span class="badge badge-primary gap-1 font-black text-xs px-2.5 py-1">
-                    <svg lucideCrown class="h-3 w-3" [strokeWidth]="2.2"></svg> Trưởng nhóm</span>
+                <span class="badge badge-primary gap-1 font-black text-xs px-2.5 py-1">
+                  <svg lucideCrown class="h-3 w-3" [strokeWidth]="2.2"></svg> Trưởng nhóm</span>
                 } @else {
-                  <span class="badge badge-ghost font-bold text-xs px-2.5 py-1">Thành viên</span>
+                <span class="badge badge-ghost font-bold text-xs px-2.5 py-1">Thành viên</span>
                 }
               </td>
 
               <!-- Action -->
               <td class="py-3 px-4 text-right">
                 @if (mem.id !== curOrg.ownerId) {
-                <button
-                  type="button"
-                  class="btn btn-ghost btn-xs text-rose-600 hover:bg-rose-50 rounded-lg font-bold"
+                <button type="button" class="btn btn-ghost btn-xs text-rose-600 hover:bg-rose-50 rounded-lg font-bold"
                   (click)="onRemoveOrgMember(mem.id)">
                   Xóa
                 </button>
@@ -130,20 +126,26 @@
     </div>
   </div>
   } @else {
-  <div class="rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-8 text-center shadow-xs space-y-3">
+  <div
+    class="rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-8 text-center shadow-xs space-y-3">
     <div class="flex h-14 w-14 mx-auto items-center justify-center rounded-2xl bg-primary/10 text-2xl">🏢</div>
     <h3 class="text-base font-black text-slate-800 dark:text-slate-200">Chưa có Organization nào</h3>
-    <p class="text-xs text-slate-500 max-w-md mx-auto">Bạn chưa tham gia Organization nào hoặc chưa chọn Organization hoạt động.</p>
+    <p class="text-xs text-slate-500 max-w-md mx-auto">Bạn chưa tham gia Organization nào hoặc chưa chọn Organization
+      hoạt động.</p>
   </div>
   }
 </section>
 
 <!-- MODAL: Mời thành viên vào Organization -->
 @if (showInviteOrgModal()) {
-<div class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs" (click)="closeInviteOrgMember()">
-  <div class="w-full max-w-[460px] rounded-3xl bg-white dark:bg-slate-900 p-6 shadow-2xl border-2 border-slate-300 dark:border-slate-700" (click)="$event.stopPropagation()">
+<div class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs"
+  (click)="closeInviteOrgMember()">
+  <div
+    class="w-full max-w-[460px] rounded-3xl bg-white dark:bg-slate-900 p-6 shadow-2xl border-2 border-slate-300 dark:border-slate-700"
+    (click)="$event.stopPropagation()">
     <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-      <h3 class="text-base font-black text-slate-900 dark:text-white">Mời thành viên vào {{ activeOrg() ? activeOrg()!.name : 'Organization' }}</h3>
+      <h3 class="text-base font-black text-slate-900 dark:text-white">Mời thành viên vào {{ activeOrg() ?
+        activeOrg()!.name : 'Organization' }}</h3>
       <button type="button" class="btn btn-ghost btn-circle btn-xs" (click)="closeInviteOrgMember()">
         <svg lucideX class="h-4 w-4" [strokeWidth]="2.4"></svg>
       </button>
@@ -153,49 +155,48 @@
       <!-- Search Input -->
       <div class="space-y-1.5">
         <label class="text-xs font-bold text-slate-700 dark:text-slate-300">Tìm theo Tên, Email hoặc UUID</label>
-        <input
-          type="text"
+        <input type="text"
           class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700"
-          placeholder="Nhập từ khóa tìm kiếm..."
-          [ngModel]="orgInviteQuery()"
+          placeholder="Nhập từ khóa tìm kiếm..." [ngModel]="orgInviteQuery()"
           (ngModelChange)="orgInviteQuery.set($event)" />
       </div>
 
       <!-- Candidate list -->
-      <div class="space-y-1.5 max-h-[180px] overflow-y-auto rounded-2xl border-2 border-slate-200 dark:border-slate-800 p-2 bg-slate-50 dark:bg-slate-800/40">
+      <div
+        class="space-y-1.5 max-h-[180px] overflow-y-auto rounded-2xl border-2 border-slate-200 dark:border-slate-800 p-2 bg-slate-50 dark:bg-slate-800/40">
         @if (orgInviteCandidates().length === 0) {
-          <div class="py-4 text-center text-xs text-slate-400">Không tìm thấy người dùng phù hợp.</div>
+        <div class="py-4 text-center text-xs text-slate-400">Không tìm thấy người dùng phù hợp.</div>
         } @else {
-          @for (cand of orgInviteCandidates(); track cand.id) {
-          <button
-            type="button"
-            class="w-full flex items-center justify-between p-2 rounded-xl text-left transition-all"
-            [class.bg-primary/15]="selectedOrgInviteUser()?.id === cand.id"
-            [class.border]="selectedOrgInviteUser()?.id === cand.id"
-            [class.border-primary/40]="selectedOrgInviteUser()?.id === cand.id"
-            [class.hover:bg-slate-200/60]="selectedOrgInviteUser()?.id !== cand.id"
-            (click)="chooseOrgInviteUser(cand)">
-            <div class="flex items-center gap-2.5 min-w-0">
-              <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-white text-3xs font-black"
-                [style.background-color]="avatarBgFor(cand.id)">
-                {{ initialsOf(cand.displayName || cand.email) }}
-              </div>
-              <div class="min-w-0">
-                <div class="text-xs font-bold truncate text-slate-900 dark:text-white">{{ cand.displayName || 'Người dùng' }}</div>
-                <div class="text-3xs text-slate-400 truncate">{{ cand.email }}</div>
-              </div>
+        @for (cand of orgInviteCandidates(); track cand.id) {
+        <button type="button" class="w-full flex items-center justify-between p-2 rounded-xl text-left transition-all"
+          [class.bg-primary/15]="selectedOrgInviteUser()?.id === cand.id"
+          [class.border]="selectedOrgInviteUser()?.id === cand.id"
+          [class.border-primary/40]="selectedOrgInviteUser()?.id === cand.id"
+          [class.hover:bg-slate-200/60]="selectedOrgInviteUser()?.id !== cand.id" (click)="chooseOrgInviteUser(cand)">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-white text-3xs font-black"
+              [style.background-color]="avatarBgFor(cand.id)">
+              {{ initialsOf(cand.displayName || cand.email) }}
             </div>
-            <span class="text-3xs font-mono text-primary shrink-0">{{ cand.id.slice(0, 6) }}...</span>
-          </button>
-          }
+            <div class="min-w-0">
+              <div class="text-xs font-bold truncate text-slate-900 dark:text-white">{{ cand.displayName || 'Người dùng'
+                }}</div>
+              <div class="text-3xs text-slate-400 truncate">{{ cand.email }}</div>
+            </div>
+          </div>
+          <span class="text-3xs font-mono text-primary shrink-0">{{ cand.id.slice(0, 6) }}...</span>
+        </button>
+        }
         }
       </div>
     </div>
 
     <!-- Actions -->
     <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-      <button type="button" class="btn btn-ghost btn-sm rounded-xl font-bold" (click)="closeInviteOrgMember()">Hủy</button>
-      <button type="button" class="btn btn-primary btn-sm gap-1.5 rounded-xl px-4 font-black" [disabled]="!selectedOrgInviteUser()" (click)="confirmInviteOrgMember()">
+      <button type="button" class="btn btn-ghost btn-sm rounded-xl font-bold"
+        (click)="closeInviteOrgMember()">Hủy</button>
+      <button type="button" class="btn btn-primary btn-sm gap-1.5 rounded-xl px-4 font-black"
+        [disabled]="!selectedOrgInviteUser()" (click)="confirmInviteOrgMember()">
         <svg lucidePlus class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg> Gửi lời mời
       </button>
     </div>

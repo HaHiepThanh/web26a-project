@@ -20,15 +20,15 @@ export const NAV_ITEMS: NavItem[] = [
     icon: 'user',
   },
   {
-    id: 'manage-workspace',
-    label: 'Manage Workspace',
-    description: 'Quản lý thành viên trong các Workspace của bạn',
-    icon: 'building',
-  },
-  {
     id: 'manage-organization',
     label: 'Quản lý Organization',
     description: 'Thành viên, lời mời & chuyển đổi tổ chức',
+    icon: 'building',
+  },
+  {
+    id: 'manage-workspace',
+    label: 'Manage Workspace',
+    description: 'Quản lý thành viên trong các Workspace của bạn',
     icon: 'org',
   },
 ];
