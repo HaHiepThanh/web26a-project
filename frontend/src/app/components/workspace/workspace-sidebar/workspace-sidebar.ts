@@ -1,6 +1,6 @@
 import { Component, input, output } from '@angular/core';
 import { LucideEllipsisVertical, LucideFolderKanban, LucidePlus } from '@lucide/angular';
-import { WorkspaceItem } from '../../../mocks';
+import { WorkspaceItem, initialsOf } from '../../../mocks';
 
 /** Danh sách Workspace ở sidebar — CHỈ lọc/chuyển đổi + tạo mới.
  *  Quản lý chi tiết (đổi tên, icon, thêm/xoá thành viên, xoá workspace) mở
@@ -13,6 +13,7 @@ import { WorkspaceItem } from '../../../mocks';
   host: { class: 'block' },
 })
 export class WorkspaceSidebar {
+  readonly initialsOf = initialsOf;
   readonly workspaces = input<WorkspaceItem[]>([]);
   readonly activeWorkspaceId = input<string | null>(null);
   readonly totalBoardsCount = input<number>(0);

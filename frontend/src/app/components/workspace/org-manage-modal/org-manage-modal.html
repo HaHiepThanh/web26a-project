@@ -7,7 +7,7 @@
     <!-- Header -->
     <div class="flex shrink-0 items-center justify-between border-b border-base-200 px-5 py-4">
       <div class="flex min-w-0 items-center gap-2.5">
-        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-lg">{{ o.icon }}</span>
+        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 border-base-300 text-2xs font-black text-base-content/60">{{ initialsOf(o.name) }}</span>
         <div class="min-w-0">
           <h3 class="truncate text-base font-black text-base-content">Quản lý tổ chức</h3>
           <p class="truncate text-2xs text-base-content/50">{{ o.name }} · {{ members().length }} thành viên</p>
@@ -30,15 +30,7 @@
       @if (isOwner()) {
       <section class="mb-5">
         <h4 class="mb-2 text-2xs font-black uppercase tracking-wide text-base-content/45">Thông tin tổ chức</h4>
-        <div class="flex flex-wrap gap-1.5">
-          @for (ic of iconChoices; track ic) {
-          <button type="button"
-            class="flex h-8 w-8 items-center justify-center rounded-lg border text-base transition-all"
-            [class]="iconInput() === ic ? 'border-primary bg-primary/10' : 'border-base-300 hover:bg-base-200'"
-            (click)="iconInput.set(ic)">{{ ic }}</button>
-          }
-        </div>
-        <div class="mt-2 flex items-center gap-2">
+        <div class="flex items-center gap-2">
           <input type="text" maxlength="50" class="input input-bordered input-sm w-full rounded-xl border-2 font-semibold"
             placeholder="Tên tổ chức (tối đa 50 ký tự)..." [ngModel]="nameInput()" (ngModelChange)="nameInput.set($event)"
             (keydown.enter)="onSaveName()" />

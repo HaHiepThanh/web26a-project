@@ -108,25 +108,38 @@ create index idx_users_email on users (email);
 create table organizations (
   id          uuid primary key default gen_random_uuid(),
   name        text not null,
-  icon        text not null default '🏢',      -- emoji hiển thị ở sidebar
   -- Đường dẫn riêng của tổ chức, dùng làm tiền tố mọi URL:
   --   /thanh-organization/board/<uuid>
   -- BẮT BUỘC nhập lúc tạo, DUY NHẤT toàn hệ thống, và KHÔNG cho đổi về sau
   -- (đổi slug = mọi link đã chia sẻ chết ngay).
-  -- Ràng buộc: chỉ chữ thường + số + gạch ngang, 3-40 ký tự, không bắt đầu/kết
+  -- Ràng buộc: chỉ chữ thường + số + gạch ngang, 3-30 ký tự, không bắt đầu/kết
   -- thúc bằng gạch ngang, không có 2 gạch ngang liền nhau.
   slug        text not null unique
-                check (slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$' and length(slug) between 3 and 40),
+                check (slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$' and length(slug) between 3 and 30),
   owner_id    text not null references users(id),
   created_at  timestamptz not null default now()
 );
 
 create index idx_organizations_owner on organizations (owner_id);
 
--- ⚠️ Backend PHẢI chặn thêm các slug trùng route hệ thống, DB không tự biết:
---    login, register, settings, workspace, board, api, admin, auth, static,
---    assets, public, new, join, invite, help, about, terms, privacy, 404
---    → thêm danh sách này vào validator lúc tạo tổ chức.
+-- ⚠️ Backend PHẢI chặn thêm các slug trùng route hệ thống, DB không tự biết.
+--    Vì slug nằm ngay ở GỐC url (/thanh-organization/...), nó dùng chung
+--    namespace với mọi route của app — một tổ chức đặt slug 'settings' sẽ
+--    chiếm mất trang /settings.
+--
+--    Danh sách phải khớp với RESERVED_SLUGS trong
+--    frontend/src/app/utils/slug.util.ts (sửa 1 bên thì sửa cả bên kia):
+--      route đang có : login, register, forgot-password, reset-password,
+--                      workspace, board, settings, dashboard, members,
+--                      onboarding, not-found, 404
+--      file tĩnh     : assets, static, public, favicon.ico, index.html
+--      hạ tầng       : api, admin, auth, app, www, mail, cdn
+--      để dành       : join, invite, new, help, about, terms, privacy, pricing,
+--                      blog, docs, support, status, search, notifications,
+--                      me, user, users, profile, org, orgs, o
+--
+--    ⚠️ THÊM ROUTE GỐC MỚI THÌ PHẢI THÊM VÀO DANH SÁCH NÀY. Slug đã cấp thì
+--       không cho đổi, nên quên một từ = kẹt vĩnh viễn với route đó.
 
 
 -- Bảng backend đọc để PHÂN QUYỀN (authorization).
@@ -192,7 +205,8 @@ create table workspaces (
   id          uuid primary key default gen_random_uuid(),
   org_id      uuid not null references organizations(id) on delete cascade,
   name        text not null,
-  icon        text not null default '📂',      -- emoji người dùng tự chọn
+  -- Chỉ còn MÀU nền, KHÔNG có emoji: giao diện hiển thị chữ cái đầu của `name`
+  -- trên nền màu này (vd 'Đồ án CNTT' → 'ĐC'). Tổ chức thì không có cả màu.
   icon_bg     text not null default 'bg-board-blue'
                 check (icon_bg in ('bg-board-blue','bg-board-purple','bg-board-green',
                                    'bg-board-teal','bg-board-orange','bg-board-red')),
@@ -584,17 +598,17 @@ insert into users (id, email, display_name, username) values
   ('fb-alpha', 'alpha@test.dev', 'Nguyễn Văn Alpha', 'alpha'),
   ('fb-beta',  'beta@test.dev',  'Trần Thị Beta',    'beta');
 
-insert into organizations (id, name, icon, slug, owner_id) values
-  ('11111111-1111-1111-1111-111111111111', 'Công ty Demo', '🏢', 'cong-ty-demo', 'fb-alpha');
+insert into organizations (id, name, slug, owner_id) values
+  ('11111111-1111-1111-1111-111111111111', 'Công ty Demo', 'cong-ty-demo', 'fb-alpha');
 
 -- Beta để role 'admin' cho thấy vai trò uỷ quyền (tạo workspace/board, mời người)
 insert into organization_members (org_id, user_id, role) values
   ('11111111-1111-1111-1111-111111111111', 'fb-alpha', 'owner'),
   ('11111111-1111-1111-1111-111111111111', 'fb-beta',  'admin');
 
-insert into workspaces (id, org_id, name, icon, icon_bg, description, created_by) values
+insert into workspaces (id, org_id, name, icon_bg, description, created_by) values
   ('22222222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111',
-   'Dự án Website', '🚀', 'bg-board-purple', 'Workspace mẫu để test', 'fb-alpha');
+   'Dự án Website', 'bg-board-purple', 'Workspace mẫu để test', 'fb-alpha');
 
 insert into workspace_members (workspace_id, user_id, role) values
   ('22222222-2222-2222-2222-222222222222', 'fb-alpha', 'owner'),

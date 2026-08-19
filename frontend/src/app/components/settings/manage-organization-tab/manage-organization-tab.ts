@@ -1,6 +1,6 @@
 import { Component, computed, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { LucideCrown, LucidePlus, LucideUserPlus, LucideX } from '@lucide/angular';
+import { LucideBuilding2, LucideCrown, LucidePlus, LucideUserPlus, LucideX } from '@lucide/angular';
 import { Organization } from '../../../mocks';
 import { User } from '../../../models';
 import { avatarBgFor, initialsOf } from '../../../mocks';
@@ -8,7 +8,7 @@ import { OrgCreateModal } from '../../workspace/org-create-modal/org-create-moda
 
 @Component({
   selector: 'app-manage-organization-tab',
-  imports: [FormsModule, LucideCrown, LucidePlus, LucideUserPlus, LucideX, OrgCreateModal],
+  imports: [FormsModule, LucideBuilding2, LucideCrown, LucidePlus, LucideUserPlus, LucideX, OrgCreateModal],
   templateUrl: './manage-organization-tab.html',
   host: { class: 'block' },
 })
@@ -21,7 +21,11 @@ export class ManageOrganizationTab {
   readonly currentUserId = input<string | null>(null);
 
   readonly switchOrg = output<string>();
-  readonly createOrg = output<{ name: string; icon: string }>();
+  /** Kiểm slug đã bị chiếm chưa — truyền xuống modal, nếu thiếu thì modal không
+   *  cảnh báo được và user sẽ bấm Tạo rồi thất bại im lặng. */
+  readonly isSlugTaken = input<(slug: string) => boolean>(() => false);
+
+  readonly createOrg = output<{ name: string; slug: string }>();
   readonly inviteMember = output<User>();
   readonly removeMember = output<string>();
   readonly flashMessage = output<{ message: string; type?: 'success' | 'error' | 'info' }>();

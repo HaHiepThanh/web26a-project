@@ -12,6 +12,7 @@ import {
   WorkspaceItem,
   WorkspaceMember,
   WorkspaceWithOrg,
+  isSlugTaken,
   loadAllWorkspacesForUser,
   loadStoredWorkspaces,
   persistWorkspaces,
@@ -223,11 +224,16 @@ export class Settings {
     this.orgService.switchOrg(orgId);
   }
 
-  onCreateOrg(event: { name: string; icon: string }): void {
-    const org = this.orgService.createOrg(event.name, event.icon);
-    if (org) {
-      this.flash(`Đã tạo tổ chức "${org.name}" thành công!`);
+  /** Truyền xuống modal để cảnh báo slug trùng ngay khi user đang gõ. */
+  readonly isSlugTaken = (slug: string): boolean => isSlugTaken(slug);
+
+  onCreateOrg(event: { name: string; slug: string }): void {
+    const org = this.orgService.createOrg(event.name, event.slug);
+    if (!org) {
+      this.flash(`Đường dẫn "${event.slug}" vừa bị người khác dùng mất, chọn đường dẫn khác nhé!`);
+      return;
     }
+    this.flash(`Đã tạo tổ chức "${org.name}" thành công!`);
   }
 
   onInviteOrgMember(user: User): void {

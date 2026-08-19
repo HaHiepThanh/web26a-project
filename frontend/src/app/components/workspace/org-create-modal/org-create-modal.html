@@ -23,37 +23,14 @@
     <form (ngSubmit)="onSubmit()" class="space-y-4">
       <!-- Live Preview -->
       <div class="flex items-center gap-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 p-3 border border-slate-200/80 dark:border-slate-800">
-        <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-2xl shadow-xs transition-transform hover:scale-105">
-          {{ iconInput() || '🏢' }}
+        <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 border-slate-200 bg-base-100 text-base font-black text-slate-500 shadow-xs dark:border-slate-700 dark:text-slate-400">
+          {{ previewInitials() }}
         </div>
         <div class="min-w-0 flex-1">
           <span class="block text-2xs font-bold text-slate-400 uppercase tracking-wider">Xem trước</span>
           <span class="block truncate text-sm font-black text-slate-900 dark:text-white">
             {{ nameInput().trim() || 'Tên tổ chức của bạn' }}
           </span>
-        </div>
-      </div>
-
-      <!-- Icon Choice Grid -->
-      <div>
-        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-          Biểu tượng đại diện
-        </label>
-        <div class="grid grid-cols-6 gap-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 p-2 bg-slate-50/50 dark:bg-slate-800/40">
-          @for (ic of iconChoices; track ic) {
-          <button
-            type="button"
-            class="flex h-9 w-full items-center justify-center rounded-xl text-lg transition-all"
-            [class.bg-primary]="iconInput() === ic"
-            [class.text-white]="iconInput() === ic"
-            [class.shadow-xs]="iconInput() === ic"
-            [class.scale-105]="iconInput() === ic"
-            [class.hover:bg-slate-200/70]="iconInput() !== ic"
-            [class.dark:hover:bg-slate-700/60]="iconInput() !== ic"
-            (click)="iconInput.set(ic)">
-            {{ ic }}
-          </button>
-          }
         </div>
       </div>
 
@@ -75,7 +52,7 @@
           [class.focus:border-primary]="!nameError()"
           placeholder="Ví dụ: Công ty Công nghệ Acme, Nhóm Freelance... (tối đa 50 ký tự)"
           [ngModel]="nameInput()"
-          (ngModelChange)="nameInput.set($event); nameError.set(null)"
+          (ngModelChange)="onNameChange($event)"
           name="orgName" />
         
         <div class="mt-1 flex items-center justify-between text-2xs text-slate-400 font-semibold px-1">
@@ -86,6 +63,52 @@
         @if (nameError()) {
         <p class="mt-1 text-xs font-bold text-error flex items-center gap-1 animate-pulse">
           <svg lucideTriangleAlert class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg> {{ nameError() }}
+        </p>
+        }
+      </div>
+
+      <!-- Organization Slug (đường dẫn riêng) -->
+      <div>
+        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200" for="org-create-slug-input">
+          Đường dẫn riêng <span class="text-error">*</span>
+        </label>
+
+        <div class="flex items-stretch rounded-xl border-2 bg-white dark:bg-slate-800 shadow-xs transition-all overflow-hidden"
+          [class.border-error]="slugError()"
+          [class.border-success]="slugOk()"
+          [class.border-slate-300]="!slugError() && !slugOk()"
+          [class.dark:border-slate-600]="!slugError() && !slugOk()">
+          <span class="flex items-center bg-slate-100 dark:bg-slate-700/60 px-2.5 text-2xs font-bold text-slate-500 dark:text-slate-400 select-none">
+            /
+          </span>
+          <input
+            type="text"
+            id="org-create-slug-input"
+            maxlength="40"
+            class="flex-1 min-w-0 bg-transparent px-2.5 py-2 font-mono text-sm font-bold text-slate-900 dark:text-white outline-none"
+            placeholder="cong-ty-cua-toi"
+            [ngModel]="slugInput()"
+            (ngModelChange)="onSlugChange($event)"
+            name="orgSlug" />
+          @if (slugOk()) {
+          <span class="flex items-center pr-2.5 text-success">
+            <svg lucideCheck class="h-4 w-4" [strokeWidth]="3"></svg>
+          </span>
+          }
+        </div>
+
+        @if (slugError()) {
+        <p class="mt-1 text-xs font-bold text-error flex items-center gap-1">
+          <svg lucideTriangleAlert class="h-3.5 w-3.5 shrink-0" [strokeWidth]="2.4"></svg> {{ slugError() }}
+        </p>
+        } @else if (slugOk()) {
+        <p class="mt-1 text-2xs text-slate-500 dark:text-slate-400">
+          Bảng của bạn sẽ có địa chỉ dạng
+          <span class="font-mono font-bold text-slate-700 dark:text-slate-300">/{{ slugInput() }}/board/…</span>
+        </p>
+        } @else {
+        <p class="mt-1 text-2xs text-slate-500 dark:text-slate-400">
+          Chữ thường không dấu, số và gạch ngang. <strong>Không đổi được sau khi tạo.</strong>
         </p>
         }
       </div>

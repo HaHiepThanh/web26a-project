@@ -23,7 +23,7 @@
       [class.dark:bg-slate-900]="activeOrgId() !== org.id" [class.border-slate-300]="activeOrgId() !== org.id"
       [class.dark:border-slate-700]="activeOrgId() !== org.id" [class.hover:bg-slate-100]="activeOrgId() !== org.id"
       (click)="switchOrg.emit(org.id)">
-      <span class="text-base leading-none shrink-0">{{ org.icon }}</span>
+      <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border border-base-300 text-3xs font-black text-base-content/60">{{ initialsOf(org.name) }}</span>
       <span class="font-black truncate min-w-0 flex-1 text-left">{{ org.name }}</span>
       <span class="badge badge-xs font-bold ml-1 shrink-0" [class.bg-white/20]="activeOrgId() === org.id"
         [class.text-white]="activeOrgId() === org.id">
@@ -41,8 +41,8 @@
     <!-- Organization Overview -->
     <div class="flex items-start justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800 min-w-0">
       <div class="flex items-start gap-3.5 min-w-0 flex-1">
-        <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-2xl shadow-xs">
-          {{ curOrg.icon }}
+        <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 border-base-300 text-sm font-black text-base-content/60 shadow-xs">
+          {{ initialsOf(curOrg.name) }}
         </div>
         <div class="min-w-0 flex-1">
           <h3 class="text-lg font-black text-slate-900 dark:text-white truncate block max-w-full" [title]="curOrg.name">
@@ -136,7 +136,7 @@
   } @else {
   <div
     class="rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-8 text-center shadow-xs space-y-3">
-    <div class="flex h-14 w-14 mx-auto items-center justify-center rounded-2xl bg-primary/10 text-2xl">🏢</div>
+    <div class="flex h-14 w-14 mx-auto items-center justify-center rounded-2xl bg-primary/10 text-primary"><svg lucideBuilding2 class="h-7 w-7" [strokeWidth]="2"></svg></div>
     <h3 class="text-base font-black text-slate-800 dark:text-slate-200">Chưa có Organization nào</h3>
     <p class="text-xs text-slate-500 max-w-md mx-auto">Bạn chưa tham gia Organization nào hoặc chưa chọn Organization
       hoạt động.</p>
@@ -213,6 +213,6 @@
 }
 
 <!-- MODAL: Tạo Organization mới -->
-<app-org-create-modal [isOpen]="showCreateOrgModal()" (close)="showCreateOrgModal.set(false)"
+<app-org-create-modal [isOpen]="showCreateOrgModal()" [isSlugTaken]="isSlugTaken()" (close)="showCreateOrgModal.set(false)"
   (createOrg)="createOrg.emit($event)">
 </app-org-create-modal>

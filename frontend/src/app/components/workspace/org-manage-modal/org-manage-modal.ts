@@ -13,7 +13,7 @@ import { AuthService } from '../../../services/auth.service';
 import { User } from '../../../models';
 import { Organization, OrgInvite, avatarBgFor, initialsOf } from '../../../mocks';
 
-/** Modal quản lý 1 Organization: đổi tên/icon, mời thành viên qua UUID/email/tên,
+/** Modal quản lý 1 Organization: đổi tên, mời thành viên qua UUID/email/tên,
  *  xem & huỷ lời mời đang chờ, xoá thành viên. Tách khỏi sidebar vì danh sách
  *  thành viên là dữ liệu dài không giới hạn — nhét vào sidebar sẽ đẩy các nút
  *  chính (Tạo Workspace...) xuống dưới màn hình khi tổ chức đông người. */
@@ -43,17 +43,15 @@ export class OrgManageModal {
   readonly invite = output<{ orgId: string; uuid: string }>();
   readonly removeMember = output<{ orgId: string; userId: string }>();
   readonly cancelInvite = output<string>();
-  readonly rename = output<{ orgId: string; name: string; icon: string }>();
+  readonly rename = output<{ orgId: string; name: string }>();
 
   readonly initialsOf = initialsOf;
   readonly avatarBgFor = avatarBgFor;
 
   readonly nameInput = signal('');
-  readonly iconInput = signal('🏢');
   readonly searchInput = signal('');
   readonly feedback = signal<{ ok: boolean; text: string } | null>(null);
 
-  readonly iconChoices = ['🏢', '🚀', '💼', '🌐', '⚡', '🔥', '🎯', '📊', '🏗️', '🧩', '🎓', '✨'];
 
   /** Chủ sở hữu mới được đổi tên/xoá thành viên — thành viên thường chỉ xem. */
   readonly isOwner = computed(() => {
@@ -64,7 +62,7 @@ export class OrgManageModal {
   readonly nameDirty = computed(() => {
     const o = this.org();
     if (!o) return false;
-    return this.nameInput().trim() !== o.name || this.iconInput() !== o.icon;
+    return this.nameInput().trim() !== o.name;
   });
 
   /** Ứng viên để mời: loại người đã là thành viên, đã có lời mời chờ, và chính mình. */
@@ -92,7 +90,6 @@ export class OrgManageModal {
       if (this.isOpen()) {
         const o = this.org();
         this.nameInput.set(o?.name ?? '');
-        this.iconInput.set(o?.icon ?? '🏢');
         this.searchInput.set('');
         this.feedback.set(null);
       }
@@ -125,7 +122,7 @@ export class OrgManageModal {
     const o = this.org();
     const name = this.nameInput().trim();
     if (!o || !name) return;
-    this.rename.emit({ orgId: o.id, name, icon: this.iconInput() });
+    this.rename.emit({ orgId: o.id, name });
   }
 
   /** Component cha gọi lại sau khi service xử lý xong, để hiện kết quả ngay trong modal. */

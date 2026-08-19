@@ -11,7 +11,7 @@
       <span class="truncate text-base font-bold text-base-content">{{ board().name }}</span>
     </div>
 
-    <a [routerLink]="['/board', board().id]" class="btn btn-primary btn-sm gap-1.5 shadow-sm flex-shrink-0" title="Mở bảng này ở chế độ đầy đủ">
+    <a [routerLink]="boardLink()" class="btn btn-primary btn-sm gap-1.5 shadow-sm flex-shrink-0" title="Mở bảng này ở chế độ đầy đủ">
       Mở board
       <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M7 7h10v10" /></svg>
     </a>

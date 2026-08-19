@@ -3,6 +3,8 @@ import { AuthService } from './auth.service';
 import {
   Organization,
   OrgInvite,
+  findOrgBySlug,
+  isSlugTaken,
   loadActiveOrgId,
   loadAllInvites,
   loadOrgRegistry,
@@ -12,6 +14,7 @@ import {
   saveAllInvites,
   upsertOrganization,
 } from '../mocks';
+import { validateSlugFormat } from '../utils/slug.util';
 
 /** Quản lý Organization (multi-tenant kiểu Supabase) của user đang đăng nhập —
  *  1 user thuộc nhiều Organization, 1 Organization có nhiều thành viên (mời qua
@@ -67,6 +70,17 @@ export class OrganizationService {
     }
   }
 
+  /** Nạp ngay, không chờ effect.
+   *
+   *  Cần thiết vì route guard chạy TRƯỚC khi effect trong constructor kịp chạy ở
+   *  lần tải trang đầu. Không có hàm này, guard thấy `organizations` rỗng và đá
+   *  người đã đăng nhập về /login mỗi lần F5 thẳng vào /:orgSlug/... */
+  ensureLoaded(): void {
+    if (this.organizations().length > 0) return;
+    const userId = this.auth.currentUser()?.id;
+    if (userId) this.reload(userId);
+  }
+
   private reload(userId: string): void {
     const orgs = loadOrganizationsForUser(userId);
     this.organizations.set(orgs);
@@ -95,16 +109,21 @@ export class OrganizationService {
     persistActiveOrgId(userId, orgId);
   }
 
-  createOrg(name: string, icon?: string): Organization | null {
+  createOrg(name: string, slug?: string): Organization | null {
     const userId = this.auth.currentUser()?.id;
     if (!userId) return null;
     const trimmed = name.trim();
     if (!trimmed || trimmed.length > 50) return null;
 
+    // Slug là bắt buộc (DB khai `not null unique`). Kiểm lại lần cuối ở đây kể cả
+    // khi modal đã kiểm: giữa lúc gõ và lúc bấm Tạo, tab khác có thể đã chiếm slug.
+    const wanted = (slug ?? '').trim();
+    if (validateSlugFormat(wanted) || isSlugTaken(wanted)) return null;
+
     const org: Organization = {
       id: `org-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       name: trimmed,
-      icon: icon?.trim() || '🏢',
+      slug: wanted,
       ownerId: userId,
       memberIds: [userId],
       createdAt: new Date().toISOString(),
@@ -114,6 +133,14 @@ export class OrganizationService {
     this.switchOrg(org.id);
     return org;
   }
+
+  /** Tra tổ chức theo slug trên URL. Trả null nếu slug không tồn tại → route 404. */
+  orgBySlug(slug: string): Organization | null {
+    return findOrgBySlug(slug);
+  }
+
+  /** Slug của tổ chức đang chọn — dùng để dựng link /:orgSlug/board/:id. */
+  readonly activeOrgSlug = computed(() => this.activeOrg()?.slug ?? '');
 
   /** Mời 1 user (theo UUID) vào Organization đang chọn. Trả về thông báo lỗi
    *  (string) nếu không mời được, hoặc null nếu gửi lời mời thành công. */
@@ -136,7 +163,6 @@ export class OrganizationService {
       id: `inv-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       orgId: org.id,
       orgName: org.name,
-      orgIcon: org.icon,
       toUserId: target.id,
       fromUserId: me.id,
       fromUserName: me.displayName ?? me.email,
@@ -169,8 +195,8 @@ export class OrganizationService {
     this.reload(userId);
   }
 
-  /** Đổi tên/icon Organization — chỉ chủ sở hữu mới được đổi. */
-  updateOrg(orgId: string, changes: { name?: string; icon?: string }): string | null {
+  /** Đổi tên Organization — chỉ chủ sở hữu mới được đổi. */
+  updateOrg(orgId: string, changes: { name?: string }): string | null {
     const me = this.auth.currentUser();
     if (!me) return 'Bạn cần đăng nhập.';
     const registry = loadOrgRegistry();
@@ -181,7 +207,7 @@ export class OrganizationService {
     const name = changes.name?.trim();
     if (name !== undefined && !name) return 'Tên tổ chức không được để trống.';
     if (name !== undefined && name.length > 50) return 'Tên tổ chức tối đa 50 ký tự.';
-    upsertOrganization({ ...org, name: name || org.name, icon: changes.icon?.trim() || org.icon });
+    upsertOrganization({ ...org, name: name || org.name });
     this.reload(me.id);
     return null;
   }

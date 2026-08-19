@@ -83,18 +83,6 @@ export class Login {
     }
   }
 
-  // ---- Guest bypass (dev/demo — Firebase chưa cấu hình nên chưa đăng nhập thật được) ----
-  continueAsGuest(): void {
-    if (!this.auth.currentUser()) {
-      this.auth.setUser({
-        id: '8f4c2e10-9b3a-4e2a-871d-5b3a1a2e3f40',
-        displayName: 'Nguyễn Văn Nam',
-        email: 'nam.nguyen@trello.dev',
-      });
-    }
-    void this.router.navigateByUrl('/workspace');
-  }
-
   // ---- Google (real Firebase auth) ----
   readonly googleLoading = signal(false);
 

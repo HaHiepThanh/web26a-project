@@ -20,7 +20,6 @@ export class WorkspaceFormModal {
   readonly close = output<void>();
   readonly save = output<{
     name: string;
-    icon: string;
     iconBg: BoardBackground;
     description: string;
     members: WorkspaceMember[];
@@ -29,8 +28,13 @@ export class WorkspaceFormModal {
 
   readonly nameInput = signal('');
   readonly nameError = signal<string | null>(null);
-  readonly iconInput = signal('📂');
   readonly iconBgInput = signal<BoardBackground>('bg-board-blue');
+
+  /** Chữ cái đầu của tên, thay cho emoji đã bỏ. */
+  readonly previewInitials = computed(() => {
+    const name = this.nameInput().trim();
+    return name ? initialsOf(name) : '—';
+  });
   readonly descInput = signal('');
   readonly members = signal<WorkspaceMember[]>([]);
   readonly deleteConfirmArmed = signal(false);
@@ -42,25 +46,6 @@ export class WorkspaceFormModal {
   readonly initialsOf = initialsOf;
   readonly avatarBgFor = avatarBgFor;
 
-  readonly iconCategories = [
-    {
-      name: '💼 Dự án',
-      icons: ['📂', '📁', '🚀', '🎯', '⚡', '🔥', '📊', '📈', '🏢', '🏗️', '📋', '💼', '📌', '🏷️'],
-    },
-    {
-      name: '💻 Công nghệ',
-      icons: ['💻', '⚙️', '🛠️', '🤖', '🔒', '🌐', '🎮', '📱', '🕹️', '🧪', '🧬', '🖥️', '⌨️', '🛰️'],
-    },
-    {
-      name: '🎓 Học tập',
-      icons: ['🎓', '📚', '✏️', '📖', '💡', '🧠', '🔬', '📝', '🏫', '📐', '🏅', '🏆', '🎨', '🖌️'],
-    },
-    {
-      name: '✨ Sáng tạo',
-      icons: ['✨', '💎', '🌟', '☕', '🍀', '🌈', '🍕', '🎉', '✈️', '🎵', '❤️', '🏖️', '🌍', '⛺'],
-    },
-  ];
-  readonly selectedIconCategory = signal<number>(0);
 
   readonly searchResults = computed(() => {
     const q = this.uuidSearchInput().trim().toLowerCase();
@@ -85,17 +70,14 @@ export class WorkspaceFormModal {
         this.deleteConfirmArmed.set(false);
         this.uuidSearchInput.set('');
         this.searchDropdownOpen.set(false);
-        this.selectedIconCategory.set(0);
 
         if (m === 'edit' && ws) {
           this.nameInput.set(ws.name);
-          this.iconInput.set(ws.icon);
           this.iconBgInput.set(ws.iconBg || 'bg-board-blue');
           this.descInput.set(ws.description);
           this.members.set([...(ws.members || [])]);
         } else {
           this.nameInput.set('');
-          this.iconInput.set('📂');
           this.iconBgInput.set('bg-board-blue');
           this.descInput.set('');
 
@@ -184,7 +166,6 @@ export class WorkspaceFormModal {
 
     this.save.emit({
       name,
-      icon: this.iconInput().trim() || '📂',
       iconBg: this.iconBgInput(),
       description: this.descInput().trim(),
       members: this.members(),

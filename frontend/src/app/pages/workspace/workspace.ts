@@ -12,6 +12,7 @@ import {
   BoardItem,
   Privacy,
   initialMockWorkspaces,
+  isSlugTaken,
   loadStoredWorkspaces,
   persistWorkspaces,
   WORKSPACE_TEMPLATES,
@@ -202,9 +203,17 @@ export class Workspace {
   // ---- Modal Tạo Organization mới ----
   readonly showOrgCreateModal = signal(false);
 
-  createOrg(data: { name: string; icon: string }): void {
-    const org = this.orgService.createOrg(data.name, data.icon);
-    if (org) this.addToast(`🏢 Đã tạo tổ chức "${org.name}"!`, 'success');
+  /** Truyền xuống modal để kiểm slug đã bị chiếm chưa ngay khi user đang gõ. */
+  readonly isSlugTaken = (slug: string): boolean => isSlugTaken(slug);
+
+  createOrg(data: { name: string; slug: string }): void {
+    const org = this.orgService.createOrg(data.name, data.slug);
+    if (!org) {
+      this.addToast(`Đường dẫn "${data.slug}" vừa bị người khác dùng mất, chọn đường dẫn khác nhé!`, 'error');
+      return;
+    }
+    this.addToast(`Đã tạo tổ chức "${org.name}" tại /${org.slug}`, 'success');
+    void this.router.navigate(['/', org.slug, 'workspace']);
   }
 
   // ---- Modal quản lý Organization (mở từ nút 3 chấm ở sidebar) ----
@@ -259,8 +268,8 @@ export class Workspace {
     this.orgManageModal()?.showResult(null, 'Đã huỷ lời mời.');
   }
 
-  renameOrg(data: { orgId: string; name: string; icon: string }): void {
-    const error = this.orgService.updateOrg(data.orgId, { name: data.name, icon: data.icon });
+  renameOrg(data: { orgId: string; name: string }): void {
+    const error = this.orgService.updateOrg(data.orgId, { name: data.name });
     this.orgManageModal()?.showResult(error, 'Đã cập nhật thông tin tổ chức.');
     if (!error) this.addToast(`Đã cập nhật tổ chức "${data.name}".`, 'success');
   }
@@ -289,7 +298,7 @@ export class Workspace {
   }
 
   onBoardClick(board: BoardItem): void {
-    void this.router.navigate(['/board', board.id]);
+    void this.router.navigate(['/', this.orgService.activeOrgSlug(), 'board', board.id]);
   }
 
   toggleStar(boardId: string): void {
@@ -413,7 +422,7 @@ export class Workspace {
     const warning = this.boardService.storageWarning();
     if (warning) this.addToast(warning, 'error');
     this.showCreateBoardModal.set(false);
-    void this.router.navigate(['/board', board.id]);
+    void this.router.navigate(['/', this.orgService.activeOrgSlug(), 'board', board.id]);
   }
 
   // ---- Workspace Modal Actions ----
@@ -431,18 +440,16 @@ export class Workspace {
 
   handleWorkspaceSave(data: {
     name: string;
-    icon: string;
     iconBg: BoardBackground;
     description: string;
     members: WorkspaceMember[];
   }): void {
-    const { name, icon, iconBg, description, members } = data;
+    const { name, iconBg, description, members } = data;
 
     if (this.workspaceModalMode() === 'create') {
       const newWs: WorkspaceItem = {
         id: 'ws-' + Date.now(),
         name,
-        icon,
         iconBg,
         membersCount: members.length,
         members,
@@ -463,7 +470,7 @@ export class Workspace {
       this.workspaces.update((list) => {
         const updated = list.map((ws) =>
           ws.id === editingWs.id
-            ? { ...ws, name, icon, iconBg, description, members, membersCount: members.length }
+            ? { ...ws, name, iconBg, description, members, membersCount: members.length }
             : ws,
         );
         this.persist(updated);

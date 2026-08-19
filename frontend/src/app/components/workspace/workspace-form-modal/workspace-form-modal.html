@@ -12,17 +12,17 @@
     </div>
 
     <form (ngSubmit)="onSubmit()">
-      <!-- Icon & Name & Color Theme -->
+      <!-- Name & Color Theme -->
       <div class="mb-4">
         <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-          Biểu tượng, Màu nền & Tên Workspace <span class="text-error">*</span>
+          Màu nền & Tên Workspace <span class="text-error">*</span>
         </label>
         <div class="flex items-center gap-3">
-          <!-- Live Preview of Workspace Icon with Selected Background -->
+          <!-- Xem trước: chữ cái đầu của tên trên nền màu đã chọn -->
           <div
             class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-2xl shadow-md transition-transform hover:scale-105"
             [class]="iconBgInput()">
-            {{ iconInput() || '📂' }}
+            {{ previewInitials() }}
           </div>
 
           <!-- Name input -->
@@ -49,7 +49,7 @@
 
         <!-- Color Palette for Workspace Icon Background -->
         <div class="mt-3">
-          <span class="text-2xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 block mb-1.5">Màu nền biểu tượng:</span>
+          <span class="text-2xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 block mb-1.5">Màu nền:</span>
           <div class="flex flex-wrap gap-2">
             @for (bg of bgClasses; track bg) {
             <div
@@ -61,51 +61,6 @@
               [class.scale-110]="iconBgInput() === bg"
               (click)="iconBgInput.set(bg)"></div>
             }
-          </div>
-        </div>
-
-        <!-- Categorized Icon Selector Grid -->
-        <div class="mt-3 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 p-3">
-          <!-- Category Tabs -->
-          <div class="flex items-center gap-1.5 overflow-x-auto pb-2 border-b border-slate-200 dark:border-slate-700 mb-2.5">
-            @for (cat of iconCategories; track $index) {
-            <button
-              type="button"
-              class="btn btn-xs rounded-lg font-bold text-2xs transition-all"
-              [class.btn-primary]="selectedIconCategory() === $index"
-              [class.btn-ghost]="selectedIconCategory() !== $index"
-              (click)="selectedIconCategory.set($index)">
-              {{ cat.name }}
-            </button>
-            }
-          </div>
-
-          <!-- Icons Grid -->
-          <div class="grid grid-cols-7 gap-1.5">
-            @for (icon of iconCategories[selectedIconCategory()].icons; track icon) {
-            <button
-              type="button"
-              class="flex h-9 w-9 items-center justify-center rounded-xl text-lg transition-all hover:scale-120 hover:bg-slate-200 dark:hover:bg-slate-700 shadow-xs"
-              [class.ring-2]="iconInput() === icon"
-              [class.ring-primary]="iconInput() === icon"
-              [class.bg-white]="iconInput() === icon"
-              [class.dark:bg-slate-700]="iconInput() === icon"
-              [class.scale-110]="iconInput() === icon"
-              (click)="iconInput.set(icon)">
-              {{ icon }}
-            </button>
-            }
-          </div>
-
-          <!-- Custom Icon Input -->
-          <div class="mt-2.5 pt-2 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs">
-            <span class="text-slate-500 font-medium text-2xs">Hoặc nhập biểu tượng bất kỳ:</span>
-            <input type="text"
-              class="input input-bordered input-xs border-2 border-slate-300 dark:border-slate-600 w-16 text-center text-sm font-bold rounded-lg bg-white dark:bg-slate-800"
-              maxlength="4"
-              [ngModel]="iconInput()"
-              (ngModelChange)="iconInput.set($event)"
-              name="customWorkspaceIcon" />
           </div>
         </div>
       </div>

@@ -1,7 +1,8 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
-import { onboardingGuard } from './guards/onboarding.guard';
+import { onboardingDoneGuard, onboardingGuard } from './guards/onboarding.guard';
 import { roleGuard } from './guards/role.guard';
+import { orgRedirectGuard, orgSlugGuard } from './guards/org-slug.guard';
 
 /**
  * Sơ đồ route (lazy-load bằng loadComponent):
@@ -35,17 +36,45 @@ export const routes: Routes = [
 
 
 
+  // --- Màn khởi động: bắt buộc tạo Organization trước khi vào app ---
+  // Nằm NGOÀI app-layout vì lúc này user chưa có tổ chức nào, header/sidebar
+  // (vốn hiển thị tổ chức + workspace) không có gì để render.
+  {
+    path: 'onboarding',
+    canActivate: [onboardingDoneGuard],
+    loadComponent: () => import('./pages/onboarding/onboarding').then((m) => m.Onboarding),
+  },
+
   // --- Phần app đã đăng nhập (#3, #4, #8, #9) ---
   {
     path: '',
     loadComponent: () => import('./layouts/app-layout/app-layout').then((m) => m.AppLayout),
-    // canActivate: [authGuard, onboardingGuard], // TODO: bật khi sẵn sàng
+    canActivate: [onboardingGuard],
     children: [
-      { path: 'workspace', loadComponent: () => import('./pages/workspace/workspace').then((m) => m.Workspace) },
-      { path: 'board/:id', loadComponent: () => import('./pages/board/board').then((m) => m.Board) },
       { path: 'settings', loadComponent: () => import('./pages/settings/settings').then((m) => m.Settings) },
       { path: 'settings/manage-workspace', loadComponent: () => import('./pages/settings/manage-workspace/project-list/project-list').then((m) => m.ProjectList) },
       { path: 'settings/manage-workspace/:boardId', loadComponent: () => import('./pages/settings/manage-workspace/project-members/project-members').then((m) => m.ProjectMembers) },
+      { path: 'not-found', loadComponent: () => import('./pages/not-found/not-found').then((m) => m.NotFound) },
+
+      // Link cũ chưa có slug (header, footer, sau khi đăng nhập) → chuyển sang
+      // /:orgSlug/workspace của tổ chức đang chọn.
+      { path: 'workspace', canActivate: [orgRedirectGuard], children: [] },
+      { path: 'board/:id', canActivate: [orgRedirectGuard], children: [] },
+
+      // ⚠️ PHẢI ĐỨNG CUỐI trong nhóm này: ':orgSlug' khớp mọi chuỗi 1 đoạn, nên
+      // đặt trước 'settings' thì nó nuốt luôn /settings. Angular khớp từ trên
+      // xuống, gặp route đầu tiên là dừng.
+      // (Cùng lý do, mọi route gốc mới thêm phải nằm TRÊN đây VÀ được ghi vào
+      //  RESERVED_SLUGS trong utils/slug.util.ts.)
+      {
+        path: ':orgSlug',
+        canActivate: [orgSlugGuard],
+        children: [
+          { path: '', pathMatch: 'full', redirectTo: 'workspace' },
+          { path: 'workspace', loadComponent: () => import('./pages/workspace/workspace').then((m) => m.Workspace) },
+          { path: 'board/:id', loadComponent: () => import('./pages/board/board').then((m) => m.Board) },
+        ],
+      },
     ],
   },
 

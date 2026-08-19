@@ -121,8 +121,7 @@ users
 organizations
 ├── id          uuid PK
 ├── name        text      -- Tên tổ chức, vd 'Công ty ABC'
-├── icon        text      -- Emoji hiện ở sidebar, mặc định '🏢'
-├── slug        text uniq -- Đường dẫn riêng, vd 'thanh-organization'
+├── slug        text uniq -- Đường dẫn riêng, 3-30 ký tự, vd 'thanh-organization'
 │                         -- BẮT BUỘC nhập, DUY NHẤT, KHÔNG đổi được sau khi tạo
 ├── owner_id    text FK → users.id  -- Người tạo, có toàn quyền
 └── created_at  timestamptz
@@ -130,11 +129,17 @@ organizations
 
 > 📌 **`slug` dùng làm tiền tố cho mọi URL của tổ chức:**
 > ```
-> /thanh-organization                    → trang workspace của tổ chức
+> /thanh-organization                    → tự chuyển sang /workspace bên dưới
+> /thanh-organization/workspace          → danh sách workspace của tổ chức
 > /thanh-organization/board/<uuid>       → 1 board cụ thể
 > ```
 >
-> **Quy tắc DB tự kiểm tra:** chỉ chữ thường + số + gạch ngang, dài 3–40 ký tự,
+> **Vì sao đáng đưa slug vào URL, không chỉ để đẹp:** không có slug thì link
+> `/board/<uuid>` phụ thuộc vào "tổ chức đang chọn" lưu ở máy người xem — gửi link
+> cho đồng nghiệp đang mở tổ chức khác là họ thấy sai dữ liệu. Có slug thì link tự
+> mang theo ngữ cảnh tổ chức, người nhận được chuyển đúng nơi trước khi trang dựng.
+>
+> **Quy tắc DB tự kiểm tra:** chỉ chữ thường + số + gạch ngang, dài 3–30 ký tự,
 > không bắt đầu/kết thúc bằng gạch ngang, không có 2 gạch ngang liền nhau.
 > ✅ `thanh-organization`, `team-ba`, `cong-ty-abc-2026`
 > ❌ `My Org` (chữ hoa + khoảng trắng), `-abc` (đầu là gạch), `ab` (quá ngắn)
@@ -143,11 +148,38 @@ organizations
 > ngay** (404). Muốn cho đổi thì phải thêm bảng lưu slug cũ để redirect — phức tạp
 > hơn nhiều, chưa cần cho đồ án.
 >
-> ⚠️ **Backend phải chặn thêm các slug trùng route hệ thống** (DB không tự biết):
-> `login`, `register`, `settings`, `workspace`, `board`, `api`, `admin`, `auth`,
-> `static`, `assets`, `public`, `new`, `join`, `invite`, `help`, `about`, `terms`,
-> `privacy`, `404`. Nếu user đặt slug là `settings` thì `/settings` sẽ không biết
-> đang trỏ vào trang cài đặt hay tổ chức tên "settings".
+> ⚠️ **Backend phải chặn thêm các slug trùng route hệ thống** (DB không tự biết).
+> Danh sách đầy đủ nằm ở `RESERVED_SLUGS` trong
+> `frontend/src/app/utils/slug.util.ts` — gồm route đang có (`login`, `register`,
+> `forgot-password`, `reset-password`, `workspace`, `board`, `settings`,
+> `dashboard`, `members`, `onboarding`, `not-found`, `404`), file tĩnh Angular
+> sinh ra (`assets`, `static`, `public`, `favicon.ico`, `index.html`), hạ tầng
+> (`api`, `admin`, `auth`, `app`, `www`, `mail`, `cdn`) và một số từ để dành.
+>
+> Nếu user đặt slug là `settings` thì `/settings` sẽ không biết đang trỏ vào trang
+> cài đặt hay tổ chức tên "settings".
+>
+> 🔴 **Cái giá phải trả của việc đặt slug ở gốc URL:** tổ chức **dùng chung
+> namespace** với route của app. Mỗi route gốc mới thêm sau này đều phải được ghi
+> vào danh sách cấm. Tình huống kẹt thật: ai đó đã lấy slug `pricing`, một năm sau
+> muốn thêm trang `/pricing` → không còn cách nào đẹp, vì slug đã cấp thì không cho
+> đổi. Đây là đánh đổi có chủ ý để URL ngắn gọn (GitHub / Vercel / npm cũng làm
+> vậy). Nếu muốn miễn nhiễm hoàn toàn thì phải thêm tiền tố, vd `/o/thanh-organization`.
+
+### Triển khai (deploy) cần gì?
+
+| Việc | Ghi chú |
+|---|---|
+| Rewrite mọi path về `index.html` | **Đã cần sẵn** cho `/board/:id`, slug không phát sinh thêm. Netlify `/* /index.html 200`, Vercel `rewrites`, nginx `try_files $uri /index.html` |
+| Thứ tự route Angular | `:orgSlug` phải khai **sau cùng** trong `app.routes.ts` — nó khớp mọi chuỗi 1 đoạn nên đặt trước `settings` sẽ nuốt luôn `/settings` |
+| DNS / chứng chỉ TLS | **Không cần gì thêm.** Khác hẳn phương án subdomain (`thanh-organization.app.com`) — kiểu đó cần wildcard DNS + wildcard TLS cert (Let's Encrypt phải dùng DNS-01) |
+
+**Chống trùng slug khi 2 người tạo cùng lúc:** kiểm tra lúc user gõ chỉ là UX.
+Chốt chặn thật là ràng buộc `unique` — backend **phải** bắt lỗi Postgres
+`23505 unique_violation` và báo lại tử tế, đừng chỉ tin vào lần kiểm tra trước đó.
+
+**Phân biệt hoa/thường:** an toàn sẵn — CHECK đã ép chữ thường nên không thể tồn
+tại 2 slug chỉ khác nhau hoa/thường.
 
 ### 4.3. `organization_members` — Ai thuộc tổ chức nào
 
@@ -217,8 +249,8 @@ workspaces
 ├── id          uuid PK
 ├── org_id      uuid FK → organizations.id  -- Thuộc tổ chức nào
 ├── name        text      -- Tên, vd 'Dự án Website'
-├── icon        text      -- Emoji người dùng tự chọn, mặc định '📂'
-├── icon_bg     text      -- Màu nền icon: 'bg-board-blue' | purple | green | teal | orange | red
+├── icon_bg     text      -- Màu nền: 'bg-board-blue' | purple | green | teal | orange | red
+│                         -- Giao diện hiện CHỮ CÁI ĐẦU của name trên nền màu này
 ├── description text null -- Mô tả ngắn
 ├── created_by  text FK → users.id
 └── created_at  timestamptz
@@ -621,9 +653,9 @@ alter table cards add constraint cards_priority_check
 | Bảng | Thêm cột |
 |---|---|
 | `users` | `username`, `phone`, `job_title`, `updated_at` |
-| `organizations` | `icon`, `slug` (bắt buộc + duy nhất) |
+| `organizations` | `slug` (bắt buộc + duy nhất) |
 | `organization_members` | role thêm mức `admin` |
-| `workspaces` | `icon`, `icon_bg`, `description`, `created_by` |
+| `workspaces` | `icon_bg`, `description`, `created_by` |
 | `boards` | `background`, `background_image_path` (ảnh nền tự tải lên) |
 | `activity_logs` | `card_id` |
 
@@ -643,6 +675,7 @@ alter table cards add constraint cards_priority_check
 | Cột `password` | Firebase giữ mật khẩu — **không bao giờ** lưu vào DB |
 | `users.language`, `users.timezone` | App cố định English + UTC+7 → không cần lưu. **Đã gỡ luôn 2 dropdown** trong trang Settings |
 | `lists.color` | Chưa có tính năng đổi màu cột. **Đã gỡ luôn chấm tròn màu** ở tiêu đề cột (cả Column View lẫn Matrix View), tiêu đề cột chỉnh to hơn cho dễ đọc |
+| `organizations.icon`, `workspaces.icon` | Bỏ hẳn emoji vì nhìn thiếu chuyên nghiệp. Thay bằng **chữ cái đầu của tên** (vd 'Đồ án CNTT' → `ĐC`). Workspace vẫn giữ `icon_bg` để phân biệt bằng màu; Tổ chức thì không màu, chỉ viền xám |
 
 ---
 

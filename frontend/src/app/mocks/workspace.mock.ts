@@ -26,7 +26,7 @@ export interface BoardItem {
 export interface WorkspaceItem {
   id: string;
   name: string;
-  icon: string;
+  /** Chỉ còn MÀU nền, không còn emoji — hiển thị bằng chữ cái đầu của tên. */
   iconBg: BoardBackground;
   membersCount: number;
   members: WorkspaceMember[];

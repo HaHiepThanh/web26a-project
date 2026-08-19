@@ -162,8 +162,8 @@
 </app-board-edit-modal>
 
 <!-- MODAL: Tạo Organization mới -->
-<app-org-create-modal [isOpen]="showOrgCreateModal()" (close)="showOrgCreateModal.set(false)"
-  (createOrg)="createOrg($event)">
+<app-org-create-modal [isOpen]="showOrgCreateModal()" [isSlugTaken]="isSlugTaken"
+  (close)="showOrgCreateModal.set(false)" (createOrg)="createOrg($event)">
 </app-org-create-modal>
 
 <!-- MODAL: Quản lý Organization (mời/xoá thành viên, đổi tên) -->

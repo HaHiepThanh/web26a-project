@@ -6,6 +6,7 @@ import { ChatService, CURRENT_CHAT_USER_ID } from '../../../services/chat.servic
 import { CardService } from '../../../services/card.service';
 import { ListService } from '../../../services/list.service';
 import { ActivityService } from '../../../services/activity.service';
+import { OrganizationService } from '../../../services/organization.service';
 import { MessageList } from '../message-list/message-list';
 import { ChatInput } from '../chat-input/chat-input';
 
@@ -25,6 +26,10 @@ import { ChatInput } from '../chat-input/chat-input';
 })
 export class DashboardChatThread {
   private readonly boardService = inject(BoardService);
+  private readonly orgService = inject(OrganizationService);
+
+  /** Link mở board đầy đủ — phải kèm slug tổ chức vì route là /:orgSlug/board/:id. */
+  readonly boardLink = computed(() => ['/', this.orgService.activeOrgSlug(), 'board', this.board().id]);
   private readonly chat = inject(ChatService);
   private readonly cardService = inject(CardService);
   private readonly listService = inject(ListService);

@@ -42,7 +42,7 @@
         [class.dark:border-slate-800]="selectedOrgFilter() !== org.id"
         [class.hover:bg-slate-100]="selectedOrgFilter() !== org.id" [title]="org.name"
         (click)="changeOrgFilter.emit(org.id)">
-        <span class="shrink-0 text-sm">{{ org.icon }}</span>
+        <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded border border-base-300 text-3xs font-black text-base-content/55">{{ initialsOf(org.name) }}</span>
         <span class="truncate min-w-0 flex-1 text-left">{{ org.name }}</span>
       </button>
       }
@@ -62,7 +62,7 @@
       [class.dark:border-slate-800]="selectedWorkspaceId() !== ws.id"
       [class.hover:bg-slate-100]="selectedWorkspaceId() !== ws.id"
       [title]="ws.name + (ws.orgName ? ' — ' + ws.orgName : '')" (click)="selectWorkspace.emit(ws.id)">
-      <span class="text-base leading-none shrink-0">{{ ws.icon }}</span>
+      <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded text-3xs font-black text-white" [class]="ws.iconBg">{{ initialsOf(ws.name) }}</span>
       <span class="font-black truncate min-w-0 flex-1 text-left">{{ ws.name }}</span>
       <span class="badge badge-xs font-bold ml-1 shrink-0" [class.bg-white/20]="selectedWorkspaceId() === ws.id"
         [class.text-white]="selectedWorkspaceId() === ws.id">
@@ -82,7 +82,7 @@
       <div class="flex items-start gap-3.5 min-w-0 flex-1">
         <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-2xl shadow-xs"
           [class]="curWs.iconBg">
-          {{ curWs.icon }}
+          {{ initialsOf(curWs.name) }}
         </div>
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-2 flex-wrap min-w-0">
@@ -93,7 +93,7 @@
             @if (curWs.orgName) {
             <span class="badge badge-sm badge-ghost font-bold text-2xs truncate max-w-[180px] shrink-0"
               [title]="curWs.orgName">
-              🏢 {{ curWs.orgName }}
+              {{ curWs.orgName }}
             </span>
             }
           </div>
@@ -191,7 +191,7 @@
   } @else {
   <div
     class="rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-8 text-center shadow-xs space-y-3">
-    <div class="flex h-14 w-14 mx-auto items-center justify-center rounded-2xl bg-primary/10 text-2xl">🏢</div>
+    <div class="flex h-14 w-14 mx-auto items-center justify-center rounded-2xl bg-primary/10 text-primary"><svg lucideBuilding2 class="h-7 w-7" [strokeWidth]="2"></svg></div>
     <h3 class="text-base font-black text-slate-800 dark:text-slate-200">Chưa có Workspace nào</h3>
     <p class="text-xs text-slate-500 max-w-md mx-auto">
       @if (selectedOrgFilter() !== null) {
