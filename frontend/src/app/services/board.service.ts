@@ -137,23 +137,26 @@ export class BoardService {
       createdAt: new Date().toISOString(),
     };
     this.createdBoards.update((map) => ({ ...map, [board.id]: board }));
-
-    // Ảnh nền base64 có thể làm vỡ quota localStorage (~5MB). Nếu vỡ, bỏ ảnh rồi lưu
-    // lại: thà mất ảnh nền còn hơn mất luôn cả board.
-    this.storageWarning.set(null);
-    if (!this.persist() && board.backgroundImageUrl) {
-      this.createdBoards.update((map) => ({ ...map, [board.id]: { ...map[board.id], backgroundImageUrl: undefined } }));
-      this.persist();
-      this.storageWarning.set('Bộ nhớ trình duyệt đã đầy — board được tạo nhưng ảnh nền không lưu được.');
-      return this.createdBoards()[board.id];
-    }
-    return board;
+    this.persistOrDropImage(board.id);
+    return this.createdBoards()[board.id];
   }
 
   async updateBoard(id: string, changes: Partial<Pick<Board, 'name' | 'visibility' | 'background' | 'backgroundImageUrl'>>): Promise<void> {
     this.createdBoards.update((map) => (map[id] ? { ...map, [id]: { ...map[id], ...changes } } : map));
     if (this.currentBoard()?.id === id) this.currentBoard.update((b) => (b ? { ...b, ...changes } : b));
+    this.persistOrDropImage(id);
+  }
+
+  /** Ảnh nền base64 có thể làm vỡ quota localStorage (~5MB). Nếu vỡ, bỏ ảnh rồi lưu
+   *  lại: thà mất ảnh nền còn hơn mất luôn cả board (dùng chung cho tạo mới lẫn sửa). */
+  private persistOrDropImage(boardId: string): void {
+    this.storageWarning.set(null);
+    if (this.persist()) return;
+    const board = this.createdBoards()[boardId];
+    if (!board?.backgroundImageUrl) return;
+    this.createdBoards.update((map) => ({ ...map, [boardId]: { ...map[boardId], backgroundImageUrl: undefined } }));
     this.persist();
+    this.storageWarning.set('Bộ nhớ trình duyệt đã đầy — đã lưu board nhưng ảnh nền không lưu được.');
   }
 
   async deleteBoard(id: string): Promise<void> {

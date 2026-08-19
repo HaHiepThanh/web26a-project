@@ -140,7 +140,7 @@
         <app-workspace-card-item [workspace]="ws" [bgImageByBoardId]="bgImageByBoardId()" [confirmDeleteKey]="confirmDeleteKey()"
           (confirmDeleteKeyChange)="confirmDeleteKey.set($event)" (editWorkspace)="openEditWorkspace($event)"
           (createBoard)="openCreateBoard($event)" (boardClick)="onBoardClick($event)" (toggleStar)="toggleStar($event)"
-          (deleteBoard)="deleteBoard($event)">
+          (editBoard)="openEditBoard($event)" (deleteBoard)="deleteBoard($event)">
         </app-workspace-card-item>
         }
       </div>
@@ -154,6 +154,12 @@
   [initialWorkspaceId]="createBoardInitialWorkspaceId()" [initialTitle]="createBoardInitialTitle()"
   (close)="showCreateBoardModal.set(false)" (submitBoard)="handleBoardSubmit($event)">
 </app-create-board-modal>
+
+<!-- MODAL: Sửa bảng (tên + nền) -->
+<app-board-edit-modal [isOpen]="showBoardEditModal()" [board]="editingBoard()?.board ?? null"
+  [currentBgImageUrl]="bgImageByBoardId()[editingBoard()?.board?.id ?? '']"
+  (close)="showBoardEditModal.set(false)" (save)="handleBoardEditSave($event)">
+</app-board-edit-modal>
 
 <!-- MODAL: Quản lý Organization (mời/xoá thành viên, đổi tên) -->
 <app-org-manage-modal [isOpen]="showOrgManageModal()" [org]="managingOrg()" [members]="managingOrgMembers()"

@@ -1,10 +1,10 @@
-import { Component, input, output } from '@angular/core';
-import { LucideBuilding2, LucideGlobe, LucideLock, LucidePencil, LucideStar } from '@lucide/angular';
+import { Component, input, output, signal } from '@angular/core';
+import { LucideBuilding2, LucideEllipsisVertical, LucideGlobe, LucideLock, LucidePencil, LucideStar } from '@lucide/angular';
 import { BoardItem, WorkspaceItem, avatarBgFor, initialsOf } from '../../../mocks';
 
 @Component({
   selector: 'app-workspace-card-item',
-  imports: [LucideBuilding2, LucideGlobe, LucideLock, LucidePencil, LucideStar],
+  imports: [LucideBuilding2, LucideEllipsisVertical, LucideGlobe, LucideLock, LucidePencil, LucideStar],
   templateUrl: './workspace-card-item.html',
   host: { class: 'block' },
 })
@@ -17,12 +17,30 @@ export class WorkspaceCardItem {
   readonly editWorkspace = output<WorkspaceItem>();
   readonly createBoard = output<string>();
   readonly boardClick = output<BoardItem>();
+  readonly editBoard = output<{ workspaceId: string; board: BoardItem }>();
   readonly toggleStar = output<string>();
   readonly deleteBoard = output<{ workspaceId: string; board: BoardItem }>();
   readonly confirmDeleteKeyChange = output<string | null>();
 
   readonly initialsOf = initialsOf;
   readonly avatarBgFor = avatarBgFor;
+
+  /** Menu 3-chấm (Sửa/Xoá) đang mở cho board nào — state cục bộ, không cần đẩy ra ngoài. */
+  readonly openMenuKey = signal<string | null>(null);
+
+  toggleBoardMenu(key: string): void {
+    this.openMenuKey.update((cur) => (cur === key ? null : key));
+  }
+
+  onEditBoard(board: BoardItem): void {
+    this.openMenuKey.set(null);
+    this.editBoard.emit({ workspaceId: this.workspace().id, board });
+  }
+
+  onAskDeleteBoard(key: string): void {
+    this.openMenuKey.set(null);
+    this.confirmDeleteKeyChange.emit(key);
+  }
 
   onDeleteBoard(wsId: string, board: BoardItem): void {
     this.confirmDeleteKeyChange.emit(null);

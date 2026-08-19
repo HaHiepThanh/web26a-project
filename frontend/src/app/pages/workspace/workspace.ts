@@ -23,6 +23,7 @@ import { WorkspaceSidebar } from '../../components/workspace/workspace-sidebar/w
 import { WorkspaceWelcomeBanner } from '../../components/workspace/workspace-welcome-banner/workspace-welcome-banner';
 import { WorkspaceCardItem } from '../../components/workspace/workspace-card-item/workspace-card-item';
 import { CreateBoardModal } from '../../components/workspace/create-board-modal/create-board-modal';
+import { BoardEditModal } from '../../components/workspace/board-edit-modal/board-edit-modal';
 import { WorkspaceFormModal } from '../../components/workspace/workspace-form-modal/workspace-form-modal';
 
 interface Toast {
@@ -45,6 +46,7 @@ function toBoardVisibility(privacy: Privacy): BoardVisibility {
     WorkspaceWelcomeBanner,
     WorkspaceCardItem,
     CreateBoardModal,
+    BoardEditModal,
     WorkspaceFormModal,
     LucideBuilding2,
     LucideGlobe,
@@ -89,6 +91,9 @@ export class Workspace {
   readonly showWorkspaceModal = signal(false);
   readonly workspaceModalMode = signal<'create' | 'edit'>('create');
   readonly selectedWorkspaceForEdit = signal<WorkspaceItem | null>(null);
+
+  readonly showBoardEditModal = signal(false);
+  readonly editingBoard = signal<{ workspaceId: string; board: BoardItem } | null>(null);
 
   // Computed views
   readonly totalBoardsCount = computed(() => {
@@ -302,7 +307,43 @@ export class Workspace {
       this.persist(updated);
       return updated;
     });
+    void this.boardService.deleteBoard(board.id);
     this.addToast(`Đã xóa bảng "${board.title}"`, 'info');
+  }
+
+  // ---- Board Edit Modal ----
+  openEditBoard(payload: { workspaceId: string; board: BoardItem }): void {
+    this.editingBoard.set(payload);
+    this.showBoardEditModal.set(true);
+  }
+
+  async handleBoardEditSave(data: {
+    boardId: string;
+    title: string;
+    background: BoardBackground;
+    backgroundImageUrl?: string;
+  }): Promise<void> {
+    const { boardId, title, background, backgroundImageUrl } = data;
+    const target = this.editingBoard();
+    if (!target) return;
+
+    await this.boardService.updateBoard(boardId, { name: title, background, backgroundImageUrl });
+
+    this.workspaces.update((list) => {
+      const updated = list.map((ws) =>
+        ws.id === target.workspaceId
+          ? { ...ws, boards: ws.boards.map((b) => (b.id === boardId ? { ...b, title, bgClass: background } : b)) }
+          : ws,
+      );
+      this.persist(updated);
+      return updated;
+    });
+
+    this.showBoardEditModal.set(false);
+    this.editingBoard.set(null);
+    this.addToast(`Đã lưu thay đổi cho bảng "${title}"!`, 'success');
+    const warning = this.boardService.storageWarning();
+    if (warning) this.addToast(warning, 'error');
   }
 
   // ---- Board Modal Actions ----

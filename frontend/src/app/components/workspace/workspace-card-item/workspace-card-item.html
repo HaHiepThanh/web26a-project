@@ -93,15 +93,12 @@
         </div>
       </div>
 
-      <!-- Delete board button -->
+      <!-- 3-chấm: mở menu Sửa / Xoá bảng (hiện khi hover) -->
       <button
-        class="absolute right-8 top-2.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-black/30 text-white opacity-0 transition hover:bg-black/55 group-hover:opacity-100"
-        title="Xóa bảng"
-        (click)="$event.stopPropagation(); confirmDeleteKeyChange.emit(workspace().id + ':' + board.id)">
-        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 6h18" />
-          <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6" />
-        </svg>
+        class="absolute right-8 top-2.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-black/30 text-white opacity-0 transition hover:bg-black/55 focus-visible:opacity-100 group-hover:opacity-100"
+        title="Tuỳ chọn bảng" [attr.aria-label]="'Tuỳ chọn ' + board.title"
+        (click)="$event.stopPropagation(); toggleBoardMenu(workspace().id + ':' + board.id)">
+        <svg lucideEllipsisVertical class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg>
       </button>
 
       <!-- Star button -->
@@ -125,6 +122,30 @@
         </span>
         <span class="badge badge-xs border-none bg-black/30 text-white font-black px-1.5">{{ board.badge }}</span>
       </div>
+
+      <!-- Popover: menu Sửa / Xoá bảng -->
+      @if (openMenuKey() === workspace().id + ':' + board.id) {
+      <div class="fixed inset-0 z-[999] cursor-default"
+        (click)="$event.stopPropagation(); openMenuKey.set(null)"></div>
+      <div
+        class="absolute right-2 top-9 z-[1000] w-32 rounded-2xl border border-base-300 bg-base-100 p-1 text-left shadow-2xl"
+        (click)="$event.stopPropagation()">
+        <button type="button"
+          class="flex w-full items-center gap-1.5 rounded-xl px-2 py-1.5 text-left text-2xs font-bold text-slate-700 hover:bg-base-200 dark:text-slate-300"
+          (click)="onEditBoard(board)">
+          <svg lucidePencil class="h-3 w-3 shrink-0" [strokeWidth]="2.4"></svg> Sửa bảng
+        </button>
+        <button type="button"
+          class="flex w-full items-center gap-1.5 rounded-xl px-2 py-1.5 text-left text-2xs font-bold text-error hover:bg-error/10"
+          (click)="onAskDeleteBoard(workspace().id + ':' + board.id)">
+          <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 6h18" />
+            <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6" />
+          </svg>
+          Xoá bảng
+        </button>
+      </div>
+      }
 
       <!-- Popover Confirm Delete -->
       @if (confirmDeleteKey() === workspace().id + ':' + board.id) {
