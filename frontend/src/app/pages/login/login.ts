@@ -89,10 +89,23 @@ export class Login {
   async onGoogleLogin(): Promise<void> {
     this.googleLoading.set(true);
     try {
-      await this.auth.loginWithGoogle();
-      void this.router.navigateByUrl('/workspace');
-    } catch {
-      this.addToast('Đăng nhập Google thất bại. Vui lòng thử lại.', 'error');
+      const { needsOnboarding } = await this.auth.loginWithGoogle();
+      // Chưa thuộc tổ chức nào → đi tạo tổ chức trước. Có rồi → vào thẳng app
+      // (/workspace tự chuyển sang /:orgSlug/workspace).
+      void this.router.navigateByUrl(needsOnboarding ? '/onboarding' : '/workspace');
+    } catch (err) {
+      // Người dùng tự đóng popup thì không phải lỗi — đừng doạ họ bằng toast đỏ.
+      const code = (err as { code?: string })?.code ?? '';
+      if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') return;
+
+      const message =
+        code === 'auth/unauthorized-domain'
+          ? 'Tên miền này chưa được cho phép trong Firebase Console → Authentication → Settings → Authorized domains.'
+          : code === 'auth/operation-not-allowed'
+            ? 'Nhà cung cấp Google chưa được bật trong Firebase Console → Authentication → Sign-in method.'
+            : 'Đăng nhập Google thất bại. Vui lòng thử lại.';
+      this.addToast(message, 'error');
+      console.error('[Google login]', err);
     } finally {
       this.googleLoading.set(false);
     }

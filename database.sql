@@ -23,7 +23,9 @@
 --  10. messages
 --  11. board_saved_filters, board_highlight_groups
 --  12. View thống kê board (3 view)
---  13. Seed dữ liệu mẫu  (đã comment — chỉ mở khi cần test)
+--  13. Trigger tự cập nhật updated_at
+--  14. Bật RLS (BẮT BUỘC — không có là DB mở toang)
+--  15. Seed dữ liệu mẫu  (đã comment — chỉ mở khi cần test)
 --
 -- ⚠️ BẢO MẬT: backend dùng service_role key nên RLS bị BỎ QUA hoàn toàn.
 --    DB không tự bảo vệ bạn — mọi query trong backend BẮT BUỘC kèm
@@ -579,8 +581,87 @@ where c.completed_at is null
 order by days_overdue desc;
 
 
+
+
 -- =============================================================================
--- 13. SEED — dữ liệu mẫu để test (đã comment, KHÔNG chạy trên production)
+-- 13. TRIGGER — tự cập nhật updated_at
+-- =============================================================================
+-- 2 bảng có cột `updated_at` (users, cards). Nếu không có trigger này, cột đó
+-- được gán lúc INSERT rồi ĐỨNG YÊN MÃI MÃI — backend phải nhớ tự set mỗi lần
+-- UPDATE, quên một chỗ là dữ liệu sai âm thầm.
+-- Để DB tự lo thì không bao giờ quên được.
+
+create or replace function set_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+create trigger trg_users_updated_at
+  before update on users
+  for each row execute function set_updated_at();
+
+create trigger trg_cards_updated_at
+  before update on cards
+  for each row execute function set_updated_at();
+
+
+-- =============================================================================
+-- 14. BẬT ROW LEVEL SECURITY (RLS) — BẮT BUỘC TRÊN SUPABASE
+-- =============================================================================
+-- ⚠️ ĐỌC KỸ PHẦN NÀY. Không có nó, database của bạn mở toang cho cả Internet.
+--
+-- Supabase phơi toàn bộ schema `public` ra ngoài qua PostgREST, và mặc định cấp
+-- quyền cho 2 role `anon` + `authenticated`. Mà `anon key` thì NẰM NGAY TRONG
+-- MÃ FRONTEND — ai mở DevTools cũng lấy được.
+--
+-- Đã kiểm chứng thực tế trên Postgres 16: khi CHƯA bật RLS, chỉ với quyền `anon`
+-- là đọc được email người dùng, thêm tổ chức giả, và XOÁ tổ chức thật.
+--
+-- CÁCH VÁ: bật RLS và KHÔNG tạo policy nào.
+--   • anon / authenticated  → không đọc/ghi được gì cả (mặc định là từ chối)
+--   • service_role          → BỎ QUA RLS hoàn toàn, backend chạy y như cũ
+-- Đúng với kiến trúc đã chọn: backend là cánh cửa DUY NHẤT vào dữ liệu.
+--
+-- Sau này nếu muốn cho frontend gọi thẳng Supabase (bỏ backend), lúc đó mới cần
+-- viết policy cho từng bảng — nhưng phải viết đủ 20 bảng, thiếu 1 là hở.
+
+alter table activity_logs enable row level security;
+alter table board_highlight_groups enable row level security;
+alter table board_members enable row level security;
+alter table board_saved_filters enable row level security;
+alter table board_stars enable row level security;
+alter table boards enable row level security;
+alter table card_attachments enable row level security;
+alter table card_labels enable row level security;
+alter table cards enable row level security;
+alter table checklist_items enable row level security;
+alter table comments enable row level security;
+alter table labels enable row level security;
+alter table lists enable row level security;
+alter table messages enable row level security;
+alter table organization_invites enable row level security;
+alter table organization_members enable row level security;
+alter table organizations enable row level security;
+alter table users enable row level security;
+alter table workspace_members enable row level security;
+alter table workspaces enable row level security;
+
+-- View KHÔNG tự kế thừa RLS của bảng bên dưới: mặc định view chạy bằng quyền
+-- của NGƯỜI TẠO view (postgres) nên vẫn đọc xuyên qua RLS. `security_invoker`
+-- bắt view chạy bằng quyền của NGƯỜI GỌI — thiếu dòng này thì 3 view thống kê
+-- trở thành cửa sau, rò đúng dữ liệu mà RLS vừa chặn.
+alter view board_member_workload set (security_invoker = on);
+alter view board_overdue_cards set (security_invoker = on);
+alter view board_stats_overview set (security_invoker = on);
+
+
+-- =============================================================================
+-- 15. SEED — dữ liệu mẫu để test (đã comment, KHÔNG chạy trên production)
 -- =============================================================================
 -- Bỏ dấu comment khối dưới để tạo: 2 user, 1 org, 1 workspace, 1 board, 3 cột,
 -- 5 thẻ phủ đủ mọi trạng thái → đủ kiểm chứng cả 3 view thống kê ở mục 12.

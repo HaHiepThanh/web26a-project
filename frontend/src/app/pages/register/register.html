@@ -143,53 +143,6 @@
         </p>
       </form>
 
-      <!-- Bộ công cụ giả lập QA/Demo — thu gọn, tách hẳn hình thức khỏi form thật -->
-      <details class="sim-toolbar collapse collapse-arrow mt-5 rounded-box border border-dashed border-warning/50 bg-warning/5">
-        <summary class="collapse-title min-h-0 py-2.5 text-xs font-bold uppercase tracking-wide text-warning">
-          🧪 Thanh công cụ giả lập (QA/Demo)
-        </summary>
-        <div class="collapse-content">
-          <div class="flex flex-col gap-2.5 pt-1">
-            <div class="flex flex-wrap items-center gap-2">
-              <span class="w-full text-2xs font-semibold uppercase text-base-content/50 sm:w-[132px] sm:shrink-0">Luồng thành công</span>
-              <button type="button" class="btn btn-success btn-outline btn-xs" (click)="autoFillValid()">🎲 Auto-fill hợp lệ</button>
-            </div>
-
-            <div class="flex flex-wrap items-center gap-2">
-              <span class="w-full text-2xs font-semibold uppercase text-base-content/50 sm:w-[132px] sm:shrink-0">Edge cases</span>
-              <button type="button" class="btn btn-error btn-outline btn-xs" (click)="fillDuplicate()">❌ Trùng Username/Email</button>
-              <button type="button" class="btn btn-error btn-outline btn-xs" (click)="fillInvalidFormat()">❌ Sai định dạng</button>
-              <button type="button" class="btn btn-error btn-outline btn-xs" (click)="fillPasswordMismatch()">❌ Mật khẩu không khớp</button>
-            </div>
-
-            <div class="flex flex-wrap items-center gap-2">
-              <span class="w-full text-2xs font-semibold uppercase text-base-content/50 sm:w-[132px] sm:shrink-0">Trạng thái hệ thống</span>
-              <button
-                type="button"
-                class="btn btn-xs"
-                [class.btn-warning]="systemSimMode() === 'slow'"
-                [class.btn-outline]="systemSimMode() !== 'slow'"
-                (click)="armSlowNetwork()"
-                title="Bấm Đăng ký lần tới sẽ hiển thị loading 3 giây"
-              >
-                🐢 Mạng chậm 3s
-                @if (systemSimMode() === 'slow') { <span class="badge badge-xs badge-neutral ml-1">Đã bật ✓</span> }
-              </button>
-              <button
-                type="button"
-                class="btn btn-xs"
-                [class.btn-error]="systemSimMode() === 'server-error'"
-                [class.btn-outline]="systemSimMode() !== 'server-error'"
-                (click)="armServerError()"
-                title="Bấm Đăng ký lần tới sẽ báo lỗi hệ thống 500"
-              >
-                💥 Lỗi Server 500
-                @if (systemSimMode() === 'server-error') { <span class="badge badge-xs badge-neutral ml-1">Đã bật ✓</span> }
-              </button>
-            </div>
-          </div>
-        </div>
-      </details>
     </div>
 
     <div class="footer">© 2026 TrelloPro Inc.</div>

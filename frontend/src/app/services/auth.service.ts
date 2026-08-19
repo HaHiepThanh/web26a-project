@@ -1,12 +1,31 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import {
   GoogleAuthProvider,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
+  updateProfile,
   onAuthStateChanged,
 } from 'firebase/auth';
 import { FirebaseService } from './firebase.service';
+import { ApiService } from './api.service';
 import { User, MOCK_SEARCHABLE_USERS, generateUuid } from '../models';
+
+/** Phản hồi của GET /auth/me ở backend (xem backend/src/modules/auth/auth.service.ts). */
+export interface MeResponse {
+  user: {
+    id: string;
+    email: string;
+    display_name: string | null;
+    username: string | null;
+    phone: string | null;
+    job_title: string | null;
+    avatar_url: string | null;
+  };
+  organizations: { id: string; name: string; slug: string; role: 'owner' | 'admin' | 'member' }[];
+  needsOnboarding: boolean;
+}
 
 const STORAGE_KEY_USER = 'trello_user';
 const STORAGE_KEY_ALL_USERS = 'trello_registered_users';
@@ -19,6 +38,7 @@ const STORAGE_KEY_ALL_USERS = 'trello_registered_users';
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly firebase = inject(FirebaseService);
+  private readonly api = inject(ApiService);
 
   readonly currentUser = signal<User | null>(this.getInitialUser());
   readonly isLoggedIn = computed(() => this.currentUser() !== null);
@@ -126,20 +146,88 @@ export class AuthService {
     );
   }
 
-  // Đăng nhập Google popup
-  async loginWithGoogle(): Promise<void> {
-    if (this.firebase?.auth) {
-      const res = await signInWithPopup(this.firebase.auth, new GoogleAuthProvider());
-      if (res.user) {
-        const user: User = {
-          id: res.user.uid,
-          email: res.user.email ?? '',
-          displayName: res.user.displayName ?? undefined,
-          avatarUrl: res.user.photoURL ?? undefined,
-        };
-        this.setUser(user);
-      }
+  /**
+   * Đăng nhập Google bằng popup, rồi ĐỒNG BỘ hồ sơ xuống database qua backend.
+   *
+   * Vì sao phải gọi backend chứ không tự ghi thẳng vào Supabase?
+   * Frontend chỉ có khoá công khai (anon) mà RLS đã chặn hết — đúng như thiết kế.
+   * Chỉ backend giữ `service_role key` mới ghi được, và nó phải verify ID token
+   * trước để chắc chắn người gọi đúng là chủ tài khoản Google đó.
+   *
+   * Trả về `needsOnboarding` để trang Login biết nên đưa user đi đâu.
+   */
+  async loginWithGoogle(): Promise<{ needsOnboarding: boolean }> {
+    if (!this.firebase?.auth) {
+      throw new Error('Firebase chưa được cấu hình.');
     }
+
+    const res = await signInWithPopup(this.firebase.auth, new GoogleAuthProvider());
+    if (!res.user) throw new Error('Đăng nhập Google không trả về người dùng.');
+
+    // GET /auth/me vừa upsert hồ sơ, vừa trả về danh sách tổ chức — 1 request là đủ.
+    return this.syncFromBackend();
+  }
+
+  /**
+   * Đăng ký bằng email + mật khẩu — QUA FIREBASE, không phải Supabase Auth.
+   *
+   * Vì sao Firebase chứ không Supabase Auth? Backend chỉ verify Firebase ID token,
+   * và `users.id` trong DB chính là Firebase uid. Dùng Supabase Auth sẽ sinh ra
+   * một uuid thứ hai cho cùng một người → hai danh tính, và token không qua nổi
+   * FirebaseAuthGuard.
+   *
+   * Mật khẩu KHÔNG bao giờ đi qua server của chúng ta: Firebase tự băm scrypt +
+   * salt riêng từng user. DB không có cột `password`.
+   */
+  async registerWithEmail(data: {
+    email: string;
+    password: string;
+    displayName: string;
+    username?: string;
+    phone?: string;
+  }): Promise<{ needsOnboarding: boolean }> {
+    if (!this.firebase?.auth) throw new Error('Firebase chưa được cấu hình.');
+
+    const cred = await createUserWithEmailAndPassword(
+      this.firebase.auth,
+      data.email.trim(),
+      data.password,
+    );
+    // Đặt tên hiển thị ngay để token sau đó mang sẵn claim `name`.
+    if (data.displayName.trim()) {
+      await updateProfile(cred.user, { displayName: data.displayName.trim() });
+      await cred.user.getIdToken(true); // ép làm mới token để claim `name` có hiệu lực
+    }
+
+    // username/phone không nằm trong Firebase token — gửi riêng để backend lưu.
+    await this.api.post('/auth/sync', {
+      username: data.username?.trim() || undefined,
+      phone: data.phone?.trim() || undefined,
+    });
+
+    return this.syncFromBackend();
+  }
+
+  /** Đăng nhập bằng email + mật khẩu (Firebase). */
+  async loginWithEmail(email: string, password: string): Promise<{ needsOnboarding: boolean }> {
+    if (!this.firebase?.auth) throw new Error('Firebase chưa được cấu hình.');
+    await signInWithEmailAndPassword(this.firebase.auth, email.trim(), password);
+    return this.syncFromBackend();
+  }
+
+  /** Gọi backend để upsert hồ sơ vào DB + biết đã có tổ chức chưa. */
+  private async syncFromBackend(): Promise<{ needsOnboarding: boolean }> {
+    const me = await this.api.get<MeResponse>('/auth/me');
+    this.setUser({
+      id: me.user.id,
+      email: me.user.email,
+      displayName: me.user.display_name ?? undefined,
+      avatarUrl: me.user.avatar_url ?? undefined,
+      username: me.user.username ?? undefined,
+      phone: me.user.phone ?? undefined,
+      jobTitle: me.user.job_title ?? undefined,
+    });
+    return { needsOnboarding: me.needsOnboarding };
   }
 
   // Đăng xuất

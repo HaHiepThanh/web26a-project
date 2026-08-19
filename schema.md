@@ -25,9 +25,43 @@ Ký hiệu dùng trong tài liệu:
 | Lưu dữ liệu | **Supabase Postgres** |
 | Lưu file/ảnh | **Supabase Storage** |
 
-⚠️ Backend dùng `service_role key` nên **RLS bị bỏ qua** → DB không tự bảo vệ.
-Mọi câu query trong backend **bắt buộc** kèm `where org_id = ?`, quên là lộ dữ liệu
+### 🔒 Hai lớp bảo vệ — phải có ĐỦ CẢ HAI
+
+**Lớp 1 — Bật RLS để chặn cửa sau (mục 14 trong `database.sql`)**
+
+Supabase phơi toàn bộ schema `public` ra Internet qua PostgREST, và mặc định cấp
+quyền cho role `anon`. Mà **`anon key` nằm ngay trong mã frontend** — ai mở
+DevTools cũng lấy được.
+
+Đã kiểm chứng trên Postgres 16: **khi chưa bật RLS**, chỉ với quyền `anon` là
+
+```
+✗ đọc được email của mọi người dùng
+✗ thêm được tổ chức giả
+✗ XOÁ được tổ chức thật
+```
+
+Cách vá: bật RLS trên cả 20 bảng và **không tạo policy nào**.
+
+| Ai gọi | Kết quả |
+|---|---|
+| `anon` / `authenticated` (khoá công khai) | Không đọc/ghi được gì — mặc định từ chối |
+| `service_role` (backend) | **Bỏ qua RLS**, chạy y như cũ |
+
+→ Backend trở thành cánh cửa **duy nhất** vào dữ liệu.
+
+⚠️ 3 view thống kê cũng phải `security_invoker = on`. View mặc định chạy bằng
+quyền **người tạo** (postgres) nên đọc xuyên qua RLS — thiếu dòng đó thì view
+thành cửa sau, rò đúng dữ liệu mà RLS vừa chặn.
+
+**Lớp 2 — Luôn lọc theo tổ chức trong backend**
+
+Vì `service_role` bỏ qua RLS, DB **không** tự chặn giúp bạn nữa. Mọi câu query
+trong backend **bắt buộc** kèm `where org_id = ?` — quên một chỗ là lộ dữ liệu
 tổ chức khác.
+
+> Lớp 1 chặn người ngoài. Lớp 2 chặn tổ chức này thấy dữ liệu tổ chức kia.
+> Thiếu lớp nào cũng hở.
 
 ---
 
@@ -680,6 +714,7 @@ alter table cards add constraint cards_priority_check
 ## 8. Checklist khi triển khai
 
 - [ ] Chạy [`database.sql`](database.sql) trong Supabase SQL Editor
+- [ ] Kiểm tra Supabase Dashboard → Table Editor: **không bảng nào hiện cảnh báo "RLS disabled"**
 - [ ] Tạo Storage bucket `card-attachments`, để **private**
 - [ ] Tạo Storage bucket `board-backgrounds` cho ảnh nền board (`boards/<board_id>/bg.jpg`)
 - [ ] (tuỳ chọn) Bỏ comment mục 13 trong `database.sql` để có dữ liệu mẫu test

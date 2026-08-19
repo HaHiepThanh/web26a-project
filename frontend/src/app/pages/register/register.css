@@ -132,27 +132,6 @@
   }
 }
 
-/* Bộ công cụ giả lập QA — thu gọn trong <details>, tách hẳn hình thức khỏi form thật */
-.sim-toolbar {
-  width: 100%;
-  max-width: 440px;
-  margin: 0 auto;
-}
-.sim-toolbar > summary {
-  list-style: none;
-  cursor: pointer;
-}
-.sim-toolbar > summary::-webkit-details-marker {
-  display: none;
-}
-
-.footer {
-  font-size: 12px;
-  color: var(--slate-400);
-  user-select: none;
-  margin-top: auto;
-}
-
 /* ---------- Right showcase panel (decorative, adapted từ login.css) ---------- */
 .showcase-panel {
   display: none;

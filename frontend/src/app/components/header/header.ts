@@ -70,6 +70,14 @@ export class Header {
     return c.overdue + c.dueSoon;
   });
 
+  /** Ảnh Google thỉnh thoảng tải lỗi (bị giới hạn tần suất, hoặc user gỡ ảnh).
+   *  Khi đó rơi về chữ cái đầu — vẫn hơn là hiện icon ảnh vỡ. */
+  readonly avatarBroken = signal(false);
+
+  onAvatarError(): void {
+    this.avatarBroken.set(true);
+  }
+
   readonly initials = computed(() => {
     const user = this.currentUser();
     const name = user?.displayName ?? user?.email ?? '?';
