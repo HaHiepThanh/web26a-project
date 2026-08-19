@@ -99,7 +99,7 @@ export class OrganizationService {
     const userId = this.auth.currentUser()?.id;
     if (!userId) return null;
     const trimmed = name.trim();
-    if (!trimmed) return null;
+    if (!trimmed || trimmed.length > 50) return null;
 
     const org: Organization = {
       id: `org-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
@@ -180,6 +180,7 @@ export class OrganizationService {
 
     const name = changes.name?.trim();
     if (name !== undefined && !name) return 'Tên tổ chức không được để trống.';
+    if (name !== undefined && name.length > 50) return 'Tên tổ chức tối đa 50 ký tự.';
     upsertOrganization({ ...org, name: name || org.name, icon: changes.icon?.trim() || org.icon });
     this.reload(me.id);
     return null;

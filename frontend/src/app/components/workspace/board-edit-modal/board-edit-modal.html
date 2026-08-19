@@ -16,17 +16,21 @@
         <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200" for="board-edit-title-input">
           Tên bảng dự án <span class="text-error">*</span>
         </label>
-        <input type="text" id="board-edit-title-input"
+        <input type="text" id="board-edit-title-input" maxlength="50"
           class="input input-bordered border-2 w-full rounded-xl font-bold text-slate-900 dark:text-white bg-white dark:bg-slate-800 shadow-xs text-sm transition-all"
           [class.border-error]="titleError()"
           [class.focus:border-error]="titleError()"
           [class.border-slate-300]="!titleError()"
           [class.dark:border-slate-600]="!titleError()"
           [class.focus:border-primary]="!titleError()"
-          placeholder="Ví dụ: Quản lý Sprint 12, Kế hoạch MVP..." [ngModel]="titleInput()"
+          placeholder="Ví dụ: Quản lý Sprint 12, Kế hoạch MVP... (tối đa 50 ký tự)" [ngModel]="titleInput()"
           (ngModelChange)="titleInput.set($event); titleError.set(null)" name="boardEditTitle" />
+        <div class="mt-1 flex items-center justify-between text-2xs text-slate-400 font-semibold px-1">
+          <span>Tối đa 50 ký tự</span>
+          <span>{{ titleInput().length }}/50</span>
+        </div>
         @if (titleError()) {
-        <p class="mt-1.5 text-xs font-bold text-error flex items-center gap-1 animate-pulse">
+        <p class="mt-1 text-xs font-bold text-error flex items-center gap-1 animate-pulse">
           <svg lucideTriangleAlert class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg> {{ titleError() }}
         </p>
         }

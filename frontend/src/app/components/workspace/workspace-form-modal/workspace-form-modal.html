@@ -27,16 +27,20 @@
 
           <!-- Name input -->
           <div class="flex-1">
-            <input type="text" id="workspace-name-input"
+            <input type="text" id="workspace-name-input" maxlength="50"
               class="input input-bordered border-2 w-full rounded-xl font-bold text-slate-900 dark:text-white bg-white dark:bg-slate-800 shadow-xs text-sm transition-all"
               [class.border-error]="nameError()"
               [class.focus:border-error]="nameError()"
               [class.border-slate-300]="!nameError()"
               [class.dark:border-slate-600]="!nameError()"
-              placeholder="Ví dụ: Đồ án Tốt nghiệp CNTT, Dự án SaaS..." [ngModel]="nameInput()"
+              placeholder="Ví dụ: Đồ án Tốt nghiệp CNTT, Dự án SaaS... (tối đa 50 ký tự)" [ngModel]="nameInput()"
               (ngModelChange)="nameInput.set($event); nameError.set(null)" name="workspaceName" />
+            <div class="mt-1 flex items-center justify-between text-2xs text-slate-400 font-semibold px-1">
+              <span>Tối đa 50 ký tự</span>
+              <span>{{ nameInput().length }}/50</span>
+            </div>
             @if (nameError()) {
-            <p class="mt-1.5 text-xs font-bold text-error flex items-center gap-1 animate-pulse">
+            <p class="mt-1 text-xs font-bold text-error flex items-center gap-1 animate-pulse">
               <span>⚠️</span> {{ nameError() }}
             </p>
             }

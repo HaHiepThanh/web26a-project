@@ -1,28 +1,9 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import {
   LucideBuilding2,
-  LucideCamera,
-  LucideCheck,
-  LucideCopy,
-  LucideCrown,
-  LucideKeyRound,
-  LucideLock,
-  LucidePlus,
-  LucideSave,
   LucideUser,
-  LucideUserPlus,
   LucideUsers,
-  LucideX,
 } from '@lucide/angular';
-import {
-  AbstractControl,
-  FormBuilder,
-  FormGroup,
-  FormsModule,
-  ReactiveFormsModule,
-  ValidationErrors,
-  Validators,
-} from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { OrganizationService } from '../../services/organization.service';
 import { User } from '../../models';
@@ -30,82 +11,38 @@ import { NAV_ITEMS, SettingsTab } from './settings.models';
 import {
   WorkspaceItem,
   WorkspaceMember,
-  avatarBgFor,
-  initialsOf,
+  WorkspaceWithOrg,
+  loadAllWorkspacesForUser,
   loadStoredWorkspaces,
   persistWorkspaces,
 } from '../../mocks';
-
-/** Confirms the two password fields match; attached at the FormGroup level. */
-function passwordsMatchValidator(group: AbstractControl): ValidationErrors | null {
-  const newPassword = group.get('newPassword')?.value;
-  const confirmPassword = group.get('confirmPassword')?.value;
-  if (!newPassword || !confirmPassword) return null;
-  return newPassword === confirmPassword ? null : { passwordMismatch: true };
-}
-
-interface PasswordStrength {
-  score: 0 | 1 | 2 | 3 | 4;
-  label: string;
-  percent: number;
-  colorVar: string;
-}
-
-/** Simple heuristic strength meter — length + character-class variety. */
-function computePasswordStrength(password: string): PasswordStrength {
-  if (!password) return { score: 0, label: '', percent: 0, colorVar: '#94a3b8' };
-
-  let score = 0;
-  if (password.length >= 6) score++;
-  if (password.length >= 10) score++;
-  if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score++;
-  if (/\d/.test(password) || /[^A-Za-z0-9]/.test(password)) score++;
-
-  const clamped = Math.min(score, 4) as PasswordStrength['score'];
-  const table: Record<number, { label: string; colorVar: string }> = {
-    0: { label: 'Rất yếu', colorVar: '#ef4444' },
-    1: { label: 'Yếu', colorVar: '#f97316' },
-    2: { label: 'Trung bình', colorVar: '#eab308' },
-    3: { label: 'Mạnh', colorVar: '#22c55e' },
-    4: { label: 'Rất mạnh', colorVar: '#10b981' },
-  };
-
-  return { score: clamped, percent: (clamped / 4) * 100, ...table[clamped] };
-}
+import { ProfileTab } from '../../components/settings/profile-tab/profile-tab';
+import { ManageWorkspaceTab } from '../../components/settings/manage-workspace-tab/manage-workspace-tab';
+import { ManageOrganizationTab } from '../../components/settings/manage-organization-tab/manage-organization-tab';
 
 @Component({
   selector: 'app-settings',
   imports: [
-    ReactiveFormsModule,
-    FormsModule,
     LucideBuilding2,
-    LucideCamera,
-    LucideCheck,
-    LucideCopy,
-    LucideCrown,
-    LucideKeyRound,
-    LucideLock,
-    LucidePlus,
-    LucideSave,
     LucideUser,
-    LucideUserPlus,
     LucideUsers,
-    LucideX,
+    ProfileTab,
+    ManageWorkspaceTab,
+    ManageOrganizationTab,
   ],
   templateUrl: './settings.html',
   styleUrl: './settings.css',
   host: { class: 'flex flex-1 min-h-0 overflow-hidden' },
 })
 export class Settings {
-  private readonly fb = inject(FormBuilder);
   readonly auth = inject(AuthService);
   readonly orgService = inject(OrganizationService);
 
-  readonly initialsOf = initialsOf;
-  readonly avatarBgFor = avatarBgFor;
+  readonly currentUser = this.auth.currentUser;
+  readonly searchableUsers = computed(() => this.auth.getSearchableUsers());
 
   // ---------------------------------------------------------------------
-  // Navigation: Only Profile & Manage Workspace
+  // Navigation & Tabs
   // ---------------------------------------------------------------------
   readonly navItems = NAV_ITEMS;
   readonly activeTab = signal<SettingsTab>('profile');
@@ -121,7 +58,7 @@ export class Settings {
   readonly toastType = signal<'success' | 'error' | 'info'>('success');
   private toastTimer?: ReturnType<typeof setTimeout>;
 
-  private flash(message: string, type: 'success' | 'error' | 'info' = 'success'): void {
+  flash(message: string, type: 'success' | 'error' | 'info' = 'success'): void {
     this.toastMessage.set(message);
     this.toastType.set(type);
     clearTimeout(this.toastTimer);
@@ -129,269 +66,150 @@ export class Settings {
   }
 
   // ---------------------------------------------------------------------
-  // TAB 1: Trang cá nhân (Profile)
+  // TAB 1: Profile handlers
   // ---------------------------------------------------------------------
-  readonly emailVerified = signal(true);
-  readonly avatarPreview = signal<string | null>(null);
-  readonly copiedUuid = signal(false);
-
-  readonly profileForm: FormGroup = this.fb.group({
-    fullName: ['', [Validators.required, Validators.minLength(2)]],
-    username: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9_.]{3,25}$/)]],
-    jobTitle: [''],
-    email: [{ value: '', disabled: true }],
-    phone: ['', [Validators.pattern(/^(0|\+84)[0-9]{9,10}$/)]],
-  });
-
-  // Password change form (Old password verification)
-  readonly passwordForm: FormGroup = this.fb.group(
-    {
-      currentPassword: ['', [Validators.required]],
-      newPassword: ['', [Validators.required, Validators.minLength(6)]],
-      confirmPassword: ['', [Validators.required]],
-    },
-    { validators: passwordsMatchValidator },
-  );
-
-  get passwordStrength(): PasswordStrength {
-    return computePasswordStrength(this.passwordForm.get('newPassword')?.value ?? '');
+  onSaveProfile(user: User): void {
+    this.auth.setUser(user);
+    this.flash('Đã cập nhật thông tin cá nhân thành công!');
   }
 
-  constructor() {
-    const user = this.auth.currentUser();
-    this.avatarPreview.set(user?.avatarUrl ?? null);
-    this.profileForm.patchValue({
-      fullName: user?.displayName ?? '',
-      username: user?.username ?? (user?.email ? user.email.split('@')[0] : ''),
-      jobTitle: user?.jobTitle ?? '',
-      email: user?.email ?? '',
-      phone: user?.phone ?? '',
-    });
-
-    // Load initial workspaces
-    this.workspaces.set(loadStoredWorkspaces(this.auth.currentUser()?.id, this.orgService.activeOrgId()));
-    if (this.workspaces().length > 0) {
-      this.selectedWorkspaceId.set(this.workspaces()[0].id);
-    }
-  }
-
-  onUploadAvatar(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result as string;
-      this.avatarPreview.set(dataUrl);
-      const user = this.auth.currentUser();
-      if (user) {
-        this.auth.setUser({ ...user, avatarUrl: dataUrl });
-      }
-      this.flash('Đã cập nhật ảnh đại diện mới.');
-    };
-    reader.readAsDataURL(file);
-    input.value = '';
-  }
-
-  onRemoveAvatar(): void {
-    this.avatarPreview.set(null);
-    const user = this.auth.currentUser();
-    if (user) {
-      this.auth.setUser({ ...user, avatarUrl: '' });
-    }
-    this.flash('Đã gỡ bỏ ảnh đại diện.');
-  }
-
-  copyUuid(): void {
-    const uuid = this.auth.currentUser()?.id;
-    if (!uuid) return;
-    navigator.clipboard.writeText(uuid).then(() => {
-      this.copiedUuid.set(true);
-      setTimeout(() => this.copiedUuid.set(false), 2000);
-      this.flash('Đã sao chép mã UUID cá nhân.');
-    });
-  }
-
-  onSaveProfile(): void {
-    if (this.profileForm.invalid) {
-      this.profileForm.markAllAsTouched();
-      this.flash('Vui lòng kiểm tra lại thông tin biểu mẫu.', 'error');
-      return;
-    }
-
-    const val = this.profileForm.getRawValue();
-    const cur = this.auth.currentUser();
-    if (cur) {
-      const updated: User = {
-        ...cur,
-        displayName: val.fullName.trim(),
-        username: val.username.trim(),
-        jobTitle: val.jobTitle?.trim() || undefined,
-        phone: val.phone?.trim() || undefined,
-        avatarUrl: this.avatarPreview() || undefined,
-      };
-      this.auth.setUser(updated);
-      this.profileForm.markAsPristine();
-      this.flash('Đã cập nhật thông tin cá nhân thành công!');
-    }
-  }
-
-  onChangePassword(): void {
-    if (this.passwordForm.invalid) {
-      this.passwordForm.markAllAsTouched();
-      return;
-    }
-
-    const { currentPassword, newPassword } = this.passwordForm.getRawValue();
-    const curUser = this.auth.currentUser();
-
-    // Verify old password
-    if (curUser?.password && curUser.password !== currentPassword) {
+  onChangePassword(event: { currentPassword: string; newPassword: string }): void {
+    const cur = this.currentUser();
+    if (cur?.password && cur.password !== event.currentPassword) {
       this.flash('Mật khẩu hiện tại không chính xác. Vui lòng thử lại!', 'error');
       return;
     }
 
-    if (curUser) {
-      this.auth.setUser({ ...curUser, password: newPassword });
+    if (cur) {
+      this.auth.setUser({ ...cur, password: event.newPassword });
     }
-
-    this.passwordForm.reset();
     this.flash('Đã đổi mật khẩu thành công!');
   }
 
   // ---------------------------------------------------------------------
-  // TAB 2: Manage Workspace (Quản lý các thành viên trong workspace của mình)
+  // TAB 2: Manage Workspace handlers
   // ---------------------------------------------------------------------
-  readonly workspaces = signal<WorkspaceItem[]>([]);
+  readonly selectedOrgFilter = signal<string | null>(null); // null = Tất cả Organization
+  readonly workspaces = signal<WorkspaceWithOrg[]>([]);
   readonly selectedWorkspaceId = signal<string | null>(null);
 
-  readonly selectedWorkspace = computed(() => {
-    const id = this.selectedWorkspaceId();
-    return this.workspaces().find((w) => w.id === id) || this.workspaces()[0] || null;
-  });
+  constructor() {
+    effect(() => {
+      const userId = this.auth.currentUser()?.id;
+      const orgFilter = this.selectedOrgFilter();
+      const orgs = this.orgService.organizations();
 
-  // Add member modal state
-  readonly showAddMemberModal = signal(false);
-  readonly memberSearchQuery = signal('');
-  readonly memberRoleSelect = signal<'member' | 'owner'>('member');
-  readonly selectedUserToAdd = signal<User | null>(null);
+      let list: WorkspaceWithOrg[];
+      if (orgFilter === null) {
+        list = loadAllWorkspacesForUser(userId, orgs);
+      } else {
+        const foundOrg = orgs.find((o) => o.id === orgFilter);
+        const orgWorkspaces = loadStoredWorkspaces(userId, orgFilter);
+        list = orgWorkspaces.map((w) => ({
+          ...w,
+          orgId: orgFilter,
+          orgName: foundOrg?.name ?? 'Tổ chức',
+        }));
+      }
 
-  readonly searchCandidateUsers = computed(() => {
-    const q = this.memberSearchQuery().trim().toLowerCase();
-    const allUsers = this.auth.getSearchableUsers();
-    const currentMemberIds = new Set(this.selectedWorkspace()?.members.map((m) => m.id.toLowerCase()) || []);
-
-    return allUsers.filter((u) => {
-      if (currentMemberIds.has(u.id.toLowerCase())) return false;
-      if (!q) return true;
-      return (
-        u.id.toLowerCase().includes(q) ||
-        (u.displayName && u.displayName.toLowerCase().includes(q)) ||
-        u.email.toLowerCase().includes(q)
-      );
+      this.workspaces.set(list);
+      if (list.length > 0) {
+        if (!this.selectedWorkspaceId() || !list.some((w) => w.id === this.selectedWorkspaceId())) {
+          this.selectedWorkspaceId.set(list[0].id);
+        }
+      } else {
+        this.selectedWorkspaceId.set(null);
+      }
     });
-  });
-
-  /** Lưu workspace vào đúng key của tài khoản đang đăng nhập (localStorage tách theo userId). */
-  private persistWorkspaceList(list: WorkspaceItem[]): void {
-    persistWorkspaces(list, this.auth.currentUser()?.id, this.orgService.activeOrgId());
   }
 
-  selectWorkspace(id: string): void {
+  onOrgFilterChange(orgId: string | null): void {
+    this.selectedOrgFilter.set(orgId);
+  }
+
+  onSelectWorkspace(id: string): void {
     this.selectedWorkspaceId.set(id);
   }
 
-  openAddMember(): void {
-    this.memberSearchQuery.set('');
-    this.selectedUserToAdd.set(null);
-    this.memberRoleSelect.set('member');
-    this.showAddMemberModal.set(true);
+  private persistWorkspaceItem(wsId: string, updatedWs: WorkspaceItem, orgId?: string): void {
+    const targetOrgId = orgId || this.workspaces().find((w) => w.id === wsId)?.orgId || this.orgService.activeOrgId();
+    const userId = this.auth.currentUser()?.id;
+    const orgWorkspaces = loadStoredWorkspaces(userId, targetOrgId);
+    const saved = orgWorkspaces.map((w) => (w.id === wsId ? updatedWs : w));
+    persistWorkspaces(saved, userId, targetOrgId);
   }
 
-  closeAddMember(): void {
-    this.showAddMemberModal.set(false);
-  }
-
-  chooseUserToAdd(user: User): void {
-    this.selectedUserToAdd.set(user);
-    this.memberSearchQuery.set(user.displayName || user.email);
-  }
-
-  confirmAddMember(): void {
-    const ws = this.selectedWorkspace();
-    const user = this.selectedUserToAdd();
-    if (!ws || !user) {
-      this.flash('Vui lòng chọn một người dùng để thêm.', 'error');
-      return;
-    }
-
+  onAddWorkspaceMember(event: { workspaceId: string; orgId?: string; user: User; role: 'owner' | 'member' }): void {
     const newMember: WorkspaceMember = {
-      id: user.id,
-      displayName: user.displayName || user.email.split('@')[0],
-      email: user.email,
-      role: this.memberRoleSelect(),
-      avatarUrl: user.avatarUrl,
+      id: event.user.id,
+      displayName: event.user.displayName || event.user.email.split('@')[0],
+      email: event.user.email,
+      role: event.role,
+      avatarUrl: event.user.avatarUrl,
     };
 
-    const updatedWorkspaces = this.workspaces().map((w) => {
-      if (w.id === ws.id) {
+    let targetUpdatedWs: WorkspaceItem | null = null;
+    const updated = this.workspaces().map((w) => {
+      if (w.id === event.workspaceId) {
         const members = [...w.members, newMember];
+        targetUpdatedWs = { ...w, members, membersCount: members.length };
         return { ...w, members, membersCount: members.length };
       }
       return w;
     });
 
-    this.workspaces.set(updatedWorkspaces);
-    this.persistWorkspaceList(updatedWorkspaces);
-    this.closeAddMember();
+    this.workspaces.set(updated);
+    if (targetUpdatedWs) {
+      this.persistWorkspaceItem(event.workspaceId, targetUpdatedWs, event.orgId);
+    }
     this.flash(`Đã thêm ${newMember.displayName} vào Workspace.`);
   }
 
-  changeMemberRole(memberId: string, newRole: 'owner' | 'member'): void {
-    const ws = this.selectedWorkspace();
-    if (!ws) return;
-
-    const updatedWorkspaces = this.workspaces().map((w) => {
-      if (w.id === ws.id) {
-        const members = w.members.map((m) => (m.id === memberId ? { ...m, role: newRole } : m));
+  onChangeWorkspaceRole(event: { workspaceId: string; orgId?: string; memberId: string; newRole: 'owner' | 'member' }): void {
+    let targetUpdatedWs: WorkspaceItem | null = null;
+    const updated = this.workspaces().map((w) => {
+      if (w.id === event.workspaceId) {
+        const members = w.members.map((m) => (m.id === event.memberId ? { ...m, role: event.newRole } : m));
+        targetUpdatedWs = { ...w, members };
         return { ...w, members };
       }
       return w;
     });
 
-    this.workspaces.set(updatedWorkspaces);
-    this.persistWorkspaceList(updatedWorkspaces);
+    this.workspaces.set(updated);
+    if (targetUpdatedWs) {
+      this.persistWorkspaceItem(event.workspaceId, targetUpdatedWs, event.orgId);
+    }
     this.flash('Đã cập nhật vai trò thành viên.');
   }
 
-  removeMember(member: WorkspaceMember): void {
-    const ws = this.selectedWorkspace();
-    if (!ws) return;
-
-    if (member.role === 'owner' && ws.members.filter((m) => m.role === 'owner').length <= 1) {
+  onRemoveWorkspaceMember(event: { workspaceId: string; orgId?: string; member: WorkspaceMember }): void {
+    const currentWs = this.workspaces().find((w) => w.id === event.workspaceId);
+    if (event.member.role === 'owner' && (currentWs?.members.filter((m) => m.role === 'owner').length ?? 0) <= 1) {
       this.flash('Workspace phải có ít nhất 1 Trưởng nhóm (Owner).', 'error');
       return;
     }
 
-    const updatedWorkspaces = this.workspaces().map((w) => {
-      if (w.id === ws.id) {
-        const members = w.members.filter((m) => m.id !== member.id);
+    let targetUpdatedWs: WorkspaceItem | null = null;
+    const updated = this.workspaces().map((w) => {
+      if (w.id === event.workspaceId) {
+        const members = w.members.filter((m) => m.id !== event.member.id);
+        targetUpdatedWs = { ...w, members, membersCount: members.length };
         return { ...w, members, membersCount: members.length };
       }
       return w;
     });
 
-    this.workspaces.set(updatedWorkspaces);
-    this.persistWorkspaceList(updatedWorkspaces);
-    this.flash(`Đã xóa ${member.displayName} khỏi Workspace.`);
+    this.workspaces.set(updated);
+    if (targetUpdatedWs) {
+      this.persistWorkspaceItem(event.workspaceId, targetUpdatedWs, event.orgId);
+    }
+    this.flash(`Đã xóa ${event.member.displayName} khỏi Workspace.`);
   }
 
   // ---------------------------------------------------------------------
-  // TAB 3: Quản lý Organization (thành viên, lời mời, chuyển đổi tổ chức)
+  // TAB 3: Manage Organization handlers
   // ---------------------------------------------------------------------
-  /** memberIds của Organization chỉ là string[] — cần map ngược sang User
-   *  (tên/email hiển thị) qua danh sách user có thể tìm kiếm được. */
   readonly orgMembers = computed<User[]>(() => {
     const org = this.orgService.activeOrg();
     if (!org) return [];
@@ -401,11 +219,22 @@ export class Settings {
     );
   });
 
-  switchOrgTab(orgId: string): void {
+  onSwitchOrg(orgId: string): void {
     this.orgService.switchOrg(orgId);
   }
 
-  removeOrgMember(memberId: string): void {
+  onInviteOrgMember(user: User): void {
+    const org = this.orgService.activeOrg();
+    if (!org) return;
+    const error = this.orgService.inviteMemberByUuid(org.id, user.id);
+    if (error) {
+      this.flash(error, 'error');
+      return;
+    }
+    this.flash(`Đã gửi lời mời tham gia "${org.name}" cho ${user.displayName || user.email}.`);
+  }
+
+  onRemoveOrgMember(memberId: string): void {
     const org = this.orgService.activeOrg();
     if (!org) return;
     const error = this.orgService.removeMember(org.id, memberId);
@@ -414,59 +243,5 @@ export class Settings {
       return;
     }
     this.flash('Đã xóa thành viên khỏi Organization.');
-  }
-
-  // Invite-to-org modal state
-  readonly showInviteOrgModal = signal(false);
-  readonly orgInviteQuery = signal('');
-  readonly selectedOrgInviteUser = signal<User | null>(null);
-
-  readonly orgInviteCandidates = computed(() => {
-    const q = this.orgInviteQuery().trim().toLowerCase();
-    const allUsers = this.auth.getSearchableUsers();
-    const me = this.auth.currentUser()?.id;
-    const currentMemberIds = new Set(this.orgService.activeOrg()?.memberIds ?? []);
-
-    return allUsers.filter((u) => {
-      if (u.id === me || currentMemberIds.has(u.id)) return false;
-      if (!q) return true;
-      return (
-        u.id.toLowerCase().includes(q) ||
-        (u.displayName && u.displayName.toLowerCase().includes(q)) ||
-        u.email.toLowerCase().includes(q)
-      );
-    });
-  });
-
-  openInviteOrgMember(): void {
-    this.orgInviteQuery.set('');
-    this.selectedOrgInviteUser.set(null);
-    this.showInviteOrgModal.set(true);
-  }
-
-  closeInviteOrgMember(): void {
-    this.showInviteOrgModal.set(false);
-  }
-
-  chooseOrgInviteUser(user: User): void {
-    this.selectedOrgInviteUser.set(user);
-    this.orgInviteQuery.set(user.displayName || user.email);
-  }
-
-  confirmInviteOrgMember(): void {
-    const org = this.orgService.activeOrg();
-    const user = this.selectedOrgInviteUser();
-    if (!org || !user) {
-      this.flash('Vui lòng chọn một người dùng để mời.', 'error');
-      return;
-    }
-
-    const error = this.orgService.inviteMemberByUuid(org.id, user.id);
-    if (error) {
-      this.flash(error, 'error');
-      return;
-    }
-    this.closeInviteOrgMember();
-    this.flash(`Đã gửi lời mời tham gia "${org.name}" cho ${user.displayName || user.email}.`);
   }
 }

@@ -84,6 +84,10 @@ export class BoardEditModal {
       this.titleError.set('Vui lòng nhập tên bảng dự án!');
       return;
     }
+    if (title.length > 50) {
+      this.titleError.set('Tên bảng dự án tối đa 50 ký tự!');
+      return;
+    }
     this.titleError.set(null);
 
     this.save.emit({

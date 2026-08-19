@@ -176,6 +176,10 @@ export class WorkspaceFormModal {
       this.nameError.set('Vui lòng nhập tên Không gian làm việc!');
       return;
     }
+    if (name.length > 50) {
+      this.nameError.set('Tên Không gian làm việc tối đa 50 ký tự!');
+      return;
+    }
     this.nameError.set(null);
 
     this.save.emit({

@@ -165,6 +165,41 @@ export function loadStoredWorkspaces(userId?: string | null, orgId?: string | nu
   return initialMockWorkspaces();
 }
 
+export interface WorkspaceWithOrg extends WorkspaceItem {
+  orgId: string;
+  orgName: string;
+}
+
+export function loadAllWorkspacesForUser(
+  userId?: string | null,
+  organizations: { id: string; name: string }[] = [],
+): WorkspaceWithOrg[] {
+  const result: WorkspaceWithOrg[] = [];
+  const seenIds = new Set<string>();
+
+  // If user has personal/guest workspaces
+  const guestList = loadStoredWorkspaces(userId, null);
+  for (const ws of guestList) {
+    if (!seenIds.has(ws.id)) {
+      seenIds.add(ws.id);
+      result.push({ ...ws, orgId: '', orgName: 'Cá nhân' });
+    }
+  }
+
+  // Load from each organization
+  for (const org of organizations) {
+    const list = loadStoredWorkspaces(userId, org.id);
+    for (const ws of list) {
+      if (!seenIds.has(ws.id)) {
+        seenIds.add(ws.id);
+        result.push({ ...ws, orgId: org.id, orgName: org.name });
+      }
+    }
+  }
+
+  return result;
+}
+
 export function persistWorkspaces(list: WorkspaceItem[], userId?: string | null, orgId?: string | null): void {
   if (typeof localStorage !== 'undefined') {
     try {

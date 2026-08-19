@@ -39,8 +39,8 @@
           }
         </div>
         <div class="mt-2 flex items-center gap-2">
-          <input type="text" class="input input-bordered input-sm w-full rounded-xl border-2 font-semibold"
-            placeholder="Tên tổ chức..." [ngModel]="nameInput()" (ngModelChange)="nameInput.set($event)"
+          <input type="text" maxlength="50" class="input input-bordered input-sm w-full rounded-xl border-2 font-semibold"
+            placeholder="Tên tổ chức (tối đa 50 ký tự)..." [ngModel]="nameInput()" (ngModelChange)="nameInput.set($event)"
             (keydown.enter)="onSaveName()" />
           <button type="button" class="btn btn-primary btn-sm shrink-0 gap-1 rounded-xl" [disabled]="!nameDirty()"
             (click)="onSaveName()">
