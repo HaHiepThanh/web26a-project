@@ -1,7 +1,15 @@
 <section class="mx-auto max-w-[920px] space-y-6">
-  <header>
-    <h2 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Quản lý Organization</h2>
-    <p class="mt-1 text-sm text-slate-500">Chuyển đổi tổ chức, xem thành viên và mời người mới qua UUID.</p>
+  <header class="flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h2 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Quản lý Organization</h2>
+      <p class="mt-1 text-sm text-slate-500">Chuyển đổi tổ chức, xem thành viên và mời người mới qua UUID.</p>
+    </div>
+
+    <button type="button" class="btn btn-primary btn-sm rounded-xl px-4 font-black shadow-xs gap-1.5"
+      (click)="showCreateOrgModal.set(true)">
+      <svg lucidePlus class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg>
+      <span>Tạo tổ chức mới</span>
+    </button>
   </header>
 
   <!-- Organization Selector Pills -->
@@ -203,3 +211,8 @@
   </div>
 </div>
 }
+
+<!-- MODAL: Tạo Organization mới -->
+<app-org-create-modal [isOpen]="showCreateOrgModal()" (close)="showCreateOrgModal.set(false)"
+  (createOrg)="createOrg.emit($event)">
+</app-org-create-modal>

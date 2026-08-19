@@ -4,10 +4,11 @@ import { LucideCrown, LucidePlus, LucideUserPlus, LucideX } from '@lucide/angula
 import { Organization } from '../../../mocks';
 import { User } from '../../../models';
 import { avatarBgFor, initialsOf } from '../../../mocks';
+import { OrgCreateModal } from '../../workspace/org-create-modal/org-create-modal';
 
 @Component({
   selector: 'app-manage-organization-tab',
-  imports: [FormsModule, LucideCrown, LucidePlus, LucideUserPlus, LucideX],
+  imports: [FormsModule, LucideCrown, LucidePlus, LucideUserPlus, LucideX, OrgCreateModal],
   templateUrl: './manage-organization-tab.html',
   host: { class: 'block' },
 })
@@ -20,12 +21,16 @@ export class ManageOrganizationTab {
   readonly currentUserId = input<string | null>(null);
 
   readonly switchOrg = output<string>();
+  readonly createOrg = output<{ name: string; icon: string }>();
   readonly inviteMember = output<User>();
   readonly removeMember = output<string>();
   readonly flashMessage = output<{ message: string; type?: 'success' | 'error' | 'info' }>();
 
   readonly initialsOf = initialsOf;
   readonly avatarBgFor = avatarBgFor;
+
+  // Create Org Modal state
+  readonly showCreateOrgModal = signal(false);
 
   // Invite-to-org modal state
   readonly showInviteOrgModal = signal(false);

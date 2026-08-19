@@ -45,23 +45,11 @@
     }
   </div>
 
-  <!-- Tạo Organization mới -->
-  @if (!creating()) {
+  <!-- Nút Tạo Organization mới: Mở popup modal -->
   <button type="button"
-    class="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-base-300 py-1.5 text-2xs font-bold text-primary transition-all hover:border-primary hover:bg-primary/5"
+    class="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-base-300 py-1.5 text-2xs font-bold text-primary transition-all hover:border-primary hover:bg-primary/5 cursor-pointer"
     (click)="startCreate()">
     <svg lucidePlus class="h-3 w-3 shrink-0" [strokeWidth]="3"></svg>
     <span>Tạo tổ chức mới</span>
   </button>
-  } @else {
-  <div class="mt-2 flex flex-col gap-1.5 rounded-xl border border-base-300 bg-base-200/40 p-2">
-    <input #nameInput type="text" maxlength="50" class="input input-bordered input-sm w-full rounded-lg bg-base-100 font-semibold" placeholder="Tên tổ chức (tối đa 50 ký tự)..."
-      [ngModel]="newName()" (ngModelChange)="newName.set($event)" (keydown.enter)="submitCreate()"
-      (keydown.escape)="cancelCreate()" />
-    <div class="flex items-center gap-1.5">
-      <button type="button" class="btn btn-primary btn-sm flex-1 rounded-lg" (click)="submitCreate()">Tạo</button>
-      <button type="button" class="btn btn-ghost btn-sm rounded-lg" (click)="cancelCreate()">Huỷ</button>
-    </div>
-  </div>
-  }
 </div>

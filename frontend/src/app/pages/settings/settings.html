@@ -65,6 +65,7 @@
     <app-manage-organization-tab [organizations]="orgService.organizations()" [activeOrgId]="orgService.activeOrgId()"
       [activeOrg]="orgService.activeOrg()" [orgMembers]="orgMembers()" [searchableUsers]="searchableUsers()"
       [currentUserId]="auth.currentUser()?.id ?? null" (switchOrg)="onSwitchOrg($event)"
+      (createOrg)="onCreateOrg($event)"
       (inviteMember)="onInviteOrgMember($event)" (removeMember)="onRemoveOrgMember($event)"
       (flashMessage)="flash($event.message, $event.type ?? 'success')">
     </app-manage-organization-tab>

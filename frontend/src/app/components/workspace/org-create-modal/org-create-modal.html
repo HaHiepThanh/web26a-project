@@ -1,0 +1,109 @@
+@if (isOpen()) {
+<div class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-[2px]"
+  (click)="close.emit()">
+  <div
+    class="w-full max-w-[480px] max-h-[90vh] overflow-y-auto rounded-3xl border-2 border-slate-300 dark:border-slate-700 bg-base-100 p-6 shadow-2xl"
+    (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="mb-5 flex items-center justify-between border-b border-base-200 pb-3.5">
+      <div class="flex items-center gap-2.5">
+        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <svg lucideBuilding2 class="h-5 w-5" [strokeWidth]="2.2"></svg>
+        </div>
+        <div>
+          <h3 class="text-base font-black text-slate-900 dark:text-white">Tạo Tổ chức mới (Organization)</h3>
+          <p class="text-2xs text-slate-500">Gom nhóm các Workspace và cộng tác cùng các thành viên</p>
+        </div>
+      </div>
+      <button type="button" class="btn btn-circle btn-ghost btn-sm" (click)="close.emit()" aria-label="Đóng">
+        <svg lucideX class="h-4 w-4" [strokeWidth]="2.4"></svg>
+      </button>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" class="space-y-4">
+      <!-- Live Preview -->
+      <div class="flex items-center gap-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 p-3 border border-slate-200/80 dark:border-slate-800">
+        <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-2xl shadow-xs transition-transform hover:scale-105">
+          {{ iconInput() || '🏢' }}
+        </div>
+        <div class="min-w-0 flex-1">
+          <span class="block text-2xs font-bold text-slate-400 uppercase tracking-wider">Xem trước</span>
+          <span class="block truncate text-sm font-black text-slate-900 dark:text-white">
+            {{ nameInput().trim() || 'Tên tổ chức của bạn' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Icon Choice Grid -->
+      <div>
+        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+          Biểu tượng đại diện
+        </label>
+        <div class="grid grid-cols-6 gap-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 p-2 bg-slate-50/50 dark:bg-slate-800/40">
+          @for (ic of iconChoices; track ic) {
+          <button
+            type="button"
+            class="flex h-9 w-full items-center justify-center rounded-xl text-lg transition-all"
+            [class.bg-primary]="iconInput() === ic"
+            [class.text-white]="iconInput() === ic"
+            [class.shadow-xs]="iconInput() === ic"
+            [class.scale-105]="iconInput() === ic"
+            [class.hover:bg-slate-200/70]="iconInput() !== ic"
+            [class.dark:hover:bg-slate-700/60]="iconInput() !== ic"
+            (click)="iconInput.set(ic)">
+            {{ ic }}
+          </button>
+          }
+        </div>
+      </div>
+
+      <!-- Organization Name Input -->
+      <div>
+        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200" for="org-create-name-input">
+          Tên Tổ chức <span class="text-error">*</span>
+        </label>
+        <input
+          #nameInputField
+          type="text"
+          id="org-create-name-input"
+          maxlength="50"
+          class="input input-bordered border-2 w-full rounded-xl font-bold text-slate-900 dark:text-white bg-white dark:bg-slate-800 shadow-xs text-sm transition-all"
+          [class.border-error]="nameError()"
+          [class.focus:border-error]="nameError()"
+          [class.border-slate-300]="!nameError()"
+          [class.dark:border-slate-600]="!nameError()"
+          [class.focus:border-primary]="!nameError()"
+          placeholder="Ví dụ: Công ty Công nghệ Acme, Nhóm Freelance... (tối đa 50 ký tự)"
+          [ngModel]="nameInput()"
+          (ngModelChange)="nameInput.set($event); nameError.set(null)"
+          name="orgName" />
+        
+        <div class="mt-1 flex items-center justify-between text-2xs text-slate-400 font-semibold px-1">
+          <span>Tối đa 50 ký tự</span>
+          <span>{{ nameInput().length }}/50</span>
+        </div>
+
+        @if (nameError()) {
+        <p class="mt-1 text-xs font-bold text-error flex items-center gap-1 animate-pulse">
+          <svg lucideTriangleAlert class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg> {{ nameError() }}
+        </p>
+        }
+      </div>
+
+      <!-- Explanatory note -->
+      <div class="rounded-xl bg-blue-50/80 dark:bg-blue-950/40 p-3 border border-blue-100 dark:border-blue-900/40 text-xs text-blue-800 dark:text-blue-200 flex items-start gap-2">
+        <svg lucideSparkles class="h-4 w-4 shrink-0 text-blue-500 mt-0.5" [strokeWidth]="2.2"></svg>
+        <span>Bạn sẽ là <strong>Trưởng nhóm (Owner)</strong> của tổ chức này và có thể mời thêm các thành viên khác cùng quản trị.</span>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
+        <button type="button" class="btn btn-ghost rounded-xl font-bold" (click)="close.emit()">Hủy</button>
+        <button type="submit" class="btn btn-primary rounded-xl font-black px-5 shadow-xs">
+          + Tạo Tổ chức
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+}

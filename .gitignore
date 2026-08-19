@@ -31,5 +31,9 @@ yarn-error.log*
 pnpm-debug.log*
 coverage/
 
-./claude
+# AI Agent files
+.claude/
+.agents/
+skills-lock.json
 
+/secrets/

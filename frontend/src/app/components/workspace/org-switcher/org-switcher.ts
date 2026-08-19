@@ -1,16 +1,11 @@
-import { Component, ElementRef, input, output, signal, viewChild } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, input, output } from '@angular/core';
 import { LucideBuilding2, LucideCheck, LucideEllipsisVertical, LucidePlus } from '@lucide/angular';
 import { Organization } from '../../../mocks';
 
-/** Danh sách Organization ở sidebar — CHỈ chuyển đổi + tạo mới.
- *  Mọi thao tác quản lý (mời/xoá thành viên, đổi tên) nằm trong modal riêng
- *  (app-org-manage-modal), mở qua nút 3 chấm — sidebar có bề rộng cố định và
- *  phải luôn giữ nút "Tạo tổ chức mới" trong tầm nhìn, không thể chứa danh
- *  sách thành viên dài tuỳ ý. */
+/** Danh sách Organization ở sidebar — chuyển đổi & mở modal tạo mới/quản lý. */
 @Component({
   selector: 'app-org-switcher',
-  imports: [FormsModule, LucideBuilding2, LucideCheck, LucideEllipsisVertical, LucidePlus],
+  imports: [LucideBuilding2, LucideCheck, LucideEllipsisVertical, LucidePlus],
   templateUrl: './org-switcher.html',
   styleUrl: './org-switcher.css',
   host: { class: 'block' },
@@ -21,13 +16,8 @@ export class OrgSwitcher {
   readonly currentUserId = input<string | null>(null);
 
   readonly switchOrg = output<string>();
-  readonly createOrg = output<{ name: string; icon: string }>();
+  readonly openCreateOrg = output<void>();
   readonly manageOrg = output<string>();
-
-  private readonly nameInput = viewChild<ElementRef<HTMLInputElement>>('nameInput');
-
-  readonly creating = signal(false);
-  readonly newName = signal('');
 
   private static readonly ICON_PALETTE = [
     'bg-board-blue',
@@ -56,24 +46,6 @@ export class OrgSwitcher {
   }
 
   startCreate(): void {
-    this.creating.set(true);
-    this.newName.set('');
-    setTimeout(() => this.nameInput()?.nativeElement.focus());
-  }
-
-  submitCreate(): void {
-    const trimmed = this.newName().trim();
-    if (!trimmed) {
-      this.cancelCreate();
-      return;
-    }
-    this.createOrg.emit({ name: trimmed, icon: '🏢' });
-    this.creating.set(false);
-    this.newName.set('');
-  }
-
-  cancelCreate(): void {
-    this.creating.set(false);
-    this.newName.set('');
+    this.openCreateOrg.emit();
   }
 }

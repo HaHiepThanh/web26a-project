@@ -28,7 +28,7 @@
     <aside class="w-full lg:w-64 shrink-0 max-lg:h-auto lg:h-full lg:overflow-y-auto lg:pr-1">
       <div class="divide-y divide-base-200 overflow-hidden rounded-3xl border border-base-300/70 bg-base-100 shadow-sm">
         <app-org-switcher [organizations]="organizations()" [activeOrg]="activeOrg()"
-          (switchOrg)="switchOrg($event)" (createOrg)="createOrg($event)" (manageOrg)="openManageOrg($event)">
+          (switchOrg)="switchOrg($event)" (openCreateOrg)="showOrgCreateModal.set(true)" (manageOrg)="openManageOrg($event)">
         </app-org-switcher>
 
         <app-workspace-sidebar [workspaces]="workspaces()" [activeWorkspaceId]="activeWorkspaceId()"
@@ -160,6 +160,11 @@
   [currentBgImageUrl]="bgImageByBoardId()[editingBoard()?.board?.id ?? '']"
   (close)="showBoardEditModal.set(false)" (save)="handleBoardEditSave($event)">
 </app-board-edit-modal>
+
+<!-- MODAL: Tạo Organization mới -->
+<app-org-create-modal [isOpen]="showOrgCreateModal()" (close)="showOrgCreateModal.set(false)"
+  (createOrg)="createOrg($event)">
+</app-org-create-modal>
 
 <!-- MODAL: Quản lý Organization (mời/xoá thành viên, đổi tên) -->
 <app-org-manage-modal [isOpen]="showOrgManageModal()" [org]="managingOrg()" [members]="managingOrgMembers()"

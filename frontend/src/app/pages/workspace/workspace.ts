@@ -18,6 +18,7 @@ import {
   Template,
 } from '../../mocks';
 import { OrgSwitcher } from '../../components/workspace/org-switcher/org-switcher';
+import { OrgCreateModal } from '../../components/workspace/org-create-modal/org-create-modal';
 import { OrgManageModal } from '../../components/workspace/org-manage-modal/org-manage-modal';
 import { WorkspaceSidebar } from '../../components/workspace/workspace-sidebar/workspace-sidebar';
 import { WorkspaceWelcomeBanner } from '../../components/workspace/workspace-welcome-banner/workspace-welcome-banner';
@@ -41,6 +42,7 @@ function toBoardVisibility(privacy: Privacy): BoardVisibility {
   selector: 'app-workspace',
   imports: [
     OrgSwitcher,
+    OrgCreateModal,
     OrgManageModal,
     WorkspaceSidebar,
     WorkspaceWelcomeBanner,
@@ -196,6 +198,9 @@ export class Workspace {
   switchOrg(orgId: string): void {
     this.orgService.switchOrg(orgId);
   }
+
+  // ---- Modal Tạo Organization mới ----
+  readonly showOrgCreateModal = signal(false);
 
   createOrg(data: { name: string; icon: string }): void {
     const org = this.orgService.createOrg(data.name, data.icon);

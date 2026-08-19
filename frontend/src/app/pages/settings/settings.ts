@@ -223,6 +223,13 @@ export class Settings {
     this.orgService.switchOrg(orgId);
   }
 
+  onCreateOrg(event: { name: string; icon: string }): void {
+    const org = this.orgService.createOrg(event.name, event.icon);
+    if (org) {
+      this.flash(`Đã tạo tổ chức "${org.name}" thành công!`);
+    }
+  }
+
   onInviteOrgMember(user: User): void {
     const org = this.orgService.activeOrg();
     if (!org) return;
