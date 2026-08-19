@@ -11,6 +11,8 @@ out-tsc/
 .env
 .env.local
 .env.*.local
+frontend/src/environments/*
+!frontend/src/environments/environment.example.ts
 
 # Operating System files
 .DS_Store
