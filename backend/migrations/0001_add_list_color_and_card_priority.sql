@@ -6,6 +6,9 @@ ALTER TABLE lists
   ADD COLUMN IF NOT EXISTS color text;
 
 -- #4: mức độ ưu tiên thẻ — dùng ở modal tạo thẻ (#2) và hiển thị cờ ưu tiên (#4).
+-- ⚠️ ĐÃ SỬA LỖI: bản cũ dùng ('cao','trung','thap') nhưng frontend gửi
+--    'low' | 'medium' | 'high' (models/card.model.ts: CardPriority) → mọi INSERT
+--    đều bị chặn bởi CHECK constraint. Giá trị phải khớp đúng với frontend.
 ALTER TABLE cards
-  ADD COLUMN IF NOT EXISTS priority text NOT NULL DEFAULT 'trung'
-    CHECK (priority IN ('cao', 'trung', 'thap'));
+  ADD COLUMN IF NOT EXISTS priority text NOT NULL DEFAULT 'medium'
+    CHECK (priority IN ('low', 'medium', 'high'));
