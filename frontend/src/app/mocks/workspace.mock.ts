@@ -26,8 +26,7 @@ export interface BoardItem {
 export interface WorkspaceItem {
   id: string;
   name: string;
-  /** Chỉ còn MÀU nền, không còn emoji — hiển thị bằng chữ cái đầu của tên. */
-  iconBg: BoardBackground;
+  // Không có icon/màu: Workspace chỉ hiện bằng TÊN. Màu chỉ dành cho Board (Kanban).
   membersCount: number;
   members: WorkspaceMember[];
   description: string;

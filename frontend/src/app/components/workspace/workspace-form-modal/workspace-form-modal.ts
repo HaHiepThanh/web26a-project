@@ -1,12 +1,13 @@
 import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { LucideTriangleAlert } from '@lucide/angular';
 import { AuthService } from '../../../services/auth.service';
-import { BOARD_BACKGROUNDS, BoardBackground, User } from '../../../models';
+import { User } from '../../../models';
 import { WorkspaceItem, WorkspaceMember, avatarBgFor, initialsOf } from '../../../mocks';
 
 @Component({
   selector: 'app-workspace-form-modal',
-  imports: [FormsModule],
+  imports: [FormsModule, LucideTriangleAlert],
   templateUrl: './workspace-form-modal.html',
 })
 export class WorkspaceFormModal {
@@ -20,7 +21,6 @@ export class WorkspaceFormModal {
   readonly close = output<void>();
   readonly save = output<{
     name: string;
-    iconBg: BoardBackground;
     description: string;
     members: WorkspaceMember[];
   }>();
@@ -28,13 +28,6 @@ export class WorkspaceFormModal {
 
   readonly nameInput = signal('');
   readonly nameError = signal<string | null>(null);
-  readonly iconBgInput = signal<BoardBackground>('bg-board-blue');
-
-  /** Chữ cái đầu của tên, thay cho emoji đã bỏ. */
-  readonly previewInitials = computed(() => {
-    const name = this.nameInput().trim();
-    return name ? initialsOf(name) : '—';
-  });
   readonly descInput = signal('');
   readonly members = signal<WorkspaceMember[]>([]);
   readonly deleteConfirmArmed = signal(false);
@@ -42,7 +35,6 @@ export class WorkspaceFormModal {
   readonly uuidSearchInput = signal('');
   readonly searchDropdownOpen = signal(false);
 
-  readonly bgClasses = BOARD_BACKGROUNDS;
   readonly initialsOf = initialsOf;
   readonly avatarBgFor = avatarBgFor;
 
@@ -73,12 +65,10 @@ export class WorkspaceFormModal {
 
         if (m === 'edit' && ws) {
           this.nameInput.set(ws.name);
-          this.iconBgInput.set(ws.iconBg || 'bg-board-blue');
           this.descInput.set(ws.description);
           this.members.set([...(ws.members || [])]);
         } else {
           this.nameInput.set('');
-          this.iconBgInput.set('bg-board-blue');
           this.descInput.set('');
 
           const cur = this.currentUser();
@@ -166,7 +156,6 @@ export class WorkspaceFormModal {
 
     this.save.emit({
       name,
-      iconBg: this.iconBgInput(),
       description: this.descInput().trim(),
       members: this.members(),
     });

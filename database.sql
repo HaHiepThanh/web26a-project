@@ -205,11 +205,8 @@ create table workspaces (
   id          uuid primary key default gen_random_uuid(),
   org_id      uuid not null references organizations(id) on delete cascade,
   name        text not null,
-  -- Chỉ còn MÀU nền, KHÔNG có emoji: giao diện hiển thị chữ cái đầu của `name`
-  -- trên nền màu này (vd 'Đồ án CNTT' → 'ĐC'). Tổ chức thì không có cả màu.
-  icon_bg     text not null default 'bg-board-blue'
-                check (icon_bg in ('bg-board-blue','bg-board-purple','bg-board-green',
-                                   'bg-board-teal','bg-board-orange','bg-board-red')),
+  -- Không có icon/màu: Workspace chỉ hiển thị bằng TÊN. Màu nền chỉ dành cho
+  -- Board (Kanban) — xem boards.background / boards.background_image_path.
   description text default '',
   created_by  text not null references users(id),
   created_at  timestamptz not null default now()
@@ -606,9 +603,9 @@ insert into organization_members (org_id, user_id, role) values
   ('11111111-1111-1111-1111-111111111111', 'fb-alpha', 'owner'),
   ('11111111-1111-1111-1111-111111111111', 'fb-beta',  'admin');
 
-insert into workspaces (id, org_id, name, icon_bg, description, created_by) values
+insert into workspaces (id, org_id, name, description, created_by) values
   ('22222222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111',
-   'Dự án Website', 'bg-board-purple', 'Workspace mẫu để test', 'fb-alpha');
+   'Dự án Website', 'Workspace mẫu để test', 'fb-alpha');
 
 insert into workspace_members (workspace_id, user_id, role) values
   ('22222222-2222-2222-2222-222222222222', 'fb-alpha', 'owner'),

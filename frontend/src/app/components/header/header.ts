@@ -21,7 +21,6 @@ import { ThemeService } from '../../services/theme.service';
 import { WorkspaceUiService } from '../../services/workspace-ui.service';
 import { CardService } from '../../services/card.service';
 import { OrganizationService } from '../../services/organization.service';
-import { initialsOf } from '../../mocks';
 
 /** Top navbar shared by every page inside app-layout (ported from trello-workspace prototype). */
 @Component({
@@ -47,7 +46,6 @@ import { initialsOf } from '../../mocks';
   styleUrl: './header.css',
 })
 export class Header {
-  readonly initialsOf = initialsOf;
   private readonly auth = inject(AuthService);
   private readonly themeService = inject(ThemeService);
   private readonly workspaceUi = inject(WorkspaceUiService);

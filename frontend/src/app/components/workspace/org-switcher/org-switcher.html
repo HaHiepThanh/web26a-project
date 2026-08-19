@@ -16,10 +16,6 @@
       [class]="org.id === activeOrg()?.id ? 'bg-primary shadow-sm text-primary-content' : 'hover:bg-base-200'">
       <button type="button" class="flex min-w-0 flex-1 items-center gap-2.5 px-2 py-1.5 text-left"
         (click)="onSelect(org.id)">
-        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border text-2xs font-black"
-          [class]="org.id === activeOrg()?.id ? 'border-primary-content/30 text-primary-content' : 'border-base-300 text-base-content/55'">
-          {{ initialsOf(org.name) }}
-        </span>
         <span class="min-w-0 flex-1">
           <span class="block truncate text-xs font-bold leading-tight">{{ org.name }}</span>
           <span class="block truncate text-2xs font-medium leading-tight"

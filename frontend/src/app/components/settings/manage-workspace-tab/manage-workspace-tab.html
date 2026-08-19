@@ -42,7 +42,6 @@
         [class.dark:border-slate-800]="selectedOrgFilter() !== org.id"
         [class.hover:bg-slate-100]="selectedOrgFilter() !== org.id" [title]="org.name"
         (click)="changeOrgFilter.emit(org.id)">
-        <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded border border-base-300 text-3xs font-black text-base-content/55">{{ initialsOf(org.name) }}</span>
         <span class="truncate min-w-0 flex-1 text-left">{{ org.name }}</span>
       </button>
       }
@@ -62,7 +61,6 @@
       [class.dark:border-slate-800]="selectedWorkspaceId() !== ws.id"
       [class.hover:bg-slate-100]="selectedWorkspaceId() !== ws.id"
       [title]="ws.name + (ws.orgName ? ' — ' + ws.orgName : '')" (click)="selectWorkspace.emit(ws.id)">
-      <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded text-3xs font-black text-white" [class]="ws.iconBg">{{ initialsOf(ws.name) }}</span>
       <span class="font-black truncate min-w-0 flex-1 text-left">{{ ws.name }}</span>
       <span class="badge badge-xs font-bold ml-1 shrink-0" [class.bg-white/20]="selectedWorkspaceId() === ws.id"
         [class.text-white]="selectedWorkspaceId() === ws.id">
@@ -80,10 +78,6 @@
     <!-- Workspace Overview -->
     <div class="flex items-start justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800 min-w-0">
       <div class="flex items-start gap-3.5 min-w-0 flex-1">
-        <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-2xl shadow-xs"
-          [class]="curWs.iconBg">
-          {{ initialsOf(curWs.name) }}
-        </div>
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-2 flex-wrap min-w-0">
             <h3 class="text-lg font-black text-slate-900 dark:text-white truncate block max-w-full"

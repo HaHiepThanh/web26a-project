@@ -440,17 +440,15 @@ export class Workspace {
 
   handleWorkspaceSave(data: {
     name: string;
-    iconBg: BoardBackground;
     description: string;
     members: WorkspaceMember[];
   }): void {
-    const { name, iconBg, description, members } = data;
+    const { name, description, members } = data;
 
     if (this.workspaceModalMode() === 'create') {
       const newWs: WorkspaceItem = {
         id: 'ws-' + Date.now(),
         name,
-        iconBg,
         membersCount: members.length,
         members,
         description: description || 'Không gian làm việc mới vừa được khởi tạo.',
@@ -470,7 +468,7 @@ export class Workspace {
       this.workspaces.update((list) => {
         const updated = list.map((ws) =>
           ws.id === editingWs.id
-            ? { ...ws, name, iconBg, description, members, membersCount: members.length }
+            ? { ...ws, name, description, members, membersCount: members.length }
             : ws,
         );
         this.persist(updated);

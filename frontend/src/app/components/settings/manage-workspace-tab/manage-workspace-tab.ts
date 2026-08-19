@@ -6,7 +6,7 @@ import { Organization, WorkspaceMember, WorkspaceWithOrg, avatarBgFor, initialsO
 
 @Component({
   selector: 'app-manage-workspace-tab',
-  imports: [FormsModule, LucideCrown, LucidePlus, LucideX],
+  imports: [FormsModule, LucideBuilding2, LucideCrown, LucidePlus, LucideX],
   templateUrl: './manage-workspace-tab.html',
   host: { class: 'block' },
 })

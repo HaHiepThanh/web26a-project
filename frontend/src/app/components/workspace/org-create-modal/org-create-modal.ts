@@ -1,7 +1,6 @@
 import { Component, ElementRef, computed, effect, input, output, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LucideBuilding2, LucideCheck, LucideSparkles, LucideTriangleAlert, LucideX } from '@lucide/angular';
-import { initialsOf } from '../../../mocks';
 import { slugify, validateSlugFormat } from '../../../utils/slug.util';
 
 @Component({
@@ -36,12 +35,6 @@ export class OrgCreateModal {
   });
 
   readonly slugOk = computed(() => !!this.slugInput() && !this.slugError());
-
-  /** Chữ cái đầu thay cho emoji ở ô xem trước. */
-  readonly previewInitials = computed(() => {
-    const name = this.nameInput().trim();
-    return name ? initialsOf(name) : '—';
-  });
 
   constructor() {
     effect(() => {

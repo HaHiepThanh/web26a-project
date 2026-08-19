@@ -12,57 +12,29 @@
     </div>
 
     <form (ngSubmit)="onSubmit()">
-      <!-- Name & Color Theme -->
+      <!-- Tên Workspace (không có icon/màu — Workspace chỉ hiện bằng tên) -->
       <div class="mb-4">
-        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-          Màu nền & Tên Workspace <span class="text-error">*</span>
+        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200"
+          for="workspace-name-input">
+          Tên Workspace <span class="text-error">*</span>
         </label>
-        <div class="flex items-center gap-3">
-          <!-- Xem trước: chữ cái đầu của tên trên nền màu đã chọn -->
-          <div
-            class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-2xl shadow-md transition-transform hover:scale-105"
-            [class]="iconBgInput()">
-            {{ previewInitials() }}
-          </div>
-
-          <!-- Name input -->
-          <div class="flex-1">
-            <input type="text" id="workspace-name-input" maxlength="50"
-              class="input input-bordered border-2 w-full rounded-xl font-bold text-slate-900 dark:text-white bg-white dark:bg-slate-800 shadow-xs text-sm transition-all"
-              [class.border-error]="nameError()"
-              [class.focus:border-error]="nameError()"
-              [class.border-slate-300]="!nameError()"
-              [class.dark:border-slate-600]="!nameError()"
-              placeholder="Ví dụ: Đồ án Tốt nghiệp CNTT, Dự án SaaS... (tối đa 50 ký tự)" [ngModel]="nameInput()"
-              (ngModelChange)="nameInput.set($event); nameError.set(null)" name="workspaceName" />
-            <div class="mt-1 flex items-center justify-between text-2xs text-slate-400 font-semibold px-1">
-              <span>Tối đa 50 ký tự</span>
-              <span>{{ nameInput().length }}/50</span>
-            </div>
-            @if (nameError()) {
-            <p class="mt-1 text-xs font-bold text-error flex items-center gap-1 animate-pulse">
-              <span>⚠️</span> {{ nameError() }}
-            </p>
-            }
-          </div>
+        <input type="text" id="workspace-name-input" maxlength="50"
+          class="input input-bordered border-2 w-full rounded-xl font-bold text-slate-900 dark:text-white bg-white dark:bg-slate-800 shadow-xs text-sm transition-all"
+          [class.border-error]="nameError()"
+          [class.focus:border-error]="nameError()"
+          [class.border-slate-300]="!nameError()"
+          [class.dark:border-slate-600]="!nameError()"
+          placeholder="Ví dụ: Đồ án Tốt nghiệp CNTT, Dự án SaaS... (tối đa 50 ký tự)" [ngModel]="nameInput()"
+          (ngModelChange)="nameInput.set($event); nameError.set(null)" name="workspaceName" />
+        <div class="mt-1 flex items-center justify-between px-1 text-2xs font-semibold text-slate-400">
+          <span>Tối đa 50 ký tự</span>
+          <span>{{ nameInput().length }}/50</span>
         </div>
-
-        <!-- Color Palette for Workspace Icon Background -->
-        <div class="mt-3">
-          <span class="text-2xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 block mb-1.5">Màu nền:</span>
-          <div class="flex flex-wrap gap-2">
-            @for (bg of bgClasses; track bg) {
-            <div
-              class="h-7 w-7 cursor-pointer rounded-xl transition-all hover:scale-110 shadow-xs"
-              [class]="bg"
-              [class.ring-2]="iconBgInput() === bg"
-              [class.ring-primary]="iconBgInput() === bg"
-              [class.ring-offset-2]="iconBgInput() === bg"
-              [class.scale-110]="iconBgInput() === bg"
-              (click)="iconBgInput.set(bg)"></div>
-            }
-          </div>
-        </div>
+        @if (nameError()) {
+        <p class="mt-1 flex items-center gap-1 text-xs font-bold text-error">
+          <svg lucideTriangleAlert class="h-3.5 w-3.5 shrink-0" [strokeWidth]="2.4"></svg> {{ nameError() }}
+        </p>
+        }
       </div>
 
       <!-- Description Input -->

@@ -249,8 +249,6 @@ workspaces
 ├── id          uuid PK
 ├── org_id      uuid FK → organizations.id  -- Thuộc tổ chức nào
 ├── name        text      -- Tên, vd 'Dự án Website'
-├── icon_bg     text      -- Màu nền: 'bg-board-blue' | purple | green | teal | orange | red
-│                         -- Giao diện hiện CHỮ CÁI ĐẦU của name trên nền màu này
 ├── description text null -- Mô tả ngắn
 ├── created_by  text FK → users.id
 └── created_at  timestamptz
@@ -655,7 +653,7 @@ alter table cards add constraint cards_priority_check
 | `users` | `username`, `phone`, `job_title`, `updated_at` |
 | `organizations` | `slug` (bắt buộc + duy nhất) |
 | `organization_members` | role thêm mức `admin` |
-| `workspaces` | `icon_bg`, `description`, `created_by` |
+| `workspaces` | `description`, `created_by` |
 | `boards` | `background`, `background_image_path` (ảnh nền tự tải lên) |
 | `activity_logs` | `card_id` |
 
@@ -675,7 +673,7 @@ alter table cards add constraint cards_priority_check
 | Cột `password` | Firebase giữ mật khẩu — **không bao giờ** lưu vào DB |
 | `users.language`, `users.timezone` | App cố định English + UTC+7 → không cần lưu. **Đã gỡ luôn 2 dropdown** trong trang Settings |
 | `lists.color` | Chưa có tính năng đổi màu cột. **Đã gỡ luôn chấm tròn màu** ở tiêu đề cột (cả Column View lẫn Matrix View), tiêu đề cột chỉnh to hơn cho dễ đọc |
-| `organizations.icon`, `workspaces.icon` | Bỏ hẳn emoji vì nhìn thiếu chuyên nghiệp. Thay bằng **chữ cái đầu của tên** (vd 'Đồ án CNTT' → `ĐC`). Workspace vẫn giữ `icon_bg` để phân biệt bằng màu; Tổ chức thì không màu, chỉ viền xám |
+| `organizations.icon`, `workspaces.icon`, `workspaces.icon_bg` | Bỏ hết emoji, chữ viết tắt và màu của Tổ chức + Workspace — cả hai giờ **chỉ hiển thị bằng tên**. Màu nền **chỉ còn dành cho Board (Kanban)**: `boards.background` + `boards.background_image_path` |
 
 ---
 

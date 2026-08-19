@@ -1,6 +1,6 @@
 import { Component, input, output } from '@angular/core';
 import { LucideBuilding2, LucideCheck, LucideEllipsisVertical, LucidePlus } from '@lucide/angular';
-import { Organization, initialsOf } from '../../../mocks';
+import { Organization } from '../../../mocks';
 
 /** Danh sách Organization ở sidebar — chuyển đổi & mở modal tạo mới/quản lý. */
 @Component({
@@ -19,7 +19,6 @@ export class OrgSwitcher {
   readonly openCreateOrg = output<void>();
   readonly manageOrg = output<string>();
 
-  readonly initialsOf = initialsOf;
 
   onSelect(orgId: string): void {
     this.switchOrg.emit(orgId);

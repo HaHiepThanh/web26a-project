@@ -105,8 +105,6 @@
             @for (inv of myInvites(); track inv.id) {
             <div class="rounded-xl border border-base-300/70 bg-base-200/40 p-2.5">
               <div class="flex items-center gap-2">
-                <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-base-300 text-3xs font-black text-base-content/60">{{
-                  initialsOf(inv.orgName) }}</span>
                 <div class="min-w-0">
                   <div class="truncate text-xs font-bold text-base-content leading-tight">{{ inv.fromUserName }}</div>
                   <div class="truncate text-2xs text-base-content/55 leading-tight">mời bạn vào "{{ inv.orgName }}"</div>
