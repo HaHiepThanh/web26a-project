@@ -1,5 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { SupabaseService } from '../../common/supabase/supabase.service';
+import { RESERVED_SLUGS } from './constants/reserved-slugs';
 
 /**
  * Tổ chức (Organization) + thành viên + lời mời.
@@ -12,67 +21,494 @@ import { SupabaseService } from '../../common/supabase/supabase.service';
  * ⚠️ Backend dùng service_role key nên RLS bị bỏ qua. MỌI câu query phải tự
  *    giới hạn theo tổ chức của user — xem docs/LUAT-CHUNG.md.
  */
+/** Lời mời đang chờ tôi trả lời — kèm tên tổ chức và tên người mời để hiển thị. */
+export interface MyInvite {
+  id: string;
+  orgId: string;
+  orgName: string;
+  fromUser: { displayName: string | null; email: string };
+  createdAt: string;
+}
+
+/** Lời mời tham gia tổ chức. */
+export interface InviteResponse {
+  id: string;
+  orgId: string;
+  toUserId: string;
+  fromUserId: string;
+  status: 'pending' | 'accepted' | 'declined';
+  createdAt: string;
+}
+
+/** Một thành viên của tổ chức, kèm thông tin hiển thị lấy từ bảng `users`. */
+export interface OrgMember {
+  userId: string;
+  role: 'owner' | 'admin' | 'member';
+  joinedAt: string;
+  user: {
+    displayName: string | null;
+    email: string;
+    avatarUrl: string | null;
+  };
+}
+
+/** Tổ chức mà user đang là thành viên, kèm vai trò của họ trong tổ chức đó. */
+export interface MyOrganization {
+  id: string;
+  name: string;
+  slug: string;
+  role: 'owner' | 'admin' | 'member';
+}
+
 @Injectable()
 export class OrganizationsService {
+  private readonly logger = new Logger(OrganizationsService.name);
+
   constructor(private readonly supabase: SupabaseService) {}
 
   /**
-   * TODO: tạo tổ chức mới; người tạo trở thành owner.
-   * Phải làm 2 việc: insert `organizations`, rồi insert `organization_members`
-   * với role 'owner'. Slug trùng → ném ConflictException (409).
+   * Tạo tổ chức mới; người tạo trở thành owner.
+   *
+   * Hai lần INSERT phải đi cùng nhau: `organizations` rồi `organization_members`
+   * với role 'owner'. Thiếu lần thứ hai là tổ chức tồn tại nhưng KHÔNG AI thuộc
+   * về nó — kể cả người vừa tạo — và GET /organizations sẽ trả mảng rỗng.
    */
-  async create(ownerUid: string, name: string, slug: string): Promise<unknown> {
-    return null;
-  }
+  async create(ownerUid: string, name: string, slug: string) {
+    // Định dạng slug đã được DTO chặn. Còn lại là luật nghiệp vụ: slug nằm ở gốc
+    // URL nên không được trùng route hệ thống.
+    if (RESERVED_SLUGS.has(slug)) {
+      throw new BadRequestException(`"${slug}" là đường dẫn hệ thống, vui lòng chọn tên khác.`);
+    }
 
-  /** TODO: danh sách tổ chức mà user này là thành viên (kèm role của họ). */
-  async findMine(uid: string): Promise<unknown[]> {
-    return [];
-  }
+    // Không "kiểm tra tồn tại rồi mới insert": giữa 2 bước đó người khác vẫn
+    // chen vào được. Cứ insert rồi bắt lỗi trùng UNIQUE (23505) — mẫu y hệt
+    // auth.service.ts → assignGeneratedUsername().
+    const { data: org, error } = await this.supabase.client
+      .from('organizations')
+      .insert({ name: name.trim(), slug, owner_id: ownerUid })
+      .select() // ⚠️ thiếu dòng này là data = null
+      .single();
 
-  /** TODO: các lời mời đang ở trạng thái 'pending' gửi tới user này. */
-  async findMyInvites(uid: string): Promise<unknown[]> {
-    return [];
+    if (error) {
+      if (error.code === '23505') {
+        throw new ConflictException(`Đường dẫn "${slug}" đã có người dùng.`);
+      }
+      this.logger.error(`Tạo tổ chức thất bại (uid=${ownerUid}): ${error.message}`);
+      throw new InternalServerErrorException('Không tạo được tổ chức');
+    }
+
+    // Bước 2 — người tạo thành owner.
+    const { error: memberError } = await this.supabase.client
+      .from('organization_members')
+      .insert({ org_id: org.id, user_id: ownerUid, role: 'owner' });
+
+    if (memberError) {
+      // Dọn lại tổ chức vừa tạo, nếu không sẽ để lại một tổ chức mồ côi giữ mất
+      // slug vĩnh viễn mà không ai vào được.
+      await this.supabase.client.from('organizations').delete().eq('id', org.id);
+      this.logger.error(
+        `Thêm owner thất bại, đã xoá tổ chức ${org.id}: ${memberError.message}`,
+      );
+      throw new InternalServerErrorException('Không tạo được tổ chức');
+    }
+
+    // API của dự án trả camelCase, còn Supabase trả tên cột snake_case.
+    return {
+      id: org.id,
+      name: org.name,
+      slug: org.slug,
+      ownerId: org.owner_id,
+      createdAt: org.created_at,
+    };
   }
 
   /**
-   * TODO: trả lời lời mời. accept=true → status 'accepted' + thêm dòng
-   * organization_members; accept=false → status 'declined'. Lời mời không phải
-   * của mình → 403; không tồn tại → 404.
+   * Người gọi có thuộc tổ chức này không? Không thuộc thì ném 403 ngay.
+   *
+   * Backend dùng service_role key nên RLS bị bỏ qua — database KHÔNG tự chặn gì.
+   * Mọi ràng buộc "chỉ đọc dữ liệu tổ chức của mình" đều do hàm này làm.
    */
-  async respondInvite(uid: string, inviteId: string, accept: boolean): Promise<unknown> {
-    return null;
+  private async assertMember(uid: string, orgId: string): Promise<MyOrganization['role']> {
+    const { data, error } = await this.supabase.client
+      .from('organization_members')
+      .select('role')
+      .eq('org_id', orgId)
+      .eq('user_id', uid)
+      .maybeSingle();
+
+    if (error) {
+      this.logger.error(`Kiểm tra thành viên thất bại (uid=${uid}, org=${orgId}): ${error.message}`);
+      throw new InternalServerErrorException('Không kiểm tra được quyền truy cập');
+    }
+    if (!data) {
+      throw new ForbiddenException('Bạn không thuộc tổ chức này.');
+    }
+    return data.role as MyOrganization['role'];
   }
 
   /**
-   * TODO: danh sách thành viên của tổ chức (join `users` để có tên/email).
-   * `uid` dùng để kiểm tra người gọi CÓ thuộc tổ chức này không — không thuộc
-   * thì 403, đừng trả dữ liệu ra ngoài.
+   * Danh sách tổ chức mà user này là thành viên, kèm role của họ.
+   *
+   * Đi từ `organization_members` chứ không phải từ `organizations`: chỉ những
+   * dòng có `user_id = uid` mới được đọc, nên tổ chức của người khác không thể
+   * lọt ra ngoài.
    */
-  async findMembers(uid: string, orgId: string): Promise<unknown[]> {
-    return [];
+  async findMine(uid: string): Promise<MyOrganization[]> {
+    const { data, error } = await this.supabase.client
+      .from('organization_members')
+      .select('role, organizations(id, name, slug)')
+      .eq('user_id', uid);
+
+    if (error) {
+      this.logger.error(`Đọc danh sách tổ chức thất bại (uid=${uid}): ${error.message}`);
+      throw new InternalServerErrorException('Không đọc được danh sách tổ chức');
+    }
+
+    // Supabase trả dạng lồng { role, organizations: {...} } — map phẳng lại cho
+    // frontend. Mẫu y hệt auth.service.ts → getMe().
+    type Row = {
+      role: MyOrganization['role'];
+      organizations: { id: string; name: string; slug: string } | null;
+    };
+
+    return (data as unknown as Row[])
+      .filter((r) => r.organizations)
+      .map((r) => ({
+        id: r.organizations!.id,
+        name: r.organizations!.name,
+        slug: r.organizations!.slug,
+        role: r.role,
+      }));
   }
 
   /**
-   * TODO: đổi vai trò của 1 thành viên (chỉ owner gọi được — RolesGuard lo).
-   * ⚠️ Mỗi tổ chức chỉ được ĐÚNG 1 owner (unique index uniq_org_single_owner):
-   *    phong owner cho người khác thì phải hạ owner cũ xuống admin.
+   * Lời mời đang chờ user này trả lời.
+   *
+   * Không cần assertMember: câu query lọc thẳng theo `to_user_id = uid` nên
+   * không thể lộ lời mời của người khác.
    */
-  async changeRole(orgId: string, userId: string, role: 'owner' | 'admin' | 'member'): Promise<unknown> {
-    return null;
-  }
+  async findMyInvites(uid: string): Promise<MyInvite[]> {
+    const { data, error } = await this.supabase.client
+      .from('organization_invites')
+      .select('id, org_id, created_at, organizations(name), users!organization_invites_from_user_id_fkey(display_name, email)')
+      .eq('to_user_id', uid)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
 
-  /** TODO: xoá 1 thành viên khỏi tổ chức. Không cho tự xoá owner. */
-  async removeMember(orgId: string, userId: string): Promise<unknown> {
-    return null;
+    if (error) {
+      this.logger.error(`Đọc lời mời thất bại (uid=${uid}): ${error.message}`);
+      throw new InternalServerErrorException('Không đọc được danh sách lời mời');
+    }
+
+    type Row = {
+      id: string;
+      org_id: string;
+      created_at: string;
+      organizations: { name: string } | null;
+      users: { display_name: string | null; email: string } | null;
+    };
+
+    // Join lấy tên tổ chức + tên người mời: chuông thông báo cần hiện
+    // "Nam mời bạn vào Công ty ABC", không phải hai chuỗi uuid.
+    return (data as unknown as Row[]).map((r) => ({
+      id: r.id,
+      orgId: r.org_id,
+      orgName: r.organizations?.name ?? '',
+      fromUser: {
+        displayName: r.users?.display_name ?? null,
+        email: r.users?.email ?? '',
+      },
+      createdAt: r.created_at,
+    }));
   }
 
   /**
-   * TODO: mời 1 user vào tổ chức (insert organization_invites, status 'pending').
-   * Người đã là thành viên → 409. Đã có lời mời đang chờ → 409
-   * (partial unique index uniq_pending_invite sẽ báo lỗi 23505).
+   * Đồng ý hoặc từ chối lời mời.
+   *
+   * Route này KHÔNG gắn @Roles — người được mời chưa thuộc tổ chức nên chưa có
+   * role nào cả. Việc kiểm tra nằm ở chỗ so `to_user_id` với uid trong token.
    */
-  async invite(orgId: string, fromUid: string, toUserId: string): Promise<unknown> {
-    return null;
+  async respondInvite(
+    uid: string,
+    inviteId: string,
+    accept: boolean,
+  ): Promise<{ id: string; status: 'accepted' | 'declined' }> {
+    const { data, error } = await this.supabase.client
+      .from('organization_invites')
+      .select('id, org_id, to_user_id, status')
+      .eq('id', inviteId)
+      .maybeSingle();
+
+    if (error) {
+      this.logger.error(`Đọc lời mời thất bại (id=${inviteId}): ${error.message}`);
+      throw new InternalServerErrorException('Không đọc được lời mời');
+    }
+    if (!data) {
+      throw new NotFoundException('Không tìm thấy lời mời.');
+    }
+
+    // Lời mời gửi cho người khác — thiếu bước này là ai cũng bấm đồng ý hộ.
+    if (data.to_user_id !== uid) {
+      throw new ForbiddenException('Lời mời này không phải của bạn.');
+    }
+    if (data.status !== 'pending') {
+      throw new ConflictException('Lời mời này đã được trả lời rồi.');
+    }
+
+    const status = accept ? 'accepted' : 'declined';
+
+    const { error: updateError } = await this.supabase.client
+      .from('organization_invites')
+      .update({ status, responded_at: new Date().toISOString() })
+      .eq('id', inviteId);
+
+    if (updateError) {
+      this.logger.error(`Cập nhật lời mời thất bại (id=${inviteId}): ${updateError.message}`);
+      throw new InternalServerErrorException('Không cập nhật được lời mời');
+    }
+
+    if (accept) {
+      // ⚠️ PHẢI làm cả việc này. Chỉ đổi status mà quên thêm thành viên là người
+      //    ta bấm đồng ý xong vẫn không vào được tổ chức — mà API vẫn trả 200
+      //    nên rất khó phát hiện.
+      const { error: memberError } = await this.supabase.client
+        .from('organization_members')
+        .insert({ org_id: data.org_id, user_id: uid, role: 'member' });
+
+      // 23505 = đã là thành viên rồi (vd hai tab cùng bấm đồng ý) — coi như xong,
+      // không phải lỗi.
+      if (memberError && memberError.code !== '23505') {
+        // Trả status về pending để người dùng bấm lại được, tránh kẹt vĩnh viễn
+        // ở trạng thái "đã đồng ý" mà không thuộc tổ chức.
+        await this.supabase.client
+          .from('organization_invites')
+          .update({ status: 'pending', responded_at: null })
+          .eq('id', inviteId);
+
+        this.logger.error(`Thêm thành viên thất bại (invite=${inviteId}): ${memberError.message}`);
+        throw new InternalServerErrorException('Không thêm được bạn vào tổ chức');
+      }
+    }
+
+    return { id: inviteId, status };
+  }
+
+  /**
+   * Danh sách thành viên của tổ chức, kèm tên/email lấy từ bảng `users`.
+   *
+   * ⚠️ Kiểm tra người gọi có thuộc tổ chức không TRƯỚC khi đọc. Thiếu bước này
+   * thì ai cũng lấy được danh sách nhân viên của mọi công ty — chỉ cần đoán uuid.
+   */
+  async findMembers(uid: string, orgId: string): Promise<OrgMember[]> {
+    await this.assertMember(uid, orgId);
+
+    const { data, error } = await this.supabase.client
+      .from('organization_members')
+      .select('user_id, role, joined_at, users(display_name, email, avatar_url)')
+      .eq('org_id', orgId)
+      .order('joined_at');
+
+    if (error) {
+      this.logger.error(`Đọc thành viên thất bại (org=${orgId}): ${error.message}`);
+      throw new InternalServerErrorException('Không đọc được danh sách thành viên');
+    }
+
+    type Row = {
+      user_id: string;
+      role: OrgMember['role'];
+      joined_at: string;
+      users: { display_name: string | null; email: string; avatar_url: string | null } | null;
+    };
+
+    // Trả kèm tên/email chứ không phải mỗi user_id trơ trọi — frontend cần hiển
+    // thị "Nguyễn Văn A", không phải một chuỗi uuid.
+    return (data as unknown as Row[]).map((r) => ({
+      userId: r.user_id,
+      role: r.role,
+      joinedAt: r.joined_at,
+      user: {
+        displayName: r.users?.display_name ?? null,
+        email: r.users?.email ?? '',
+        avatarUrl: r.users?.avatar_url ?? null,
+      },
+    }));
+  }
+
+  /**
+   * Đổi vai trò của 1 thành viên. Chỉ owner gọi được — RolesGuard lo phần đó.
+   *
+   * ⚠️ Mỗi tổ chức chỉ được ĐÚNG 1 owner (unique index `uniq_org_single_owner`),
+   *    nên phong owner cho người khác thì phải HẠ OWNER CŨ XUỐNG ADMIN TRƯỚC.
+   *    Làm ngược thứ tự là câu UPDATE vỡ ngay vì trùng index.
+   */
+  async changeRole(
+    orgId: string,
+    userId: string,
+    role: 'owner' | 'admin' | 'member',
+  ): Promise<{ userId: string; role: string }> {
+    // 1. Người này có trong tổ chức không?
+    const { data: target, error } = await this.supabase.client
+      .from('organization_members')
+      .select('user_id, role')
+      .eq('org_id', orgId)
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (error) {
+      this.logger.error(`Đọc thành viên thất bại (org=${orgId}): ${error.message}`);
+      throw new InternalServerErrorException('Không đọc được thành viên');
+    }
+    if (!target) {
+      throw new NotFoundException('Không tìm thấy thành viên này trong tổ chức.');
+    }
+    if (target.role === role) {
+      return { userId, role }; // không đổi gì thì khỏi gọi database
+    }
+
+    // 2. Phong owner: hạ owner hiện tại xuống admin TRƯỚC.
+    let demotedOwnerId: string | null = null;
+    if (role === 'owner') {
+      const { data: currentOwner } = await this.supabase.client
+        .from('organization_members')
+        .select('user_id')
+        .eq('org_id', orgId)
+        .eq('role', 'owner')
+        .maybeSingle();
+
+      if (currentOwner && currentOwner.user_id !== userId) {
+        const { error: demoteError } = await this.supabase.client
+          .from('organization_members')
+          .update({ role: 'admin' })
+          .eq('org_id', orgId)
+          .eq('user_id', currentOwner.user_id);
+
+        if (demoteError) {
+          this.logger.error(`Hạ owner cũ thất bại (org=${orgId}): ${demoteError.message}`);
+          throw new InternalServerErrorException('Không chuyển được quyền owner');
+        }
+        demotedOwnerId = currentOwner.user_id as string;
+      }
+    }
+
+    // 3. Đổi role cho người được chỉ định.
+    const { error: updateError } = await this.supabase.client
+      .from('organization_members')
+      .update({ role })
+      .eq('org_id', orgId)
+      .eq('user_id', userId);
+
+    if (updateError) {
+      // Supabase JS không có API transaction, nên tự phục hồi bước 2 để tổ chức
+      // không rơi vào cảnh KHÔNG CÒN OWNER NÀO.
+      if (demotedOwnerId) {
+        await this.supabase.client
+          .from('organization_members')
+          .update({ role: 'owner' })
+          .eq('org_id', orgId)
+          .eq('user_id', demotedOwnerId);
+      }
+      this.logger.error(`Đổi vai trò thất bại (org=${orgId}, user=${userId}): ${updateError.message}`);
+      throw new InternalServerErrorException('Không đổi được vai trò');
+    }
+
+    return { userId, role };
+  }
+
+  /**
+   * Xoá 1 thành viên khỏi tổ chức. Owner hoặc admin gọi được — RolesGuard lo.
+   *
+   * KHÔNG cho xoá owner: tổ chức sẽ mất chủ vĩnh viễn, mà route đổi vai trò
+   * (#12) lại chỉ owner mới gọi được — không còn ai cứu được nữa. Muốn xoá owner
+   * thì phải chuyển quyền cho người khác trước.
+   */
+  async removeMember(orgId: string, userId: string): Promise<{ userId: string; removed: true }> {
+    const { data: target, error } = await this.supabase.client
+      .from('organization_members')
+      .select('user_id, role')
+      .eq('org_id', orgId)
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (error) {
+      this.logger.error(`Đọc thành viên thất bại (org=${orgId}): ${error.message}`);
+      throw new InternalServerErrorException('Không đọc được thành viên');
+    }
+    if (!target) {
+      throw new NotFoundException('Không tìm thấy thành viên này trong tổ chức.');
+    }
+    if (target.role === 'owner') {
+      throw new BadRequestException(
+        'Không xoá được owner. Hãy chuyển quyền owner cho người khác trước.',
+      );
+    }
+
+    const { error: deleteError } = await this.supabase.client
+      .from('organization_members')
+      .delete()
+      .eq('org_id', orgId)
+      .eq('user_id', userId);
+
+    if (deleteError) {
+      this.logger.error(`Xoá thành viên thất bại (org=${orgId}, user=${userId}): ${deleteError.message}`);
+      throw new InternalServerErrorException('Không xoá được thành viên');
+    }
+
+    return { userId, removed: true };
+  }
+
+  /**
+   * Mời 1 user vào tổ chức.
+   *
+   * Chỉ owner/admin gọi được — RolesGuard đã chặn ở tầng trên, service không
+   * phải kiểm tra lại quyền.
+   */
+  async invite(orgId: string, fromUid: string, toUserId: string): Promise<InviteResponse> {
+    // 1. Đã là thành viên rồi thì mời làm gì nữa.
+    const { data: existing, error: memberError } = await this.supabase.client
+      .from('organization_members')
+      .select('user_id')
+      .eq('org_id', orgId)
+      .eq('user_id', toUserId)
+      .maybeSingle();
+
+    if (memberError) {
+      this.logger.error(`Kiểm tra thành viên thất bại (org=${orgId}): ${memberError.message}`);
+      throw new InternalServerErrorException('Không kiểm tra được thành viên');
+    }
+    if (existing) {
+      throw new ConflictException('Người này đã là thành viên của tổ chức.');
+    }
+
+    // 2. Tạo lời mời. `from_user_id` lấy từ TOKEN, không lấy từ body — lấy từ
+    //    body thì ai cũng gửi lời mời mạo danh người khác được.
+    const { data, error } = await this.supabase.client
+      .from('organization_invites')
+      .insert({ org_id: orgId, to_user_id: toUserId, from_user_id: fromUid, status: 'pending' })
+      .select()
+      .single();
+
+    if (error) {
+      // Partial unique index `uniq_pending_invite` chặn mời trùng khi đang chờ.
+      // Là partial (chỉ áp dụng cho status='pending') nên người đã TỪ CHỐI trước
+      // đó vẫn mời lại được — đúng như mong muốn.
+      if (error.code === '23505') {
+        throw new ConflictException('Đã có lời mời đang chờ người này trả lời.');
+      }
+      // 23503 = vi phạm khoá ngoại: to_user_id không có trong bảng users.
+      if (error.code === '23503') {
+        throw new NotFoundException('Không tìm thấy người dùng này.');
+      }
+      this.logger.error(`Tạo lời mời thất bại (org=${orgId}): ${error.message}`);
+      throw new InternalServerErrorException('Không tạo được lời mời');
+    }
+
+    return {
+      id: data.id,
+      orgId: data.org_id,
+      toUserId: data.to_user_id,
+      fromUserId: data.from_user_id,
+      status: data.status,
+      createdAt: data.created_at,
+    };
   }
 }
