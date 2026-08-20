@@ -41,7 +41,7 @@ npm install
 npm run start:dev
 ```
 
-Chưa chạy được vì thiếu `.env` — thầy gửi cho **Huy**, hai bạn còn lại xin lại của
+Chưa chạy được vì thiếu `.env` — anh gửi cho **Huy**, hai bạn còn lại xin lại của
 Huy. File `.env` này **cả 3 bạn dùng chung y hệt nhau**.
 
 Đặt nó trong thư mục `backend/`, ngang hàng với `package.json`.
@@ -51,7 +51,7 @@ Huy. File `.env` này **cả 3 bạn dùng chung y hệt nhau**.
 | File | Lấy ở đâu |
 |---|---|
 | `backend/postman/web26a-backend.postman_collection.json` | có sẵn trong repo |
-| `web26a-<tên bạn>.postman_environment.json` | **thầy gửi riêng từng người** |
+| `web26a-<tên bạn>.postman_environment.json` | **anh gửi riêng từng người** |
 
 > 🚨 **File thứ hai MỖI BẠN MỘT FILE KHÁC NHAU — không xin của nhau được.**
 > Trong đó có tài khoản test riêng của bạn và toàn bộ id dữ liệu mẫu của riêng bạn.
@@ -88,7 +88,7 @@ Supabase → **SQL Editor** → **New query** → dán nguyên file seed của m
 | Hoàng | `backend/postman/seed-hoang.sql` |
 
 Chạy xong là dùng Postman được ngay. Cuối kết quả có in ra một bảng id — đó chỉ
-để **xem cho biết**, **không phải copy đi đâu cả**. Thầy đã điền sẵn hết trong
+để **xem cho biết**, **không phải copy đi đâu cả**. Anh đã điền sẵn hết trong
 file environment của bạn rồi.
 
 ## 9. Bắt đầu làm
@@ -98,7 +98,7 @@ vào AI Agent.
 
 ---
 
-## Ba điều nhớ giùm thầy
+## Ba điều nhớ giùm anh
 
 **1. Token đăng nhập chỉ sống 1 tiếng.**
 Đang chạy ngon mà đột nhiên **mọi** request thành 401 thì là token hết hạn —
