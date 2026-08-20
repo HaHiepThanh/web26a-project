@@ -2,6 +2,11 @@
 
 > **Đợt này chỉ làm backend.** Viết code → test bằng **Postman** → kiểm chứng
 > bằng **Supabase → Table Editor**. Không cần chạy frontend, không cần `ng serve`.
+>
+> **Cách làm:** các bạn không gõ code tay — điều khiển AI Agent bằng prompt.
+> AI viết code, bạn **duyệt, tự chạy test và tự kiểm chứng dữ liệu**. Vì thế phần
+> quan trọng nhất của bạn là **đọc hiểu tài liệu để biết AI làm đúng hay sai**,
+> chứ không phải nhớ cú pháp.
 
 Phần `auth` (3 endpoint) **đã làm xong** — dùng làm mẫu tham khảo, đừng sửa.
 
@@ -44,7 +49,7 @@ bằng tên mình rồi dán vào AI Agent. Agent sẽ tự biết bạn làm en
   board thì list và label chỉ là chép lại đổi tên bảng.
 - **Hoàng** ít endpoint nhất và phần lớn là leaf feature — không ai chờ Hoàng cả,
   nên có sai cũng không chặn tiến độ nhóm. Tài liệu của Hoàng cũng chi tiết nhất,
-  gần như có sẵn code để đọc hiểu rồi tự gõ lại.
+  gần như có sẵn code để đối chiếu xem AI Agent viết đúng chưa.
 
 ---
 

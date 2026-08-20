@@ -10,22 +10,34 @@ Copy nguyên khối, **thay `<TÊN>` bằng tên bạn**: `Huy` / `Hoà` / `Hoà
 Mình là <TÊN>, học viên mới, chưa từng viết backend thật.
 
 Dự án: clone Trello, dùng NestJS + Supabase (Postgres) + Firebase Auth.
-Mình được giao làm một số endpoint, code đã có sẵn khung, mình cần điền ruột vào.
+Mình được giao làm một số endpoint, code đã có sẵn khung, cần điền ruột vào.
 
 Trước khi trả lời, hãy đọc 2 file này:
-  backend/docs/AI-AGENT.md   ← quy tắc hướng dẫn, đọc file này TRƯỚC
+  backend/docs/AI-AGENT.md   ← quy tắc làm việc, đọc file này TRƯỚC
   backend/docs/<TÊN>.md      ← phần việc của mình
 
-Rồi trả lời đúng 3 việc:
+CÁCH LÀM VIỆC: mình KHÔNG gõ code tay. BẠN viết code vào file, mình duyệt
+và tự chạy test. Với MỖI endpoint, làm đúng 5 bước này:
+
+  1. Nói ngắn gọn bạn sắp làm gì, sửa file nào — rồi HỎI MÌNH rồi DỪNG LẠI CHỜ
+  2. Mình gõ "ok" thì bạn mới viết code
+  3. Viết xong, tóm tắt 3-5 dòng: sửa gì, chỗ nào là mấu chốt, chỗ nào chặn
+     truy cập trái phép. Đừng dán lại toàn bộ code
+  4. Hướng dẫn mình test bằng Postman TỪ A ĐẾN Z: lấy token thế nào, gắn vào
+     đâu, gọi đường dẫn nào, gửi body gì, kết quả thế nào MỚI LÀ ĐÚNG
+  5. Chờ mình chạy xong và báo lại. Chạy được rồi mới sang endpoint tiếp theo
+
+Trả lời đầu tiên cho mình 4 việc:
   1. Xác nhận mình phụ trách mảng nào + liệt kê đầy đủ endpoint của mình
   2. Mình nên bắt đầu từ endpoint nào, vì sao
-  3. Hướng dẫn mình làm endpoint đầu tiên đó, từng bước một
+  3. Nói bạn định làm gì cho endpoint đó
+  4. Hỏi mình có ok không, rồi dừng lại chờ
 
-Yêu cầu khi hướng dẫn mình:
+Yêu cầu chung:
   - Trả lời bằng tiếng Việt
-  - Giải thích chậm, đừng viết hộ hết code — cho khung + gợi ý để mình tự viết
-  - Mỗi lần chỉ 1 endpoint. Làm xong, test chạy được rồi mới sang cái tiếp theo
-  - Sau mỗi endpoint, hướng dẫn mình test bằng Postman từ A đến Z
+  - MỖI LẦN CHỈ 1 ENDPOINT. Mình có giục "làm hết đi" thì cũng đừng nghe
+  - Chỉ sửa file trong thư mục của mình, đừng đụng phần của bạn khác
+  - Viết code xong mà chưa hướng dẫn mình test thì coi như chưa xong
 ```
 
 > **Nếu AI Agent không đọc được file trong máy** (ChatGPT/Claude trên web):
@@ -36,13 +48,23 @@ Yêu cầu khi hướng dẫn mình:
 
 ## Prompt dùng trong lúc làm
 
-### Nhờ xem code vừa viết
+### Duyệt cho AI viết code
 
 ```
-Mình viết xong hàm <tên hàm> rồi. Xem giúp mình có sai gì không,
-nhất là phần bảo mật (lọc theo org_id, lấy user_id từ token).
+ok, làm đi
+```
 
-<dán code vào đây>
+### Sang endpoint tiếp theo
+
+```
+Mình test rồi, chạy đúng như bạn nói. Sang endpoint tiếp theo nhé.
+```
+
+### Nhờ giải thích đoạn code AI vừa viết
+
+```
+Đoạn <dán đoạn code> này làm gì vậy? Giải thích bằng ví dụ dữ liệu
+cụ thể trước và sau giúp mình.
 ```
 
 ### Hỏi cách test
@@ -77,10 +99,17 @@ Mình đọc phần <tên endpoint> trong <TÊN>.md mà chưa hiểu.
 Giải thích lại giúp mình bằng ví dụ cụ thể, kèm dữ liệu mẫu trước và sau.
 ```
 
-### Nhờ kiểm tra trước khi báo xong
+### Nhờ rà lại trước khi báo xong
 
 ```
 Mình nghĩ đã xong endpoint <METHOD /đường-dẫn>.
 Rà lại giúp mình theo checklist "Xong khi nào" cuối file <TÊN>.md,
-và chỉ ra chỗ nào mình còn thiếu.
+và chỉ ra chỗ nào còn thiếu.
+```
+
+### Khi AI làm quá đà
+
+```
+Khoan, bạn đang làm nhiều endpoint một lúc. Quay lại làm từng cái thôi,
+và nhớ hướng dẫn mình test xong cái này rồi mới sang cái sau.
 ```

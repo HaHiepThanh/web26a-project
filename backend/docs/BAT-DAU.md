@@ -4,15 +4,24 @@
 
 ## Đợt này làm gì, không làm gì
 
-**Chỉ làm backend.** Vòng làm việc của bạn gói gọn trong 3 thứ:
+**Chỉ làm backend.** Và bạn **không gõ code tay** — bạn điều khiển AI Agent bằng
+prompt. Vòng làm việc mỗi endpoint:
 
 ```
-   viết code trong backend/src/
+   ① bạn duyệt      AI nói sắp làm gì → bạn gõ "ok"
             ↓
-   gọi thử bằng POSTMAN          ← xem API trả về đúng chưa
+   ② AI viết code   vào backend/src/, rồi tóm tắt nó đã làm gì
             ↓
-   mở SUPABASE → Table Editor    ← xem dữ liệu đã thật sự vào bảng chưa
+   ③ BẠN TEST       Postman: lấy token → gọi endpoint → xem status + dữ liệu
+            ↓
+   ④ BẠN KIỂM CHỨNG Supabase → Table Editor: dữ liệu đã thật sự vào bảng chưa
+            ↓
+   ⑤ báo lại AI     chạy đúng → sang endpoint tiếp theo. Sai → AI sửa
 ```
+
+Bước ③ và ④ **là phần của bạn, không ai làm hộ được** — và đó cũng là chỗ bạn
+học được nhiều nhất. Vì thế vẫn phải đọc kỹ file phần việc của mình: nó là thứ
+giúp bạn **biết AI viết đúng hay sai**.
 
 🚫 **Không cần chạy frontend.** Đừng `cd frontend`, đừng `ng serve`, đừng
 `npm install` trong đó. Thư mục `frontend/` đợt này **không phải việc của ai cả**.
@@ -118,6 +127,13 @@ file environment của bạn rồi.
 
 Mở [`PROMPT.md`](PROMPT.md), copy prompt mở đầu, thay `<TÊN>` bằng tên mình, dán
 vào AI Agent.
+
+AI sẽ liệt kê endpoint của bạn, nói nên làm cái nào trước, rồi **hỏi xin phép**.
+Gõ `ok` là nó viết code. Viết xong nó hướng dẫn bạn test — **chạy thật, đừng bỏ qua**.
+
+> Nếu AI viết một lúc nhiều endpoint hoặc viết xong mà không hướng dẫn test, nhắc nó:
+> *"Quay lại làm từng cái thôi, và hướng dẫn mình test xong rồi mới sang cái sau."*
+> Mẫu câu này có sẵn trong [`PROMPT.md`](PROMPT.md).
 
 ---
 

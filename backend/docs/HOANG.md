@@ -2,6 +2,10 @@
 
 > **Dùng với AI Agent:** mở [`PROMPT.md`](PROMPT.md), copy prompt mở đầu,
 > thay `<TÊN>` bằng **Hoàng** rồi dán vào AI Agent.
+>
+> AI Agent sẽ **viết code** cho từng endpoint; việc của bạn là **duyệt, chạy test
+> và báo lại kết quả**. Các đoạn code trong file này là để bạn **đối chiếu và hiểu**
+> AI đang làm gì — thấy nó viết khác hẳn thì hỏi lại tại sao.
 
 **Bạn phụ trách:** 10 endpoint chính + 1 bonus.
 
@@ -165,7 +169,7 @@ Làm **đúng thứ tự này**. Mỗi cái xong phải test được rồi mớ
 3. INSERT
 ```
 
-### Code đầy đủ — đọc kỹ từng dòng rồi tự gõ lại
+### Code đầy đủ — AI Agent sẽ viết cái này, bạn đọc để hiểu nó làm gì
 
 ```ts
 import {

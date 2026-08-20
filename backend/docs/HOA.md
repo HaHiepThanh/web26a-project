@@ -2,6 +2,10 @@
 
 > **Dùng với AI Agent:** mở [`PROMPT.md`](PROMPT.md), copy prompt mở đầu,
 > thay `<TÊN>` bằng **Hoà** rồi dán vào AI Agent.
+>
+> AI Agent sẽ **viết code** cho từng endpoint; việc của bạn là **duyệt, chạy test
+> và báo lại kết quả**. File này là thứ bạn dùng để **biết AI làm đúng hay sai** —
+> đọc trước, rồi đối chiếu trong lúc làm.
 
 **Bạn phụ trách:** 14 endpoint.
 
