@@ -3,7 +3,7 @@
 > **Dùng với AI Agent:** mở [`PROMPT.md`](PROMPT.md), copy prompt mở đầu,
 > thay `<TÊN>` bằng **Hoàng** rồi dán vào AI Agent.
 
-**Bạn phụ trách:** 10 endpoint chính + 2 bonus.
+**Bạn phụ trách:** 10 endpoint chính + 1 bonus.
 
 **Thư mục của bạn:**
 ```
@@ -11,8 +11,10 @@ backend/src/modules/cards/
 backend/src/modules/comments/
 backend/src/modules/chat/
 backend/src/modules/activity/     ← bonus
-backend/src/modules/ai/           ← bonus, làm sau cùng
 ```
+
+> `modules/ai/` (AI gợi ý tạo thẻ) **đã tạm tắt**, không nằm trong bài của bạn.
+> Thầy sẽ giao sau khi 10 endpoint chính xong xuôi.
 
 **Đừng đụng vào** `modules/auth/`, `modules/organizations|workspaces/` (Huy),
 `modules/boards|lists|labels/` (Hoà).
@@ -143,8 +145,7 @@ chuẩn nhất trong dự án — mọi thứ bạn cần đều có ở đó.
 | 8 | `POST /chat` | ⭐ y hệt #5 |
 | 9 | `GET /chat?boardId=` | ⭐ y hệt #6 |
 | 10 | `PATCH /cards/:id/move` | ⭐⭐⭐ **khó nhất, để cuối** |
-| 11 | `GET /activity?boardId=` | *bonus* |
-| 12 | `POST /ai/detect-task` | *bonus, làm sau cùng* |
+| 11 | `GET /activity?boardId=` | *bonus — chỉ làm khi 10 cái trên đã xong* |
 
 Làm **đúng thứ tự này**. Mỗi cái xong phải test được rồi mới sang cái tiếp theo.
 Đừng viết cả 5 hàm rồi mới chạy thử — hỏng thì không biết hỏng ở đâu.
@@ -595,9 +596,6 @@ thêm bình luận). Nhưng **chỉ làm sau khi 10 endpoint chính đã xong**.
 
 ---
 
-## 12. `POST /ai/detect-task` — *bonus, sau cùng*
-
-Cần `ANTHROPIC_API_KEY` trong `.env`. Chỉ làm khi mọi thứ khác đã xong.
 
 ---
 

@@ -28,7 +28,7 @@ Hỏi tên nếu họ chưa nói. Rồi tra bảng này:
 |---|---|---|---|
 | **Huy** | Tổ chức & Workspace + phân quyền | `backend/docs/HUY.md` | `src/modules/organizations/`, `src/modules/workspaces/`, `src/common/firebase/roles.guard.ts` |
 | **Hoà** | Board, List, Label | `backend/docs/HOA.md` | `src/modules/boards/`, `src/modules/lists/`, `src/modules/labels/` |
-| **Hoàng** | Card, Comment, Chat, Activity | `backend/docs/HOANG.md` | `src/modules/cards/`, `src/modules/comments/`, `src/modules/chat/`, `src/modules/activity/`, `src/modules/ai/` |
+| **Hoàng** | Card, Comment, Chat, Activity | `backend/docs/HOANG.md` | `src/modules/cards/`, `src/modules/comments/`, `src/modules/chat/`, `src/modules/activity/` |
 
 Tên viết không dấu (`Hoa`, `Hoang`) hoặc viết hoa đều tính. Nếu họ nói tên khác
 (vd "Nam"), hỏi lại họ nhận mảng nào — **đừng đoán**.
@@ -110,7 +110,7 @@ Cột **#** là thứ tự nên làm.
 | 13 | POST | `/labels/cards/:cardId/:labelId` | — | 201 |
 | 14 | DELETE | `/labels/cards/:cardId/:labelId` | — | 200 |
 
-### HOÀNG — Card, Comment, Chat, Activity (10 + 2 bonus)
+### HOÀNG — Card, Comment, Chat, Activity (10 + 1 bonus)
 
 | # | Method | Đường dẫn | Đầu vào | Trả về đúng |
 |---|---|---|---|---|
@@ -124,8 +124,7 @@ Cột **#** là thứ tự nên làm.
 | 8 | DELETE | `/comments/:id` | — | 200, người khác xoá → **403** |
 | 9 | GET | `/chat?boardId=` | query | 200 + `[message]` cũ → mới |
 | 10 | POST | `/chat` | body `{boardId, content}` | 201 |
-| 11 | GET | `/activity?boardId=` | query | 200 — *bonus* |
-| 12 | POST | `/ai/detect-task` | body | 200 — *bonus, làm cuối* |
+| 11 | GET | `/activity?boardId=` | query | 200 — *bonus, làm cuối* |
 
 ⚠️ #6, #7, #10: `userId` **lấy từ token** (`@CurrentUser()`), tuyệt đối không lấy từ body.
 
@@ -321,6 +320,10 @@ if (error?.code === '23505') {
   báo học viên hỏi thầy, đừng tự đổi.
 - ❌ Không sửa phần của học viên khác. Huy đụng vào `cards/` là hỏng việc của Hoàng.
 - ❌ Không tắt/bỏ qua `FirebaseAuthGuard` để "test cho nhanh".
+- ❌ Không bật lại `AiModule` trong `src/app.module.ts`. Tính năng "AI gợi ý tạo
+  thẻ" đã tạm tắt có chủ đích và **không nằm trong bài của ai cả**. `AiService`
+  gọi `getOrThrow('ANTHROPIC_API_KEY')` ngay trong constructor, bật lại mà thiếu
+  key là **toàn bộ backend không khởi động được**.
 - ❌ Không đoán `SUPABASE_SERVICE_ROLE_KEY`, `FIREBASE_PRIVATE_KEY` hay Firebase
   Web API key. Chúng nằm trong `.env` và file environment Postman, **không có trên git**.
   Thiếu thì bảo học viên xin thầy.

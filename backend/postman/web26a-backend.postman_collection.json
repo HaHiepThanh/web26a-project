@@ -1313,7 +1313,7 @@
   },
   {
    "name": "4. HOANG — Card, Comment, Chat, Activity",
-   "description": "Phan cua Hoang. Chi tiet: backend/docs/HOANG.md\nCan listId + boardId — chay seed-du-lieu-test.sql de co san.",
+   "description": "Phan cua Hoang. Chi tiet: backend/docs/HOANG.md\nCan listId + boardId — chay seed-hoang.sql de co san.",
    "item": [
     {
      "name": "GET /cards?boardId= — danh sach the",
@@ -1728,43 +1728,6 @@
        ]
       },
       "description": "Chi ĐOC. Viec GHI log nam trong cac service khac (tao/sua/xoa the...).\nPhoi hop voi ban B de ghi log khi co thao tac."
-     },
-     "response": []
-    },
-    {
-     "name": "POST /ai/detect-task — BONUS (tuy chon)",
-     "request": {
-      "method": "POST",
-      "header": [
-       {
-        "key": "Authorization",
-        "value": "Bearer {{idToken}}"
-       },
-       {
-        "key": "Content-Type",
-        "value": "application/json"
-       }
-      ],
-      "url": {
-       "raw": "{{baseUrl}}/ai/detect-task",
-       "host": [
-        "{{baseUrl}}"
-       ],
-       "path": [
-        "ai",
-        "detect-task"
-       ]
-      },
-      "description": "BONUS, lam sau cung. Can ANTHROPIC_API_KEY trong .env.",
-      "body": {
-       "mode": "raw",
-       "raw": "{\n  \"message\": \"Mai nho gui bao cao cho khach truoc 5h chieu\"\n}",
-       "options": {
-        "raw": {
-         "language": "json"
-        }
-       }
-      }
      },
      "response": []
     }

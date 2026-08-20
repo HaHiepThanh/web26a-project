@@ -12,7 +12,7 @@ import { ListsModule } from './modules/lists/lists.module';
 import { CardsModule } from './modules/cards/cards.module';
 import { LabelsModule } from './modules/labels/labels.module';
 import { ChatModule } from './modules/chat/chat.module';
-import { AiModule } from './modules/ai/ai.module';
+// import { AiModule } from './modules/ai/ai.module';   // ⏸ tạm tắt — xem ghi chú bên dưới
 import { ActivityModule } from './modules/activity/activity.module';
 import { CommentsModule } from './modules/comments/comments.module';
 
@@ -31,7 +31,16 @@ import { CommentsModule } from './modules/comments/comments.module';
     CardsModule,
     LabelsModule,
     ChatModule,
-    AiModule,
+    // ⏸ AiModule TẠM TẮT — tính năng "AI gợi ý tạo thẻ từ tin nhắn" để làm sau.
+    //
+    //    Lý do phải tắt hẳn chứ không chỉ bỏ khỏi bài tập: AiService gọi
+    //    config.getOrThrow('ANTHROPIC_API_KEY') ngay trong constructor, mà
+    //    NestJS khởi tạo mọi provider lúc bật app — nên thiếu key là TOÀN BỘ
+    //    backend không chạy được, chứ không riêng gì AI.
+    //
+    //    Bật lại: bỏ comment dòng import ở trên + dòng `AiModule,` dưới đây,
+    //    và thêm ANTHROPIC_API_KEY vào backend/.env.
+    // AiModule,
     // Bonus
     ActivityModule,
     CommentsModule,

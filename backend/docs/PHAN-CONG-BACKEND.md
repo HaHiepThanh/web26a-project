@@ -14,7 +14,7 @@ Phần `auth` (3 endpoint) **đã làm xong** — dùng làm mẫu tham khảo, 
 |---|---|---|---|
 | **Huy** | 👉 [`HUY.md`](HUY.md) | Tổ chức & Workspace + phân quyền | 12 + `RolesGuard` |
 | **Hoà** | 👉 [`HOA.md`](HOA.md) | Board, List, Label | 14 |
-| **Hoàng** | 👉 [`HOANG.md`](HOANG.md) | Card, Comment, Chat, Activity | 10 + 2 bonus |
+| **Hoàng** | 👉 [`HOANG.md`](HOANG.md) | Card, Comment, Chat, Activity | 10 + 1 bonus |
 
 **Kèm AI Agent:** mở [`PROMPT.md`](PROMPT.md), copy prompt mở đầu, thay `<TÊN>`
 bằng tên mình rồi dán vào AI Agent. Agent sẽ tự biết bạn làm endpoint nào, nên bắt
@@ -27,8 +27,8 @@ bằng tên mình rồi dán vào AI Agent. Agent sẽ tự biết bạn làm en
 |  | Huy | Hoà | Hoàng |
 |---|---|---|---|
 | **Mảng** | Tổ chức & Workspace | Board, List, Label | Card, Comment, Chat, Activity |
-| **Endpoint** | 12 | 14 | 10 (+2 bonus) |
-| **Thư mục** | `organizations/`, `workspaces/`, `common/firebase/roles.guard.ts` | `boards/`, `lists/`, `labels/` | `cards/`, `comments/`, `chat/`, `activity/`, `ai/` |
+| **Endpoint** | 12 | 14 | 10 (+1 bonus) |
+| **Thư mục** | `organizations/`, `workspaces/`, `common/firebase/roles.guard.ts` | `boards/`, `lists/`, `labels/` | `cards/`, `comments/`, `chat/`, `activity/` |
 | **Việc khó nhất** | Phân quyền owner/admin/member | Sắp xếp lại thứ tự cột | Kéo thẻ sang cột khác |
 
 **Vì sao chia thế này:**
@@ -136,6 +136,20 @@ id nào về Postman.
 
 Chưa có `backend/.env`? Copy từ `.env.example` rồi **xin thầy giá trị thật** —
 file này chứa khoá bí mật nên cố tình không có trên git.
+
+---
+
+## Tính năng tạm hoãn
+
+**AI gợi ý tạo thẻ từ tin nhắn** (`POST /ai/detect-task`) **để làm sau**, không
+nằm trong bài của ai.
+
+`AiModule` đã được comment trong `src/app.module.ts`. Đừng bật lại: `AiService`
+gọi `getOrThrow('ANTHROPIC_API_KEY')` ngay lúc khởi tạo, nên bật mà thiếu key là
+**toàn bộ backend không chạy được** — chứ không phải chỉ hỏng mỗi tính năng AI.
+
+Code trong `src/modules/ai/` vẫn giữ nguyên. Khi nào làm tới, bỏ 2 dòng comment
+trong `app.module.ts` và thêm key vào `.env` là xong.
 
 ---
 
