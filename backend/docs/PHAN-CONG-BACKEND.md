@@ -6,6 +6,9 @@ Phần `auth` (3 endpoint) **đã làm xong** — dùng làm mẫu tham khảo, 
 
 ---
 
+> 🚀 **Lần đầu vào dự án?** Đọc [`BAT-DAU.md`](BAT-DAU.md) trước — 9 bước từ
+> `git fetch` đến lúc gõ dòng code đầu tiên.
+
 ## 📌 Bắt đầu ở đâu
 
 **Mỗi bạn chỉ cần đọc 1 file của mình:**
@@ -51,6 +54,7 @@ bằng tên mình rồi dán vào AI Agent. Agent sẽ tự biết bạn làm en
 | [`CACH-LAM-1-ENDPOINT.md`](CACH-LAM-1-ENDPOINT.md) | **Đọc trước tiên.** Công thức 6 bước làm 1 endpoint, dùng cho cả 36 cái. |
 | [`TEST-BANG-POSTMAN.md`](TEST-BANG-POSTMAN.md) | Khi cần lấy token / test / gặp lỗi lạ |
 | [`TRA-CUU-DATABASE.md`](TRA-CUU-DATABASE.md) | Khi cần biết tên bảng, tên cột, giá trị hợp lệ |
+| [`BAT-DAU.md`](BAT-DAU.md) | **Cài đặt lần đầu** — 9 bước, đọc trước tiên |
 | [`PROMPT.md`](PROMPT.md) | **Prompt để dán vào AI Agent** — copy là chạy |
 | [`AI-AGENT.md`](AI-AGENT.md) | Dành cho AI Agent đọc, không phải cho bạn |
 
