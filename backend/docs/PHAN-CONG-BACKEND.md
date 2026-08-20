@@ -1,6 +1,7 @@
 # Phân công backend — Huy, Hoà, Hoàng
 
-> Chỉ cần chạy được bằng **Postman**. Chưa phải tích hợp vào frontend.
+> **Đợt này chỉ làm backend.** Viết code → test bằng **Postman** → kiểm chứng
+> bằng **Supabase → Table Editor**. Không cần chạy frontend, không cần `ng serve`.
 
 Phần `auth` (3 endpoint) **đã làm xong** — dùng làm mẫu tham khảo, đừng sửa.
 

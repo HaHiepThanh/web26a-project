@@ -2,6 +2,29 @@
 
 > Đọc hết trang này một lượt trước khi gõ lệnh đầu tiên. Khoảng 5 phút.
 
+## Đợt này làm gì, không làm gì
+
+**Chỉ làm backend.** Vòng làm việc của bạn gói gọn trong 3 thứ:
+
+```
+   viết code trong backend/src/
+            ↓
+   gọi thử bằng POSTMAN          ← xem API trả về đúng chưa
+            ↓
+   mở SUPABASE → Table Editor    ← xem dữ liệu đã thật sự vào bảng chưa
+```
+
+🚫 **Không cần chạy frontend.** Đừng `cd frontend`, đừng `ng serve`, đừng
+`npm install` trong đó. Thư mục `frontend/` đợt này **không phải việc của ai cả**.
+
+> Chạy thử cũng không lên được đâu: `frontend/src/environments/environment.ts`
+> chứa khoá cấu hình nên bị `.gitignore` chặn, `git pull` về sẽ không có file đó
+> và Angular báo lỗi thiếu file. Đó **không phải** lỗi của bạn — chỉ là frontend
+> chưa tới lượt.
+
+Ngoại lệ duy nhất: **Huy cần MỞ ĐỌC** `frontend/src/app/utils/slug.util.ts` để
+copy danh sách `RESERVED_SLUGS` sang backend. Chỉ đọc file, không chạy gì.
+
 ---
 
 ## 1. Lấy code về
