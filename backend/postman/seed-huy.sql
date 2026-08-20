@@ -1,12 +1,13 @@
+-- Sinh ra từ seed-du-lieu-test.sql. Sửa logic thì sửa file gốc rồi tạo lại 3 file này.
 -- =============================================================================
--- SEED DỮ LIỆU TEST — để 3 bạn không phải ngồi chờ nhau
+-- SEED DỮ LIỆU TEST — DÀNH RIÊNG CHO HUY
 -- =============================================================================
 -- Hoà cần workspace mới tạo được board; Hoàng cần list mới tạo được thẻ.
 -- File này tạo sẵn cả chuỗi đó, ai cũng bắt tay vào phần mình được ngay.
 --
 -- CÁCH CHẠY: Supabase → SQL Editor → New query → dán cả file → Run.
 --
--- ⚠️ CHỈ CẦN SỬA 1 DÒNG: email ở ngay bên dưới.
+-- ✅ FILE NÀY DÀNH RIÊNG CHO HUY — KHÔNG CẦN SỬA GÌ, dán vào là chạy.
 --
 -- ⚠️ TRƯỚC KHI CHẠY: phải đăng nhập ít nhất 1 lần qua Postman
 --    (thư mục "0. BAT DAU O DAY" → Dang nhap), rồi gọi GET /auth/me.
@@ -20,7 +21,7 @@
 
 do $$
 declare
-  -- >>>>>>>>>>>>>>  SỬA ĐÚNG DÒNG NÀY  <<<<<<<<<<<<<<
+  -- email test của Huy — đã điền sẵn, đừng đổi
   my_email  text := 'hocvien-a@test.dev';
 
   my_uid      text;

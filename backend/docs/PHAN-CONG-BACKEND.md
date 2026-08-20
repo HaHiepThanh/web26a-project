@@ -102,9 +102,13 @@ Endpoint trả đúng dữ liệu nhưng không chặn được người lạ th
 ## Không bị chặn lẫn nhau
 
 Hoà cần workspace mới tạo được board; Hoàng cần list mới tạo được thẻ. Để khỏi
-ngồi chờ nhau, chạy [`../postman/seed-du-lieu-test.sql`](../postman/seed-du-lieu-test.sql)
-trong **Supabase → SQL Editor**. File này tạo sẵn 1 tổ chức + 1 workspace + 1 board
-+ 3 cột + vài thẻ + 2 nhãn, và in ra id để dán vào Postman.
+ngồi chờ nhau, chạy file seed **của mình** trong **Supabase → SQL Editor** —
+[`seed-huy.sql`](../postman/seed-huy.sql) / [`seed-hoa.sql`](../postman/seed-hoa.sql) /
+[`seed-hoang.sql`](../postman/seed-hoang.sql). Đã điền sẵn email, dán vào là chạy.
+
+File này tạo sẵn 1 tổ chức + 1 workspace + 1 board + 3 cột + vài thẻ + 2 nhãn,
+thêm 1 thành viên "Người Lạ" và 1 tổ chức lạ để test bảo mật, rồi in ra 8 id để
+dán vào Postman.
 
 Chạy xong, ai làm phần nào cứ thay dần dữ liệu seed bằng endpoint thật của mình.
 
@@ -118,10 +122,16 @@ npm install
 npm run start:dev
 ```
 
-Import 2 file trong `backend/postman/` vào Postman (file environment thầy gửi
-riêng, không có trên git), chọn environment **web26a - Local**, mở thư mục
+Import 2 file vào Postman:
+- `backend/postman/web26a-backend.postman_collection.json` (có trong repo)
+- `web26a-<tên bạn>.postman_environment.json` (thầy gửi riêng, không có trên git)
+
+Chọn environment mang **tên bạn** ở góc trên bên phải, mở thư mục
 **`0. BAT DAU O DAY`** và chạy request đầu tiên. Token tự lưu, các request khác
 dùng lại ngay.
+
+Rồi chạy file seed của bạn (`seed-huy.sql` / `seed-hoa.sql` / `seed-hoang.sql`)
+trong Supabase → SQL Editor. Đã điền sẵn, không cần sửa gì.
 
 Chưa có `backend/.env`? Copy từ `.env.example` rồi **xin thầy giá trị thật** —
 file này chứa khoá bí mật nên cố tình không có trên git.

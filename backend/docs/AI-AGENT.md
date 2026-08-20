@@ -157,6 +157,9 @@ Mọi endpoint (trừ `/health`) đều cần **Firebase ID token**. Không có 
 không liên quan gì tới code họ vừa viết.
 
 **Cách lấy (Postman):**
+0. Lần đầu tiên: đổi biến `testEmail` thành email riêng của học viên
+   (`huy@test.dev` / `hoa@test.dev` / `hoang@test.dev`). Ba bạn dùng chung một
+   email là chung một tài khoản → seed của người này đè lên người kia.
 1. Mở collection → thư mục **`0. BAT DAU O DAY`**
 2. Chạy request **"Dang ky tai khoan test"** (chỉ lần đầu; chạy lại báo
    `EMAIL_EXISTS` là bình thường, bỏ qua)

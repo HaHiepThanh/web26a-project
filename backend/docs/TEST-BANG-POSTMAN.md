@@ -40,26 +40,43 @@ Mở Postman → **Import** → kéo vào **2 file**:
 | File | Lấy ở đâu |
 |---|---|
 | `backend/postman/web26a-backend.postman_collection.json` | có trong repo |
-| `web26a-local.postman_environment.json` | **thầy gửi riêng** — chứa Firebase API key, không có trên git |
+| `web26a-<tên bạn>.postman_environment.json` | **thầy gửi riêng cho từng người** — chứa Firebase API key, không có trên git |
 
 Sau khi import, ở góc **trên bên phải** Postman có ô chọn environment — chọn
-**`web26a - Local`**. Bước này hay bị quên, quên là mọi biến `{{...}}` thành rỗng.
+đúng cái mang **tên bạn** (`web26a - Huy` / `web26a - Hoà` / `web26a - Hoàng`).
+Bước này hay bị quên, quên là mọi biến `{{...}}` thành rỗng.
+
+> **Vì sao mỗi người một file?** File đó chứa `testEmail` — tài khoản đăng nhập
+> **giả** mà Postman dùng để lấy token. Không phải email thật của bạn, `@test.dev`
+> cũng không phải domain có thật. Ba bạn cần ba tài khoản khác nhau để dữ liệu
+> test của mỗi người nằm riêng, không đè lên nhau. Thầy đã điền sẵn — **đừng đổi**.
 
 ### A3. Tạo dữ liệu mẫu
 
 Để không phải ngồi chờ bạn khác làm xong endpoint tạo dữ liệu:
 
 1. Mở Supabase → **SQL Editor** → **New query**
-2. Dán nội dung `backend/postman/seed-du-lieu-test.sql`
-3. Thay `DAN_FIREBASE_UID_CUA_BAN_VAO_DAY` bằng uid của bạn (lấy ở bước B3)
-4. Bấm **Run**
+2. Dán nội dung file seed **của bạn** — không cần sửa gì cả:
 
-Xong sẽ có sẵn 1 tổ chức + 1 workspace + 1 board + 3 cột + 3 thẻ + 2 nhãn, kèm
-bảng id ở cuối để dán vào environment Postman.
+   | Bạn | File |
+   |---|---|
+   | Huy | `backend/postman/seed-huy.sql` |
+   | Hoà | `backend/postman/seed-hoa.sql` |
+   | Hoàng | `backend/postman/seed-hoang.sql` |
 
-> ⚠️ Supabase SQL Editor **không nhận lệnh `\set`** của psql. Nếu báo lỗi ở dòng
-> đó, xoá dòng `\set` đi rồi bấm Tìm–Thay thế trong trình soạn thảo:
-> thay mọi `:'my_uid'` bằng uid của bạn kèm dấu nháy đơn, vd `'AbC123xyz...'`.
+3. Bấm **Run**
+
+> ⚠️ Phải chạy `GET /auth/me` (bước B ở dưới) **ít nhất 1 lần trước đã** — lúc đó
+> backend mới tạo dòng của bạn trong bảng `users`. Chưa làm thì file seed dừng
+> lại kèm hướng dẫn, không phải lỗi gì nghiêm trọng.
+
+Xong sẽ có sẵn 1 tổ chức + 1 workspace + 1 board + 3 cột + 3 thẻ + 2 nhãn, cộng
+thêm 1 "Người Lạ" và 1 tổ chức lạ để test bảo mật. Cuối kết quả in ra **8 dòng id**
+— dán hết vào environment Postman (`orgId`, `workspaceId`, `boardId`, `listId`,
+`cardId`, `labelId`, `memberUserId`, `orgIdNguoiLa`).
+
+Chạy lại lúc nào cũng được: nó xoá dữ liệu seed cũ **của riêng bạn** rồi tạo lại.
+Lỡ xoá nhầm mất dữ liệu thì chạy lại file này là có lại sau 10 giây.
 
 ---
 
@@ -68,12 +85,40 @@ bảng id ở cuối để dán vào environment Postman.
 Mọi endpoint trừ `/health` đều đòi **Firebase ID token**. Không có là **401**,
 chuyện này không liên quan gì tới code bạn viết.
 
+### B0. Đặt email test của riêng bạn — làm 1 lần
+
+⚠️ **Ba bạn phải dùng 3 email khác nhau.** Dùng chung một email là chung một tài
+khoản, chung một tổ chức seed → người chạy seed sau ghi đè lên dữ liệu người trước.
+
+File environment ship sẵn `hocvien-a@test.dev`. Đổi thành tên bạn:
+
+```
+Postman → Environments → web26a - Local → sửa ô testEmail → Save
+```
+
+```
+Huy    →  huy@test.dev
+Hoà    →  hoa@test.dev
+Hoàng  →  hoang@test.dev
+```
+
+Email này là **giả**, `.test.dev` không phải domain thật — Firebase không gửi mail
+xác minh, nó chỉ dùng làm định danh tài khoản test. Mật khẩu giữ nguyên.
+
+> **Phải khác nhau ở phần TRƯỚC dấu @, không phải ở domain.** File seed đặt tên
+> tổ chức theo phần trước @, nên `huy@gmail.com` và `huy@test.dev` bị coi là cùng
+> một người. (Seed có kiểm tra và sẽ chặn kèm hướng dẫn, không làm mất dữ liệu ai —
+> nhưng đặt đúng ngay từ đầu thì đỡ mất một vòng.)
+
 ### B1. Đăng ký tài khoản test — chỉ lần đầu
 
 Thư mục **`0. BAT DAU O DAY`** → request **`Dang ky tai khoan test`** → **Send**.
 
 Chạy lần thứ hai sẽ báo `EMAIL_EXISTS` — **bình thường**, tài khoản đã có rồi,
 bỏ qua và sang B2.
+
+> Mỗi lần đổi `testEmail` là phải chạy lại request này, nếu không `Dang nhap`
+> sẽ báo `EMAIL_NOT_FOUND` (tài khoản mới chưa tồn tại).
 
 ### B2. Đăng nhập
 
