@@ -18,7 +18,7 @@ function mockLabels(boardId: string): Label[] {
     // ['Cần review', '#0d9488'],
     // ['Feature mới', '#059669'],
   ];
-  return seed.map(([name, color]) => ({ id: mockId('label'), tenantId: 'tenant-demo', boardId, name, color }));
+  return seed.map(([name, color]) => ({ id: mockId('label'), orgId: 'org-demo', boardId, name, color }));
 }
 
 /** Nhãn màu theo board + gắn/gỡ nhiều nhãn cùng lúc cho 1 thẻ (#5). Người dùng tự
@@ -40,7 +40,7 @@ export class LabelService {
   async createLabel(boardId: string, name: string, color: string): Promise<Label | null> {
     const trimmed = name.trim();
     if (!trimmed) return null;
-    const label: Label = { id: mockId('label'), tenantId: 'tenant-demo', boardId, name: trimmed, color };
+    const label: Label = { id: mockId('label'), orgId: 'org-demo', boardId, name: trimmed, color };
     this.labels.update((all) => [...all, label]);
     return label;
   }

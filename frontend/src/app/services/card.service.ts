@@ -75,7 +75,7 @@ export class CardService {
     const existing = this.cardsByList()[listId] ?? [];
     const card: Card = {
       id: mockId('card'),
-      tenantId: 'tenant-demo',
+      orgId: 'org-demo',
       listId,
       title,
       description: input.description?.trim() || undefined,

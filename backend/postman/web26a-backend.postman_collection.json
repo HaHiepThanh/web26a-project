@@ -1,0 +1,1954 @@
+{
+ "info": {
+  "name": "web26a — Backend Trello Clone",
+  "description": "# Bo API cho do an web26a\n\n## Cai dat 2 phut\n1. Import CA HAI file: collection nay + file `web26a-local.postman_environment.json`.\n2. Goc tren ben phai Postman: chon environment **web26a - Local**.\n3. Chay backend: `cd backend && npm run start:dev`\n4. Mo thu muc **0. BAT DAU O DAY** → chay *Dang ky tai khoan test* → xong.\n\nToken tu dong luu, cac request khac dung lai ngay. Khong phai copy tay lan nao.\n\n## Bien tu dong luu\n`idToken`, `refreshToken`, `myUid`, `orgId`, `workspaceId`, `boardId`, `listId`, `cardId`, `labelId`, `commentId` — chay request tao xong la\ncac request sau tu co id, khong phai dan tay.\n\n## Luu y\n- Token song **1 gio**. Bi 401 giua chung → chay *Lam moi token*.\n- Moi nguoi dung **email test rieng** de khong dam du lieu nhau.\n- Endpoint chua lam se tra ve rong hoac loi — do la binh thuong.",
+  "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+ },
+ "item": [
+  {
+   "name": "0. BAT DAU O DAY — Lay token",
+   "description": "Moi endpoint cua backend deu doi header `Authorization: Bearer <Firebase ID token>`.\n\n**Lam theo thu tu:**\n1. Chay **Dang ky tai khoan test** (chi 1 lan cho moi email).\n2. Hoac chay **Dang nhap** neu da co tai khoan.\n3. Token tu dong luu vao bien `idToken` — cac request khac dung lai ngay, khong phai copy tay.\n\n**Token het han sau 1 gio** → chay **Lam moi token**, khong phai dang nhap lai.",
+   "item": [
+    {
+     "name": "Dang ky tai khoan test",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key={{firebaseApiKey}}",
+       "protocol": "https",
+       "host": [
+        "identitytoolkit",
+        "googleapis",
+        "com"
+       ],
+       "path": [
+        "v1",
+        "accounts:signUp"
+       ],
+       "query": [
+        {
+         "key": "key",
+         "value": "{{firebaseApiKey}}"
+        }
+       ]
+      },
+      "description": "Tao tai khoan Firebase moi bang email/mat khau.\n\nBao loi EMAIL_EXISTS = email da dung roi → chuyen sang request 'Dang nhap'.",
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\",\n  \"returnSecureToken\": true\n}",
+       "options": {
+        "raw": {
+         "language": "json"
+        }
+       }
+      }
+     },
+     "response": [],
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "const d = pm.response.json();",
+         "",
+         "if (d.idToken) {",
+         "  pm.collectionVariables.set('idToken', d.idToken);",
+         "  pm.collectionVariables.set('refreshToken', d.refreshToken);",
+         "  pm.collectionVariables.set('myUid', d.localId);",
+         "  console.log('Tao tai khoan thanh cong. UID =', d.localId);",
+         "} else if (d.error && d.error.message === 'EMAIL_EXISTS') {",
+         "  console.log('Email nay da dang ky roi — chay request \"Dang nhap\" ben duoi la duoc.');",
+         "} else {",
+         "  console.log('Loi khac:', JSON.stringify(d.error || d));",
+         "}",
+         "",
+         "// Email da ton tai KHONG phai loi — chi can khong phai loi cau hinh.",
+         "pm.test('Firebase phan hoi hop le (tao moi hoac bao email da ton tai)', function () {",
+         "  const ok = !!d.idToken || (d.error && d.error.message === 'EMAIL_EXISTS');",
+         "  pm.expect(ok, 'Kiem tra lai firebaseApiKey trong environment').to.be.true;",
+         "});"
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "name": "Dang nhap (lay token)",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={{firebaseApiKey}}",
+       "protocol": "https",
+       "host": [
+        "identitytoolkit",
+        "googleapis",
+        "com"
+       ],
+       "path": [
+        "v1",
+        "accounts:signInWithPassword"
+       ],
+       "query": [
+        {
+         "key": "key",
+         "value": "{{firebaseApiKey}}"
+        }
+       ]
+      },
+      "description": "Dang nhap tai khoan da co. Token tu luu vao bien `idToken`.",
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\",\n  \"returnSecureToken\": true\n}",
+       "options": {
+        "raw": {
+         "language": "json"
+        }
+       }
+      }
+     },
+     "response": [],
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "const d = pm.response.json();",
+         "if (d.idToken) {",
+         "  pm.collectionVariables.set('idToken', d.idToken);",
+         "  pm.collectionVariables.set('refreshToken', d.refreshToken);",
+         "  pm.collectionVariables.set('myUid', d.localId);",
+         "  console.log('Da luu token. UID =', d.localId);",
+         "} else {",
+         "  console.log('KHONG lay duoc token:', JSON.stringify(d));",
+         "}",
+         "",
+         "pm.test('Lay duoc idToken', function () {",
+         "  pm.expect(pm.response.json()).to.have.property('idToken');",
+         "});"
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "name": "Lam moi token (khi het han)",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/x-www-form-urlencoded"
+       }
+      ],
+      "url": {
+       "raw": "https://securetoken.googleapis.com/v1/token?key={{firebaseApiKey}}",
+       "protocol": "https",
+       "host": [
+        "securetoken",
+        "googleapis",
+        "com"
+       ],
+       "path": [
+        "v1",
+        "token"
+       ],
+       "query": [
+        {
+         "key": "key",
+         "value": "{{firebaseApiKey}}"
+        }
+       ]
+      },
+      "description": "Firebase ID token song 1 gio. Bi 401 giua chung thi chay request nay,\nkhong can dang nhap lai.",
+      "body": {
+       "mode": "urlencoded",
+       "urlencoded": [
+        {
+         "key": "grant_type",
+         "value": "refresh_token"
+        },
+        {
+         "key": "refresh_token",
+         "value": "{{refreshToken}}"
+        }
+       ]
+      }
+     },
+     "response": [],
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "const d = pm.response.json();",
+         "if (d.id_token) {",
+         "  pm.collectionVariables.set('idToken', d.id_token);",
+         "  pm.collectionVariables.set('refreshToken', d.refresh_token);",
+         "  console.log('Da lam moi token');",
+         "}"
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "1. Auth — DA XONG (dung lam mau)",
+   "description": "3 endpoint nay **da hoan thanh**, dung lam mau tham khao khi lam phan cua minh:\n- Cach lay user hien tai tu token (`@CurrentUser()`)\n- Cach validate body bang DTO (tra 400 khi sai)\n- Cach xu ly trung du lieu (tra 409 thay vi 500)\n\nFile tham khao: `src/modules/auth/`",
+   "item": [
+    {
+     "name": "GET /auth/me — ho so + danh sach to chuc",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/auth/me",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "auth",
+        "me"
+       ]
+      },
+      "description": "Tra ve ho so user + cac to chuc user thuoc ve + co `needsOnboarding`.\nGoi lan dau se TU TAO dong trong bang `users`."
+     },
+     "response": [],
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Tra ve 200', () => pm.response.to.have.status(200));",
+         "try {",
+         "  const d = pm.response.json();",
+         "  if (d.organizations && d.organizations[0]) {",
+         "    pm.collectionVariables.set('orgId', d.organizations[0].id);",
+         "    console.log('Da luu orgId =', d.organizations[0].id);",
+         "  }",
+         "} catch(e) {}"
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "name": "POST /auth/sync — dong bo ho so",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/auth/sync",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "auth",
+        "sync"
+       ]
+      },
+      "description": "Body TUY CHON. Chi dien khi o do dang trong — dang nhap lai KHONG ghi de\ndu lieu user da tu sua.",
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"username\": \"hocvien_test\",\n  \"phone\": \"0912345678\"\n}",
+       "options": {
+        "raw": {
+         "language": "json"
+        }
+       }
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "PATCH /auth/profile — sua ho so",
+     "request": {
+      "method": "PATCH",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/auth/profile",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "auth",
+        "profile"
+       ]
+      },
+      "description": "Sua ho so. Username trung → 409. Sai dinh dang → 400.\nKhong doi duoc `email` qua day (Firebase quan ly email).",
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"displayName\": \"Ho Ten Moi\",\n  \"username\": \"ten_dang_nhap\",\n  \"phone\": \"0987654321\",\n  \"jobTitle\": \"Sinh vien\"\n}",
+       "options": {
+        "raw": {
+         "language": "json"
+        }
+       }
+      }
+     },
+     "response": []
+    }
+   ]
+  },
+  {
+   "name": "2. HUY — To chuc & Workspace",
+   "description": "Phan cua Huy. Chi tiet: backend/docs/HUY.md\nLam theo THU TU tren xuong duoi — request sau dung id cua request truoc.",
+   "item": [
+    {
+     "name": "POST /organizations — tao to chuc",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/organizations",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "organizations"
+       ]
+      },
+      "description": "Tao to chuc moi, nguoi tao thanh owner.\n\nPhai lam 2 buoc: INSERT `organizations`, roi INSERT `organization_members`\nvoi role = 'owner'.\n\nCot `slug` BAT BUOC + DUY NHAT toan he thong: chu thuong/so/gach ngang,\n3-30 ky tu. Trung slug → phai tra 409 (khong duoc de lot 500).\n\nKet qua dung: 201 + { id, name, slug, ownerId, createdAt }",
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"name\": \"To chuc cua toi\",\n  \"slug\": \"to-chuc-cua-toi\"\n}",
+       "options": {
+        "raw": {
+         "language": "json"
+        }
+       }
+      }
+     },
+     "response": [],
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// Tu luu id vao bien de request sau dung lai",
+         "try {",
+         "  const d = pm.response.json();",
+         "  const v = d.id || (Array.isArray(d) && d[0] && d[0].id);",
+         "  if (v) {",
+         "    pm.collectionVariables.set('orgId', v);",
+         "    console.log('Da luu orgId =', v);",
+         "  }",
+         "} catch (e) { /* endpoint chua lam xong thi bo qua */ }",
+         "",
+         "pm.test('Khong bi 401 (token con han)', function () {",
+         "  pm.expect(pm.response.code).to.not.eql(401);",
+         "});"
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "name": "GET /organizations — to chuc cua toi",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/organizations",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "organizations"
+       ]
+      },
+      "description": "Danh sach to chuc user dang thuoc ve, kem role cua ho.\nDoc bang `organization_members` loc theo user_id = uid trong token,\njoin sang `organizations`.\n\nKet qua dung: 200 + [ { id, name, slug, role } ]  (mang rong [] neu chua co)"
+     },
+     "response": [],
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// Tu luu id vao bien de request sau dung lai",
+         "try {",
+         "  const d = pm.response.json();",
+         "  const v = d.id || (Array.isArray(d) && d[0] && d[0].id);",
+         "  if (v) {",
+         "    pm.collectionVariables.set('orgId', v);",
+         "    console.log('Da luu orgId =', v);",
+         "  }",
+         "} catch (e) { /* endpoint chua lam xong thi bo qua */ }",
+         "",
+         "pm.test('Khong bi 401 (token con han)', function () {",
+         "  pm.expect(pm.response.code).to.not.eql(401);",
+         "});"
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "name": "GET /organizations/invites/me — loi moi cho toi",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/organizations/invites/me",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "organizations",
+        "invites",
+        "me"
+       ]
+      },
+      "description": "Loi moi dang cho (status = 'pending') gui toi user nay.\n\n⚠️ Route TINH `invites/me` phai khai TRUOC route DONG `:id/...` trong\ncontroller, khong thi NestJS hieu 'invites' la :id.\n\nKet qua dung: 200 + [ { id, orgId, orgName, fromUser, createdAt } ]"
+     },
+     "response": []
+    },
+    {
+     "name": "PATCH /organizations/invites/:inviteId — dong y / tu choi",
+     "request": {
+      "method": "PATCH",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/organizations/invites/{{inviteId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "organizations",
+        "invites",
+        "{{inviteId}}"
+       ]
+      },
+      "description": "accept = true  → status 'accepted' + INSERT organization_members\naccept = false → status 'declined'\n\nLoi moi khong phai cua minh → 403. Khong ton tai → 404.",
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"accept\": true\n}",
+       "options": {
+        "raw": {
+         "language": "json"
+        }
+       }
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "GET /organizations/:id/members — danh sach thanh vien",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/organizations/{{orgId}}/members",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "organizations",
+        "{{orgId}}",
+        "members"
+       ]
+      },
+      "description": "Join sang bang `users` de tra ve ten/email, khong chi tra user_id.\n\n⚠️ Phai kiem tra NGUOI GOI co thuoc to chuc nay khong. Khong thuoc → 403.\n   Thieu buoc nay la ai cung doc duoc danh sach nhan vien cong ty khac.\n\nKet qua dung: 200 + [ { userId, role, user: { displayName, email } } ]"
+     },
+     "response": []
+    },
+    {
+     "name": "PATCH /organizations/:id/members/:userId/role — doi vai tro",
+     "request": {
+      "method": "PATCH",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/organizations/{{orgId}}/members/{{memberUserId}}/role",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "organizations",
+        "{{orgId}}",
+        "members",
+        "{{memberUserId}}",
+        "role"
+       ]
+      },
+      "description": "CHI owner goi duoc (RolesGuard). Nguoi khac goi → 403.\n\nrole nhan 1 trong 3: 'owner' | 'admin' | 'member'.\n\n⚠️ Moi to chuc chi duoc DUNG 1 owner (unique index uniq_org_single_owner):\n   phong owner cho nguoi khac thi phai ha owner cu xuong 'admin'.",
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"role\": \"admin\"\n}",
+       "options": {
+        "raw": {
+         "language": "json"
+        }
+       }
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "DELETE /organizations/:id/members/:userId — xoa thanh vien",
+     "request": {
+      "method": "DELETE",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/organizations/{{orgId}}/members/{{memberUserId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "organizations",
+        "{{orgId}}",
+        "members",
+        "{{memberUserId}}"
+       ]
+      },
+      "description": "owner hoac admin goi duoc. member goi → 403.\nKhong cho xoa chinh owner cua to chuc."
+     },
+     "response": []
+    },
+    {
+     "name": "POST /organizations/:id/invites — moi nguoi vao to chuc",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/organizations/{{orgId}}/invites",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "organizations",
+        "{{orgId}}",
+        "invites"
+       ]
+      },
+      "description": "owner hoac admin goi duoc.\n\ntoUserId = Firebase uid cua nguoi duoc moi (lay tu bang `users`).\nNguoi da la thanh vien → 409. Da co loi moi dang cho → 409.",
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"toUserId\": \"{{memberUserId}}\"\n}",
+       "options": {
+        "raw": {
+         "language": "json"
+        }
+       }
+      }
+     },
+     "response": [],
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// Tu luu id vao bien de request sau dung lai",
+         "try {",
+         "  const d = pm.response.json();",
+         "  const v = d.id || (Array.isArray(d) && d[0] && d[0].id);",
+         "  if (v) {",
+         "    pm.collectionVariables.set('inviteId', v);",
+         "    console.log('Da luu inviteId =', v);",
+         "  }",
+         "} catch (e) { /* endpoint chua lam xong thi bo qua */ }",
+         "",
+         "pm.test('Khong bi 401 (token con han)', function () {",
+         "  pm.expect(pm.response.code).to.not.eql(401);",
+         "});"
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "name": "GET /workspaces?orgId= — danh sach workspace",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/workspaces?orgId={{orgId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "workspaces"
+       ],
+       "query": [
+        {
+         "key": "orgId",
+         "value": "{{orgId}}"
+        }
+       ]
+      },
+      "description": "Chi tra workspace cua to chuc do, VA chi khi nguoi goi la thanh vien.\n\nKet qua dung: 200 + [ { id, orgId, name, description, createdAt } ]"
+     },
+     "response": []
+    },
+    {
+     "name": "POST /workspaces — tao workspace",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/workspaces",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "workspaces"
+       ]
+      },
+      "description": "Tao workspace + them nguoi tao vao `workspace_members` voi role 'owner'.\n\nKet qua dung: 201 + { id, orgId, name, description, createdBy, createdAt }",
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"orgId\": \"{{orgId}}\",\n  \"name\": \"Workspace cua toi\",\n  \"description\": \"Mo ta ngan\"\n}",
+       "options": {
+        "raw": {
+         "language": "json"
+        }
+       }
+      }
+     },
+     "response": [],
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// Tu luu id vao bien de request sau dung lai",
+         "try {",
+         "  const d = pm.response.json();",
+         "  const v = d.id || (Array.isArray(d) && d[0] && d[0].id);",
+         "  if (v) {",
+         "    pm.collectionVariables.set('workspaceId', v);",
+         "    console.log('Da luu workspaceId =', v);",
+         "  }",
+         "} catch (e) { /* endpoint chua lam xong thi bo qua */ }",
+         "",
+         "pm.test('Khong bi 401 (token con han)', function () {",
+         "  pm.expect(pm.response.code).to.not.eql(401);",
+         "});"
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "name": "PATCH /workspaces/:id — doi ten / mo ta",
+     "request": {
+      "method": "PATCH",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/workspaces/{{workspaceId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "workspaces",
+        "{{workspaceId}}"
+       ]
+      },
+      "description": "Chi sua duoc workspace thuoc to chuc cua minh. Khac to chuc → 404.",
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"name\": \"Ten moi\",\n  \"description\": \"Mo ta moi\"\n}",
+       "options": {
+        "raw": {
+         "language": "json"
+        }
+       }
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "DELETE /workspaces/:id — xoa workspace",
+     "request": {
+      "method": "DELETE",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/workspaces/{{workspaceId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "workspaces",
+        "{{workspaceId}}"
+       ]
+      },
+      "description": "Xoa workspace se keo theo board/list/card ben trong (ON DELETE CASCADE).\nKiem tra quyen truoc khi xoa."
+     },
+     "response": []
+    }
+   ]
+  },
+  {
+   "name": "3. HOA — Board, List, Label",
+   "description": "Phan cua Hoa. Chi tiet: backend/docs/HOA.md\nCan workspaceId — chay seed-du-lieu-test.sql hoac cho Huy lam xong POST /workspaces.",
+   "item": [
+    {
+     "name": "GET /boards?workspaceId= — danh sach board",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/boards?workspaceId={{workspaceId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "boards"
+       ],
+       "query": [
+        {
+         "key": "workspaceId",
+         "value": "{{workspaceId}}"
+        }
+       ]
+      },
+      "description": ""
+     },
+     "response": []
+    },
+    {
+     "name": "POST /boards — tao board",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/boards",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "boards"
+       ]
+      },
+      "description": "visibility: workspace | private | public.\nbackground (tuy chon): 1 trong 6 mau bg-board-*. Co the kem background_image_path.",
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"workspaceId\": \"{{workspaceId}}\",\n  \"name\": \"Board Kanban\",\n  \"visibility\": \"workspace\",\n  \"background\": \"bg-board-blue\"\n}",
+       "options": {
+        "raw": {
+         "language": "json"
+        }
+       }
+      }
+     },
+     "response": [],
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// Tu luu id vao bien de request sau dung lai",
+         "try {",
+         "  const d = pm.response.json();",
+         "  const v = d.id || d.boardId || (Array.isArray(d) && d[0] && d[0].id);",
+         "  if (v) {",
+         "    pm.collectionVariables.set('boardId', v);",
+         "    console.log('Da luu boardId =', v);",
+         "  }",
+         "} catch (e) { /* endpoint chua lam xong thi bo qua */ }",
+         "",
+         "pm.test('Khong bi 401 (token con han)', function () {",
+         "  pm.expect(pm.response.code).to.not.eql(401);",
+         "});"
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "name": "GET /boards/:id — chi tiet board",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/boards/{{boardId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "boards",
+        "{{boardId}}"
+       ]
+      },
+      "description": ""
+     },
+     "response": []
+    },
+    {
+     "name": "PATCH /boards/:id — sua board",
+     "request": {
+      "method": "PATCH",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/boards/{{boardId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "boards",
+        "{{boardId}}"
+       ]
+      },
+      "description": "",
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"name\": \"Ten board moi\",\n  \"visibility\": \"private\"\n}",
+       "options": {
+        "raw": {
+         "language": "json"
+        }
+       }
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "DELETE /boards/:id — xoa board",
+     "request": {
+      "method": "DELETE",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/boards/{{boardId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "boards",
+        "{{boardId}}"
+       ]
+      },
+      "description": "Dang gan @Roles('owner') — nhung RolesGuard chua lam nen HIEN AI CUNG XOA DUOC.\nPhoi hop voi ban A de guard hoat dong."
+     },
+     "response": []
+    },
+    {
+     "name": "GET /lists?boardId= — danh sach cot",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/lists?boardId={{boardId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "lists"
+       ],
+       "query": [
+        {
+         "key": "boardId",
+         "value": "{{boardId}}"
+        }
+       ]
+      },
+      "description": "Nho sap xep theo `position` tang dan."
+     },
+     "response": []
+    },
+    {
+     "name": "POST /lists — tao cot",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/lists",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "lists"
+       ]
+      },
+      "description": "Tu tinh `position` = (max position hien tai) + 1.\nBang `lists` KHONG con cot `color`.",
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"boardId\": \"{{boardId}}\",\n  \"name\": \"Viec can lam\"\n}",
+       "options": {
+        "raw": {
+         "language": "json"
+        }
+       }
+      }
+     },
+     "response": [],
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// Tu luu id vao bien de request sau dung lai",
+         "try {",
+         "  const d = pm.response.json();",
+         "  const v = d.id || d.listId || (Array.isArray(d) && d[0] && d[0].id);",
+         "  if (v) {",
+         "    pm.collectionVariables.set('listId', v);",
+         "    console.log('Da luu listId =', v);",
+         "  }",
+         "} catch (e) { /* endpoint chua lam xong thi bo qua */ }",
+         "",
+         "pm.test('Khong bi 401 (token con han)', function () {",
+         "  pm.expect(pm.response.code).to.not.eql(401);",
+         "});"
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "name": "PATCH /lists/:id — doi ten cot",
+     "request": {
+      "method": "PATCH",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/lists/{{listId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "lists",
+        "{{listId}}"
+       ]
+      },
+      "description": "",
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"name\": \"Dang lam\"\n}",
+       "options": {
+        "raw": {
+         "language": "json"
+        }
+       }
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "PATCH /lists/:id/position — keo tha doi thu tu",
+     "request": {
+      "method": "PATCH",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/lists/{{listId}}/position",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "lists",
+        "{{listId}}",
+        "position"
+       ]
+      },
+      "description": "KHO NHAT PHAN NAY. Doi 1 cot sang vi tri moi thi cac cot khac phai\nduoc danh so lai. Test ky: keo tu dau ve cuoi, tu cuoi ve dau, va giua.",
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"position\": 2\n}",
+       "options": {
+        "raw": {
+         "language": "json"
+        }
+       }
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "DELETE /lists/:id — xoa cot",
+     "request": {
+      "method": "DELETE",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/lists/{{listId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "lists",
+        "{{listId}}"
+       ]
+      },
+      "description": "Xoa cot se CASCADE xoa het the trong cot do."
+     },
+     "response": []
+    },
+    {
+     "name": "GET /labels?boardId= — danh sach nhan",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/labels?boardId={{boardId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "labels"
+       ],
+       "query": [
+        {
+         "key": "boardId",
+         "value": "{{boardId}}"
+        }
+       ]
+      },
+      "description": "Nhan thuoc pham vi 1 board."
+     },
+     "response": []
+    },
+    {
+     "name": "POST /labels — tao nhan",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/labels",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "labels"
+       ]
+      },
+      "description": "",
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"boardId\": \"{{boardId}}\",\n  \"name\": \"Gap\",\n  \"color\": \"#ef4444\"\n}",
+       "options": {
+        "raw": {
+         "language": "json"
+        }
+       }
+      }
+     },
+     "response": [],
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// Tu luu id vao bien de request sau dung lai",
+         "try {",
+         "  const d = pm.response.json();",
+         "  const v = d.id || d.labelId || (Array.isArray(d) && d[0] && d[0].id);",
+         "  if (v) {",
+         "    pm.collectionVariables.set('labelId', v);",
+         "    console.log('Da luu labelId =', v);",
+         "  }",
+         "} catch (e) { /* endpoint chua lam xong thi bo qua */ }",
+         "",
+         "pm.test('Khong bi 401 (token con han)', function () {",
+         "  pm.expect(pm.response.code).to.not.eql(401);",
+         "});"
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "name": "POST /labels/cards/:cardId/:labelId — gan nhan vao the",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/labels/cards/{{cardId}}/{{labelId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "labels",
+        "cards",
+        "{{cardId}}",
+        "{{labelId}}"
+       ]
+      },
+      "description": "Ghi vao bang noi `card_labels`. Gan 2 lan khong duoc tao 2 dong (khoa chinh gop)."
+     },
+     "response": []
+    },
+    {
+     "name": "DELETE /labels/cards/:cardId/:labelId — go nhan",
+     "request": {
+      "method": "DELETE",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/labels/cards/{{cardId}}/{{labelId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "labels",
+        "cards",
+        "{{cardId}}",
+        "{{labelId}}"
+       ]
+      },
+      "description": ""
+     },
+     "response": []
+    }
+   ]
+  },
+  {
+   "name": "4. HOANG — Card, Comment, Chat, Activity",
+   "description": "Phan cua Hoang. Chi tiet: backend/docs/HOANG.md\nCan listId + boardId — chay seed-du-lieu-test.sql de co san.",
+   "item": [
+    {
+     "name": "GET /cards?boardId= — danh sach the",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/cards?boardId={{boardId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "cards"
+       ],
+       "query": [
+        {
+         "key": "boardId",
+         "value": "{{boardId}}"
+        }
+       ]
+      },
+      "description": "Lay the cua CA board (join qua lists), sap theo list_id + position."
+     },
+     "response": []
+    },
+    {
+     "name": "POST /cards — tao the",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/cards",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "cards"
+       ]
+      },
+      "description": "Tu tinh position = cuoi cot.",
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"listId\": \"{{listId}}\",\n  \"title\": \"Viet API dang nhap\"\n}",
+       "options": {
+        "raw": {
+         "language": "json"
+        }
+       }
+      }
+     },
+     "response": [],
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// Tu luu id vao bien de request sau dung lai",
+         "try {",
+         "  const d = pm.response.json();",
+         "  const v = d.id || d.cardId || (Array.isArray(d) && d[0] && d[0].id);",
+         "  if (v) {",
+         "    pm.collectionVariables.set('cardId', v);",
+         "    console.log('Da luu cardId =', v);",
+         "  }",
+         "} catch (e) { /* endpoint chua lam xong thi bo qua */ }",
+         "",
+         "pm.test('Khong bi 401 (token con han)', function () {",
+         "  pm.expect(pm.response.code).to.not.eql(401);",
+         "});"
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "name": "PATCH /cards/:id — sua the",
+     "request": {
+      "method": "PATCH",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/cards/{{cardId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "cards",
+        "{{cardId}}"
+       ]
+      },
+      "description": "priority CHI nhan: low | medium | high (DB co CHECK, sai la 500).\nNen validate bang DTO de tra 400 cho de hieu.",
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"title\": \"Tieu de moi\",\n  \"description\": \"Mo ta chi tiet\",\n  \"priority\": \"high\",\n  \"due_date\": \"2026-12-31\",\n  \"status\": \"doing\"\n}",
+       "options": {
+        "raw": {
+         "language": "json"
+        }
+       }
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "PATCH /cards/:id/move — keo the sang cot khac",
+     "request": {
+      "method": "PATCH",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/cards/{{cardId}}/move",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "cards",
+        "{{cardId}}",
+        "move"
+       ]
+      },
+      "description": "KHO NHAT PHAN NAY. Test ky: keo trong cung 1 cot, keo sang cot khac,\nkeo vao cot dang rong, keo len dau / xuong cuoi.",
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"toListId\": \"{{listId}}\",\n  \"position\": 1\n}",
+       "options": {
+        "raw": {
+         "language": "json"
+        }
+       }
+      }
+     },
+     "response": []
+    },
+    {
+     "name": "DELETE /cards/:id — xoa the",
+     "request": {
+      "method": "DELETE",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/cards/{{cardId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "cards",
+        "{{cardId}}"
+       ]
+      },
+      "description": ""
+     },
+     "response": []
+    },
+    {
+     "name": "GET /comments?cardId= — binh luan cua the",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/comments?cardId={{cardId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "comments"
+       ],
+       "query": [
+        {
+         "key": "cardId",
+         "value": "{{cardId}}"
+        }
+       ]
+      },
+      "description": "Join `users` de co ten nguoi binh luan."
+     },
+     "response": []
+    },
+    {
+     "name": "POST /comments — them binh luan",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/comments",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "comments"
+       ]
+      },
+      "description": "user_id lay tu TOKEN (@CurrentUser), TUYET DOI khong lay tu body —\nlay tu body thi ai cung gia mao duoc nguoi khac.",
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"cardId\": \"{{cardId}}\",\n  \"content\": \"Minh nhan viec nay nhe\"\n}",
+       "options": {
+        "raw": {
+         "language": "json"
+        }
+       }
+      }
+     },
+     "response": [],
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// Tu luu id vao bien de request sau dung lai",
+         "try {",
+         "  const d = pm.response.json();",
+         "  const v = d.id || d.commentId || (Array.isArray(d) && d[0] && d[0].id);",
+         "  if (v) {",
+         "    pm.collectionVariables.set('commentId', v);",
+         "    console.log('Da luu commentId =', v);",
+         "  }",
+         "} catch (e) { /* endpoint chua lam xong thi bo qua */ }",
+         "",
+         "pm.test('Khong bi 401 (token con han)', function () {",
+         "  pm.expect(pm.response.code).to.not.eql(401);",
+         "});"
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "name": "DELETE /comments/:id — xoa binh luan",
+     "request": {
+      "method": "DELETE",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/comments/{{commentId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "comments",
+        "{{commentId}}"
+       ]
+      },
+      "description": "CHI cho xoa binh luan CUA CHINH MINH → nguoi khac xoa phai tra 403."
+     },
+     "response": []
+    },
+    {
+     "name": "GET /chat?boardId= — tin nhan trong board",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/chat?boardId={{boardId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "chat"
+       ],
+       "query": [
+        {
+         "key": "boardId",
+         "value": "{{boardId}}"
+        }
+       ]
+      },
+      "description": ""
+     },
+     "response": []
+    },
+    {
+     "name": "POST /chat — gui tin nhan",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/chat",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "chat"
+       ]
+      },
+      "description": "user_id lay tu token, giong phan comment.",
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"boardId\": \"{{boardId}}\",\n  \"content\": \"Chao ca nhom\"\n}",
+       "options": {
+        "raw": {
+         "language": "json"
+        }
+       }
+      }
+     },
+     "response": [],
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// Tu luu id vao bien de request sau dung lai",
+         "try {",
+         "  const d = pm.response.json();",
+         "  const v = d.id || d.messageId || (Array.isArray(d) && d[0] && d[0].id);",
+         "  if (v) {",
+         "    pm.collectionVariables.set('messageId', v);",
+         "    console.log('Da luu messageId =', v);",
+         "  }",
+         "} catch (e) { /* endpoint chua lam xong thi bo qua */ }",
+         "",
+         "pm.test('Khong bi 401 (token con han)', function () {",
+         "  pm.expect(pm.response.code).to.not.eql(401);",
+         "});"
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "name": "GET /activity?boardId= — nhat ky hoat dong",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/activity?boardId={{boardId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "activity"
+       ],
+       "query": [
+        {
+         "key": "boardId",
+         "value": "{{boardId}}"
+        }
+       ]
+      },
+      "description": "Chi ĐOC. Viec GHI log nam trong cac service khac (tao/sua/xoa the...).\nPhoi hop voi ban B de ghi log khi co thao tac."
+     },
+     "response": []
+    },
+    {
+     "name": "POST /ai/detect-task — BONUS (tuy chon)",
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/ai/detect-task",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "ai",
+        "detect-task"
+       ]
+      },
+      "description": "BONUS, lam sau cung. Can ANTHROPIC_API_KEY trong .env.",
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"message\": \"Mai nho gui bao cao cho khach truoc 5h chieu\"\n}",
+       "options": {
+        "raw": {
+         "language": "json"
+        }
+       }
+      }
+     },
+     "response": []
+    }
+   ]
+  },
+  {
+   "name": "5. Kiem tra bao mat — AI CUNG PHAI CHAY",
+   "description": "Lam xong endpoint cua minh thi chay het thu muc nay.\n**Endpoint tra dung du lieu ma khong chan duoc nguoi la thi van la LAM CHUA XONG.**",
+   "item": [
+    {
+     "name": "Khong co token → phai 401",
+     "request": {
+      "method": "GET",
+      "header": [],
+      "url": {
+       "raw": "{{baseUrl}}/auth/me",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "auth",
+        "me"
+       ]
+      },
+      "description": ""
+     },
+     "response": [],
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Phai tra 401', () => pm.response.to.have.status(401));"
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "name": "Token bia dat → phai 401",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer token-bia-dat-hoan-toan"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/auth/me",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "auth",
+        "me"
+       ]
+      },
+      "description": ""
+     },
+     "response": [],
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Phai tra 401', () => pm.response.to.have.status(401));"
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "name": "Health check (khong can token)",
+     "request": {
+      "method": "GET",
+      "header": [],
+      "url": {
+       "raw": "{{baseUrl}}/health",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "health"
+       ]
+      },
+      "description": "Kiem tra backend song va noi duoc Supabase."
+     },
+     "response": [],
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Backend song', () => pm.response.to.have.status(200));",
+         "pm.test('Noi duoc Supabase', function () {",
+         "  pm.expect(pm.response.json().supabase).to.eql('ket noi duoc');",
+         "});"
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "variable": [
+  {
+   "key": "baseUrl",
+   "value": "http://localhost:3000"
+  },
+  {
+   "key": "firebaseApiKey",
+   "value": "",
+   "description": "Dien tu file environment"
+  },
+  {
+   "key": "testEmail",
+   "value": "hocvien-a@test.dev"
+  },
+  {
+   "key": "testPassword",
+   "value": "Passw0rd!"
+  },
+  {
+   "key": "idToken",
+   "value": ""
+  },
+  {
+   "key": "refreshToken",
+   "value": ""
+  },
+  {
+   "key": "myUid",
+   "value": ""
+  },
+  {
+   "key": "orgId",
+   "value": ""
+  },
+  {
+   "key": "workspaceId",
+   "value": ""
+  },
+  {
+   "key": "boardId",
+   "value": ""
+  },
+  {
+   "key": "listId",
+   "value": ""
+  },
+  {
+   "key": "cardId",
+   "value": ""
+  },
+  {
+   "key": "labelId",
+   "value": ""
+  },
+  {
+   "key": "commentId",
+   "value": ""
+  },
+  {
+   "key": "messageId",
+   "value": ""
+  },
+  {
+   "key": "inviteId",
+   "value": ""
+  },
+  {
+   "key": "memberUserId",
+   "value": "",
+   "type": "string"
+  },
+  {
+   "key": "otherIdToken",
+   "value": "",
+   "type": "string"
+  }
+ ]
+}

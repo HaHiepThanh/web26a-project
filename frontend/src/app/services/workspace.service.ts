@@ -2,18 +2,18 @@ import { Injectable, inject, signal } from '@angular/core';
 import { ApiService } from './api.service';
 import { Workspace } from '../models';
 
-/** CRUD workspace trong tenant (#3). */
+/** CRUD workspace trong tổ chức (#3). */
 @Injectable({ providedIn: 'root' })
 export class WorkspaceService {
   private readonly api = inject(ApiService); // TODO: gọi backend qua this.api (get/post/patch/delete)
 
   readonly workspaces = signal<Workspace[]>([]);
 
-  // TODO: lấy danh sách workspace của tenant -> set workspaces.
-  async loadWorkspaces(tenantId: string): Promise<void> {}
+  // TODO: lấy danh sách workspace của tổ chức -> set workspaces.
+  async loadWorkspaces(orgId: string): Promise<void> {}
 
   // TODO: tạo workspace mới.
-  async createWorkspace(tenantId: string, name: string): Promise<Workspace | null> {
+  async createWorkspace(orgId: string, name: string): Promise<Workspace | null> {
     return null;
   }
 

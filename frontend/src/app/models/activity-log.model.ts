@@ -12,7 +12,7 @@ export type ActivityActionType =
 
 export interface ActivityLog {
   id: string; // uuid
-  tenantId: string; // FK tenants.id
+  orgId: string; // FK organizations.id
   boardId: string; // FK boards.id
   cardId?: string; // cột mới (CLAUDE.md #11) — lọc audit trail theo đúng 1 thẻ, xem migrations/0002_*.sql
   userId: string; // FK auth.users.id

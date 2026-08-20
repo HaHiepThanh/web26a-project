@@ -5,7 +5,7 @@ import { AppService } from './app.service';
 import { SupabaseModule } from './common/supabase/supabase.module';
 import { FirebaseModule } from './common/firebase/firebase.module';
 import { AuthModule } from './modules/auth/auth.module';
-import { TenantsModule } from './modules/tenants/tenants.module';
+import { OrganizationsModule } from './modules/organizations/organizations.module';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module';
 import { BoardsModule } from './modules/boards/boards.module';
 import { ListsModule } from './modules/lists/lists.module';
@@ -24,7 +24,7 @@ import { CommentsModule } from './modules/comments/comments.module';
     FirebaseModule,
     // Feature modules — lõi
     AuthModule,
-    TenantsModule,
+    OrganizationsModule,
     WorkspacesModule,
     BoardsModule,
     ListsModule,

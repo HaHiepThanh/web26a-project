@@ -6,7 +6,7 @@ import { ActivityLogRecord } from './activity.types';
  * ids trùng với mock của "Manage Workspace Members"
  * (frontend/src/app/pages/settings/manage-workspace) để dữ liệu nhất quán giữa các trang.
  */
-const TENANT_ID = 'tenant-1';
+const ORG_ID = 'org-1';
 
 function daysAgo(n: number, hour = 9): string {
   const d = new Date();
@@ -25,7 +25,7 @@ function log(
   targetId?: string,
 ): ActivityLogRecord {
   seq += 1;
-  return { id: `log-mock-${seq}`, tenantId: TENANT_ID, boardId, userId, actionType, targetId, actionText, createdAt };
+  return { id: `log-mock-${seq}`, orgId: ORG_ID, boardId, userId, actionType, targetId, actionText, createdAt };
 }
 
 /** b-1 có nhiều hoạt động trải nhiều ngày/nhiều thành viên (case thường gặp).

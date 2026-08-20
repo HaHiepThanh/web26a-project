@@ -3,7 +3,7 @@ export type CardPriority = 'low' | 'medium' | 'high';
 
 export interface Card {
   id: string; // uuid
-  tenantId: string; // FK tenants.id
+  orgId: string; // FK organizations.id
   listId: string; // FK lists.id
   title: string;
   description?: string; // nullable, hỗ trợ markdown đơn giản

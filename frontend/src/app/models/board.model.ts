@@ -8,7 +8,7 @@ export const BOARD_BACKGROUNDS: BoardBackground[] = ['bg-board-blue', 'bg-board-
 
 export interface Board {
   id: string; // uuid
-  tenantId: string; // FK tenants.id
+  orgId: string; // FK organizations.id
   workspaceId: string; // FK workspaces.id
   name: string;
   visibility: BoardVisibility; // default 'public'

@@ -3,8 +3,12 @@ import { Reflector } from '@nestjs/core';
 import { ROLES_KEY, Role } from './roles.decorator';
 
 /**
- * Kiểm tra role của user trong tenant hiện tại (chạy SAU FirebaseAuthGuard).
- * Dùng cho hành động nhạy cảm: xoá board/tenant, đổi role, xoá thành viên (#7).
+ * Kiểm tra role của user trong TỔ CHỨC hiện tại (chạy SAU FirebaseAuthGuard).
+ * Dùng cho hành động nhạy cảm: đổi vai trò, xoá thành viên, mời người, xoá board.
+ *
+ * 🚧 CHƯA LÀM — đây là việc của Huy (xem docs/HUY.md, bước 8).
+ *    Hiện `return true` vô điều kiện, nghĩa là mọi route gắn @Roles ĐANG KHÔNG
+ *    được bảo vệ: ai đăng nhập cũng gọi được.
  */
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -17,8 +21,9 @@ export class RolesGuard implements CanActivate {
     ]);
     if (!required?.length) return true; // route không yêu cầu role
 
-    // TODO: từ req.user.uid + tenantId (param/body) -> tra tenant_members lấy role,
-    //       so với `required`; ném ForbiddenException nếu không đủ quyền.
+    // TODO(Huy): từ req.user.uid + orgId (lấy ở param/body) -> query
+    //            organization_members lấy role thật, so với `required`,
+    //            không đủ quyền thì ném ForbiddenException (403).
     return true;
   }
 }

@@ -1,7 +1,7 @@
-// Link mời tham gia tenant, có token và thời hạn (#2).
+// Link mời tham gia tổ chức, có token và thời hạn (#2).
 export interface Invite {
   id: string; // uuid
-  tenantId: string; // FK tenants.id
+  orgId: string; // FK organizations.id
   token: string; // duy nhất, dùng trong URL /join/:token
   createdBy: string; // FK auth.users.id
   expiresAt: string; // ISO timestamptz

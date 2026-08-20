@@ -55,7 +55,7 @@ export function relativeTimeFrom(iso: string): string {
  *  tới khi AuthService/Firebase thật được bật, dùng tạm 1 thành viên mock cố định. */
 export const CURRENT_USER_ID = 'u-nam';
 
-/** Thành viên tenant giả lập — dùng làm nguồn chọn "Người phụ trách" (#2) tới khi có API thật.
+/** Thành viên tổ chức giả lập — dùng làm nguồn chọn "Người phụ trách" (#2) tới khi có API thật.
  *  Export để các mock khác (vd: components/board/workspace-stats-modal/board-stats.mock.ts)
  *  dùng chung đúng 1 roster, tránh lệch id/tên giữa các màn. */
 export const MOCK_MEMBERS: User[] = [
@@ -127,7 +127,7 @@ export class BoardService {
     if (!title) return null;
     const board: Board = {
       id: `b-new-${Date.now()}-${boardIdSeq++}`,
-      tenantId: 'tenant-demo',
+      orgId: 'org-demo',
       workspaceId,
       name: title,
       visibility: options?.visibility ?? 'public',

@@ -36,7 +36,7 @@ function mockMessages(boardId: string): Message[] {
   const set = MESSAGE_SETS[boardId] ?? DEFAULT_MESSAGE_SET;
   return set.map((m) => ({
     id: mockId('msg'),
-    tenantId: 'tenant-demo',
+    orgId: 'org-demo',
     boardId,
     userId: m.userId,
     content: m.content,
@@ -77,7 +77,7 @@ export class ChatService {
 
     const message: Message = {
       id: mockId('msg'),
-      tenantId: 'tenant-demo',
+      orgId: 'org-demo',
       boardId,
       userId: CURRENT_CHAT_USER_ID,
       content: trimmed,
@@ -104,7 +104,7 @@ export class ChatService {
   simulateIncomingMessage(boardId: string, userId: string, content: string): void {
     const message: Message = {
       id: mockId('msg'),
-      tenantId: 'tenant-demo',
+      orgId: 'org-demo',
       boardId,
       userId,
       content,

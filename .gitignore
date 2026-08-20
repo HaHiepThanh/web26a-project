@@ -39,3 +39,6 @@ coverage/
 skills-lock.json
 
 /secrets/
+# File environment Postman chua Firebase Web API key — gui truc tiep cho hoc vien,
+# KHONG commit (tranh GitHub secret scanning bao dong lai).
+backend/postman/*.postman_environment.json

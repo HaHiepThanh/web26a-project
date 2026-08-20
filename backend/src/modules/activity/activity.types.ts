@@ -10,7 +10,7 @@ export type ActivityActionType =
 
 export interface ActivityLogRecord {
   id: string;
-  tenantId: string;
+  orgId: string;
   boardId: string;
   userId: string;
   actionType: ActivityActionType;

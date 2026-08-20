@@ -170,7 +170,7 @@ function buildActivityLogs(boardId: string, cards: EnrichedCard[]): ActivityLog[
   cards.forEach((c, i) => {
     logs.push({
       id: `bstat-log-${boardId}-${i}-created`,
-      tenantId: 'tenant-demo',
+      orgId: 'org-demo',
       boardId,
       cardId: c.id,
       userId: c.assigneeId,
@@ -182,7 +182,7 @@ function buildActivityLogs(boardId: string, cards: EnrichedCard[]): ActivityLog[
     if (c.isDone && c.completedAt) {
       logs.push({
         id: `bstat-log-${boardId}-${i}-done`,
-        tenantId: 'tenant-demo',
+        orgId: 'org-demo',
         boardId,
         cardId: c.id,
         userId: c.assigneeId,
@@ -193,7 +193,7 @@ function buildActivityLogs(boardId: string, cards: EnrichedCard[]): ActivityLog[
     } else if (hashStr(c.id) % 3 === 0) {
       logs.push({
         id: `bstat-log-${boardId}-${i}-comment`,
-        tenantId: 'tenant-demo',
+        orgId: 'org-demo',
         boardId,
         cardId: c.id,
         userId: c.assigneeId,

@@ -15,7 +15,7 @@ import { orgRedirectGuard, orgSlugGuard } from './guards/org-slug.guard';
  *                                        └─ /settings
  *  Ngoài layout: /onboarding, /join/:token, ** (not-found)
  *
- * TODO(học viên): bật lại các guard khi service auth/tenant đã hoạt động.
+ * TODO(học viên): bật lại các guard khi service auth/organization đã hoạt động.
  */
 export const routes: Routes = [
   // Điều hướng mặc định — phải đứng TRƯỚC route "" bên dưới, nếu không route

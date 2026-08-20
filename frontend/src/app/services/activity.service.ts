@@ -32,7 +32,7 @@ export class ActivityService {
   record(boardId: string, cardId: string, actionText: string, actionType: ActivityActionType = 'card_updated'): void {
     const entry: ActivityLog = {
       id: mockId('log'),
-      tenantId: 'tenant-demo',
+      orgId: 'org-demo',
       boardId,
       cardId,
       userId: CURRENT_USER_ID,

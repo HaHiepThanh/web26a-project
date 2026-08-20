@@ -33,7 +33,7 @@ export class ListService {
     const maxPos = this.lists().reduce((max, l) => Math.max(max, l.position), -1);
     const list: List = {
       id: mockId('list'),
-      tenantId: 'tenant-demo',
+      orgId: 'org-demo',
       boardId,
       name: trimmed,
       position: maxPos + 1,

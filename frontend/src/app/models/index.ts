@@ -1,7 +1,6 @@
 // Barrel export: import gọn `import { Board, Card } from '../models';`
 export * from './user.model';
-export * from './tenant.model';
-export * from './tenant-member.model';
+export * from './organization-member.model';
 export * from './invite.model';
 export * from './workspace.model';
 export * from './board.model';

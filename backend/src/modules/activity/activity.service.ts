@@ -32,10 +32,10 @@ export class ActivityService {
     actionText: string,
     targetId?: string,
   ): Promise<void> {
-    const tenantId = this.logs.find((entry) => entry.boardId === boardId)?.tenantId ?? 'tenant-1';
+    const orgId = this.logs.find((entry) => entry.boardId === boardId)?.orgId ?? 'org-1';
     this.logs.push({
       id: `log-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      tenantId,
+      orgId,
       boardId,
       userId: userUid,
       actionType,
