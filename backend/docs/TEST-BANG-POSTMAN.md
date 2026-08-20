@@ -71,12 +71,18 @@ Bước này hay bị quên, quên là mọi biến `{{...}}` thành rỗng.
 > lại kèm hướng dẫn, không phải lỗi gì nghiêm trọng.
 
 Xong sẽ có sẵn 1 tổ chức + 1 workspace + 1 board + 3 cột + 3 thẻ + 2 nhãn, cộng
-thêm 1 "Người Lạ" và 1 tổ chức lạ để test bảo mật. Cuối kết quả in ra **8 dòng id**
-— dán hết vào environment Postman (`orgId`, `workspaceId`, `boardId`, `listId`,
-`cardId`, `labelId`, `memberUserId`, `orgIdNguoiLa`).
+thêm 1 "Người Lạ" và 1 tổ chức lạ để test bảo mật.
 
-Chạy lại lúc nào cũng được: nó xoá dữ liệu seed cũ **của riêng bạn** rồi tạo lại.
-Lỡ xoá nhầm mất dữ liệu thì chạy lại file này là có lại sau 10 giây.
+**Không phải copy id gì cả.** Mọi id đều được tính ra từ email của bạn chứ không
+random, nên thầy đã điền sẵn vào file environment Postman. Chạy seed xong là bấm
+Send được ngay.
+
+Cuối kết quả có in ra một bảng id — đó chỉ để **xem cho biết**, dùng khi nghi ngờ
+Postman đang trỏ sai chỗ. Không cần dán đi đâu.
+
+Chạy lại lúc nào cũng được: nó xoá dữ liệu seed cũ **của riêng bạn** rồi tạo lại,
+và tạo lại đúng những id cũ. Lỡ xoá nhầm mất dữ liệu thì chạy lại file này là có
+lại sau 10 giây, Postman vẫn trỏ đúng.
 
 ---
 
@@ -199,9 +205,11 @@ Nhiều request **tự lưu** id vào biến sau khi chạy thành công. Ví d�
 `POST /boards` xong thì `{{boardId}}` tự có giá trị, request `GET /boards/:id`
 dùng được luôn.
 
-👉 Vì vậy: **chạy các request theo thứ tự trên xuống dưới**. Nhảy cóc xuống
-`PATCH /boards/:id` khi chưa tạo board thì `{{boardId}}` còn rỗng → URL thành
-`/boards/` → 404.
+Ban đầu chúng đã có sẵn giá trị trỏ vào **dữ liệu seed**. Khi bạn tự tạo board
+mới bằng `POST /boards`, script sẽ **ghi đè** `{{boardId}}` sang board vừa tạo —
+các request phía dưới tự động chuyển sang làm việc trên board mới.
+
+👉 Vì vậy: **chạy các request theo thứ tự trên xuống dưới**.
 
 Xem giá trị hiện tại của biến: bấm icon 👁 góc trên bên phải.
 

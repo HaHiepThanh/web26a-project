@@ -107,8 +107,8 @@ ngồi chờ nhau, chạy file seed **của mình** trong **Supabase → SQL Edi
 [`seed-hoang.sql`](../postman/seed-hoang.sql). Đã điền sẵn email, dán vào là chạy.
 
 File này tạo sẵn 1 tổ chức + 1 workspace + 1 board + 3 cột + vài thẻ + 2 nhãn,
-thêm 1 thành viên "Người Lạ" và 1 tổ chức lạ để test bảo mật, rồi in ra 8 id để
-dán vào Postman.
+thêm 1 thành viên "Người Lạ" và 1 tổ chức lạ để test bảo mật. Id đã được điền
+sẵn trong file environment Postman — không phải copy gì.
 
 Chạy xong, ai làm phần nào cứ thay dần dữ liệu seed bằng endpoint thật của mình.
 
@@ -131,7 +131,8 @@ Chọn environment mang **tên bạn** ở góc trên bên phải, mở thư m�
 dùng lại ngay.
 
 Rồi chạy file seed của bạn (`seed-huy.sql` / `seed-hoa.sql` / `seed-hoang.sql`)
-trong Supabase → SQL Editor. Đã điền sẵn, không cần sửa gì.
+trong Supabase → SQL Editor. Đã điền sẵn, không cần sửa gì, cũng không phải copy
+id nào về Postman.
 
 Chưa có `backend/.env`? Copy từ `.env.example` rồi **xin thầy giá trị thật** —
 file này chứa khoá bí mật nên cố tình không có trên git.
