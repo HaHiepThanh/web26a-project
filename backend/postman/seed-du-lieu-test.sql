@@ -23,14 +23,23 @@ declare
   -- >>>>>>>>>>>>>>  SỬA ĐÚNG DÒNG NÀY  <<<<<<<<<<<<<<
   my_email  text := 'hocvien-a@test.dev';
 
-  my_uid    text;
-  my_slug   text;
-  org_id    uuid;
-  ws_id     uuid;
-  board_id  uuid;
-  list1_id  uuid;
-  list2_id  uuid;
-  list3_id  uuid;
+  my_uid      text;
+  my_slug     text;
+  org_id      uuid;
+  ws_id       uuid;
+  board_id    uuid;
+  list1_id    uuid;
+  list2_id    uuid;
+  list3_id    uuid;
+
+  -- "Người lạ" + tổ chức của họ — để test phân quyền và bảo mật mà KHÔNG cần
+  -- rủ bạn khác vào cùng test. Xem phần 9 và 10 ở cuối.
+  other_uid   text;
+  other_slug  text;
+  other_org   uuid;
+  other_ws    uuid;
+  other_board uuid;
+  other_list  uuid;
 begin
   -- 1. Tìm uid từ email ------------------------------------------------------
   select id into my_uid from users where email = my_email;
@@ -44,11 +53,17 @@ begin
   end if;
 
   -- slug riêng cho từng người, để 3 bạn không đạp lên nhau
-  my_slug := 'seed-' || lower(regexp_replace(split_part(my_email, '@', 1), '[^a-zA-Z0-9]', '-', 'g'));
+  -- Cắt còn tối đa 20 ký tự và bỏ gạch ngang thừa ở cuối: cột slug giới hạn
+  -- 30 ký tự và cấm kết thúc bằng gạch ngang, còn chỗ cho hậu tố '-nguoi-la'.
+  my_slug := rtrim(left('seed-' || lower(regexp_replace(
+               split_part(my_email, '@', 1), '[^a-zA-Z0-9]', '-', 'g')), 20), '-');
+  other_slug := my_slug || '-khac';
+  other_uid  := 'nguoi-la-' || my_slug;
 
   -- 2. Xoá dữ liệu seed cũ của chính mình -----------------------------------
   -- cascade sẽ dọn sạch workspace/board/list/card/label bên trong
-  delete from organizations where slug = my_slug;
+  delete from organizations where slug in (my_slug, other_slug);
+  delete from users where id = other_uid;
 
   -- 3. Tổ chức ---------------------------------------------------------------
   insert into organizations (name, slug, owner_id)
@@ -92,7 +107,42 @@ begin
     (org_id, board_id, 'Gấp',     '#ef4444'),
     (org_id, board_id, 'Backend', '#3b82f6');
 
-  raise notice 'Seed xong cho % (slug: %)', my_email, my_slug;
+  -- 9. "Người lạ" — thành viên thường trong TỔ CHỨC CỦA BẠN ------------------
+  -- Để Huy test được ngay: mời người, đổi vai trò, xoá thành viên — mà không
+  -- phải chờ bạn nào đăng ký tài khoản thật.
+  -- ⚠️ Người này KHÔNG đăng nhập được (không có tài khoản Firebase), nên không
+  --    dùng để test "member gọi API bị 403" — cái đó vẫn cần tài khoản thật.
+  insert into users (id, email, display_name, username)
+  values (other_uid, 'nguoi-la-' || my_slug || '@test.dev', 'Người Lạ', other_uid);
+
+  insert into organization_members (org_id, user_id, role)
+  values (org_id, other_uid, 'member');
+
+  -- 10. TỔ CHỨC KHÁC mà bạn KHÔNG thuộc về ------------------------------------
+  -- Dùng để tự kiểm tra bảo mật: gọi endpoint của mình với id bên dưới thì
+  -- PHẢI bị chặn (403 hoặc 404), tuyệt đối không được trả dữ liệu ra.
+  insert into organizations (name, slug, owner_id)
+  values ('Tổ chức Người Lạ', other_slug, other_uid) returning id into other_org;
+
+  insert into organization_members (org_id, user_id, role)
+  values (other_org, other_uid, 'owner');
+
+  insert into workspaces (org_id, name, description, created_by)
+  values (other_org, 'Workspace Người Lạ', 'KHONG duoc phep truy cap', other_uid)
+  returning id into other_ws;
+
+  insert into boards (org_id, workspace_id, name, visibility, background, created_by)
+  values (other_org, other_ws, 'Board Người Lạ', 'workspace', 'bg-board-red', other_uid)
+  returning id into other_board;
+
+  insert into lists (org_id, board_id, name, position)
+  values (other_org, other_board, 'Cột Người Lạ', 1) returning id into other_list;
+
+  insert into cards (org_id, list_id, title, description, position, priority, created_by)
+  values (other_org, other_list, 'Thẻ bí mật của người khác', 'KHONG duoc phep doc',
+          1, 'high', other_uid);
+
+  raise notice 'Seed xong cho % (slug: %, tổ chức lạ: %)', my_email, my_slug, other_slug;
 end $$;
 
 
@@ -109,10 +159,14 @@ end $$;
 -- =============================================================================
 
 with seed_org as (
-  select id from organizations
-  where slug like 'seed-%'
+  select id, slug from organizations
+  where slug like 'seed-%' and slug not like '%-khac'
   order by created_at desc
   limit 1
+),
+org_khac as (
+  select id from organizations
+  where slug = (select slug from seed_org) || '-khac'
 )
 select 'orgId' as bien, (select id from seed_org)::text as gia_tri
 union all
@@ -131,4 +185,11 @@ select 'cardId',      (select id::text from cards
                        order by position limit 1)
 union all
 select 'labelId',     (select id::text from labels
-                       where org_id = (select id from seed_org) limit 1);
+                       where org_id = (select id from seed_org) limit 1)
+-- Hai dòng dưới dùng cho phần KIỂM TRA BẢO MẬT: gọi endpoint của bạn với 2 id
+-- này thì PHẢI bị chặn (403 hoặc 404), không được trả dữ liệu ra.
+union all
+select 'memberUserId', (select user_id from organization_members
+                        where org_id = (select id from seed_org) and role = 'member' limit 1)
+union all
+select 'orgIdNguoiLa', (select id::text from org_khac);

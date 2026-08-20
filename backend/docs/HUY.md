@@ -297,6 +297,11 @@ pass**, không chứng minh được gì cả.
 ## 9. `POST /organizations/:id/invites` — mời người vào
 
 **Vào:** body `{ toUserId }` (Firebase uid của người được mời)
+
+> 💡 **Không cần rủ ai vào test.** File seed đã tạo sẵn một user tên "Người Lạ" —
+> uid nằm ở biến `{{memberUserId}}` trong Postman. Dùng luôn cho #9, #12, #13.
+> Người này không đăng nhập được (không có tài khoản Firebase), nên riêng phần
+> test 403 ở #8 vẫn cần tài khoản thật.
 **Ra:** `201` + `{ id, orgId, toUserId, status: 'pending' }`
 
 Chỉ owner/admin gọi được — `RolesGuard` (#8) lo phần này.

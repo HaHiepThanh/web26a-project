@@ -251,8 +251,16 @@ Endpoint trả đúng dữ liệu **chưa phải là xong**. Bảo họ thử th
 3. **Truyền body thiếu field bắt buộc** → phải ra **400**, không phải 500.
 4. **Truy cập dữ liệu của tổ chức khác** → phải ra 403/404, tuyệt đối không trả dữ liệu.
    Đây là lỗi nặng nhất của dự án này, xem mục 6.
+   Dùng biến `{{orgIdNguoiLa}}` — file seed đã tạo sẵn một tổ chức mà học viên
+   **không thuộc về**, đúng để thử việc này.
 
-Thư mục **`5. Kiem tra bao mat`** trong Postman có sẵn 3 request đầu.
+Thư mục **`5. Kiem tra bao mat`** trong Postman có sẵn cả 5 request.
+
+> 💡 Học viên **không cần rủ bạn khác** để test. File seed tạo sẵn:
+> `{{memberUserId}}` (một thành viên thường trong tổ chức của họ — để thử mời,
+> đổi vai trò, xoá thành viên) và `{{orgIdNguoiLa}}` (tổ chức lạ — để thử bảo mật).
+> Ngoại lệ duy nhất: test "member gọi API bị 403" cần một tài khoản Firebase thật,
+> tạo bằng cách đổi `testEmail` trong thư mục `0. BAT DAU O DAY`.
 
 ---
 

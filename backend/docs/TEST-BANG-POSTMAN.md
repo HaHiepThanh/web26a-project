@@ -141,7 +141,14 @@ Các uuid dài ngoằng được cất trong biến để khỏi phải dán tay
 {{listId}}       id cột
 {{cardId}}       id thẻ
 {{labelId}}      id nhãn
+
+{{memberUserId}} uid của "Người Lạ" — thành viên thường trong tổ chức của bạn
+{{orgIdNguoiLa}} id một tổ chức bạn KHÔNG thuộc về
 ```
+
+Hai biến cuối do file seed tạo ra, dùng riêng cho việc **tự test** mà không cần
+rủ bạn khác: `{{memberUserId}}` để thử mời / đổi vai trò / xoá thành viên,
+`{{orgIdNguoiLa}}` để thử truy cập dữ liệu tổ chức khác (phải bị chặn).
 
 Nhiều request **tự lưu** id vào biến sau khi chạy thành công. Ví dụ chạy
 `POST /boards` xong thì `{{boardId}}` tự có giá trị, request `GET /boards/:id`
@@ -203,14 +210,17 @@ Thư mục **`5. Kiem tra bao mat`** có sẵn 3 request:
 | `Token bia dat → phai 401` | 401 |
 | `Health check (khong can token)` | 200 |
 
-Thêm 3 phép thử **tự làm** trên chính endpoint của bạn:
+và 2 request dùng `{{orgIdNguoiLa}}` — tổ chức do file seed tạo ra mà **bạn
+không thuộc về**. Gọi endpoint với id đó phải ra **403 hoặc 404**. Trả về dữ liệu
+thật là **lỗi nặng nhất** của dự án này.
+
+Thêm 2 phép thử **tự làm** trên chính endpoint của bạn:
 
 1. **Sửa uuid thành id không tồn tại** (đổi 1 chữ số) → phải **404**, không phải 500
 2. **Xoá 1 field bắt buộc trong body** → phải **400**, không phải 500
-3. **Dùng id của tổ chức khác** → phải **403**, tuyệt đối không được trả dữ liệu
 
-Phép thử 3 quan trọng nhất. Backend dùng `service_role key` nên database **không
-tự bảo vệ** — chỉ có code của bạn đứng chắn.
+Backend dùng `service_role key` nên database **không tự bảo vệ** — chỉ có code của
+bạn đứng chắn.
 
 ---
 

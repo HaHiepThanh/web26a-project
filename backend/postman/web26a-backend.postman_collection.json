@@ -1870,6 +1870,86 @@
        }
       }
      ]
+    },
+    {
+     "name": "To chuc NGUOI LA → phai 403/404",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/organizations/{{orgIdNguoiLa}}/members",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "organizations",
+        "{{orgIdNguoiLa}}",
+        "members"
+       ]
+      },
+      "description": "orgIdNguoiLa la to chuc do file seed tao ra ma BAN KHONG THUOC VE.\n\nGoi endpoint cua minh voi id nay thi PHAI bi chan: 403 hoac 404.\nNeu tra ve danh sach thanh vien → code dang RO RI du lieu to chuc khac.\n\n⚠️ Backend dung service_role key nen database KHONG tu chan. Chi co code\n   trong service cua ban dung chan."
+     },
+     "response": [],
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Phai bi chan (403 hoac 404), KHONG duoc tra du lieu', function () {",
+         "  pm.expect([403, 404]).to.include(pm.response.code);",
+         "});"
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "name": "Workspace cua to chuc NGUOI LA → phai 403/404",
+     "request": {
+      "method": "GET",
+      "header": [
+       {
+        "key": "Authorization",
+        "value": "Bearer {{idToken}}"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/workspaces?orgId={{orgIdNguoiLa}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "workspaces"
+       ],
+       "query": [
+        {
+         "key": "orgId",
+         "value": "{{orgIdNguoiLa}}"
+        }
+       ]
+      },
+      "description": "Phai tra 403 (khong thuoc to chuc). Tra ve [] cung TAM chap nhan,\nnhung tra ve danh sach workspace that la LOI NANG."
+     },
+     "response": [],
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Phai bi chan (403 hoac 404), KHONG duoc tra du lieu', function () {",
+         "  pm.expect([403, 404]).to.include(pm.response.code);",
+         "});"
+        ]
+       }
+      }
+     ]
     }
    ]
   }
@@ -1947,6 +2027,11 @@
   },
   {
    "key": "otherIdToken",
+   "value": "",
+   "type": "string"
+  },
+  {
+   "key": "orgIdNguoiLa",
    "value": "",
    "type": "string"
   }
