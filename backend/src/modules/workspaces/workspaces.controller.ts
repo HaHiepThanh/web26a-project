@@ -13,6 +13,8 @@ import { FirebaseAuthGuard } from '../../common/firebase/firebase-auth.guard';
 import { CurrentUser } from '../../common/firebase/current-user.decorator';
 import type { CurrentUserInfo } from '../../common/firebase/current-user.decorator';
 import { WorkspacesService } from './workspaces.service';
+import { CreateWorkspaceDto } from './dto/create-workspace.dto';
+import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
 
 /**
  * Workspace — nhóm board theo phòng ban/dự án, nằm TRONG 1 tổ chức.
@@ -35,7 +37,7 @@ export class WorkspacesController {
   @Post()
   create(
     @CurrentUser() user: CurrentUserInfo,
-    @Body() body: { orgId: string; name: string; description?: string },
+    @Body() body: CreateWorkspaceDto,
   ) {
     return this.workspaces.create(user.uid, body.orgId, body.name, body.description);
   }
@@ -45,7 +47,7 @@ export class WorkspacesController {
   update(
     @CurrentUser() user: CurrentUserInfo,
     @Param('id') id: string,
-    @Body() body: { name?: string; description?: string },
+    @Body() body: UpdateWorkspaceDto,
   ) {
     return this.workspaces.update(user.uid, id, body);
   }
