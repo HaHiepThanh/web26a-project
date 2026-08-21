@@ -1,5 +1,9 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { Card, CardPriority } from '../models';
+import {
+  Card,
+  CardPriority,
+  CreateCardInput,
+} from '../models';
 import { MockNetworkService } from './mock-network.service';
 import { CURRENT_USER_ID } from './board.service';
 
@@ -9,15 +13,6 @@ const DUE_SOON_WINDOW_DAYS = 3;
 let idSeq = 1;
 function mockId(prefix: string): string {
   return `${prefix}-${Date.now()}-${idSeq++}`;
-}
-
-export interface CreateCardInput {
-  title: string;
-  description?: string;
-  priority: CardPriority;
-  assigneeId?: string;
-  dueDate?: string;
-  labelId?: string | null;
 }
 
 /** CRUD card + kéo thả giữa/trong list (#4), optimistic update khi kéo-thả (#3):
@@ -165,3 +160,6 @@ export class CardService {
     }
   }
 }
+
+// Kiểu đã chuyển sang models/ — re-export để chỗ nào còn import từ đây vẫn chạy.
+export type { CreateCardInput };

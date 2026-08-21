@@ -1,5 +1,10 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { Message, TaskSuggestion, User } from '../models';
+import {
+  Message,
+  PendingSuggestion,
+  TaskSuggestion,
+  User,
+} from '../models';
 import { AiService } from './ai.service';
 
 let idSeq = 1;
@@ -46,12 +51,6 @@ function mockMessages(boardId: string): Message[] {
 
 function lastSeenKey(boardId: string): string {
   return `trello_chat_lastseen_${boardId}`;
-}
-
-export interface PendingSuggestion {
-  id: string;
-  sourceMessageId: string;
-  suggestion: TaskSuggestion;
 }
 
 /** [AI-CHAT] Khung chat nổi theo board (#8): gửi/nhận tin nhắn + phát hiện task qua AiService. */
@@ -148,3 +147,6 @@ export class ChatService {
     }
   }
 }
+
+// Kiểu đã chuyển sang models/ — re-export để chỗ nào còn import từ đây vẫn chạy.
+export type { PendingSuggestion };

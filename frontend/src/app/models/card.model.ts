@@ -17,3 +17,14 @@ export interface Card {
   updatedAt: string; // ISO timestamptz
   // Gợi ý map khi mở card detail: labels?, checklistItems?, comments? (bonus).
 }
+
+/** Dữ liệu người dùng nhập ở form "Thêm thẻ" — khác `Card` (bản ghi trong DB):
+ *  chưa có id/vị trí/người tạo, và `labelId` chỉ là nhãn chọn nhanh lúc tạo. */
+export interface CreateCardInput {
+  title: string;
+  description?: string;
+  priority: CardPriority;
+  assigneeId?: string;
+  dueDate?: string;
+  labelId?: string | null;
+}

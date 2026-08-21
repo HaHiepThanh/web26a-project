@@ -1,14 +1,10 @@
 import { Component, DestroyRef, computed, effect, inject, input, output, signal } from '@angular/core';
 
-/** 1 List đã được board.ts đo sẵn từ DOM thật (offset/size dọc theo trục cuộn) —
- *  Mini Map không tự đo, không đụng DOM của Board. */
-export interface MinimapListGeom {
-  id: string;
-  name: string;
-  cardCount: number;
-  offset: number;
-  size: number;
-}
+import { MinimapListGeom } from '../../../models';
+
+// Kiểu đã chuyển sang models/board-minimap.model.ts.
+// Re-export để chỗ nào còn import từ đây vẫn chạy.
+export type { MinimapListGeom };
 
 interface Rect {
   left: number;

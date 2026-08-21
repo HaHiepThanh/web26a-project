@@ -10,13 +10,8 @@ import {
   roleLabel,
 } from '../manage-workspace.models';
 
+import { Toast, ToastType } from '../../../../models';
 type MembersTab = 'members' | 'invitations' | 'requests';
-type ToastType = 'success' | 'error' | 'info';
-interface Toast {
-  id: number;
-  message: string;
-  type: ToastType;
-}
 
 /**
  * Screen 2 — quản lý thành viên của 1 project (board) cụ thể.

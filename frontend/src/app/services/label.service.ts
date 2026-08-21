@@ -1,17 +1,10 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { ApiService } from './api.service';
 import { describeError } from './api-error.util';
-import { Label } from '../models';
-
-/** Hình dạng backend trả về (backend/src/modules/labels → LabelResponse). */
-interface ApiLabel {
-  id: string;
-  orgId: string;
-  boardId: string;
-  name: string;
-  color: string;
-}
-
+import {
+  ApiLabel,
+  Label,
+} from '../models';
 /** Bảng màu cho phép khi tự tạo nhãn (#5) — loại trừ đỏ/vàng/xám vì 3 màu đó đã
  *  khoá riêng cho mức ưu tiên (#4), tránh nhầm lẫn ý nghĩa giữa nhãn và cờ ưu tiên. */
 export const LABEL_COLOR_PALETTE = ['#2563eb', '#059669', '#7c3aed', '#0d9488', '#db2777', '#4f46e5', '#0891b2', '#65a30d'];

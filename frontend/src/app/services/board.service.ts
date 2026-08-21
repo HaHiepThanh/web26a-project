@@ -1,21 +1,13 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { ApiService } from './api.service';
 import { describeError } from './api-error.util';
-import { Board, BoardBackground, BoardVisibility, User } from '../models';
-
-/** Hình dạng backend trả về (backend/src/modules/boards → BoardResponse). */
-interface ApiBoard {
-  id: string;
-  orgId: string;
-  workspaceId: string;
-  name: string;
-  visibility: BoardVisibility;
-  background: BoardBackground | null;
-  backgroundImagePath: string | null;
-  createdBy: string;
-  createdAt: string;
-}
-
+import {
+  ApiBoard,
+  Board,
+  BoardBackground,
+  BoardVisibility,
+  User,
+} from '../models';
 /** Board người dùng tạo được lưu lại để F5 không mất tên/nền/quyền riêng tư.
  *  Đây là nơi DUY NHẤT giữ ảnh nền (base64) — trang Workspace đọc lại qua
  *  `backgroundImageByBoardId` chứ không lưu thêm bản sao, tránh nhân đôi dung lượng. */

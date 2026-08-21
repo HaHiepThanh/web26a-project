@@ -30,3 +30,10 @@ export interface DetectTaskResponse {
   confidence: number; // 0..1 — độ tự tin của model
   suggestion: TaskSuggestion | null; // null khi isTask = false
 }
+
+/** Gợi ý tạo thẻ do AI phát hiện, đang chờ người dùng bấm xác nhận hoặc bỏ qua. */
+export interface PendingSuggestion {
+  id: string;
+  sourceMessageId: string;
+  suggestion: TaskSuggestion;
+}

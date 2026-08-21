@@ -1,18 +1,10 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { ApiService } from './api.service';
 import { describeError } from './api-error.util';
-import { List } from '../models';
-
-/** Hình dạng backend trả về (backend/src/modules/lists → ListResponse). */
-interface ApiList {
-  id: string;
-  orgId: string;
-  boardId: string;
-  name: string;
-  position: number;
-  createdAt: string;
-}
-
+import {
+  ApiList,
+  List,
+} from '../models';
 /**
  * CRUD list + sắp xếp thứ tự (kéo thả ngang) (#4) — GỌI BACKEND THẬT.
  *

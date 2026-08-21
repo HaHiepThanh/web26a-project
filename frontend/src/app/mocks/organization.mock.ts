@@ -11,29 +11,15 @@
 
 import { slugify, validateSlugFormat } from '../utils/slug.util';
 
-export interface Organization {
-  id: string;
-  name: string;
-  /** Đường dẫn riêng, đứng ngay ở gốc URL: /thanh-organization/board/<uuid>.
-   *  DUY NHẤT toàn hệ thống và KHÔNG cho đổi sau khi tạo (đổi = chết mọi link đã chia sẻ). */
-  slug: string;
-  ownerId: string; // userId đã tạo Organization này
-  memberIds: string[]; // toàn bộ thành viên hiện có (bao gồm ownerId)
-  createdAt: string;
-}
+import { Organization, OrgInvite, OrgInviteStatus } from '../models';
 
-export type OrgInviteStatus = 'pending' | 'accepted' | 'declined';
+// Các kiểu trên đã chuyển sang models/organization.model.ts.
+// Re-export để chỗ nào còn import từ đây vẫn chạy.
+export type { Organization, OrgInvite, OrgInviteStatus };
 
-export interface OrgInvite {
-  id: string;
-  orgId: string;
-  orgName: string;
-  toUserId: string;
-  fromUserId: string;
-  fromUserName: string;
-  status: OrgInviteStatus;
-  createdAt: string;
-}
+
+
+
 
 const STORAGE_KEY_ORG_REGISTRY = 'trello_org_registry'; // dùng chung mọi tài khoản trên trình duyệt này
 const STORAGE_KEY_ACTIVE_ORG = 'trello_active_org'; // riêng theo từng user (chỉ là lựa chọn hiển thị)

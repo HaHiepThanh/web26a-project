@@ -12,40 +12,23 @@ import { ActivityLog, CardPriority } from '../../../models';
 import { boardSeed } from '../../../services/mock-board-data';
 import { MOCK_MEMBERS } from '../../../services/board.service';
 
-export interface MemberWorkloadStat {
-  userId: string;
-  name: string;
-  avatarUrl: string;
-  assignedCount: number;
-  completedCount: number; // Done
-  doingCount: number; // chưa xong & chưa quá hạn
-  overdueCount: number; // dueDate đã qua và chưa hoàn thành
-  lastActiveAt: string | null; // null = chưa từng có hoạt động nào
-}
 
-export interface OverdueCardInfo {
-  id: string;
-  title: string;
-  assigneeId: string;
-  assigneeName: string;
-  dueDate: string;
-  daysOverdue: number;
-}
+import {
+  MemberWorkloadStat,
+  OverdueCardInfo,
+  WorkspaceStatsData,
+  WorkspaceStatsOverview,
+} from '../../../models';
 
-export interface WorkspaceStatsOverview {
-  completedCount: number;
-  inProgressCount: number; // chưa hoàn thành (To Do + Doing), gồm cả quá hạn
-  overdueCount: number;
-  onTimeRatePct: number | null;
-}
+// Các kiểu trên đã chuyển sang models/board-stats.model.ts.
+// Re-export để chỗ nào còn import từ đây vẫn chạy.
+export type {
+  MemberWorkloadStat,
+  OverdueCardInfo,
+  WorkspaceStatsData,
+  WorkspaceStatsOverview,
+};
 
-export interface WorkspaceStatsData {
-  workspaceName: string;
-  overview: WorkspaceStatsOverview;
-  memberWorkload: MemberWorkloadStat[];
-  overdueCards: OverdueCardInfo[];
-  activityLogs: ActivityLog[];
-}
 
 function hashStr(s: string): number {
   let h = 0;

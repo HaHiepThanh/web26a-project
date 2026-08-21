@@ -6,8 +6,13 @@ import { BoardService } from '../../services/board.service';
 import { AuthService } from '../../services/auth.service';
 import { OrganizationService } from '../../services/organization.service';
 import { WorkspaceService } from '../../services/workspace.service';
-import { BoardBackground, BoardVisibility, User,
+import {
   Board,
+  BoardBackground,
+  BoardVisibility,
+  Toast,
+  ToastType,
+  User,
 } from '../../models';
 import {
   WorkspaceItem,
@@ -30,12 +35,6 @@ import { CreateBoardModal } from '../../components/workspace/create-board-modal/
 import { BoardEditModal } from '../../components/workspace/board-edit-modal/board-edit-modal';
 import { WorkspaceFormModal } from '../../components/workspace/workspace-form-modal/workspace-form-modal';
 
-interface Toast {
-  id: number;
-  message: string;
-  type: 'success' | 'error' | 'info';
-  action?: { label: string; handler: () => void };
-}
 
 /** 3 lựa chọn trên giao diện khớp 1-1 với 3 giá trị backend nhận. */
 function toBoardVisibility(privacy: Privacy): BoardVisibility {

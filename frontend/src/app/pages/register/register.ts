@@ -3,13 +3,8 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
-type ToastType = 'success' | 'error' | 'info';
-interface Toast {
-  id: number;
-  message: string;
-  type: ToastType;
-}
 
+import { Toast, ToastType } from '../../models';
 interface FieldErrors {
   fullName?: string;
   username?: string;

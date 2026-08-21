@@ -1,14 +1,11 @@
 import { Injectable, computed, signal } from '@angular/core';
-import { ChecklistItem } from '../models';
-
+import {
+  ChecklistItem,
+  ChecklistProgress,
+} from '../models';
 let idSeq = 1;
 function mockId(prefix: string): string {
   return `${prefix}-${Date.now()}-${idSeq++}`;
-}
-
-export interface ChecklistProgress {
-  done: number;
-  total: number;
 }
 
 /** [BONUS #4] Checklist nhỏ trong card: thêm/tick/xoá item. Dữ liệu mock tại chỗ
@@ -59,3 +56,6 @@ export class ChecklistService {
     });
   }
 }
+
+// Kiểu đã chuyển sang models/ — re-export để chỗ nào còn import từ đây vẫn chạy.
+export type { ChecklistProgress };

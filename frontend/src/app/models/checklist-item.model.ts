@@ -6,3 +6,9 @@ export interface ChecklistItem {
   isDone: boolean; // default false
   position: number; // float
 }
+
+/** Tiến độ checklist của 1 thẻ — dùng để vẽ thanh "3/5" ngoài mặt thẻ. */
+export interface ChecklistProgress {
+  done: number;
+  total: number;
+}

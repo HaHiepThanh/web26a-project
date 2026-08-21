@@ -1,18 +1,10 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { ApiService } from './api.service';
 import { describeError } from './api-error.util';
-import { Workspace } from '../models';
-
-/** Hình dạng backend trả về (khớp backend/src/modules/workspaces). */
-interface ApiWorkspace {
-  id: string;
-  orgId: string;
-  name: string;
-  description: string;
-  createdBy: string;
-  createdAt: string;
-}
-
+import {
+  ApiWorkspace,
+  Workspace,
+} from '../models';
 /**
  * CRUD workspace trong tổ chức — GỌI BACKEND THẬT.
  *

@@ -10,23 +10,13 @@ import {
 } from 'firebase/auth';
 import { FirebaseService } from './firebase.service';
 import { ApiService } from './api.service';
-import { User, MOCK_SEARCHABLE_USERS, generateUuid } from '../models';
-
+import {
+  MOCK_SEARCHABLE_USERS,
+  MeResponse,
+  User,
+  generateUuid,
+} from '../models';
 /** Phản hồi của GET /auth/me ở backend (xem backend/src/modules/auth/auth.service.ts). */
-export interface MeResponse {
-  user: {
-    id: string;
-    email: string;
-    display_name: string | null;
-    username: string | null;
-    phone: string | null;
-    job_title: string | null;
-    avatar_url: string | null;
-  };
-  organizations: { id: string; name: string; slug: string; role: 'owner' | 'admin' | 'member' }[];
-  needsOnboarding: boolean;
-}
-
 const STORAGE_KEY_USER = 'trello_user';
 const STORAGE_KEY_ALL_USERS = 'trello_registered_users';
 

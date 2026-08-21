@@ -1,59 +1,38 @@
 import { BoardBackground } from '../models/board.model';
 
-export type Privacy = 'Workspace' | 'Private' | 'Public';
-export type ToastType = 'success' | 'error' | 'info';
+import {
+  BoardItem,
+  Privacy,
+  Template,
+  Toast,
+  ToastType,
+  TrashedBoard,
+  WorkspaceItem,
+  WorkspaceMember,
+  WorkspaceWithOrg,
+} from '../models';
 
-export interface WorkspaceMember {
-  id: string; // uuid
-  displayName: string;
-  email: string;
-  role: 'owner' | 'member';
-  avatarUrl?: string;
-}
+// Các kiểu trên đã chuyển sang models/workspace-item.model.ts và models/toast.model.ts.
+// Re-export để chỗ nào còn import từ đây vẫn chạy.
+export type {
+  BoardItem,
+  Privacy,
+  Template,
+  Toast,
+  ToastType,
+  TrashedBoard,
+  WorkspaceItem,
+  WorkspaceMember,
+  WorkspaceWithOrg,
+};
 
-export interface BoardItem {
-  id: string;
-  title: string;
-  tag: string;
-  privacy: Privacy;
-  badge: string;
-  starred: boolean;
-  bgClass: BoardBackground;
-  // Ảnh nền KHÔNG lưu ở đây: base64 rất nặng, giữ 1 bản duy nhất trong BoardService
-  // (key `trello_boards`) và tra theo board.id — xem `backgroundImageByBoardId`.
-}
 
-export interface WorkspaceItem {
-  id: string;
-  name: string;
-  // Không có icon/màu: Workspace chỉ hiện bằng TÊN. Màu chỉ dành cho Board (Kanban).
-  membersCount: number;
-  members: WorkspaceMember[];
-  description: string;
-  boards: BoardItem[];
-}
 
-export interface Template {
-  title: string;
-  desc: string;
-  badge: string;
-  badgeClass: string;
-  columns: number;
-}
 
-export interface Toast {
-  id: number;
-  message: string;
-  type: ToastType;
-  action?: { label: string; handler: () => void };
-}
 
-export interface TrashedBoard {
-  board: BoardItem;
-  workspaceId: string;
-  workspaceName: string;
-  originalIndex: number;
-}
+
+
+
 
 export function initialsOf(name: string): string {
   const parts = name.trim().split(/\s+/);
@@ -164,10 +143,6 @@ export function loadStoredWorkspaces(userId?: string | null, orgId?: string | nu
   return initialMockWorkspaces();
 }
 
-export interface WorkspaceWithOrg extends WorkspaceItem {
-  orgId: string;
-  orgName: string;
-}
 
 export function loadAllWorkspacesForUser(
   userId?: string | null,

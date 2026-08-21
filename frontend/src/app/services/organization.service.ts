@@ -3,49 +3,14 @@ import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
 import { describeError } from './api-error.util';
 import { Organization, OrgInvite, loadActiveOrgId, persistActiveOrgId } from '../mocks';
-import { User } from '../models';
-
-/* ------------------------------------------------------------------ *
- * Hình dạng dữ liệu backend trả về (khớp backend/src/modules/organizations)
- * ------------------------------------------------------------------ */
-
-interface ApiMyOrg {
-  id: string;
-  name: string;
-  slug: string;
-  role: 'owner' | 'admin' | 'member';
-}
-
-interface ApiOrgMember {
-  userId: string;
-  role: 'owner' | 'admin' | 'member';
-  joinedAt: string;
-  user: { displayName: string | null; email: string; avatarUrl: string | null };
-}
-
-interface ApiMyInvite {
-  id: string;
-  orgId: string;
-  orgName: string;
-  fromUser: { displayName: string | null; email: string };
-  createdAt: string;
-}
-
-interface ApiCreatedOrg {
-  id: string;
-  name: string;
-  slug: string;
-  ownerId: string;
-  createdAt: string;
-}
-
-/** Thành viên đã kèm sẵn thông tin hiển thị — component dùng trực tiếp. */
-export interface OrgMemberView {
-  user: User;
-  role: 'owner' | 'admin' | 'member';
-  joinedAt: string;
-}
-
+import {
+  ApiCreatedOrg,
+  ApiMyInvite,
+  ApiMyOrg,
+  ApiOrgMember,
+  OrgMemberView,
+  User,
+} from '../models';
 /**
  * Quản lý Organization của user đang đăng nhập — GỌI BACKEND THẬT.
  *
@@ -337,3 +302,6 @@ export class OrganizationService {
     return 'Tính năng huỷ lời mời chưa có ở backend (thiếu DELETE /organizations/invites/:id).';
   }
 }
+
+// Kiểu đã chuyển sang models/ — re-export để chỗ nào còn import từ đây vẫn chạy.
+export type { OrgMemberView };

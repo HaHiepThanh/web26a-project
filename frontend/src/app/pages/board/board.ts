@@ -2,7 +2,16 @@ import { Component, DestroyRef, ElementRef, computed, effect, inject, signal, vi
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
-import { Card, CardPriority, Label, List, User } from '../../models';
+import {
+  Card,
+  CardPriority,
+  Label,
+  List,
+  MinimapListGeom,
+  Toast,
+  ToastType,
+  User,
+} from '../../models';
 import { BoardService } from '../../services/board.service';
 import { ListService } from '../../services/list.service';
 import { CardService } from '../../services/card.service';
@@ -17,17 +26,11 @@ import { LabelPicker } from '../../components/board/label-picker/label-picker';
 import { CardItem } from '../../components/board/card-item/card-item';
 import { ChatPanel } from '../../components/chat/chat-panel/chat-panel';
 import { CardDetailModal } from '../../components/board/card-detail-modal/card-detail-modal';
-import { BoardMinimap, MinimapListGeom } from '../../components/board/board-minimap/board-minimap';
+import { BoardMinimap } from '../../components/board/board-minimap/board-minimap';
 import { WorkspaceStatsModal } from '../../components/board/workspace-stats-modal/workspace-stats-modal';
 import { BoardHeaderBar } from '../../components/board/board-header-bar/board-header-bar';
 import { BoardBulkActions } from '../../components/board/board-bulk-actions/board-bulk-actions';
 
-type ToastType = 'success' | 'error' | 'info';
-interface Toast {
-  id: number;
-  message: string;
-  type: ToastType;
-}
 type SortMode = 'manual' | 'priority' | 'due' | 'new';
 type ViewMode = 'status' | 'matrix';
 /** Row View (#14): cách trình bày khác của view "Theo trạng thái" — Lists xếp

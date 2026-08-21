@@ -3,13 +3,8 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
-type ToastType = 'success' | 'error' | 'info';
-interface Toast {
-  id: number;
-  message: string;
-  type: ToastType;
-}
 
+import { Toast, ToastType } from '../../models';
 /**
  * Trang đăng nhập. CẢ HAI cách đều là xác thực THẬT qua Firebase:
  *   - Email + mật khẩu → signInWithEmailAndPassword
