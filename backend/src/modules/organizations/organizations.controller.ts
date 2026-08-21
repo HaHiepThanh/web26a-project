@@ -5,6 +5,10 @@ import { Roles } from '../../common/firebase/roles.decorator';
 import { CurrentUser } from '../../common/firebase/current-user.decorator';
 import type { CurrentUserInfo } from '../../common/firebase/current-user.decorator';
 import { OrganizationsService } from './organizations.service';
+import { CreateOrganizationDto } from './dto/create-organization.dto';
+import { InviteMemberDto } from './dto/invite-member.dto';
+import { RespondInviteDto } from './dto/respond-invite.dto';
+import { ChangeRoleDto } from './dto/change-role.dto';
 
 /**
  * Tổ chức (Organization) — ranh giới cô lập dữ liệu. Bảng: `organizations`,
@@ -19,7 +23,7 @@ export class OrganizationsController {
 
   /** POST /organizations — tạo tổ chức mới, người tạo thành owner. */
   @Post()
-  create(@CurrentUser() user: CurrentUserInfo, @Body() body: { name: string; slug: string }) {
+  create(@CurrentUser() user: CurrentUserInfo, @Body() body: CreateOrganizationDto) {
     return this.organizations.create(user.uid, body.name, body.slug);
   }
 
@@ -42,7 +46,7 @@ export class OrganizationsController {
   respondInvite(
     @CurrentUser() user: CurrentUserInfo,
     @Param('inviteId') inviteId: string,
-    @Body() body: { accept: boolean },
+    @Body() body: RespondInviteDto,
   ) {
     return this.organizations.respondInvite(user.uid, inviteId, body.accept);
   }
@@ -60,7 +64,7 @@ export class OrganizationsController {
   changeRole(
     @Param('id') id: string,
     @Param('userId') userId: string,
-    @Body() body: { role: 'owner' | 'admin' | 'member' },
+    @Body() body: ChangeRoleDto,
   ) {
     return this.organizations.changeRole(id, userId, body.role);
   }
@@ -80,7 +84,7 @@ export class OrganizationsController {
   invite(
     @CurrentUser() user: CurrentUserInfo,
     @Param('id') id: string,
-    @Body() body: { toUserId: string },
+    @Body() body: InviteMemberDto,
   ) {
     return this.organizations.invite(id, user.uid, body.toUserId);
   }

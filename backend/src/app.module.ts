@@ -18,7 +18,10 @@ import { CommentsModule } from './modules/comments/comments.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }), // đọc .env
+    // envFilePath: .env đặt ở GỐC dự án (ngang hàng backend/), cạnh secrets/.
+    // Đường dẫn tính từ thư mục chạy lệnh npm, tức backend/. Vẫn giữ './.env'
+    // làm phương án dự phòng cho ai đặt file trong backend/ như .env.example nói.
+    ConfigModule.forRoot({ isGlobal: true, envFilePath: ['../.env', '.env'] }),
     // Hạ tầng dùng chung (global)
     SupabaseModule,
     FirebaseModule,

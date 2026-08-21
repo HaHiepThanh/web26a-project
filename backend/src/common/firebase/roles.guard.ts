@@ -1,18 +1,32 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { SupabaseService } from '../supabase/supabase.service';
 import { ROLES_KEY, Role } from './roles.decorator';
 
 /**
  * Kiểm tra role của user trong TỔ CHỨC hiện tại (chạy SAU FirebaseAuthGuard).
  * Dùng cho hành động nhạy cảm: đổi vai trò, xoá thành viên, mời người, xoá board.
  *
- * 🚧 CHƯA LÀM — đây là việc của Huy (xem docs/HUY.md, bước 8).
- *    Hiện `return true` vô điều kiện, nghĩa là mọi route gắn @Roles ĐANG KHÔNG
- *    được bảo vệ: ai đăng nhập cũng gọi được.
+ * Thứ tự chạy:
+ *   FirebaseAuthGuard  → verify token, gắn req.user = { uid, ... }   ("bạn là ai")
+ *   RolesGuard         → tra role thật trong database, so với @Roles ("bạn được làm gì")
+ *   Controller
  */
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(private readonly reflector: Reflector) {}
+  private readonly logger = new Logger(RolesGuard.name);
+
+  constructor(
+    private readonly reflector: Reflector,
+    private readonly supabase: SupabaseService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const required = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
@@ -21,9 +35,61 @@ export class RolesGuard implements CanActivate {
     ]);
     if (!required?.length) return true; // route không yêu cầu role
 
-    // TODO(Huy): từ req.user.uid + orgId (lấy ở param/body) -> query
-    //            organization_members lấy role thật, so với `required`,
-    //            không đủ quyền thì ném ForbiddenException (403).
+    const req = context.switchToHttp().getRequest();
+    const uid: string | undefined = req.user?.uid;
+
+    // Không có uid nghĩa là FirebaseAuthGuard chưa chạy (route quên gắn nó).
+    // Chặn luôn thay vì cho qua — thà hỏng lộ liễu còn hơn thủng âm thầm.
+    if (!uid) {
+      throw new ForbiddenException('Không xác định được người gọi.');
+    }
+
+    const orgId = this.resolveOrgId(req);
+    if (!orgId) {
+      throw new ForbiddenException('Không xác định được tổ chức của yêu cầu này.');
+    }
+
+    const { data, error } = await this.supabase.client
+      .from('organization_members')
+      .select('role')
+      .eq('org_id', orgId)
+      .eq('user_id', uid)
+      .maybeSingle();
+
+    if (error) {
+      this.logger.error(`Đọc role thất bại (uid=${uid}, org=${orgId}): ${error.message}`);
+      throw new InternalServerErrorException('Không kiểm tra được quyền');
+    }
+    if (!data) {
+      throw new ForbiddenException('Bạn không thuộc tổ chức này.');
+    }
+
+    const role = data.role as Role;
+    if (!required.includes(role)) {
+      // Ném exception kèm lời nhắn thay vì `return false`: return false cho ra
+      // 403 với message rỗng tuếch, người dùng đọc không hiểu vì sao bị chặn.
+      throw new ForbiddenException(
+        `Hành động này cần quyền ${required.join(' hoặc ')}. Bạn đang là ${role}.`,
+      );
+    }
     return true;
+  }
+
+  /**
+   * Tìm orgId của yêu cầu hiện tại.
+   *
+   * Ba route đang dùng guard này đều có dạng `/organizations/:id/...` nên orgId
+   * nằm ở `req.params.id`. Nhưng viết cứng `params.id` thì route sau này đặt tên
+   * param khác là hỏng âm thầm — nên tìm theo thứ tự, cái nào có trước thì dùng.
+   */
+  private resolveOrgId(req: {
+    params?: Record<string, string>;
+    body?: Record<string, unknown>;
+  }): string | undefined {
+    return (
+      req.params?.id ??
+      req.params?.orgId ??
+      (typeof req.body?.orgId === 'string' ? req.body.orgId : undefined)
+    );
   }
 }
