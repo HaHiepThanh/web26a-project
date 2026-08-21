@@ -54,7 +54,7 @@ export const MOCK_BOARDS: Record<string, MockBoardSeed> = {
   //   id: 'b-2',
   //   name: 'Ứng dụng tìm trọ thông minh',
   //   workspaceId: 'ws-1',
-  //   visibility: 'restricted',
+  //   visibility: 'private',
   //   background: 'bg-board-teal',
   //   lists: [
   //     { name: 'Ý tưởng', color: '#7c3aed' },
@@ -75,7 +75,7 @@ export const MOCK_BOARDS: Record<string, MockBoardSeed> = {
   //   id: 'b-3',
   //   name: 'Kế hoạch Tuần cá nhân',
   //   workspaceId: 'ws-1',
-  //   visibility: 'restricted',
+  //   visibility: 'private',
   //   background: 'bg-board-blue',
   //   lists: [
   //     { name: 'Việc cần làm', color: '#64748b' },
@@ -120,7 +120,7 @@ export const DEFAULT_BOARD_ID = 'b-1';
 const EMPTY_SEED: Omit<MockBoardSeed, 'id'> = {
   name: '',
   workspaceId: '',
-  visibility: 'restricted',
+  visibility: 'private',
   background: 'bg-board-blue',
   lists: [],
   cards: [],

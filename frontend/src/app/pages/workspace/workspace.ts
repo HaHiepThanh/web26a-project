@@ -6,7 +6,9 @@ import { BoardService } from '../../services/board.service';
 import { AuthService } from '../../services/auth.service';
 import { OrganizationService } from '../../services/organization.service';
 import { WorkspaceService } from '../../services/workspace.service';
-import { BoardBackground, BoardVisibility, User } from '../../models';
+import { BoardBackground, BoardVisibility, User,
+  Board,
+} from '../../models';
 import {
   WorkspaceItem,
   WorkspaceMember,
@@ -35,8 +37,16 @@ interface Toast {
   action?: { label: string; handler: () => void };
 }
 
+/** 3 lựa chọn trên giao diện khớp 1-1 với 3 giá trị backend nhận. */
 function toBoardVisibility(privacy: Privacy): BoardVisibility {
-  return privacy === 'Public' ? 'public' : 'restricted';
+  return privacy.toLowerCase() as BoardVisibility;
+}
+
+/** Chiều ngược lại — dựng lại lựa chọn hiển thị từ giá trị backend trả về. */
+function toPrivacy(visibility: string): Privacy {
+  if (visibility === 'private') return 'Private';
+  if (visibility === 'public') return 'Public';
+  return 'Workspace';
 }
 
 @Component({
@@ -190,12 +200,11 @@ export class Workspace {
   }
 
   /**
-   * Nạp workspace: TÊN/MÔ TẢ lấy từ backend, BOARD vẫn lấy ở localStorage.
+   * Nạp workspace VÀ board — cả hai đều từ backend.
    *
-   * Đây là bước trung gian có chủ ý. Endpoint workspace (phần của Huy) đã xong
-   * nên dùng thật được ngay; endpoint board (phần của Hoà) thì chưa, nên board
-   * tạm giữ ở localStorage, khoá theo ĐÚNG id workspace thật từ server. Khi Hoà
-   * xong, chỉ cần thay chỗ lấy `boards` mà không phải sửa gì thêm.
+   * Mỗi workspace là một request `GET /boards?workspaceId=`, chạy song song.
+   * Còn giữ ở localStorage đúng 2 thứ backend chưa lưu được: MÀU NỀN và ẢNH NỀN
+   * của board (`POST /boards` chỉ nhận workspaceId + name).
    */
   private async loadWorkspaces(userId: string | undefined, orgId: string | null): Promise<void> {
     this.activeWorkspaceId.set(null);
@@ -213,8 +222,18 @@ export class Workspace {
     }
 
     const localItems = loadStoredWorkspaces(userId, orgId);
+    const serverWorkspaces = this.workspaceService.workspaces();
+
+    // Board của từng workspace — gọi song song, không nối tiếp.
+    const boardsPerWorkspace = await Promise.all(
+      serverWorkspaces.map(async (w) => {
+        await this.boardService.loadBoards(w.id);
+        return this.boardService.boards();
+      }),
+    );
+
     this.workspaces.set(
-      this.workspaceService.workspaces().map((w) => {
+      serverWorkspaces.map((w, i) => {
         const local = localItems.find((c) => c.id === w.id);
         return {
           id: w.id,
@@ -222,10 +241,25 @@ export class Workspace {
           description: local?.description ?? '',
           membersCount: local?.membersCount ?? 0,
           members: local?.members ?? [],
-          boards: local?.boards ?? [],
+          boards: boardsPerWorkspace[i].map((b) => this.toBoardItem(b, w.name, local)),
         };
       }),
     );
+  }
+
+  /** Board từ backend → thẻ hiển thị. Màu nền và cờ sao còn ở localStorage nên
+   *  lấy lại từ bản cũ (nếu có) để F5 không mất. */
+  private toBoardItem(b: Board, workspaceName: string, local?: WorkspaceItem): BoardItem {
+    const old = local?.boards.find((x) => x.id === b.id);
+    return {
+      id: b.id,
+      title: b.name,
+      tag: workspaceName.toUpperCase(),
+      privacy: toPrivacy(b.visibility),
+      badge: 'KANBAN',
+      starred: old?.starred ?? false,
+      bgClass: b.background ?? old?.bgClass ?? 'bg-board-blue',
+    };
   }
 
   /** Lưu phần dữ liệu CÒN Ở LOCAL (board, thành viên workspace) — tên/mô tả đã
@@ -349,8 +383,17 @@ export class Workspace {
     });
   }
 
-  deleteBoard(payload: { workspaceId: string; board: BoardItem }): void {
+  async deleteBoard(payload: { workspaceId: string; board: BoardItem }): Promise<void> {
     const { workspaceId, board } = payload;
+
+    // Xoá trên server TRƯỚC. Backend chỉ cho owner/admin xoá board — xoá khỏi
+    // giao diện trước rồi mới biết bị 403 thì bảng biến mất rồi lại hiện lại.
+    const error = await this.boardService.deleteBoard(board.id);
+    if (error) {
+      this.addToast(error, 'error');
+      return;
+    }
+
     this.workspaces.update((list) => {
       const updated = list.map((ws) =>
         ws.id === workspaceId ? { ...ws, boards: ws.boards.filter((b) => b.id !== board.id) } : ws,
@@ -358,7 +401,6 @@ export class Workspace {
       this.persist(updated);
       return updated;
     });
-    void this.boardService.deleteBoard(board.id);
     this.addToast(`Đã xóa bảng "${board.title}"`, 'info');
   }
 
@@ -378,7 +420,15 @@ export class Workspace {
     const target = this.editingBoard();
     if (!target) return;
 
-    await this.boardService.updateBoard(boardId, { name: title, background, backgroundImageUrl });
+    const error = await this.boardService.updateBoard(boardId, {
+      name: title,
+      background,
+      backgroundImageUrl,
+    });
+    if (error) {
+      this.addToast(error, 'error');
+      return;
+    }
 
     this.workspaces.update((list) => {
       const updated = list.map((ws) =>

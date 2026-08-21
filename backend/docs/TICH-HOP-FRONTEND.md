@@ -1,6 +1,7 @@
 # Tích hợp frontend ↔ backend — phần của Huy
 
-> Trạng thái: **8 endpoint tổ chức + 4 endpoint workspace đã nối xong và chạy thật.**
+> Trạng thái: **26 endpoint đã nối xong và chạy thật** — 12 của Huy (tổ chức,
+> workspace) + 14 của Hoà (board, list, label).
 > Mọi thao tác dưới đây đã được bấm tay trên trình duyệt và đối chiếu với Supabase.
 
 ---
@@ -21,6 +22,27 @@
 | `POST /workspaces` | Nút "Tạo Workspace" |
 | `PATCH /workspaces/:id` | Nút "Sửa" trên thẻ workspace |
 | `DELETE /workspaces/:id` | Nút Xoá trong modal sửa workspace |
+
+### Phần của Hoà
+
+| Endpoint | Nối vào đâu ở giao diện |
+|---|---|
+| `POST /boards` | Modal "Tạo bảng" |
+| `GET /boards?workspaceId=` | Danh sách bảng trong mỗi workspace |
+| `GET /boards/:id` | Mở trang Board từ link |
+| `PATCH /boards/:id` | Modal "Sửa bảng" · đặt quyền riêng tư lúc tạo |
+| `DELETE /boards/:id` | Menu 3 chấm trên thẻ bảng → Xoá |
+| `POST /lists` | Ô "Thêm danh sách" ở trang Board |
+| `GET /lists?boardId=` | Các cột trên trang Board |
+| `PATCH /lists/:id` | Sửa tên cột tại chỗ |
+| `PATCH /lists/:id/position` | Kéo thả đổi thứ tự cột |
+| `DELETE /lists/:id` | Menu cột → "Xoá danh sách" |
+| `POST /labels` · `GET /labels?boardId=` | Bộ chọn nhãn trong thẻ |
+| `POST`/`DELETE /labels/cards/:cardId/:labelId` | Gắn / gỡ nhãn khỏi thẻ |
+
+> ⚠️ 4 endpoint nhãn cuối bảng **đã nối trong service nhưng chưa bấm tới được trên
+> giao diện**: bộ chọn nhãn nằm trong modal chi tiết thẻ, mà thẻ là phần của Hoàng
+> chưa xong. Đã kiểm chứng ở tầng API (`kiem-tra-hoa.py`, mục 11–12).
 
 ---
 
@@ -66,6 +88,47 @@ dùng thấy màn tạo tổ chức sẽ tưởng mất sạch dữ liệu và t
 
 ---
 
+## Ba lỗi tìm ra khi nối phần của Hoà
+
+### 1. `DELETE /boards/:id` chặn nhầm cả chủ tổ chức — ĐÃ SỬA
+
+Route gắn `@Roles('owner')`, nhưng `RolesGuard` tìm `orgId` ở `req.params.id` —
+với route này `params.id` là **id của BOARD**. Guard mang id board đi tra
+`organization_members` → không có dòng nào → **403 cho tất cả**, kể cả owner đang
+xoá board của chính mình.
+
+Đã sửa: bỏ `@Roles` khỏi route, kiểm tra vai trò trong `boards.service.remove()`
+sau khi đã đọc board ra để biết `org_id` thật.
+
+### 2. `BoardVisibility` ở frontend không khớp database — ĐÃ SỬA
+
+Frontend khai `'public' | 'restricted'`, database và backend dùng
+`'workspace' | 'private' | 'public'`. Giao diện vốn đã cho chọn đúng 3 mức nhưng
+bị ép xuống còn 2. Gửi `'restricted'` lên là backend trả 400.
+
+### 3. Thuật toán tính `position` khi kéo thả — LỖI CỦA CHÍNH BẢN TÍCH HỢP NÀY
+
+Bản đầu tìm cột được kéo bằng "vị trí đầu tiên khác nhau giữa hai danh sách".
+Sai: kéo cột đầu xuống cuối (`A B C → B C A`) thì vị trí 0 khác ngay, thuật toán
+kết luận nhầm **B** di chuyển, tính ra position sai và cột nhảy ngược về chỗ cũ.
+
+Cách đúng: bỏ thử từng cột ra khỏi **cả hai** danh sách; cột nào bỏ đi mà phần còn
+lại trùng khớp thì đó là cột được kéo. Đã kiểm chứng bằng 10 tình huống (3 cột và
+5 cột, kéo lên đầu / xuống cuối / vào giữa, và kéo qua lại 50 lần liên tiếp).
+
+---
+
+## Hai kiểu đặt tên khác nhau giữa hai bạn
+
+Endpoint của **Huy** trả về `camelCase` (`orgId`, `createdAt`); endpoint của
+**Hoà** trả nguyên dòng Supabase nên là `snake_case` (`org_id`, `created_at`).
+
+Frontend hiện quy về một mối bằng hàm `toBoard()` / `toList()` / `toLabel()` trong
+từng service. Chạy được, nhưng đây là thứ nên thống nhất khi có thời gian — API
+công khai mà hai nửa đặt tên khác nhau thì người dùng API luôn phải tra tài liệu.
+
+---
+
 ## Backend còn thiếu 4 endpoint
 
 Giao diện đã có sẵn nút, nhưng backend chưa có route tương ứng. Hiện các nút này
@@ -88,13 +151,14 @@ Muốn tìm theo email/tên thì backend phải có endpoint tra cứu người 
 
 | Dữ liệu | Vì sao |
 |---|---|
-| Board trong workspace | `POST /boards` là phần của Hoà, chưa xong |
+| **Màu nền / ảnh nền của board** | `POST /boards` chỉ nhận `workspaceId` + `name`; `PATCH` chỉ nhận `name` + `visibility` |
+| Cờ đánh dấu sao board | Chưa có endpoint `board_stars` |
 | Danh sách thành viên **của từng workspace** | Chưa có endpoint `workspace_members` |
-| List, card, comment, chat | Phần của Hoà và Hoàng |
+| Thẻ nào đang gắn nhãn nào | Cần `GET /cards` — phần của Hoàng |
+| Card, comment, chat | Phần của Hoàng |
 
-Trang Workspace hiện lấy **tên/mô tả từ backend**, còn **board từ localStorage**,
-khoá theo đúng id workspace thật do server cấp. Khi Hoà xong, chỉ cần thay chỗ lấy
-`boards` trong `loadWorkspaces()` mà không phải sửa gì thêm.
+Tất cả đều khoá theo **id thật do server cấp**, nên khi endpoint tương ứng có
+thì chỉ cần thay chỗ đọc dữ liệu, không phải sửa cấu trúc.
 
 ---
 

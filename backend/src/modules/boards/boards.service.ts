@@ -177,7 +177,24 @@ export class BoardsService {
    * bên trong, không cần tự tay xoá từng bảng.
    */
   async remove(uid: string, id: string): Promise<void> {
-    await this.findOne(uid, id); // ném 404 nếu không tồn tại / khác tổ chức
+    // Ném 404 nếu board không tồn tại hoặc user không thuộc tổ chức của nó.
+    const board = (await this.findOne(uid, id)) as { org_id: string };
+
+    // Xoá board là hành động không hoàn tác được (kéo theo list/card/nhãn bên
+    // trong qua ON DELETE CASCADE) → chỉ owner/admin. Kiểm tra ở đây chứ không
+    // dùng @Roles trên controller: xem ghi chú ở boards.controller.ts.
+    const { data: member, error: memberError } = await this.supabase.client
+      .from('organization_members')
+      .select('role')
+      .eq('org_id', board.org_id)
+      .eq('user_id', uid)
+      .maybeSingle();
+    if (memberError) {
+      throw new InternalServerErrorException('Không kiểm tra được quyền.');
+    }
+    if (!member || (member.role !== 'owner' && member.role !== 'admin')) {
+      throw new ForbiddenException('Chỉ owner hoặc admin mới xoá được board.');
+    }
 
     const { error } = await this.supabase.client.from('boards').delete().eq('id', id);
     if (error) {

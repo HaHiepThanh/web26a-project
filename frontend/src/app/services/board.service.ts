@@ -1,7 +1,26 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
+import { ApiService } from './api.service';
+import { describeError } from './api-error.util';
 import { Board, BoardBackground, BoardVisibility, User } from '../models';
 
-let boardIdSeq = 1;
+/**
+ * Hình dạng backend trả về (backend/src/modules/boards).
+ *
+ * ⚠️ Endpoint của Hoà trả về nguyên dòng Supabase nên tên cột là snake_case
+ *    (`org_id`, `workspace_id`…), khác với endpoint của Huy trả camelCase.
+ *    Vì thế mọi thứ đi qua `toBoard()` để quy về một mối trước khi vào giao diện.
+ */
+interface ApiBoard {
+  id: string;
+  org_id: string;
+  workspace_id: string;
+  name: string;
+  visibility: BoardVisibility;
+  background: BoardBackground | null;
+  background_image_path: string | null;
+  created_by: string;
+  created_at: string;
+}
 
 /** Board người dùng tạo được lưu lại để F5 không mất tên/nền/quyền riêng tư.
  *  Đây là nơi DUY NHẤT giữ ảnh nền (base64) — trang Workspace đọc lại qua
@@ -67,9 +86,19 @@ export const MOCK_MEMBERS: User[] = [
   // { id: 'u-bao', email: 'bao@trello.dev', displayName: 'Bảo' },
 ];
 
-/** CRUD board + visibility (#3). Hiện dùng dữ liệu giả (chưa nối backend thật). */
+/**
+ * CRUD board + visibility (#3) — GỌI BACKEND THẬT.
+ *
+ * Còn một phần ở localStorage: `background` và `backgroundImageUrl`. Backend
+ * hiện chưa nhận hai trường này (`POST /boards` chỉ nhận `workspaceId` + `name`,
+ * `PATCH /boards/:id` chỉ nhận `name` + `visibility`), nên màu/ảnh nền vẫn giữ
+ * ở trình duyệt, khoá theo ĐÚNG id board thật do server cấp.
+ */
 @Injectable({ providedIn: 'root' })
 export class BoardService {
+  private readonly api = inject(ApiService);
+  readonly loading = signal(false);
+  readonly loadError = signal<string | null>(null);
   readonly boards = signal<Board[]>([]); // danh sách board trong 1 workspace
   /** Toàn bộ board của tôi (gộp mọi workspace) — dùng cho Dashboard Chat (#chat-hub),
    *  tách riêng khỏi `boards` (scope 1-workspace) để không đè lẫn nhau. */
@@ -105,17 +134,66 @@ export class BoardService {
     }
   }
 
-  // TODO: khi có backend thật, gọi ApiService.get(`/workspaces/${workspaceId}/boards`) thay vì mock.
-  async loadBoards(workspaceId: string): Promise<void> {}
-
-  /** Gộp board của TẤT CẢ workspace — cho Dashboard Chat hub liệt kê mọi hội thoại. */
-  async loadAllBoards(): Promise<void> {
-    this.allBoards.set(Object.values(this.createdBoards()));
+  /** Ghép dòng snake_case của backend + màu/ảnh nền đang giữ ở trình duyệt. */
+  private toBoard(row: ApiBoard): Board {
+    const local = this.createdBoards()[row.id];
+    return {
+      id: row.id,
+      orgId: row.org_id,
+      workspaceId: row.workspace_id,
+      name: row.name,
+      visibility: row.visibility,
+      background: local?.background,
+      backgroundImageUrl: local?.backgroundImageUrl,
+      createdBy: row.created_by,
+      createdAt: row.created_at,
+    };
   }
 
-  /** Dựng Board từ :id — chỉ board đã tạo trong phiên này (createBoard); id lạ → null. */
+  async loadBoards(workspaceId: string): Promise<void> {
+    if (!workspaceId) {
+      this.boards.set([]);
+      return;
+    }
+    this.loading.set(true);
+    this.loadError.set(null);
+    try {
+      const rows = await this.api.get<ApiBoard[]>(`/boards?workspaceId=${workspaceId}`);
+      this.boards.set(rows.map((r) => this.toBoard(r)));
+    } catch (e) {
+      this.loadError.set(describeError(e, 'Không tải được danh sách board.'));
+      this.boards.set([]);
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  /** Gộp board của TẤT CẢ workspace — cho Dashboard Chat hub liệt kê mọi hội thoại. */
+  async loadAllBoards(workspaceIds: string[] = []): Promise<void> {
+    if (!workspaceIds.length) {
+      this.allBoards.set([]);
+      return;
+    }
+    const perWorkspace = await Promise.all(
+      workspaceIds.map((id) =>
+        this.api.get<ApiBoard[]>(`/boards?workspaceId=${id}`).catch(() => [] as ApiBoard[]),
+      ),
+    );
+    this.allBoards.set(perWorkspace.flat().map((r) => this.toBoard(r)));
+  }
+
+  /** Nạp 1 board theo id — dùng cho trang Board mở thẳng từ link chia sẻ. */
   async loadBoard(boardId: string): Promise<void> {
-    this.currentBoard.set(this.createdBoards()[boardId] ?? null);
+    this.loadError.set(null);
+    try {
+      const row = await this.api.get<ApiBoard>(`/boards/${boardId}`);
+      this.currentBoard.set(this.toBoard(row));
+    } catch (e) {
+      // 404 = không tồn tại HOẶC không thuộc tổ chức của mình — backend cố ý gộp
+      // hai trường hợp để người ngoài không dò được id nào có thật.
+      this.currentBoard.set(null);
+      this.loadError.set(describeError(e, 'Không mở được board.'));
+    }
   }
 
   async createBoard(
@@ -125,26 +203,63 @@ export class BoardService {
   ): Promise<Board | null> {
     const title = name.trim();
     if (!title) return null;
+
+    let row: ApiBoard;
+    try {
+      // Backend chỉ nhận workspaceId + name. Id do SERVER cấp — không tự sinh
+      // 'b-new-...' nữa, id tự chế sẽ không khớp gì với database.
+      row = await this.api.post<ApiBoard>('/boards', { workspaceId, name: title });
+    } catch (e) {
+      this.loadError.set(describeError(e, 'Không tạo được board.'));
+      return null;
+    }
+
+    // visibility là bước thứ hai vì POST không nhận. Hỏng thì board vẫn còn với
+    // giá trị mặc định 'workspace' — báo cho người dùng chứ không nuốt lỗi.
+    if (options?.visibility && options.visibility !== row.visibility) {
+      try {
+        row = await this.api.patch<ApiBoard>(`/boards/${row.id}`, {
+          visibility: options.visibility,
+        });
+      } catch {
+        this.loadError.set('Đã tạo board nhưng chưa đặt được quyền riêng tư.');
+      }
+    }
+
+    // Màu/ảnh nền backend chưa lưu được → giữ ở trình duyệt, khoá theo id THẬT.
     const board: Board = {
-      id: `b-new-${Date.now()}-${boardIdSeq++}`,
-      orgId: 'org-demo',
-      workspaceId,
-      name: title,
-      visibility: options?.visibility ?? 'public',
+      ...this.toBoard(row),
       background: options?.background,
       backgroundImageUrl: options?.backgroundImageUrl,
-      createdBy: CURRENT_USER_ID,
-      createdAt: new Date().toISOString(),
     };
     this.createdBoards.update((map) => ({ ...map, [board.id]: board }));
     this.persistOrDropImage(board.id);
+    this.boards.update((list) => [...list, this.createdBoards()[board.id]]);
     return this.createdBoards()[board.id];
   }
 
-  async updateBoard(id: string, changes: Partial<Pick<Board, 'name' | 'visibility' | 'background' | 'backgroundImageUrl'>>): Promise<void> {
+  async updateBoard(
+    id: string,
+    changes: Partial<Pick<Board, 'name' | 'visibility' | 'background' | 'backgroundImageUrl'>>,
+  ): Promise<string | null> {
+    // Chỉ 2 trường này backend nhận; gửi thừa sẽ bị ValidationPipe loại bỏ.
+    const patch: { name?: string; visibility?: BoardVisibility } = {};
+    if (changes.name !== undefined) patch.name = changes.name;
+    if (changes.visibility !== undefined) patch.visibility = changes.visibility;
+
+    if (Object.keys(patch).length > 0) {
+      try {
+        await this.api.patch<ApiBoard>(`/boards/${id}`, patch);
+      } catch (e) {
+        return describeError(e, 'Không sửa được board.');
+      }
+    }
+
     this.createdBoards.update((map) => (map[id] ? { ...map, [id]: { ...map[id], ...changes } } : map));
+    this.boards.update((list) => list.map((b) => (b.id === id ? { ...b, ...changes } : b)));
     if (this.currentBoard()?.id === id) this.currentBoard.update((b) => (b ? { ...b, ...changes } : b));
     this.persistOrDropImage(id);
+    return null;
   }
 
   /** Ảnh nền base64 có thể làm vỡ quota localStorage (~5MB). Nếu vỡ, bỏ ảnh rồi lưu
@@ -159,12 +274,21 @@ export class BoardService {
     this.storageWarning.set('Bộ nhớ trình duyệt đã đầy — đã lưu board nhưng ảnh nền không lưu được.');
   }
 
-  async deleteBoard(id: string): Promise<void> {
+  async deleteBoard(id: string): Promise<string | null> {
+    // Xoá trên server TRƯỚC. Xoá ở giao diện trước rồi server hỏng là danh sách
+    // trên màn hình lệch với database cho tới lần F5 kế tiếp.
+    try {
+      await this.api.delete(`/boards/${id}`);
+    } catch (e) {
+      return describeError(e, 'Không xoá được board.');
+    }
     this.createdBoards.update((map) => {
       const next = { ...map };
       delete next[id];
       return next;
     });
+    this.boards.update((list) => list.filter((b) => b.id !== id));
     this.persist();
+    return null;
   }
 }

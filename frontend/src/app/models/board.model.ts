@@ -1,5 +1,11 @@
 // Board thuộc một workspace (#3).
-export type BoardVisibility = 'public' | 'restricted';
+//
+// 3 giá trị này khớp ĐÚNG với CHECK constraint của cột `boards.visibility` trong
+// database.sql và với DTO của backend. Gửi giá trị khác là backend trả 400.
+//   'workspace' — mọi thành viên workspace xem được (mặc định)
+//   'private'   — chỉ người có tên trong board_members
+//   'public'    — ai trong tổ chức cũng xem được
+export type BoardVisibility = 'workspace' | 'private' | 'public';
 
 /** Màu nền trang Board — CSS class định nghĩa trong styles.css (global, không phải
  *  view-encapsulated, vì cùng 1 class được dùng ở cả tile Workspace lẫn trang Board). */
@@ -22,7 +28,7 @@ export interface Board {
   createdAt: string; // ISO timestamptz
 }
 
-// Thành viên được phép xem board khi visibility = 'restricted' (#3, bonus).
+// Thành viên được phép xem board khi visibility = 'private' (#3, bonus).
 export interface BoardMember {
   boardId: string; // FK boards.id
   userId: string; // FK auth.users.id

@@ -10,8 +10,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { FirebaseAuthGuard } from '../../common/firebase/firebase-auth.guard';
-import { RolesGuard } from '../../common/firebase/roles.guard';
-import { Roles } from '../../common/firebase/roles.decorator';
 import { CurrentUser } from '../../common/firebase/current-user.decorator';
 import type { CurrentUserInfo } from '../../common/firebase/current-user.decorator';
 import { BoardsService } from './boards.service';
@@ -48,8 +46,18 @@ export class BoardsController {
     return this.boards.update(user.uid, id, body);
   }
 
-  @UseGuards(RolesGuard)
-  @Roles('owner')
+  /**
+   * Xoá board — chỉ owner/admin của tổ chức.
+   *
+   * ⚠️ KHÔNG dùng `@Roles('owner')` + RolesGuard ở đây được. Guard tìm orgId ở
+   *    `req.params.id`; với route `/organizations/:id/...` thì đúng, nhưng ở đây
+   *    `params.id` là ID CỦA BOARD. Guard mang id board đi tra
+   *    `organization_members` → không có dòng nào → 403 cho TẤT CẢ, kể cả chủ
+   *    tổ chức đang xoá board của chính mình.
+   *
+   *    Muốn biết board thuộc tổ chức nào thì bắt buộc phải đọc database — việc
+   *    đó thuộc về service, nên kiểm tra vai trò nằm trong `boards.remove()`.
+   */
   @Delete(':id')
   remove(@CurrentUser() user: CurrentUserInfo, @Param('id') id: string) {
     return this.boards.remove(user.uid, id);
