@@ -7,6 +7,20 @@ import {
 } from '@nestjs/common';
 import { SupabaseService } from '../../common/supabase/supabase.service';
 
+/**
+ * Postgres báo mã 22P02 khi nhận chuỗi không phải uuid vào cột kiểu uuid.
+ *
+ * Không bắt riêng mã này thì mọi id gõ sai (vd /boards/abc) đều rơi vào nhánh
+ * `throw new InternalServerErrorException` → client nhận 500 khó hiểu, trong khi
+ * đúng ra phải là 404 "không tìm thấy" — id sai định dạng thì chắc chắn không
+ * trỏ tới dòng nào cả.
+ */
+const LOI_UUID_SAI = '22P02';
+
+function laUuidSai(error: { code?: string } | null): boolean {
+  return error?.code === LOI_UUID_SAI;
+}
+
 /** CRUD list + sắp xếp thứ tự (kéo thả ngang) (#4). */
 @Injectable()
 export class ListsService {
@@ -24,6 +38,8 @@ export class ListsService {
       .eq('id', boardId)
       .maybeSingle();
     if (boardError) {
+      // id gõ sai định dạng uuid → coi như không tồn tại, đừng để lọt thành 500.
+      if (laUuidSai(boardError)) throw new NotFoundException('Không tìm thấy board.');
       throw new InternalServerErrorException('Không đọc được board.');
     }
     if (!board) {
@@ -113,6 +129,8 @@ export class ListsService {
       .eq('id', id)
       .maybeSingle();
     if (error) {
+      // id gõ sai định dạng uuid → coi như không tồn tại, đừng để lọt thành 500.
+      if (laUuidSai(error)) throw new NotFoundException('Không tìm thấy cột.');
       throw new InternalServerErrorException('Không đọc được list.');
     }
     if (!list) {

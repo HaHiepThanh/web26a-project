@@ -90,6 +90,11 @@ export class WorkspacesService {
    * xem được toàn bộ workspace của công ty khác.
    */
   async findAll(uid: string, orgId: string): Promise<WorkspaceResponse[]> {
+    // Thiếu query param → trả mảng rỗng, KHÔNG phải 500. Trước đây `orgId` là
+    // undefined được đưa thẳng xuống Postgres, nó ném `invalid input syntax for
+    // type uuid: "undefined"` và lộ ra ngoài thành 500 khó hiểu.
+    if (!orgId) return [];
+
     await this.assertMember(uid, orgId);
 
     const { data, error } = await this.supabase.client

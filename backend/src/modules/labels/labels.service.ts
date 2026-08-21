@@ -7,6 +7,20 @@ import {
 } from '@nestjs/common';
 import { SupabaseService } from '../../common/supabase/supabase.service';
 
+/**
+ * Postgres báo mã 22P02 khi nhận chuỗi không phải uuid vào cột kiểu uuid.
+ *
+ * Không bắt riêng mã này thì mọi id gõ sai (vd /boards/abc) đều rơi vào nhánh
+ * `throw new InternalServerErrorException` → client nhận 500 khó hiểu, trong khi
+ * đúng ra phải là 404 "không tìm thấy" — id sai định dạng thì chắc chắn không
+ * trỏ tới dòng nào cả.
+ */
+const LOI_UUID_SAI = '22P02';
+
+function laUuidSai(error: { code?: string } | null): boolean {
+  return error?.code === LOI_UUID_SAI;
+}
+
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
 
 /** Nhãn màu theo board + gắn/gỡ nhãn cho card (#4). */
@@ -26,6 +40,8 @@ export class LabelsService {
       .eq('id', boardId)
       .maybeSingle();
     if (boardError) {
+      // id gõ sai định dạng uuid → coi như không tồn tại, đừng để lọt thành 500.
+      if (laUuidSai(boardError)) throw new NotFoundException('Không tìm thấy board.');
       throw new InternalServerErrorException('Không đọc được board.');
     }
     if (!board) {
@@ -100,6 +116,8 @@ export class LabelsService {
       .eq('id', labelId)
       .maybeSingle();
     if (labelError) {
+      // id gõ sai định dạng uuid → coi như không tồn tại, đừng để lọt thành 500.
+      if (laUuidSai(labelError)) throw new NotFoundException('Không tìm thấy nhãn.');
       throw new InternalServerErrorException('Không đọc được nhãn.');
     }
     if (!label) {
@@ -125,6 +143,8 @@ export class LabelsService {
       .eq('id', cardId)
       .maybeSingle();
     if (cardError) {
+      // id gõ sai định dạng uuid → coi như không tồn tại, đừng để lọt thành 500.
+      if (laUuidSai(cardError)) throw new NotFoundException('Không tìm thấy card.');
       throw new InternalServerErrorException('Không đọc được card.');
     }
     if (!card) {
@@ -167,6 +187,8 @@ export class LabelsService {
       .eq('id', labelId)
       .maybeSingle();
     if (labelError) {
+      // id gõ sai định dạng uuid → coi như không tồn tại, đừng để lọt thành 500.
+      if (laUuidSai(labelError)) throw new NotFoundException('Không tìm thấy nhãn.');
       throw new InternalServerErrorException('Không đọc được nhãn.');
     }
     if (!label) {
