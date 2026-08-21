@@ -118,14 +118,39 @@ lại trùng khớp thì đó là cột được kéo. Đã kiểm chứng bằn
 
 ---
 
-## Hai kiểu đặt tên khác nhau giữa hai bạn
+## Quy ước đặt tên: camelCase — ĐÃ THỐNG NHẤT
 
-Endpoint của **Huy** trả về `camelCase` (`orgId`, `createdAt`); endpoint của
-**Hoà** trả nguyên dòng Supabase nên là `snake_case` (`org_id`, `created_at`).
+Ban đầu endpoint của Huy trả `camelCase`, của Hoà trả nguyên dòng Supabase nên là
+`snake_case`. Nay **toàn bộ API trả camelCase**.
 
-Frontend hiện quy về một mối bằng hàm `toBoard()` / `toList()` / `toLabel()` trong
-từng service. Chạy được, nhưng đây là thứ nên thống nhất khi có thời gian — API
-công khai mà hai nửa đặt tên khác nhau thì người dùng API luôn phải tra tài liệu.
+Mỗi service của Hoà có thêm một hàm `toBoard()` / `toList()` / `toLabel()` đổi tên
+cột trước khi trả ra, kèm interface `BoardResponse` / `ListResponse` / `LabelResponse`
+để chỗ khác biết chắc hình dạng dữ liệu.
+
+```
+POST /organizations   id, name, slug, ownerId, createdAt
+POST /workspaces      id, orgId, name, description, createdBy, createdAt
+POST /boards          id, orgId, workspaceId, name, visibility, background,
+                      backgroundImagePath, createdBy, createdAt
+POST /lists           id, orgId, boardId, name, position, createdAt
+POST /labels          id, orgId, boardId, name, color
+```
+
+> ⚠️ **Bẫy khi viết tiếp:** trong service, biến lấy thẳng từ Supabase vẫn là
+> snake_case; chỉ giá trị ĐÃ qua hàm `toXxx()` mới là camelCase. Trộn hai thứ là
+> query ra `org_id = undefined` → Postgres ném 22P02 → 500. Đúng lỗi này đã xảy ra
+> một lần khi chuyển đổi (ở `boards.findOne`), test bắt được ngay.
+
+---
+
+## Quy ước mã lỗi khi truy cập dữ liệu không thuộc về mình
+
+Hai bạn tình cờ theo cùng một quy tắc, và nó hợp lý — giữ nguyên:
+
+| Loại endpoint | Trả về | Vì sao |
+|---|---|---|
+| Danh sách theo cha mình không thuộc | **403** | Người gọi biết rõ mình đang hỏi tổ chức nào, nói thẳng là không có quyền |
+| Một tài nguyên theo id | **404** | Trả 403 là vô tình xác nhận "id này có thật" → người ngoài dò được |
 
 ---
 

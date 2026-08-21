@@ -3,23 +3,17 @@ import { ApiService } from './api.service';
 import { describeError } from './api-error.util';
 import { Board, BoardBackground, BoardVisibility, User } from '../models';
 
-/**
- * Hình dạng backend trả về (backend/src/modules/boards).
- *
- * ⚠️ Endpoint của Hoà trả về nguyên dòng Supabase nên tên cột là snake_case
- *    (`org_id`, `workspace_id`…), khác với endpoint của Huy trả camelCase.
- *    Vì thế mọi thứ đi qua `toBoard()` để quy về một mối trước khi vào giao diện.
- */
+/** Hình dạng backend trả về (backend/src/modules/boards → BoardResponse). */
 interface ApiBoard {
   id: string;
-  org_id: string;
-  workspace_id: string;
+  orgId: string;
+  workspaceId: string;
   name: string;
   visibility: BoardVisibility;
   background: BoardBackground | null;
-  background_image_path: string | null;
-  created_by: string;
-  created_at: string;
+  backgroundImagePath: string | null;
+  createdBy: string;
+  createdAt: string;
 }
 
 /** Board người dùng tạo được lưu lại để F5 không mất tên/nền/quyền riêng tư.
@@ -134,19 +128,19 @@ export class BoardService {
     }
   }
 
-  /** Ghép dòng snake_case của backend + màu/ảnh nền đang giữ ở trình duyệt. */
+  /** Ghép dữ liệu backend + màu/ảnh nền đang giữ ở trình duyệt. */
   private toBoard(row: ApiBoard): Board {
     const local = this.createdBoards()[row.id];
     return {
       id: row.id,
-      orgId: row.org_id,
-      workspaceId: row.workspace_id,
+      orgId: row.orgId,
+      workspaceId: row.workspaceId,
       name: row.name,
       visibility: row.visibility,
       background: local?.background,
       backgroundImageUrl: local?.backgroundImageUrl,
-      createdBy: row.created_by,
-      createdAt: row.created_at,
+      createdBy: row.createdBy,
+      createdAt: row.createdAt,
     };
   }
 

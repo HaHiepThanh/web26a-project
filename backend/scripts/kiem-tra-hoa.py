@@ -168,8 +168,11 @@ if not BID:
     print(f'\n{R}Không tạo được board — dừng.{RS}\n')
     sys.exit(1)
 
-assert_('1.2', 'board.org_id được điền tự động (không phải null)',
-        bool(board.get('org_id')), f"org_id = {board.get('org_id')}")
+assert_('1.2', 'board.orgId được điền tự động (không phải null)',
+        bool(board.get('orgId')), f"orgId = {board.get('orgId')}")
+assert_('1.2b', 'trả về camelCase, KHÔNG lẫn snake_case',
+        not [k for k in (board or {}) if '_' in k],
+        f"còn trường snake_case: {[k for k in (board or {}) if '_' in k]}")
 assert_('1.3', "visibility mặc định = 'workspace'",
         board.get('visibility') == 'workspace', f"visibility = {board.get('visibility')}")
 
@@ -209,7 +212,8 @@ assert_('4.6', 'sửa name KHÔNG làm mất visibility đã đặt',
 section('2. LIST — tạo, đọc, đổi tên, sắp thứ tự')
 
 l1 = check('5.1', 'tạo cột 1', 'POST', '/lists', A, {'boardId': BID, 'name': 'Việc cần làm'}, 201,
-           lambda d: ('position' in (d or {}), 'có position'))
+           lambda d: ('position' in (d or {}) and 'boardId' in (d or {}),
+                      f"cần position + boardId (camelCase), nhận {sorted((d or {}).keys())}"))
 L1 = l1.get('id')
 L2 = call('POST', '/lists', A, {'boardId': BID, 'name': 'Đang làm'})[1].get('id')
 L3 = call('POST', '/lists', A, {'boardId': BID, 'name': 'Hoàn thành'})[1].get('id')
@@ -270,8 +274,8 @@ lb = check('9.1', 'tạo nhãn', 'POST', '/labels', A,
            {'boardId': BID, 'name': 'Gấp', 'color': '#ef4444'}, 201,
            lambda d: ('id' in (d or {}), 'có id'))
 LB = lb.get('id') if isinstance(lb, dict) else None
-assert_('9.2', 'label.org_id được điền tự động', bool((lb or {}).get('org_id')),
-        f"org_id = {(lb or {}).get('org_id')}")
+assert_('9.2', 'label.orgId được điền tự động', bool((lb or {}).get('orgId')),
+        f"orgId = {(lb or {}).get('orgId')}")
 
 check('9.3', 'boardId không tồn tại → 404', 'POST', '/labels', A,
       {'boardId': NOPE, 'name': 'X', 'color': '#000000'}, 404)

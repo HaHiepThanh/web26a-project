@@ -17,6 +17,38 @@ import { SupabaseService } from '../../common/supabase/supabase.service';
  */
 const LOI_UUID_SAI = '22P02';
 
+/** Dòng thô Supabase trả về (tên cột snake_case). */
+interface ListRow {
+  id: string;
+  org_id: string;
+  board_id: string;
+  name: string;
+  position: number;
+  created_at: string;
+}
+
+/** Hình dạng API trả ra ngoài — camelCase, thống nhất với phần của Huy. */
+export interface ListResponse {
+  id: string;
+  orgId: string;
+  boardId: string;
+  name: string;
+  position: number;
+  createdAt: string;
+}
+
+/** Đổi snake_case của Supabase sang camelCase trước khi trả ra. */
+function toList(row: ListRow): ListResponse {
+  return {
+    id: row.id,
+    orgId: row.org_id,
+    boardId: row.board_id,
+    name: row.name,
+    position: row.position,
+    createdAt: row.created_at,
+  };
+}
+
 function laUuidSai(error: { code?: string } | null): boolean {
   return error?.code === LOI_UUID_SAI;
 }
@@ -66,7 +98,7 @@ export class ListsService {
    * Danh sách list trong 1 board, sắp theo `position` tăng dần.
    * Thiếu `boardId` → trả `[]` thay vì lỗi.
    */
-  async findAll(uid: string, boardId: string): Promise<unknown[]> {
+  async findAll(uid: string, boardId: string): Promise<ListResponse[]> {
     if (!boardId) return [];
 
     await this.assertBoardAccess(uid, boardId);
@@ -79,7 +111,7 @@ export class ListsService {
     if (error) {
       throw new InternalServerErrorException('Không đọc được danh sách list.');
     }
-    return data;
+    return (data as ListRow[]).map(toList);
   }
 
   /**
@@ -88,7 +120,7 @@ export class ListsService {
    * nhất hiện có rồi +1. Board chưa có list nào thì bắt đầu từ 1 (tránh
    * `null + 1 = NaN` làm insert vỡ).
    */
-  async create(uid: string, boardId: string, name: string): Promise<unknown> {
+  async create(uid: string, boardId: string, name: string): Promise<ListResponse> {
     if (!boardId || !name?.trim()) {
       throw new BadRequestException('Thiếu boardId hoặc name.');
     }
@@ -115,7 +147,7 @@ export class ListsService {
     if (error) {
       throw new InternalServerErrorException('Không tạo được list.');
     }
-    return data;
+    return toList(data as ListRow);
   }
 
   /**
@@ -154,7 +186,7 @@ export class ListsService {
   }
 
   /** Đổi tên list. Không tồn tại / khác tổ chức → 404. */
-  async rename(uid: string, id: string, name: string): Promise<unknown> {
+  async rename(uid: string, id: string, name: string): Promise<ListResponse> {
     if (!name?.trim()) {
       throw new BadRequestException('Thiếu name.');
     }
@@ -170,7 +202,7 @@ export class ListsService {
     if (error) {
       throw new InternalServerErrorException('Không đổi được tên list.');
     }
-    return data;
+    return toList(data as ListRow);
   }
 
   /**
@@ -180,7 +212,7 @@ export class ListsService {
    * của 2 list lân cận) rồi gửi thẳng lên — backend chỉ việc UPDATE 1 dòng,
    * không cần đọc/đánh số lại toàn bộ danh sách.
    */
-  async reorder(uid: string, id: string, position: number): Promise<unknown> {
+  async reorder(uid: string, id: string, position: number): Promise<ListResponse> {
     if (typeof position !== 'number' || Number.isNaN(position)) {
       throw new BadRequestException('position phải là số.');
     }
@@ -196,7 +228,7 @@ export class ListsService {
     if (error) {
       throw new InternalServerErrorException('Không cập nhật được vị trí.');
     }
-    return data;
+    return toList(data as ListRow);
   }
 
   /** Xoá list. `ON DELETE CASCADE` tự xoá card bên trong. */

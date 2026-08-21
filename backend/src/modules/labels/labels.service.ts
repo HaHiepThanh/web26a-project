@@ -17,6 +17,35 @@ import { SupabaseService } from '../../common/supabase/supabase.service';
  */
 const LOI_UUID_SAI = '22P02';
 
+/** Dòng thô Supabase trả về (tên cột snake_case). */
+interface LabelRow {
+  id: string;
+  org_id: string;
+  board_id: string;
+  name: string;
+  color: string;
+}
+
+/** Hình dạng API trả ra ngoài — camelCase, thống nhất với phần của Huy. */
+export interface LabelResponse {
+  id: string;
+  orgId: string;
+  boardId: string;
+  name: string;
+  color: string;
+}
+
+/** Đổi snake_case của Supabase sang camelCase trước khi trả ra. */
+function toLabel(row: LabelRow): LabelResponse {
+  return {
+    id: row.id,
+    orgId: row.org_id,
+    boardId: row.board_id,
+    name: row.name,
+    color: row.color,
+  };
+}
+
 function laUuidSai(error: { code?: string } | null): boolean {
   return error?.code === LOI_UUID_SAI;
 }
@@ -65,7 +94,7 @@ export class LabelsService {
   }
 
   /** Danh sách nhãn của 1 board. Thiếu `boardId` → trả `[]` thay vì lỗi. */
-  async findAll(uid: string, boardId: string): Promise<unknown[]> {
+  async findAll(uid: string, boardId: string): Promise<LabelResponse[]> {
     if (!boardId) return [];
 
     await this.assertBoardAccess(uid, boardId);
@@ -77,11 +106,11 @@ export class LabelsService {
     if (error) {
       throw new InternalServerErrorException('Không đọc được danh sách nhãn.');
     }
-    return data;
+    return (data as LabelRow[]).map(toLabel);
   }
 
   /** Tạo nhãn mới cho board. `color` phải đúng định dạng hex `#rrggbb`. */
-  async create(uid: string, boardId: string, name: string, color: string): Promise<unknown> {
+  async create(uid: string, boardId: string, name: string, color: string): Promise<LabelResponse> {
     if (!boardId || !name?.trim()) {
       throw new BadRequestException('Thiếu boardId hoặc name.');
     }
@@ -99,7 +128,7 @@ export class LabelsService {
     if (error) {
       throw new InternalServerErrorException('Không tạo được nhãn.');
     }
-    return data;
+    return toLabel(data as LabelRow);
   }
 
   /**
@@ -109,7 +138,7 @@ export class LabelsService {
    * `cards` không có `board_id` trực tiếp, phải đi vòng qua `lists`.
    * Gắn 2 lần cùng 1 cặp card+label không báo lỗi (upsert, ignoreDuplicates).
    */
-  async attach(uid: string, cardId: string, labelId: string): Promise<unknown> {
+  async attach(uid: string, cardId: string, labelId: string): Promise<{ cardId: string; labelId: string }> {
     const { data: label, error: labelError } = await this.supabase.client
       .from('labels')
       .select('id, board_id, org_id')
@@ -164,15 +193,15 @@ export class LabelsService {
       throw new BadRequestException('Card và nhãn không cùng board.');
     }
 
-    const { data, error } = await this.supabase.client
+    // ignoreDuplicates: gắn lại nhãn đã có thì không ném lỗi, cũng không trả về
+    // dòng nào — vì vậy không đọc `data`, cứ coi là thành công.
+    const { error } = await this.supabase.client
       .from('card_labels')
-      .upsert({ card_id: cardId, label_id: labelId }, { onConflict: 'card_id,label_id', ignoreDuplicates: true })
-      .select()
-      .maybeSingle();
+      .upsert({ card_id: cardId, label_id: labelId }, { onConflict: 'card_id,label_id', ignoreDuplicates: true });
     if (error) {
       throw new InternalServerErrorException('Không gắn được nhãn.');
     }
-    return data ?? { card_id: cardId, label_id: labelId };
+    return { cardId, labelId };
   }
 
   /**

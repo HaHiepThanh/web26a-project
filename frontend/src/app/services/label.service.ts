@@ -3,11 +3,11 @@ import { ApiService } from './api.service';
 import { describeError } from './api-error.util';
 import { Label } from '../models';
 
-/** Dòng backend trả về (snake_case — nguyên dòng Supabase). */
+/** Hình dạng backend trả về (backend/src/modules/labels → LabelResponse). */
 interface ApiLabel {
   id: string;
-  org_id: string;
-  board_id: string;
+  orgId: string;
+  boardId: string;
   name: string;
   color: string;
 }
@@ -36,7 +36,7 @@ export class LabelService {
   private loadedBoardId: string | null = null;
 
   private toLabel(r: ApiLabel): Label {
-    return { id: r.id, orgId: r.org_id, boardId: r.board_id, name: r.name, color: r.color };
+    return { id: r.id, orgId: r.orgId, boardId: r.boardId, name: r.name, color: r.color };
   }
 
   private fail(message: string): void {

@@ -3,14 +3,14 @@ import { ApiService } from './api.service';
 import { describeError } from './api-error.util';
 import { List } from '../models';
 
-/** Dòng backend trả về (snake_case — nguyên dòng Supabase). */
+/** Hình dạng backend trả về (backend/src/modules/lists → ListResponse). */
 interface ApiList {
   id: string;
-  org_id: string;
-  board_id: string;
+  orgId: string;
+  boardId: string;
   name: string;
   position: number;
-  created_at: string;
+  createdAt: string;
 }
 
 /**
@@ -34,11 +34,11 @@ export class ListService {
   private toList(r: ApiList): List {
     return {
       id: r.id,
-      orgId: r.org_id,
-      boardId: r.board_id,
+      orgId: r.orgId,
+      boardId: r.boardId,
       name: r.name,
       position: r.position,
-      createdAt: r.created_at,
+      createdAt: r.createdAt,
     };
   }
 

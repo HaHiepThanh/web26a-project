@@ -17,6 +17,53 @@ import { SupabaseService } from '../../common/supabase/supabase.service';
  */
 const LOI_UUID_SAI = '22P02';
 
+/** Dòng thô Supabase trả về (tên cột snake_case). */
+interface BoardRow {
+  id: string;
+  org_id: string;
+  workspace_id: string;
+  name: string;
+  visibility: string;
+  background: string | null;
+  background_image_path: string | null;
+  created_by: string;
+  created_at: string;
+}
+
+/** Hình dạng API trả ra ngoài — camelCase, thống nhất với phần của Huy. */
+export interface BoardResponse {
+  id: string;
+  orgId: string;
+  workspaceId: string;
+  name: string;
+  visibility: string;
+  background: string | null;
+  backgroundImagePath: string | null;
+  createdBy: string;
+  createdAt: string;
+}
+
+/**
+ * Đổi snake_case của Supabase sang camelCase trước khi trả ra.
+ *
+ * ⚠️ ĐỪNG trả thẳng `data` của Supabase. Nó giữ nguyên tên cột trong database
+ *    (`org_id`, `created_at`), trong khi phần còn lại của API dùng camelCase —
+ *    frontend sẽ phải nhớ endpoint nào dùng kiểu nào.
+ */
+function toBoard(row: BoardRow): BoardResponse {
+  return {
+    id: row.id,
+    orgId: row.org_id,
+    workspaceId: row.workspace_id,
+    name: row.name,
+    visibility: row.visibility,
+    background: row.background,
+    backgroundImagePath: row.background_image_path,
+    createdBy: row.created_by,
+    createdAt: row.created_at,
+  };
+}
+
 function laUuidSai(error: { code?: string } | null): boolean {
   return error?.code === LOI_UUID_SAI;
 }
@@ -68,7 +115,7 @@ export class BoardsService {
    * Danh sách board trong 1 workspace.
    * Thiếu `workspaceId` → trả `[]` thay vì lỗi (đúng theo HOA.md).
    */
-  async findAll(uid: string, workspaceId: string): Promise<unknown[]> {
+  async findAll(uid: string, workspaceId: string): Promise<BoardResponse[]> {
     if (!workspaceId) return [];
 
     await this.assertWorkspaceAccess(uid, workspaceId);
@@ -80,7 +127,7 @@ export class BoardsService {
     if (error) {
       throw new InternalServerErrorException('Không đọc được danh sách board.');
     }
-    return data;
+    return (data as BoardRow[]).map(toBoard);
   }
 
   /**
@@ -89,7 +136,7 @@ export class BoardsService {
    * Không tồn tại HOẶC không thuộc tổ chức của user → đều trả 404 như nhau —
    * không để lộ "board này có thật nhưng bạn không có quyền", tránh dò id.
    */
-  async findOne(uid: string, id: string): Promise<unknown> {
+  async findOne(uid: string, id: string): Promise<BoardResponse> {
     const { data: board, error } = await this.supabase.client
       .from('boards')
       .select()
@@ -107,7 +154,8 @@ export class BoardsService {
     const { data: member, error: memberError } = await this.supabase.client
       .from('organization_members')
       .select('role')
-      .eq('org_id', board.org_id)
+      // `board` ở đây là DÒNG THÔ từ Supabase (snake_case) — chưa qua toBoard().
+      .eq('org_id', (board as BoardRow).org_id)
       .eq('user_id', uid)
       .maybeSingle();
     if (memberError) {
@@ -117,7 +165,7 @@ export class BoardsService {
       throw new NotFoundException('Không tìm thấy board.');
     }
 
-    return board;
+    return toBoard(board as BoardRow);
   }
 
   /**
@@ -127,7 +175,7 @@ export class BoardsService {
    * workspace trước để lấy org_id của nó, đồng thời nhân tiện kiểm tra user có
    * thuộc tổ chức đó không (chưa có org_id nào tin được từ phía client).
    */
-  async create(uid: string, workspaceId: string, name: string): Promise<unknown> {
+  async create(uid: string, workspaceId: string, name: string): Promise<BoardResponse> {
     if (!workspaceId || !name?.trim()) {
       throw new BadRequestException('Thiếu workspaceId hoặc name.');
     }
@@ -147,7 +195,7 @@ export class BoardsService {
     if (error) {
       throw new InternalServerErrorException('Không tạo được board.');
     }
-    return data;
+    return toBoard(data as BoardRow);
   }
 
   /**
@@ -187,7 +235,7 @@ export class BoardsService {
     if (error) {
       throw new InternalServerErrorException('Không cập nhật được board.');
     }
-    return data;
+    return toBoard(data as BoardRow);
   }
 
   /**
@@ -196,7 +244,7 @@ export class BoardsService {
    */
   async remove(uid: string, id: string): Promise<void> {
     // Ném 404 nếu board không tồn tại hoặc user không thuộc tổ chức của nó.
-    const board = (await this.findOne(uid, id)) as { org_id: string };
+    const board = await this.findOne(uid, id);
 
     // Xoá board là hành động không hoàn tác được (kéo theo list/card/nhãn bên
     // trong qua ON DELETE CASCADE) → chỉ owner/admin. Kiểm tra ở đây chứ không
@@ -204,7 +252,7 @@ export class BoardsService {
     const { data: member, error: memberError } = await this.supabase.client
       .from('organization_members')
       .select('role')
-      .eq('org_id', board.org_id)
+      .eq('org_id', board.orgId)
       .eq('user_id', uid)
       .maybeSingle();
     if (memberError) {
