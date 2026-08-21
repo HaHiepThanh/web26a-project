@@ -12,7 +12,6 @@ import {
   WorkspaceItem,
   WorkspaceMember,
   WorkspaceWithOrg,
-  isSlugTaken,
   loadAllWorkspacesForUser,
   loadStoredWorkspaces,
   persistWorkspaces,
@@ -230,35 +229,32 @@ export class Settings {
   // ---------------------------------------------------------------------
   // TAB 3: Manage Organization handlers
   // ---------------------------------------------------------------------
-  readonly orgMembers = computed<User[]>(() => {
-    const org = this.orgService.activeOrg();
-    if (!org) return [];
-    const allUsers = this.auth.getSearchableUsers();
-    return org.memberIds.map(
-      (id) => allUsers.find((u) => u.id === id) ?? ({ id, displayName: 'Người dùng ẩn danh', email: '—' } as User),
-    );
-  });
+  /** Tên/email lấy thẳng từ backend, không dò trong danh sách mock nữa. */
+  readonly orgMembers = computed<User[]>(() =>
+    this.orgService.membersOf(this.orgService.activeOrgId()).map((m) => m.user),
+  );
 
   onSwitchOrg(orgId: string): void {
     this.orgService.switchOrg(orgId);
   }
 
-  /** Truyền xuống modal để cảnh báo slug trùng ngay khi user đang gõ. */
-  readonly isSlugTaken = (slug: string): boolean => isSlugTaken(slug);
+  /** Slug đã bị chiếm hay chưa thì CHỈ backend biết (nó giữ tổ chức của mọi người,
+   *  trình duyệt này chỉ thấy tổ chức của user đang đăng nhập). Modal vì thế không
+   *  cảnh báo lúc gõ nữa — bấm Tạo, backend trả 409 kèm câu tiếng Việt sẵn. */
 
-  onCreateOrg(event: { name: string; slug: string }): void {
-    const org = this.orgService.createOrg(event.name, event.slug);
+  async onCreateOrg(event: { name: string; slug: string }): Promise<void> {
+    const { org, error } = await this.orgService.createOrg(event.name, event.slug);
     if (!org) {
-      this.flash(`Đường dẫn "${event.slug}" vừa bị người khác dùng mất, chọn đường dẫn khác nhé!`);
+      this.flash(error ?? 'Không tạo được tổ chức, thử lại nhé!', 'error');
       return;
     }
     this.flash(`Đã tạo tổ chức "${org.name}" thành công!`);
   }
 
-  onInviteOrgMember(user: User): void {
+  async onInviteOrgMember(user: User): Promise<void> {
     const org = this.orgService.activeOrg();
     if (!org) return;
-    const error = this.orgService.inviteMemberByUuid(org.id, user.id);
+    const error = await this.orgService.inviteMember(org.id, user.id);
     if (error) {
       this.flash(error, 'error');
       return;
@@ -266,10 +262,10 @@ export class Settings {
     this.flash(`Đã gửi lời mời tham gia "${org.name}" cho ${user.displayName || user.email}.`);
   }
 
-  onRemoveOrgMember(memberId: string): void {
+  async onRemoveOrgMember(memberId: string): Promise<void> {
     const org = this.orgService.activeOrg();
     if (!org) return;
-    const error = this.orgService.removeMember(org.id, memberId);
+    const error = await this.orgService.removeMember(org.id, memberId);
     if (error) {
       this.flash(error, 'error');
       return;

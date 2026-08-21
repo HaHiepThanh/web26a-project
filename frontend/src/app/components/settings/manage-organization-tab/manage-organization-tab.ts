@@ -23,7 +23,6 @@ export class ManageOrganizationTab {
   readonly switchOrg = output<string>();
   /** Kiểm slug đã bị chiếm chưa — truyền xuống modal, nếu thiếu thì modal không
    *  cảnh báo được và user sẽ bấm Tạo rồi thất bại im lặng. */
-  readonly isSlugTaken = input<(slug: string) => boolean>(() => false);
 
   readonly createOrg = output<{ name: string; slug: string }>();
   readonly inviteMember = output<User>();

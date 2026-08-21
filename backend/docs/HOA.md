@@ -166,13 +166,59 @@ Viết thẳng `.update({ name: changes.name, visibility: changes.visibility })`
 gửi mỗi `{name}` sẽ **xoá luôn** `visibility` thành null. Kiểu bug này rất khó
 nhận ra vì endpoint vẫn trả 200.
 
-### Chi tiết #5 — DELETE board
+### Chi tiết #5 — DELETE board ⚠️ ĐỌC KỸ, CÓ BẪY
 
-Đã có `@Roles('owner')` trong controller. Nhưng `RolesGuard` **hiện đang
-`return true` vô điều kiện** (việc của Huy) — nên giờ ai gọi cũng xoá được.
+Huy đã làm xong `RolesGuard` và nó chặn thật rồi. Nhưng route này đang gắn
+`@Roles('owner')`, mà **guard sẽ chặn NHẦM cả owner**.
 
-Bạn **cứ làm phần xoá của mình**, đừng chờ. Khi Huy xong guard, chạy lại test này
-bằng tài khoản member để xác nhận ra 403.
+Lý do: guard tìm `orgId` ở `req.params.id`. Với route `/organizations/:id/...`
+thì `params.id` đúng là id tổ chức. Nhưng với `DELETE /boards/:id` thì
+`params.id` là **id của BOARD**. Guard mang id board đi tra `organization_members`
+→ không có dòng nào → **403 cho tất cả mọi người**, kể cả chủ tổ chức.
+
+Đã thử thật, tài khoản owner gọi xoá board của chính mình:
+
+```
+DELETE /boards/7ad1cf8d-...
+→ 403  { "message": "Bạn không thuộc tổ chức này." }
+```
+
+**Cách sửa — bỏ `@Roles('owner')` khỏi route này, kiểm tra quyền trong service:**
+
+```ts
+// boards.controller.ts — bỏ 2 dòng @UseGuards(RolesGuard) và @Roles('owner')
+@Delete(':id')
+remove(@CurrentUser() user: CurrentUserInfo, @Param('id') id: string) {
+  return this.boards.remove(user.uid, id);
+}
+```
+
+```ts
+// boards.service.ts — kiểm tra ngay trong hàm
+async remove(uid: string, id: string) {
+  // 1. Đọc board ra để biết nó thuộc tổ chức nào
+  const { data: board } = await sb
+    .from('boards').select('id, org_id').eq('id', id).maybeSingle();
+  if (!board) throw new NotFoundException('Không tìm thấy board.');
+
+  // 2. Giờ MỚI có org_id thật để tra vai trò
+  const { data: member } = await sb
+    .from('organization_members').select('role')
+    .eq('org_id', board.org_id).eq('user_id', uid).maybeSingle();
+
+  if (!member) throw new NotFoundException('Không tìm thấy board.');
+  if (member.role !== 'owner' && member.role !== 'admin') {
+    throw new ForbiddenException('Chỉ owner hoặc admin mới xoá được board.');
+  }
+  // 3. Xoá
+}
+```
+
+Đây không phải cách "né" guard — đây là cách đúng. Guard chỉ đọc được thứ có sẵn
+trên URL; muốn biết board thuộc tổ chức nào thì **bắt buộc phải đọc database**, mà
+việc đó thuộc về service.
+
+Test: gọi bằng tài khoản owner → xoá được. Gọi bằng tài khoản member → 403.
 
 `DELETE` sẽ tự xoá list/card/label bên trong nhờ `ON DELETE CASCADE` — không cần
 tự xoá tay từng bảng.

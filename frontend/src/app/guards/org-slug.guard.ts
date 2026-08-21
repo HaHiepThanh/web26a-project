@@ -3,24 +3,25 @@ import { CanActivateFn, Router } from '@angular/router';
 import { OrganizationService } from '../services/organization.service';
 
 /**
- * Route dạng /:orgSlug/... — đổi slug trên URL thành Organization đang chọn.
+ * Route dạng /:orgSlug/... — đổi slug trên URL thành tổ chức đang chọn.
  *
  * Đây là điểm mấu chốt khiến link chia sẻ hoạt động đúng: người nhận có thể đang
- * mở một Organization khác, guard này chuyển họ sang đúng Organization của link
- * TRƯỚC khi trang được dựng, thay vì hiển thị dữ liệu của tổ chức sai.
+ * mở một tổ chức khác, guard này chuyển họ sang đúng tổ chức của link TRƯỚC khi
+ * trang được dựng, thay vì hiển thị dữ liệu của tổ chức sai.
  */
-export const orgSlugGuard: CanActivateFn = (route) => {
+export const orgSlugGuard: CanActivateFn = async (route) => {
   const orgService = inject(OrganizationService);
   const router = inject(Router);
 
-  // Guard chạy trước effect nạp dữ liệu ở lần tải trang đầu → phải ép nạp.
-  orgService.ensureLoaded();
+  // Danh sách tổ chức lấy từ backend → phải chờ nạp xong mới tra được slug.
+  await orgService.ensureLoaded();
 
   const slug = route.paramMap.get('orgSlug') ?? '';
   const org = orgService.orgBySlug(slug);
 
-  // Slug không tồn tại (gõ sai / tổ chức đã bị xoá) → 404, đừng im lặng đưa về
-  // tổ chức khác vì như vậy user tưởng mình đang xem đúng nơi.
+  // Không tìm thấy slug → 404. Hai trường hợp gộp làm một cách CỐ Ý: slug không
+  // tồn tại, và slug có thật nhưng người này không thuộc tổ chức đó. Phân biệt
+  // hai cái là vô tình xác nhận "tổ chức này có thật" cho người ngoài.
   if (!org) return router.createUrlTree(['/not-found']);
 
   if (orgService.activeOrgId() !== org.id) orgService.switchOrg(org.id);
@@ -31,16 +32,15 @@ export const orgSlugGuard: CanActivateFn = (route) => {
  * Các link cũ dạng /workspace (header, footer, sau khi đăng nhập) chưa biết slug.
  * Guard này đưa về đúng /:slug/workspace của tổ chức đang chọn.
  */
-export const orgRedirectGuard: CanActivateFn = () => {
+export const orgRedirectGuard: CanActivateFn = async () => {
   const orgService = inject(OrganizationService);
   const router = inject(Router);
 
-  // Guard chạy trước effect nạp dữ liệu ở lần tải trang đầu → phải ép nạp.
-  orgService.ensureLoaded();
+  await orgService.ensureLoaded();
 
   const slug = orgService.activeOrgSlug();
-  // Chưa đăng nhập / chưa có tổ chức nào → để nguyên cho auth guard xử lý.
-  if (!slug) return router.createUrlTree(['/login']);
+  // Chưa có tổ chức nào → để onboardingGuard xử lý ở /onboarding.
+  if (!slug) return router.createUrlTree(['/onboarding']);
 
   return router.createUrlTree(['/', slug, 'workspace']);
 };

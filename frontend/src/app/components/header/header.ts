@@ -102,12 +102,15 @@ export class Header {
     this.inviteMenuOpen.update((v) => !v);
   }
 
-  acceptInvite(inviteId: string): void {
-    this.orgService.respondInvite(inviteId, true);
+  /** Lỗi khi trả lời lời mời (vd lời mời đã bị huỷ) — hiện ngay trong chuông. */
+  readonly inviteError = signal<string | null>(null);
+
+  async acceptInvite(inviteId: string): Promise<void> {
+    this.inviteError.set(await this.orgService.respondInvite(inviteId, true));
   }
 
-  declineInvite(inviteId: string): void {
-    this.orgService.respondInvite(inviteId, false);
+  async declineInvite(inviteId: string): Promise<void> {
+    this.inviteError.set(await this.orgService.respondInvite(inviteId, false));
   }
 
   toggleTheme(): void {

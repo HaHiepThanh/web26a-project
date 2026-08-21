@@ -53,9 +53,14 @@
               <span class="label-text text-xs">Ghi nhớ đăng nhập trong 30 ngày</span>
             </label>
 
-            <button type="submit" class="btn btn-primary btn-block">
-              <span>Đăng nhập</span>
-              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            <button type="submit" class="btn btn-primary btn-block" [disabled]="passwordLoading()">
+              @if (passwordLoading()) {
+                <span class="loading loading-spinner loading-sm"></span>
+                <span>Đang đăng nhập…</span>
+              } @else {
+                <span>Đăng nhập</span>
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+              }
             </button>
           </form>
 

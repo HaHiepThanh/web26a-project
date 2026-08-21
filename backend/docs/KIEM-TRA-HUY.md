@@ -1,13 +1,47 @@
 # Bảng kiểm — phần của Huy (Tổ chức & Workspace)
 
-> Dành cho **thầy chấm bài**. Toàn bộ 46 phép thử dưới đây đã được chạy thật trên
+> Dành cho **thầy chấm bài**. Toàn bộ 54 phép thử dưới đây đã được chạy thật trên
 > code Huy đã merge vào `main` — cột "Kết quả thật" là output thật, không phải phỏng đoán.
 >
-> **Tổng kết: 46/46 ĐẠT.**
+> **Tổng kết: 54/54 ĐẠT.**
 
 ---
 
-## Chuẩn bị
+## Cách nhanh nhất: chạy script, 5 giây xong
+
+```bash
+cd backend
+npm run start:dev          # cửa sổ terminal thứ nhất, để đó
+```
+
+```bash
+cd backend
+python3 scripts/kiem-tra-huy.py    # cửa sổ thứ hai
+```
+
+Không cần cài gì thêm — script chỉ dùng thư viện có sẵn của Python 3.
+
+Nó tự làm hết: tạo 2 tài khoản test, tạo tổ chức riêng cho lần chạy này, chạy
+54 phép thử, rồi **xoá sạch dữ liệu test**. Chạy lại bao nhiêu lần cũng được,
+database không bị bẩn.
+
+Kết quả cuối:
+
+```
+KẾT QUẢ: 54/54 ĐẠT — phần của Huy hoạt động đúng.
+```
+
+Có phép thử nào hỏng thì nó in ra mã số, mô tả và lý do — tra mã số đó trong
+bảng bên dưới để biết chi tiết.
+
+> Script trả exit code 0 khi đạt hết, 1 khi có lỗi — dùng được trong CI nếu cần.
+
+---
+
+## Hoặc bấm tay trong Postman
+
+Phần còn lại của tài liệu này là **cùng 54 phép thử đó**, viết ra để bấm tay và
+để hiểu từng phép thử kiểm cái gì.
 
 ### 1. Chạy backend
 

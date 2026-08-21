@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { LucideBuilding2, LucideCheck, LucideLogOut, LucideSparkles, LucideTriangleAlert } from '@lucide/angular';
 import { AuthService } from '../../services/auth.service';
 import { OrganizationService } from '../../services/organization.service';
-import { isSlugTaken } from '../../mocks';
+
 import { SLUG_MAX_LENGTH, slugify, validateSlugFormat } from '../../utils/slug.util';
 
 /**
@@ -41,13 +41,19 @@ export class Onboarding {
   readonly slugTouched = signal(false);
   readonly submitting = signal(false);
 
+  /** Lỗi backend trả về, gắn với ĐÚNG slug đã gửi đi. Người dùng sửa slug khác
+   *  là lỗi tự biến mất, không phải bấm gì để xoá. */
+  private readonly serverError = signal<{ slug: string; message: string } | null>(null);
+
   readonly slugError = computed<string | null>(() => {
     const slug = this.slugInput();
     if (!slug) return null;
     const formatError = validateSlugFormat(slug);
     if (formatError) return formatError;
-    if (isSlugTaken(slug)) return `Đường dẫn "${slug}" đã có tổ chức khác dùng rồi!`;
-    return null;
+    // Slug có bị chiếm chưa thì CHỈ backend biết — nó giữ toàn bộ tổ chức của mọi
+    // người, còn trình duyệt này chỉ thấy tổ chức của chính user đang đăng nhập.
+    const se = this.serverError();
+    return se && se.slug === slug ? se.message : null;
   });
 
   readonly slugOk = computed(() => !!this.slugInput() && !this.slugError());
@@ -72,7 +78,7 @@ export class Onboarding {
     this.slugInput.set(slugify(value));
   }
 
-  onSubmit(): void {
+  async onSubmit(): Promise<void> {
     const name = this.nameInput().trim();
     if (!name) {
       this.nameError.set('Vui lòng nhập tên tổ chức!');
@@ -91,12 +97,13 @@ export class Onboarding {
     }
 
     this.submitting.set(true);
-    const org = this.orgService.createOrg(name, slug);
+    // Backend là nơi duy nhất biết chắc slug còn trống hay không — nó trả 409
+    // kèm câu tiếng Việt sẵn, cứ hiển thị nguyên văn.
+    const { org, error } = await this.orgService.createOrg(name, slug);
     if (!org) {
-      // Tab khác vừa chiếm mất slug giữa lúc gõ và lúc bấm Tạo.
       this.submitting.set(false);
       this.slugTouched.set(true);
-      this.slugInput.set(slugify(slug)); // ép tính lại slugError để hiện thông báo
+      this.serverError.set({ slug, message: error ?? 'Không tạo được tổ chức, thử lại giúp mình.' });
       return;
     }
     void this.router.navigate(['/', org.slug, 'workspace']);

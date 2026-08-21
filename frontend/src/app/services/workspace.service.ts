@@ -1,25 +1,97 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { ApiService } from './api.service';
+import { describeError } from './api-error.util';
 import { Workspace } from '../models';
 
-/** CRUD workspace trong tổ chức (#3). */
+/** Hình dạng backend trả về (khớp backend/src/modules/workspaces). */
+interface ApiWorkspace {
+  id: string;
+  orgId: string;
+  name: string;
+  description: string;
+  createdBy: string;
+  createdAt: string;
+}
+
+/**
+ * CRUD workspace trong tổ chức — GỌI BACKEND THẬT.
+ *
+ * Backend tự kiểm tra người gọi có thuộc tổ chức không, nên ở đây không cần
+ * (và không nên) kiểm tra lại quyền: client-side check chỉ để ẩn nút cho đẹp,
+ * không chặn được ai.
+ */
 @Injectable({ providedIn: 'root' })
 export class WorkspaceService {
-  private readonly api = inject(ApiService); // TODO: gọi backend qua this.api (get/post/patch/delete)
+  private readonly api = inject(ApiService);
 
   readonly workspaces = signal<Workspace[]>([]);
+  readonly loading = signal(false);
+  readonly loadError = signal<string | null>(null);
 
-  // TODO: lấy danh sách workspace của tổ chức -> set workspaces.
-  async loadWorkspaces(orgId: string): Promise<void> {}
-
-  // TODO: tạo workspace mới.
-  async createWorkspace(orgId: string, name: string): Promise<Workspace | null> {
-    return null;
+  private toModel(w: ApiWorkspace): Workspace {
+    return { id: w.id, orgId: w.orgId, name: w.name, createdAt: w.createdAt };
   }
 
-  // TODO: đổi tên workspace.
-  async updateWorkspace(id: string, name: string): Promise<void> {}
+  /** Nạp workspace của 1 tổ chức. Không có orgId thì dọn sạch danh sách. */
+  async loadWorkspaces(orgId: string | null): Promise<void> {
+    if (!orgId) {
+      this.workspaces.set([]);
+      return;
+    }
+    this.loading.set(true);
+    this.loadError.set(null);
+    try {
+      const rows = await this.api.get<ApiWorkspace[]>(`/workspaces?orgId=${orgId}`);
+      this.workspaces.set(rows.map((w) => this.toModel(w)));
+    } catch (e) {
+      this.loadError.set(describeError(e, 'Không tải được danh sách workspace.'));
+    } finally {
+      this.loading.set(false);
+    }
+  }
 
-  // TODO: xoá workspace.
-  async deleteWorkspace(id: string): Promise<void> {}
+  /** Tạo workspace. Trả `{ workspace }` khi thành công, `{ error }` khi hỏng. */
+  async createWorkspace(
+    orgId: string,
+    name: string,
+    description = '',
+  ): Promise<{ workspace?: Workspace; error?: string }> {
+    try {
+      const row = await this.api.post<ApiWorkspace>('/workspaces', { orgId, name, description });
+      const ws = this.toModel(row);
+      this.workspaces.update((list) => [...list, ws]);
+      return { workspace: ws };
+    } catch (e) {
+      return { error: describeError(e, 'Không tạo được workspace.') };
+    }
+  }
+
+  /** Đổi tên / mô tả. Trả về thông báo lỗi, hoặc null nếu thành công. */
+  async updateWorkspace(
+    id: string,
+    changes: { name?: string; description?: string },
+  ): Promise<string | null> {
+    try {
+      const row = await this.api.patch<ApiWorkspace>(`/workspaces/${id}`, changes);
+      const ws = this.toModel(row);
+      this.workspaces.update((list) => list.map((w) => (w.id === id ? ws : w)));
+      return null;
+    } catch (e) {
+      return describeError(e, 'Không sửa được workspace.');
+    }
+  }
+
+  /**
+   * Xoá workspace. Board/list/card bên trong tự đi theo (ON DELETE CASCADE ở database),
+   * không cần xoá tay từng bảng.
+   */
+  async deleteWorkspace(id: string): Promise<string | null> {
+    try {
+      await this.api.delete(`/workspaces/${id}`);
+      this.workspaces.update((list) => list.filter((w) => w.id !== id));
+      return null;
+    } catch (e) {
+      return describeError(e, 'Không xoá được workspace.');
+    }
+  }
 }

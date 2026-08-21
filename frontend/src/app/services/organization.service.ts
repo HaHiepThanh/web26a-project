@@ -1,240 +1,339 @@
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
+import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
-import {
-  Organization,
-  OrgInvite,
-  findOrgBySlug,
-  isSlugTaken,
-  loadActiveOrgId,
-  loadAllInvites,
-  loadOrgRegistry,
-  loadOrganizationsForUser,
-  loadPendingInvitesForUser,
-  persistActiveOrgId,
-  saveAllInvites,
-  upsertOrganization,
-} from '../mocks';
-import { validateSlugFormat } from '../utils/slug.util';
+import { describeError } from './api-error.util';
+import { Organization, OrgInvite, loadActiveOrgId, persistActiveOrgId } from '../mocks';
+import { User } from '../models';
 
-/** Quản lý Organization (multi-tenant kiểu Supabase) của user đang đăng nhập —
- *  1 user thuộc nhiều Organization, 1 Organization có nhiều thành viên (mời qua
- *  UUID, phải được đồng ý mới vào). Mỗi Organization có Workspace/Board riêng
- *  biệt (xem mocks/workspace.mock.ts: storage key Workspace tách theo orgId).
+/* ------------------------------------------------------------------ *
+ * Hình dạng dữ liệu backend trả về (khớp backend/src/modules/organizations)
+ * ------------------------------------------------------------------ */
+
+interface ApiMyOrg {
+  id: string;
+  name: string;
+  slug: string;
+  role: 'owner' | 'admin' | 'member';
+}
+
+interface ApiOrgMember {
+  userId: string;
+  role: 'owner' | 'admin' | 'member';
+  joinedAt: string;
+  user: { displayName: string | null; email: string; avatarUrl: string | null };
+}
+
+interface ApiMyInvite {
+  id: string;
+  orgId: string;
+  orgName: string;
+  fromUser: { displayName: string | null; email: string };
+  createdAt: string;
+}
+
+interface ApiCreatedOrg {
+  id: string;
+  name: string;
+  slug: string;
+  ownerId: string;
+  createdAt: string;
+}
+
+/** Thành viên đã kèm sẵn thông tin hiển thị — component dùng trực tiếp. */
+export interface OrgMemberView {
+  user: User;
+  role: 'owner' | 'admin' | 'member';
+  joinedAt: string;
+}
+
+/**
+ * Quản lý Organization của user đang đăng nhập — GỌI BACKEND THẬT.
  *
- *  Vì đây là app mock không có backend thật, "gửi lời mời" được lưu ở 1
- *  localStorage key dùng chung cho cả trình duyệt (`trello_org_invites`) và
- *  đồng bộ realtime giữa các tab/cửa sổ CÙNG trình duyệt qua sự kiện `storage`
- *  — đây là cách duy nhất để 2 tài khoản "nhìn thấy nhau" mà không cần server.
- *  Muốn test với 2 tài khoản: mở 2 tab/cửa sổ của CÙNG 1 trình duyệt (vd 2 cửa
- *  sổ Chrome bình thường, hoặc 1 cửa sổ thường + 1 cửa sổ ẩn danh CÙNG trình
- *  duyệt) trỏ vào cùng localhost:4200, đăng nhập 2 tài khoản khác nhau. */
+ * Trước đây service này đọc/ghi localStorage (mock). Nay mọi thao tác đi qua
+ * NestJS: `ApiService` tự gắn Firebase ID token vào header, backend verify token
+ * rồi mới cho đụng dữ liệu.
+ *
+ * ⚠️ Hệ quả quan trọng: mọi thao tác giờ là BẤT ĐỒNG BỘ. Component nào gọi
+ *    `createOrg`/`removeMember`/... đều phải `await`. Guard phải `await ensureLoaded()`
+ *    trước khi đọc `organizations()`, nếu không sẽ thấy mảng rỗng ở lần tải trang
+ *    đầu và đá người đã đăng nhập về /onboarding.
+ *
+ * `activeOrgId` vẫn giữ ở localStorage — đó chỉ là lựa chọn hiển thị của từng
+ * máy, không phải dữ liệu nghiệp vụ, không cần đẩy lên server.
+ */
 @Injectable({ providedIn: 'root' })
 export class OrganizationService {
+  private readonly api = inject(ApiService);
   private readonly auth = inject(AuthService);
 
   readonly organizations = signal<Organization[]>([]);
   readonly activeOrgId = signal<string | null>(null);
   readonly myInvites = signal<OrgInvite[]>([]);
-  /** Toàn bộ lời mời (mọi Organization) — để modal quản lý hiện danh sách "đang chờ
-   *  đồng ý" của tổ chức đang mở, biết ai đã được mời mà chưa vào. */
-  readonly allInvites = signal<OrgInvite[]>([]);
 
-  readonly activeOrg = computed(() => this.organizations().find((o) => o.id === this.activeOrgId()) ?? null);
+  /** Thành viên từng tổ chức, khoá theo orgId. Nạp kèm lúc tải danh sách tổ chức. */
+  readonly membersByOrg = signal<Record<string, OrgMemberView[]>>({});
+
+  /** Vai trò của TÔI trong từng tổ chức — dùng để ẩn/hiện nút, không phải để bảo mật. */
+  readonly myRoleByOrg = signal<Record<string, 'owner' | 'admin' | 'member'>>({});
+
+  readonly loading = signal(false);
+  /** Lỗi mạng/máy chủ ở lần nạp gần nhất — để trang hiện banner thay vì im lặng. */
+  readonly loadError = signal<string | null>(null);
+
+  readonly activeOrg = computed(
+    () => this.organizations().find((o) => o.id === this.activeOrgId()) ?? null,
+  );
   readonly pendingInviteCount = computed(() => this.myInvites().length);
+  readonly activeOrgSlug = computed(() => this.activeOrg()?.slug ?? '');
+
+  /** Vai trò của tôi trong tổ chức đang chọn. */
+  readonly myRole = computed(() => {
+    const id = this.activeOrgId();
+    return id ? (this.myRoleByOrg()[id] ?? null) : null;
+  });
+  readonly isOwner = computed(() => this.myRole() === 'owner');
+  readonly isAdminOrOwner = computed(() => this.myRole() === 'owner' || this.myRole() === 'admin');
+
+  /** Chống gọi trùng: nhiều guard chạy cùng lúc chỉ nạp 1 lần. */
+  private loadPromise: Promise<void> | null = null;
+  private loadedForUid: string | null = null;
 
   constructor() {
-    // Nạp lại Organization + lời mời mỗi khi user đăng nhập/đăng xuất/đổi tài khoản.
+    // Đổi tài khoản → nạp lại. Đăng xuất → dọn sạch state, không để dữ liệu
+    // người trước sót lại trên màn hình người sau.
     effect(() => {
-      const userId = this.auth.currentUser()?.id;
-      if (!userId) {
+      const uid = this.auth.currentUser()?.id ?? null;
+      if (!uid) {
+        this.loadPromise = null;
+        this.loadedForUid = null;
         this.organizations.set([]);
         this.activeOrgId.set(null);
         this.myInvites.set([]);
+        this.membersByOrg.set({});
+        this.myRoleByOrg.set({});
         return;
       }
-      this.reload(userId);
+      if (uid !== this.loadedForUid) void this.ensureLoaded();
     });
+  }
 
-    // Đồng bộ realtime giữa các tab cùng trình duyệt: khi tab khác (vd tài
-    // khoản B) ghi lời mời/Organization mới vào localStorage, tab này cập nhật
-    // ngay không cần F5 — đây là cách duy nhất để mô phỏng "nhận thông báo" mà
-    // không có server thật đứng giữa.
-    if (typeof window !== 'undefined') {
-      window.addEventListener('storage', (e: StorageEvent) => {
-        if (!e.key) return;
-        if (e.key === 'trello_org_invites' || e.key === 'trello_org_registry') {
-          const userId = this.auth.currentUser()?.id;
-          if (userId) this.reload(userId);
-        }
+  /**
+   * Bảo đảm dữ liệu đã nạp xong. Guard PHẢI await hàm này.
+   *
+   * Gọi nhiều lần cùng lúc vẫn chỉ tạo đúng 1 request nhờ cache promise —
+   * ba guard chạy nối tiếp nhau trên một route sẽ không gọi API ba lần.
+   */
+  async ensureLoaded(): Promise<void> {
+    const uid = this.auth.currentUser()?.id ?? null;
+    if (!uid) return;
+    if (this.loadedForUid === uid && this.loadPromise) return this.loadPromise;
+
+    this.loadedForUid = uid;
+    this.loadPromise = this.fetchFromServer(uid);
+    return this.loadPromise;
+  }
+
+  /** Ép nạp lại từ server, bỏ qua cache. Gọi sau khi tạo/xoá/đổi dữ liệu. */
+  async reload(): Promise<void> {
+    const uid = this.auth.currentUser()?.id ?? null;
+    if (!uid) return;
+    this.loadedForUid = uid;
+    this.loadPromise = this.fetchFromServer(uid);
+    return this.loadPromise;
+  }
+
+  private async fetchFromServer(uid: string): Promise<void> {
+    this.loading.set(true);
+    this.loadError.set(null);
+    try {
+      // Hai request này độc lập nhau → chạy song song cho nhanh.
+      const [apiOrgs, apiInvites] = await Promise.all([
+        this.api.get<ApiMyOrg[]>('/organizations'),
+        this.api.get<ApiMyInvite[]>('/organizations/invites/me').catch(() => [] as ApiMyInvite[]),
+      ]);
+
+      // Backend không trả memberIds/ownerId trong GET /organizations, mà giao diện
+      // đang cần cả hai (đếm thành viên, kiểm tra ai là chủ). Lấy thêm bằng cách
+      // gọi /members cho từng tổ chức — song song, không nối tiếp.
+      const memberLists = await Promise.all(
+        apiOrgs.map((o) =>
+          this.api
+            .get<ApiOrgMember[]>(`/organizations/${o.id}/members`)
+            .catch(() => [] as ApiOrgMember[]),
+        ),
+      );
+
+      const membersMap: Record<string, OrgMemberView[]> = {};
+      const roleMap: Record<string, 'owner' | 'admin' | 'member'> = {};
+      const orgs: Organization[] = apiOrgs.map((o, i) => {
+        const members = memberLists[i];
+        membersMap[o.id] = members.map((m) => ({
+          role: m.role,
+          joinedAt: m.joinedAt,
+          user: {
+            id: m.userId,
+            email: m.user.email,
+            displayName: m.user.displayName ?? undefined,
+            avatarUrl: m.user.avatarUrl ?? undefined,
+          } as User,
+        }));
+        roleMap[o.id] = o.role;
+        return {
+          id: o.id,
+          name: o.name,
+          slug: o.slug,
+          ownerId: members.find((m) => m.role === 'owner')?.userId ?? '',
+          memberIds: members.map((m) => m.userId),
+          // GET /organizations không trả createdAt — giao diện hiện không dùng tới.
+          createdAt: '',
+        };
       });
+
+      this.organizations.set(orgs);
+      this.membersByOrg.set(membersMap);
+      this.myRoleByOrg.set(roleMap);
+      this.myInvites.set(
+        apiInvites.map((i) => ({
+          id: i.id,
+          orgId: i.orgId,
+          orgName: i.orgName,
+          toUserId: uid,
+          fromUserId: '',
+          fromUserName: i.fromUser.displayName || i.fromUser.email,
+          status: 'pending' as const,
+          createdAt: i.createdAt,
+        })),
+      );
+
+      // Giữ lựa chọn cũ nếu tổ chức đó vẫn còn, không thì lấy cái đầu tiên.
+      const saved = loadActiveOrgId(uid, orgs);
+      const valid = orgs.some((o) => o.id === saved) ? saved : (orgs[0]?.id ?? null);
+      this.activeOrgId.set(valid);
+      if (valid && valid !== saved) persistActiveOrgId(uid, valid);
+    } catch (e) {
+      // Không xoá dữ liệu đang có: mất mạng chốc lát mà xoá sạch màn hình thì
+      // tệ hơn là hiển thị dữ liệu hơi cũ kèm banner báo lỗi.
+      this.loadError.set(describeError(e, 'Không tải được danh sách tổ chức.'));
+    } finally {
+      this.loading.set(false);
     }
   }
 
-  /** Nạp ngay, không chờ effect.
-   *
-   *  Cần thiết vì route guard chạy TRƯỚC khi effect trong constructor kịp chạy ở
-   *  lần tải trang đầu. Không có hàm này, guard thấy `organizations` rỗng và đá
-   *  người đã đăng nhập về /login mỗi lần F5 thẳng vào /:orgSlug/... */
-  ensureLoaded(): void {
-    if (this.organizations().length > 0) return;
-    const userId = this.auth.currentUser()?.id;
-    if (userId) this.reload(userId);
-  }
-
-  private reload(userId: string): void {
-    const orgs = loadOrganizationsForUser(userId);
-    this.organizations.set(orgs);
-    const active = loadActiveOrgId(userId, orgs);
-    this.activeOrgId.set(active);
-    this.myInvites.set(loadPendingInvitesForUser(userId));
-    this.allInvites.set(loadAllInvites());
-  }
-
-  /** Lời mời đang chờ đồng ý của 1 Organization (dùng cho modal quản lý thành viên). */
-  pendingInvitesFor(orgId: string): OrgInvite[] {
-    return this.allInvites().filter((i) => i.orgId === orgId && i.status === 'pending');
-  }
-
-  /** Huỷ 1 lời mời chưa được trả lời. */
-  cancelInvite(inviteId: string): void {
-    const invites = loadAllInvites().filter((i) => i.id !== inviteId);
-    saveAllInvites(invites);
-    this.allInvites.set(invites);
+  /** Thành viên (kèm tên/email) của 1 tổ chức. Rỗng nếu chưa nạp xong. */
+  membersOf(orgId: string | null): OrgMemberView[] {
+    return orgId ? (this.membersByOrg()[orgId] ?? []) : [];
   }
 
   switchOrg(orgId: string): void {
-    const userId = this.auth.currentUser()?.id;
-    if (!userId || !this.organizations().some((o) => o.id === orgId)) return;
+    const uid = this.auth.currentUser()?.id;
+    if (!uid || !this.organizations().some((o) => o.id === orgId)) return;
     this.activeOrgId.set(orgId);
-    persistActiveOrgId(userId, orgId);
+    persistActiveOrgId(uid, orgId);
   }
 
-  createOrg(name: string, slug?: string): Organization | null {
-    const userId = this.auth.currentUser()?.id;
-    if (!userId) return null;
-    const trimmed = name.trim();
-    if (!trimmed || trimmed.length > 50) return null;
-
-    // Slug là bắt buộc (DB khai `not null unique`). Kiểm lại lần cuối ở đây kể cả
-    // khi modal đã kiểm: giữa lúc gõ và lúc bấm Tạo, tab khác có thể đã chiếm slug.
-    const wanted = (slug ?? '').trim();
-    if (validateSlugFormat(wanted) || isSlugTaken(wanted)) return null;
-
-    const org: Organization = {
-      id: `org-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-      name: trimmed,
-      slug: wanted,
-      ownerId: userId,
-      memberIds: [userId],
-      createdAt: new Date().toISOString(),
-    };
-    upsertOrganization(org);
-    this.organizations.set([...this.organizations(), org]);
-    this.switchOrg(org.id);
-    return org;
-  }
-
-  /** Tra tổ chức theo slug trên URL. Trả null nếu slug không tồn tại → route 404. */
+  /** Tra tổ chức theo slug trên URL. Trả null nếu không thuộc tổ chức đó → 404. */
   orgBySlug(slug: string): Organization | null {
-    return findOrgBySlug(slug);
+    return this.organizations().find((o) => o.slug === slug) ?? null;
   }
 
-  /** Slug của tổ chức đang chọn — dùng để dựng link /:orgSlug/board/:id. */
-  readonly activeOrgSlug = computed(() => this.activeOrg()?.slug ?? '');
+  /* ---------------------------------------------------------------- *
+   * Thao tác ghi — đều gọi backend rồi nạp lại
+   * ---------------------------------------------------------------- */
 
-  /** Mời 1 user (theo UUID) vào Organization đang chọn. Trả về thông báo lỗi
-   *  (string) nếu không mời được, hoặc null nếu gửi lời mời thành công. */
-  inviteMemberByUuid(orgId: string, targetUuid: string): string | null {
-    const me = this.auth.currentUser();
-    if (!me) return 'Bạn cần đăng nhập.';
-    const org = this.organizations().find((o) => o.id === orgId);
-    if (!org) return 'Không tìm thấy Organization.';
-
-    const target = this.auth.findUserByUuid(targetUuid);
-    if (!target) return 'Không tìm thấy người dùng với UUID này.';
-    if (target.id === me.id) return 'Bạn không thể tự mời chính mình.';
-    if (org.memberIds.includes(target.id)) return `${target.displayName ?? target.email} đã là thành viên rồi.`;
-
-    const invites = loadAllInvites();
-    const already = invites.some((i) => i.orgId === orgId && i.toUserId === target.id && i.status === 'pending');
-    if (already) return `Đã gửi lời mời cho ${target.displayName ?? target.email} trước đó rồi.`;
-
-    const invite: OrgInvite = {
-      id: `inv-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-      orgId: org.id,
-      orgName: org.name,
-      toUserId: target.id,
-      fromUserId: me.id,
-      fromUserName: me.displayName ?? me.email,
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-    };
-    const updated = [...invites, invite];
-    saveAllInvites(updated);
-    this.allInvites.set(updated);
-    return null;
-  }
-
-  /** Trả lời lời mời (đồng ý/từ chối). Khi đồng ý, user được thêm vào
-   *  memberIds của Organization và ngay lập tức thấy chung Workspace/Board. */
-  respondInvite(inviteId: string, accept: boolean): void {
-    const userId = this.auth.currentUser()?.id;
-    if (!userId) return;
-
-    const invites = loadAllInvites();
-    const invite = invites.find((i) => i.id === inviteId);
-    if (!invite || invite.toUserId !== userId || invite.status !== 'pending') return;
-
-    invite.status = accept ? 'accepted' : 'declined';
-    saveAllInvites(invites);
-
-    if (accept) {
-      this.addMemberToOrg(invite.orgId, userId);
+  /**
+   * Tạo tổ chức mới. Trả về `{ org }` khi thành công, `{ loi }` khi hỏng.
+   *
+   * Không tự kiểm tra slug trùng ở client nữa: backend là nơi duy nhất biết chắc,
+   * và nó đã trả 409 kèm câu tiếng Việt sẵn.
+   */
+  async createOrg(name: string, slug: string): Promise<{ org?: Organization; error?: string }> {
+    try {
+      const kq = await this.api.post<ApiCreatedOrg>('/organizations', {
+        name: name.trim(),
+        slug: slug.trim(),
+      });
+      await this.reload();
+      const org = this.organizations().find((o) => o.id === kq.id) ?? null;
+      if (org) this.switchOrg(org.id);
+      return { org: org ?? undefined };
+    } catch (e) {
+      return { error: describeError(e, 'Không tạo được tổ chức.') };
     }
-
-    this.reload(userId);
   }
 
-  /** Đổi tên Organization — chỉ chủ sở hữu mới được đổi. */
-  updateOrg(orgId: string, changes: { name?: string }): string | null {
+  /** Mời 1 user vào tổ chức theo uid. Trả về thông báo lỗi, hoặc null nếu thành công. */
+  async inviteMember(orgId: string, toUserId: string): Promise<string | null> {
     const me = this.auth.currentUser();
     if (!me) return 'Bạn cần đăng nhập.';
-    const registry = loadOrgRegistry();
-    const org = registry[orgId];
-    if (!org) return 'Không tìm thấy Organization.';
-    if (org.ownerId !== me.id) return 'Chỉ Trưởng nhóm mới được chỉnh sửa tổ chức.';
-
-    const name = changes.name?.trim();
-    if (name !== undefined && !name) return 'Tên tổ chức không được để trống.';
-    if (name !== undefined && name.length > 50) return 'Tên tổ chức tối đa 50 ký tự.';
-    upsertOrganization({ ...org, name: name || org.name });
-    this.reload(me.id);
-    return null;
-  }
-
-  /** Xoá 1 thành viên khỏi Organization (không cho xoá Owner). Trả về thông báo
-   *  lỗi (string) nếu không xoá được, hoặc null nếu xoá thành công. */
-  removeMember(orgId: string, userId: string): string | null {
-    const me = this.auth.currentUser();
-    if (!me) return 'Bạn cần đăng nhập.';
-    const registry = loadOrgRegistry();
-    const org = registry[orgId];
-    if (!org) return 'Không tìm thấy Organization.';
-    if (userId === org.ownerId) return 'Không thể xoá Trưởng nhóm (Owner) của Organization.';
-
-    org.memberIds = org.memberIds.filter((id) => id !== userId);
-    upsertOrganization(org);
-    this.reload(me.id);
-    return null;
-  }
-
-  private addMemberToOrg(orgId: string, userId: string): void {
-    const registry = loadOrgRegistry();
-    const org = registry[orgId];
-    if (!org) return;
-    if (!org.memberIds.includes(userId)) {
-      org.memberIds = [...org.memberIds, userId];
-      upsertOrganization(org);
+    if (toUserId === me.id) return 'Bạn không thể tự mời chính mình.';
+    try {
+      await this.api.post(`/organizations/${orgId}/invites`, { toUserId: toUserId.trim() });
+      return null;
+    } catch (e) {
+      return describeError(e, 'Không gửi được lời mời.');
     }
+  }
+
+  /** Đồng ý / từ chối lời mời. Trả về thông báo lỗi, hoặc null nếu thành công. */
+  async respondInvite(inviteId: string, accept: boolean): Promise<string | null> {
+    try {
+      await this.api.patch(`/organizations/invites/${inviteId}`, { accept });
+      await this.reload();
+      return null;
+    } catch (e) {
+      return describeError(e, 'Không trả lời được lời mời.');
+    }
+  }
+
+  /** Xoá 1 thành viên khỏi tổ chức (owner/admin). */
+  async removeMember(orgId: string, userId: string): Promise<string | null> {
+    try {
+      await this.api.delete(`/organizations/${orgId}/members/${userId}`);
+      await this.reload();
+      return null;
+    } catch (e) {
+      return describeError(e, 'Không xoá được thành viên.');
+    }
+  }
+
+  /** Đổi vai trò của 1 thành viên (chỉ owner). */
+  async changeRole(
+    orgId: string,
+    userId: string,
+    role: 'owner' | 'admin' | 'member',
+  ): Promise<string | null> {
+    try {
+      await this.api.patch(`/organizations/${orgId}/members/${userId}/role`, { role });
+      await this.reload();
+      return null;
+    } catch (e) {
+      return describeError(e, 'Không đổi được vai trò.');
+    }
+  }
+
+  /* ---------------------------------------------------------------- *
+   * Chưa có endpoint tương ứng ở backend
+   * ---------------------------------------------------------------- */
+
+  /**
+   * Đổi tên tổ chức — backend CHƯA có `PATCH /organizations/:id`.
+   * Trả lỗi rõ ràng thay vì sửa ngầm ở localStorage: sửa ngầm thì người dùng
+   * thấy tên mới, F5 một cái là tên cũ quay lại, không hiểu vì sao.
+   */
+  async updateOrg(_orgId: string, _changes: { name?: string }): Promise<string | null> {
+    return 'Tính năng đổi tên tổ chức chưa có ở backend (thiếu PATCH /organizations/:id).';
+  }
+
+  /**
+   * Danh sách lời mời đang chờ của 1 tổ chức — backend CHƯA có endpoint này
+   * (`GET /organizations/invites/me` chỉ trả lời mời gửi cho CHÍNH TÔI).
+   */
+  pendingInvitesFor(_orgId: string): OrgInvite[] {
+    return [];
+  }
+
+  /** Huỷ lời mời — backend CHƯA có `DELETE /organizations/invites/:id`. */
+  async cancelInvite(_inviteId: string): Promise<string | null> {
+    return 'Tính năng huỷ lời mời chưa có ở backend (thiếu DELETE /organizations/invites/:id).';
   }
 }

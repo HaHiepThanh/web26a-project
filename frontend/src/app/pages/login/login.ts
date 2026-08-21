@@ -11,9 +11,16 @@ interface Toast {
 }
 
 /**
- * Trang đăng nhập (ported từ prototype login/ — vanilla HTML/CSS/TS).
- * Google = xác thực thật qua AuthService (Firebase). Mật khẩu là phương thức demo
- * (chưa có backend tương ứng) — vào thẳng Workspace, không hiển thị bước trung gian.
+ * Trang đăng nhập. CẢ HAI cách đều là xác thực THẬT qua Firebase:
+ *   - Email + mật khẩu → signInWithEmailAndPassword
+ *   - Google           → signInWithPopup
+ *
+ * Sau khi Firebase xác thực xong, AuthService gọi `GET /auth/me` để backend ghi
+ * hồ sơ vào database và cho biết user đã thuộc tổ chức nào chưa.
+ *
+ * ⚠️ Trước đây form mật khẩu là GIẢ LẬP: nó chỉ `setUser()` một uuid bịa sẵn rồi
+ *    đi thẳng vào app. Hệ quả là không có Firebase ID token, nên MỌI request tới
+ *    backend đều trả 401 và app trông như "không có dữ liệu gì cả".
  */
 @Component({
   selector: 'app-login',
@@ -45,35 +52,54 @@ export class Login {
     this.passwordVisible.update((v) => !v);
   }
 
-  onPasswordSubmit(): void {
-    if (!this.username.trim()) {
-      this.addToast('Vui lòng nhập tên đăng nhập hoặc email!', 'error');
+  readonly passwordLoading = signal(false);
+
+  async onPasswordSubmit(): Promise<void> {
+    const email = this.username.trim();
+    if (!email) {
+      this.addToast('Vui lòng nhập email!', 'error');
       return;
     }
-    if (!this.password.trim()) {
+    if (!this.password) {
       this.addToast('Vui lòng nhập mật khẩu!', 'error');
       return;
     }
-    const input = this.username.trim();
-    // Check if user already exists in searchable users
-    const existing = this.auth.getSearchableUsers().find(
-      (u) =>
-        u.email.toLowerCase() === input.toLowerCase() ||
-        (u.username && u.username.toLowerCase() === input.toLowerCase()) ||
-        (u.displayName && u.displayName.toLowerCase() === input.toLowerCase()),
-    );
-    if (existing) {
-      this.auth.setUser(existing);
-    } else {
-      const isEmail = input.includes('@');
-      this.auth.setUser({
-        id: this.auth.findUserByUuid(input)?.id ?? this.auth.currentUser()?.id ?? '8f4c2e10-9b3a-4e2a-871d-5b3a1a2e3f40',
-        displayName: isEmail ? input.split('@')[0] : input,
-        email: isEmail ? input : `${input}@trello.dev`,
-      });
+    // Firebase chỉ nhận email, không nhận username. Nói rõ ngay thay vì để nó
+    // trả về lỗi 'auth/invalid-email' khó hiểu.
+    if (!email.includes('@')) {
+      this.addToast('Đăng nhập bằng EMAIL, không phải tên đăng nhập.', 'error');
+      return;
     }
-    // Demo: vào thẳng Workspace, không delay/không hiển thị màn chào trung gian.
-    void this.router.navigateByUrl('/workspace');
+
+    this.passwordLoading.set(true);
+    try {
+      const { needsOnboarding } = await this.auth.loginWithEmail(email, this.password);
+      void this.router.navigateByUrl(needsOnboarding ? '/onboarding' : '/workspace');
+    } catch (err) {
+      this.addToast(this.describeLoginError(err), 'error');
+    } finally {
+      this.passwordLoading.set(false);
+    }
+  }
+
+  /** Đổi mã lỗi Firebase thành câu tiếng Việt người dùng đọc hiểu. */
+  private describeLoginError(err: unknown): string {
+    const code = (err as { code?: string })?.code ?? '';
+    switch (code) {
+      case 'auth/invalid-credential':
+      case 'auth/wrong-password':
+      case 'auth/user-not-found':
+        return 'Email hoặc mật khẩu không đúng.';
+      case 'auth/invalid-email':
+        return 'Email không hợp lệ.';
+      case 'auth/too-many-requests':
+        return 'Sai quá nhiều lần. Thử lại sau vài phút nhé.';
+      case 'auth/network-request-failed':
+        return 'Không kết nối được. Kiểm tra mạng giúp mình.';
+      default:
+        // Không phải lỗi Firebase → gần như chắc chắn là backend chưa chạy.
+        return 'Không đăng nhập được. Backend đã chạy chưa (npm run start:dev)?';
+    }
   }
 
   // ---- Forgot password ----

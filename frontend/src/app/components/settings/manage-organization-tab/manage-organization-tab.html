@@ -209,6 +209,6 @@
 }
 
 <!-- MODAL: Tạo Organization mới -->
-<app-org-create-modal [isOpen]="showCreateOrgModal()" [isSlugTaken]="isSlugTaken()" (close)="showCreateOrgModal.set(false)"
+<app-org-create-modal [isOpen]="showCreateOrgModal()" (close)="showCreateOrgModal.set(false)"
   (createOrg)="createOrg.emit($event)">
 </app-org-create-modal>

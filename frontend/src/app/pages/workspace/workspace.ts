@@ -5,6 +5,7 @@ import { WorkspaceUiService } from '../../services/workspace-ui.service';
 import { BoardService } from '../../services/board.service';
 import { AuthService } from '../../services/auth.service';
 import { OrganizationService } from '../../services/organization.service';
+import { WorkspaceService } from '../../services/workspace.service';
 import { BoardBackground, BoardVisibility, User } from '../../models';
 import {
   WorkspaceItem,
@@ -12,7 +13,6 @@ import {
   BoardItem,
   Privacy,
   initialMockWorkspaces,
-  isSlugTaken,
   loadStoredWorkspaces,
   persistWorkspaces,
   WORKSPACE_TEMPLATES,
@@ -67,6 +67,7 @@ export class Workspace {
   private readonly boardService = inject(BoardService);
   private readonly auth = inject(AuthService);
   private readonly orgService = inject(OrganizationService);
+  private readonly workspaceService = inject(WorkspaceService);
   private readonly router = inject(Router);
 
   private readonly orgManageModal = viewChild(OrgManageModal);
@@ -158,8 +159,7 @@ export class Workspace {
     effect(() => {
       const userId = this.currentUser()?.id;
       const orgId = this.orgService.activeOrgId();
-      this.workspaces.set(loadStoredWorkspaces(userId, orgId));
-      this.activeWorkspaceId.set(null);
+      void this.loadWorkspaces(userId, orgId);
     });
 
     effect(() => {
@@ -189,8 +189,47 @@ export class Workspace {
     this.confirmDeleteKey.set(null);
   }
 
-  /** Lưu workspace vào đúng key của tài khoản đang đăng nhập — tránh account khác
-   *  đăng nhập vào lại thấy dữ liệu của account này (localStorage tách theo userId). */
+  /**
+   * Nạp workspace: TÊN/MÔ TẢ lấy từ backend, BOARD vẫn lấy ở localStorage.
+   *
+   * Đây là bước trung gian có chủ ý. Endpoint workspace (phần của Huy) đã xong
+   * nên dùng thật được ngay; endpoint board (phần của Hoà) thì chưa, nên board
+   * tạm giữ ở localStorage, khoá theo ĐÚNG id workspace thật từ server. Khi Hoà
+   * xong, chỉ cần thay chỗ lấy `boards` mà không phải sửa gì thêm.
+   */
+  private async loadWorkspaces(userId: string | undefined, orgId: string | null): Promise<void> {
+    this.activeWorkspaceId.set(null);
+    if (!userId || !orgId) {
+      this.workspaces.set([]);
+      return;
+    }
+
+    await this.workspaceService.loadWorkspaces(orgId);
+    const loadError = this.workspaceService.loadError();
+    if (loadError) {
+      this.addToast(loadError, 'error');
+      this.workspaces.set([]);
+      return;
+    }
+
+    const localItems = loadStoredWorkspaces(userId, orgId);
+    this.workspaces.set(
+      this.workspaceService.workspaces().map((w) => {
+        const local = localItems.find((c) => c.id === w.id);
+        return {
+          id: w.id,
+          name: w.name,
+          description: local?.description ?? '',
+          membersCount: local?.membersCount ?? 0,
+          members: local?.members ?? [],
+          boards: local?.boards ?? [],
+        };
+      }),
+    );
+  }
+
+  /** Lưu phần dữ liệu CÒN Ở LOCAL (board, thành viên workspace) — tên/mô tả đã
+   *  nằm trên server rồi, không cần lưu lại ở đây. */
   private persist(list: WorkspaceItem[]): void {
     persistWorkspaces(list, this.currentUser()?.id, this.orgService.activeOrgId());
   }
@@ -203,13 +242,14 @@ export class Workspace {
   // ---- Modal Tạo Organization mới ----
   readonly showOrgCreateModal = signal(false);
 
-  /** Truyền xuống modal để kiểm slug đã bị chiếm chưa ngay khi user đang gõ. */
-  readonly isSlugTaken = (slug: string): boolean => isSlugTaken(slug);
+  /** Slug đã bị chiếm hay chưa thì CHỈ backend biết (nó giữ tổ chức của mọi người,
+   *  trình duyệt này chỉ thấy tổ chức của user đang đăng nhập). Modal vì thế không
+   *  cảnh báo lúc gõ nữa — bấm Tạo, backend trả 409 kèm câu tiếng Việt sẵn. */
 
-  createOrg(data: { name: string; slug: string }): void {
-    const org = this.orgService.createOrg(data.name, data.slug);
+  async createOrg(data: { name: string; slug: string }): Promise<void> {
+    const { org, error } = await this.orgService.createOrg(data.name, data.slug);
     if (!org) {
-      this.addToast(`Đường dẫn "${data.slug}" vừa bị người khác dùng mất, chọn đường dẫn khác nhé!`, 'error');
+      this.addToast(error ?? 'Không tạo được tổ chức, thử lại nhé!', 'error');
       return;
     }
     this.addToast(`Đã tạo tổ chức "${org.name}" tại /${org.slug}`, 'success');
@@ -224,15 +264,12 @@ export class Workspace {
     () => this.organizations().find((o) => o.id === this.managingOrgId()) ?? null,
   );
 
-  /** Thành viên (đã resolve tên/email) của Organization đang mở trong modal. */
-  readonly managingOrgMembers = computed<User[]>(() => {
-    const org = this.managingOrg();
-    if (!org) return [];
-    const allUsers = this.auth.getSearchableUsers();
-    return org.memberIds.map(
-      (id) => allUsers.find((u) => u.id === id) ?? ({ id, displayName: 'Người dùng ẩn danh', email: '—' } as User),
-    );
-  });
+  /** Thành viên của tổ chức đang mở trong modal.
+   *  Tên/email lấy thẳng từ backend (GET /organizations/:id/members đã join sang
+   *  bảng users), không còn phải dò trong danh sách mock ở localStorage. */
+  readonly managingOrgMembers = computed<User[]>(() =>
+    this.orgService.membersOf(this.managingOrgId()).map((m) => m.user),
+  );
 
   readonly managingOrgInvites = computed(() => {
     const org = this.managingOrg();
@@ -249,27 +286,27 @@ export class Workspace {
     this.managingOrgId.set(null);
   }
 
-  inviteMember(data: { orgId: string; uuid: string }): void {
-    const error = this.orgService.inviteMemberByUuid(data.orgId, data.uuid);
+  async inviteMember(data: { orgId: string; uuid: string }): Promise<void> {
+    const error = await this.orgService.inviteMember(data.orgId, data.uuid);
     this.orgManageModal()?.showResult(error, 'Đã gửi lời mời! Chờ họ đồng ý ở chuông thông báo.');
     if (!error) this.addToast('📨 Đã gửi lời mời tham gia tổ chức!', 'success');
   }
 
-  removeOrgMember(data: { orgId: string; userId: string }): void {
+  async removeOrgMember(data: { orgId: string; userId: string }): Promise<void> {
     const member = this.managingOrgMembers().find((m) => m.id === data.userId);
     const name = member?.displayName ?? member?.email ?? 'thành viên';
-    const error = this.orgService.removeMember(data.orgId, data.userId);
+    const error = await this.orgService.removeMember(data.orgId, data.userId);
     this.orgManageModal()?.showResult(error, `Đã xoá ${name} khỏi tổ chức.`);
     if (!error) this.addToast(`Đã xoá ${name} khỏi tổ chức.`, 'info');
   }
 
-  cancelOrgInvite(inviteId: string): void {
-    this.orgService.cancelInvite(inviteId);
-    this.orgManageModal()?.showResult(null, 'Đã huỷ lời mời.');
+  async cancelOrgInvite(inviteId: string): Promise<void> {
+    const error = await this.orgService.cancelInvite(inviteId);
+    this.orgManageModal()?.showResult(error, 'Đã huỷ lời mời.');
   }
 
-  renameOrg(data: { orgId: string; name: string }): void {
-    const error = this.orgService.updateOrg(data.orgId, { name: data.name });
+  async renameOrg(data: { orgId: string; name: string }): Promise<void> {
+    const error = await this.orgService.updateOrg(data.orgId, { name: data.name });
     this.orgManageModal()?.showResult(error, 'Đã cập nhật thông tin tổ chức.');
     if (!error) this.addToast(`Đã cập nhật tổ chức "${data.name}".`, 'success');
   }
@@ -438,17 +475,30 @@ export class Workspace {
     this.showWorkspaceModal.set(true);
   }
 
-  handleWorkspaceSave(data: {
+  async handleWorkspaceSave(data: {
     name: string;
     description: string;
     members: WorkspaceMember[];
-  }): void {
+  }): Promise<void> {
     const { name, description, members } = data;
+    const orgId = this.orgService.activeOrgId();
+    if (!orgId) return;
 
     if (this.workspaceModalMode() === 'create') {
-      const newWs: WorkspaceItem = {
-        id: 'ws-' + Date.now(),
+      const { workspace, error } = await this.workspaceService.createWorkspace(
+        orgId,
         name,
+        description,
+      );
+      if (!workspace) {
+        this.addToast(error ?? 'Không tạo được workspace.', 'error');
+        return;
+      }
+      // id lấy từ server, KHÔNG tự sinh 'ws-' + Date.now() nữa — id tự sinh sẽ
+      // không khớp gì với database và mọi request sau đó đều 404.
+      const newWs: WorkspaceItem = {
+        id: workspace.id,
+        name: workspace.name,
         membersCount: members.length,
         members,
         description: description || 'Không gian làm việc mới vừa được khởi tạo.',
@@ -465,6 +515,14 @@ export class Workspace {
       const editingWs = this.selectedWorkspaceForEdit();
       if (!editingWs) return;
 
+      const error = await this.workspaceService.updateWorkspace(editingWs.id, {
+        name,
+        description,
+      });
+      if (error) {
+        this.addToast(error, 'error');
+        return;
+      }
       this.workspaces.update((list) => {
         const updated = list.map((ws) =>
           ws.id === editingWs.id
@@ -479,8 +537,17 @@ export class Workspace {
     this.showWorkspaceModal.set(false);
   }
 
-  handleWorkspaceDelete(wsId: string): void {
+  async handleWorkspaceDelete(wsId: string): Promise<void> {
     const ws = this.workspaces().find((w) => w.id === wsId);
+
+    // Xoá trên server TRƯỚC. Xoá ở giao diện trước rồi server hỏng là danh sách
+    // trên màn hình lệch với database cho tới lần F5 kế tiếp.
+    const error = await this.workspaceService.deleteWorkspace(wsId);
+    if (error) {
+      this.addToast(error, 'error');
+      return;
+    }
+
     this.workspaces.update((list) => {
       const updated = list.filter((w) => w.id !== wsId);
       this.persist(updated);
