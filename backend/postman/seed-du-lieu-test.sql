@@ -64,16 +64,22 @@ begin
   -- Mọi id đều TÍNH TỪ EMAIL chứ không random. Nhờ vậy chạy lại bao nhiêu lần
   -- cũng ra đúng những id cũ, và thầy điền sẵn được vào file Postman của bạn —
   -- bạn không phải copy dán uuid nào cả.
-  org_id      := md5('org:'   || my_email)::uuid;
-  ws_id       := md5('ws:'    || my_email)::uuid;
-  board_id    := md5('board:' || my_email)::uuid;
-  list1_id    := md5('list1:' || my_email)::uuid;
-  list2_id    := md5('list2:' || my_email)::uuid;
-  list3_id    := md5('list3:' || my_email)::uuid;
-  other_org   := md5('xorg:'  || my_email)::uuid;
-  other_ws    := md5('xws:'   || my_email)::uuid;
-  other_board := md5('xboard:'|| my_email)::uuid;
-  other_list  := md5('xlist:' || my_email)::uuid;
+  --
+  -- ⚠️ Hai lệnh `overlay` là BẮT BUỘC, đừng bỏ đi cho gọn. md5() cho ra 32 ký tự
+  --    hex đúng độ dài uuid, nhưng KHÔNG phải uuid phiên bản 4: thiếu chữ '4' ở
+  --    vị trí 13 và ký tự variant ở vị trí 17. Postgres vẫn nhận, nhưng DTO của
+  --    backend validate `@IsUUID('4')` sẽ trả 400 "orgId phải là uuid hợp lệ" —
+  --    và bạn sẽ ngồi tìm lỗi trong code của mình trong khi lỗi nằm ở file này.
+  org_id      := overlay(overlay(md5('org:'   || my_email) placing '4' from 13) placing '8' from 17)::uuid;
+  ws_id       := overlay(overlay(md5('ws:'    || my_email) placing '4' from 13) placing '8' from 17)::uuid;
+  board_id    := overlay(overlay(md5('board:' || my_email) placing '4' from 13) placing '8' from 17)::uuid;
+  list1_id    := overlay(overlay(md5('list1:' || my_email) placing '4' from 13) placing '8' from 17)::uuid;
+  list2_id    := overlay(overlay(md5('list2:' || my_email) placing '4' from 13) placing '8' from 17)::uuid;
+  list3_id    := overlay(overlay(md5('list3:' || my_email) placing '4' from 13) placing '8' from 17)::uuid;
+  other_org   := overlay(overlay(md5('xorg:'  || my_email) placing '4' from 13) placing '8' from 17)::uuid;
+  other_ws    := overlay(overlay(md5('xws:'   || my_email) placing '4' from 13) placing '8' from 17)::uuid;
+  other_board := overlay(overlay(md5('xboard:'|| my_email) placing '4' from 13) placing '8' from 17)::uuid;
+  other_list  := overlay(overlay(md5('xlist:' || my_email) placing '4' from 13) placing '8' from 17)::uuid;
 
   -- 2. Xoá dữ liệu seed cũ của CHÍNH MÌNH ------------------------------------
   -- ⚠️ Kiểm tra chủ sở hữu TRƯỚC KHI XOÁ. Hai người đặt testEmail khác domain
@@ -123,14 +129,14 @@ begin
 
   -- 7. Vài thẻ (đủ 3 mức ưu tiên để test bộ lọc) -----------------------------
   insert into cards (id, org_id, list_id, title, description, position, priority, created_by) values
-    (md5('card1:' || my_email)::uuid, org_id, list1_id, 'Viết API đăng nhập', 'Thẻ mẫu', 1, 'high',   my_uid),
-    (md5('card2:' || my_email)::uuid, org_id, list1_id, 'Thiết kế giao diện', 'Thẻ mẫu', 2, 'medium', my_uid),
-    (md5('card3:' || my_email)::uuid, org_id, list2_id, 'Kiểm thử API',       'Thẻ mẫu', 1, 'low',    my_uid);
+    (overlay(overlay(md5('card1:' || my_email) placing '4' from 13) placing '8' from 17)::uuid, org_id, list1_id, 'Viết API đăng nhập', 'Thẻ mẫu', 1, 'high',   my_uid),
+    (overlay(overlay(md5('card2:' || my_email) placing '4' from 13) placing '8' from 17)::uuid, org_id, list1_id, 'Thiết kế giao diện', 'Thẻ mẫu', 2, 'medium', my_uid),
+    (overlay(overlay(md5('card3:' || my_email) placing '4' from 13) placing '8' from 17)::uuid, org_id, list2_id, 'Kiểm thử API',       'Thẻ mẫu', 1, 'low',    my_uid);
 
   -- 8. Hai nhãn --------------------------------------------------------------
   insert into labels (id, org_id, board_id, name, color) values
-    (md5('label1:' || my_email)::uuid, org_id, board_id, 'Gấp',     '#ef4444'),
-    (md5('label2:' || my_email)::uuid, org_id, board_id, 'Backend', '#3b82f6');
+    (overlay(overlay(md5('label1:' || my_email) placing '4' from 13) placing '8' from 17)::uuid, org_id, board_id, 'Gấp',     '#ef4444'),
+    (overlay(overlay(md5('label2:' || my_email) placing '4' from 13) placing '8' from 17)::uuid, org_id, board_id, 'Backend', '#3b82f6');
 
   -- 9. "Người lạ" — thành viên thường trong TỔ CHỨC CỦA BẠN ------------------
   -- Để Huy test được ngay: mời người, đổi vai trò, xoá thành viên — mà không
@@ -162,7 +168,7 @@ begin
   values (other_list, other_org, other_board, 'Cột Người Lạ', 1);
 
   insert into cards (id, org_id, list_id, title, description, position, priority, created_by)
-  values (md5('xcard:' || my_email)::uuid, other_org, other_list,
+  values (overlay(overlay(md5('xcard:' || my_email) placing '4' from 13) placing '8' from 17)::uuid, other_org, other_list,
           'Thẻ bí mật của người khác', 'KHONG duoc phep doc', 1, 'high', other_uid);
 
   raise notice 'Seed xong cho % (slug: %, tổ chức lạ: %)', my_email, my_slug, other_slug;

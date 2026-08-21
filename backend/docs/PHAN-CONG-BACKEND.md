@@ -61,6 +61,7 @@ bằng tên mình rồi dán vào AI Agent. Agent sẽ tự biết bạn làm en
 | [`TEST-BANG-POSTMAN.md`](TEST-BANG-POSTMAN.md) | Khi cần lấy token / test / gặp lỗi lạ |
 | [`TRA-CUU-DATABASE.md`](TRA-CUU-DATABASE.md) | Khi cần biết tên bảng, tên cột, giá trị hợp lệ |
 | [`BAT-DAU.md`](BAT-DAU.md) | **Cài đặt lần đầu** — 9 bước, đọc trước tiên |
+| [`KIEM-TRA-HUY.md`](KIEM-TRA-HUY.md) | Bảng kiểm 52 phép thử phần của Huy (dành cho thầy chấm) |
 | [`PROMPT.md`](PROMPT.md) | **Prompt để dán vào AI Agent** — copy là chạy |
 | [`AI-AGENT.md`](AI-AGENT.md) | Dành cho AI Agent đọc, không phải cho bạn |
 
