@@ -18,9 +18,9 @@ import { orgRedirectGuard, orgSlugGuard } from './guards/org-slug.guard';
  * TODO(học viên): bật lại các guard khi service auth/organization đã hoạt động.
  */
 export const routes: Routes = [
-  // Điều hướng mặc định — phải đứng TRƯỚC route "" bên dưới, nếu không route
-  // "" (prefix match) sẽ luôn khớp trước và redirect không bao giờ chạy.
-  { path: '', pathMatch: 'full', redirectTo: 'login' },
+  // Landing page công khai — trang chủ marketing, đứng TRƯỚC route "" (app-layout)
+  // bên dưới vì đó là prefix match cho ':orgSlug' và sẽ nuốt luôn '' nếu đứng trước.
+  { path: '', pathMatch: 'full', loadComponent: () => import('./pages/landing/landing').then((m) => m.Landing) },
 
   // --- Nhóm xác thực (#1) ---
   {

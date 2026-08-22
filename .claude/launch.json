@@ -6,6 +6,13 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["--prefix", "frontend", "run", "start"],
       "port": 4200
+    },
+    {
+      "name": "web26a-backend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "backend", "run", "start:dev"],
+      "port": 3000,
+      "autoPort": true
     }
   ]
 }

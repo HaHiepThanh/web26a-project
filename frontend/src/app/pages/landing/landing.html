@@ -1,0 +1,396 @@
+<!-- ============================== NAVBAR ============================== -->
+<header class="nav" [class.nav-scrolled]="scrolled()">
+  <div class="nav-inner">
+    <a routerLink="/" class="brand" (click)="closeMobileMenu()">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="2.4" fill="white" />
+          <circle cx="12" cy="4.5" r="1.7" fill="white" fill-opacity="0.95" />
+          <circle cx="19" cy="16.5" r="1.7" fill="white" fill-opacity="0.95" />
+          <circle cx="5" cy="16.5" r="1.7" fill="white" fill-opacity="0.95" />
+          <path d="M12 6.6V10M13.6 13.2l4 2.2M10.4 13.2l-4 2.2" stroke="white" stroke-width="1.4"
+            stroke-linecap="round" />
+        </svg>
+      </span>
+      <span class="brand-word">Horizon Hub Harmony</span>
+    </a>
+
+    <nav class="nav-links hidden items-center gap-7 lg:flex" aria-label="Điều hướng chính">
+      <a href="#features">Tính năng</a>
+      <a href="#how-it-works">Cách hoạt động</a>
+      <a href="#showcase">Sản phẩm</a>
+      <a href="https://github.com/HaHiepThanh/web26a-project" target="_blank" rel="noopener noreferrer">GitHub</a>
+    </nav>
+
+    <div class="nav-cta hidden shrink-0 items-center gap-2 lg:flex">
+      <a routerLink="/login" class="btn btn-ghost btn-sm rounded-full px-4">Đăng nhập</a>
+      <a routerLink="/register" class="btn btn-primary btn-sm rounded-full px-4 shadow-sm">Bắt đầu miễn phí</a>
+    </div>
+
+    <button type="button" class="nav-burger flex lg:hidden" (click)="toggleMobileMenu()"
+      [attr.aria-expanded]="mobileMenuOpen()" aria-label="Mở menu điều hướng">
+      @if (!mobileMenuOpen()) {
+      <svg lucideMenu class="h-5 w-5" [strokeWidth]="2.2"></svg>
+      } @else {
+      <svg lucideX class="h-5 w-5" [strokeWidth]="2.2"></svg>
+      }
+    </button>
+  </div>
+
+  @if (mobileMenuOpen()) {
+  <nav class="nav-mobile flex flex-col lg:hidden" aria-label="Điều hướng (di động)">
+    <a href="#features" (click)="closeMobileMenu()">Tính năng</a>
+    <a href="#how-it-works" (click)="closeMobileMenu()">Cách hoạt động</a>
+    <a href="#showcase" (click)="closeMobileMenu()">Sản phẩm</a>
+    <a href="https://github.com/HaHiepThanh/web26a-project" target="_blank" rel="noopener noreferrer">GitHub</a>
+    <div class="nav-mobile-cta">
+      <a routerLink="/login" class="btn btn-ghost btn-sm rounded-full" (click)="closeMobileMenu()">Đăng nhập</a>
+      <a routerLink="/register" class="btn btn-primary btn-sm rounded-full" (click)="closeMobileMenu()">Bắt đầu miễn
+        phí</a>
+    </div>
+  </nav>
+  }
+</header>
+
+<main class="landing">
+
+  <!-- ============================== HERO ============================== -->
+  <section class="hero">
+    <div class="hero-bg" aria-hidden="true">
+      <div class="dot-grid"></div>
+      <div class="glow glow-a"></div>
+      <div class="glow glow-b"></div>
+    </div>
+
+    <div class="hero-inner">
+      <div class="hero-copy">
+        <p class="eyebrow">One Hub · One Team · One Horizon</p>
+        <h1 class="hero-title">
+          Sắp xếp công việc.<br />
+          Cùng đội tiến xa hơn.
+        </h1>
+        <p class="hero-sub">
+          HHH là nơi đội nhóm tổ chức công việc theo bảng Kanban — tạo workspace, quản lý board và card,
+          cộng tác theo thời gian thực, tất cả trong một không gian duy nhất.
+        </p>
+        <div class="hero-actions">
+          <a routerLink="/register" class="btn btn-primary btn-lg rounded-full gap-2 shadow-md">
+            Bắt đầu miễn phí
+            <svg lucideArrowRight class="h-4 w-4" [strokeWidth]="2.4"></svg>
+          </a>
+          <a href="#how-it-works" class="btn btn-ghost btn-lg rounded-full">Xem cách hoạt động</a>
+        </div>
+      </div>
+
+      <div class="hero-visual reveal">
+        <div class="hero-window">
+          <div class="window-bar">
+            <span class="win-dot win-dot-red"></span>
+            <span class="win-dot win-dot-amber"></span>
+            <span class="win-dot win-dot-green"></span>
+            <span class="window-url">hhh.app/acme/board/sprint-24</span>
+          </div>
+
+          <div class="window-body">
+            <div class="mini-board">
+              <div class="mini-col">
+                <div class="mini-col-head"><span class="col-dot col-dot-amber"></span>Cần làm<span
+                    class="col-count">3</span></div>
+                <div class="mini-card">
+                  <span class="mini-label" style="background:#f59e0b"></span>
+                  <p class="mini-title">Thiết kế wireframe trang chủ</p>
+                  <div class="mini-foot">
+                    <span class="mini-due">15/09</span>
+                    <span class="mini-avatar mini-avatar-violet">LT</span>
+                  </div>
+                </div>
+                <div class="mini-card">
+                  <span class="mini-label" style="background:#0ea5e9"></span>
+                  <p class="mini-title">Viết API xác thực người dùng</p>
+                  <div class="mini-foot">
+                    <span class="mini-due">18/09</span>
+                    <span class="mini-avatar mini-avatar-blue">MK</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mini-col">
+                <div class="mini-col-head"><span class="col-dot col-dot-primary"></span>Đang làm<span
+                    class="col-count">1</span></div>
+                <div class="mini-card mini-card-float">
+                  <span class="mini-label" style="background:#ef4444"></span>
+                  <p class="mini-title">Review pull request #482</p>
+                  <div class="mini-foot">
+                    <span class="mini-due mini-due-warn">Sắp hết hạn</span>
+                    <span class="mini-avatar mini-avatar-emerald">HN</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mini-col">
+                <div class="mini-col-head mini-col-head-done"><span class="col-dot col-dot-emerald"></span>Hoàn
+                  thành<span class="col-count">1</span></div>
+                <div class="mini-card mini-card-done">
+                  <span class="mini-label" style="background:#10b981"></span>
+                  <p class="mini-title">Chuẩn bị demo cho khách hàng</p>
+                  <div class="mini-foot">
+                    <span class="mini-due">—</span>
+                    <span class="mini-avatar mini-avatar-rose">TA</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="float-chip chip-a">
+          <span class="chip-dot"></span>
+          3 người đang xem bảng này
+        </div>
+        <div class="float-chip chip-b">
+          <svg lucideZap class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg>
+          Cập nhật theo thời gian thực
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== FEATURES ============================== -->
+  <section id="features" class="features">
+    <div class="section-inner">
+      <p class="eyebrow reveal">Tính năng</p>
+      <h2 class="section-title reveal">Mọi thứ một đội cần để quản lý công việc</h2>
+      <p class="section-sub reveal">Không thừa thãi, không phức tạp — tập trung vào những gì thật sự giúp cả đội làm
+        việc trôi chảy.</p>
+
+      <div class="feature-grid">
+        <div class="feature-card reveal">
+          <div class="feature-icon"><svg lucideKanban class="h-5 w-5" [strokeWidth]="2"></svg></div>
+          <h3>Bảng Kanban trực quan</h3>
+          <p>Kéo thả thẻ giữa các danh sách hoặc sắp xếp lại trong cùng danh sách chỉ với một thao tác.</p>
+        </div>
+
+        <div class="feature-card reveal">
+          <div class="feature-icon"><svg lucideFolderKanban class="h-5 w-5" [strokeWidth]="2"></svg></div>
+          <h3>Workspace theo tổ chức</h3>
+          <p>Gom nhiều board dự án vào từng workspace — theo phòng ban, theo team hay theo mục tiêu.</p>
+        </div>
+
+        <div class="feature-card reveal">
+          <div class="feature-icon"><svg lucideShieldCheck class="h-5 w-5" [strokeWidth]="2"></svg></div>
+          <h3>Phân quyền rõ ràng</h3>
+          <p>Owner toàn quyền quản lý thành viên và board; member tập trung vào công việc. Mời người mới chỉ bằng một
+            đường link.</p>
+        </div>
+
+        <div class="feature-card reveal">
+          <div class="feature-icon"><svg lucideListChecks class="h-5 w-5" [strokeWidth]="2"></svg></div>
+          <h3>Card chi tiết đầy đủ</h3>
+          <p>Mô tả, người phụ trách, hạn chót, nhãn màu, checklist và bình luận — mọi ngữ cảnh nằm gọn trong một thẻ.
+          </p>
+        </div>
+
+        <div class="feature-card reveal">
+          <div class="feature-icon"><svg lucideZap class="h-5 w-5" [strokeWidth]="2"></svg></div>
+          <h3>Cộng tác thời gian thực</h3>
+          <p>Ai đó tạo, sửa hay di chuyển thẻ — cả đội đang mở cùng board thấy thay đổi ngay, không cần tải lại trang.
+          </p>
+        </div>
+
+        <div class="feature-card reveal">
+          <div class="feature-icon"><svg lucideActivity class="h-5 w-5" [strokeWidth]="2"></svg></div>
+          <h3>Nhật ký hoạt động</h3>
+          <p>Mọi thay đổi trên board được ghi lại theo dòng thời gian, dễ dàng theo dõi ai đã làm gì.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== PRODUCT SHOWCASE ============================== -->
+  <section id="showcase" class="showcase">
+    <div class="section-inner">
+      <p class="eyebrow reveal">Sản phẩm</p>
+      <h2 class="section-title reveal">Bên trong một board</h2>
+      <p class="section-sub reveal">Từ danh sách công việc đến chi tiết từng thẻ — được thiết kế để cả đội nhìn vào là
+        hiểu ngay tiến độ.</p>
+
+      <div class="showcase-row reveal">
+        <div class="showcase-text">
+          <h3>Danh sách &amp; thẻ, sắp xếp theo cách của đội bạn</h3>
+          <p>Tạo bao nhiêu danh sách tùy ý — "Cần làm", "Đang làm", "Hoàn thành" hay theo quy trình riêng của team. Kéo
+            thả thẻ để cập nhật trạng thái tức thì.</p>
+          <ul class="showcase-points">
+            <li>Nhãn màu phân loại công việc theo nhóm</li>
+            <li>Hạn chót hiển thị ngay trên từng thẻ</li>
+            <li>Avatar người phụ trách, biết ngay ai đang làm gì</li>
+          </ul>
+        </div>
+        <div class="showcase-visual">
+          <div class="showcase-window">
+            <div class="window-bar">
+              <span class="win-dot win-dot-red"></span><span class="win-dot win-dot-amber"></span><span
+                class="win-dot win-dot-green"></span>
+            </div>
+            <div class="window-body window-body-list">
+              <div class="board-card">
+                <div class="board-card-flag" style="color:#dc2626">
+                  <svg viewBox="0 0 24 24" fill="currentColor" class="h-3.5 w-3.5">
+                    <path d="M5 3v18M5 4h13l-3 4 3 4H5" fill="none" stroke="currentColor" stroke-width="1.8" />
+                  </svg>
+                  Ưu tiên cao
+                </div>
+                <div class="board-card-labels">
+                  <span class="label-bar" style="background:#f43f5e"></span>
+                  <span class="label-bar" style="background:#f59e0b"></span>
+                </div>
+                <p class="board-card-title">Sửa lỗi đăng nhập trên Safari</p>
+                <div class="board-card-meta">
+                  <span>📝 Có mô tả</span>
+                  <span>☑ 3/5</span>
+                  <span>💬 2</span>
+                </div>
+                <div class="board-card-foot">
+                  <span class="board-card-due board-card-due-warn">Hạn 20/09</span>
+                  <span class="mini-avatar mini-avatar-blue">MK</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="showcase-row showcase-row-rev reveal">
+        <div class="showcase-text">
+          <h3>Card chi tiết — mọi thông tin nằm đúng chỗ</h3>
+          <p>Mở một thẻ để xem toàn bộ ngữ cảnh: mô tả công việc, checklist các bước nhỏ, và trao đổi ngay trong phần
+            bình luận — không cần rời board.</p>
+          <ul class="showcase-points">
+            <li>Checklist theo dõi tiến độ từng bước nhỏ</li>
+            <li>Bình luận trao đổi trực tiếp trong thẻ</li>
+            <li>Gán người phụ trách từ danh sách thành viên tổ chức</li>
+          </ul>
+        </div>
+        <div class="showcase-visual">
+          <div class="showcase-window">
+            <div class="window-bar">
+              <span class="win-dot win-dot-red"></span><span class="win-dot win-dot-amber"></span><span
+                class="win-dot win-dot-green"></span>
+            </div>
+            <div class="window-body window-body-detail">
+              <p class="detail-title">Sửa lỗi đăng nhập trên Safari</p>
+              <p class="detail-desc">Người dùng Safari 17 không đăng nhập được bằng Google — cần kiểm tra lại flow OAuth
+                popup.</p>
+              <div class="detail-checklist">
+                <div class="detail-check-head">Checklist <span>3/5</span></div>
+                <div class="detail-check-bar"><span style="width:60%"></span></div>
+              </div>
+              <div class="detail-row"><span class="detail-key">Người phụ trách</span><span
+                  class="mini-avatar mini-avatar-blue">MK</span></div>
+              <div class="detail-row"><span class="detail-key">Hạn chót</span><span class="detail-val">20/09/2026</span>
+              </div>
+              <div class="detail-row"><span class="detail-key">Bình luận</span><span class="detail-val">2 bình
+                  luận</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== HOW IT WORKS ============================== -->
+  <section id="how-it-works" class="how">
+    <div class="section-inner">
+      <p class="eyebrow reveal">Cách hoạt động</p>
+      <h2 class="section-title reveal">Bắt đầu chỉ trong bốn bước</h2>
+
+      <div class="how-grid">
+        <div class="how-step reveal">
+          <span class="how-num">01</span>
+          <div class="how-icon"><svg lucideFolderKanban class="h-5 w-5" [strokeWidth]="2"></svg></div>
+          <h3>Tạo workspace</h3>
+          <p>Đặt tên cho tổ chức hoặc phòng ban của bạn ngay sau khi đăng nhập.</p>
+        </div>
+        <div class="how-step reveal">
+          <span class="how-num">02</span>
+          <div class="how-icon"><svg lucideKanban class="h-5 w-5" [strokeWidth]="2"></svg></div>
+          <h3>Tạo board</h3>
+          <p>Mỗi dự án một board Kanban riêng, dễ theo dõi và không lẫn lộn.</p>
+        </div>
+        <div class="how-step reveal">
+          <span class="how-num">03</span>
+          <div class="how-icon"><svg lucideListChecks class="h-5 w-5" [strokeWidth]="2"></svg></div>
+          <h3>Thêm list &amp; card</h3>
+          <p>Chia nhỏ công việc theo từng giai đoạn, gắn nhãn và hạn chót cho từng thẻ.</p>
+        </div>
+        <div class="how-step reveal">
+          <span class="how-num">04</span>
+          <div class="how-icon"><svg lucideUsers class="h-5 w-5" [strokeWidth]="2"></svg></div>
+          <h3>Cộng tác cùng đội</h3>
+          <p>Mời thành viên qua link, kéo thả và theo dõi tiến độ cùng nhau theo thời gian thực.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== FINAL CTA ============================== -->
+  <section class="final-cta">
+    <div class="final-cta-inner reveal">
+      <p class="eyebrow">One Hub · One Team · One Horizon</p>
+      <h2>Sẵn sàng sắp xếp công việc của cả đội?</h2>
+      <p class="final-cta-sub">Tạo workspace đầu tiên chỉ mất chưa đầy một phút.</p>
+      <a routerLink="/register" class="btn btn-primary btn-lg rounded-full gap-2 shadow-md">
+        Bắt đầu miễn phí
+        <svg lucideArrowRight class="h-4 w-4" [strokeWidth]="2.4"></svg>
+      </a>
+    </div>
+  </section>
+</main>
+
+<!-- ============================== FOOTER ============================== -->
+<footer class="landing-footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <a routerLink="/" class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="2.4" fill="white" />
+            <circle cx="12" cy="4.5" r="1.7" fill="white" fill-opacity="0.95" />
+            <circle cx="19" cy="16.5" r="1.7" fill="white" fill-opacity="0.95" />
+            <circle cx="5" cy="16.5" r="1.7" fill="white" fill-opacity="0.95" />
+            <path d="M12 6.6V10M13.6 13.2l4 2.2M10.4 13.2l-4 2.2" stroke="white" stroke-width="1.4"
+              stroke-linecap="round" />
+          </svg>
+        </span>
+        <span class="brand-word">HHH</span>
+      </a>
+      <p class="footer-tagline">Horizon Hub Harmony — một hub duy nhất để đội nhóm sắp xếp, theo dõi và hoàn thành công
+        việc cùng nhau.</p>
+    </div>
+
+    <div class="footer-col">
+      <span class="footer-col-title">Sản phẩm</span>
+      <a href="#features">Tính năng</a>
+      <a href="#how-it-works">Cách hoạt động</a>
+      <a routerLink="/login">Đăng nhập</a>
+      <a routerLink="/register">Bắt đầu miễn phí</a>
+    </div>
+
+    <div class="footer-col">
+      <span class="footer-col-title">Dự án</span>
+      <a href="https://github.com/HaHiepThanh/web26a-project" target="_blank" rel="noopener noreferrer"
+        class="footer-github">
+        <svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor" aria-hidden="true">
+          <path
+            d="M12 .5C5.73.5.5 5.73.5 12c0 5.08 3.29 9.39 7.86 10.91.57.1.79-.25.79-.55 0-.27-.01-1.17-.02-2.12-3.2.7-3.88-1.36-3.88-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.56-.29-5.25-1.28-5.25-5.7 0-1.26.45-2.29 1.19-3.09-.12-.29-.52-1.47.11-3.06 0 0 .97-.31 3.18 1.18a11.1 11.1 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.64 1.59.24 2.77.12 3.06.74.8 1.19 1.83 1.19 3.09 0 4.43-2.7 5.4-5.27 5.69.41.36.78 1.06.78 2.15 0 1.55-.01 2.8-.01 3.18 0 .3.21.66.8.55A10.52 10.52 0 0 0 23.5 12C23.5 5.73 18.27.5 12 .5Z" />
+        </svg>
+        GitHub
+      </a>
+      <span class="footer-stack">Angular · NestJS · Supabase · Firebase · Socket.IO</span>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <span>© 2026 HHH — Horizon Hub Harmony.</span>
+    <span class="footer-bottom-tag">One Hub. One Team. One Horizon.</span>
+  </div>
+</footer>
