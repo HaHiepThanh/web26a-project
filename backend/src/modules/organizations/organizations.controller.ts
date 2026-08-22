@@ -7,6 +7,7 @@ import type { CurrentUserInfo } from '../../common/firebase/current-user.decorat
 import { OrganizationsService } from './organizations.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { InviteMemberDto } from './dto/invite-member.dto';
+import { RenameOrganizationDto } from './dto/rename-organization.dto';
 import { RespondInviteDto } from './dto/respond-invite.dto';
 import { ChangeRoleDto } from './dto/change-role.dto';
 
@@ -75,6 +76,38 @@ export class OrganizationsController {
   @Delete(':id/members/:userId')
   removeMember(@Param('id') id: string, @Param('userId') userId: string) {
     return this.organizations.removeMember(id, userId);
+  }
+
+  /** PATCH /organizations/:id — đổi tên tổ chức (slug không đổi được). */
+  @UseGuards(RolesGuard)
+  @Roles('owner', 'admin')
+  @Patch(':id')
+  rename(
+    @CurrentUser() user: CurrentUserInfo,
+    @Param('id') id: string,
+    @Body() body: RenameOrganizationDto,
+  ) {
+    return this.organizations.rename(user.uid, id, body.name);
+  }
+
+  /** GET /organizations/:id/invites — lời mời tổ chức này đã gửi, chưa ai trả lời. */
+  @UseGuards(RolesGuard)
+  @Roles('owner', 'admin')
+  @Get(':id/invites')
+  pendingInvites(@CurrentUser() user: CurrentUserInfo, @Param('id') id: string) {
+    return this.organizations.findPendingInvites(user.uid, id);
+  }
+
+  /**
+   * DELETE /organizations/invites/:inviteId — huỷ lời mời đã gửi.
+   *
+   * ⚠️ KHÔNG gắn được RolesGuard ở đây: guard tìm orgId trong `req.params.id`,
+   *    mà route này chỉ có id của LỜI MỜI. Phải đọc database mới biết lời mời
+   *    thuộc tổ chức nào — việc đó nằm trong service (giống DELETE /boards/:id).
+   */
+  @Delete('invites/:inviteId')
+  cancelInvite(@CurrentUser() user: CurrentUserInfo, @Param('inviteId') inviteId: string) {
+    return this.organizations.cancelInvite(user.uid, inviteId);
   }
 
   /** POST /organizations/:id/invites — mời 1 người theo userId (owner hoặc admin). */

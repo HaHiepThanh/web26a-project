@@ -40,6 +40,17 @@ export interface MyInvite {
 export type InviteRole = 'admin' | 'member';
 const INVITE_ROLES: InviteRole[] = ['admin', 'member'];
 
+/** Lời mời tổ chức ĐÃ GỬI mà chưa ai trả lời (khác `MyInvite` — lời mời gửi TỚI tôi). */
+export interface PendingInvite {
+  id: string;
+  orgId: string;
+  toUserId: string;
+  fromUserId: string;
+  role: InviteRole;
+  createdAt: string;
+  toUser: { displayName: string | null; email: string; avatarUrl: string | null };
+}
+
 /** Lời mời tham gia tổ chức. */
 export interface InviteResponse {
   id: string;
@@ -489,6 +500,116 @@ export class OrganizationsService {
     this.realtime.emitToUser(userId, 'member.removed', userId, { orgId });
 
     return { userId, removed: true };
+  }
+
+  /**
+   * Đổi tên tổ chức. KHÔNG cho đổi `slug`.
+   *
+   * Slug nằm trong mọi URL (`/:orgSlug/board/:id`) và trong link mọi người đã
+   * lưu/gửi cho nhau — đổi là gãy hết. Tên hiển thị thì đổi thoải mái.
+   */
+  async rename(uid: string, orgId: string, name: string): Promise<MyOrganization> {
+    const ten = name?.trim();
+    if (!ten) throw new BadRequestException('Tên tổ chức không được để trống.');
+
+    const role = await this.assertMember(uid, orgId);
+    if (role !== 'owner' && role !== 'admin') {
+      throw new ForbiddenException('Chỉ chủ tổ chức hoặc quản trị viên mới đổi được tên.');
+    }
+
+    const { data, error } = await this.supabase.client
+      .from('organizations')
+      .update({ name: ten })
+      .eq('id', orgId)
+      .select('id, name, slug')
+      .single();
+
+    if (error) {
+      this.logger.error(`Đổi tên tổ chức thất bại (org=${orgId}): ${error.message}`);
+      throw new InternalServerErrorException('Không đổi được tên tổ chức');
+    }
+    return { id: data.id as string, name: data.name as string, slug: data.slug as string, role };
+  }
+
+  /**
+   * Lời mời tổ chức này ĐÃ GỬI mà chưa ai trả lời.
+   *
+   * Khác `findMyInvites` (lời mời gửi TỚI tôi): đây là danh sách người mình đang
+   * chờ, hiện trong modal "Quản lý tổ chức". Chỉ owner/admin xem được — thành
+   * viên thường không cần biết công ty đang mời những ai.
+   */
+  async findPendingInvites(uid: string, orgId: string): Promise<PendingInvite[]> {
+    const role = await this.assertMember(uid, orgId);
+    if (role !== 'owner' && role !== 'admin') {
+      throw new ForbiddenException('Chỉ chủ tổ chức hoặc quản trị viên mới xem được lời mời đã gửi.');
+    }
+
+    const { data, error } = await this.supabase.client
+      .from('organization_invites')
+      .select('id, to_user_id, from_user_id, role, created_at, users!organization_invites_to_user_id_fkey(display_name, email, avatar_url)')
+      .eq('org_id', orgId)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      this.logger.error(`Đọc lời mời đã gửi thất bại (org=${orgId}): ${error.message}`);
+      throw new InternalServerErrorException('Không đọc được danh sách lời mời');
+    }
+
+    type Row = {
+      id: string;
+      to_user_id: string;
+      from_user_id: string;
+      role: InviteRole;
+      created_at: string;
+      users: { display_name: string | null; email: string; avatar_url: string | null } | null;
+    };
+
+    return (data as unknown as Row[]).map((r) => ({
+      id: r.id,
+      orgId,
+      toUserId: r.to_user_id,
+      fromUserId: r.from_user_id,
+      role: r.role ?? 'member',
+      createdAt: r.created_at,
+      // Kèm tên/email người được mời — nếu không thì giao diện chỉ hiện được một
+      // chuỗi uid, chẳng ai biết đang chờ ai.
+      toUser: {
+        displayName: r.users?.display_name ?? null,
+        email: r.users?.email ?? '',
+        avatarUrl: r.users?.avatar_url ?? null,
+      },
+    }));
+  }
+
+  /** Huỷ một lời mời đã gửi (chỉ khi còn `pending`). */
+  async cancelInvite(uid: string, inviteId: string): Promise<{ id: string; cancelled: true }> {
+    const { data: invite, error } = await this.supabase.client
+      .from('organization_invites')
+      .select('id, org_id, status')
+      .eq('id', inviteId)
+      .maybeSingle();
+    if (error?.code === '22P02' || !invite) throw new NotFoundException('Không tìm thấy lời mời.');
+
+    const role = await this.assertMember(uid, invite.org_id as string);
+    if (role !== 'owner' && role !== 'admin') {
+      throw new ForbiddenException('Chỉ chủ tổ chức hoặc quản trị viên mới huỷ được lời mời.');
+    }
+    // Đã đồng ý/từ chối rồi thì không "huỷ" được nữa — người ta đã ở trong tổ
+    // chức, muốn gỡ thì dùng DELETE /organizations/:id/members/:userId.
+    if (invite.status !== 'pending') {
+      throw new ConflictException('Lời mời này đã được trả lời rồi, không huỷ được.');
+    }
+
+    const { error: deleteError } = await this.supabase.client
+      .from('organization_invites')
+      .delete()
+      .eq('id', inviteId);
+    if (deleteError) {
+      this.logger.error(`Huỷ lời mời thất bại (id=${inviteId}): ${deleteError.message}`);
+      throw new InternalServerErrorException('Không huỷ được lời mời');
+    }
+    return { id: inviteId, cancelled: true };
   }
 
   /**

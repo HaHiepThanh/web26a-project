@@ -60,7 +60,14 @@ export class BoardsController {
   update(
     @CurrentUser() user: CurrentUserInfo,
     @Param('id') id: string,
-    @Body() body: { name?: string; visibility?: string; memberIds?: string[] },
+    @Body()
+    body: {
+      name?: string;
+      visibility?: string;
+      memberIds?: string[];
+      background?: string | null;
+      backgroundImagePath?: string | null;
+    },
   ) {
     return this.boards.update(user.uid, id, body);
   }

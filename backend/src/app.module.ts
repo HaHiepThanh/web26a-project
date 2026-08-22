@@ -17,6 +17,11 @@ import { ChatModule } from './modules/chat/chat.module';
 import { ActivityModule } from './modules/activity/activity.module';
 import { CommentsModule } from './modules/comments/comments.module';
 import { RealtimeModule } from './modules/realtime/realtime.module';
+import { AccessModule } from './common/access/access.module';
+import { ChecklistModule } from './modules/checklist/checklist.module';
+import { AttachmentsModule } from './modules/attachments/attachments.module';
+import { BoardPrefsModule } from './modules/board-prefs/board-prefs.module';
+import { StatsModule } from './modules/stats/stats.module';
 
 @Module({
   imports: [
@@ -29,6 +34,8 @@ import { RealtimeModule } from './modules/realtime/realtime.module';
     FirebaseModule,
     // WebSocket theo board — @Global, mọi module dưới đây phát sự kiện qua nó.
     RealtimeModule,
+    // Kiểm tra quyền dùng chung — @Global, xem common/access/access.service.ts.
+    AccessModule,
     // Feature modules — lõi
     AuthModule,
     UsersModule,
@@ -52,6 +59,10 @@ import { RealtimeModule } from './modules/realtime/realtime.module';
     // Bonus
     ActivityModule,
     CommentsModule,
+    ChecklistModule,
+    AttachmentsModule,
+    BoardPrefsModule,
+    StatsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

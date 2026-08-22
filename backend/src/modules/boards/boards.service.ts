@@ -441,7 +441,13 @@ export class BoardsService {
   async update(
     uid: string,
     id: string,
-    changes: { name?: string; visibility?: string; memberIds?: string[] },
+    changes: {
+      name?: string;
+      visibility?: string;
+      memberIds?: string[];
+      background?: string | null;
+      backgroundImagePath?: string | null;
+    },
   ): Promise<unknown> {
     const current = await this.findOne(uid, id); // ném 404 nếu không tồn tại / khác tổ chức
     await this.assertCanManage(uid, current.orgId);
@@ -450,9 +456,16 @@ export class BoardsService {
       throw new BadRequestException('visibility phải là workspace, private hoặc public.');
     }
 
-    const patch: Record<string, string> = {};
+    const patch: Record<string, string | null> = {};
     if (changes.name !== undefined) patch.name = changes.name.trim();
     if (changes.visibility !== undefined) patch.visibility = changes.visibility;
+    // Màu nền + ảnh nền: hai cột này đã có sẵn trong bảng `boards` và API vẫn
+    // trả ra từ đầu, chỉ là chưa bao giờ ghi được — nên frontend phải giữ tạm ở
+    // localStorage, đổi máy là mất nền. Nhận `null` để người dùng gỡ nền về mặc định.
+    if (changes.background !== undefined) patch.background = changes.background || null;
+    if (changes.backgroundImagePath !== undefined) {
+      patch.background_image_path = changes.backgroundImagePath || null;
+    }
 
     const visibilityMoi = changes.visibility ?? current.visibility;
 

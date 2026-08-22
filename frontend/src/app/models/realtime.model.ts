@@ -18,7 +18,11 @@ export type BoardEventType =
   | 'chat.message'
   | 'activity.created'
   | 'board.updated'
-  | 'board.deleted';
+  | 'board.deleted'
+  | 'checklist.changed'
+  | 'checklist.deleted'
+  | 'attachment.changed'
+  | 'attachment.deleted';
 
 /**
  * Sự kiện gửi tới ĐÚNG MỘT NGƯỜI, không phụ thuộc họ đang mở board nào.
