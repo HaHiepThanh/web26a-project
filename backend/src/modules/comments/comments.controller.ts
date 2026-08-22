@@ -12,6 +12,7 @@ import { FirebaseAuthGuard } from '../../common/firebase/firebase-auth.guard';
 import { CurrentUser } from '../../common/firebase/current-user.decorator';
 import type { CurrentUserInfo } from '../../common/firebase/current-user.decorator';
 import { CommentsService } from './comments.service';
+import { CreateCommentDto } from './dto/create-comment.dto';
 
 @UseGuards(FirebaseAuthGuard)
 @Controller('comments')
@@ -24,10 +25,7 @@ export class CommentsController {
   }
 
   @Post()
-  create(
-    @CurrentUser() user: CurrentUserInfo,
-    @Body() body: { cardId: string; content: string },
-  ) {
+  create(@CurrentUser() user: CurrentUserInfo, @Body() body: CreateCommentDto) {
     return this.comments.create(body.cardId, user.uid, body.content);
   }
 
