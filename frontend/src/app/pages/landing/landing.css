@@ -1,7 +1,13 @@
 /* Landing page (marketing) — self-contained decorative styling. Interactive
    controls (buttons/links) use DaisyUI classes in the template so they inherit
    the app's real theme colors; this file only covers layout, the custom
-   "product window" mockups, and animation that DaisyUI has no equivalent for. */
+   "product window" mockups, and animation that DaisyUI has no equivalent for.
+
+   Concept "One Task, One Journey": animation vocabulary is intentionally
+   narrow — opacity/transform only, same easing family everywhere — so the
+   6-7 sections read as one product demo, not a slideshow of unrelated
+   effects. See the MOTION SAFETY block at the end for the reduced-motion
+   killswitch that every animation/transition below must respect. */
 
 :host {
   display: block;
@@ -16,6 +22,8 @@
   --slate-400: #94a3b8;
   --slate-500: #64748b;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .landing,
@@ -24,14 +32,84 @@
   font-family: var(--font-family);
 }
 
+/* ---------- Scroll-reveal primitives (shared timing/easing site-wide) ---------- */
 .reveal {
   opacity: 0;
-  transform: translateY(16px);
-  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateY(20px);
+  transition:
+    opacity 0.6s var(--ease-out),
+    transform 0.6s var(--ease-out);
 }
 .reveal.in-view {
   opacity: 1;
   transform: translateY(0);
+}
+
+.reveal-scale {
+  opacity: 0;
+  transform: scale(0.97);
+  transition:
+    opacity 0.65s var(--ease-out),
+    transform 0.65s var(--ease-out),
+    box-shadow 0.65s var(--ease-out);
+}
+.reveal-scale.in-view {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Container whose direct children fade/rise in with a short stagger once the
+   container itself scrolls into view — used by the realtime activity panel. */
+.reveal-stagger > * {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 0.5s var(--ease-out),
+    transform 0.5s var(--ease-out);
+}
+.reveal-stagger.in-view > *:nth-child(1) {
+  transition-delay: 0.05s;
+}
+.reveal-stagger.in-view > *:nth-child(2) {
+  transition-delay: 0.3s;
+}
+.reveal-stagger.in-view > *:nth-child(3) {
+  transition-delay: 0.55s;
+}
+.reveal-stagger.in-view > * {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ============================== SCROLL PROGRESS ============================== */
+/* Thanh mỏng ở mép trên cùng, trên cả navbar — đổi màu theo giai đoạn của
+   "câu chuyện task" đang cuộn tới: Cần làm (hổ phách) → Đang làm (tím) →
+   Hoàn thành (xanh lá). Chiều rộng cập nhật theo % scroll, do component tính
+   sẵn (không đọc DOM trong lúc cuộn) nên không có forced reflow. */
+.scroll-progress {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 3px;
+  z-index: 110;
+  pointer-events: none;
+}
+.scroll-progress-fill {
+  display: block;
+  height: 100%;
+  width: 0%;
+  background: #f59e0b;
+  transition:
+    width 0.15s linear,
+    background-color 0.4s ease;
+}
+.scroll-progress-fill.stage-todo {
+  background: #f59e0b;
+}
+.scroll-progress-fill.stage-doing {
+  background: var(--hhh-violet);
+}
+.scroll-progress-fill.stage-done {
+  background: #10b981;
 }
 
 /* ============================== NAVBAR ============================== */
@@ -43,7 +121,10 @@
   background: rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid transparent;
-  transition: border-color 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    background-color 0.25s ease;
 }
 .nav-scrolled {
   border-bottom-color: var(--border-color);
@@ -79,13 +160,17 @@
   margin-left: auto;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
   color: var(--text-primary);
 }
 .nav-burger:hover {
   background: var(--bg-surface-hover);
+}
+.nav-burger:focus-visible {
+  outline: 2px solid var(--hhh-primary);
+  outline-offset: 2px;
 }
 .nav-mobile {
   gap: 2px;
@@ -182,6 +267,12 @@
   color: var(--text-secondary);
 }
 
+#features,
+#showcase,
+#how-it-works {
+  scroll-margin-top: 80px;
+}
+
 /* ============================== HERO ============================== */
 .hero {
   position: relative;
@@ -200,12 +291,14 @@
   opacity: 0.08;
   background-image: radial-gradient(#94a3b8 1px, transparent 1px);
   background-size: 24px 24px;
+  animation: dotDrift 26s linear infinite;
 }
 .glow {
   position: absolute;
   border-radius: 50%;
   filter: blur(110px);
   pointer-events: none;
+  animation: glowDrift 22s ease-in-out infinite alternate;
 }
 .glow-a {
   top: -20%;
@@ -220,6 +313,24 @@
   width: 40%;
   aspect-ratio: 1;
   background: rgba(124, 58, 237, 0.18);
+  animation-duration: 28s;
+  animation-direction: alternate-reverse;
+}
+@keyframes glowDrift {
+  from {
+    transform: translate(0, 0) scale(1);
+  }
+  to {
+    transform: translate(-4%, 3%) scale(1.06);
+  }
+}
+@keyframes dotDrift {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 24px 24px;
+  }
 }
 
 .hero-inner {
@@ -275,15 +386,56 @@
 .hero-visual {
   position: relative;
 }
+/* Custom properties riêng cho mockup hero — cho phép .mockup-theme-toggle đổi
+   toàn bộ bảng màu bên trong (chỉ mockup, không đụng theme thật của trang)
+   mà không phải viết lại từng rule .mini-card/.mini-title/.window-url... */
 .hero-window {
+  --mockup-bg: var(--hhh-navy-2);
+  --mockup-border: rgba(255, 255, 255, 0.08);
+  --mockup-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.55);
+  --mockup-bar-bg: rgba(255, 255, 255, 0.03);
+  --mockup-bar-border: rgba(255, 255, 255, 0.06);
+  --mockup-text-dim: var(--slate-400);
+  --mockup-title: #e2e8f0;
+  --mockup-card-bg: rgba(255, 255, 255, 0.045);
+  --mockup-card-border: rgba(255, 255, 255, 0.07);
+  --mockup-card-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
+  --mockup-toast-bg: rgba(52, 211, 153, 0.15);
+  --mockup-toast-text: #6ee7b7;
+  --mockup-cursor: #fff;
+  --mockup-warn: #fda4af;
+
   position: relative;
   z-index: 1;
   border-radius: 16px;
   overflow: hidden;
-  background: var(--hhh-navy-2);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.55);
-  animation: heroFadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  background: var(--mockup-bg);
+  border: 1px solid var(--mockup-border);
+  box-shadow: var(--mockup-shadow);
+  animation: heroFadeUp 0.7s var(--ease-out) backwards;
+  transition:
+    background-color 0.4s ease,
+    border-color 0.4s ease,
+    box-shadow 0.4s ease;
+}
+/* Bản "sáng" — dùng đúng token light-theme thật của app (--bg-navbar,
+   --text-primary...) thay vì bịa màu mới, để mockup phản ánh đúng giao diện
+   sáng thật (chế độ duy nhất app hiện cho phép — xem ThemeService). */
+.hero-window.is-light {
+  --mockup-bg: var(--bg-navbar);
+  --mockup-border: var(--border-color);
+  --mockup-shadow: 0 30px 60px -15px rgba(15, 23, 42, 0.25);
+  --mockup-bar-bg: var(--bg-header);
+  --mockup-bar-border: var(--border-color);
+  --mockup-text-dim: var(--text-muted);
+  --mockup-title: var(--text-primary);
+  --mockup-card-bg: var(--bg-card);
+  --mockup-card-border: var(--border-color);
+  --mockup-card-shadow: var(--shadow-sm);
+  --mockup-toast-bg: var(--accent-green-soft);
+  --mockup-toast-text: var(--accent-green);
+  --mockup-cursor: var(--text-primary);
+  --mockup-warn: var(--danger);
 }
 @keyframes heroFadeUp {
   from {
@@ -298,15 +450,26 @@
 .window-bar {
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: space-between;
+  gap: 10px;
   padding: 11px 14px;
-  background: rgba(255, 255, 255, 0.03);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--mockup-bar-bg);
+  border-bottom: 1px solid var(--mockup-bar-border);
+  transition:
+    background-color 0.4s ease,
+    border-color 0.4s ease;
+}
+.window-bar-decor {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
 }
 .win-dot {
   width: 9px;
   height: 9px;
   border-radius: 50%;
+  flex-shrink: 0;
 }
 .win-dot-red {
   background: #f87171;
@@ -321,32 +484,73 @@
   margin-left: 10px;
   font-family: var(--font-mono);
   font-size: 11px;
-  color: var(--slate-500);
+  color: var(--mockup-text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Toggle sáng/tối riêng cho mockup hero. */
+.mockup-theme-toggle {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  color: var(--mockup-text-dim);
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+.mockup-theme-toggle:hover {
+  background: rgba(128, 128, 128, 0.16);
+  color: var(--mockup-title);
+}
+.mockup-theme-toggle:focus-visible {
+  outline: 2px solid var(--hhh-primary);
+  outline-offset: 1px;
 }
 .window-body {
+  position: relative;
   padding: 20px;
 }
 
 .mini-board {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
+  transition: opacity 0.35s ease;
+}
+.mini-board-resetting {
+  opacity: 0.5;
 }
 .mini-col {
   display: flex;
   flex-direction: column;
   gap: 9px;
+  min-height: 168px;
 }
 .mini-col-head {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 0 2px;
+  padding: 3px 5px;
+  border-radius: 6px;
   font-size: 10.5px;
   font-weight: 700;
-  color: var(--slate-400);
+  color: var(--mockup-text-dim);
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  transition:
+    background-color 0.35s ease,
+    box-shadow 0.35s ease;
+}
+.mini-col-head-active {
+  background: rgba(124, 58, 237, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(124, 58, 237, 0.35);
 }
 .mini-col-head .col-count {
   margin-left: auto;
@@ -370,12 +574,16 @@
 }
 
 .mini-card {
-  background: rgba(255, 255, 255, 0.045);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: var(--mockup-card-bg);
+  border: 1px solid var(--mockup-card-border);
   border-radius: 10px;
   padding: 10px;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
+  box-shadow: var(--mockup-card-shadow);
   animation: cardFloat 4.5s ease-in-out infinite;
+  transition:
+    background-color 0.4s ease,
+    border-color 0.4s ease,
+    box-shadow 0.4s ease;
 }
 .mini-card-float {
   animation-delay: 0.6s;
@@ -392,6 +600,78 @@
     transform: translateY(-3px);
   }
 }
+
+/* Ô giữ chỗ vô hình cho task — luôn nằm trong luồng flex của cột (cùng nội
+   dung/kích thước với thẻ task thật) nhưng visibility:hidden, để card tĩnh
+   bên cạnh ("Viết API...", "Review pull request...") không bao giờ đổi vị
+   trí khi task "di chuyển". Thẻ hiển thị thật là .hero-live-card bên dưới. */
+.mini-card-slot {
+  visibility: hidden;
+}
+.mini-toast-reserve {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mini-toast-slot {
+  visibility: hidden;
+}
+
+/* Thẻ task "sống" duy nhất — position:absolute trong .mini-board, không nằm
+   trong flex-flow của cột nào nên di chuyển giữa 2 cột chỉ bằng transform,
+   không gây reflow cho card khác (tránh Cumulative Layout Shift thật). Toạ
+   độ (translate) do component đo từ 2 ô .mini-card-slot ở trên. */
+.hero-live-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition:
+    transform 0.75s var(--ease-out),
+    width 0.75s var(--ease-out);
+}
+.hero-task-card {
+  animation: taskPop 0.45s var(--ease-out) both;
+  border-color: rgba(124, 58, 237, 0.4) !important;
+}
+.mini-card-landed {
+  box-shadow:
+    0 0 0 1px rgba(124, 58, 237, 0.45),
+    0 8px 18px rgba(0, 0, 0, 0.22);
+}
+@keyframes taskPop {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.mini-activity-toast {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--mockup-toast-bg);
+  color: var(--mockup-toast-text);
+  font-size: 10px;
+  font-weight: 700;
+  transition:
+    background-color 0.4s ease,
+    color 0.4s ease;
+}
+.hero-live-card .mini-activity-toast {
+  animation: taskPop 0.35s var(--ease-out) both;
+}
+
 .mini-label {
   display: block;
   width: 26px;
@@ -402,8 +682,9 @@
 .mini-title {
   font-size: 12px;
   font-weight: 500;
-  color: #e2e8f0;
+  color: var(--mockup-title);
   line-height: 1.4;
+  transition: color 0.4s ease;
 }
 .mini-foot {
   margin-top: 10px;
@@ -414,10 +695,12 @@
 .mini-due {
   font-size: 10px;
   font-family: var(--font-mono);
-  color: var(--slate-500);
+  color: var(--mockup-text-dim);
+  transition: color 0.4s ease;
 }
 .mini-due-warn {
-  color: #fda4af;
+  color: var(--mockup-warn);
+  transition: color 0.4s ease;
 }
 .mini-avatar {
   width: 19px;
@@ -442,6 +725,35 @@
 }
 .mini-avatar-rose {
   background: #fb7185;
+}
+
+/* ---------- Fake cursor: hero drag demonstration ---------- */
+.fake-cursor {
+  display: none;
+  position: absolute;
+  z-index: 3;
+  left: 19%;
+  top: 76px;
+  color: var(--mockup-cursor);
+  opacity: 0;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5));
+  transition:
+    left 0.75s var(--ease-out),
+    top 0.75s var(--ease-out),
+    opacity 0.25s ease;
+  pointer-events: none;
+}
+.fake-cursor.cursor-active {
+  opacity: 1;
+}
+.fake-cursor.cursor-at-target {
+  left: 48%;
+  top: 128px;
+}
+@media (min-width: 640px) {
+  .fake-cursor {
+    display: block;
+  }
 }
 
 .float-chip {
@@ -476,6 +788,28 @@
   right: 32px;
   animation-delay: 0.5s;
   animation-direction: reverse;
+  min-width: 172px;
+  justify-content: center;
+}
+.sync-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #fbbf24;
+}
+.sync-dot-pulse {
+  animation: syncPulse 0.9s ease-in-out infinite;
+}
+@keyframes syncPulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.7);
+  }
 }
 @media (min-width: 640px) {
   .float-chip {
@@ -513,12 +847,18 @@
   }
 }
 .feature-card {
+  display: flex;
+  flex-direction: column;
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 24px;
   box-shadow: var(--shadow-sm);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    opacity 0.6s var(--ease-out);
 }
 .feature-card:hover {
   transform: translateY(-3px);
@@ -546,6 +886,278 @@
   font-size: 13.5px;
   line-height: 1.6;
   color: var(--text-secondary);
+}
+
+/* ---------- Feature micro-visuals: each card gets its own motion, not a shared fade ---------- */
+.feat-visual {
+  position: relative;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-subtle);
+  height: 40px;
+}
+
+/* Card 1 — Kanban: a chip sliding between two lanes */
+.feat-visual-kanban {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.feat-slot {
+  width: 34%;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--bg-surface-hover);
+  border: 1px dashed var(--border-color);
+}
+.feat-chip {
+  position: absolute;
+  top: 14px;
+  left: 0;
+  width: 30%;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--hhh-primary);
+  opacity: 0.85;
+}
+.feature-card.in-view .feat-chip {
+  animation: chipSlide 3.6s ease-in-out infinite;
+}
+@keyframes chipSlide {
+  0%,
+  15% {
+    left: 0;
+  }
+  50%,
+  65% {
+    left: 44%;
+  }
+  100% {
+    left: 0;
+  }
+}
+
+/* Card 2 — Workspace: folder opens, tree fades in */
+.feat-visual-workspace {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  height: auto;
+  min-height: 40px;
+}
+.feat-folder-icon {
+  color: var(--hhh-primary);
+  flex-shrink: 0;
+  margin-top: 1px;
+  transform-origin: 50% 20%;
+  transition: transform 0.4s var(--ease-out);
+}
+.feature-card.in-view .feat-folder-icon {
+  transform: rotate(-4deg) scale(1.05);
+}
+.feat-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--text-muted);
+}
+.feat-tree span {
+  opacity: 0;
+  transform: translateX(-6px);
+  transition:
+    opacity 0.4s var(--ease-out),
+    transform 0.4s var(--ease-out);
+}
+.feature-card.in-view .feat-tree span:nth-child(1) {
+  transition-delay: 0.15s;
+}
+.feature-card.in-view .feat-tree span:nth-child(2) {
+  transition-delay: 0.3s;
+}
+.feature-card.in-view .feat-tree span:nth-child(3) {
+  transition-delay: 0.45s;
+}
+.feature-card.in-view .feat-tree span {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Card 3 — Permission: a member avatar joining */
+.feat-visual-permission {
+  display: flex;
+  align-items: center;
+}
+.feat-avatar {
+  width: 26px;
+  height: 26px;
+  margin-left: -8px;
+  border-radius: 50%;
+  border: 2px solid var(--bg-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 700;
+  color: #fff;
+}
+.feat-avatar:first-child {
+  margin-left: 0;
+}
+.feat-avatar-a {
+  background: #a78bfa;
+  z-index: 1;
+}
+.feat-avatar-b {
+  background: #60a5fa;
+  z-index: 2;
+}
+.feat-avatar-c {
+  background: var(--hhh-primary);
+  z-index: 3;
+}
+.feat-avatar-new {
+  opacity: 0;
+  transform: scale(0.5);
+  transition:
+    opacity 0.4s var(--ease-out) 0.3s,
+    transform 0.4s var(--ease-out) 0.3s;
+}
+.feature-card.in-view .feat-avatar-new {
+  opacity: 1;
+  transform: scale(1);
+  animation: avatarRing 2.4s ease-in-out 0.9s infinite;
+}
+@keyframes avatarRing {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0);
+  }
+}
+
+/* Card 4 — Card detail: checklist ticking + progress bar filling */
+.feat-visual-checklist {
+  height: auto;
+  min-height: 40px;
+}
+.feat-check-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  color: var(--text-secondary);
+  margin-bottom: 3px;
+}
+.feat-check-row svg {
+  color: var(--hhh-primary);
+  flex-shrink: 0;
+}
+.feat-check-pending {
+  color: var(--text-muted);
+}
+.feat-check-pending svg {
+  color: var(--text-muted);
+}
+.feat-progress {
+  margin-top: 6px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--border-color);
+  overflow: hidden;
+}
+.feat-progress span {
+  display: block;
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: var(--hhh-primary);
+  transition: width 1s var(--ease-out) 0.5s;
+}
+.feature-card.in-view .feat-progress span {
+  width: 66%;
+}
+
+/* Card 5 — Realtime: a live activity line */
+.feat-visual-realtime {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: auto;
+}
+.feat-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #34d399;
+  flex-shrink: 0;
+}
+.feature-card.in-view .feat-live-dot {
+  animation: syncPulse 1.8s ease-in-out infinite;
+}
+.feat-activity-line {
+  font-size: 11px;
+  color: var(--text-muted);
+  opacity: 0;
+  transform: translateY(4px);
+  transition:
+    opacity 0.4s var(--ease-out) 0.2s,
+    transform 0.4s var(--ease-out) 0.2s;
+}
+.feature-card.in-view .feat-activity-line {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Card 6 — Activity: a small timeline */
+.feat-visual-timeline {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: auto;
+}
+.feat-tl-line {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  top: 50%;
+  height: 1px;
+  background: var(--border-color);
+}
+.feat-tl-dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  opacity: 0;
+  transform: scale(0.5);
+  transition:
+    opacity 0.35s var(--ease-out),
+    transform 0.35s var(--ease-out);
+}
+.feature-card.in-view .feat-tl-dot:nth-child(2) {
+  transition-delay: 0.1s;
+}
+.feature-card.in-view .feat-tl-dot:nth-child(3) {
+  transition-delay: 0.35s;
+}
+.feature-card.in-view .feat-tl-dot:nth-child(4) {
+  transition-delay: 0.6s;
+}
+.feature-card.in-view .feat-tl-dot {
+  opacity: 1;
+  transform: scale(1);
+}
+.feat-tl-dot-latest {
+  background: var(--hhh-primary);
+}
+.feature-card.in-view .feat-tl-dot-latest {
+  animation: avatarRing 2.4s ease-in-out 1.2s infinite;
 }
 
 /* ============================== PRODUCT SHOWCASE ============================== */
@@ -625,6 +1237,10 @@
   background: var(--bg-navbar);
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-lg);
+  transition: box-shadow 0.5s var(--ease-out);
+}
+.reveal-scale.in-view .showcase-window {
+  box-shadow: var(--shadow-xl);
 }
 .showcase-window .window-bar {
   background: var(--bg-header);
@@ -712,6 +1328,7 @@
   font-size: 11.5px;
   font-weight: 700;
   color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
 }
 .detail-check-bar {
   margin-top: 6px;
@@ -725,6 +1342,44 @@
   height: 100%;
   background: var(--hhh-primary);
   border-radius: 999px;
+  transition: width 0.6s var(--ease-out);
+}
+.detail-check-list {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.detail-check-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+.detail-check-item .chk-icon {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transition: color 0.3s ease;
+}
+.detail-check-item.done {
+  color: var(--text-primary);
+}
+.detail-check-item.done .chk-icon {
+  color: var(--hhh-primary);
+}
+.detail-complete-badge {
+  margin-top: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: var(--accent-green-soft);
+  color: var(--accent-green);
+  font-size: 11.5px;
+  font-weight: 700;
+  animation: taskPop 0.4s var(--ease-out) both;
 }
 .detail-row {
   margin-top: 12px;
@@ -745,29 +1400,127 @@
   color: var(--text-primary);
 }
 
+/* ============================== REALTIME COLLABORATION ============================== */
+.realtime {
+  position: relative;
+  background: var(--hhh-navy);
+}
+.realtime .eyebrow {
+  color: #a5b4fc;
+}
+.realtime .section-title {
+  color: #fff;
+}
+.realtime .section-sub {
+  color: var(--slate-400);
+}
+
+.activity-panel {
+  margin-top: 40px;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 8px;
+}
+.activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 12px;
+}
+.activity-item + .activity-item {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.activity-icon {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.activity-icon-move {
+  background: rgba(124, 58, 237, 0.18);
+}
+.activity-icon-comment {
+  background: rgba(96, 165, 250, 0.18);
+  color: #93c5fd;
+}
+.activity-icon-done {
+  background: rgba(52, 211, 153, 0.18);
+  color: #6ee7b7;
+}
+.activity-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #a78bfa;
+}
+.activity-body p {
+  font-size: 13px;
+  color: #e2e8f0;
+  line-height: 1.5;
+}
+.activity-body strong {
+  font-weight: 700;
+  color: #fff;
+}
+.activity-task {
+  color: #c4b5fd;
+}
+.activity-meta {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--slate-400);
+}
+.activity-body p.activity-meta {
+  font-size: 12px;
+}
+.activity-item-compact {
+  padding: 0;
+  margin-top: 12px;
+}
+.activity-item-compact .activity-body p {
+  font-size: 11.5px;
+}
+
 /* ============================== HOW IT WORKS ============================== */
 .how {
   background: var(--bg-app);
 }
-.how-grid {
+.how-layout {
   margin-top: 48px;
   display: grid;
   grid-template-columns: 1fr;
-  gap: 28px;
-}
-@media (min-width: 640px) {
-  .how-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  gap: 32px;
 }
 @media (min-width: 1024px) {
-  .how-grid {
-    grid-template-columns: repeat(4, 1fr);
+  .how-layout {
+    grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
+    gap: 56px;
+    align-items: start;
   }
+}
+
+.how-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
 }
 .how-step {
   position: relative;
   padding-top: 8px;
+  opacity: 0.55;
+  transition: opacity 0.35s ease;
+}
+.how-step.active {
+  opacity: 1;
 }
 .how-num {
   display: block;
@@ -776,6 +1529,10 @@
   font-weight: 700;
   color: var(--hhh-primary);
   opacity: 0.55;
+  transition: opacity 0.35s ease;
+}
+.how-step.active .how-num {
+  opacity: 1;
 }
 .how-icon {
   margin-top: 10px;
@@ -789,6 +1546,13 @@
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-sm);
+  transition:
+    box-shadow 0.35s ease,
+    border-color 0.35s ease;
+}
+.how-step.active .how-icon {
+  border-color: rgba(79, 70, 229, 0.4);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
 }
 .how-step h3 {
   margin-top: 14px;
@@ -803,6 +1567,90 @@
   color: var(--text-secondary);
 }
 
+.how-visual-window {
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--bg-navbar);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-lg);
+}
+.how-visual-window .window-bar {
+  background: var(--bg-header);
+  border-bottom: 1px solid var(--border-color);
+}
+.how-visual-window .window-body {
+  padding: 24px;
+  min-height: 200px;
+  background: var(--bg-app);
+  display: flex;
+  align-items: center;
+}
+@media (min-width: 1024px) {
+  .how-visual {
+    position: sticky;
+    top: 96px;
+  }
+}
+
+.how-panel {
+  width: 100%;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .how-panel {
+    animation: taskPop 0.4s var(--ease-out) both;
+  }
+}
+.how-panel-workspace {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.feat-tree-lg {
+  font-size: 13px;
+  gap: 8px;
+}
+.feat-tree-lg span:first-child {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+.how-panel-board {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.how-board-col {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 8px;
+  border-radius: 10px;
+  background: var(--bg-surface);
+  border: 1px dashed var(--border-color);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.how-panel-card {
+  width: 100%;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+}
+.how-panel-collab {
+  width: 100%;
+}
+.how-panel-collab .activity-item-compact .activity-body p,
+.how-panel-collab .activity-item-compact .activity-body strong {
+  color: var(--text-primary);
+}
+.how-panel-collab .activity-icon-move {
+  background: rgba(124, 58, 237, 0.12);
+}
+
 /* ============================== FINAL CTA ============================== */
 .final-cta {
   position: relative;
@@ -810,6 +1658,9 @@
   background: var(--hhh-navy);
   padding: 96px 24px;
   text-align: center;
+}
+.final-cta .hero-bg {
+  opacity: 0.7;
 }
 .final-cta-inner {
   position: relative;
@@ -834,6 +1685,75 @@
 }
 .final-cta .btn {
   margin-top: 28px;
+}
+
+.cta-task-card {
+  margin: 0 auto 28px;
+  max-width: 280px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 14px 16px;
+  text-align: left;
+  transition:
+    border-color 0.4s ease,
+    background-color 0.4s ease;
+}
+.cta-task-card.done {
+  border-color: rgba(52, 211, 153, 0.4);
+  background: rgba(52, 211, 153, 0.08);
+}
+.cta-task-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.cta-task-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+.cta-task-badge {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  background: rgba(251, 191, 36, 0.18);
+  color: #fbbf24;
+  transition:
+    background-color 0.4s ease,
+    color 0.4s ease;
+}
+.cta-task-card.done .cta-task-badge {
+  background: rgba(52, 211, 153, 0.2);
+  color: #6ee7b7;
+}
+.cta-task-checks {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.cta-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--slate-400);
+}
+.cta-check.done {
+  color: #cbd5e1;
+}
+.cta-check.done svg {
+  color: #6ee7b7;
 }
 
 /* ============================== FOOTER ============================== */
@@ -912,24 +1832,36 @@
 }
 
 /* ============================== MOTION SAFETY ============================== */
+/* Reduced-motion users still get the full story — every state is reachable
+   via signal bindings above — they just get there without animation. This
+   blanket rule is the single source of truth so no new keyframe added later
+   can slip through unguarded. */
 @media (prefers-reduced-motion: reduce) {
-  .reveal {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal,
+  .reveal-scale {
     opacity: 1;
     transform: none;
-    transition: none;
   }
-  .mini-card,
-  .float-chip {
-    animation: none !important;
-  }
-  .hero-window {
-    animation: none;
+  .reveal-stagger > * {
+    opacity: 1;
+    transform: none;
   }
 }
 
 @media (max-width: 639px) {
   .mini-board {
     grid-template-columns: 1fr;
+  }
+  .mini-col {
+    min-height: 0;
   }
   .section-inner {
     padding: 64px 20px;
