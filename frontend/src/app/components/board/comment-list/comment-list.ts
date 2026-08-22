@@ -1,7 +1,8 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { User } from '../../../models';
 import { CommentService } from '../../../services/comment.service';
-import { BoardService, CURRENT_USER_ID, avatarColorFor, initialsOf } from '../../../services/board.service';
+import { BoardService, avatarColorFor, initialsOf } from '../../../services/board.service';
+import { AuthService } from '../../../services/auth.service';
 
 /** [BONUS #4] Bình luận trong card: thêm, xoá bình luận của chính mình. */
 @Component({
@@ -13,11 +14,14 @@ import { BoardService, CURRENT_USER_ID, avatarColorFor, initialsOf } from '../..
 export class CommentList {
   private readonly commentService = inject(CommentService);
   private readonly boardService = inject(BoardService);
+  private readonly auth = inject(AuthService);
 
   readonly cardId = input.required<string>();
   readonly boardId = input.required<string>();
 
-  readonly currentUserId = CURRENT_USER_ID;
+  /** uid thật của người đang đăng nhập — nút Xoá chỉ hiện trên bình luận của chính mình.
+   *  (Backend vẫn chặn thêm lần nữa, đây chỉ để ẩn nút cho gọn.) */
+  readonly currentUserId = this.auth.currentUserId;
   readonly members = this.boardService.members;
 
   readonly membersById = computed(() => {

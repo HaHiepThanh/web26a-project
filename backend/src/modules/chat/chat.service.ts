@@ -5,13 +5,36 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { SupabaseService } from '../../common/supabase/supabase.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
+
+/** Khối `users(...)` mà Supabase join kèm — vẫn là snake_case của database. */
+interface JoinedUserRow {
+  display_name: string | null;
+  avatar_url: string | null;
+}
+
+/**
+ * Đổi khối user join kèm sang camelCase.
+ *
+ * ⚠️ Thiếu bước này thì API trả ra lai hai kiểu: các trường ngoài cùng camelCase
+ *    (`userId`, `createdAt`) còn khối `user` lại snake_case (`display_name`) —
+ *    frontend phải nhớ chỗ nào viết kiểu nào.
+ */
+function toUser(row: unknown): { displayName: string | null; avatarUrl: string | null } | null {
+  const u = row as JoinedUserRow | null;
+  if (!u) return null;
+  return { displayName: u.display_name ?? null, avatarUrl: u.avatar_url ?? null };
+}
 
 /** [AI-CHAT] Tin nhắn chat theo board (cần bảng messages). */
 @Injectable()
 export class ChatService {
   private readonly logger = new Logger(ChatService.name);
 
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(
+    private readonly supabase: SupabaseService,
+    private readonly realtime: RealtimeGateway,
+  ) {}
 
   /**
    * Người gọi có được đụng vào board này không? Không thì 404.
@@ -63,7 +86,7 @@ export class ChatService {
       userId: m.user_id,
       content: m.content,
       createdAt: m.created_at,
-      user: m.users,
+      user: toUser(m.users),
     }));
   }
 
@@ -84,7 +107,7 @@ export class ChatService {
 
     // Đổi sang camelCase cho khớp phần còn lại của API — đừng trả thẳng dòng Supabase.
     const row = data as Record<string, unknown>;
-    return {
+    const created = {
       id: row.id,
       orgId: row.org_id,
       boardId: row.board_id,
@@ -93,5 +116,9 @@ export class ChatService {
       createdAt: row.created_at,
     };
 
+    // Đây là lý do chính khiến dự án cần WebSocket: chat mà phải F5 mới thấy tin
+    // của người khác thì không gọi là chat được.
+    this.realtime.emitToBoard(boardId, 'chat.message', userUid, created);
+    return created;
   }
 }

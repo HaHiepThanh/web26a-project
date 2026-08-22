@@ -37,6 +37,28 @@ export class LabelService {
     this.lastError.set({ id: this.errorSeq, message });
   }
 
+  /** Áp nhãn mới nhận từ WebSocket — có rồi thì ghi đè, chưa có thì thêm. */
+  applyRemoteLabel(r: ApiLabel): void {
+    const label = this.toLabel(r);
+    this.labels.update((all) =>
+      all.some((l) => l.id === label.id) ? all.map((l) => (l.id === label.id ? label : l)) : [...all, label],
+    );
+  }
+
+  applyRemoteAttach(cardId: string, labelId: string): void {
+    this.cardLabelIds.update((map) => {
+      const current = map[cardId] ?? [];
+      return current.includes(labelId) ? map : { ...map, [cardId]: [...current, labelId] };
+    });
+  }
+
+  applyRemoteDetach(cardId: string, labelId: string): void {
+    this.cardLabelIds.update((map) => {
+      const current = map[cardId] ?? [];
+      return current.includes(labelId) ? { ...map, [cardId]: current.filter((id) => id !== labelId) } : map;
+    });
+  }
+
   async loadLabels(boardId: string, force = false): Promise<void> {
     if (!boardId) {
       this.labels.set([]);

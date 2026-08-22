@@ -3,7 +3,6 @@ import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { Card, Label, List, User } from '../../../models';
 import { CardService } from '../../../services/card.service';
 import { ListService } from '../../../services/list.service';
-import { ActivityService } from '../../../services/activity.service';
 import { ListHeader } from '../list-header/list-header';
 import { CardItem } from '../card-item/card-item';
 import { AddCard } from '../add-card/add-card';
@@ -20,7 +19,6 @@ import { AddCard } from '../add-card/add-card';
 export class BoardList {
   private readonly cardService = inject(CardService);
   private readonly listService = inject(ListService);
-  private readonly activityService = inject(ActivityService);
 
   readonly list = input.required<List>();
   readonly boardId = input.required<string>();
@@ -66,7 +64,7 @@ export class BoardList {
 
     if (fromListId !== toListId) {
       const toName = this.listService.lists().find((l) => l.id === toListId)?.name ?? '—';
-      this.activityService.record(this.boardId(), card.id, `đã chuyển thẻ "${card.title}" sang "${toName}"`, 'card_moved');
+      // 'card_moved' do backend ghi (PATCH /cards/:id/move), không ghi lại ở đây.
     }
   }
 

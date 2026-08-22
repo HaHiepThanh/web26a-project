@@ -14,7 +14,7 @@
           <div class="flex items-baseline gap-1.5">
             <span class="text-2xs font-semibold text-base-content/80">{{ userLabel(c.userId) }}</span>
             <span class="text-3xs text-base-content/40">{{ timeLabel(c.createdAt) }}</span>
-            @if (c.userId === currentUserId) {
+            @if (c.userId === currentUserId()) {
               <button type="button" class="ml-auto text-3xs text-base-content/40 opacity-0 transition-opacity hover:text-error group-hover:opacity-100" (click)="deleteComment(c.id)">
                 Xoá
               </button>

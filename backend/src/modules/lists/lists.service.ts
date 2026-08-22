@@ -6,6 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { SupabaseService } from '../../common/supabase/supabase.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 /**
  * Postgres báo mã 22P02 khi nhận chuỗi không phải uuid vào cột kiểu uuid.
@@ -56,7 +57,10 @@ function laUuidSai(error: { code?: string } | null): boolean {
 /** CRUD list + sắp xếp thứ tự (kéo thả ngang) (#4). */
 @Injectable()
 export class ListsService {
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(
+    private readonly supabase: SupabaseService,
+    private readonly realtime: RealtimeGateway,
+  ) {}
 
   /**
    * Kiểm tra user có được truy cập board này không, trả về `org_id` của nó.
@@ -147,17 +151,22 @@ export class ListsService {
     if (error) {
       throw new InternalServerErrorException('Không tạo được list.');
     }
-    return toList(data as ListRow);
+    const created = toList(data as ListRow);
+    this.realtime.emitToBoard(boardId, 'list.created', uid, created);
+    return created;
   }
 
   /**
    * Tìm list theo id + xác nhận `uid` thuộc tổ chức của nó.
    * Không tồn tại hoặc khác tổ chức → cùng trả 404 (không lộ list có thật hay không).
    */
-  private async assertListAccess(uid: string, id: string): Promise<{ id: string; org_id: string }> {
+  private async assertListAccess(
+    uid: string,
+    id: string,
+  ): Promise<{ id: string; org_id: string; board_id: string }> {
     const { data: list, error } = await this.supabase.client
       .from('lists')
-      .select('id, org_id')
+      .select('id, org_id, board_id')
       .eq('id', id)
       .maybeSingle();
     if (error) {
@@ -202,7 +211,9 @@ export class ListsService {
     if (error) {
       throw new InternalServerErrorException('Không đổi được tên list.');
     }
-    return toList(data as ListRow);
+    const renamed = toList(data as ListRow);
+    this.realtime.emitToBoard(renamed.boardId, 'list.updated', uid, renamed);
+    return renamed;
   }
 
   /**
@@ -228,16 +239,21 @@ export class ListsService {
     if (error) {
       throw new InternalServerErrorException('Không cập nhật được vị trí.');
     }
-    return toList(data as ListRow);
+    const moved = toList(data as ListRow);
+    this.realtime.emitToBoard(moved.boardId, 'list.updated', uid, moved);
+    return moved;
   }
 
   /** Xoá list. `ON DELETE CASCADE` tự xoá card bên trong. */
   async remove(uid: string, id: string): Promise<void> {
-    await this.assertListAccess(uid, id);
+    const list = await this.assertListAccess(uid, id);
 
     const { error } = await this.supabase.client.from('lists').delete().eq('id', id);
     if (error) {
       throw new InternalServerErrorException('Không xoá được list.');
     }
+    // Thẻ bên trong bị CASCADE xoá theo — client tự dọn khi nhận 'list.deleted',
+    // không cần phát thêm 'card.deleted' cho từng thẻ.
+    this.realtime.emitToBoard(list.board_id, 'list.deleted', uid, { id });
   }
 }

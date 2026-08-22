@@ -52,7 +52,7 @@
     </div>
   </div>
 
-  <app-message-list [messages]="messages()" [usersById]="usersById()" [currentUserId]="currentUserId"
+  <app-message-list [messages]="messages()" [usersById]="usersById()" [currentUserId]="currentUserId()"
     [memberNames]="memberNames()" [pendingSuggestion]="pendingSuggestion()"
     [pendingAssigneeName]="pendingAssigneeName()" (confirmSuggestion)="confirmSuggestion()"
     (dismissSuggestion)="dismissSuggestion()" />

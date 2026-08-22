@@ -227,8 +227,9 @@ check('5.4', '🔒 B bình luận vào thẻ của A → bị chặn', 'POST', '
       {'cardId': CID, 'content': 'Trộm'}, (403, 404))
 
 check('6.1', 'đọc bình luận của thẻ', 'GET', f'/comments?cardId={CID}', A, None, 200,
-      lambda d: (len(d or []) >= 1 and 'user' in d[0],
-                 'phải có khối "user" (đã join sang bảng users)'))
+      lambda d: (len(d or []) >= 1 and 'user' in d[0] and 'userId' in d[0]
+                 and (d[0]['user'] is None or 'displayName' in d[0]['user']),
+                 'phải có userId + khối "user" camelCase (displayName/avatarUrl)'))
 check('6.2', '🔒 B đọc bình luận thẻ của A → bị chặn', 'GET', f'/comments?cardId={CID}', B, None, (403, 404))
 
 # B bình luận trên thẻ CỦA B, rồi A thử xoá → phải 403
@@ -250,7 +251,9 @@ check('8.4', '🔒 B gửi tin vào board của A → bị chặn', 'POST', '/ch
       {'boardId': BID, 'content': 'Trộm'}, (403, 404))
 
 check('9.1', 'đọc lịch sử chat', 'GET', f'/chat?boardId={BID}', A, None, 200,
-      lambda d: (len(d or []) >= 1 and 'user' in d[0], 'phải có khối "user"'))
+      lambda d: (len(d or []) >= 1 and 'user' in d[0] and 'userId' in d[0]
+                 and (d[0]['user'] is None or 'displayName' in d[0]['user']),
+                 'phải có userId + khối "user" camelCase'))
 check('9.2', 'sắp xếp cũ → mới', 'GET', f'/chat?boardId={BID}', A, None, 200,
       lambda d: (all((d or [])[i]['createdAt'] <= (d or [])[i + 1]['createdAt'] for i in range(len(d or []) - 1)),
                  'createdAt phải tăng dần'))

@@ -2,7 +2,7 @@
 
 > Trạng thái: **38 endpoint đã nối xong và chạy thật** — 12 của Huy (tổ chức,
 > workspace) + 14 của Hoà (board, list, label) + 12 của Hoàng (card, comment,
-> chat, activity).
+> chat, activity) — **cộng thêm lớp WebSocket realtime** (xem [WEBSOCKET.md](WEBSOCKET.md)).
 > Mọi thao tác dưới đây đã được bấm tay trên trình duyệt và đối chiếu với Supabase.
 
 ---
@@ -256,3 +256,59 @@ xem đã đăng nhập lại chưa (token sống 1 tiếng).
 
 Phép thử quyết định: **xoá `trello_workspaces_data` trong localStorage rồi F5.**
 Workspace vẫn còn nghĩa là dữ liệu đến từ database thật.
+
+
+---
+
+## Vòng dọn dẹp sau khi 3 bạn xong
+
+Ba việc dưới đây không phải lỗi của riêng bạn nào — là những chỗ code cũ còn sót
+lại từ giai đoạn giao diện chạy bằng dữ liệu giả, đến khi nối backend thật thì
+thành sai.
+
+### 1. `CURRENT_USER_ID = 'u-nam'` — hằng số giả
+
+`board.service.ts` và `chat.service.ts` mỗi nơi tự khai một hằng số "tôi là ai",
+đều là `'u-nam'` — không khớp Firebase uid nào trong database. Hậu quả:
+
+| Chỗ hỏng | Biểu hiện |
+|---|---|
+| `myCards` / `myDueCounts` | mục "Việc của tôi" và banner nhắc hạn **luôn rỗng** |
+| khung chat | tin của chính mình vẫn căn trái như tin người khác |
+| bình luận | nút Xoá **không bao giờ hiện**, kể cả trên bình luận của mình |
+
+Đã thay bằng `AuthService.currentUserId` — nguồn duy nhất, lấy từ Firebase uid thật.
+
+### 2. Danh sách hội thoại ở Dashboard đọc dữ liệu bịa
+
+`ChatService.getConversationPreview()` dựng tin nhắn từ hằng số `MESSAGE_SETS`
+ngay trong file. Sau khi comment hết dữ liệu mẫu để test từ tài khoản trắng thì
+danh sách hội thoại **luôn rỗng** dù board có tin thật.
+
+Đã thay bằng `loadPreviews()` gọi `GET /chat?boardId=` cho từng board, chạy song song.
+
+Mốc "đã đọc tới đâu" trước đây đọc thẳng `localStorage` trong hàm dựng — không
+phải signal, nên bấm vào hội thoại xong badge chưa-đọc **không tắt**. Nay là signal.
+
+### 3. Nhật ký hoạt động ghi hai lần
+
+Backend đã tự ghi `card_created` / `card_moved` / `comment_added`, mà frontend
+cũng gọi `activityService.record()` sau mỗi thao tác — nhật ký hiện hai dòng cho
+cùng một hành động. Đã bỏ 4 chỗ gọi trùng.
+
+### 4. `/auth/me` còn trả snake_case
+
+Endpoint này trả thẳng dòng `users` của database (`display_name`, `job_title`,
+`avatar_url`) trong khi mọi endpoint khác đã camelCase. Đã thêm `toUserProfile()`
+ở tầng controller. Khối `user` lồng trong `GET /comments`, `GET /chat`,
+`GET /activity` cũng vậy — nay là `displayName` / `avatarUrl`.
+
+---
+
+## Còn thiếu (chưa ai được giao)
+
+- `PATCH /organizations/:id` — đổi tên tổ chức
+- `GET /organizations/:id/invites` + `DELETE /organizations/invites/:id` — xem/huỷ lời mời đã gửi
+- `GET /users/search?q=` — tìm người để mời
+- lưu màu/ảnh nền board (hiện còn ở localStorage)
+- checklist trong thẻ, tệp đính kèm (hiện là dữ liệu tại chỗ, F5 là mất)

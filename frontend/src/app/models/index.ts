@@ -23,3 +23,5 @@ export * from './ai-task-detection.model';
 export * from './toast.model';
 // --- Hợp đồng dữ liệu với backend (hình dạng JSON NestJS trả về) ---
 export * from './api.model';
+// --- Hợp đồng sự kiện WebSocket (khớp backend/src/modules/realtime/realtime.events.ts) ---
+export * from './realtime.model';

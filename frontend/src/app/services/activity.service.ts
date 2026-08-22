@@ -1,7 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { ApiService } from './api.service';
 import { ActivityActionType, ActivityLog } from '../models';
-import { CURRENT_USER_ID } from './board.service';
+import { AuthService } from './auth.service';
 
 let idSeq = 1;
 function mockId(prefix: string): string {
@@ -14,6 +14,7 @@ function mockId(prefix: string): string {
 @Injectable({ providedIn: 'root' })
 export class ActivityService {
   private readonly api = inject(ApiService);
+  private readonly auth = inject(AuthService);
 
   readonly logs = signal<ActivityLog[]>([]);
 
@@ -21,6 +22,11 @@ export class ActivityService {
   async loadLogs(boardId: string): Promise<void> {
     const logs = await this.api.get<ActivityLog[]>(`/activity?boardId=${encodeURIComponent(boardId)}`);
     this.logs.set(logs);
+  }
+
+  /** Áp 1 dòng nhật ký nhận từ WebSocket — mới nhất lên đầu, chống trùng theo id. */
+  applyRemoteLog(log: ActivityLog): void {
+    this.logs.update((all) => (all.some((l) => l.id === log.id) ? all : [log, ...all]));
   }
 
   logsForCard(cardId: string): ActivityLog[] {
@@ -35,7 +41,7 @@ export class ActivityService {
       orgId: 'org-demo',
       boardId,
       cardId,
-      userId: CURRENT_USER_ID,
+      userId: this.auth.currentUserId(),
       actionType,
       actionText,
       createdAt: new Date().toISOString(),

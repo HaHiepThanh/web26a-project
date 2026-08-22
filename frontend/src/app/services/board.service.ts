@@ -57,9 +57,10 @@ export function relativeTimeFrom(iso: string): string {
   return new Date(iso).toLocaleDateString('vi-VN');
 }
 
-/** "Bạn" trong toàn bộ demo (chat, banner nhắc hạn, dashboard "việc của tôi") —
- *  tới khi AuthService/Firebase thật được bật, dùng tạm 1 thành viên mock cố định. */
-export const CURRENT_USER_ID = 'u-nam';
+/* "Bạn" là ai giờ lấy từ `AuthService.currentUserId` (Firebase uid thật).
+   Hằng số giả `CURRENT_USER_ID = 'u-nam'` từng nằm ở đây đã bị bỏ: nó không khớp
+   uid nào trong database nên "Việc của tôi" luôn rỗng và nút xoá bình luận của
+   chính mình không bao giờ hiện. */
 
 /** Thành viên tổ chức giả lập — dùng làm nguồn chọn "Người phụ trách" (#2) tới khi có API thật.
  *  Export để các mock khác (vd: components/board/workspace-stats-modal/board-stats.mock.ts)
@@ -180,6 +181,22 @@ export class BoardService {
   }
 
   /** Nạp 1 board theo id — dùng cho trang Board mở thẳng từ link chia sẻ. */
+  /**
+   * Áp thay đổi board nhận từ WebSocket (người khác đổi tên / quyền riêng tư).
+   *
+   * CHỈ chép `name` và `visibility`, không thay cả object. Màu và ảnh nền vẫn
+   * nằm ở localStorage vì backend chưa lưu hai trường đó — ghi đè nguyên bản ghi
+   * từ server là nền đang hiển thị biến mất.
+   */
+  applyRemoteBoard(r: ApiBoard): void {
+    const patch = (b: Board): Board =>
+      b.id === r.id ? { ...b, name: r.name, visibility: r.visibility } : b;
+
+    this.currentBoard.update((cur) => (cur ? patch(cur) : cur));
+    this.boards.update((all) => all.map(patch));
+    this.allBoards.update((all) => all.map(patch));
+  }
+
   async loadBoard(boardId: string): Promise<void> {
     this.loadError.set(null);
     try {

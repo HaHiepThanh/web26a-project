@@ -6,6 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { SupabaseService } from '../../common/supabase/supabase.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 /**
  * Postgres báo mã 22P02 khi nhận chuỗi không phải uuid vào cột kiểu uuid.
@@ -71,7 +72,10 @@ function laUuidSai(error: { code?: string } | null): boolean {
 /** CRUD board + visibility (#3). Xoá board chỉ owner (#7). */
 @Injectable()
 export class BoardsService {
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(
+    private readonly supabase: SupabaseService,
+    private readonly realtime: RealtimeGateway,
+  ) {}
 
   /**
    * Kiểm tra user có được truy cập workspace này không, trả về `org_id` của nó.
@@ -235,7 +239,9 @@ export class BoardsService {
     if (error) {
       throw new InternalServerErrorException('Không cập nhật được board.');
     }
-    return toBoard(data as BoardRow);
+    const updated = toBoard(data as BoardRow);
+    this.realtime.emitToBoard(id, 'board.updated', uid, updated);
+    return updated;
   }
 
   /**
@@ -266,5 +272,8 @@ export class BoardsService {
     if (error) {
       throw new InternalServerErrorException('Không xoá được board.');
     }
+    // Ai đang mở board này cần biết ngay để rời trang, thay vì ngồi thao tác tiếp
+    // trên một board không còn tồn tại rồi nhận 404 ở mọi thao tác.
+    this.realtime.emitToBoard(id, 'board.deleted', uid, { id });
   }
 }

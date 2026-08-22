@@ -3,7 +3,8 @@ import { FirebaseAuthGuard } from '../../common/firebase/firebase-auth.guard';
 import { CurrentUser } from '../../common/firebase/current-user.decorator';
 import type { CurrentUserInfo } from '../../common/firebase/current-user.decorator';
 import { AuthService } from './auth.service';
-import type { MeResponse, UserRow } from './auth.service';
+import { toUserProfile } from './auth.service';
+import type { MeResponse, UserProfile } from './auth.service';
 import { SyncProfileDto } from './dto/sync-profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 
@@ -23,17 +24,20 @@ export class AuthController {
    */
   @Post('sync')
   @HttpCode(HttpStatus.OK)
-  sync(@CurrentUser() user: CurrentUserInfo, @Body() body: SyncProfileDto): Promise<UserRow> {
-    return this.auth.syncProfile(user, body);
+  async sync(
+    @CurrentUser() user: CurrentUserInfo,
+    @Body() body: SyncProfileDto,
+  ): Promise<UserProfile> {
+    return toUserProfile(await this.auth.syncProfile(user, body));
   }
 
   /** PATCH /auth/profile — lưu thay đổi từ trang Cài đặt xuống database. */
   @Patch('profile')
-  updateProfile(
+  async updateProfile(
     @CurrentUser() user: CurrentUserInfo,
     @Body() body: UpdateProfileDto,
-  ): Promise<UserRow> {
-    return this.auth.updateProfile(user, body);
+  ): Promise<UserProfile> {
+    return toUserProfile(await this.auth.updateProfile(user, body));
   }
 
   /** GET /auth/me — hồ sơ + danh sách tổ chức + cờ needsOnboarding. */

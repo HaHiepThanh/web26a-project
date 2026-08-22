@@ -7,6 +7,26 @@ import {
 } from '@nestjs/common';
 import { SupabaseService } from '../../common/supabase/supabase.service';
 import { ActivityService } from '../activity/activity.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
+
+/** Khối `users(...)` mà Supabase join kèm — vẫn là snake_case của database. */
+interface JoinedUserRow {
+  display_name: string | null;
+  avatar_url: string | null;
+}
+
+/**
+ * Đổi khối user join kèm sang camelCase.
+ *
+ * ⚠️ Thiếu bước này thì API trả ra lai hai kiểu: các trường ngoài cùng camelCase
+ *    (`userId`, `createdAt`) còn khối `user` lại snake_case (`display_name`) —
+ *    frontend phải nhớ chỗ nào viết kiểu nào.
+ */
+function toUser(row: unknown): { displayName: string | null; avatarUrl: string | null } | null {
+  const u = row as JoinedUserRow | null;
+  if (!u) return null;
+  return { displayName: u.display_name ?? null, avatarUrl: u.avatar_url ?? null };
+}
 
 /** [BONUS #4] Bình luận trong card. */
 @Injectable()
@@ -16,6 +36,7 @@ export class CommentsService {
   constructor(
     private readonly supabase: SupabaseService,
     private readonly activity: ActivityService,
+    private readonly realtime: RealtimeGateway,
   ) {}
 
   /**
@@ -72,7 +93,7 @@ export class CommentsService {
       userId: c.user_id,
       content: c.content,
       createdAt: c.created_at,
-      user: c.users,
+      user: toUser(c.users),
     }));
   }
 
@@ -102,6 +123,7 @@ export class CommentsService {
     };
 
     if (card.boardId) {
+      this.realtime.emitToBoard(card.boardId, 'comment.created', userUid, created);
       await this.activity.record(
         card.boardId,
         userUid,
@@ -119,7 +141,7 @@ export class CommentsService {
 
     const { data: comment } = await sb
       .from('comments')
-      .select('id, user_id')
+      .select('id, user_id, card_id, cards(lists(board_id))')
       .eq('id', id)
       .maybeSingle();
 
@@ -134,6 +156,15 @@ export class CommentsService {
     if (error) {
       this.logger.error(`Xoá bình luận thất bại: ${error.message}`);
       throw new InternalServerErrorException('Không xoá được bình luận');
+    }
+
+    const boardId = (comment.cards as unknown as { lists: { board_id: string } | null } | null)
+      ?.lists?.board_id;
+    if (boardId) {
+      this.realtime.emitToBoard(boardId, 'comment.deleted', userUid, {
+        id,
+        cardId: comment.card_id as string,
+      });
     }
   }
 }

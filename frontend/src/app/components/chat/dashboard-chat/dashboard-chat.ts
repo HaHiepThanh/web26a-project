@@ -1,7 +1,7 @@
-import { Component, computed, inject, input, output } from '@angular/core';
+import { Component, computed, effect, inject, input, output } from '@angular/core';
 import { Board, User } from '../../../models';
 import { BoardService, avatarColorFor, initialsOf, relativeTimeFrom } from '../../../services/board.service';
-import { ChatService, CURRENT_CHAT_USER_ID } from '../../../services/chat.service';
+import { ChatService } from '../../../services/chat.service';
 
 interface ConversationRow {
   board: Board;
@@ -42,6 +42,7 @@ export class DashboardChat {
     const membersById: Record<string, User | undefined> = {};
     for (const m of members) membersById[m.id] = m;
 
+    const me = this.chat.currentUserId();
     const rows = this.boardService.allBoards().map((board): ConversationRow => {
       const preview = this.chat.getConversationPreview(board.id);
       const last = preview.lastMessage;
@@ -49,7 +50,7 @@ export class DashboardChat {
       return {
         board,
         lastMessageText: last?.content ?? null,
-        lastSenderLabel: last ? (last.userId === CURRENT_CHAT_USER_ID ? 'Bạn' : (sender?.displayName ?? sender?.email ?? 'Ẩn danh')) : null,
+        lastSenderLabel: last ? (last.userId === me ? 'Bạn' : (sender?.displayName ?? sender?.email ?? 'Ẩn danh')) : null,
         lastMessageAt: last?.createdAt ?? null,
         unreadCount: preview.unreadCount,
         avatarColor: avatarColorFor(board.id),
@@ -66,6 +67,14 @@ export class DashboardChat {
 
   constructor() {
     void this.boardService.loadAllBoards();
+
+    // Danh sách board về sau (bất đồng bộ) → lúc đó mới đi lấy tin cuối của từng
+    // board. `loadPreviews` tự bỏ qua board đã nạp nên effect chạy lại nhiều lần
+    // cũng không gọi lại API.
+    effect(() => {
+      const ids = this.boardService.allBoards().map((b) => b.id);
+      if (ids.length) void this.chat.loadPreviews(ids);
+    });
   }
 
   selectOverview(): void {

@@ -52,8 +52,41 @@ export interface MyOrganization {
   role: 'owner' | 'admin' | 'member';
 }
 
+/**
+ * Hồ sơ user như API trả ra ngoài — camelCase, thống nhất với mọi endpoint khác.
+ *
+ * `UserRow` ở trên là dòng thô của database (snake_case) và CHỈ dùng nội bộ trong
+ * service. Trả thẳng nó ra ngoài là để lộ tên cột database vào hợp đồng API —
+ * đổi tên cột một cái là gãy frontend.
+ */
+export interface UserProfile {
+  id: string;
+  email: string;
+  displayName: string | null;
+  username: string | null;
+  phone: string | null;
+  jobTitle: string | null;
+  avatarUrl: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export function toUserProfile(row: UserRow): UserProfile {
+  return {
+    id: row.id,
+    email: row.email,
+    displayName: row.display_name,
+    username: row.username,
+    phone: row.phone,
+    jobTitle: row.job_title,
+    avatarUrl: row.avatar_url,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
 export interface MeResponse {
-  user: UserRow;
+  user: UserProfile;
   organizations: MyOrganization[];
   /** true khi user chưa thuộc tổ chức nào → frontend đưa sang màn /onboarding. */
   needsOnboarding: boolean;
@@ -269,7 +302,7 @@ export class AuthService {
       }));
 
     return {
-      user: profile,
+      user: toUserProfile(profile),
       organizations,
       needsOnboarding: organizations.length === 0,
     };

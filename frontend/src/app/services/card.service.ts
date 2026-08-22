@@ -7,7 +7,7 @@ import {
 } from '../models';
 import { ApiService } from './api.service';
 import { describeError } from './api-error.util';
-import { CURRENT_USER_ID } from './board.service';
+import { AuthService } from './auth.service';
 
 /** 5 trường mà PATCH /cards/:id nhận. Khai tường minh thay vì Record<string, unknown>
  *  để gõ sai tên trường là TypeScript báo ngay, không phải chờ backend trả 400. */
@@ -32,6 +32,7 @@ const DUE_SOON_WINDOW_DAYS = 3;
 @Injectable({ providedIn: 'root' })
 export class CardService {
   private readonly api = inject(ApiService);
+  private readonly auth = inject(AuthService);
 
   // Map listId -> cards, tiện render theo cột.
   readonly cardsByList = signal<Record<string, Card[]>>({});
@@ -49,6 +50,7 @@ export class CardService {
   /** Đếm thẻ của "tôi" quá hạn / sắp đến hạn (#10, Mức 1 — không cron job, tính lại
    *  mỗi lần cardsByList đổi). Dùng cho banner ở board + badge 🔔 ở Header. */
   readonly myDueCounts = computed(() => {
+    const me = this.auth.currentUserId();
     const today = new Date().toISOString().slice(0, 10);
     const soonLimit = new Date(today);
     soonLimit.setDate(soonLimit.getDate() + DUE_SOON_WINDOW_DAYS);
@@ -58,7 +60,7 @@ export class CardService {
     let dueSoon = 0;
     for (const arr of Object.values(this.cardsByList())) {
       for (const c of arr) {
-        if (c.assigneeId !== CURRENT_USER_ID || !c.dueDate) continue;
+        if (c.assigneeId !== me || !c.dueDate) continue;
         if (c.dueDate < today) overdue++;
         else if (c.dueDate <= soonLimitStr) dueSoon++;
       }
@@ -67,7 +69,10 @@ export class CardService {
   });
 
   /** Toàn bộ thẻ gán cho "tôi" (bất kể hạn) — dùng cho mục "Việc của tôi" ở Dashboard (#10). */
-  readonly myCards = computed(() => Object.values(this.cardsByList()).flat().filter((c) => c.assigneeId === CURRENT_USER_ID));
+  readonly myCards = computed(() => {
+    const me = this.auth.currentUserId();
+    return Object.values(this.cardsByList()).flat().filter((c) => c.assigneeId === me);
+  });
 
   /** Backend trả 1 mảng phẳng mọi thẻ của board; giao diện cần gom theo cột. */
   private toCard(r: ApiCard): Card {
@@ -90,6 +95,33 @@ export class CardService {
   private fail(message: string): void {
     this.errorSeq++;
     this.lastError.set({ id: this.errorSeq, message });
+  }
+
+  /**
+   * Áp một thẻ nhận từ WebSocket (tạo/sửa/kéo bởi người khác).
+   *
+   * Phải gỡ thẻ khỏi MỌI cột trước rồi mới thêm vào cột đích: sự kiện
+   * `card.moved` mang thẻ đã đổi `listId`, nếu chỉ ghi đè tại chỗ thì thẻ ở lại
+   * cột cũ và xuất hiện thêm một bản ở cột mới.
+   */
+  applyRemoteCard(r: ApiCard): void {
+    const card = this.toCard(r);
+    this.cardsByList.update((map) => {
+      const next: Record<string, Card[]> = {};
+      for (const [listId, arr] of Object.entries(map)) {
+        next[listId] = arr.filter((c) => c.id !== card.id);
+      }
+      next[card.listId] = [...(next[card.listId] ?? []), card].sort((a, b) => a.position - b.position);
+      return next;
+    });
+  }
+
+  applyRemoteCardDeleted(id: string): void {
+    this.cardsByList.update((map) => {
+      const next: Record<string, Card[]> = {};
+      for (const [listId, arr] of Object.entries(map)) next[listId] = arr.filter((c) => c.id !== id);
+      return next;
+    });
   }
 
   async loadCards(boardId: string, force = false): Promise<void> {

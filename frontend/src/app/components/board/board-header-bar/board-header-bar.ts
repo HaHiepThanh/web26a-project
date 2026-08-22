@@ -2,7 +2,8 @@ import { Component, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { LucideArrowLeft, LucideFolderKanban, LucideListFilter, LucidePin, LucideStar, LucideX, LucideChartLine } from '@lucide/angular';
-import { Board, CardPriority, Label, List, User } from '../../../models';
+import { Board, BoardViewer, CardPriority, Label, List, User } from '../../../models';
+import { avatarColorFor, initialsOf } from '../../../services/board.service';
 import { FLAG_PATH } from '../card-item/card-item';
 
 /** Cùng bảng màu với card-item.ts (PRIORITY_TEXT) — để nút lọc "Mức ưu tiên" khớp
@@ -21,6 +22,20 @@ const PRIORITY_ACTIVE: Record<CardPriority, string> = {
 })
 export class BoardHeaderBar {
   readonly board = input<Board | null>(null);
+  /** Ai đang mở board này ngay lúc này (qua WebSocket). */
+  readonly viewers = input<BoardViewer[]>([]);
+  /** false = mất kết nối realtime → nội dung trên màn hình có thể đã cũ. */
+  readonly realtimeConnected = input<boolean>(true);
+
+  readonly avatarColorFor = avatarColorFor;
+  readonly initialsOf = initialsOf;
+
+  /** Chỉ vẽ tối đa 4 avatar, còn lại gộp thành "+N" cho khỏi tràn thanh tiêu đề. */
+  readonly VIEWERS_SHOWN = 4;
+
+  viewerLabel(v: BoardViewer): string {
+    return v.displayName ?? 'Ẩn danh';
+  }
   readonly listsCount = input<number>(0);
   readonly totalCards = input<number>(0);
   readonly viewMode = input<'status' | 'matrix'>('status');

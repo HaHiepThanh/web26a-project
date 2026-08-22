@@ -6,6 +6,26 @@ import {
 } from '@nestjs/common';
 import { SupabaseService } from '../../common/supabase/supabase.service';
 import { ActivityActionType } from './activity.types';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
+
+/** Khối `users(...)` mà Supabase join kèm — vẫn là snake_case của database. */
+interface JoinedUserRow {
+  display_name: string | null;
+  avatar_url: string | null;
+}
+
+/**
+ * Đổi khối user join kèm sang camelCase.
+ *
+ * ⚠️ Thiếu bước này thì API trả ra lai hai kiểu: các trường ngoài cùng camelCase
+ *    (`userId`, `createdAt`) còn khối `user` lại snake_case (`display_name`) —
+ *    frontend phải nhớ chỗ nào viết kiểu nào.
+ */
+function toUser(row: unknown): { displayName: string | null; avatarUrl: string | null } | null {
+  const u = row as JoinedUserRow | null;
+  if (!u) return null;
+  return { displayName: u.display_name ?? null, avatarUrl: u.avatar_url ?? null };
+}
 
 /**
  * [BONUS #6] Activity log feed cho board — đọc/ghi bảng thật `activity_logs`.
@@ -15,7 +35,10 @@ import { ActivityActionType } from './activity.types';
 export class ActivityService {
   private readonly logger = new Logger(ActivityService.name);
 
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(
+    private readonly supabase: SupabaseService,
+    private readonly realtime: RealtimeGateway,
+  ) {}
 
   /**
    * Người gọi có được đụng vào board này không? Không thì 404.
@@ -70,7 +93,7 @@ export class ActivityService {
       targetId: r.target_id,
       actionText: r.action_text,
       createdAt: r.created_at,
-      user: r.users,
+      user: toUser(r.users),
     }));
   }
 
@@ -94,18 +117,39 @@ export class ActivityService {
       return;
     }
 
-    const { error } = await sb.from('activity_logs').insert({
-      org_id: board.org_id,
-      board_id: boardId,
-      card_id: targetId ?? null,
-      user_id: userUid,
-      action_type: actionType,
-      target_id: targetId ?? null,
-      action_text: actionText,
-    });
+    // `.select().single()` để lấy lại dòng vừa ghi — cần id + created_at thật thì
+    // mới phát được cho những người đang mở board, chứ không tự bịa ở client.
+    const { data, error } = await sb
+      .from('activity_logs')
+      .insert({
+        org_id: board.org_id,
+        board_id: boardId,
+        card_id: targetId ?? null,
+        user_id: userUid,
+        action_type: actionType,
+        target_id: targetId ?? null,
+        action_text: actionText,
+      })
+      .select()
+      .single();
 
     if (error) {
       this.logger.warn(`Ghi activity log thất bại: ${error.message}`);
+      return;
     }
+
+    const r = data as Record<string, unknown>;
+    this.realtime.emitToBoard(boardId, 'activity.created', userUid, {
+      id: r.id,
+      orgId: r.org_id,
+      boardId: r.board_id,
+      cardId: r.card_id,
+      userId: r.user_id,
+      actionType: r.action_type,
+      targetId: r.target_id,
+      actionText: r.action_text,
+      createdAt: r.created_at,
+      user: null,
+    });
   }
 }

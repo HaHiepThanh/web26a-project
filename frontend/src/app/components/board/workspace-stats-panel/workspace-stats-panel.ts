@@ -1,8 +1,9 @@
-import { Component, computed, input, signal } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LucideTriangleAlert, LucideX } from '@lucide/angular';
 import { ActivityActionType, ActivityLog } from '../../../models';
-import { avatarColorFor, CURRENT_USER_ID, initialsOf } from '../../../services/board.service';
+import { avatarColorFor, initialsOf } from '../../../services/board.service';
+import { AuthService } from '../../../services/auth.service';
 import { MemberWorkloadStat, WorkspaceStatsData } from '../workspace-stats-modal/board-stats.mock';
 
 type LogScope = 'mine' | 'team';
@@ -54,8 +55,11 @@ let instanceSeq = 0;
   templateUrl: './workspace-stats-panel.html',
 })
 export class WorkspaceStatsPanel {
+  private readonly auth = inject(AuthService);
+
   readonly data = input.required<WorkspaceStatsData>();
-  readonly currentUserId = input<string>(CURRENT_USER_ID);
+  /** Bỏ trống thì lấy uid thật của người đang đăng nhập (bộ lọc "Của tôi"). */
+  readonly currentUserId = input<string>(this.auth.currentUserId());
 
   readonly overdueDrawerId = `wsp-overdue-drawer-${instanceSeq++}`;
 

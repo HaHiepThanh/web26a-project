@@ -33,6 +33,21 @@ export class AuthService {
   readonly currentUser = signal<User | null>(this.getInitialUser());
   readonly isLoggedIn = computed(() => this.currentUser() !== null);
 
+  /**
+   * id của người đang đăng nhập — CHÍNH LÀ Firebase uid, cũng là `users.id` dưới
+   * database và là giá trị nằm trong `cards.assignee_id`, `comments.user_id`,
+   * `messages.user_id`.
+   *
+   * Trước đây mỗi nơi tự khai một hằng số giả (`CURRENT_USER_ID = 'u-nam'`,
+   * `CURRENT_CHAT_USER_ID = 'u-nam'`) nên không khớp uid thật: "Việc của tôi"
+   * luôn rỗng, tin nhắn của mình vẫn căn trái, nút xoá bình luận không bao giờ
+   * hiện. Đây là NGUỒN DUY NHẤT, đừng khai lại ở chỗ khác.
+   *
+   * Trả '' khi chưa đăng nhập — không id nào bằng '' nên mọi phép so sánh tự
+   * động thành false, không cần chỗ gọi phải kiểm tra null.
+   */
+  readonly currentUserId = computed(() => this.currentUser()?.id ?? '');
+
   constructor() {
     try {
       if (this.firebase?.auth) {
@@ -220,11 +235,11 @@ export class AuthService {
     this.setUser({
       id: row.id,
       email: row.email,
-      displayName: row.display_name ?? undefined,
-      avatarUrl: row.avatar_url ?? undefined,
+      displayName: row.displayName ?? undefined,
+      avatarUrl: row.avatarUrl ?? undefined,
       username: row.username ?? undefined,
       phone: row.phone ?? undefined,
-      jobTitle: row.job_title ?? undefined,
+      jobTitle: row.jobTitle ?? undefined,
     });
   }
 
@@ -234,11 +249,11 @@ export class AuthService {
     this.setUser({
       id: me.user.id,
       email: me.user.email,
-      displayName: me.user.display_name ?? undefined,
-      avatarUrl: me.user.avatar_url ?? undefined,
+      displayName: me.user.displayName ?? undefined,
+      avatarUrl: me.user.avatarUrl ?? undefined,
       username: me.user.username ?? undefined,
       phone: me.user.phone ?? undefined,
-      jobTitle: me.user.job_title ?? undefined,
+      jobTitle: me.user.jobTitle ?? undefined,
     });
     return { needsOnboarding: me.needsOnboarding };
   }

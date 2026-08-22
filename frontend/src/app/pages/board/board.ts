@@ -1,6 +1,6 @@
 import { Component, DestroyRef, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import {
   Card,
@@ -20,6 +20,7 @@ import { ActivityService } from '../../services/activity.service';
 import { ChecklistService } from '../../services/checklist.service';
 import { CommentService } from '../../services/comment.service';
 import { AttachmentService } from '../../services/attachment.service';
+import { RealtimeService } from '../../services/realtime.service';
 import { BoardList } from '../../components/board/board-list/board-list';
 import { AddList } from '../../components/board/add-list/add-list';
 import { LabelPicker } from '../../components/board/label-picker/label-picker';
@@ -116,6 +117,8 @@ export class Board {
   private readonly checklistService = inject(ChecklistService);
   private readonly commentService = inject(CommentService);
   private readonly attachmentService = inject(AttachmentService);
+  private readonly realtime = inject(RealtimeService);
+  private readonly router = inject(Router);
 
   readonly boardId = this.route.snapshot.paramMap.get('id') ?? 'demo-board';
 
@@ -572,8 +575,27 @@ export class Board {
     el.scrollTo(horizontal ? { left: target, behavior: 'smooth' } : { top: target, behavior: 'smooth' });
   }
 
+  /** Ai đang mở board này — thanh tiêu đề vẽ dãy avatar. */
+  readonly viewers = this.realtime.viewers;
+  /** Mất kết nối realtime → hiện dải cảnh báo, vì lúc đó màn hình có thể đã cũ. */
+  readonly realtimeConnected = this.realtime.connected;
+
   constructor() {
     void this.bootstrap();
+
+    // Vào phòng WebSocket của board này, và RỜI khi rời trang. Thiếu vế thứ hai
+    // thì mở lần lượt 5 board là đang nghe cùng lúc cả 5.
+    const roiPhong = this.realtime.joinBoard(this.boardId);
+    inject(DestroyRef).onDestroy(roiPhong);
+
+    // Người khác vừa xoá đúng board mình đang mở → rời đi, đừng để người dùng
+    // thao tác tiếp rồi ăn 404 ở mọi nút bấm.
+    effect(() => {
+      if (this.realtime.boardDeleted() === this.boardId) {
+        this.addToast('Board này vừa bị xoá bởi một thành viên khác.', 'error');
+        void this.router.navigate(['/workspace']);
+      }
+    });
     this.loadSavedFilters();
     this.loadSavedHighlightGroups();
     this.loadCollapsedLists();
@@ -639,7 +661,8 @@ export class Board {
     void this.cardService.moveCardOptimistic(card.id, from.listId, to.listId, targetIndex, to.priority);
     if (!sameCell) {
       const priorityLabel = this.priorities.find((p) => p.id === to.priority)?.label ?? to.priority;
-      this.activityService.record(this.boardId, card.id, `đã kéo thẻ "${card.title}" sang "${this.listNameFor(to.listId)} · ${priorityLabel}"`, 'card_moved');
+      // Backend đã ghi 'card_moved' trong PATCH /cards/:id/move — ghi thêm ở đây
+      // là nhật ký hiện hai dòng cho cùng một thao tác kéo thả.
     }
   }
 

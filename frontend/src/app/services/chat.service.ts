@@ -1,72 +1,88 @@
-import { Injectable, inject, signal } from '@angular/core';
-import {
-  ApiMessage,
-  Message,
-  PendingSuggestion,
-  TaskSuggestion,
-  User,
-} from '../models';
+import { Injectable, computed, inject, signal } from '@angular/core';
+import { ApiCreatedMessage, ApiMessage, Message, PendingSuggestion, User } from '../models';
 import { AiService } from './ai.service';
-
 import { ApiService } from './api.service';
+import { AuthService } from './auth.service';
 import { describeError } from './api-error.util';
+
 let idSeq = 1;
-function mockId(prefix: string): string {
+function localId(prefix: string): string {
   return `${prefix}-${Date.now()}-${idSeq++}`;
 }
 
-/** "Bạn" trong khung chat demo — trùng 1 thành viên mock của board.service.ts. */
-export const CURRENT_CHAT_USER_ID = 'u-nam';
+/** Số tin giữ lại cho mỗi board ở phần xem trước Dashboard — chỉ cần đủ để đếm
+ *  "chưa đọc", không cần cả lịch sử. */
+const PREVIEW_KEEP = 30;
 
-/** Vài cặp tin nhắn mẫu khác nhau theo board (#chat-hub) — để Dashboard Chat không
- *  hiện y hệt 1 dòng preview cho mọi board; board không khớp id nào rơi về cặp mặc định. */
-const MESSAGE_SETS: Record<string, { userId: string; content: string; minutesAgo: number }[]> = {
-  // -- Dữ liệu mẫu đã comment để test từ tài khoản trắng hoàn toàn — bỏ comment để khôi phục --
-  // 'b-1': [
-  //   { userId: 'u-linh', content: 'Mọi người check lại API xác thực trước chiều nay giúp mình nhé', minutesAgo: 40 },
-  //   { userId: 'u-khoa', content: '@Nam làm giúp mình phần fix bug thanh toán trước thứ 6 nhé, gấp lắm', minutesAgo: 35 },
-  // ],
-  // 'b-2': [
-  //   { userId: 'u-my', content: 'Mình vừa đẩy xong bản UI tìm trọ mới, mọi người xem giúp', minutesAgo: 12 },
-  //   { userId: 'u-nam', content: 'Ok để mình review trong hôm nay', minutesAgo: 10 },
-  // ],
-  // 'b-3': [{ userId: 'u-bao', content: 'Tuần này còn 2 task deadline thứ 6, ai rảnh nhận giúp mình với', minutesAgo: 1440 }],
-  // 'b-4': [
-  //   { userId: 'u-khoa', content: 'Demo MVP cho nhà đầu tư dời sang 10h sáng mai nhé cả nhà', minutesAgo: 5 },
-  //   { userId: 'u-linh', content: 'Rõ, mình chuẩn bị lại slide', minutesAgo: 3 },
-  // ],
-};
+const LAST_SEEN_KEY = 'trello_chat_lastseen';
 
-const DEFAULT_MESSAGE_SET = MESSAGE_SETS['b-1'] ?? [];
-
-function mockMessages(boardId: string): Message[] {
-  const now = Date.now();
-  const set = MESSAGE_SETS[boardId] ?? DEFAULT_MESSAGE_SET;
-  return set.map((m) => ({
-    id: mockId('msg'),
-    orgId: 'org-demo',
-    boardId,
-    userId: m.userId,
-    content: m.content,
-    createdAt: new Date(now - 1000 * 60 * m.minutesAgo).toISOString(),
-  }));
+function loadLastSeen(): Record<string, number> {
+  if (typeof localStorage === 'undefined') return {};
+  try {
+    const raw = localStorage.getItem(LAST_SEEN_KEY);
+    const parsed = raw ? JSON.parse(raw) : null;
+    return parsed && typeof parsed === 'object' ? (parsed as Record<string, number>) : {};
+  } catch {
+    return {};
+  }
 }
 
-function lastSeenKey(boardId: string): string {
-  return `trello_chat_lastseen_${boardId}`;
-}
-
-/** [AI-CHAT] Khung chat nổi theo board (#8): gửi/nhận tin nhắn + phát hiện task qua AiService. */
+/**
+ * [AI-CHAT] Khung chat theo board (#8) — GỌI BACKEND THẬT + nhận tin mới qua WebSocket.
+ *
+ * Không còn nguồn dữ liệu giả nào ở đây. Trước kia `getConversationPreview()` dựng
+ * tin nhắn từ hằng số `MESSAGE_SETS` nên danh sách hội thoại ở Dashboard hiển thị
+ * nội dung không có thật (và sau khi comment hết dữ liệu mẫu thì luôn rỗng).
+ * Giờ mọi thứ đến từ `GET /chat?boardId=`.
+ *
+ * Tin nhắn của người khác KHÔNG do service này đi hỏi định kỳ: `RealtimeService`
+ * nhận sự kiện `chat.message` từ server rồi gọi `applyIncoming()`.
+ */
 @Injectable({ providedIn: 'root' })
 export class ChatService {
   private readonly ai = inject(AiService);
   private readonly api = inject(ApiService);
+  private readonly auth = inject(AuthService);
 
   readonly messages = signal<Message[]>([]);
   readonly loadError = signal<string | null>(null);
   readonly pendingSuggestion = signal<PendingSuggestion | null>(null);
 
+  /** uid thật của "Bạn" — quyết định tin nào căn phải, tin nào tính là chưa đọc. */
+  readonly currentUserId = this.auth.currentUserId;
+
+  /** Vài tin gần nhất của từng board, cho danh sách hội thoại ở Dashboard (#chat-hub).
+   *  Tách khỏi `messages` (state của board đang mở) để hai bên không đè nhau. */
+  private readonly previewByBoard = signal<Record<string, Message[]>>({});
+
+  /** Mốc "đã xem tới đâu" của từng board. Là signal chứ không đọc thẳng localStorage:
+   *  có vậy bấm vào một hội thoại xong thì badge chưa-đọc mới tự tắt. */
+  private readonly lastSeenAt = signal<Record<string, number>>(loadLastSeen());
+
   private loadedBoardId: string | null = null;
+
+  /** Tổng số tin chưa đọc trên mọi board — Header dùng để chấm badge 💬. */
+  readonly totalUnread = computed(() => {
+    const me = this.currentUserId();
+    const seen = this.lastSeenAt();
+    let total = 0;
+    for (const [boardId, msgs] of Object.entries(this.previewByBoard())) {
+      const mark = seen[boardId] ?? 0;
+      total += msgs.filter((m) => m.userId !== me && Date.parse(m.createdAt) > mark).length;
+    }
+    return total;
+  });
+
+  private toMessage(r: ApiMessage, boardId: string): Message {
+    return {
+      id: r.id,
+      orgId: '',
+      boardId,
+      userId: r.userId,
+      content: r.content,
+      createdAt: r.createdAt,
+    };
+  }
 
   async loadMessages(boardId: string, force = false): Promise<void> {
     if (!boardId) {
@@ -76,39 +92,29 @@ export class ChatService {
     if (!force && this.loadedBoardId === boardId) return;
     this.loadedBoardId = boardId;
     try {
-      const rows = await this.api.get<ApiMessage[]>(`/chat?boardId=${boardId}`);
-      // Backend trả kèm khối `user` (đã join sang bảng users) nhưng model
-      // `Message` chỉ giữ userId — tên hiển thị lấy từ roster thành viên khi vẽ.
-      this.messages.set(
-        rows.map((r) => ({
-          id: r.id,
-          orgId: '',
-          boardId,
-          userId: r.userId,
-          content: r.content,
-          createdAt: r.createdAt,
-        })) as Message[],
-      );
+      const rows = await this.api.get<ApiMessage[]>(`/chat?boardId=${encodeURIComponent(boardId)}`);
+      const list = rows.map((r) => this.toMessage(r, boardId));
+      this.messages.set(list);
+      this.cachePreview(boardId, list);
     } catch (e) {
       this.messages.set([]);
       this.loadError.set(describeError(e, 'Không tải được tin nhắn.'));
     }
   }
 
-  /** Gửi tin nhắn của "Bạn" (CURRENT_CHAT_USER_ID) rồi chạy AI phát hiện task (#8). */
+  /** Gửi tin nhắn rồi chạy AI phát hiện task (#8).
+   *  Không tự thêm vào `messages` — server sẽ phát lại qua WebSocket cho MỌI người
+   *  đang mở board, kể cả người gửi, nên thêm ở đây là hiện hai lần. */
   async sendMessage(boardId: string, content: string, members: User[]): Promise<void> {
     const trimmed = content.trim();
     if (!trimmed) return;
 
     let message: Message;
     try {
-      const row = await this.api.post<{ id: string; boardId: string; userId: string; content: string; createdAt: string }>(
-        '/chat',
-        { boardId, content: trimmed },
-      );
+      const row = await this.api.post<ApiCreatedMessage>('/chat', { boardId, content: trimmed });
       message = {
         id: row.id,
-        orgId: '',
+        orgId: row.orgId,
         boardId: row.boardId,
         userId: row.userId,
         content: row.content,
@@ -118,7 +124,7 @@ export class ChatService {
       this.loadError.set(describeError(e, 'Không gửi được tin nhắn.'));
       return;
     }
-    this.messages.update((all) => [...all, message]);
+    this.applyIncoming(message);
 
     const result = await this.ai.detectTask({
       boardId,
@@ -127,59 +133,86 @@ export class ChatService {
     });
 
     if (result.isTask && result.suggestion) {
-      this.pendingSuggestion.set({ id: mockId('sugg'), sourceMessageId: message.id, suggestion: result.suggestion });
+      this.pendingSuggestion.set({
+        id: localId('sugg'),
+        sourceMessageId: message.id,
+        suggestion: result.suggestion,
+      });
     }
+  }
+
+  /**
+   * Thêm 1 tin vào state — dùng cho cả tin mình vừa gửi lẫn tin nhận qua WebSocket.
+   *
+   * Chống trùng theo id: người gửi vừa thêm tại chỗ xong thì server cũng phát sự
+   * kiện về, nếu không lọc thì tin của chính mình hiện hai lần.
+   */
+  applyIncoming(message: Message): void {
+    if (this.loadedBoardId === message.boardId) {
+      this.messages.update((all) => (all.some((m) => m.id === message.id) ? all : [...all, message]));
+    }
+    this.previewByBoard.update((map) => {
+      const current = map[message.boardId] ?? [];
+      if (current.some((m) => m.id === message.id)) return map;
+      return { ...map, [message.boardId]: [...current, message].slice(-PREVIEW_KEEP) };
+    });
   }
 
   dismissSuggestion(): void {
     this.pendingSuggestion.set(null);
   }
 
-  /** Gửi tin nhắn giả lập từ người khác — dùng để demo badge/pulse/toast khi đóng chat. */
-  simulateIncomingMessage(boardId: string, userId: string, content: string): void {
-    const message: Message = {
-      id: mockId('msg'),
-      orgId: 'org-demo',
-      boardId,
-      userId,
-      content,
-      createdAt: new Date().toISOString(),
-    };
-    this.messages.update((all) => [...all, message]);
+  // ---- Dashboard Chat hub (#chat-hub) ----
+
+  /** Nạp tin gần nhất của nhiều board cùng lúc để vẽ danh sách hội thoại.
+   *  Gọi song song: 5 board là 5 request chạy đồng thời, không phải chờ nối đuôi. */
+  async loadPreviews(boardIds: string[]): Promise<void> {
+    const missing = boardIds.filter((id) => id && !(id in this.previewByBoard()));
+    if (!missing.length) return;
+
+    const results = await Promise.all(
+      missing.map(async (boardId) => {
+        try {
+          const rows = await this.api.get<ApiMessage[]>(`/chat?boardId=${encodeURIComponent(boardId)}`);
+          return [boardId, rows.map((r) => this.toMessage(r, boardId))] as const;
+        } catch {
+          // Một board hỏng không được làm hỏng cả danh sách — coi như chưa có tin.
+          return [boardId, [] as Message[]] as const;
+        }
+      }),
+    );
+
+    this.previewByBoard.update((map) => {
+      const next = { ...map };
+      for (const [boardId, msgs] of results) next[boardId] = msgs.slice(-PREVIEW_KEEP);
+      return next;
+    });
   }
 
-  subscribeToBoard(boardId: string): () => void {
-    return () => {};
+  private cachePreview(boardId: string, list: Message[]): void {
+    this.previewByBoard.update((map) => ({ ...map, [boardId]: list.slice(-PREVIEW_KEEP) }));
   }
 
-  // ---- Dashboard Chat hub (#chat-hub): xem trước 1 board mà KHÔNG đụng tới
-  // `messages`/`loadedBoardId` (state của khung chat board đang mở) ----
-
-  /** Tin cuối + số tin chưa đọc của 1 board, dựa trên mốc "đã xem tới đâu" lưu localStorage.
-   *  Tái dùng đúng mockMessages() dùng cho loadMessages(), không tạo nguồn dữ liệu thứ 2. */
+  /** Tin cuối + số tin chưa đọc của 1 board. Đọc từ signal nên tự vẽ lại khi có
+   *  tin mới qua WebSocket hoặc khi người dùng bấm `markSeen`. */
   getConversationPreview(boardId: string): { lastMessage: Message | null; unreadCount: number } {
-    const msgs = mockMessages(boardId);
-    const lastMessage = msgs[msgs.length - 1] ?? null;
-    const lastSeen = this.lastSeenFor(boardId);
-    const unreadCount = msgs.filter((m) => m.userId !== CURRENT_CHAT_USER_ID && Date.parse(m.createdAt) > lastSeen).length;
-    return { lastMessage, unreadCount };
-  }
-
-  private lastSeenFor(boardId: string): number {
-    try {
-      const raw = localStorage.getItem(lastSeenKey(boardId));
-      return raw ? Number(raw) || 0 : 0;
-    } catch {
-      return 0;
-    }
+    const msgs = this.previewByBoard()[boardId] ?? [];
+    const me = this.currentUserId();
+    const mark = this.lastSeenAt()[boardId] ?? 0;
+    return {
+      lastMessage: msgs[msgs.length - 1] ?? null,
+      unreadCount: msgs.filter((m) => m.userId !== me && Date.parse(m.createdAt) > mark).length,
+    };
   }
 
   /** Gọi khi người dùng thực sự đã mở/xem chat của 1 board — board đó hết "chưa đọc". */
   markSeen(boardId: string): void {
+    const next = { ...this.lastSeenAt(), [boardId]: Date.now() };
+    this.lastSeenAt.set(next);
     try {
-      localStorage.setItem(lastSeenKey(boardId), String(Date.now()));
+      localStorage.setItem(LAST_SEEN_KEY, JSON.stringify(next));
     } catch {
-      /* bỏ qua */
+      /* hết quota thì thôi, chỉ mất mốc đã đọc */
     }
   }
 }

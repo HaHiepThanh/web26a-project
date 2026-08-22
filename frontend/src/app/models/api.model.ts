@@ -22,16 +22,16 @@ import { Role } from './organization-member.model';
  * auth — backend/src/modules/auth
  * ------------------------------------------------------------------ */
 
-/** GET /auth/me. Các trường của `user` giữ snake_case vì đọc thẳng từ bảng `users`. */
+/** GET /auth/me — camelCase như mọi endpoint khác. */
 export interface MeResponse {
   user: {
     id: string;
     email: string;
-    display_name: string | null;
+    displayName: string | null;
     username: string | null;
     phone: string | null;
-    job_title: string | null;
-    avatar_url: string | null;
+    jobTitle: string | null;
+    avatarUrl: string | null;
   };
   organizations: { id: string; name: string; slug: string; role: Role }[];
   /** true khi user chưa thuộc tổ chức nào → điều hướng sang /onboarding. */
@@ -148,7 +148,7 @@ export interface ApiComment {
   userId: string;
   content: string;
   createdAt: string;
-  user: { display_name: string | null; avatar_url: string | null } | null;
+  user: { displayName: string | null; avatarUrl: string | null } | null;
 }
 
 /** POST /comments — trả về dòng vừa tạo, chưa join `users`. */
@@ -166,5 +166,16 @@ export interface ApiMessage {
   userId: string;
   content: string;
   createdAt: string;
-  user: { display_name: string | null; avatar_url: string | null } | null;
+  user: { displayName: string | null; avatarUrl: string | null } | null;
+}
+
+/** POST /chat — dòng vừa tạo, chưa join `users`. Cũng chính là hình dạng của sự
+ *  kiện WebSocket `chat.message` mà server phát cho mọi người đang mở board. */
+export interface ApiCreatedMessage {
+  id: string;
+  orgId: string;
+  boardId: string;
+  userId: string;
+  content: string;
+  createdAt: string;
 }

@@ -56,10 +56,10 @@ export class CommentService {
           createdAt: r.createdAt,
           user: r.user
             ? {
-                id: '',
+                id: r.userId,
                 email: '',
-                displayName: r.user.display_name ?? undefined,
-                avatarUrl: r.user.avatar_url ?? undefined,
+                displayName: r.user.displayName ?? undefined,
+                avatarUrl: r.user.avatarUrl ?? undefined,
               }
             : undefined,
         })) as Comment[],
@@ -90,6 +90,30 @@ export class CommentService {
     } catch (e) {
       this.fail(describeError(e, 'Không gửi được bình luận.'));
     }
+  }
+
+  /**
+   * Áp bình luận nhận từ WebSocket.
+   *
+   * Chỉ nạp vào những thẻ ĐÃ mở (`cardId` đã có trong map). Thẻ chưa mở thì bỏ
+   * qua: lần đầu mở thẻ đó `loadComments()` sẽ lấy đủ từ server — giữ sẵn bình
+   * luận cho cả trăm thẻ chỉ để phòng hờ là phí bộ nhớ.
+   */
+  applyRemoteComment(comment: Comment): void {
+    this.commentsByCard.update((map) => {
+      const current = map[comment.cardId];
+      if (!current) return map;
+      if (current.some((c) => c.id === comment.id)) return map;
+      return { ...map, [comment.cardId]: [...current, comment] };
+    });
+  }
+
+  applyRemoteCommentDeleted(cardId: string, commentId: string): void {
+    this.commentsByCard.update((map) => {
+      const current = map[cardId];
+      if (!current) return map;
+      return { ...map, [cardId]: current.filter((c) => c.id !== commentId) };
+    });
   }
 
   /** Backend chỉ cho TÁC GIẢ xoá — người khác gọi sẽ nhận 403, không phải kiểm tra ở đây. */

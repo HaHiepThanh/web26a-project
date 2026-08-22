@@ -6,6 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { SupabaseService } from '../../common/supabase/supabase.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 /**
  * Postgres báo mã 22P02 khi nhận chuỗi không phải uuid vào cột kiểu uuid.
@@ -55,7 +56,10 @@ const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
 /** Nhãn màu theo board + gắn/gỡ nhãn cho card (#4). */
 @Injectable()
 export class LabelsService {
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(
+    private readonly supabase: SupabaseService,
+    private readonly realtime: RealtimeGateway,
+  ) {}
 
   /**
    * Kiểm tra user có được truy cập board này không, trả về `org_id` của nó.
@@ -128,7 +132,9 @@ export class LabelsService {
     if (error) {
       throw new InternalServerErrorException('Không tạo được nhãn.');
     }
-    return toLabel(data as LabelRow);
+    const created = toLabel(data as LabelRow);
+    this.realtime.emitToBoard(created.boardId, 'label.created', uid, created);
+    return created;
   }
 
   /**
@@ -201,6 +207,7 @@ export class LabelsService {
     if (error) {
       throw new InternalServerErrorException('Không gắn được nhãn.');
     }
+    this.realtime.emitToBoard(label.board_id as string, 'label.attached', uid, { cardId, labelId });
     return { cardId, labelId };
   }
 
@@ -212,7 +219,7 @@ export class LabelsService {
   async detach(uid: string, cardId: string, labelId: string): Promise<void> {
     const { data: label, error: labelError } = await this.supabase.client
       .from('labels')
-      .select('id, org_id')
+      .select('id, org_id, board_id')
       .eq('id', labelId)
       .maybeSingle();
     if (labelError) {
@@ -249,5 +256,6 @@ export class LabelsService {
     if (!data || data.length === 0) {
       throw new NotFoundException('Nhãn này chưa được gắn vào thẻ.');
     }
+    this.realtime.emitToBoard(label.board_id as string, 'label.detached', uid, { cardId, labelId });
   }
 }

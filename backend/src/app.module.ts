@@ -15,6 +15,7 @@ import { ChatModule } from './modules/chat/chat.module';
 // import { AiModule } from './modules/ai/ai.module';   // ⏸ tạm tắt — xem ghi chú bên dưới
 import { ActivityModule } from './modules/activity/activity.module';
 import { CommentsModule } from './modules/comments/comments.module';
+import { RealtimeModule } from './modules/realtime/realtime.module';
 
 @Module({
   imports: [
@@ -25,6 +26,8 @@ import { CommentsModule } from './modules/comments/comments.module';
     // Hạ tầng dùng chung (global)
     SupabaseModule,
     FirebaseModule,
+    // WebSocket theo board — @Global, mọi module dưới đây phát sự kiện qua nó.
+    RealtimeModule,
     // Feature modules — lõi
     AuthModule,
     OrganizationsModule,

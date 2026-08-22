@@ -2,10 +2,10 @@ import { Component, computed, effect, inject, input, output } from '@angular/cor
 import { RouterLink } from '@angular/router';
 import { Board, User } from '../../../models';
 import { BoardService, avatarColorFor, initialsOf } from '../../../services/board.service';
-import { ChatService, CURRENT_CHAT_USER_ID } from '../../../services/chat.service';
+import { ChatService } from '../../../services/chat.service';
 import { CardService } from '../../../services/card.service';
 import { ListService } from '../../../services/list.service';
-import { ActivityService } from '../../../services/activity.service';
+import { RealtimeService } from '../../../services/realtime.service';
 import { OrganizationService } from '../../../services/organization.service';
 import { MessageList } from '../message-list/message-list';
 import { ChatInput } from '../chat-input/chat-input';
@@ -33,7 +33,7 @@ export class DashboardChatThread {
   private readonly chat = inject(ChatService);
   private readonly cardService = inject(CardService);
   private readonly listService = inject(ListService);
-  private readonly activityService = inject(ActivityService);
+  private readonly realtime = inject(RealtimeService);
 
   readonly board = input.required<Board>();
   /** Nút "←" chỉ hiện trên màn hình nhỏ (md:hidden) — báo Dashboard quay lại sidebar. */
@@ -43,7 +43,7 @@ export class DashboardChatThread {
   readonly avatarInitials = computed(() => initialsOf(this.board().name));
 
   readonly members = this.boardService.members;
-  readonly currentUserId = CURRENT_CHAT_USER_ID;
+  readonly currentUserId = this.chat.currentUserId;
   readonly messages = this.chat.messages;
 
   readonly usersById = computed(() => {
@@ -66,6 +66,14 @@ export class DashboardChatThread {
     // giá trị SAU khi Angular gán input — giống lý do ChatPanel dùng effect cho boardId().
     effect(() => {
       void this.bootstrap(this.board().id);
+    });
+
+    // Vào phòng WebSocket của board đang xem để tin nhắn về ngay, không phải F5.
+    // `onCleanup` chạy khi người dùng đổi sang hội thoại khác HOẶC rời trang —
+    // thiếu nó thì mỗi lần bấm sang board khác lại chồng thêm một lượt lắng nghe.
+    effect((onCleanup) => {
+      const roiPhong = this.realtime.joinBoard(this.board().id);
+      onCleanup(roiPhong);
     });
   }
 
@@ -93,7 +101,7 @@ export class DashboardChatThread {
       dueDate: pending.suggestion.dueDate,
     });
     this.chat.dismissSuggestion();
-    if (card) this.activityService.record(this.board().id, card.id, 'đã tạo thẻ này từ gợi ý AI trong chat');
+    // 'card_created' do backend ghi (POST /cards), không ghi lại ở đây.
   }
 
   dismissSuggestion(): void {

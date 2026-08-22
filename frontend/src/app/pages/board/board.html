@@ -4,6 +4,8 @@
   <!-- Board Header & Filter Controls Subcomponent -->
   <app-board-header-bar
     [board]="board()"
+    [viewers]="viewers()"
+    [realtimeConnected]="realtimeConnected()"
     [listsCount]="lists().length"
     [totalCards]="totalCards()"
     [viewMode]="viewMode()"

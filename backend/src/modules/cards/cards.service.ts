@@ -9,6 +9,7 @@ import {
 import { SupabaseService } from '../../common/supabase/supabase.service';
 import { ActivityService } from '../activity/activity.service';
 import { UpdateCardDto } from './dto/update-card.dto';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 /** Postgres báo mã này khi nhận chuỗi không phải uuid vào cột kiểu uuid. */
 const LOI_UUID_SAI = '22P02';
@@ -76,7 +77,23 @@ export class CardsService {
   constructor(
     private readonly supabase: SupabaseService,
     private readonly activity: ActivityService,
+    private readonly realtime: RealtimeGateway,
   ) {}
+
+  /**
+   * Board nào chứa cột này? Bảng `cards` chỉ có `list_id`, không có `board_id` —
+   * mà phòng WebSocket lại đặt tên theo board, nên phải tra thêm một bước.
+   * Trả '' khi không tra được: `emitToBoard` bỏ qua boardId rỗng, việc phát tin
+   * hỏng không được làm hỏng thao tác chính.
+   */
+  private async boardIdOfList(listId: string): Promise<string> {
+    const { data } = await this.supabase.client
+      .from('lists')
+      .select('board_id')
+      .eq('id', listId)
+      .maybeSingle();
+    return (data?.board_id as string) ?? '';
+  }
 
   /**
    * Người gọi có thuộc tổ chức này không? Không thuộc → 404.
@@ -197,7 +214,9 @@ export class CardsService {
       `Đã tạo thẻ "${title}"`,
       (data as CardRow).id,
     );
-    return toCard(data as CardRow);
+    const created = toCard(data as CardRow);
+    this.realtime.emitToBoard(list.board_id as string, 'card.created', uid, created);
+    return created;
   }
 
   async update(uid: string, id: string, changes: UpdateCardDto): Promise<CardResponse> {
@@ -225,7 +244,9 @@ export class CardsService {
       this.logger.error(`Cập nhật thẻ thất bại: ${error.message}`);
       throw new InternalServerErrorException('Không cập nhật được thẻ');
     }
-    return toCard(data as CardRow);
+    const updated = toCard(data as CardRow);
+    this.realtime.emitToBoard(await this.boardIdOfList(updated.listId), 'card.updated', uid, updated);
+    return updated;
   }
 
   async move(id: string, toListId: string, position: number, uid: string): Promise<CardResponse> {
@@ -265,16 +286,24 @@ export class CardsService {
       `Đã chuyển thẻ "${card.title}"`,
       id,
     );
-    return toCard(data as CardRow);
+
+    const moved = toCard(data as CardRow);
+    // Kéo thẻ sang board khác đã bị chặn ở trên, nên board cũ và mới luôn giống
+    // nhau — chỉ cần phát 1 lần vào board đích.
+    this.realtime.emitToBoard(toList.board_id as string, 'card.moved', uid, moved);
+    return moved;
   }
 
   async remove(uid: string, id: string): Promise<void> {
-    await this.assertCardAccess(uid, id);
+    const card = await this.assertCardAccess(uid, id);
+    // Tra board TRƯỚC khi xoá: xoá xong thì không còn dòng nào để lần ra list nữa.
+    const boardId = await this.boardIdOfList(card.list_id);
 
     const { error } = await this.supabase.client.from('cards').delete().eq('id', id);
     if (error) {
       this.logger.error(`Xoá thẻ thất bại: ${error.message}`);
       throw new InternalServerErrorException('Không xoá được thẻ');
     }
+    this.realtime.emitToBoard(boardId, 'card.deleted', uid, { id, listId: card.list_id });
   }
 }

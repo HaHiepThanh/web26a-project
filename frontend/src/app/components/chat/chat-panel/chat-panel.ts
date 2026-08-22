@@ -1,10 +1,9 @@
 import { Component, DestroyRef, computed, effect, inject, input, output, signal } from '@angular/core';
 import { User } from '../../../models';
-import { ChatService, CURRENT_CHAT_USER_ID } from '../../../services/chat.service';
+import { ChatService } from '../../../services/chat.service';
 import { BoardService } from '../../../services/board.service';
 import { CardService } from '../../../services/card.service';
 import { ListService } from '../../../services/list.service';
-import { ActivityService } from '../../../services/activity.service';
 import { MessageList } from '../message-list/message-list';
 import { ChatInput } from '../chat-input/chat-input';
 
@@ -37,7 +36,6 @@ export class ChatPanel {
   private readonly boardService = inject(BoardService);
   private readonly cardService = inject(CardService);
   private readonly listService = inject(ListService);
-  private readonly activityService = inject(ActivityService);
 
   readonly boardId = input.required<string>();
   readonly taskCreated = output<string>();
@@ -57,7 +55,8 @@ export class ChatPanel {
 
   readonly messages = this.chat.messages;
   readonly members = this.boardService.members;
-  readonly currentUserId = CURRENT_CHAT_USER_ID;
+  /** uid thật của người đang đăng nhập — tin của mình mới căn phải. */
+  readonly currentUserId = this.chat.currentUserId;
 
   readonly usersById = computed(() => {
     const map: Record<string, User | undefined> = {};
@@ -99,7 +98,7 @@ export class ChatPanel {
       }
       const newOnes = list.slice(this.lastSeenCount);
       this.lastSeenCount = list.length;
-      const fromOthers = newOnes.filter((m) => m.userId !== CURRENT_CHAT_USER_ID);
+      const fromOthers = newOnes.filter((m) => m.userId !== this.currentUserId());
       if (!fromOthers.length || !this.collapsed()) return;
 
       this.unreadCount.update((n) => n + fromOthers.length);
@@ -190,21 +189,12 @@ export class ChatPanel {
     });
     this.chat.dismissSuggestion();
     if (card) {
-      this.activityService.record(this.boardId(), card.id, 'đã tạo thẻ này từ gợi ý AI trong chat', 'card_created');
+      // 'card_created' do backend ghi (POST /cards), không ghi lại ở đây.
       this.taskCreated.emit(card.title);
     }
   }
 
   dismissSuggestion(): void {
     this.chat.dismissSuggestion();
-  }
-
-  /** Nút demo — giả lập tin nhắn từ người khác để xem badge/pulse/toast/title khi đóng chat. */
-  simulateIncoming(): void {
-    const others = this.members().filter((m) => m.id !== CURRENT_CHAT_USER_ID);
-    const from = others[Math.floor(Math.random() * others.length)] ?? this.members()[0];
-    if (!from) return;
-    const samples = ['Bug ở form đăng ký nghiêm trọng nè mọi người ơi', '@Nam xem giúp mình PR #482 với', 'Ai rảnh review code giúp mình không?'];
-    this.chat.simulateIncomingMessage(this.boardId(), from.id, samples[Math.floor(Math.random() * samples.length)]);
   }
 }

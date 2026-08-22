@@ -39,6 +39,26 @@ export class ListService {
     this.lastError.set({ id: this.errorSeq, message });
   }
 
+  /**
+   * Áp một cột nhận từ WebSocket (người khác vừa tạo/đổi tên/kéo).
+   *
+   * Kiểu "có id rồi thì ghi đè, chưa có thì thêm vào" chứ không phải "thêm mới".
+   * Server phát cho MỌI người đang mở board — kể cả người vừa bấm nút — nên nếu
+   * chỉ biết thêm thì người tạo sẽ thấy cột của mình hiện hai lần.
+   */
+  applyRemoteList(r: ApiList): void {
+    const incoming = this.toList(r);
+    this.lists.update((all) => {
+      const idx = all.findIndex((l) => l.id === incoming.id);
+      const next = idx >= 0 ? all.map((l) => (l.id === incoming.id ? incoming : l)) : [...all, incoming];
+      return next.sort((a, b) => a.position - b.position);
+    });
+  }
+
+  applyRemoteListDeleted(id: string): void {
+    this.lists.update((all) => all.filter((l) => l.id !== id));
+  }
+
   async loadLists(boardId: string, force = false): Promise<void> {
     if (!boardId) {
       this.lists.set([]);
