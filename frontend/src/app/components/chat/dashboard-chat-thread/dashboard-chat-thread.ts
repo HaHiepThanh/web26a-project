@@ -72,7 +72,7 @@ export class DashboardChatThread {
   private async bootstrap(boardId: string): Promise<void> {
     await this.listService.loadLists(boardId);
     const listIds = this.listService.lists().map((l) => l.id);
-    await this.cardService.loadCards(boardId, listIds);
+    await this.cardService.loadCards(boardId);
     await this.chat.loadMessages(boardId);
     this.chat.markSeen(boardId);
   }

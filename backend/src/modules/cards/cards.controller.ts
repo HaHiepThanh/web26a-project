@@ -23,8 +23,8 @@ export class CardsController {
   constructor(private readonly cards: CardsService) {}
 
   @Get()
-  findAll(@Query('boardId') boardId: string) {
-    return this.cards.findAll(boardId);
+  findAll(@CurrentUser() user: CurrentUserInfo, @Query('boardId') boardId: string) {
+    return this.cards.findAll(user.uid, boardId);
   }
 
   @Post()
@@ -33,8 +33,12 @@ export class CardsController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() body: UpdateCardDto) {
-    return this.cards.update(id, body);
+  update(
+    @CurrentUser() user: CurrentUserInfo,
+    @Param('id') id: string,
+    @Body() body: UpdateCardDto,
+  ) {
+    return this.cards.update(user.uid, id, body);
   }
 
   @Patch(':id/move')
@@ -47,7 +51,7 @@ export class CardsController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.cards.remove(id);
+  remove(@CurrentUser() user: CurrentUserInfo, @Param('id') id: string) {
+    return this.cards.remove(user.uid, id);
   }
 }

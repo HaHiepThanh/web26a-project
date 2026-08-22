@@ -1,4 +1,9 @@
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { SupabaseService } from '../../common/supabase/supabase.service';
 import { ActivityActionType } from './activity.types';
 
@@ -12,8 +17,36 @@ export class ActivityService {
 
   constructor(private readonly supabase: SupabaseService) {}
 
+  /**
+   * Người gọi có được đụng vào board này không? Không thì 404.
+   *
+   * ⚠️ Nhật ký ghi lại ai làm gì trong nội bộ công ty — thiếu hàm này thì người
+   *    ngoài đọc được toàn bộ hoạt động của mọi tổ chức khác.
+   */
+  private async assertBoardAccess(uid: string, boardId: string): Promise<void> {
+    const sb = this.supabase.client;
+    const { data: board, error } = await sb
+      .from('boards')
+      .select('id, org_id')
+      .eq('id', boardId)
+      .maybeSingle();
+    // 22P02 = id gõ sai định dạng uuid → coi như không tồn tại.
+    if (error?.code === '22P02' || !board) throw new NotFoundException('Không tìm thấy board.');
+
+    const { data: member } = await sb
+      .from('organization_members')
+      .select('role')
+      .eq('org_id', board.org_id as string)
+      .eq('user_id', uid)
+      .maybeSingle();
+    if (!member) throw new NotFoundException('Không tìm thấy board.');
+  }
+
   // Lấy log của board, mới nhất trước.
-  async findAll(boardId: string): Promise<unknown[]> {
+  async findAll(uid: string, boardId: string): Promise<unknown[]> {
+    if (!boardId) return [];
+    await this.assertBoardAccess(uid, boardId);
+
     const { data, error } = await this.supabase.client
       .from('activity_logs')
       .select('*, users(display_name, avatar_url)')
@@ -26,7 +59,19 @@ export class ActivityService {
       throw new InternalServerErrorException('Không đọc được nhật ký');
     }
 
-    return data;
+    // Đổi sang camelCase cho khớp phần còn lại của API.
+    return (data as Record<string, unknown>[]).map((r) => ({
+      id: r.id,
+      orgId: r.org_id,
+      boardId: r.board_id,
+      cardId: r.card_id,
+      userId: r.user_id,
+      actionType: r.action_type,
+      targetId: r.target_id,
+      actionText: r.action_text,
+      createdAt: r.created_at,
+      user: r.users,
+    }));
   }
 
   /**

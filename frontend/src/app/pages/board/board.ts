@@ -595,7 +595,7 @@ export class Board {
     await this.labelService.loadLabels(this.boardId);
     await this.listService.loadLists(this.boardId);
     const listIds = this.lists().map((l) => l.id);
-    await this.cardService.loadCards(this.boardId, listIds);
+    await this.cardService.loadCards(this.boardId);
   }
 
   /** Thẻ của 1 list, đã áp sắp xếp hiển thị (#thứ tự lưu thật không đổi trừ khi kéo-thả thủ công). */

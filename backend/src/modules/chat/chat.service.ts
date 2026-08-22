@@ -13,12 +13,41 @@ export class ChatService {
 
   constructor(private readonly supabase: SupabaseService) {}
 
-  async findAll(boardId: string): Promise<unknown[]> {
+  /**
+   * Người gọi có được đụng vào board này không? Không thì 404.
+   *
+   * ⚠️ Thiếu hàm này thì ai đăng nhập cũng đọc được toàn bộ chat nội bộ của mọi
+   *    công ty khác, chỉ cần đoán đúng boardId.
+   */
+  private async assertBoardAccess(uid: string, boardId: string): Promise<string> {
+    const sb = this.supabase.client;
+    const { data: board, error } = await sb
+      .from('boards')
+      .select('id, org_id')
+      .eq('id', boardId)
+      .maybeSingle();
+    // 22P02 = id gõ sai định dạng uuid → coi như không tồn tại.
+    if (error?.code === '22P02' || !board) throw new NotFoundException('Không tìm thấy board.');
+
+    const { data: member } = await sb
+      .from('organization_members')
+      .select('role')
+      .eq('org_id', board.org_id as string)
+      .eq('user_id', uid)
+      .maybeSingle();
+    if (!member) throw new NotFoundException('Không tìm thấy board.');
+
+    return board.org_id as string;
+  }
+
+  async findAll(uid: string, boardId: string): Promise<unknown[]> {
+    if (!boardId) return [];
+    await this.assertBoardAccess(uid, boardId);
     const sb = this.supabase.client;
 
     const { data, error } = await sb
       .from('messages')
-      .select('id, content, created_at, users(display_name, avatar_url)')
+      .select('id, user_id, content, created_at, users(display_name, avatar_url)')
       .eq('board_id', boardId)
       .order('created_at', { ascending: true });
 
@@ -27,8 +56,11 @@ export class ChatService {
       throw new InternalServerErrorException('Không đọc được tin nhắn');
     }
 
+    // userId là BẮT BUỘC: frontend cần nó để biết tin nào của mình (căn trái/phải)
+    // — chỉ có display_name thì hai người trùng tên là hiển thị sai.
     return data.map((m) => ({
       id: m.id,
+      userId: m.user_id,
       content: m.content,
       createdAt: m.created_at,
       user: m.users,
@@ -36,19 +68,12 @@ export class ChatService {
   }
 
   async create(boardId: string, userUid: string, content: string): Promise<unknown> {
+    const orgId = await this.assertBoardAccess(userUid, boardId);
     const sb = this.supabase.client;
-
-    const { data: board } = await sb
-      .from('boards')
-      .select('id, org_id')
-      .eq('id', boardId)
-      .maybeSingle();
-
-    if (!board) throw new NotFoundException('Không tìm thấy board.');
 
     const { data, error } = await sb
       .from('messages')
-      .insert({ board_id: boardId, org_id: board.org_id, user_id: userUid, content })
+      .insert({ board_id: boardId, org_id: orgId, user_id: userUid, content })
       .select()
       .single();
 
@@ -57,6 +82,16 @@ export class ChatService {
       throw new InternalServerErrorException('Không gửi được tin nhắn');
     }
 
-    return data;
+    // Đổi sang camelCase cho khớp phần còn lại của API — đừng trả thẳng dòng Supabase.
+    const row = data as Record<string, unknown>;
+    return {
+      id: row.id,
+      orgId: row.org_id,
+      boardId: row.board_id,
+      userId: row.user_id,
+      content: row.content,
+      createdAt: row.created_at,
+    };
+
   }
 }

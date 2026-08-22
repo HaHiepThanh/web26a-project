@@ -1,8 +1,7 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { User } from '../../../models';
 import { CommentService } from '../../../services/comment.service';
 import { BoardService, CURRENT_USER_ID, avatarColorFor, initialsOf } from '../../../services/board.service';
-import { ActivityService } from '../../../services/activity.service';
 
 /** [BONUS #4] Bình luận trong card: thêm, xoá bình luận của chính mình. */
 @Component({
@@ -14,7 +13,6 @@ import { ActivityService } from '../../../services/activity.service';
 export class CommentList {
   private readonly commentService = inject(CommentService);
   private readonly boardService = inject(BoardService);
-  private readonly activityService = inject(ActivityService);
 
   readonly cardId = input.required<string>();
   readonly boardId = input.required<string>();
@@ -30,6 +28,21 @@ export class CommentList {
 
   readonly comments = computed(() => this.commentService.commentsFor(this.cardId()));
   readonly newCommentText = signal('');
+
+  constructor() {
+    // Nạp bình luận từ backend mỗi khi mở một thẻ khác. Thiếu chỗ này thì thẻ cũ
+    // luôn hiện rỗng — bình luận chỉ xuất hiện với thẻ vừa gõ trong phiên này.
+    effect(() => {
+      const id = this.cardId();
+      if (id) void this.commentService.loadComments(id);
+    });
+  }
+
+  /** Tên hiển thị lấy từ backend (đã join bảng `users`); không có thì dò trong
+   *  roster thành viên như trước. */
+  displayNameOf(comment: { userId: string; user?: User }): string {
+    return comment.user?.displayName ?? comment.user?.email ?? this.userLabel(comment.userId);
+  }
 
   userLabel(userId: string): string {
     const u = this.membersById()[userId];
@@ -55,12 +68,13 @@ export class CommentList {
   addComment(): void {
     const text = this.newCommentText().trim();
     if (!text) return;
-    this.commentService.addComment(this.cardId(), text);
-    this.activityService.record(this.boardId(), this.cardId(), 'đã bình luận vào thẻ này');
+    // Backend tự ghi activity log khi thêm bình luận — không gọi record() ở đây
+    // nữa, nếu không nhật ký sẽ có 2 dòng cho cùng một hành động.
+    void this.commentService.addComment(this.cardId(), text);
     this.newCommentText.set('');
   }
 
   deleteComment(commentId: string): void {
-    this.commentService.deleteComment(this.cardId(), commentId);
+    void this.commentService.deleteComment(this.cardId(), commentId);
   }
 }

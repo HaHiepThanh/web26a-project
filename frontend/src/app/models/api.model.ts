@@ -15,6 +15,7 @@
  */
 
 import { BoardBackground, BoardVisibility } from './board.model';
+import { CardPriority } from './card.model';
 import { Role } from './organization-member.model';
 
 /* ------------------------------------------------------------------ *
@@ -119,4 +120,51 @@ export interface ApiLabel {
   boardId: string;
   name: string;
   color: string;
+}
+
+/* ------------------------------------------------------------------ *
+ * cards / comments / chat — backend/src/modules/{cards,comments,chat}
+ * ------------------------------------------------------------------ */
+
+export interface ApiCard {
+  id: string;
+  orgId: string;
+  listId: string;
+  title: string;
+  description: string | null;
+  assigneeId: string | null;
+  dueDate: string | null;
+  priority: CardPriority;
+  completedAt: string | null;
+  position: number;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** GET /comments?cardId= — đã join sang bảng `users` để có tên người bình luận. */
+export interface ApiComment {
+  id: string;
+  userId: string;
+  content: string;
+  createdAt: string;
+  user: { display_name: string | null; avatar_url: string | null } | null;
+}
+
+/** POST /comments — trả về dòng vừa tạo, chưa join `users`. */
+export interface ApiCreatedComment {
+  id: string;
+  cardId: string;
+  userId: string;
+  content: string;
+  createdAt: string;
+}
+
+/** GET /chat?boardId= — đã join sang bảng `users`. */
+export interface ApiMessage {
+  id: string;
+  userId: string;
+  content: string;
+  createdAt: string;
+  user: { display_name: string | null; avatar_url: string | null } | null;
 }

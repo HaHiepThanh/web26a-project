@@ -8,6 +8,7 @@ import {
   BoardVisibility,
   User,
 } from '../models';
+import { OrganizationService } from './organization.service';
 /** Board người dùng tạo được lưu lại để F5 không mất tên/nền/quyền riêng tư.
  *  Đây là nơi DUY NHẤT giữ ảnh nền (base64) — trang Workspace đọc lại qua
  *  `backgroundImageByBoardId` chứ không lưu thêm bản sao, tránh nhân đôi dung lượng. */
@@ -83,6 +84,7 @@ export const MOCK_MEMBERS: User[] = [
 @Injectable({ providedIn: 'root' })
 export class BoardService {
   private readonly api = inject(ApiService);
+  private readonly organizations = inject(OrganizationService);
   readonly loading = signal(false);
   readonly loadError = signal<string | null>(null);
   readonly boards = signal<Board[]>([]); // danh sách board trong 1 workspace
@@ -92,7 +94,16 @@ export class BoardService {
   readonly currentBoard = signal<Board | null>(null);
   /** Cảnh báo lưu trữ gần nhất (vỡ quota localStorage) — trang Workspace đọc để hiện toast. */
   readonly storageWarning = signal<string | null>(null);
-  readonly members = signal<User[]>(MOCK_MEMBERS);
+  /**
+   * Thành viên dùng cho ô "Người phụ trách", avatar chat, tên người bình luận.
+   *
+   * Lấy từ tổ chức đang mở (`GET /organizations/:id/members` — phần của Huy) chứ
+   * không phải danh sách giả nữa. Chưa nạp xong thì rỗng, KHÔNG rơi về mock:
+   * hiện tên người không có thật còn khó hiểu hơn là để trống.
+   */
+  readonly members = computed<User[]>(() =>
+    this.organizations.membersOf(this.organizations.activeOrgId()).map((m) => m.user),
+  );
 
   /** Board người dùng đã tạo, khôi phục từ localStorage lúc khởi động — để tên/nền/quyền
    *  riêng tư không bị mất khi điều hướng sang trang Board HAY khi F5. */

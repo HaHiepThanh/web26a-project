@@ -1,5 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import {
+  ApiMessage,
   Message,
   PendingSuggestion,
   TaskSuggestion,
@@ -7,6 +8,8 @@ import {
 } from '../models';
 import { AiService } from './ai.service';
 
+import { ApiService } from './api.service';
+import { describeError } from './api-error.util';
 let idSeq = 1;
 function mockId(prefix: string): string {
   return `${prefix}-${Date.now()}-${idSeq++}`;
@@ -57,16 +60,39 @@ function lastSeenKey(boardId: string): string {
 @Injectable({ providedIn: 'root' })
 export class ChatService {
   private readonly ai = inject(AiService);
+  private readonly api = inject(ApiService);
 
   readonly messages = signal<Message[]>([]);
+  readonly loadError = signal<string | null>(null);
   readonly pendingSuggestion = signal<PendingSuggestion | null>(null);
 
   private loadedBoardId: string | null = null;
 
-  async loadMessages(boardId: string): Promise<void> {
-    if (this.loadedBoardId === boardId) return;
+  async loadMessages(boardId: string, force = false): Promise<void> {
+    if (!boardId) {
+      this.messages.set([]);
+      return;
+    }
+    if (!force && this.loadedBoardId === boardId) return;
     this.loadedBoardId = boardId;
-    this.messages.set(mockMessages(boardId));
+    try {
+      const rows = await this.api.get<ApiMessage[]>(`/chat?boardId=${boardId}`);
+      // Backend trả kèm khối `user` (đã join sang bảng users) nhưng model
+      // `Message` chỉ giữ userId — tên hiển thị lấy từ roster thành viên khi vẽ.
+      this.messages.set(
+        rows.map((r) => ({
+          id: r.id,
+          orgId: '',
+          boardId,
+          userId: r.userId,
+          content: r.content,
+          createdAt: r.createdAt,
+        })) as Message[],
+      );
+    } catch (e) {
+      this.messages.set([]);
+      this.loadError.set(describeError(e, 'Không tải được tin nhắn.'));
+    }
   }
 
   /** Gửi tin nhắn của "Bạn" (CURRENT_CHAT_USER_ID) rồi chạy AI phát hiện task (#8). */
@@ -74,14 +100,24 @@ export class ChatService {
     const trimmed = content.trim();
     if (!trimmed) return;
 
-    const message: Message = {
-      id: mockId('msg'),
-      orgId: 'org-demo',
-      boardId,
-      userId: CURRENT_CHAT_USER_ID,
-      content: trimmed,
-      createdAt: new Date().toISOString(),
-    };
+    let message: Message;
+    try {
+      const row = await this.api.post<{ id: string; boardId: string; userId: string; content: string; createdAt: string }>(
+        '/chat',
+        { boardId, content: trimmed },
+      );
+      message = {
+        id: row.id,
+        orgId: '',
+        boardId: row.boardId,
+        userId: row.userId,
+        content: row.content,
+        createdAt: row.createdAt,
+      };
+    } catch (e) {
+      this.loadError.set(describeError(e, 'Không gửi được tin nhắn.'));
+      return;
+    }
     this.messages.update((all) => [...all, message]);
 
     const result = await this.ai.detectTask({

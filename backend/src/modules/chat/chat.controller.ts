@@ -18,8 +18,8 @@ export class ChatController {
   constructor(private readonly chat: ChatService) {}
 
   @Get()
-  findAll(@Query('boardId') boardId: string) {
-    return this.chat.findAll(boardId);
+  findAll(@CurrentUser() user: CurrentUserInfo, @Query('boardId') boardId: string) {
+    return this.chat.findAll(user.uid, boardId);
   }
 
   @Post()

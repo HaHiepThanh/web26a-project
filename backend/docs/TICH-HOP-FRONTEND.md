@@ -1,7 +1,8 @@
 # Tích hợp frontend ↔ backend — phần của Huy
 
-> Trạng thái: **26 endpoint đã nối xong và chạy thật** — 12 của Huy (tổ chức,
-> workspace) + 14 của Hoà (board, list, label).
+> Trạng thái: **38 endpoint đã nối xong và chạy thật** — 12 của Huy (tổ chức,
+> workspace) + 14 của Hoà (board, list, label) + 12 của Hoàng (card, comment,
+> chat, activity).
 > Mọi thao tác dưới đây đã được bấm tay trên trình duyệt và đối chiếu với Supabase.
 
 ---
@@ -85,6 +86,49 @@ cache promise nên nhiều guard trên cùng một route chỉ tạo đúng 1 re
 Thêm một lớp phòng thủ: nếu gọi API **hỏng** (mất mạng, backend chưa chạy),
 `onboardingGuard` cho vào app kèm banner lỗi thay vì đá sang `/onboarding` — người
 dùng thấy màn tạo tổ chức sẽ tưởng mất sạch dữ liệu và tạo thêm tổ chức thừa.
+
+---
+
+## Phần của Hoàng
+
+| Endpoint | Nối vào đâu ở giao diện |
+|---|---|
+| `POST /cards` · `GET /cards?boardId=` | Ô "Thêm thẻ" · các thẻ trên board |
+| `PATCH /cards/:id` | Modal chi tiết thẻ (tiêu đề, mô tả, ưu tiên, hạn, người phụ trách) |
+| `PATCH /cards/:id/move` | Kéo thả thẻ giữa/trong cột |
+| `DELETE /cards/:id` | Nút "Xoá thẻ" trong modal |
+| `POST /comments` · `GET /comments?cardId=` | Khung bình luận trong modal thẻ |
+| `DELETE /comments/:id` | Nút xoá trên bình luận của chính mình |
+| `POST /chat` · `GET /chat?boardId=` | Khung chat của board |
+| `GET /activity?boardId=` | Nhật ký hoạt động |
+
+### 🔴 Lỗ hổng bảo mật trong bản gửi PR — ĐÃ SỬA
+
+`GET /cards`, `PATCH /cards/:id`, `DELETE /cards/:id`, `GET /comments`,
+`GET /chat`, `GET /activity` **không nhận `uid` và không kiểm tra quyền gì cả**.
+Controller không truyền `@CurrentUser()` xuống service.
+
+Kiểm chứng thật: tài khoản B không thuộc tổ chức nào của A vẫn
+
+```
+GET    /cards?boardId=   → 200  đọc được thẻ của A
+GET    /comments?cardId= → 200  đọc được bình luận nội bộ
+GET    /chat?boardId=    → 200  đọc được chat nội bộ
+PATCH  /cards/:id        → 200  SỬA được thẻ của A
+DELETE /cards/:id        → 200  XOÁ được thẻ của A
+```
+
+Đã sửa: thêm `assertOrgMember` / `assertBoardAccess` / `assertCardAccess` vào cả
+4 service (cards, comments, chat, activity) và truyền `@CurrentUser()` từ controller.
+Sau khi sửa, cả 6 trường hợp trên đều trả **404**.
+
+### Hai điểm nữa đã sửa
+
+- **snake_case** — cards/comments/chat/activity trả nguyên dòng Supabase. Đã đổi
+  sang camelCase như phần còn lại.
+- **Thiếu `userId` trong `GET /chat` và `GET /comments`** — trả tên hiển thị nhưng
+  không trả id, nên frontend không biết tin nhắn nào là của mình (để căn trái/phải)
+  và bình luận nào được phép xoá. Đã thêm `user_id` vào câu `select`.
 
 ---
 
@@ -180,7 +224,8 @@ Muốn tìm theo email/tên thì backend phải có endpoint tra cứu người 
 | Cờ đánh dấu sao board | Chưa có endpoint `board_stars` |
 | Danh sách thành viên **của từng workspace** | Chưa có endpoint `workspace_members` |
 | Thẻ nào đang gắn nhãn nào | Cần `GET /cards` — phần của Hoàng |
-| Card, comment, chat | Phần của Hoàng |
+| Checklist trong thẻ | Chưa có endpoint `checklist_items` |
+| Tệp đính kèm | Chưa có endpoint `card_attachments` + Supabase Storage |
 
 Tất cả đều khoá theo **id thật do server cấp**, nên khi endpoint tương ứng có
 thì chỉ cần thay chỗ đọc dữ liệu, không phải sửa cấu trúc.
