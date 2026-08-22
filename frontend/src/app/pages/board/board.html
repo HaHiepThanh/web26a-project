@@ -1,4 +1,13 @@
-<div class="flex h-[calc(100vh-52px)] flex-col bg-cover bg-center" [class]="pageBgClass()"
+<!-- h-full (KHÔNG phải h-[calc(100vh-52px)]).
+
+     ⚠️ Công thức cũ trừ chiều cao Header (52px) nhưng QUÊN Footer (~43px), nên
+        khung board cao hơn ô chứa nó 43px. Ô chứa (`main` trong app-layout) lại
+        có `overflow: hidden` → 43px cuối bị cắt mất, và ô soạn tin của khung chat
+        nằm đúng trong dải đó nên biến mất hẳn trên màn hình thấp.
+
+        `h-full min-h-0` để khung board vừa khít ô chứa, không cần biết Header hay
+        Footer cao bao nhiêu — thêm/bớt thanh nào sau này cũng không phải sửa lại. -->
+<div class="flex h-full min-h-0 flex-col bg-cover bg-center" [class]="pageBgClass()"
   [style.background-image]="pageBgImageUrl() ? 'url(' + pageBgImageUrl() + ')' : null">
 
   <!-- Board Header & Filter Controls Subcomponent -->

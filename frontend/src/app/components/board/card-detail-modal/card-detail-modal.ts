@@ -1,4 +1,4 @@
-import { Component, ElementRef, computed, inject, input, output, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, computed, effect, inject, input, output, signal, untracked, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { Card, CardPriority, User } from '../../../models';
@@ -20,17 +20,24 @@ const PRIORITIES: { id: CardPriority; label: string }[] = [
 ];
 const PRIORITY_LABEL: Record<CardPriority, string> = { high: 'Cao', medium: 'Trung bình', low: 'Thấp' };
 
-/** Người "giả lập đang xem cùng" cho demo Presence (#11) — không có backend Realtime
- *  thật nên dùng nút 🎲 giống demo `09-card-presence.html`, state chỉ tồn tại khi modal mở. */
-const PRESENCE_POOL = [
-  { name: 'Linh', color: '#7c3aed' },
-  { name: 'Khoa', color: '#059669' },
-  { name: 'My', color: '#ea580c' },
-];
-
-/** Modal chi tiết thẻ (appRequirement #4): sửa tiêu đề/mô tả/phụ trách/hạn/ưu tiên/nhãn
- *  + xoá thẻ. Auto-save từng trường khi rời khỏi ô (blur/change), không có nút "Lưu".
- *  Mục 11: audit trail (ghi log mỗi lần sửa) + presence giả lập (ai đang xem cùng). */
+/**
+ * Modal chi tiết thẻ: sửa tiêu đề / mô tả / phụ trách / hạn / ưu tiên / nhãn + xoá thẻ.
+ *
+ * ── LƯU CÓ XÁC NHẬN, không auto-save nữa.
+ *
+ * Bản trước lưu từng trường theo sự kiện `change` (tức là lúc rời khỏi ô). Nghe
+ * thì tiện, nhưng hỏng đúng ở thao tác tự nhiên nhất: gõ xong rồi bấm ra ngoài
+ * để đóng modal. Cú bấm đó vừa làm ô mất focus vừa đóng modal — modal bị gỡ
+ * khỏi DOM trước khi `change` kịp bắn, nên thay đổi mất trắng mà không báo gì.
+ *
+ * Nay mọi thay đổi vào BẢN NHÁP trong bộ nhớ; bấm "Lưu thay đổi" mới gửi lên
+ * server. Bấm ra ngoài khi còn thay đổi chưa lưu thì hiện dải hỏi lại thay vì
+ * đóng ngay.
+ *
+ * Nhãn, checklist, bình luận, đính kèm KHÔNG nằm trong bản nháp — chúng là thực
+ * thể riêng, mỗi thao tác là một hành động dứt khoát của người dùng (tick một
+ * mục, gửi một bình luận) nên lưu ngay là đúng.
+ */
 @Component({
   selector: 'app-card-detail-modal',
   imports: [FormsModule, DatePipe, LabelPicker, Checklist, CommentList],
@@ -58,6 +65,17 @@ export class CardDetailModal {
   private readonly titleInputRef = viewChild<ElementRef<HTMLInputElement>>('titleInput');
 
   constructor() {
+    // Mở thẻ nào thì nạp bản nháp của thẻ đó. `card()` là computed đọc lại từ
+    // CardService nên nó cũng đổi khi người khác sửa thẻ qua WebSocket — chỉ nạp
+    // lại khi ĐỔI SANG THẺ KHÁC, nếu không thì đang gõ dở bị ghi đè mất.
+    let thẻĐangMở: string | null = null;
+    effect(() => {
+      const c = this.card();
+      if (c.id === thẻĐangMở) return;
+      thẻĐangMở = c.id;
+      untracked(() => this.nạpBảnNháp(c));
+    });
+
     setTimeout(() => {
       if (!this.autoFocusTitle()) return;
       const el = this.titleInputRef()?.nativeElement;
@@ -99,62 +117,119 @@ export class CardDetailModal {
     this.historyOpen.update((v) => !v);
   }
 
-  // ---- Presence giả lập (#11) ----
-  readonly viewers = signal<{ name: string; color: string }[]>([]);
-  private viewerPoolIndex = 0;
+  // ---- Bản nháp: sửa vào đây trước, bấm "Lưu thay đổi" mới gửi lên server ----
+  readonly draftTitle = signal('');
+  readonly draftDescription = signal('');
+  readonly draftAssigneeId = signal<string | null>(null);
+  readonly draftDueDate = signal('');
+  readonly draftPriority = signal<CardPriority>('medium');
 
-  addSimulatedViewer(): void {
-    if (this.viewers().length >= PRESENCE_POOL.length) return;
-    this.viewers.update((v) => [...v, PRESENCE_POOL[this.viewerPoolIndex % PRESENCE_POOL.length]]);
-    this.viewerPoolIndex++;
+  readonly saving = signal(false);
+  /** Vừa lưu xong — hiện "Đã lưu" vài giây để người dùng biết chắc là đã ăn. */
+  readonly justSaved = signal(false);
+  /** Bấm ra ngoài khi còn thay đổi chưa lưu → hiện dải hỏi lại thay vì đóng luôn. */
+  readonly confirmClose = signal(false);
+
+  private nạpBảnNháp(card: Card): void {
+    this.draftTitle.set(card.title);
+    this.draftDescription.set(card.description ?? '');
+    this.draftAssigneeId.set(card.assigneeId ?? null);
+    this.draftDueDate.set(card.dueDate ?? '');
+    this.draftPriority.set(card.priority);
+    this.confirmClose.set(false);
   }
 
-  removeSimulatedViewer(): void {
-    this.viewers.update((v) => v.slice(0, -1));
+  /** Còn thay đổi chưa lưu không? Quyết định việc hiện nút Lưu và dải hỏi lại. */
+  readonly dirty = computed(() => {
+    const c = this.card();
+    return (
+      this.draftTitle().trim() !== c.title ||
+      this.draftDescription() !== (c.description ?? '') ||
+      this.draftAssigneeId() !== (c.assigneeId ?? null) ||
+      this.draftDueDate() !== (c.dueDate ?? '') ||
+      this.draftPriority() !== c.priority
+    );
+  });
+
+  /** Tiêu đề trống thì không cho lưu — thẻ không tên là không tìm lại được. */
+  readonly canSave = computed(() => this.dirty() && !!this.draftTitle().trim() && !this.saving());
+
+  async save(): Promise<void> {
+    if (!this.canSave()) return;
+    const c = this.card();
+    const changes: Partial<Card> = {};
+    const nhatKy: string[] = [];
+
+    const title = this.draftTitle().trim();
+    if (title !== c.title) {
+      changes.title = title;
+      nhatKy.push(`đã đổi tên thẻ từ "${c.title}" thành "${title}"`);
+    }
+    if (this.draftDescription() !== (c.description ?? '')) {
+      changes.description = this.draftDescription() || undefined;
+      nhatKy.push('đã cập nhật mô tả');
+    }
+    if (this.draftAssigneeId() !== (c.assigneeId ?? null)) {
+      changes.assigneeId = this.draftAssigneeId() ?? undefined;
+      nhatKy.push(
+        `đã đổi người phụ trách từ "${this.memberName(c.assigneeId)}" thành "${this.memberName(this.draftAssigneeId() ?? undefined)}"`,
+      );
+    }
+    if (this.draftDueDate() !== (c.dueDate ?? '')) {
+      changes.dueDate = this.draftDueDate() || undefined;
+      nhatKy.push(`đã đổi hạn chót từ "${c.dueDate ?? 'chưa có'}" thành "${this.draftDueDate() || 'chưa có'}"`);
+    }
+    if (this.draftPriority() !== c.priority) {
+      changes.priority = this.draftPriority();
+      nhatKy.push(
+        `đã đổi mức ưu tiên từ "${PRIORITY_LABEL[c.priority]}" thành "${PRIORITY_LABEL[this.draftPriority()]}"`,
+      );
+    }
+
+    this.saving.set(true);
+    // MỘT request cho tất cả trường đã đổi, thay vì mỗi ô một request như trước.
+    await this.cardService.updateCard(c.id, changes);
+    this.saving.set(false);
+
+    for (const d of nhatKy) this.log(d);
+    this.justSaved.set(true);
+    setTimeout(() => this.justSaved.set(false), 2000);
   }
 
-  // ---- Sửa trường — auto-save + ghi log (#11) ----
-  onTitleChange(event: Event): void {
-    const value = (event.target as HTMLInputElement).value.trim();
-    const old = this.card().title;
-    if (!value || value === old) return;
-    void this.cardService.updateCard(this.card().id, { title: value });
-    this.log(`đã đổi tên thẻ từ "${old}" thành "${value}"`);
+  /** Bỏ mọi thay đổi, quay lại đúng dữ liệu đang có trên server. */
+  discard(): void {
+    this.nạpBảnNháp(this.card());
+    this.editingDesc.set(false);
   }
 
-  onDescriptionChange(event: Event): void {
-    const value = (event.target as HTMLTextAreaElement).value;
-    if (value === (this.card().description ?? '')) return;
-    void this.cardService.updateCard(this.card().id, { description: value || undefined });
-    this.log('đã cập nhật mô tả');
+  /**
+   * Bấm nền ngoài / nút X / Esc.
+   *
+   * Còn thay đổi chưa lưu thì KHÔNG đóng ngay — hiện dải hỏi lại. Đây chính là
+   * chỗ người dùng mất dữ liệu ở bản trước.
+   */
+  attemptClose(): void {
+    if (this.dirty()) {
+      this.confirmClose.set(true);
+      return;
+    }
+    this.close.emit();
   }
 
-  onAssigneeChange(assigneeId: string | null): void {
-    const oldId = this.card().assigneeId;
-    if ((oldId ?? null) === assigneeId) return;
-    void this.cardService.updateCard(this.card().id, { assigneeId: assigneeId ?? undefined });
-    this.log(`đã đổi người phụ trách từ "${this.memberName(oldId)}" thành "${this.memberName(assigneeId ?? undefined)}"`);
+  async saveAndClose(): Promise<void> {
+    await this.save();
+    this.close.emit();
   }
 
-  onDueChange(event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
-    const old = this.card().dueDate;
-    if ((old ?? '') === value) return;
-    void this.cardService.updateCard(this.card().id, { dueDate: value || undefined });
-    this.log(`đã đổi hạn chót từ "${old ?? 'chưa có'}" thành "${value || 'chưa có'}"`);
-  }
-
-  onPriorityChange(priority: CardPriority): void {
-    const old = this.card().priority;
-    if (old === priority) return;
-    void this.cardService.updateCard(this.card().id, { priority });
-    this.log(`đã đổi mức ưu tiên từ "${PRIORITY_LABEL[old]}" thành "${PRIORITY_LABEL[priority]}"`);
+  discardAndClose(): void {
+    this.discard();
+    this.close.emit();
   }
 
   /** Class Tailwind/DaisyUI cho nút chọn mức ưu tiên (tô màu khi đang được chọn). */
   priorityChoiceClass(id: CardPriority): string {
     const base = 'flex-1 rounded-md border-[1.5px] px-1 py-1.5 text-center text-[11.5px] font-semibold transition-colors';
-    if (this.card().priority !== id) return `${base} border-base-300 bg-base-100 text-base-content/80 hover:bg-base-200`;
+    if (this.draftPriority() !== id) return `${base} border-base-300 bg-base-100 text-base-content/80 hover:bg-base-200`;
     const selected: Record<CardPriority, string> = {
       high: 'border-error bg-error/10 text-error',
       medium: 'border-warning bg-warning/10 text-warning',

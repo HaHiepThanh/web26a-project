@@ -106,6 +106,12 @@ const MINIMAP_OVERFLOW_RATIO = 1.5;
   ],
   templateUrl: './board.html',
   styleUrl: './board.css',
+  // Phần tử <app-board> mặc định là `display: inline` và cao theo nội dung. Không
+  // có dòng này thì `h-full` bên trong board.html không bám vào đâu cả (bám vào
+  // một phần tử cao 292px), nên trước đây phải hardcode `h-[calc(100vh-52px)]` —
+  // và công thức đó quên mất Footer nên khung board tràn xuống, bị `main`
+  // (overflow: hidden) cắt mất 43px cuối, nuốt luôn ô soạn tin của khung chat.
+  host: { class: 'block h-full min-h-0 flex-1 overflow-hidden' },
 })
 export class Board {
   private readonly route = inject(ActivatedRoute);
