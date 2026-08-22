@@ -1,30 +1,39 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { SupabaseService } from '../../common/supabase/supabase.service';
-import { createMockActivityLogs } from './activity.mock';
-import { ActivityActionType, ActivityLogRecord } from './activity.types';
+import { ActivityActionType } from './activity.types';
 
 /**
- * [BONUS #6] Activity log feed cho board.
- * Lưu tạm trong bộ nhớ (chưa nối bảng activity_logs thật) để FE có dữ liệu test
- * ngay trong lúc chờ Supabase. Khi nối bảng thật, thay nội dung 2 hàm bên dưới
- * bằng query tới this.supabase.client — giữ nguyên chữ ký hàm để không phải sửa
- * chỗ gọi (board activity-feed, trang Workspace Stats).
+ * [BONUS #6] Activity log feed cho board — đọc/ghi bảng thật `activity_logs`.
+ * Các service khác (cards, comments...) inject ActivityService rồi gọi record().
  */
 @Injectable()
 export class ActivityService {
+  private readonly logger = new Logger(ActivityService.name);
+
   constructor(private readonly supabase: SupabaseService) {}
 
-  private readonly logs: ActivityLogRecord[] = createMockActivityLogs();
-
   // Lấy log của board, mới nhất trước.
-  async findAll(boardId: string): Promise<ActivityLogRecord[]> {
-    return this.logs
-      .filter((entry) => entry.boardId === boardId)
-      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  async findAll(boardId: string): Promise<unknown[]> {
+    const { data, error } = await this.supabase.client
+      .from('activity_logs')
+      .select('*, users(display_name, avatar_url)')
+      .eq('board_id', boardId)
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (error) {
+      this.logger.error(`Đọc nhật ký thất bại: ${error.message}`);
+      throw new InternalServerErrorException('Không đọc được nhật ký');
+    }
+
+    return data;
   }
 
-  // Ghi 1 dòng log khi có hành động quan trọng (tạo/sửa/xoá/di chuyển card, comment...).
-  // Các service khác (cards, comments...) inject ActivityService rồi gọi hàm này.
+  /**
+   * Ghi 1 dòng log khi có hành động quan trọng (tạo/chuyển card, thêm bình luận...).
+   * Không throw khi ghi log thất bại — đây là việc phụ, không được làm hỏng hành
+   * động chính (tạo thẻ, thêm bình luận...) mà caller đang thực hiện.
+   */
   async record(
     boardId: string,
     userUid: string,
@@ -32,16 +41,26 @@ export class ActivityService {
     actionText: string,
     targetId?: string,
   ): Promise<void> {
-    const orgId = this.logs.find((entry) => entry.boardId === boardId)?.orgId ?? 'org-1';
-    this.logs.push({
-      id: `log-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      orgId,
-      boardId,
-      userId: userUid,
-      actionType,
-      targetId,
-      actionText,
-      createdAt: new Date().toISOString(),
+    const sb = this.supabase.client;
+
+    const { data: board } = await sb.from('boards').select('org_id').eq('id', boardId).maybeSingle();
+    if (!board) {
+      this.logger.warn(`Không ghi được log: không tìm thấy board ${boardId}`);
+      return;
+    }
+
+    const { error } = await sb.from('activity_logs').insert({
+      org_id: board.org_id,
+      board_id: boardId,
+      card_id: targetId ?? null,
+      user_id: userUid,
+      action_type: actionType,
+      target_id: targetId ?? null,
+      action_text: actionText,
     });
+
+    if (error) {
+      this.logger.warn(`Ghi activity log thất bại: ${error.message}`);
+    }
   }
 }
