@@ -1,10 +1,10 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LucideTriangleAlert, LucideX } from '@lucide/angular';
-import { ActivityActionType, ActivityLog } from '../../../models';
+import { ActivityActionType, ActivityLog, MemberWorkloadStat, WorkspaceStatsData } from '../../../models';
 import { avatarColorFor, initialsOf } from '../../../services/board.service';
 import { AuthService } from '../../../services/auth.service';
-import { MemberWorkloadStat, WorkspaceStatsData } from '../workspace-stats-modal/board-stats.mock';
+
 
 type LogScope = 'mine' | 'team';
 type ActionGroup = 'all' | 'created' | 'moved' | 'assigned' | 'updated' | 'deleted';
@@ -45,7 +45,7 @@ let instanceSeq = 0;
 
 /**
  * Khối trình bày cho Modal "Thống kê & Báo cáo" mở từ toolbar Board (board.html/board.ts).
- * Chỉ nhận `data` đã tính sẵn qua input (xem board-stats.mock.ts) — không tự fetch gì, chỉ
+ * Chỉ nhận `data` qua input (modal cha lấy từ `GET /stats/boards/:id`) — không tự fetch gì, chỉ
  * lo hiển thị + lọc/tìm kiếm tại chỗ. Đúng 3 khối theo yêu cầu UI: dải chỉ số, cảnh báo +
  * tiến độ thành viên, bộ lọc + nhật ký hoạt động.
  */

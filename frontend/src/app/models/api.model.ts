@@ -221,3 +221,94 @@ export interface ApiCreatedMessage {
   content: string;
   createdAt: string;
 }
+
+
+/* ------------------------------------------------------------------ *
+ * checklist · attachments · stars · saved-filters · highlight-groups · stats
+ * backend/docs/API-BO-SUNG.md
+ * ------------------------------------------------------------------ */
+
+/** GET /checklist?cardId= */
+export interface ApiChecklistItem {
+  id: string;
+  cardId: string;
+  content: string;
+  isDone: boolean;
+  position: number;
+}
+
+/** GET /attachments?cardId= — `url` là link ký, HẾT HẠN SAU 1 GIỜ. */
+export interface ApiAttachment {
+  id: string;
+  cardId: string;
+  name: string;
+  mimeType: string;
+  sizeBytes: number;
+  isImage: boolean;
+  isCover: boolean;
+  uploadedBy: string;
+  createdAt: string;
+  url: string | null;
+}
+
+/** GET /saved-filters?boardId= */
+export interface ApiSavedFilter {
+  id: string;
+  boardId: string;
+  name: string;
+  assigneeIds: string[];
+  labelIds: string[];
+  priorities: string[];
+  dateFilter: string | null;
+  createdAt: string;
+}
+
+/** GET /highlight-groups?boardId= */
+export interface ApiHighlightGroup {
+  id: string;
+  boardId: string;
+  name: string;
+  cardIds: string[];
+  createdAt: string;
+}
+
+/** GET /stats/boards/:boardId — gộp cả 3 view vào 1 phản hồi. */
+export interface ApiBoardStats {
+  overview: {
+    boardId: string;
+    boardName: string;
+    totalCards: number;
+    completedCount: number;
+    inProgressCount: number;
+    overdueCount: number;
+    onTimeRatePct: number;
+  } | null;
+  memberWorkload: {
+    userId: string;
+    displayName: string | null;
+    assignedCount: number;
+    completedCount: number;
+    doingCount: number;
+    overdueCount: number;
+    lastActiveAt: string | null;
+  }[];
+  overdueCards: {
+    cardId: string;
+    title: string;
+    assigneeId: string | null;
+    assigneeName: string | null;
+    dueDate: string | null;
+    daysOverdue: number;
+  }[];
+}
+
+/** GET /organizations/:id/invites — lời mời tổ chức ĐÃ GỬI, chưa ai trả lời. */
+export interface ApiPendingInvite {
+  id: string;
+  orgId: string;
+  toUserId: string;
+  fromUserId: string;
+  role: OrgInviteRole;
+  createdAt: string;
+  toUser: { displayName: string | null; email: string; avatarUrl: string | null };
+}

@@ -76,6 +76,13 @@ export class CardDetailModal {
       untracked(() => this.nạpBảnNháp(c));
     });
 
+    // Đính kèm nạp từ server. Bắt buộc `force` khi mở lại thẻ: link tải là link
+    // CÓ CHỮ KÝ hết hạn sau 1 giờ, dùng lại link cũ là ảnh hỏng.
+    effect(() => {
+      const id = this.card().id;
+      if (id) void this.attachmentService.loadAttachments(id);
+    });
+
     setTimeout(() => {
       if (!this.autoFocusTitle()) return;
       const el = this.titleInputRef()?.nativeElement;
@@ -263,17 +270,25 @@ export class CardDetailModal {
   }
 
   removeAttachment(id: string, name: string): void {
-    this.attachmentService.remove(this.card().id, id);
+    void this.attachmentService.remove(this.card().id, id);
     this.log(`đã gỡ đính kèm "${name}"`);
   }
 
   toggleCover(id: string): void {
-    this.attachmentService.toggleCover(this.card().id, id);
+    void this.attachmentService.toggleCover(this.card().id, id);
   }
 
-  openAttachment(dataUrl: string): void {
-    window.open(dataUrl, '_blank');
+  /** Mở tệp bằng link ký. `null` nghĩa là link chưa cấp được — báo thay vì mở tab trắng. */
+  openAttachment(url: string | null): void {
+    if (!url) {
+      this.attachmentUploading();
+      return;
+    }
+    window.open(url, '_blank', 'noopener');
   }
+
+  /** Đang tải tệp lên — nút Đính kèm hiện vòng xoay. */
+  readonly attachmentUploading = this.attachmentService.uploading;
 
   /** Nhãn ngắn theo loại tệp cho ô placeholder (PDF/RTF/DOC...). */
   fileBadge(att: { name: string; mimeType: string }): string {

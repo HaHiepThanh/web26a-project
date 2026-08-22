@@ -126,8 +126,10 @@
             <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-3xs font-black text-white opacity-60"
               [style.background-color]="avatarBgFor(inv.toUserId)">?</span>
             <span class="min-w-0 flex-1">
-              <span class="block truncate font-mono text-3xs text-base-content/70">{{ inv.toUserId }}</span>
-              <span class="block text-3xs text-base-content/45">Chờ người này bấm đồng ý ở chuông thông báo</span>
+              <span class="block truncate text-2xs font-bold text-base-content">{{ inv.fromUserName }}</span>
+              <span class="block text-3xs text-base-content/45">
+                Chờ đồng ý · vào với quyền {{ inv.role === 'admin' ? 'Quản trị' : 'Thành viên' }}
+              </span>
             </span>
             @if (isOwner()) {
             <button type="button" class="btn btn-ghost btn-xs shrink-0 rounded-lg text-2xs font-bold text-error"

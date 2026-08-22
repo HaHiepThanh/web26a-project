@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { ChecklistService } from '../../../services/checklist.service';
 import { ActivityService } from '../../../services/activity.service';
 
@@ -26,6 +26,15 @@ export class Checklist {
 
   readonly newItemText = signal('');
 
+  constructor() {
+    // Nạp checklist từ server mỗi khi mở một thẻ khác. Thiếu chỗ này thì thẻ cũ
+    // luôn hiện rỗng — mục chỉ xuất hiện với thẻ vừa gõ trong phiên này.
+    effect(() => {
+      const id = this.cardId();
+      if (id) void this.checklistService.loadChecklist(id);
+    });
+  }
+
   onInput(event: Event): void {
     this.newItemText.set((event.target as HTMLInputElement).value);
   }
@@ -33,18 +42,18 @@ export class Checklist {
   addItem(): void {
     const text = this.newItemText().trim();
     if (!text) return;
-    this.checklistService.addItem(this.cardId(), text);
+    void this.checklistService.addItem(this.cardId(), text);
     this.activityService.record(this.boardId(), this.cardId(), `đã thêm mục checklist "${text}"`);
     this.newItemText.set('');
   }
 
   toggleItem(itemId: string): void {
-    this.checklistService.toggleItem(this.cardId(), itemId);
+    void this.checklistService.toggleItem(this.cardId(), itemId);
   }
 
   deleteItem(itemId: string): void {
     const item = this.items().find((i) => i.id === itemId);
-    this.checklistService.deleteItem(this.cardId(), itemId);
+    void this.checklistService.deleteItem(this.cardId(), itemId);
     if (item) this.activityService.record(this.boardId(), this.cardId(), `đã xoá mục checklist "${item.content}"`);
   }
 }

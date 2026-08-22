@@ -4,6 +4,8 @@ import { environment } from '../../environments/environment';
 import {
   ApiBoard,
   ApiCard,
+  ApiAttachment,
+  ApiChecklistItem,
   ApiComment,
   ApiCreatedMessage,
   ApiLabel,
@@ -24,6 +26,8 @@ import { ActivityService } from './activity.service';
 import { BoardService } from './board.service';
 import { CardService } from './card.service';
 import { ChatService } from './chat.service';
+import { AttachmentService } from './attachment.service';
+import { ChecklistService } from './checklist.service';
 import { CommentService } from './comment.service';
 import { LabelService } from './label.service';
 import { ListService } from './list.service';
@@ -54,6 +58,8 @@ export class RealtimeService {
   private readonly cards = inject(CardService);
   private readonly labels = inject(LabelService);
   private readonly comments = inject(CommentService);
+  private readonly checklist = inject(ChecklistService);
+  private readonly attachments = inject(AttachmentService);
   private readonly chat = inject(ChatService);
   private readonly activity = inject(ActivityService);
   private readonly boards = inject(BoardService);
@@ -243,6 +249,8 @@ export class RealtimeService {
         const { id } = event.data as { id: string };
         this.cards.applyRemoteCardDeleted(id);
         this.comments.clearCard(id);
+        this.checklist.clearCard(id);
+        this.attachments.clearCard(id);
         break;
       }
 
@@ -300,6 +308,24 @@ export class RealtimeService {
       case 'board.deleted':
         this.boardDeleted.set((event.data as { id: string }).id);
         break;
+
+      case 'checklist.changed':
+        this.checklist.applyRemoteItem((event.data as { item: ApiChecklistItem }).item);
+        break;
+      case 'checklist.deleted': {
+        const { cardId, id } = event.data as { cardId: string; id: string };
+        this.checklist.applyRemoteDeleted(cardId, id);
+        break;
+      }
+
+      case 'attachment.changed':
+        this.attachments.applyRemote((event.data as { attachment: ApiAttachment }).attachment);
+        break;
+      case 'attachment.deleted': {
+        const { cardId, id } = event.data as { cardId: string; id: string };
+        this.attachments.applyRemoteDeleted(cardId, id);
+        break;
+      }
     }
   }
 }

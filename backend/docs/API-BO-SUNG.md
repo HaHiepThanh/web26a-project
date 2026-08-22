@@ -155,3 +155,47 @@ Hai chỗ frontend đang hiện câu *"Tính năng … chưa có ở backend"* t
 Kiểm tra quyền gom về một chỗ: `src/common/access/access.service.ts`. Module mới
 chỉ việc gọi `assertBoardAccess` / `assertCardAccess`, không phải tự chép lại —
 chính việc chép tay từng module là chỗ đã để lọt lỗ hổng ở module cards trước đây.
+
+---
+
+## Đã nối vào frontend
+
+Toàn bộ 21 endpoint trên đã nối xong. Các bạn học viên **chỉ cần chỉnh UI/UX**,
+không phải viết thêm phần gọi API.
+
+| Service / màn hình | Trước | Nay |
+|---|---|---|
+| `ChecklistService` | signal trong RAM, F5 mất | `/checklist` |
+| `AttachmentService` | base64 trong RAM | `/attachments` + Storage |
+| Modal Thống kê | `board-stats.mock.ts` tự bịa số | `GET /stats/boards/:id` |
+| Đánh dấu sao | cờ trong `trello_boards` | `/stars` |
+| Bộ lọc đã lưu | `trello_saved_filters_<id>` | `/saved-filters` |
+| Nhóm highlight | `trello_saved_highlight_groups_<id>` | `/highlight-groups` |
+| Đổi tên tổ chức | báo "chưa có ở backend" | `PATCH /organizations/:id` |
+| Huỷ lời mời | báo "chưa có ở backend" | `DELETE /organizations/invites/:id` |
+| Lời mời đã gửi | luôn rỗng | `GET /organizations/:id/invites` |
+| Màu nền board | localStorage | `PATCH /boards/:id` |
+
+`board-stats.mock.ts` đã xoá hẳn.
+
+### Ba chỗ cần để ý khi chỉnh UI
+
+**1. Link tệp đính kèm hết hạn sau 1 giờ.** `AttachmentService.loadAttachments()`
+tự nạp lại sau 45 phút. Đừng lưu `att.url` vào biến rồi dùng lâu — mở lại thẻ thì
+link mới được cấp.
+
+**2. Bộ lọc/nhóm highlight có id do SERVER cấp.** Trước đây frontend tự sinh
+`f-${Date.now()}`; giờ dùng id thật, nên đừng tự sinh id ở bất kỳ đâu — id tự chế
+không khớp database và mọi thao tác xoá sau đó đều 404.
+
+**3. Đính kèm tải lên LẦN LƯỢT, không song song.** Chọn 10 tệp thì gửi 10 request
+nối tiếp. Cố tình như vậy để không nghẽn đường truyền và không chạm giới hạn của
+Storage. `AttachmentService.uploading` là signal để vẽ trạng thái đang tải.
+
+### Còn đúng một chỗ chưa dứt điểm
+
+**Ảnh nền board** vẫn ở localStorage. MÀU nền đã xuống database, nhưng ẢNH nền
+hiện là chuỗi base64 do trình duyệt đọc từ tệp, trong khi cột
+`boards.background_image_path` được thiết kế để chứa ĐƯỜNG DẪN Storage. Muốn dứt
+điểm thì cần thêm một endpoint tải ảnh nền lên Storage (kiểu như `POST
+/boards/:id/background`) — chưa có trong đợt này.

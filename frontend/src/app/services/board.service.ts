@@ -77,10 +77,13 @@ export const MOCK_MEMBERS: User[] = [
 /**
  * CRUD board + visibility (#3) — GỌI BACKEND THẬT.
  *
- * Còn một phần ở localStorage: `background` và `backgroundImageUrl`. Backend
- * hiện chưa nhận hai trường này (`POST /boards` chỉ nhận `workspaceId` + `name`,
- * `PATCH /boards/:id` chỉ nhận `name` + `visibility`), nên màu/ảnh nền vẫn giữ
- * ở trình duyệt, khoá theo ĐÚNG id board thật do server cấp.
+ * MÀU nền (`background`) nay lưu xuống database qua `PATCH /boards/:id` — đổi máy
+ * vẫn còn.
+ *
+ * Riêng ẢNH nền (`backgroundImageUrl`) vẫn ở localStorage: nó là chuỗi base64 do
+ * trình duyệt đọc từ tệp, trong khi cột `boards.background_image_path` được thiết
+ * kế để chứa ĐƯỜNG DẪN tới Supabase Storage. Muốn dứt điểm thì cần thêm một
+ * endpoint tải ảnh nền lên Storage — xem backend/docs/API-BO-SUNG.md.
  */
 @Injectable({ providedIn: 'root' })
 export class BoardService {
@@ -132,7 +135,13 @@ export class BoardService {
     }
   }
 
-  /** Ghép dữ liệu backend + màu/ảnh nền đang giữ ở trình duyệt. */
+  /**
+   * Ghép dữ liệu backend + ảnh nền đang giữ ở trình duyệt.
+   *
+   * MÀU nền ưu tiên lấy từ SERVER; bản localStorage chỉ còn là phương án dự phòng
+   * cho những board tạo từ trước khi cột này ghi được. Ngược lại thì mở máy khác
+   * sẽ thấy màu mặc định dù server đã lưu đúng.
+   */
   private toBoard(row: ApiBoard): Board {
     const local = this.createdBoards()[row.id];
     return {
@@ -141,7 +150,7 @@ export class BoardService {
       workspaceId: row.workspaceId,
       name: row.name,
       visibility: row.visibility,
-      background: local?.background,
+      background: (row.background as BoardBackground | null) ?? local?.background,
       backgroundImageUrl: local?.backgroundImageUrl,
       createdBy: row.createdBy,
       createdAt: row.createdAt,
@@ -235,6 +244,15 @@ export class BoardService {
         visibility: options?.visibility ?? 'workspace',
         ...(options?.visibility === 'private' ? { memberIds: options.memberIds ?? [] } : {}),
       });
+      // Màu nền gửi ở bước hai vì POST /boards chưa nhận. Hỏng thì board vẫn còn
+      // với màu mặc định — không nuốt lỗi, nhưng cũng không huỷ cả board.
+      if (options?.background) {
+        try {
+          row = await this.api.patch<ApiBoard>(`/boards/${row.id}`, { background: options.background });
+        } catch {
+          this.loadError.set('Đã tạo board nhưng chưa lưu được màu nền.');
+        }
+      }
     } catch (e) {
       this.loadError.set(describeError(e, 'Không tạo được board.'));
       return null;
@@ -256,10 +274,15 @@ export class BoardService {
     id: string,
     changes: Partial<Pick<Board, 'name' | 'visibility' | 'background' | 'backgroundImageUrl'>>,
   ): Promise<string | null> {
-    // Chỉ 2 trường này backend nhận; gửi thừa sẽ bị ValidationPipe loại bỏ.
-    const patch: { name?: string; visibility?: BoardVisibility } = {};
+    const patch: {
+      name?: string;
+      visibility?: BoardVisibility;
+      background?: string | null;
+    } = {};
     if (changes.name !== undefined) patch.name = changes.name;
     if (changes.visibility !== undefined) patch.visibility = changes.visibility;
+    // MÀU nền giờ xuống database. Gửi `null` khi người dùng gỡ nền về mặc định.
+    if (changes.background !== undefined) patch.background = changes.background ?? null;
 
     if (Object.keys(patch).length > 0) {
       try {

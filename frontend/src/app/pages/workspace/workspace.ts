@@ -6,6 +6,7 @@ import { BoardService } from '../../services/board.service';
 import { AuthService } from '../../services/auth.service';
 import { OrganizationService } from '../../services/organization.service';
 import { WorkspaceService } from '../../services/workspace.service';
+import { BoardPrefsService } from '../../services/board-prefs.service';
 import {
   Board,
   BoardBackground,
@@ -81,6 +82,7 @@ export class Workspace {
   private readonly auth = inject(AuthService);
   private readonly orgService = inject(OrganizationService);
   private readonly workspaceService = inject(WorkspaceService);
+  private readonly boardPrefs = inject(BoardPrefsService);
   private readonly router = inject(Router);
 
   private readonly orgManageModal = viewChild(OrgManageModal);
@@ -244,7 +246,11 @@ export class Workspace {
       return;
     }
 
-    await this.workspaceService.loadWorkspaces(orgId);
+    // Danh sách sao độc lập với workspace → gọi song song, không nối đuôi.
+    await Promise.all([
+      this.workspaceService.loadWorkspaces(orgId),
+      this.boardPrefs.loadStars(),
+    ]);
     const loadError = this.workspaceService.loadError();
     if (loadError) {
       this.addToast(loadError, 'error');
@@ -301,6 +307,7 @@ export class Workspace {
         };
       }),
     );
+    this.dongBoSao();
     this.workspacesReady.set(true);
   }
 
@@ -369,6 +376,9 @@ export class Workspace {
 
   openManageOrg(orgId: string): void {
     this.managingOrgId.set(orgId);
+    // Lời mời đã gửi chỉ nạp khi mở modal — nạp sẵn cho mọi tổ chức lúc đăng
+    // nhập là phí request cho thứ hiếm khi ai xem.
+    void this.orgService.loadPendingInvites(orgId);
     this.showOrgManageModal.set(true);
   }
 
@@ -442,15 +452,26 @@ export class Workspace {
     void this.router.navigate(['/', this.orgService.activeOrgSlug(), 'board', board.id]);
   }
 
-  toggleStar(boardId: string): void {
-    this.workspaces.update((list) => {
-      const updated = list.map((ws) => ({
+  /**
+   * Gắn/bỏ sao — GỌI BACKEND (`/stars`), không còn nhét cờ vào localStorage.
+   *
+   * Trạng thái thật nằm ở `boardPrefs.starredBoardIds`; ở đây chỉ chép lại xuống
+   * cờ `starred` của thẻ hiển thị để giao diện vẽ ngay.
+   */
+  async toggleStar(boardId: string): Promise<void> {
+    await this.boardPrefs.toggleStar(boardId);
+    this.dongBoSao();
+  }
+
+  /** Chép `starredBoardIds` xuống cờ `starred` của từng thẻ board đang hiển thị. */
+  private dongBoSao(): void {
+    const sao = this.boardPrefs.starredBoardIds();
+    this.workspaces.update((list) =>
+      list.map((ws) => ({
         ...ws,
-        boards: ws.boards.map((b) => (b.id === boardId ? { ...b, starred: !b.starred } : b)),
-      }));
-      this.persist(updated);
-      return updated;
-    });
+        boards: ws.boards.map((b) => ({ ...b, starred: sao.has(b.id) })),
+      })),
+    );
   }
 
   async deleteBoard(payload: { workspaceId: string; board: BoardItem }): Promise<void> {

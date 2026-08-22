@@ -38,6 +38,19 @@ export class ApiService {
     );
   }
 
+  /**
+   * Gửi tệp (multipart/form-data).
+   *
+   * ⚠️ KHÔNG tự đặt `Content-Type`. Trình duyệt phải tự sinh header đó kèm
+   *    `boundary=...` để server tách được các phần; đặt tay là mất boundary và
+   *    request hỏng ngay. Vì vậy ở đây chỉ đính kèm Authorization.
+   */
+  async upload<T>(path: string, form: FormData): Promise<T> {
+    const token = await this.firebase.getIdToken();
+    const headers = new HttpHeaders(token ? { Authorization: `Bearer ${token}` } : {});
+    return firstValueFrom(this.http.post<T>(`${this.base}${path}`, form, { headers }));
+  }
+
   async delete<T>(path: string): Promise<T> {
     return firstValueFrom(
       this.http.delete<T>(`${this.base}${path}`, { headers: await this.authHeaders() }),

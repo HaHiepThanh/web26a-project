@@ -21,6 +21,7 @@ import { ChecklistService } from '../../services/checklist.service';
 import { CommentService } from '../../services/comment.service';
 import { AttachmentService } from '../../services/attachment.service';
 import { RealtimeService } from '../../services/realtime.service';
+import { BoardPrefsService } from '../../services/board-prefs.service';
 import { BoardList } from '../../components/board/board-list/board-list';
 import { AddList } from '../../components/board/add-list/add-list';
 import { LabelPicker } from '../../components/board/label-picker/label-picker';
@@ -124,6 +125,7 @@ export class Board {
   private readonly commentService = inject(CommentService);
   private readonly attachmentService = inject(AttachmentService);
   private readonly realtime = inject(RealtimeService);
+  private readonly boardPrefs = inject(BoardPrefsService);
   private readonly router = inject(Router);
 
   readonly boardId = this.route.snapshot.paramMap.get('id') ?? 'demo-board';
@@ -357,21 +359,24 @@ export class Board {
     this.activeHighlightGroupId.set(null);
   }
 
-  private savedFiltersKey(): string {
-    return `trello_saved_filters_${this.boardId}`;
-  }
-
-  private loadSavedFilters(): void {
-    try {
-      const raw = localStorage.getItem(this.savedFiltersKey());
-      this.savedFilters.set(raw ? (JSON.parse(raw) as SavedFilter[]) : []);
-    } catch {
-      this.savedFilters.set([]);
-    }
-  }
-
-  private persistSavedFilters(): void {
-    localStorage.setItem(this.savedFiltersKey(), JSON.stringify(this.savedFilters()));
+  /**
+   * Bộ lọc đã lưu — GỌI BACKEND (`/saved-filters`), không còn ở localStorage.
+   *
+   * Backend lọc theo `user_id` nên vẫn là dữ liệu riêng: người khác cùng board
+   * không thấy bộ lọc của mình. Khác localStorage ở chỗ đổi máy vẫn còn.
+   */
+  private async loadSavedFilters(): Promise<void> {
+    const rows = await this.boardPrefs.loadFilters(this.boardId);
+    this.savedFilters.set(
+      rows.map((r) => ({
+        id: r.id,
+        name: r.name,
+        assigneeIds: r.assigneeIds,
+        labelIds: r.labelIds,
+        priorities: r.priorities as CardPriority[],
+        date: (r.dateFilter as DateFilter | null) ?? null,
+      })),
+    );
   }
 
   openSaveFilterForm(): void {
@@ -383,19 +388,31 @@ export class Board {
     this.showSaveFilterForm.set(false);
   }
 
-  saveCurrentFilter(): void {
+  async saveCurrentFilter(): Promise<void> {
     const name = this.newFilterName().trim();
     if (!name) return;
-    const filter: SavedFilter = {
-      id: `f-${Date.now()}`,
+
+    // id do SERVER cấp — không tự sinh `f-${Date.now()}` nữa, id tự chế không
+    // khớp gì với database nên mọi thao tác xoá sau đó đều 404.
+    const row = await this.boardPrefs.createFilter({
+      boardId: this.boardId,
       name,
       assigneeIds: this.filterAssigneeIds(),
       labelIds: this.filterLabelIds(),
       priorities: this.filterPriorities(),
-      date: this.filterDate(),
+      dateFilter: this.filterDate(),
+    });
+    if (!row) return;
+
+    const filter: SavedFilter = {
+      id: row.id,
+      name: row.name,
+      assigneeIds: row.assigneeIds,
+      labelIds: row.labelIds,
+      priorities: row.priorities as CardPriority[],
+      date: (row.dateFilter as DateFilter | null) ?? null,
     };
     this.savedFilters.update((all) => [...all, filter]);
-    this.persistSavedFilters();
     this.activeSavedFilterId.set(filter.id);
     this.showSaveFilterForm.set(false);
   }
@@ -409,41 +426,33 @@ export class Board {
     this.activeHighlightGroupId.set(null);
   }
 
-  removeSavedFilter(id: string, event: Event): void {
+  async removeSavedFilter(id: string, event: Event): Promise<void> {
     event.stopPropagation();
+    const truoc = this.savedFilters();
     this.savedFilters.update((all) => all.filter((f) => f.id !== id));
-    this.persistSavedFilters();
     if (this.activeSavedFilterId() === id) this.activeSavedFilterId.set(null);
+    if (!(await this.boardPrefs.removeFilter(id))) this.savedFilters.set(truoc);
   }
 
-  private savedHighlightGroupsKey(): string {
-    return `trello_saved_highlight_groups_${this.boardId}`;
-  }
-
-  private loadSavedHighlightGroups(): void {
-    try {
-      const raw = localStorage.getItem(this.savedHighlightGroupsKey());
-      this.savedHighlightGroups.set(raw ? (JSON.parse(raw) as SavedHighlightGroup[]) : []);
-    } catch {
-      this.savedHighlightGroups.set([]);
-    }
-  }
-
-  private persistSavedHighlightGroups(): void {
-    localStorage.setItem(this.savedHighlightGroupsKey(), JSON.stringify(this.savedHighlightGroups()));
+  /** Nhóm highlight — GỌI BACKEND (`/highlight-groups`), riêng theo từng người. */
+  private async loadSavedHighlightGroups(): Promise<void> {
+    const rows = await this.boardPrefs.loadGroups(this.boardId);
+    this.savedHighlightGroups.set(rows.map((r) => ({ id: r.id, name: r.name, cardIds: r.cardIds })));
   }
 
   /** Lưu đúng bộ thẻ đang chọn tay (Shift+click, #12) thành 1 chip highlight mới. */
-  saveSelectionAsHighlightGroup(): void {
+  async saveSelectionAsHighlightGroup(): Promise<void> {
     const cardIds = [...this.selectedCardIds()];
     if (!cardIds.length) return;
     const name = window.prompt('Đặt tên cho bộ highlight này:');
     if (!name?.trim()) return;
-    const group: SavedHighlightGroup = { id: `hg-${Date.now()}`, name: name.trim(), cardIds };
-    this.savedHighlightGroups.update((all) => [...all, group]);
-    this.persistSavedHighlightGroups();
+
+    const row = await this.boardPrefs.createGroup({ boardId: this.boardId, name: name.trim(), cardIds });
+    if (!row) return;
+
+    this.savedHighlightGroups.update((all) => [...all, { id: row.id, name: row.name, cardIds: row.cardIds }]);
     this.clearSelection();
-    this.addToast(`Đã lưu bộ highlight "${group.name}" (${cardIds.length} thẻ).`, 'success');
+    this.addToast(`Đã lưu bộ highlight "${row.name}" (${row.cardIds.length} thẻ).`, 'success');
   }
 
   applyHighlightGroup(g: SavedHighlightGroup): void {
@@ -451,11 +460,12 @@ export class Board {
     this.activeHighlightGroupId.set(g.id);
   }
 
-  removeHighlightGroup(id: string, event: Event): void {
+  async removeHighlightGroup(id: string, event: Event): Promise<void> {
     event.stopPropagation();
+    const truoc = this.savedHighlightGroups();
     this.savedHighlightGroups.update((all) => all.filter((g) => g.id !== id));
-    this.persistSavedHighlightGroups();
     if (this.activeHighlightGroupId() === id) this.activeHighlightGroupId.set(null);
+    if (!(await this.boardPrefs.removeGroup(id))) this.savedHighlightGroups.set(truoc);
   }
 
   // Record<string, T | undefined> (thay vì Record<string, T>) vì tsconfig chưa bật
@@ -602,8 +612,8 @@ export class Board {
         void this.router.navigate(['/workspace']);
       }
     });
-    this.loadSavedFilters();
-    this.loadSavedHighlightGroups();
+    void this.loadSavedFilters();
+    void this.loadSavedHighlightGroups();
     this.loadCollapsedLists();
     this.loadLayoutMode();
     this.setupMinimapTracking();

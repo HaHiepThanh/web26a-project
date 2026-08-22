@@ -13,7 +13,17 @@
     </div>
 
     <div class="overflow-y-auto px-5 py-5">
-      <app-workspace-stats-panel [data]="data()" />
+      @if (loading()) {
+        <div class="flex items-center justify-center gap-2 py-16 text-sm text-base-content/60">
+          <span class="loading loading-spinner loading-sm"></span> Đang tính số liệu...
+        </div>
+      } @else if (loadError(); as err) {
+        <div class="rounded-xl border border-error/40 bg-error/10 px-4 py-6 text-center">
+          <p class="text-sm font-semibold text-error">{{ err }}</p>
+        </div>
+      } @else {
+        <app-workspace-stats-panel [data]="data()" />
+      }
     </div>
   </div>
 </div>

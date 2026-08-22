@@ -9,6 +9,7 @@ import {
   ApiMyInvite,
   ApiMyOrg,
   ApiOrgMember,
+  ApiPendingInvite,
   OrgInviteRole,
   OrgMemberView,
   User,
@@ -36,6 +37,8 @@ export class OrganizationService {
   readonly organizations = signal<Organization[]>([]);
   readonly activeOrgId = signal<string | null>(null);
   readonly myInvites = signal<OrgInvite[]>([]);
+  /** Lời mời ĐÃ GỬI của từng tổ chức (khác `myInvites` — lời mời gửi TỚI tôi). */
+  private readonly pendingByOrg = signal<Record<string, OrgInvite[]>>({});
 
   /** Thành viên từng tổ chức, khoá theo orgId. Nạp kèm lúc tải danh sách tổ chức. */
   readonly membersByOrg = signal<Record<string, OrgMemberView[]>>({});
@@ -322,21 +325,73 @@ export class OrganizationService {
    * Trả lỗi rõ ràng thay vì sửa ngầm ở localStorage: sửa ngầm thì người dùng
    * thấy tên mới, F5 một cái là tên cũ quay lại, không hiểu vì sao.
    */
-  async updateOrg(_orgId: string, _changes: { name?: string }): Promise<string | null> {
-    return 'Tính năng đổi tên tổ chức chưa có ở backend (thiếu PATCH /organizations/:id).';
+  /** Đổi tên tổ chức. `slug` KHÔNG đổi được — nó nằm trong mọi URL đã lưu/chia sẻ. */
+  async updateOrg(orgId: string, changes: { name?: string }): Promise<string | null> {
+    const name = changes.name?.trim();
+    if (!name) return 'Tên tổ chức không được để trống.';
+    try {
+      await this.api.patch(`/organizations/${orgId}`, { name });
+      // Nạp lại để tên mới hiện ở bộ chuyển tổ chức, sidebar và mọi chỗ khác.
+      await this.reload();
+      return null;
+    } catch (e) {
+      return describeError(e, 'Không đổi được tên tổ chức.');
+    }
   }
 
   /**
    * Danh sách lời mời đang chờ của 1 tổ chức — backend CHƯA có endpoint này
    * (`GET /organizations/invites/me` chỉ trả lời mời gửi cho CHÍNH TÔI).
    */
-  pendingInvitesFor(_orgId: string): OrgInvite[] {
-    return [];
+  /**
+   * Lời mời tổ chức ĐÃ GỬI mà chưa ai trả lời.
+   *
+   * Đọc từ cache `pendingByOrg`; gọi `loadPendingInvites(orgId)` để nạp. Tách
+   * làm hai bước vì modal "Quản lý tổ chức" mới cần danh sách này — nạp sẵn cho
+   * mọi tổ chức ngay lúc đăng nhập là phí request.
+   */
+  pendingInvitesFor(orgId: string): OrgInvite[] {
+    return this.pendingByOrg()[orgId] ?? [];
+  }
+
+  /** Nạp lời mời đã gửi của 1 tổ chức (chỉ owner/admin gọi được, người khác nhận 403). */
+  async loadPendingInvites(orgId: string): Promise<void> {
+    if (!orgId) return;
+    try {
+      const rows = await this.api.get<ApiPendingInvite[]>(`/organizations/${orgId}/invites`);
+      this.pendingByOrg.update((map) => ({
+        ...map,
+        [orgId]: rows.map((r) => ({
+          id: r.id,
+          orgId: r.orgId,
+          orgName: '',
+          toUserId: r.toUserId,
+          fromUserId: r.fromUserId,
+          // Tên/email người ĐƯỢC MỜI — nếu không có thì modal chỉ hiện được uid.
+          fromUserName: r.toUser.displayName || r.toUser.email || r.toUserId,
+          role: r.role,
+          status: 'pending' as const,
+          createdAt: r.createdAt,
+        })),
+      }));
+    } catch {
+      // Thành viên thường gọi sẽ nhận 403 — không phải lỗi cần la lên, chỉ là
+      // họ không có quyền xem, và modal đã ẩn khối đó rồi.
+      this.pendingByOrg.update((map) => ({ ...map, [orgId]: [] }));
+    }
   }
 
   /** Huỷ lời mời — backend CHƯA có `DELETE /organizations/invites/:id`. */
-  async cancelInvite(_inviteId: string): Promise<string | null> {
-    return 'Tính năng huỷ lời mời chưa có ở backend (thiếu DELETE /organizations/invites/:id).';
+  /** Huỷ lời mời đã gửi. Người ta đã bấm đồng ý rồi thì backend trả 409. */
+  async cancelInvite(inviteId: string): Promise<string | null> {
+    const orgId = this.activeOrgId();
+    try {
+      await this.api.delete(`/organizations/invites/${inviteId}`);
+      if (orgId) await this.loadPendingInvites(orgId);
+      return null;
+    } catch (e) {
+      return describeError(e, 'Không huỷ được lời mời.');
+    }
   }
 }
 
