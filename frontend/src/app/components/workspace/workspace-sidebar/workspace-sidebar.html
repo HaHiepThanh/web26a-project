@@ -61,7 +61,7 @@
 
   <button type="button"
     class="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-base-300 py-1.5 text-2xs font-bold text-primary transition-all hover:border-primary hover:bg-primary/5"
-    (click)="createWorkspace.emit()">
+    (click)="createWorkspace.emit()" [class.hidden]="!canManage()">
     <svg lucidePlus class="h-3 w-3 shrink-0" [strokeWidth]="3"></svg>
     <span>Tạo Không gian mới</span>
   </button>

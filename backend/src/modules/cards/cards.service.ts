@@ -220,7 +220,8 @@ export class CardsService {
   }
 
   async update(uid: string, id: string, changes: UpdateCardDto): Promise<CardResponse> {
-    await this.assertCardAccess(uid, id);
+    const truoc = await this.assertCardAccess(uid, id);
+    const truocKhiSua = truoc.assignee_id;
 
     const patch: Record<string, unknown> = {};
     if (changes.title !== undefined) patch.title = changes.title;
@@ -245,8 +246,57 @@ export class CardsService {
       throw new InternalServerErrorException('Không cập nhật được thẻ');
     }
     const updated = toCard(data as CardRow);
-    this.realtime.emitToBoard(await this.boardIdOfList(updated.listId), 'card.updated', uid, updated);
+    const boardId = await this.boardIdOfList(updated.listId);
+    this.realtime.emitToBoard(boardId, 'card.updated', uid, updated);
+
+    // Vừa GIAO việc cho người khác → báo riêng cho đúng người đó.
+    // Chỉ báo khi assignee THỰC SỰ đổi, và không tự báo cho chính mình.
+    if (updated.assigneeId && updated.assigneeId !== uid && updated.assigneeId !== truocKhiSua) {
+      await this.baoDuocGiaoViec(uid, updated, boardId);
+    }
     return updated;
+  }
+
+  /**
+   * Gửi thông báo "bạn được giao thẻ X" tới đúng người được giao.
+   *
+   * Gom sẵn tên board + tên workspace + slug tổ chức vào payload để client bấm
+   * một cái là đi thẳng tới `/:orgSlug/board/:id` — không phải gọi thêm 3 API
+   * chỉ để dựng được một dòng thông báo.
+   *
+   * Không `await` kết quả ở chỗ gọi và nuốt mọi lỗi: đây là việc phụ, hỏng thì
+   * cũng không được làm hỏng thao tác gán việc mà người dùng vừa làm.
+   */
+  private async baoDuocGiaoViec(
+    actorUid: string,
+    card: CardResponse,
+    boardId: string,
+  ): Promise<void> {
+    try {
+      const sb = this.supabase.client;
+      const [{ data: board }, { data: actor }] = await Promise.all([
+        sb
+          .from('boards')
+          .select('id, name, workspaces(name), organizations(slug)')
+          .eq('id', boardId)
+          .maybeSingle(),
+        sb.from('users').select('display_name, email').eq('id', actorUid).maybeSingle(),
+      ]);
+
+      this.realtime.emitToUser(card.assigneeId as string, 'card.assigned', actorUid, {
+        cardId: card.id,
+        cardTitle: card.title,
+        boardId,
+        boardName: (board?.name as string) ?? '',
+        workspaceName:
+          ((board?.workspaces as unknown as { name: string } | null)?.name as string) ?? '',
+        orgSlug:
+          ((board?.organizations as unknown as { slug: string } | null)?.slug as string) ?? '',
+        byUserName: (actor?.display_name as string) || (actor?.email as string) || 'Ai đó',
+      });
+    } catch (e) {
+      this.logger.warn(`Không gửi được thông báo giao việc: ${(e as Error).message}`);
+    }
   }
 
   async move(id: string, toListId: string, position: number, uid: string): Promise<CardResponse> {

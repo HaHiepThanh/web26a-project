@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, computed, effect, inject, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, HostListener, computed, effect, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import {
   LucideBell,
@@ -16,12 +16,18 @@ import {
   LucideUserPlus,
   LucideX,
 } from '@lucide/angular';
+import { AppNotification } from '../../models';
+import { relativeTimeFrom } from '../../services/board.service';
 import { AuthService } from '../../services/auth.service';
 import { ThemeService } from '../../services/theme.service';
 import { WorkspaceUiService } from '../../services/workspace-ui.service';
 import { CardService } from '../../services/card.service';
+import { NotificationService } from '../../services/notification.service';
 import { OrganizationService } from '../../services/organization.service';
 import { RealtimeService } from '../../services/realtime.service';
+
+/** Dải nhắc "có lời mời mới" tự tắt sau ngần này. */
+const INVITE_TOAST_MS = 6000;
 
 /** Top navbar shared by every page inside app-layout (ported from trello-workspace prototype). */
 @Component({
@@ -55,12 +61,14 @@ export class Header {
   private readonly cardService = inject(CardService);
   private readonly orgService = inject(OrganizationService);
   private readonly realtime = inject(RealtimeService);
+  private readonly notificationService = inject(NotificationService);
 
   readonly currentUser = this.auth.currentUser;
   readonly theme = this.themeService.theme;
   readonly menuOpen = signal(false);
   readonly createMenuOpen = signal(false);
   readonly inviteMenuOpen = signal(false);
+  readonly notifyMenuOpen = signal(false);
 
 
   readonly myInvites = this.orgService.myInvites;
@@ -70,23 +78,52 @@ export class Header {
   readonly inviteToast = signal<{ orgName: string; fromUserName: string } | null>(null);
   /** Chuông rung một nhịp khi có lời mời mới, để người dùng để ý. */
   readonly bellPulse = signal(false);
+  private inviteToastTimer: ReturnType<typeof setTimeout> | null = null;
+
+  // ---- Chuông 🔔 thông báo cá nhân (được giao thẻ, nhắc hạn) ----
+  readonly notifications = this.notificationService.items;
+  readonly unreadNotifications = this.notificationService.unreadCount;
+  readonly notifyPulse = signal(false);
+  readonly relativeTimeFrom = relativeTimeFrom;
+
+  /** Badge gộp: thông báo chưa đọc + số thẻ sắp/đã quá hạn. */
+  readonly bellBadgeCount = computed(() => this.unreadNotifications() + this.dueBadgeCount());
+
+  readonly bellTitle = computed(() => {
+    const n = this.unreadNotifications();
+    const due = this.dueBadgeCount();
+    if (!n && !due) return 'Thông báo';
+    const phan: string[] = [];
+    if (n) phan.push(`${n} thông báo chưa đọc`);
+    if (due) phan.push(`${due} thẻ sắp/đã quá hạn`);
+    return phan.join(' · ');
+  });
+
+  /** Thành viên thường không tạo được workspace/board — ẩn mục trong menu "+ Tạo".
+   *  Backend mới là nơi chặn thật (assertCanManage), đây chỉ cho gọn mắt. */
+  readonly canManage = this.orgService.isAdminOrOwner;
 
   constructor() {
-    // Header có mặt ở MỌI trang sau đăng nhập → đây là chỗ hợp lý nhất để mở
-    // kết nối realtime. Chờ tới lúc mở board mới nối thì lời mời chỉ hiện sau
-    // khi người dùng tình cờ vào một board nào đó.
-    effect(() => {
-      if (this.auth.isLoggedIn()) this.realtime.ensureConnected();
-    });
-
+    // Kết nối realtime mở ở App (gốc), không phải ở đây — xem app.ts.
     // Lời mời mới về → rung chuông + hiện dải nhắc, KHÔNG cần F5.
     effect(() => {
       const inv = this.realtime.newInvite();
       if (!inv) return;
+
       this.inviteToast.set({ orgName: inv.orgName, fromUserName: inv.fromUserName });
       this.bellPulse.set(false);
       setTimeout(() => this.bellPulse.set(true));
-      setTimeout(() => this.inviteToast.set(null), 6000);
+
+      // ⚠️ Huỷ hẹn giờ của toast TRƯỚC. Không có dòng này thì hai lời mời về
+      //    cách nhau dưới 6 giây sẽ giẫm chân nhau: hẹn giờ của cái thứ nhất
+      //    tắt luôn toast của cái thứ hai — người dùng thấy thông báo chớp qua
+      //    rồi biến mất sau 2–3 giây.
+      if (this.inviteToastTimer) clearTimeout(this.inviteToastTimer);
+      this.inviteToastTimer = setTimeout(() => this.inviteToast.set(null), INVITE_TOAST_MS);
+    });
+
+    inject(DestroyRef).onDestroy(() => {
+      if (this.inviteToastTimer) clearTimeout(this.inviteToastTimer);
     });
   }
 
@@ -120,13 +157,37 @@ export class Header {
       this.menuOpen.set(false);
       this.createMenuOpen.set(false);
       this.inviteMenuOpen.set(false);
+      this.notifyMenuOpen.set(false);
     }
   }
 
   toggleInviteMenu(): void {
     this.menuOpen.set(false);
     this.createMenuOpen.set(false);
+    this.notifyMenuOpen.set(false);
     this.inviteMenuOpen.update((v) => !v);
+  }
+
+  toggleNotifyMenu(): void {
+    this.menuOpen.set(false);
+    this.createMenuOpen.set(false);
+    this.inviteMenuOpen.set(false);
+    this.notifyMenuOpen.update((v) => !v);
+  }
+
+  markAllNotificationsRead(): void {
+    this.notificationService.markAllRead();
+  }
+
+  /** Bấm 1 thông báo → đánh dấu đã đọc rồi đi thẳng tới board chứa thẻ đó. */
+  openNotification(n: AppNotification): void {
+    this.notificationService.markRead(n.id);
+    this.notifyMenuOpen.set(false);
+    if (!n.boardId) return;
+    // Route là /:orgSlug/board/:id — slug đi kèm trong payload nên không phải
+    // đoán tổ chức nào (người dùng có thể đang mở tổ chức khác).
+    const slug = n.orgSlug || this.orgService.activeOrgSlug();
+    void this.router.navigate(['/', slug, 'board', n.boardId]);
   }
 
   /** Lỗi khi trả lời lời mời (vd lời mời đã bị huỷ) — hiện ngay trong chuông. */

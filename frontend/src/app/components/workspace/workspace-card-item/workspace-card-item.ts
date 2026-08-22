@@ -9,6 +9,9 @@ import { BoardItem, WorkspaceItem, avatarBgFor, initialsOf } from '../../../mock
   host: { class: 'block' },
 })
 export class WorkspaceCardItem {
+  /** false = thành viên thường → ẩn các nút quản lý (backend vẫn chặn thật). */
+  readonly canManage = input<boolean>(true);
+
   readonly workspace = input.required<WorkspaceItem>();
   /** Ảnh nền theo boardId (nguồn: BoardService) — tile chỉ tra để vẽ, không tự lưu. */
   readonly bgImageByBoardId = input<Record<string, string | undefined>>({});

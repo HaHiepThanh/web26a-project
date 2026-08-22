@@ -12,6 +12,7 @@ import {
   BoardEvent,
   BoardViewer,
   Comment,
+  CardAssignedPayload,
   OrgInvite,
   OrgInviteRole,
   PresenceEvent,
@@ -26,6 +27,7 @@ import { ChatService } from './chat.service';
 import { CommentService } from './comment.service';
 import { LabelService } from './label.service';
 import { ListService } from './list.service';
+import { NotificationService } from './notification.service';
 import { OrganizationService } from './organization.service';
 
 /**
@@ -56,6 +58,7 @@ export class RealtimeService {
   private readonly activity = inject(ActivityService);
   private readonly boards = inject(BoardService);
   private readonly organizations = inject(OrganizationService);
+  private readonly notifications = inject(NotificationService);
 
   /** Ai đang mở board hiện tại (kể cả mình) — thanh tiêu đề vẽ dãy avatar. */
   readonly viewers = signal<BoardViewer[]>([]);
@@ -120,6 +123,17 @@ export class RealtimeService {
    */
   ensureConnected(): void {
     this.ensureSocket();
+  }
+
+  /** Đăng xuất → đóng kết nối, tránh người sau nhận thông báo của người trước. */
+  disconnect(): void {
+    if (!this.socket) return;
+    this.socket.close();
+    this.socket = null;
+    this.joinCount.clear();
+    this.connected.set(false);
+    this.viewers.set([]);
+    this.newInvite.set(null);
   }
 
   /**
@@ -192,6 +206,10 @@ export class RealtimeService {
 
       case 'member.removed':
         void this.organizations.refreshAfterMembershipChange();
+        break;
+
+      case 'card.assigned':
+        this.notifications.addCardAssigned(event.data as CardAssignedPayload);
         break;
     }
   }

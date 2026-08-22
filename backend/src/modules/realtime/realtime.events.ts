@@ -35,7 +35,29 @@ export type BoardEventType =
  * `board:<id>` — lời mời vào tổ chức thì người nhận còn chưa thuộc tổ chức đó,
  * không có board nào để mà vào phòng.
  */
-export type UserEventType = 'invite.created' | 'invite.responded' | 'member.removed';
+export type UserEventType =
+  | 'invite.created'
+  | 'invite.responded'
+  | 'member.removed'
+  /** Được giao phụ trách một thẻ — chuông thông báo ở Header sáng lên. */
+  | 'card.assigned';
+
+/**
+ * Payload của `card.assigned`.
+ *
+ * Mang sẵn ĐỦ thông tin để vẽ dòng thông báo và bấm vào là đi thẳng tới board:
+ * tên thẻ, tên board, tên workspace, và slug tổ chức (route là
+ * `/:orgSlug/board/:id`). Thiếu slug thì client phải đoán hoặc gọi thêm API.
+ */
+export interface CardAssignedPayload {
+  cardId: string;
+  cardTitle: string;
+  boardId: string;
+  boardName: string;
+  workspaceName: string;
+  orgSlug: string;
+  byUserName: string;
+}
 
 export interface UserEvent<T = unknown> {
   type: UserEventType;

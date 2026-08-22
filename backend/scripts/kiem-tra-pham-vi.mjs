@@ -299,6 +299,86 @@ try {
   const wsMoLai = wsCuaB3?.find((w) => w.id === wsMo.id);
   check('7.3', 'workspace "org" trả memberIds rỗng (cả tổ chức thấy)', wsMoLai?.memberIds?.length === 0,
     JSON.stringify(wsMoLai?.memberIds));
+  // ------------------------------------------- 8. PHÂN QUYỀN QUẢN LÝ
+  section('8. 🔒 THÀNH VIÊN THƯỜNG KHÔNG QUẢN LÝ ĐƯỢC');
+
+  // Mở lại "WS Mở" cho cả tổ chức để C vào được, rồi thử các thao tác quản lý.
+  const wsCuaC2 = (await api('GET', `/workspaces?orgId=${OID}`, C))[1];
+  const wsC = wsCuaC2[0];
+
+  const [stCTaoWs] = await api('POST', '/workspaces', C, { orgId: OID, name: 'C thu tao' });
+  check('8.1', '🔒 member TẠO workspace → 403', stCTaoWs === 403, `nhận ${stCTaoWs}`);
+
+  const [stCSuaWs] = await api('PATCH', `/workspaces/${wsC.id}`, C, { name: 'C doi ten' });
+  check('8.2', '🔒 member SỬA workspace → 403', stCSuaWs === 403, `nhận ${stCSuaWs}`);
+
+  const [stCXoaWs] = await api('DELETE', `/workspaces/${wsC.id}`, C);
+  check('8.3', '🔒 member XOÁ workspace → 403', stCXoaWs === 403, `nhận ${stCXoaWs}`);
+
+  const [stCTaoBoard] = await api('POST', '/boards', C, { workspaceId: wsC.id, name: 'C thu tao board' });
+  check('8.4', '🔒 member TẠO board → 403', stCTaoBoard === 403, `nhận ${stCTaoBoard}`);
+
+  const boardChung = (await api('POST', '/boards', A, { workspaceId: wsC.id, name: 'Board chung 2' }))[1];
+  const [stCSuaBoard] = await api('PATCH', `/boards/${boardChung.id}`, C, { name: 'C doi ten board' });
+  check('8.5', '🔒 member SỬA board → 403', stCSuaBoard === 403, `nhận ${stCSuaBoard}`);
+
+  const [stCXoaBoard] = await api('DELETE', `/boards/${boardChung.id}`, C);
+  check('8.6', '🔒 member XOÁ board → 403', stCXoaBoard === 403, `nhận ${stCXoaBoard}`);
+
+  // ...nhưng VẪN LÀM VIỆC được bên trong board.
+  const [stCTaoList, listC] = await api('POST', '/lists', C, { boardId: boardChung.id, name: 'C them cot' });
+  check('8.7', 'member vẫn THÊM CỘT được', stCTaoList === 201, `nhận ${stCTaoList}`);
+
+  const [stCTaoThe, theC] = await api('POST', '/cards', C, { listId: listC.id, title: 'C them the' });
+  check('8.8', 'member vẫn THÊM THẺ được', stCTaoThe === 201, `nhận ${stCTaoThe}`);
+
+  const [stCChat] = await api('POST', '/chat', C, { boardId: boardChung.id, content: 'C chat' });
+  check('8.9', 'member vẫn CHAT được', stCChat === 201, `nhận ${stCChat}`);
+
+  const [stCBinhLuan] = await api('POST', '/comments', C, { cardId: theC.id, content: 'C binh luan' });
+  check('8.10', 'member vẫn BÌNH LUẬN được', stCBinhLuan === 201, `nhận ${stCBinhLuan}`);
+
+  // admin (B) thì quản lý được
+  const [stBTaoWs, wsB] = await api('POST', '/workspaces', B, { orgId: OID, name: 'B (admin) tao' });
+  check('8.11', 'admin TẠO workspace → 201', stBTaoWs === 201, `nhận ${stBTaoWs}`);
+  if (wsB?.id) await api('DELETE', `/workspaces/${wsB.id}`, B);
+
+  // ------------------------------------- 9. THÔNG BÁO ĐƯỢC GIAO VIỆC
+  section('9. THÔNG BÁO KHI ĐƯỢC GIAO PHỤ TRÁCH THẺ');
+
+  bEvents.length = 0;
+  const theGiao = (await api('POST', '/cards', A, { listId: listC.id, title: 'Thẻ giao cho B' }))[1];
+  await api('PATCH', `/cards/${theGiao.id}`, A, { assigneeId: B_UID });
+  await sleep(900);
+
+  const evGiao = bEvents.find((e) => e.type === 'card.assigned');
+  check('9.1', 'B nhận sự kiện "card.assigned"', !!evGiao,
+    `B nhận ${bEvents.length} sự kiện: ${bEvents.map((e) => e.type).join(', ') || '(không có)'}`);
+  check('9.2', 'kèm tên thẻ', evGiao?.data?.cardTitle === 'Thẻ giao cho B', JSON.stringify(evGiao?.data));
+  check('9.3', 'kèm tên workspace (để ghép câu thông báo)', !!evGiao?.data?.workspaceName,
+    JSON.stringify(evGiao?.data));
+  check('9.4', 'kèm boardId + orgSlug (để bấm vào là điều hướng được)',
+    !!evGiao?.data?.boardId && !!evGiao?.data?.orgSlug, JSON.stringify(evGiao?.data));
+  check('9.5', 'kèm tên người giao', !!evGiao?.data?.byUserName, JSON.stringify(evGiao?.data));
+
+  // Tự gán cho chính mình thì KHÔNG tự báo cho mình.
+  const aEvents = [];
+  const aSocket = io(BASE, { auth: { token: A }, transports: ['websocket'] });
+  sockets.push(aSocket);
+  aSocket.on('user:event', (e) => aEvents.push(e));
+  await new Promise((res) => { aSocket.on('connect', res); setTimeout(res, 5000); });
+  await api('PATCH', `/cards/${theGiao.id}`, A, { assigneeId: A_UID });
+  await sleep(900);
+  check('9.6', 'tự gán cho chính mình → KHÔNG tự báo', !aEvents.some((e) => e.type === 'card.assigned'),
+    `A tự nhận ${aEvents.filter((e) => e.type === 'card.assigned').length} thông báo`);
+
+  // Sửa trường khác (không đụng assignee) thì không bắn lại thông báo.
+  bEvents.length = 0;
+  await api('PATCH', `/cards/${theGiao.id}`, A, { title: 'Đổi mỗi tên thôi' });
+  await sleep(900);
+  check('9.7', 'sửa trường khác → không bắn lại thông báo giao việc',
+    !bEvents.some((e) => e.type === 'card.assigned'),
+    `nhận ${bEvents.filter((e) => e.type === 'card.assigned').length} thông báo thừa`);
 } finally {
   await cleanup();
   console.log(`\n${Y}── Dọn dẹp ${'─'.repeat(48)}${RS}`);

@@ -1,4 +1,4 @@
-import { Component, output } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { LucideRocket, LucideSparkles, LucideZap } from '@lucide/angular';
 
 @Component({
@@ -7,6 +7,9 @@ import { LucideRocket, LucideSparkles, LucideZap } from '@lucide/angular';
   templateUrl: './workspace-welcome-banner.html',
 })
 export class WorkspaceWelcomeBanner {
+  /** false = thành viên thường → ẩn các nút quản lý (backend vẫn chặn thật). */
+  readonly canManage = input<boolean>(true);
+
   readonly createWorkspace = output<void>();
   readonly loadSamples = output<void>();
 }

@@ -47,7 +47,7 @@
       <button
         type="button"
         class="btn btn-primary btn-sm gap-1.5 rounded-xl font-black px-5 shadow-sm"
-        (click)="createWorkspace.emit()">
+        (click)="createWorkspace.emit()" [class.hidden]="!canManage()">
         <svg lucideSparkles class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg> Tạo Không gian làm việc đầu tiên
       </button>
       <button

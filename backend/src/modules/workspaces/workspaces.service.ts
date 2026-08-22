@@ -105,6 +105,26 @@ export class WorkspacesService {
     return data.role as OrgRole;
   }
 
+  /**
+   * Chỉ owner/admin của tổ chức mới được TẠO / SỬA / XOÁ workspace và board.
+   *
+   * `member` chỉ được LÀM VIỆC bên trong board đã có: kéo thẻ, bình luận, chat,
+   * gắn nhãn. Không có ranh giới này thì bất kỳ ai vào tổ chức cũng xoá được cả
+   * workspace của phòng ban khác.
+   *
+   * ⚠️ Phải chặn ở BACKEND. Ẩn nút trên giao diện chỉ là cho gọn mắt — người
+   *    dùng vẫn gọi thẳng API bằng token của họ được.
+   */
+  private async assertCanManage(uid: string, orgId: string): Promise<OrgRole> {
+    const role = await this.assertMember(uid, orgId);
+    if (role !== 'owner' && role !== 'admin') {
+      throw new ForbiddenException(
+        'Chỉ chủ tổ chức hoặc quản trị viên mới quản lý được workspace.',
+      );
+    }
+    return role;
+  }
+
   /** Danh sách user_id đang có tên trong 1 workspace. */
   private async memberIdsOf(workspaceId: string): Promise<string[]> {
     const { data } = await this.supabase.client
@@ -252,7 +272,7 @@ export class WorkspacesService {
 
     // 1. Kiểm tra quyền TRƯỚC khi ghi. Bỏ bước này là ai cũng tạo được workspace
     //    trong công ty người khác — chỉ cần đoán đúng orgId.
-    await this.assertMember(uid, orgId);
+    await this.assertCanManage(uid, orgId);
 
     // 2. Lọc danh sách chỉ định TRƯỚC khi tạo workspace: sai thì hỏng ngay từ
     //    đầu, không để lại workspace nửa vời phải đi dọn.
@@ -390,6 +410,7 @@ export class WorkspacesService {
     },
   ): Promise<WorkspaceResponse> {
     const current = await this.findOwnedOr404(uid, id);
+    await this.assertCanManage(uid, current.org_id);
 
     if (changes.visibility !== undefined && !VISIBILITIES.includes(changes.visibility)) {
       throw new BadRequestException("visibility phải là 'org' hoặc 'restricted'.");
@@ -449,7 +470,8 @@ export class WorkspacesService {
    */
   async remove(uid: string, id: string): Promise<{ id: string; deleted: true }> {
     // Ném 404 cho cả hai trường hợp: không tồn tại, và thuộc tổ chức khác.
-    await this.findOwnedOr404(uid, id);
+    const ws = await this.findOwnedOr404(uid, id);
+    await this.assertCanManage(uid, ws.org_id);
 
     const { error } = await this.supabase.client.from('workspaces').delete().eq('id', id);
 

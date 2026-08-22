@@ -396,3 +396,80 @@ và danh sách thành viên giờ có dropdown đổi quyền (endpoint `PATCH .
 
 **4. Mô tả workspace chỉ nằm ở localStorage** — mở máy khác là mất. Nay đọc từ
 server (`GET /workspaces` vốn đã trả `description`, chỉ là frontend không dùng).
+
+---
+
+## Vòng 3: phân quyền quản lý + thông báo cá nhân
+
+### Phân quyền: `member` chỉ LÀM VIỆC, không QUẢN LÝ
+
+| Thao tác | owner | admin | member |
+|---|:--:|:--:|:--:|
+| Tạo / sửa / xoá **workspace** | ✅ | ✅ | ❌ 403 |
+| Tạo / sửa / xoá **board** | ✅ | ✅ | ❌ 403 |
+| Mời / gỡ thành viên tổ chức | ✅ | ✅ | ❌ |
+| Đổi quyền thành viên | ✅ | ❌ | ❌ |
+| Thêm cột, thêm/kéo thẻ, gắn nhãn | ✅ | ✅ | ✅ |
+| Bình luận, chat | ✅ | ✅ | ✅ |
+
+Chặn bằng `assertCanManage()` trong `workspaces.service.ts` và `boards.service.ts`.
+Giao diện có ẩn nút (`canManage` từ `OrganizationService.isAdminOrOwner`) nhưng
+**đó chỉ để cho gọn mắt** — người dùng vẫn gọi thẳng API bằng token của họ được,
+nên chốt thật phải nằm ở server.
+
+### Sự kiện `card.assigned`
+
+Gán `assigneeId` cho người khác → server bắn `user:event` tới đúng người đó, kèm
+sẵn tên thẻ + tên board + tên workspace + **slug tổ chức** (route là
+`/:orgSlug/board/:id`, thiếu slug thì client phải đoán). Chuông 🔔 ở Header hiện
+"Bạn được giao nhiệm vụ ở thẻ X nằm ở workspace Y", bấm vào đi thẳng tới board.
+
+Không bắn khi tự gán cho chính mình, và không bắn lại khi sửa các trường khác của
+cùng một thẻ.
+
+Thông báo lưu ở `localStorage` **theo từng user** (`NotificationService`) nên F5
+không mất và hai người dùng chung máy không thấy của nhau. Không có endpoint
+`GET /notifications`, nên thông báo tới lúc đang offline sẽ không có — chấp nhận
+được vì đây là nhắc việc tức thời, nguồn sự thật vẫn là thẻ trong board.
+
+### Năm lỗi đã sửa
+
+**1. Bấm "+ Tạo" hiện hai modal, và hiện lại mãi.** Hai lỗi chồng nhau:
+
+- `WorkspaceUiService` dùng BỘ ĐẾM tăng dần và không bao giờ đặt lại về 0. Bấm
+  một lần là bộ đếm > 0 vĩnh viễn → mở lại trang Workspace là modal tự bật. Lỡ
+  bấm cả hai nút thì cả hai modal cùng bật.
+- `openCreateBoard()` đọc `workspaces()` **ngay trong effect**, nên `workspaces`
+  thành phụ thuộc của effect: dữ liệu nạp xong effect chạy LẠI và mở thêm modal
+  thứ hai.
+
+Nay là "một yêu cầu, đọc xong thì mất" (`consumeRequest`), chờ `workspacesReady()`
+rồi mới mở, và phần mở modal nằm trong `untracked()`.
+
+**2. Lời mời realtime không tới.** `ensureConnected()` đặt trong Header, mà Header
+chỉ nằm trong `app-layout`. Trang `/onboarding` nằm NGOÀI layout đó — đúng nơi
+người vừa được mời (chưa thuộc tổ chức nào) bị đưa tới. Đã chuyển kết nối lên
+`App` (gốc), và thêm khối lời mời ngay trên trang onboarding để họ đồng ý được
+tại chỗ, khỏi phải tạo một tổ chức rỗng trước.
+
+Kèm một lỗi nhỏ: hai lời mời về cách nhau dưới 6 giây thì hẹn giờ của cái thứ
+nhất tắt luôn toast của cái thứ hai. Đã huỷ hẹn giờ cũ trước khi đặt cái mới.
+
+**3. Trang Cài đặt hiển thị sai quyền.** Bảng thành viên suy ra vai trò bằng
+`id === ownerId ? 'Trưởng nhóm' : 'Thành viên'` — ai là `admin` cũng bị hiện
+thành "Thành viên". Nguyên nhân sâu hơn: `settings.ts` map `OrgMemberView` thành
+`User[]`, **vứt luôn trường `role`**. Nay truyền cả `role` và render đủ 3 mức.
+
+**4. Ô nhập chat vỡ giao diện.** `.textarea` của daisyUI đặt `min-height` ~3rem
+cho ô nhiều dòng, trong khi đây là `rows="1"` → ô cao 70px, placeholder xuống
+hàng và trôi trong khoảng trống; `textarea-bordered` lại bị đè mất viền
+(`border-width: 0`) nên trông như chữ trần trên nền.
+
+⚠️ Bản sửa đầu tiên viết `border: 1px solid oklch(var(--bc) / 0.2)` — đoán tên
+biến nội bộ của daisyUI. Biến `--bc` không tồn tại ở phiên bản này nên `oklch()`
+thành giá trị không hợp lệ và CSS bỏ luôn CẢ khai báo `border` (shorthand sai
+một phần là hỏng cả cụm) → viền vẫn 0px y như cũ. Bài học: đừng đoán biến CSS của
+thư viện, cứ dùng `border-base-300` để Tailwind sinh giá trị đúng lúc build.
+
+**5. Tạo cột bị nhân đôi** (đã sửa ở vòng 2, ghi lại vì cùng họ với #1): sự kiện
+WebSocket về trước phản hồi HTTP.

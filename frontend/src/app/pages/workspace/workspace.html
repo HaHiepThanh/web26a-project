@@ -33,6 +33,7 @@
 
         <app-workspace-sidebar [workspaces]="workspaces()" [activeWorkspaceId]="activeWorkspaceId()"
           [totalBoardsCount]="totalBoardsCount()" (selectWorkspace)="selectWorkspace($event)"
+          [canManage]="canManage()"
           (createWorkspace)="openCreateWorkspace()" (manageWorkspace)="openEditWorkspace($event)">
         </app-workspace-sidebar>
       </div>
@@ -109,14 +110,14 @@
         </div>
 
         <button type="button" class="btn btn-primary btn-xs rounded-xl px-3.5 font-black gap-1 shadow-xs"
-          (click)="openCreateWorkspace()">
+          (click)="openCreateWorkspace()" [class.hidden]="!canManage()">
           <span>+ Tạo Workspace</span>
         </button>
       </div>
 
       <!-- 1. Zero state: Show Welcome Banner Component -->
       @if (workspaces().length === 0) {
-      <app-workspace-welcome-banner (createWorkspace)="openCreateWorkspace()" (loadSamples)="loadSampleWorkspaces()">
+      <app-workspace-welcome-banner [canManage]="canManage()" (createWorkspace)="openCreateWorkspace()" (loadSamples)="loadSampleWorkspaces()">
       </app-workspace-welcome-banner>
       }
 
@@ -138,6 +139,7 @@
       <div class="flex flex-col gap-6 pb-12">
         @for (ws of filteredWorkspaces(); track ws.id) {
         <app-workspace-card-item [workspace]="ws" [bgImageByBoardId]="bgImageByBoardId()" [confirmDeleteKey]="confirmDeleteKey()"
+          [canManage]="canManage()"
           (confirmDeleteKeyChange)="confirmDeleteKey.set($event)" (editWorkspace)="openEditWorkspace($event)"
           (createBoard)="openCreateBoard($event)" (boardClick)="onBoardClick($event)" (toggleStar)="toggleStar($event)"
           (editBoard)="openEditBoard($event)" (deleteBoard)="deleteBoard($event)">

@@ -6,7 +6,7 @@ import {
 } from '@lucide/angular';
 import { AuthService } from '../../services/auth.service';
 import { OrganizationService } from '../../services/organization.service';
-import { OrgInviteRole, User } from '../../models';
+import { OrgInviteRole, OrgMemberView, Role, User } from '../../models';
 import { NAV_ITEMS, SettingsTab } from './settings.models';
 import {
   WorkspaceItem,
@@ -229,13 +229,33 @@ export class Settings {
   // ---------------------------------------------------------------------
   // TAB 3: Manage Organization handlers
   // ---------------------------------------------------------------------
-  /** Tên/email lấy thẳng từ backend, không dò trong danh sách mock nữa. */
-  readonly orgMembers = computed<User[]>(() =>
-    this.orgService.membersOf(this.orgService.activeOrgId()).map((m) => m.user),
+  /**
+   * Thành viên tổ chức KÈM VAI TRÒ THẬT.
+   *
+   * ⚠️ Trước đây chỗ này `.map((m) => m.user)` — vứt luôn trường `role`. Bảng
+   *    thành viên bên dưới vì thế phải đoán: `id === ownerId` thì hiện "Trưởng
+   *    nhóm", còn lại hiện cứng "Thành viên". Ai là `admin` cũng bị hiển thị
+   *    thành "Thành viên".
+   */
+  readonly orgMembers = computed<OrgMemberView[]>(() =>
+    this.orgService.membersOf(this.orgService.activeOrgId()),
   );
 
   onSwitchOrg(orgId: string): void {
     this.orgService.switchOrg(orgId);
+  }
+
+  async onChangeOrgRole(data: { userId: string; role: Role }): Promise<void> {
+    const org = this.orgService.activeOrg();
+    if (!org) return;
+    const member = this.orgMembers().find((m) => m.user.id === data.userId);
+    const name = member?.user.displayName ?? member?.user.email ?? 'thành viên';
+    const error = await this.orgService.changeRole(org.id, data.userId, data.role);
+    if (error) {
+      this.flash(error, 'error');
+      return;
+    }
+    this.flash(`Đã đổi ${name} thành ${data.role === 'admin' ? 'Quản trị' : 'Thành viên'}.`);
   }
 
   /** Slug đã bị chiếm hay chưa thì CHỈ backend biết (nó giữ tổ chức của mọi người,

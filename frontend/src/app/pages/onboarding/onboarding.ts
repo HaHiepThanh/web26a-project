@@ -27,6 +27,17 @@ export class Onboarding {
   private readonly router = inject(Router);
 
   readonly currentUser = this.auth.currentUser;
+
+  /**
+   * Lời mời đang chờ — hiện NGAY tại màn này.
+   *
+   * ⚠️ Người vừa được mời mà chưa thuộc tổ chức nào sẽ bị `onboardingGuard` đưa
+   *    thẳng tới đây. Trước đây màn này chỉ có ô "Tạo tổ chức", nên họ không có
+   *    cách nào đồng ý lời mời — phải tự tạo một tổ chức rỗng rồi mới vào được
+   *    app để bấm chuông. Danh sách này tự cập nhật qua WebSocket.
+   */
+  readonly invites = this.orgService.myInvites;
+  readonly respondingId = signal<string | null>(null);
   readonly maxSlug = SLUG_MAX_LENGTH;
 
   /** Tên đăng nhập dùng làm gốc cho cả tên tổ chức lẫn đường dẫn gợi ý. */
@@ -113,5 +124,23 @@ export class Onboarding {
   async onLogout(): Promise<void> {
     await this.auth.logout();
     void this.router.navigateByUrl('/login');
+  }
+
+  /** Đồng ý lời mời → vào thẳng app, khỏi phải tạo tổ chức rỗng. */
+  async acceptInvite(inviteId: string): Promise<void> {
+    this.respondingId.set(inviteId);
+    const error = await this.orgService.respondInvite(inviteId, true);
+    this.respondingId.set(null);
+    if (error) {
+      this.nameError.set(error);
+      return;
+    }
+    await this.router.navigateByUrl('/workspace');
+  }
+
+  async declineInvite(inviteId: string): Promise<void> {
+    this.respondingId.set(inviteId);
+    await this.orgService.respondInvite(inviteId, false);
+    this.respondingId.set(null);
   }
 }

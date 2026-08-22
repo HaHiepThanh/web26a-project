@@ -1,6 +1,9 @@
 import { Component, ElementRef, computed, input, output, signal, viewChild } from '@angular/core';
 import { User } from '../../../models';
 
+/** Ô soạn tin cao tối đa ngần này rồi mới cuộn — khớp `max-height` trong chat-input.css. */
+const MAX_COMPOSER_HEIGHT = 120;
+
 /** Ô nhập chat: gõ "@" để autocomplete tên thành viên board (#8), Enter để gửi. */
 @Component({
   selector: 'app-chat-input',
@@ -56,10 +59,16 @@ export class ChatInput {
     this.mentionQuery.set(term);
   }
 
-  /** Textarea tự cao dần theo số dòng đang gõ (thay vì cuộn ngang như 1 input 1 dòng). */
+  /**
+   * Textarea tự cao dần theo số dòng đang gõ.
+   *
+   * `height = 'auto'` trước khi đo là bắt buộc: không có bước đó thì
+   * `scrollHeight` vẫn tính theo chiều cao CŨ, nên ô chỉ phình ra mà không bao
+   * giờ co lại khi người dùng xoá bớt dòng.
+   */
   private autoGrow(el: HTMLTextAreaElement): void {
     el.style.height = 'auto';
-    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+    el.style.height = `${Math.min(el.scrollHeight, MAX_COMPOSER_HEIGHT)}px`;
   }
 
   /** Enter để gửi, Shift+Enter để xuống dòng — không chặn IME (gõ tiếng Việt/Nhật...). */

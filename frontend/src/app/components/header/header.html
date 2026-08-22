@@ -38,6 +38,12 @@
       @if (createMenuOpen()) {
       <div
         class="absolute left-0 top-[42px] z-[200] w-[240px] rounded-2xl border border-base-300/70 bg-base-100 p-1.5 shadow-xl">
+        @if (!canManage()) {
+        <p class="px-2 py-3 text-2xs leading-snug text-base-content/55">
+          Bạn là <b>thành viên</b> của tổ chức này nên không tạo được workspace hay bảng mới.
+          Nhờ chủ tổ chức hoặc quản trị viên tạo giúp.
+        </p>
+        } @else {
         <button type="button"
           class="flex w-full cursor-pointer items-center gap-2.5 rounded-md p-2 text-left transition hover:bg-base-200"
           (click)="requestCreateBoard()">
@@ -59,9 +65,10 @@
           </div>
           <div class="min-w-0">
             <div class="text-xs font-bold text-base-content leading-tight">Tạo Workspace mới</div>
-            <div class="text-2xs text-base-content/50 leading-tight">Thêm thành viên qua UUID</div>
+            <div class="text-2xs text-base-content/50 leading-tight">Chọn ai thấy được workspace</div>
           </div>
         </button>
+        }
       </div>
       }
     </div>
@@ -70,15 +77,63 @@
 
     <!-- Segmented icon toolbar -->
     <div class="flex items-center gap-0.5 rounded-full bg-base-200/60 p-1">
-      <button class="btn btn-ghost btn-circle btn-sm relative hover:bg-base-100"
-        [title]="dueBadgeCount() > 0 ? dueBadgeCount() + ' thẻ của bạn sắp/đã quá hạn' : 'Thông báo'">
-        <svg lucideBell class="h-[17px] w-[17px]" [strokeWidth]="2"></svg>
-        @if (dueBadgeCount() > 0) {
-        <span
-          class="badge badge-error absolute right-0 top-0 h-4 min-w-4 rounded-full border-2 border-base-100 px-1.5 text-3xs font-bold text-white">{{
-          dueBadgeCount() }}</span>
+      <div class="relative">
+        <button type="button" class="btn btn-ghost btn-circle btn-sm relative hover:bg-base-100"
+          [title]="bellTitle()" (click)="toggleNotifyMenu()">
+          <svg lucideBell class="h-[17px] w-[17px]" [class.invite-pulse]="notifyPulse()" [strokeWidth]="2"></svg>
+          @if (bellBadgeCount() > 0) {
+          <span
+            class="badge badge-error absolute right-0 top-0 h-4 min-w-4 rounded-full border-2 border-base-100 px-1.5 text-3xs font-bold text-white">{{
+            bellBadgeCount() }}</span>
+          }
+        </button>
+
+        @if (notifyMenuOpen()) {
+        <div
+          class="absolute right-0 top-[42px] z-[200] w-[320px] rounded-2xl border border-base-300/70 bg-base-100 p-2 shadow-xl">
+          <div class="flex items-center justify-between px-1.5 pb-1.5 pt-1">
+            <span class="text-2xs font-black uppercase tracking-wider text-base-content/45">Thông báo</span>
+            @if (unreadNotifications() > 0) {
+            <button type="button" class="text-3xs font-bold text-primary hover:underline"
+              (click)="markAllNotificationsRead()">Đánh dấu đã đọc</button>
+            }
+          </div>
+
+          @if (dueBadgeCount() > 0) {
+          <div class="mb-1 rounded-xl border border-warning/40 bg-warning/10 px-2.5 py-2">
+            <div class="text-2xs font-bold leading-snug text-base-content">
+              {{ dueBadgeCount() }} thẻ của bạn sắp hoặc đã quá hạn
+            </div>
+          </div>
+          }
+
+          @if (notifications().length === 0) {
+          <div class="px-1.5 py-4 text-center text-xs text-base-content/50">Chưa có thông báo nào.</div>
+          } @else {
+          <div class="flex max-h-[320px] flex-col gap-1 overflow-y-auto">
+            @for (n of notifications(); track n.id) {
+            <button type="button"
+              class="rounded-xl border px-2.5 py-2 text-left transition hover:bg-base-200"
+              [class.border-primary]="!n.read"
+              [class.bg-primary]="false"
+              [class.border-base-300]="n.read"
+              (click)="openNotification(n)">
+              <div class="flex items-start gap-2">
+                @if (!n.read) {
+                <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary"></span>
+                }
+                <span class="min-w-0">
+                  <span class="block text-2xs font-semibold leading-snug text-base-content">{{ n.text }}</span>
+                  <span class="mt-0.5 block text-3xs text-base-content/45">{{ relativeTimeFrom(n.createdAt) }} · bấm để mở bảng</span>
+                </span>
+              </div>
+            </button>
+            }
+          </div>
+          }
+        </div>
         }
-      </button>
+      </div>
 
       <!-- Lời mời tham gia Organization -->
       <div class="relative">

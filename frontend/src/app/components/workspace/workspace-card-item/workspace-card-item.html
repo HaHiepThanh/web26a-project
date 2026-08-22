@@ -50,14 +50,14 @@
         type="button"
         class="btn btn-ghost btn-xs text-xs rounded-xl font-bold hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 gap-1 px-2.5"
         title="Chỉnh sửa & Thành viên"
-        (click)="editWorkspace.emit(workspace())">
+        (click)="editWorkspace.emit(workspace())" [class.hidden]="!canManage()">
         <svg lucidePencil class="h-3 w-3" [strokeWidth]="2.2"></svg>
         <span>Sửa</span>
       </button>
       <button
         type="button"
         class="btn btn-primary btn-xs rounded-xl px-3 font-black text-2xs shadow-xs hover:shadow-sm gap-1"
-        (click)="createBoard.emit(workspace().id)">
+        (click)="createBoard.emit(workspace().id)" [class.hidden]="!canManage()">
         <span>+</span>
         <span>Thêm bảng</span>
       </button>
@@ -91,6 +91,7 @@
       <button
         class="absolute right-8 top-2.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-black/30 text-white opacity-0 transition hover:bg-black/55 focus-visible:opacity-100 group-hover:opacity-100"
         title="Tuỳ chọn bảng" [attr.aria-label]="'Tuỳ chọn ' + board.title"
+        [class.hidden]="!canManage()"
         (click)="$event.stopPropagation(); toggleBoardMenu(workspace().id + ':' + board.id)">
         <svg lucideEllipsisVertical class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg>
       </button>
@@ -162,7 +163,7 @@
     <!-- Tile: Create new board -->
     <div
       class="flex h-[96px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700/80 bg-slate-50/60 dark:bg-slate-800/30 text-xs font-bold text-slate-500 transition-all duration-200 hover:border-primary hover:bg-primary/5 hover:text-primary hover:scale-[1.02]"
-      (click)="createBoard.emit(workspace().id)">
+      (click)="createBoard.emit(workspace().id)" [class.hidden]="!canManage()">
       <span class="flex h-7 w-7 items-center justify-center rounded-full bg-slate-200/70 dark:bg-slate-700/70 text-base font-bold leading-none">+</span>
       <span>Tạo bảng mới</span>
     </div>

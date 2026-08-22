@@ -14,6 +14,42 @@
       </p>
     </div>
 
+    <!-- Lời mời đang chờ — tới ngay qua WebSocket, không cần F5 -->
+    @if (invites().length) {
+    <div class="mb-4 rounded-3xl border-2 border-primary/40 bg-base-100 p-5 shadow-xl">
+      <h2 class="mb-1 text-sm font-black text-slate-900 dark:text-white">
+        Bạn có {{ invites().length }} lời mời
+      </h2>
+      <p class="mb-3 text-2xs text-slate-500 dark:text-slate-400">
+        Đồng ý một lời mời là vào được app ngay — không cần tự tạo tổ chức.
+      </p>
+      <div class="flex flex-col gap-2">
+        @for (inv of invites(); track inv.id) {
+        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/60">
+          <div class="text-xs font-bold text-slate-900 dark:text-white">
+            {{ inv.fromUserName }} mời bạn vào "{{ inv.orgName }}"
+          </div>
+          <div class="mt-0.5 text-3xs font-bold"
+            [class.text-warning]="inv.role === 'admin'"
+            [class.text-slate-500]="inv.role !== 'admin'">
+            Vào với quyền {{ inv.role === 'admin' ? 'Quản trị' : 'Thành viên' }}
+          </div>
+          <div class="mt-2.5 flex gap-2">
+            <button type="button" class="btn btn-success btn-sm flex-1 rounded-xl text-white"
+              [disabled]="respondingId() === inv.id" (click)="acceptInvite(inv.id)">
+              <svg lucideCheck class="h-3.5 w-3.5" [strokeWidth]="3"></svg> Đồng ý
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm flex-1 rounded-xl"
+              [disabled]="respondingId() === inv.id" (click)="declineInvite(inv.id)">
+              Từ chối
+            </button>
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+    }
+
     <div class="rounded-3xl border-2 border-slate-200 dark:border-slate-700 bg-base-100 p-6 shadow-xl">
       <form (ngSubmit)="onSubmit()">
 

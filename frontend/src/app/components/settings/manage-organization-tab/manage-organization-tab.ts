@@ -3,7 +3,7 @@ import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LucideBuilding2, LucideCrown, LucidePlus, LucideUserPlus, LucideX } from '@lucide/angular';
 import { Organization } from '../../../mocks';
-import { OrgInviteRole, User } from '../../../models';
+import { OrgInviteRole, OrgMemberView, Role, User } from '../../../models';
 import { UserSearchService } from '../../../services/user-search.service';
 import { avatarBgFor, initialsOf } from '../../../mocks';
 import { OrgCreateModal } from '../../workspace/org-create-modal/org-create-modal';
@@ -18,7 +18,8 @@ export class ManageOrganizationTab {
   readonly organizations = input<Organization[]>([]);
   readonly activeOrgId = input<string | null>(null);
   readonly activeOrg = input<Organization | null>(null);
-  readonly orgMembers = input<User[]>([]);
+  /** Kèm `role` thật từ backend — không suy ra từ ownerId nữa. */
+  readonly orgMembers = input<OrgMemberView[]>([]);
   private readonly userSearch = inject(UserSearchService);
 
   /** Quyền người được mời sẽ nhận khi họ bấm Đồng ý. */
@@ -32,6 +33,7 @@ export class ManageOrganizationTab {
   readonly createOrg = output<{ name: string; slug: string }>();
   readonly inviteMember = output<{ user: User; role: OrgInviteRole }>();
   readonly removeMember = output<string>();
+  readonly changeRole = output<{ userId: string; role: Role }>();
   readonly flashMessage = output<{ message: string; type?: 'success' | 'error' | 'info' }>();
 
   readonly initialsOf = initialsOf;
@@ -105,5 +107,21 @@ export class ManageOrganizationTab {
 
   onRemoveOrgMember(memberId: string): void {
     this.removeMember.emit(memberId);
+  }
+
+  /** Chỉ chủ tổ chức đổi được quyền — nút này ẩn với người khác. */
+  readonly isOwner = computed(() => {
+    const me = this.currentUserId();
+    return !!me && this.orgMembers().some((m) => m.user.id === me && m.role === 'owner');
+  });
+
+  onChangeRole(userId: string, value: string): void {
+    if (value !== 'admin' && value !== 'member') return;
+    this.changeRole.emit({ userId, role: value });
+  }
+
+  roleLabel(role: Role): string {
+    if (role === 'owner') return 'Trưởng nhóm';
+    return role === 'admin' ? 'Quản trị' : 'Thành viên';
   }
 }

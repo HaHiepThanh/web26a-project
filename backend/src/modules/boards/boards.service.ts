@@ -145,6 +145,28 @@ export class BoardsService {
     return ws.org_id;
   }
 
+  /**
+   * Chỉ owner/admin của tổ chức mới TẠO / SỬA / XOÁ được board.
+   *
+   * `member` chỉ được LÀM VIỆC bên trong board: thêm cột, kéo thẻ, bình luận,
+   * chat, gắn nhãn — những thứ đó không đi qua hàm này.
+   *
+   * ⚠️ Phải chặn ở BACKEND. Ẩn nút trên giao diện chỉ cho gọn mắt; người dùng
+   *    vẫn gọi thẳng API bằng token của họ được.
+   */
+  private async assertCanManage(uid: string, orgId: string): Promise<void> {
+    const { data } = await this.supabase.client
+      .from('organization_members')
+      .select('role')
+      .eq('org_id', orgId)
+      .eq('user_id', uid)
+      .maybeSingle();
+    const role = data?.role as string | undefined;
+    if (role !== 'owner' && role !== 'admin') {
+      throw new ForbiddenException('Chỉ chủ tổ chức hoặc quản trị viên mới quản lý được board.');
+    }
+  }
+
   private async laThanhVienWorkspace(uid: string, workspaceId: string): Promise<boolean> {
     const { data } = await this.supabase.client
       .from('workspace_members')
@@ -342,6 +364,7 @@ export class BoardsService {
     }
 
     const orgId = await this.assertWorkspaceAccess(uid, workspaceId);
+    await this.assertCanManage(uid, orgId);
 
     // Lọc danh sách TRƯỚC khi tạo board: sai thì hỏng ngay, không để lại board
     // nửa vời phải đi dọn.
@@ -421,6 +444,7 @@ export class BoardsService {
     changes: { name?: string; visibility?: string; memberIds?: string[] },
   ): Promise<unknown> {
     const current = await this.findOne(uid, id); // ném 404 nếu không tồn tại / khác tổ chức
+    await this.assertCanManage(uid, current.orgId);
 
     if (changes.visibility !== undefined && !VISIBILITIES.includes(changes.visibility)) {
       throw new BadRequestException('visibility phải là workspace, private hoặc public.');

@@ -1,4 +1,4 @@
-import { Component, HostListener, computed, effect, inject, signal, viewChild } from '@angular/core';
+import { Component, DestroyRef, HostListener, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { LucideBuilding2, LucideGlobe, LucideLock, LucideSearch, LucideStar, LucideX } from '@lucide/angular';
 import { WorkspaceUiService } from '../../services/workspace-ui.service';
@@ -92,7 +92,19 @@ export class Workspace {
   readonly organizations = this.orgService.organizations;
   readonly activeOrg = this.orgService.activeOrg;
 
+  /**
+   * Được quản lý workspace/board không (owner hoặc admin của tổ chức)?
+   *
+   * Chỉ dùng để ẨN NÚT cho gọn — backend mới là nơi thật sự chặn
+   * (`assertCanManage` trong workspaces/boards service). Ẩn nút mà không chặn
+   * ở server thì người dùng vẫn gọi thẳng API bằng token của họ được.
+   */
+  readonly canManage = this.orgService.isAdminOrOwner;
+
   readonly workspaces = signal<WorkspaceItem[]>([]);
+  /** Đã nạp xong danh sách workspace lần đầu chưa — nút "+ Tạo" ở Header phải
+   *  chờ mốc này, nếu không nó không biết tổ chức đã có workspace nào hay chưa. */
+  readonly workspacesReady = signal(false);
   readonly activeWorkspaceId = signal<string | null>(null);
   readonly templates = WORKSPACE_TEMPLATES;
   readonly searchQuery = this.workspaceUi.searchQuery;
@@ -175,19 +187,32 @@ export class Workspace {
       void this.loadWorkspaces(userId, orgId);
     });
 
+    // MỘT effect cho cả hai nút "+ Tạo" ở Header — không thể mở nhầm hai modal.
+    //
+    // Hai chi tiết quan trọng:
+    //
+    //  • Chờ `workspacesReady()` rồi mới mở. `openCreateBoard()` cần biết đã có
+    //    workspace nào chưa; gọi lúc danh sách còn rỗng thì nó tưởng là chưa có
+    //    workspace nào và mở nhầm modal "Tạo Không gian làm việc".
+    //
+    //  • Phần mở modal nằm trong `untracked()`. Không có nó thì effect ĐỌC
+    //    `workspaces()` bên trong `openCreateBoard()` → `workspaces` thành phụ
+    //    thuộc → dữ liệu nạp xong effect chạy LẠI và mở thêm modal thứ hai.
+    //    Đây chính là lý do bấm một nút mà hiện hai hộp thoại.
     effect(() => {
-      const boardTrigger = this.workspaceUi.createBoardRequests();
-      if (boardTrigger > 0) {
-        this.openCreateBoard();
-      }
+      const req = this.workspaceUi.pendingRequest();
+      if (!req || !this.workspacesReady()) return;
+
+      untracked(() => {
+        this.workspaceUi.consumeRequest();
+        if (req === 'create-board') this.openCreateBoard();
+        else this.openCreateWorkspace();
+      });
     });
 
-    effect(() => {
-      const wsTrigger = this.workspaceUi.createWorkspaceRequests();
-      if (wsTrigger > 0) {
-        this.openCreateWorkspace();
-      }
-    });
+    // Rời trang mà yêu cầu chưa kịp xử lý (đổi tổ chức, bấm Back ngay) thì bỏ đi
+    // — để dành sẽ bật modal ở lần mở trang sau, đúng cái lỗi vừa sửa.
+    inject(DestroyRef).onDestroy(() => this.workspaceUi.clearRequest());
   }
 
   @HostListener('window:keydown.escape')
@@ -213,6 +238,9 @@ export class Workspace {
     this.activeWorkspaceId.set(null);
     if (!userId || !orgId) {
       this.workspaces.set([]);
+      // Vẫn coi là "nạp xong": không có tổ chức thì cũng không có gì để chờ nữa,
+      // và nút "+ Tạo" phải phản hồi được thay vì im lặng.
+      this.workspacesReady.set(true);
       return;
     }
 
@@ -221,6 +249,7 @@ export class Workspace {
     if (loadError) {
       this.addToast(loadError, 'error');
       this.workspaces.set([]);
+      this.workspacesReady.set(true);
       return;
     }
 
@@ -272,6 +301,7 @@ export class Workspace {
         };
       }),
     );
+    this.workspacesReady.set(true);
   }
 
   /** Board từ backend → thẻ hiển thị. Màu nền và cờ sao còn ở localStorage nên

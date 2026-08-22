@@ -3,3 +3,38 @@
   flex-shrink: 0;
   position: relative;
 }
+
+/*
+ * Ô soạn tin — CHỈ đặt kích thước ở đây, MÀU để cho Tailwind utility class trong
+ * chat-input.html lo.
+ *
+ * Vì sao tách ra như vậy?
+ *
+ *   1. `.textarea` của daisyUI đặt `min-height` khoảng 3rem cho ô nhiều dòng.
+ *      Ở đây `rows="1"` nên ô cao 70px trong khi chữ chỉ chiếm 1 dòng —
+ *      placeholder xuống hàng và trôi trong một khoảng trống to.
+ *
+ *   2. ⚠️ Bản sửa đầu tiên viết `border: 1px solid oklch(var(--bc) / 0.2)` —
+ *      đoán tên biến nội bộ của daisyUI. Biến `--bc` KHÔNG tồn tại ở phiên bản
+ *      này nên `oklch()` thành giá trị không hợp lệ, và CSS bỏ luôn CẢ khai báo
+ *      `border` (shorthand sai một phần là hỏng cả cụm) → viền vẫn 0px y như cũ.
+ *      Bài học: đừng đoán biến CSS của thư viện, cứ dùng `border-base-300` để
+ *      Tailwind sinh ra giá trị đúng lúc build.
+ */
+.composer {
+  min-height: 2.25rem;
+  max-height: 120px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  resize: none;
+  overflow-y: auto;
+}
+
+.composer::placeholder {
+  /* Khung chat hẹp — placeholder dài phải cắt bớt chứ không được xuống dòng,
+     nếu không nó đẩy ô cao gấp đôi ngay khi chưa gõ gì. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

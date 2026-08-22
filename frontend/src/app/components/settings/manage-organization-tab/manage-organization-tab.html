@@ -81,43 +81,53 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-xs font-medium">
-            @for (mem of orgMembers(); track mem.id) {
+            @for (mem of orgMembers(); track mem.user.id) {
             <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
               <!-- Member info -->
               <td class="py-3 px-4">
                 <div class="flex items-center gap-3">
                   <div
                     class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white text-2xs font-black shadow-xs"
-                    [style.background-color]="avatarBgFor(mem.id)">
-                    {{ initialsOf(mem.displayName || mem.email) }}
+                    [style.background-color]="avatarBgFor(mem.user.id)">
+                    {{ initialsOf(mem.user.displayName || mem.user.email) }}
                   </div>
                   <div class="min-w-0">
-                    <div class="font-black text-slate-900 dark:text-white truncate">{{ mem.displayName }}</div>
-                    <div class="text-2xs text-slate-400 truncate">{{ mem.email }}</div>
+                    <div class="font-black text-slate-900 dark:text-white truncate">{{ mem.user.displayName || mem.user.email }}</div>
+                    <div class="text-2xs text-slate-400 truncate">{{ mem.user.email }}</div>
                   </div>
                 </div>
               </td>
 
               <!-- UUID -->
               <td class="py-3 px-4 font-mono text-2xs text-slate-500">
-                <span class="select-all" [title]="mem.id">{{ mem.id.slice(0, 8) }}...{{ mem.id.slice(-4) }}</span>
+                <span class="select-all" [title]="mem.user.id">{{ mem.user.id.slice(0, 8) }}...{{ mem.user.id.slice(-4) }}</span>
               </td>
 
-              <!-- Role -->
+              <!-- Role: đọc THẲNG mem.role từ backend, không suy ra từ ownerId -->
               <td class="py-3 px-4">
-                @if (mem.id === curOrg.ownerId) {
+                @if (mem.role === 'owner') {
                 <span class="badge badge-primary gap-1 font-black text-xs px-2.5 py-1">
                   <svg lucideCrown class="h-3 w-3" [strokeWidth]="2.2"></svg> Trưởng nhóm</span>
+                } @else if (isOwner()) {
+                <select class="select select-bordered select-xs rounded-lg font-bold"
+                  title="Đổi quyền của thành viên này"
+                  [value]="mem.role"
+                  (change)="onChangeRole(mem.user.id, $any($event.target).value)">
+                  <option value="member">Thành viên</option>
+                  <option value="admin">Quản trị</option>
+                </select>
                 } @else {
-                <span class="badge badge-ghost font-bold text-xs px-2.5 py-1">Thành viên</span>
+                <span class="badge font-bold text-xs px-2.5 py-1"
+                  [class.badge-warning]="mem.role === 'admin'"
+                  [class.badge-ghost]="mem.role !== 'admin'">{{ roleLabel(mem.role) }}</span>
                 }
               </td>
 
               <!-- Action -->
               <td class="py-3 px-4 text-right">
-                @if (mem.id !== curOrg.ownerId) {
+                @if (mem.role !== 'owner' && isOwner()) {
                 <button type="button" class="btn btn-ghost btn-xs text-rose-600 hover:bg-rose-50 rounded-lg font-bold"
-                  (click)="onRemoveOrgMember(mem.id)">
+                  (click)="onRemoveOrgMember(mem.user.id)">
                   Xóa
                 </button>
                 }

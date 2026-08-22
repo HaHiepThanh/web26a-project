@@ -1,6 +1,8 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, effect, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { OfflineOverlay } from './components/offline-overlay/offline-overlay';
+import { AuthService } from './services/auth.service';
+import { RealtimeService } from './services/realtime.service';
 import { ThemeService } from './services/theme.service';
 
 @Component({
@@ -18,6 +20,23 @@ export class App {
   // duyệt trong khi phần còn lại của trang vẫn đang ở theme sáng thủ công của app — chữ
   // trong input tối trùng màu nền input cũng tối do daisyUI tự vẽ riêng.
   private readonly themeService = inject(ThemeService);
+
+  private readonly auth = inject(AuthService);
+  private readonly realtime = inject(RealtimeService);
+
+  constructor() {
+    // Mở kết nối realtime ở GỐC ứng dụng, không phải trong Header.
+    //
+    // ⚠️ Bản trước đặt ở Header, mà Header chỉ nằm trong `app-layout`. Trang
+    //    /onboarding lại nằm NGOÀI layout đó — đúng nơi một người vừa được mời
+    //    (chưa thuộc tổ chức nào) bị đưa tới. Họ ngồi ở màn đó và lời mời KHÔNG
+    //    BAO GIỜ tới, phải F5 mới thấy. Cùng lỗi mà ThemeService từng mắc, xem
+    //    ghi chú ở trên.
+    effect(() => {
+      if (this.auth.isLoggedIn()) this.realtime.ensureConnected();
+      else this.realtime.disconnect();
+    });
+  }
 
   protected readonly title = signal('frontend');
 }

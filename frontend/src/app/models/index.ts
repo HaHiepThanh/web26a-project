@@ -25,3 +25,5 @@ export * from './toast.model';
 export * from './api.model';
 // --- Hợp đồng sự kiện WebSocket (khớp backend/src/modules/realtime/realtime.events.ts) ---
 export * from './realtime.model';
+// --- Thông báo ở chuông Header ---
+export * from './notification.model';

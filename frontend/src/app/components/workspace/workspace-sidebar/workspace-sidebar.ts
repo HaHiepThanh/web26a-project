@@ -13,6 +13,9 @@ import { WorkspaceItem } from '../../../mocks';
   host: { class: 'block' },
 })
 export class WorkspaceSidebar {
+  /** false = thành viên thường → ẩn các nút quản lý (backend vẫn chặn thật). */
+  readonly canManage = input<boolean>(true);
+
   readonly workspaces = input<WorkspaceItem[]>([]);
   readonly activeWorkspaceId = input<string | null>(null);
   readonly totalBoardsCount = input<number>(0);
