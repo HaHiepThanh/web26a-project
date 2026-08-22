@@ -1,14 +1,16 @@
-import { Component, computed, input, output, signal } from '@angular/core';
+import { Component, computed, inject, input, output, signal } from '@angular/core';
+import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LucideBuilding2, LucideCrown, LucidePlus, LucideUserPlus, LucideX } from '@lucide/angular';
 import { Organization } from '../../../mocks';
-import { User } from '../../../models';
+import { OrgInviteRole, User } from '../../../models';
+import { UserSearchService } from '../../../services/user-search.service';
 import { avatarBgFor, initialsOf } from '../../../mocks';
 import { OrgCreateModal } from '../../workspace/org-create-modal/org-create-modal';
 
 @Component({
   selector: 'app-manage-organization-tab',
-  imports: [FormsModule, LucideBuilding2, LucideCrown, LucidePlus, LucideUserPlus, LucideX, OrgCreateModal],
+  imports: [NgClass, FormsModule, LucideBuilding2, LucideCrown, LucidePlus, LucideUserPlus, LucideX, OrgCreateModal],
   templateUrl: './manage-organization-tab.html',
   host: { class: 'block' },
 })
@@ -17,7 +19,10 @@ export class ManageOrganizationTab {
   readonly activeOrgId = input<string | null>(null);
   readonly activeOrg = input<Organization | null>(null);
   readonly orgMembers = input<User[]>([]);
-  readonly searchableUsers = input<User[]>([]);
+  private readonly userSearch = inject(UserSearchService);
+
+  /** Quyền người được mời sẽ nhận khi họ bấm Đồng ý. */
+  readonly inviteRole = signal<OrgInviteRole>('member');
   readonly currentUserId = input<string | null>(null);
 
   readonly switchOrg = output<string>();
@@ -25,7 +30,7 @@ export class ManageOrganizationTab {
    *  cảnh báo được và user sẽ bấm Tạo rồi thất bại im lặng. */
 
   readonly createOrg = output<{ name: string; slug: string }>();
-  readonly inviteMember = output<User>();
+  readonly inviteMember = output<{ user: User; role: OrgInviteRole }>();
   readonly removeMember = output<string>();
   readonly flashMessage = output<{ message: string; type?: 'success' | 'error' | 'info' }>();
 
@@ -40,26 +45,40 @@ export class ManageOrganizationTab {
   readonly orgInviteQuery = signal('');
   readonly selectedOrgInviteUser = signal<User | null>(null);
 
-  readonly orgInviteCandidates = computed(() => {
-    const q = this.orgInviteQuery().trim().toLowerCase();
-    const allUsers = this.searchableUsers();
+  readonly searching = this.userSearch.searching;
+
+  /**
+   * Ứng viên để mời — GỌI BACKEND (`GET /users/search`).
+   *
+   * ⚠️ Bản trước lọc trong `searchableUsers` (đọc localStorage) nên chỉ thấy
+   *    những người đã đăng nhập trên chính máy này — dán id của đồng nghiệp vào
+   *    thì không bao giờ ra.
+   */
+  readonly orgInviteCandidates = computed<User[]>(() => {
     const me = this.currentUserId();
     const currentMemberIds = new Set(this.activeOrg()?.memberIds ?? []);
-
-    return allUsers.filter((u) => {
-      if (u.id === me || currentMemberIds.has(u.id)) return false;
-      if (!q) return true;
-      return (
-        u.id.toLowerCase().includes(q) ||
-        (u.displayName && u.displayName.toLowerCase().includes(q)) ||
-        u.email.toLowerCase().includes(q)
-      );
-    });
+    return this.userSearch
+      .results()
+      .filter((u) => u.id !== me && !currentMemberIds.has(u.id))
+      .map((u) => ({
+        id: u.id,
+        email: u.email,
+        displayName: u.displayName ?? undefined,
+        avatarUrl: u.avatarUrl ?? undefined,
+      }));
   });
+
+  onInviteQueryChange(value: string): void {
+    this.orgInviteQuery.set(value);
+    this.selectedOrgInviteUser.set(null);
+    this.userSearch.search(value);
+  }
 
   openInviteOrgMember(): void {
     this.orgInviteQuery.set('');
     this.selectedOrgInviteUser.set(null);
+    this.inviteRole.set('member');
+    this.userSearch.clear();
     this.showInviteOrgModal.set(true);
   }
 
@@ -80,7 +99,7 @@ export class ManageOrganizationTab {
       return;
     }
 
-    this.inviteMember.emit(user);
+    this.inviteMember.emit({ user, role: this.inviteRole() });
     this.closeInviteOrgMember();
   }
 

@@ -32,16 +32,35 @@ export class BoardsController {
   @Post()
   create(
     @CurrentUser() user: CurrentUserInfo,
-    @Body() body: { workspaceId: string; name: string },
+    @Body()
+    body: { workspaceId: string; name: string; visibility?: string; memberIds?: string[] },
   ) {
-    return this.boards.create(user.uid, body.workspaceId, body.name);
+    return this.boards.create(
+      user.uid,
+      body.workspaceId,
+      body.name,
+      body.visibility ?? 'workspace',
+      body.memberIds ?? [],
+    );
+  }
+
+  /**
+   * GET /boards/:id/members — ai được xem board này.
+   *
+   * Board 'workspace'/'public' trả về thành viên của workspace; board 'private'
+   * chỉ trả người được chỉ định. Giao diện dùng đúng endpoint này cho ô chọn
+   * "Người phụ trách" nên không bao giờ hiện người không vào được board.
+   */
+  @Get(':id/members')
+  findMembers(@CurrentUser() user: CurrentUserInfo, @Param('id') id: string) {
+    return this.boards.findMembers(user.uid, id);
   }
 
   @Patch(':id')
   update(
     @CurrentUser() user: CurrentUserInfo,
     @Param('id') id: string,
-    @Body() body: { name?: string; visibility?: string },
+    @Body() body: { name?: string; visibility?: string; memberIds?: string[] },
   ) {
     return this.boards.update(user.uid, id, body);
   }

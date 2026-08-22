@@ -22,6 +22,8 @@ export interface OrgInvite {
   toUserId: string;
   fromUserId: string;
   fromUserName: string;
+  /** Quyền sẽ nhận khi bấm Đồng ý — chuông hiện trước để người ta biết mình vào với vai gì. */
+  role: import('./api.model').OrgInviteRole;
   status: OrgInviteStatus;
   createdAt: string;
 }

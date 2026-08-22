@@ -312,3 +312,87 @@ Endpoint này trả thẳng dòng `users` của database (`display_name`, `job_t
 - `GET /users/search?q=` — tìm người để mời
 - lưu màu/ảnh nền board (hiện còn ở localStorage)
 - checklist trong thẻ, tệp đính kèm (hiện là dữ liệu tại chỗ, F5 là mất)
+
+---
+
+## Vòng 2: phạm vi hiển thị, quyền, và tìm người dùng
+
+Cần chạy `migrations/0003_pham_vi_workspace_va_quyen_loi_moi.sql` trước.
+
+### Endpoint mới / đổi
+
+| Endpoint | Thay đổi |
+|---|---|
+| `GET /users/search?q=` | **mới** — tìm người để mời/thêm |
+| `GET /workspaces/:id/members` | **mới** — vùng chọn thành viên cho board |
+| `GET /boards/:id/members` | **mới** |
+| `POST /workspaces` | nhận thêm `visibility`, `memberIds` |
+| `PATCH /workspaces/:id` | nhận thêm `visibility`, `memberIds` |
+| `GET /workspaces?orgId=` | **lọc**: workspace `restricted` chỉ hiện với người được chỉ định |
+| `POST /boards` | nhận thêm `visibility`, `memberIds` (bỏ được bước PATCH thứ hai) |
+| `PATCH /boards/:id` | nhận thêm `memberIds` |
+| `GET /boards?workspaceId=` | **lọc**: board `private` chỉ hiện với người được chỉ định |
+| `POST /organizations/:id/invites` | nhận thêm `role` (`admin` \| `member`) |
+| `GET /organizations/invites/me` | trả thêm `role` |
+
+### Hai tầng phạm vi
+
+```
+Tổ chức (10 người)
+  └── Workspace  visibility: 'org' → cả 10 thấy
+                 visibility: 'restricted' → chỉ workspace_members (vd 5)
+        └── Board  visibility: 'workspace' → cả 5 thấy
+                   visibility: 'private'   → chỉ board_members (vd 2)
+```
+
+Vùng chọn thành viên của board **lấy từ workspace, không phải từ tổ chức**. Tổ
+chức 10 người mà workspace chỉ mở cho 5 thì board nhiều nhất cũng chỉ được 5 —
+backend trả 400 nếu client cố gửi id nằm ngoài.
+
+### `GET /users/search` — vì sao chia hai kiểu tìm
+
+Cho tìm tự do toàn bảng `users` thì ai đăng nhập cũng gõ "a" rồi lần ra email của
+cả hệ thống. Nên:
+
+- **Gõ đúng id hoặc đúng email** → tìm toàn hệ thống. Phải biết trước chính xác
+  định danh mới ra, không dò mò được. Đây là cách mời người ngoài tổ chức.
+- **Gõ tên / username** → chỉ tìm trong người đã cùng tổ chức với mình.
+- Query dưới 3 ký tự → trả rỗng.
+
+⚠️ `users.id` là **Firebase uid** (28 ký tự, không có gạch ngang), KHÔNG phải
+uuid. Bản đầu của endpoint này kiểm tra bằng regex uuid nên không bao giờ khớp.
+Cùng cái bẫy đó cũng làm hỏng `@IsUUID` trong DTO `memberIds`.
+
+### Sự kiện WebSocket cấp người dùng
+
+Ngoài `board:event` (theo phòng board) giờ có `user:event` — phòng `user:<uid>`,
+socket tự vào ngay sau khi xác thực. Cần thiết vì người được mời **chưa thuộc tổ
+chức nào**, không có board nào để mà vào phòng.
+
+| type | dùng để |
+|---|---|
+| `invite.created` | chuông lời mời sáng ngay, không F5 |
+| `invite.responded` | người gửi thấy đối phương đã đồng ý |
+| `member.removed` | người bị gỡ biết ngay, khỏi thao tác rồi ăn 403 |
+
+### Bốn lỗi đã sửa
+
+**1. Tạo cột/thẻ bị nhân đôi** — `createList` thêm thẳng `[...all, list]` sau khi
+POST trả về, trong khi sự kiện WebSocket `list.created` có thể về **trước** phản
+hồi HTTP (server phát ngay lúc ghi xong, còn HTTP còn phải đi hết chặng về). Đã
+cho cả 4 chỗ (`list`, `card`, `label`, `comment`) đi qua hàm `applyRemote*` —
+upsert theo id.
+
+**2. Tìm theo uid ra sai người** — frontend tìm trong `localStorage`
+(`trello_registered_users`), chỉ chứa người đã đăng nhập trên chính máy đó. Không
+thấy thì `workspace-form-modal` **bịa ra** một người tên `User-a1b2c3d4` với email
+giả `a1b2c3d4@trello.dev`. Thêm vào vẫn chạy (id thật) nên rất dễ bị bỏ qua. Đã
+thay bằng `GET /users/search`, và bỏ hẳn nhánh tạo người dùng giả.
+
+**3. Không chọn được quyền khi mời** — `organization_invites` thiếu cột `role`,
+`respondInvite` luôn ghi cứng `'member'`. Đã thêm cột + ô chọn Thành viên/Quản trị,
+và danh sách thành viên giờ có dropdown đổi quyền (endpoint `PATCH .../role` vốn
+đã có, chỉ thiếu nút).
+
+**4. Mô tả workspace chỉ nằm ở localStorage** — mở máy khác là mất. Nay đọc từ
+server (`GET /workspaces` vốn đã trả `description`, chỉ là frontend không dùng).

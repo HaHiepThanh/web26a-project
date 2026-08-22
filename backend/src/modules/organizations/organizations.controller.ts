@@ -86,6 +86,6 @@ export class OrganizationsController {
     @Param('id') id: string,
     @Body() body: InviteMemberDto,
   ) {
-    return this.organizations.invite(id, user.uid, body.toUserId);
+    return this.organizations.invite(id, user.uid, body.toUserId, body.role ?? 'member');
   }
 }

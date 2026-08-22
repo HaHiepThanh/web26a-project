@@ -55,99 +55,111 @@
           (ngModelChange)="descInput.set($event)" name="workspaceDesc"></textarea>
       </div>
 
-      <!-- MEMBER MANAGEMENT VIA UUID / SEARCH -->
+      <!-- AI THẤY ĐƯỢC WORKSPACE NÀY -->
       <div class="my-4 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 p-4 shadow-xs">
-        <div class="mb-3 flex items-center justify-between">
-          <div class="flex items-center gap-1.5">
-            <span class="text-sm font-bold text-primary">👥</span>
-            <span class="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Thành viên Workspace</span>
-          </div>
-          <span class="badge badge-primary badge-sm font-black">{{ members().length }} người</span>
+        <div class="mb-3 flex items-center gap-1.5">
+          <span class="text-sm font-bold text-primary">👥</span>
+          <span class="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Ai thấy được workspace này</span>
         </div>
 
-        <!-- UUID Search / Input bar -->
-        <div class="relative mb-3">
-          <div class="flex gap-2">
-            <div class="relative flex-1">
-              <svg
-                class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
-              <input type="text"
-                class="input input-sm w-full rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 pl-9 text-xs font-medium text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 shadow-xs"
-                placeholder="Nhập UUID, Email hoặc Tên người dùng..." [ngModel]="uuidSearchInput()"
-                (ngModelChange)="uuidSearchInput.set($event); searchDropdownOpen.set(true)"
-                (keydown.enter)="$event.preventDefault(); addMemberByInput()" name="uuidSearch" />
-            </div>
-            <button type="button" class="btn btn-primary btn-sm rounded-xl px-4 text-xs font-black shadow-xs"
-              (click)="addMemberByInput()">
-              + Thêm
-            </button>
+        <div class="mb-3 grid gap-2 sm:grid-cols-2">
+          <button type="button"
+            class="flex items-start gap-2.5 rounded-xl border-2 p-3 text-left transition"
+            [ngClass]="visibility() === 'org'
+              ? 'border-primary bg-primary/10'
+              : 'border-slate-300 dark:border-slate-600'"
+            (click)="setVisibility('org')">
+            <span class="mt-0.5 text-base">🏢</span>
+            <span class="min-w-0">
+              <span class="block text-xs font-black text-slate-900 dark:text-white">Cả tổ chức</span>
+              <span class="block text-3xs leading-snug text-slate-500 dark:text-slate-400">
+                Mọi thành viên trong tổ chức đều thấy và vào được
+              </span>
+            </span>
+          </button>
+
+          <button type="button"
+            class="flex items-start gap-2.5 rounded-xl border-2 p-3 text-left transition"
+            [ngClass]="visibility() === 'restricted'
+              ? 'border-primary bg-primary/10'
+              : 'border-slate-300 dark:border-slate-600'"
+            (click)="setVisibility('restricted')">
+            <span class="mt-0.5 text-base">🔒</span>
+            <span class="min-w-0">
+              <span class="block text-xs font-black text-slate-900 dark:text-white">Chỉ định thành viên</span>
+              <span class="block text-3xs leading-snug text-slate-500 dark:text-slate-400">
+                Chỉ những người bạn chọn bên dưới
+              </span>
+            </span>
+          </button>
+        </div>
+
+        @if (visibility() === 'restricted') {
+          <div class="mb-2 flex items-center justify-between">
+            <span class="text-3xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
+              Chọn từ thành viên tổ chức
+            </span>
+            <span class="badge badge-primary badge-sm font-black">{{ selectedCount() }} người</span>
           </div>
 
-          <!-- Search dropdown suggestions -->
-          @if (searchResults().length > 0 && searchDropdownOpen()) {
-          <div
-            class="absolute left-0 right-0 top-full z-50 mt-1 max-h-48 overflow-y-auto rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-1 shadow-xl">
-            @for (user of searchResults(); track user.id) {
-            <button type="button"
-              class="w-full flex items-center justify-between rounded-lg p-2 text-left transition hover:bg-primary/10 hover:text-primary"
-              (click)="addMember(user)">
-              <div class="flex items-center gap-2 min-w-0">
-                <div
-                  class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-3xs font-bold text-white shadow-xs"
-                  [style.background-color]="avatarBgFor(user.id)">
-                  {{ initialsOf(user.displayName || user.email) }}
-                </div>
-                <div class="min-w-0">
-                  <div class="truncate text-xs font-bold text-slate-900 dark:text-white">{{ user.displayName }}</div>
-                  <div class="truncate text-3xs text-slate-500 dark:text-slate-400">{{ user.email }}</div>
-                </div>
-              </div>
-              <span class="text-3xs font-mono text-slate-400 shrink-0 ml-2">UUID: {{ user.id.slice(0, 8) }}...</span>
-            </button>
+          <div class="relative mb-2">
+            <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text"
+              class="input input-sm w-full rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 pl-9 text-xs font-medium text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 shadow-xs"
+              placeholder="Tìm theo tên, email hoặc ID..." [ngModel]="memberSearch()"
+              (ngModelChange)="memberSearch.set($event)"
+              (keydown.enter)="$event.preventDefault()" name="memberSearch" />
+          </div>
+
+          <div class="max-h-52 space-y-1.5 overflow-y-auto pr-1">
+            @for (m of filteredMembers(); track m.user.id) {
+              <button type="button"
+                class="flex w-full items-center justify-between rounded-xl border p-2 text-left shadow-2xs transition"
+                [ngClass]="isSelected(m.user.id)
+                  ? 'border-primary bg-primary/10'
+                  : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800'"
+                [class.opacity-70]="isLocked(m.user.id)"
+                [disabled]="isLocked(m.user.id)"
+                (click)="toggleMember(m.user.id)">
+                <span class="flex min-w-0 items-center gap-2.5">
+                  <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-3xs font-bold text-white shadow-xs"
+                    [style.background-color]="avatarBgFor(m.user.id)">
+                    {{ initialsOf(m.user.displayName || m.user.email) }}
+                  </span>
+                  <span class="min-w-0">
+                    <span class="flex items-center gap-1.5">
+                      <span class="truncate text-xs font-bold text-slate-900 dark:text-white">
+                        {{ m.user.displayName || m.user.email.split('@')[0] }}
+                      </span>
+                      @if (isLocked(m.user.id)) {
+                        <span class="badge badge-warning badge-xs text-3xs font-black">Bạn</span>
+                      }
+                      @if (m.role !== 'member') {
+                        <span class="badge badge-ghost badge-xs text-3xs font-bold">{{ m.role }}</span>
+                      }
+                    </span>
+                    <span class="block truncate text-3xs text-slate-500 dark:text-slate-400">{{ m.user.email }}</span>
+                  </span>
+                </span>
+                <span class="ml-2 shrink-0 text-base">{{ isSelected(m.user.id) ? '☑️' : '⬜' }}</span>
+              </button>
+            } @empty {
+              <p class="px-1 py-3 text-center text-xs font-semibold text-slate-400">
+                @if (memberSearch()) { Không có ai khớp "{{ memberSearch() }}". }
+                @else { Tổ chức chưa có thành viên nào khác — mời thêm người ở "Quản lý tổ chức". }
+              </p>
             }
           </div>
-          }
-        </div>
-
-        <!-- Members list -->
-        <div class="space-y-1.5 max-h-44 overflow-y-auto pr-1">
-          @for (m of members(); track m.id) {
-          <div
-            class="flex items-center justify-between rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2 shadow-2xs">
-            <div class="flex items-center gap-2.5 min-w-0">
-              <div
-                class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-3xs font-bold text-white shadow-xs"
-                [style.background-color]="avatarBgFor(m.id)">
-                {{ initialsOf(m.displayName || m.email) }}
-              </div>
-              <div class="min-w-0">
-                <div class="flex items-center gap-1.5">
-                  <span class="truncate text-xs font-bold text-slate-900 dark:text-white">{{ m.displayName }}</span>
-                  @if (m.role === 'owner') {
-                  <span class="badge badge-warning badge-xs font-black text-3xs">Trưởng nhóm</span>
-                  }
-                </div>
-                <div class="truncate text-3xs text-slate-500 dark:text-slate-400 font-mono">
-                  UUID: {{ m.id }}
-                </div>
-              </div>
-            </div>
-
-            @if (m.role !== 'owner') {
-            <button type="button"
-              class="btn btn-ghost btn-circle btn-xs text-error hover:bg-error/10"
-              title="Gỡ thành viên"
-              (click)="removeMember(m.id)">
-              &times;
-            </button>
-            }
-          </div>
-          }
-        </div>
+        } @else {
+          <p class="rounded-xl bg-white/60 px-3 py-2.5 text-3xs font-semibold leading-relaxed text-slate-500 dark:bg-slate-900/40 dark:text-slate-400">
+            Tất cả {{ orgMembers().length }} thành viên của tổ chức sẽ thấy workspace này.
+            Board bên trong vẫn đặt riêng được quyền xem.
+          </p>
+        }
       </div>
 
       <!-- Actions -->

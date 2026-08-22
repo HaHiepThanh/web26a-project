@@ -10,9 +10,13 @@ import {
   Board,
   BoardBackground,
   BoardVisibility,
+  OrgInviteRole,
+  OrgMemberView,
+  Role,
   Toast,
   ToastType,
   User,
+  WorkspaceVisibility,
 } from '../../models';
 import {
   WorkspaceItem,
@@ -231,15 +235,39 @@ export class Workspace {
       }),
     );
 
+    // Roster thành viên tổ chức — dùng để dựng danh sách thành viên của workspace
+    // mà không phải gọi thêm API cho từng cái.
+    const orgRoster = this.orgService.membersOf(orgId);
+    const byId = new Map(orgRoster.map((m) => [m.user.id, m.user]));
+
     this.workspaces.set(
       serverWorkspaces.map((w, i) => {
         const local = localItems.find((c) => c.id === w.id);
+
+        // Workspace mở cho cả tổ chức → thành viên là toàn bộ tổ chức.
+        // Workspace chỉ định → đúng những người trong memberIds.
+        const ids = w.visibility === 'restricted' ? w.memberIds : orgRoster.map((m) => m.user.id);
+        const members: WorkspaceMember[] = ids
+          .map((id) => byId.get(id))
+          .filter((u): u is User => !!u)
+          .map((u) => ({
+            id: u.id,
+            displayName: u.displayName || u.email.split('@')[0],
+            email: u.email,
+            role: u.id === w.createdBy ? 'owner' : 'member',
+            avatarUrl: u.avatarUrl,
+          }));
+
         return {
           id: w.id,
           name: w.name,
-          description: local?.description ?? '',
-          membersCount: local?.membersCount ?? 0,
-          members: local?.members ?? [],
+          // Mô tả giờ lấy từ SERVER (trước đây chỉ đọc localStorage nên mở máy
+          // khác là mất trắng); bản local chỉ dùng làm phương án dự phòng.
+          description: w.description || local?.description || '',
+          visibility: w.visibility,
+          memberIds: w.memberIds,
+          membersCount: members.length || ids.length,
+          members,
           boards: boardsPerWorkspace[i].map((b) => this.toBoardItem(b, w.name, local)),
         };
       }),
@@ -300,8 +328,8 @@ export class Workspace {
   /** Thành viên của tổ chức đang mở trong modal.
    *  Tên/email lấy thẳng từ backend (GET /organizations/:id/members đã join sang
    *  bảng users), không còn phải dò trong danh sách mock ở localStorage. */
-  readonly managingOrgMembers = computed<User[]>(() =>
-    this.orgService.membersOf(this.managingOrgId()).map((m) => m.user),
+  readonly managingOrgMembers = computed<OrgMemberView[]>(() =>
+    this.orgService.membersOf(this.managingOrgId()),
   );
 
   readonly managingOrgInvites = computed(() => {
@@ -319,18 +347,31 @@ export class Workspace {
     this.managingOrgId.set(null);
   }
 
-  async inviteMember(data: { orgId: string; uuid: string }): Promise<void> {
-    const error = await this.orgService.inviteMember(data.orgId, data.uuid);
-    this.orgManageModal()?.showResult(error, 'Đã gửi lời mời! Chờ họ đồng ý ở chuông thông báo.');
-    if (!error) this.addToast('📨 Đã gửi lời mời tham gia tổ chức!', 'success');
+  async inviteMember(data: { orgId: string; uuid: string; role: OrgInviteRole }): Promise<void> {
+    const error = await this.orgService.inviteMember(data.orgId, data.uuid, data.role);
+    const quyen = data.role === 'admin' ? 'quản trị viên' : 'thành viên';
+    this.orgManageModal()?.showResult(
+      error,
+      `Đã gửi lời mời (vào với quyền ${quyen})! Chờ họ đồng ý ở chuông thông báo.`,
+    );
+    if (!error) this.addToast(`📨 Đã gửi lời mời làm ${quyen}!`, 'success');
   }
 
   async removeOrgMember(data: { orgId: string; userId: string }): Promise<void> {
-    const member = this.managingOrgMembers().find((m) => m.id === data.userId);
-    const name = member?.displayName ?? member?.email ?? 'thành viên';
+    const member = this.managingOrgMembers().find((m) => m.user.id === data.userId);
+    const name = member?.user.displayName ?? member?.user.email ?? 'thành viên';
     const error = await this.orgService.removeMember(data.orgId, data.userId);
     this.orgManageModal()?.showResult(error, `Đã xoá ${name} khỏi tổ chức.`);
     if (!error) this.addToast(`Đã xoá ${name} khỏi tổ chức.`, 'info');
+  }
+
+  async changeOrgMemberRole(data: { orgId: string; userId: string; role: Role }): Promise<void> {
+    const member = this.managingOrgMembers().find((m) => m.user.id === data.userId);
+    const name = member?.user.displayName ?? member?.user.email ?? 'thành viên';
+    const quyen = data.role === 'admin' ? 'Quản trị' : 'Thành viên';
+    const error = await this.orgService.changeRole(data.orgId, data.userId, data.role);
+    this.orgManageModal()?.showResult(error, `Đã đổi ${name} thành ${quyen}.`);
+    if (!error) this.addToast(`Đã đổi quyền của ${name} thành ${quyen}.`, 'success');
   }
 
   async cancelOrgInvite(inviteId: string): Promise<void> {
@@ -477,12 +518,16 @@ export class Workspace {
     backgroundImageUrl?: string;
     selectedMemberIds: string[];
   }): Promise<void> {
-    const { title, workspaceId, privacy, background, backgroundImageUrl } = data;
+    const { title, workspaceId, privacy, background, backgroundImageUrl, selectedMemberIds } = data;
     const targetWorkspace = this.workspaces().find((w) => w.id === workspaceId);
     if (!targetWorkspace) return;
 
+    const visibility = toBoardVisibility(privacy);
     const board = await this.boardService.createBoard(workspaceId, title, {
-      visibility: toBoardVisibility(privacy),
+      visibility,
+      // Chỉ gửi khi board đặt riêng tư — 'Workspace'/'Public' thì cả workspace
+      // đều thấy nên danh sách chỉ định không có ý nghĩa.
+      memberIds: visibility === 'private' ? selectedMemberIds : undefined,
       background,
       backgroundImageUrl,
     });
@@ -527,9 +572,11 @@ export class Workspace {
   async handleWorkspaceSave(data: {
     name: string;
     description: string;
+    visibility: WorkspaceVisibility;
+    memberIds: string[];
     members: WorkspaceMember[];
   }): Promise<void> {
-    const { name, description, members } = data;
+    const { name, description, visibility, memberIds, members } = data;
     const orgId = this.orgService.activeOrgId();
     if (!orgId) return;
 
@@ -538,6 +585,8 @@ export class Workspace {
         orgId,
         name,
         description,
+        visibility,
+        memberIds,
       );
       if (!workspace) {
         this.addToast(error ?? 'Không tạo được workspace.', 'error');
@@ -548,6 +597,8 @@ export class Workspace {
       const newWs: WorkspaceItem = {
         id: workspace.id,
         name: workspace.name,
+        visibility: workspace.visibility,
+        memberIds: workspace.memberIds,
         membersCount: members.length,
         members,
         description: description || 'Không gian làm việc mới vừa được khởi tạo.',
@@ -567,6 +618,9 @@ export class Workspace {
       const error = await this.workspaceService.updateWorkspace(editingWs.id, {
         name,
         description,
+        visibility,
+        // Chỉ gửi danh sách khi thật sự chỉ định — gửi kèm lúc 'org' là thừa.
+        ...(visibility === 'restricted' ? { memberIds } : {}),
       });
       if (error) {
         this.addToast(error, 'error');
@@ -575,7 +629,7 @@ export class Workspace {
       this.workspaces.update((list) => {
         const updated = list.map((ws) =>
           ws.id === editingWs.id
-            ? { ...ws, name, description, members, membersCount: members.length }
+            ? { ...ws, name, description, visibility, memberIds, members, membersCount: members.length }
             : ws,
         );
         this.persist(updated);

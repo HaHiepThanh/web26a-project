@@ -173,9 +173,10 @@ export class CardService {
         }
       }
 
-      const card = this.toCard(final);
-      this.cardsByList.update((map) => ({ ...map, [listId]: [...(map[listId] ?? []), card] }));
-      return card;
+      // Upsert theo id, không phải thêm mù quáng: sự kiện WebSocket `card.created`
+      // có thể đã về trước khi POST trả lời (xem ghi chú ở ListService.createList).
+      this.applyRemoteCard(final);
+      return this.toCard(final);
     } catch (e) {
       this.fail(describeError(e, 'Không tạo được thẻ.'));
       return null;

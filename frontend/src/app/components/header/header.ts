@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, computed, inject, signal } from '@angular/core';
+import { Component, ElementRef, HostListener, computed, effect, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import {
   LucideBell,
@@ -21,6 +21,7 @@ import { ThemeService } from '../../services/theme.service';
 import { WorkspaceUiService } from '../../services/workspace-ui.service';
 import { CardService } from '../../services/card.service';
 import { OrganizationService } from '../../services/organization.service';
+import { RealtimeService } from '../../services/realtime.service';
 
 /** Top navbar shared by every page inside app-layout (ported from trello-workspace prototype). */
 @Component({
@@ -53,6 +54,7 @@ export class Header {
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly cardService = inject(CardService);
   private readonly orgService = inject(OrganizationService);
+  private readonly realtime = inject(RealtimeService);
 
   readonly currentUser = this.auth.currentUser;
   readonly theme = this.themeService.theme;
@@ -60,8 +62,33 @@ export class Header {
   readonly createMenuOpen = signal(false);
   readonly inviteMenuOpen = signal(false);
 
+
   readonly myInvites = this.orgService.myInvites;
   readonly pendingInviteCount = this.orgService.pendingInviteCount;
+
+  /** Lời mời vừa tới qua WebSocket — hiện dải nhắc ngay dưới chuông vài giây. */
+  readonly inviteToast = signal<{ orgName: string; fromUserName: string } | null>(null);
+  /** Chuông rung một nhịp khi có lời mời mới, để người dùng để ý. */
+  readonly bellPulse = signal(false);
+
+  constructor() {
+    // Header có mặt ở MỌI trang sau đăng nhập → đây là chỗ hợp lý nhất để mở
+    // kết nối realtime. Chờ tới lúc mở board mới nối thì lời mời chỉ hiện sau
+    // khi người dùng tình cờ vào một board nào đó.
+    effect(() => {
+      if (this.auth.isLoggedIn()) this.realtime.ensureConnected();
+    });
+
+    // Lời mời mới về → rung chuông + hiện dải nhắc, KHÔNG cần F5.
+    effect(() => {
+      const inv = this.realtime.newInvite();
+      if (!inv) return;
+      this.inviteToast.set({ orgName: inv.orgName, fromUserName: inv.fromUserName });
+      this.bellPulse.set(false);
+      setTimeout(() => this.bellPulse.set(true));
+      setTimeout(() => this.inviteToast.set(null), 6000);
+    });
+  }
 
   /** Nhắc hạn Mức 1 (#10): đếm thẻ của "tôi" quá hạn/sắp đến hạn ở board vừa mở gần
    *  nhất (CardService là singleton, còn dữ liệu ngay cả khi rời board qua trang khác). */

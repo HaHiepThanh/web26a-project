@@ -44,12 +44,37 @@
       <!-- 2. Mời thành viên -->
       <section class="mb-5">
         <h4 class="mb-2 text-2xs font-black uppercase tracking-wide text-base-content/45">Mời thành viên</h4>
+        <!-- Quyền người được mời sẽ nhận khi họ bấm Đồng ý -->
+        <div class="mb-2 flex items-center gap-2">
+          <span class="text-3xs font-black uppercase tracking-wide text-base-content/45">Vào với quyền</span>
+          <div class="join">
+            <button type="button" class="btn join-item btn-xs text-3xs font-bold"
+              [class.btn-active]="inviteRole() === 'member'"
+              (click)="inviteRole.set('member')"
+              title="Xem và làm việc trên board, không quản lý được thành viên">
+              Thành viên
+            </button>
+            <button type="button" class="btn join-item btn-xs text-3xs font-bold"
+              [class.btn-active]="inviteRole() === 'admin'"
+              (click)="inviteRole.set('admin')"
+              title="Mời/gỡ thành viên, tạo và xoá workspace, board">
+              Quản trị
+            </button>
+          </div>
+        </div>
+
         <div class="relative">
           <svg lucideSearch class="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-base-content/35" [strokeWidth]="2.2"></svg>
           <input type="text" class="input input-bordered input-sm w-full rounded-xl border-2 pl-9 font-semibold"
-            placeholder="Tìm theo tên, email hoặc dán UUID..." [ngModel]="searchInput()"
-            (ngModelChange)="searchInput.set($event)" (keydown.enter)="onInviteRaw()" />
+            placeholder="Tìm theo tên, email hoặc dán ID người dùng..." [ngModel]="searchInput()"
+            (ngModelChange)="onSearchChange($event)" (keydown.enter)="onInviteRaw()" />
+          @if (searching()) {
+            <span class="loading loading-spinner loading-xs absolute right-3 top-1/2 -translate-y-1/2 text-base-content/40"></span>
+          }
         </div>
+        <p class="mt-1 px-1 text-3xs leading-snug text-base-content/45">
+          Gõ đúng email hoặc dán ID để tìm người ngoài tổ chức; gõ tên chỉ tìm trong người cùng tổ chức.
+        </p>
 
         @if (searchInput().trim()) {
         <div class="mt-1.5 overflow-hidden rounded-xl border border-base-300 bg-base-200/40">
@@ -63,17 +88,27 @@
               <span class="block truncate text-3xs text-base-content/50">{{ u.email }}</span>
             </span>
             <span class="flex shrink-0 items-center gap-1 text-3xs font-bold text-primary">
-              <svg lucideUserPlus class="h-3 w-3" [strokeWidth]="2.4"></svg> Mời
+              <svg lucideUserPlus class="h-3 w-3" [strokeWidth]="2.4"></svg>
+              Mời {{ inviteRole() === 'admin' ? 'làm quản trị' : '' }}
             </span>
           </button>
           } @empty {
-          <button type="button" class="flex w-full items-center gap-2 px-2.5 py-2.5 text-left transition-colors hover:bg-base-200"
-            (click)="onInviteRaw()">
-            <svg lucideUserPlus class="h-3.5 w-3.5 shrink-0 text-primary" [strokeWidth]="2.4"></svg>
-            <span class="min-w-0 flex-1 truncate text-2xs font-semibold text-base-content/70">
-              Gửi lời mời tới "<span class="font-mono">{{ searchInput().trim() }}</span>"
-            </span>
-          </button>
+            @if (searching()) {
+            <p class="px-2.5 py-2.5 text-2xs font-semibold text-base-content/50">Đang tìm...</p>
+            } @else {
+            <button type="button" class="flex w-full items-center gap-2 px-2.5 py-2.5 text-left transition-colors hover:bg-base-200"
+              (click)="onInviteRaw()">
+              <svg lucideUserPlus class="h-3.5 w-3.5 shrink-0 text-primary" [strokeWidth]="2.4"></svg>
+              <span class="min-w-0 flex-1 text-2xs font-semibold text-base-content/70">
+                <span class="block truncate">
+                  Không tìm thấy ai — vẫn gửi tới "<span class="font-mono">{{ searchInput().trim() }}</span>"?
+                </span>
+                <span class="block text-3xs text-base-content/45">
+                  Chỉ gửi được nếu đó đúng là ID người dùng có thật.
+                </span>
+              </span>
+            </button>
+            }
           }
         </div>
         }
@@ -110,26 +145,40 @@
           Thành viên ({{ members().length }})
         </h4>
         <div class="flex flex-col gap-1">
-          @for (mem of members(); track mem.id) {
+          @for (mem of members(); track mem.user.id) {
           <div class="flex items-center gap-2.5 rounded-xl border border-base-300 px-2.5 py-2">
             <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-2xs font-black text-white"
-              [style.background-color]="avatarBgFor(mem.id)">{{ initialsOf(mem.displayName || mem.email) }}</span>
+              [style.background-color]="avatarBgFor(mem.user.id)">{{ initialsOf(mem.user.displayName || mem.user.email) }}</span>
             <span class="min-w-0 flex-1">
-              <span class="block truncate text-xs font-bold text-base-content">{{ mem.displayName || mem.email }}</span>
-              <span class="block truncate text-3xs text-base-content/50">{{ mem.email }}</span>
+              <span class="block truncate text-xs font-bold text-base-content">{{ mem.user.displayName || mem.user.email }}</span>
+              <span class="block truncate text-3xs text-base-content/50">{{ mem.user.email }}</span>
             </span>
 
-            @if (mem.id === o.ownerId) {
+            @if (mem.role === 'owner') {
             <span class="badge badge-primary badge-sm shrink-0 gap-1 font-black">
               <svg lucideCrown class="h-3 w-3" [strokeWidth]="2.2"></svg> Trưởng nhóm
             </span>
-            } @else if (isOwner()) {
-            <button type="button" class="btn btn-ghost btn-xs shrink-0 gap-1 rounded-lg font-bold text-error"
-              title="Xoá khỏi tổ chức" (click)="onRemove(mem.id)">
-              <svg lucideTrash2 class="h-3 w-3" [strokeWidth]="2.2"></svg> Xoá
-            </button>
             } @else {
-            <span class="badge badge-ghost badge-sm shrink-0 font-bold">Thành viên</span>
+              <!-- Chỉ owner đổi được quyền; người khác chỉ thấy nhãn. -->
+              @if (isOwner()) {
+              <select class="select select-bordered select-xs shrink-0 rounded-lg text-3xs font-bold"
+                title="Đổi quyền của thành viên này"
+                [value]="mem.role"
+                (change)="onChangeRole(mem.user.id, $any($event.target).value)">
+                <option value="member">Thành viên</option>
+                <option value="admin">Quản trị</option>
+              </select>
+              <button type="button" class="btn btn-ghost btn-xs shrink-0 gap-1 rounded-lg font-bold text-error"
+                title="Xoá khỏi tổ chức" (click)="onRemove(mem.user.id)">
+                <svg lucideTrash2 class="h-3 w-3" [strokeWidth]="2.2"></svg> Xoá
+              </button>
+              } @else {
+              <span class="badge badge-sm shrink-0 font-bold"
+                [class.badge-warning]="mem.role === 'admin'"
+                [class.badge-ghost]="mem.role !== 'admin'">
+                {{ mem.role === 'admin' ? 'Quản trị' : 'Thành viên' }}
+              </span>
+              }
             }
           </div>
           }

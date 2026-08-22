@@ -32,6 +32,10 @@ export interface BoardItem {
 
 export interface WorkspaceItem {
   id: string;
+  /** 'org' = cả tổ chức thấy · 'restricted' = chỉ `memberIds`. Xem workspace.model.ts. */
+  visibility?: import('./api.model').WorkspaceVisibility;
+  /** id người được chỉ định (rỗng khi visibility là 'org'). */
+  memberIds?: string[];
   name: string;
   // Không có icon/màu: Workspace chỉ hiện bằng TÊN. Màu chỉ dành cho Board (Kanban).
   membersCount: number;

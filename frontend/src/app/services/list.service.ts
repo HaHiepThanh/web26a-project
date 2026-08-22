@@ -81,9 +81,13 @@ export class ListService {
     try {
       // position do BACKEND tính (cột mới luôn về cuối) — client không tự đoán.
       const row = await this.api.post<ApiList>('/lists', { boardId, name: trimmed });
-      const list = this.toList(row);
-      this.lists.update((all) => [...all, list]);
-      return list;
+      // Đi qua applyRemoteList (upsert theo id) chứ KHÔNG `[...all, list]`.
+      //
+      // ⚠️ Sự kiện WebSocket `list.created` có thể về TRƯỚC khi POST trả lời —
+      //    server phát ngay lúc ghi xong, còn phản hồi HTTP còn phải đi hết
+      //    chặng về. Thêm mù quáng ở đây là cột hiện HAI LẦN.
+      this.applyRemoteList(row);
+      return this.toList(row);
     } catch (e) {
       this.fail(describeError(e, 'Không tạo được cột.'));
       return null;

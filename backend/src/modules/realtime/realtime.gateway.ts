@@ -15,6 +15,8 @@ import {
   BoardEvent,
   BoardEventType,
   BoardViewer,
+  UserEvent,
+  UserEventType,
   WS,
 } from './realtime.events';
 
@@ -26,6 +28,15 @@ interface SocketData {
 
 function room(boardId: string): string {
   return `board:${boardId}`;
+}
+
+/**
+ * Phòng riêng của từng người. Socket tự vào ngay sau khi xác thực xong, không
+ * cần client xin — những việc như "có người mời bạn vào tổ chức" phải tới được
+ * cả khi người ta đang ở màn hình Dashboard, chưa mở board nào.
+ */
+function userRoom(uid: string): string {
+  return `user:${uid}`;
 }
 
 /**
@@ -89,6 +100,10 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         },
       };
       client.data = data;
+      // Vào phòng riêng NGAY, không chờ client xin: uid đã xác thực xong nên
+      // không có gì để kiểm tra thêm, và người ta cần nhận lời mời ngay cả khi
+      // chưa mở board nào.
+      await client.join(userRoom(decoded.uid));
     } catch {
       // Token hết hạn/bị sửa → cắt. Client sẽ tự kết nối lại với token mới.
       client.disconnect(true);
@@ -162,6 +177,18 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     if (!boardId || !this.server) return;
     const event: BoardEvent<T> = { type, boardId, actorId, data };
     this.server.to(room(boardId)).emit(WS.EVENT, event);
+  }
+
+  /**
+   * Gửi việc riêng cho ĐÚNG MỘT NGƯỜI (mọi tab họ đang mở).
+   *
+   * Dùng cho lời mời vào tổ chức: người nhận chưa thuộc tổ chức nên không có
+   * board nào để phát vào — phải có phòng riêng theo uid.
+   */
+  emitToUser<T>(uid: string, type: UserEventType, actorId: string, data: T): void {
+    if (!uid || !this.server) return;
+    const event: UserEvent<T> = { type, actorId, data };
+    this.server.to(userRoom(uid)).emit(WS.USER_EVENT, event);
   }
 
   // ------------------------------------------------------------------ nội bộ

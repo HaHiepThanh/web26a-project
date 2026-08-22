@@ -8,6 +8,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { SupabaseService } from '../../common/supabase/supabase.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 import { RESERVED_SLUGS } from './constants/reserved-slugs';
 
 /**
@@ -26,9 +27,18 @@ export interface MyInvite {
   id: string;
   orgId: string;
   orgName: string;
+  /** Quyền sẽ nhận khi bấm Đồng ý — chuông thông báo hiện luôn cho người ta biết. */
+  role: InviteRole;
   fromUser: { displayName: string | null; email: string };
   createdAt: string;
 }
+
+/**
+ * Quyền chọn sẵn lúc mời. KHÔNG có 'owner': mỗi tổ chức chỉ đúng 1 owner, muốn
+ * chuyển thì dùng PATCH /organizations/:id/members/:userId/role.
+ */
+export type InviteRole = 'admin' | 'member';
+const INVITE_ROLES: InviteRole[] = ['admin', 'member'];
 
 /** Lời mời tham gia tổ chức. */
 export interface InviteResponse {
@@ -36,6 +46,7 @@ export interface InviteResponse {
   orgId: string;
   toUserId: string;
   fromUserId: string;
+  role: InviteRole;
   status: 'pending' | 'accepted' | 'declined';
   createdAt: string;
 }
@@ -64,7 +75,10 @@ export interface MyOrganization {
 export class OrganizationsService {
   private readonly logger = new Logger(OrganizationsService.name);
 
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(
+    private readonly supabase: SupabaseService,
+    private readonly realtime: RealtimeGateway,
+  ) {}
 
   /**
    * Tạo tổ chức mới; người tạo trở thành owner.
@@ -190,7 +204,7 @@ export class OrganizationsService {
   async findMyInvites(uid: string): Promise<MyInvite[]> {
     const { data, error } = await this.supabase.client
       .from('organization_invites')
-      .select('id, org_id, created_at, organizations(name), users!organization_invites_from_user_id_fkey(display_name, email)')
+      .select('id, org_id, role, created_at, organizations(name), users!organization_invites_from_user_id_fkey(display_name, email)')
       .eq('to_user_id', uid)
       .eq('status', 'pending')
       .order('created_at', { ascending: false });
@@ -203,6 +217,7 @@ export class OrganizationsService {
     type Row = {
       id: string;
       org_id: string;
+      role: InviteRole;
       created_at: string;
       organizations: { name: string } | null;
       users: { display_name: string | null; email: string } | null;
@@ -214,6 +229,7 @@ export class OrganizationsService {
       id: r.id,
       orgId: r.org_id,
       orgName: r.organizations?.name ?? '',
+      role: r.role ?? 'member',
       fromUser: {
         displayName: r.users?.display_name ?? null,
         email: r.users?.email ?? '',
@@ -235,7 +251,7 @@ export class OrganizationsService {
   ): Promise<{ id: string; status: 'accepted' | 'declined' }> {
     const { data, error } = await this.supabase.client
       .from('organization_invites')
-      .select('id, org_id, to_user_id, status')
+      .select('id, org_id, to_user_id, role, status')
       .eq('id', inviteId)
       .maybeSingle();
 
@@ -273,7 +289,7 @@ export class OrganizationsService {
       //    nên rất khó phát hiện.
       const { error: memberError } = await this.supabase.client
         .from('organization_members')
-        .insert({ org_id: data.org_id, user_id: uid, role: 'member' });
+        .insert({ org_id: data.org_id, user_id: uid, role: (data.role as InviteRole) ?? 'member' });
 
       // 23505 = đã là thành viên rồi (vd hai tab cùng bấm đồng ý) — coi như xong,
       // không phải lỗi.
@@ -288,6 +304,21 @@ export class OrganizationsService {
         this.logger.error(`Thêm thành viên thất bại (invite=${inviteId}): ${memberError.message}`);
         throw new InternalServerErrorException('Không thêm được bạn vào tổ chức');
       }
+    }
+
+    // Báo lại cho người đã gửi lời mời: danh sách thành viên của họ đang mở sẽ
+    // tự cập nhật, không phải bấm F5 mới biết người ta đã đồng ý.
+    const { data: inviter } = await this.supabase.client
+      .from('organization_invites')
+      .select('from_user_id')
+      .eq('id', inviteId)
+      .maybeSingle();
+    if (inviter?.from_user_id) {
+      this.realtime.emitToUser(inviter.from_user_id as string, 'invite.responded', uid, {
+        id: inviteId,
+        orgId: data.org_id as string,
+        status,
+      });
     }
 
     return { id: inviteId, status };
@@ -453,6 +484,10 @@ export class OrganizationsService {
       throw new InternalServerErrorException('Không xoá được thành viên');
     }
 
+    // Người bị gỡ cần biết ngay — nếu không họ vẫn thao tác trên tổ chức đó rồi
+    // ăn 403/404 ở mọi nút bấm mà không hiểu vì sao.
+    this.realtime.emitToUser(userId, 'member.removed', userId, { orgId });
+
     return { userId, removed: true };
   }
 
@@ -462,7 +497,16 @@ export class OrganizationsService {
    * Chỉ owner/admin gọi được — RolesGuard đã chặn ở tầng trên, service không
    * phải kiểm tra lại quyền.
    */
-  async invite(orgId: string, fromUid: string, toUserId: string): Promise<InviteResponse> {
+  async invite(
+    orgId: string,
+    fromUid: string,
+    toUserId: string,
+    role: InviteRole = 'member',
+  ): Promise<InviteResponse> {
+    if (!INVITE_ROLES.includes(role)) {
+      throw new BadRequestException("role phải là 'admin' hoặc 'member'.");
+    }
+
     // 1. Đã là thành viên rồi thì mời làm gì nữa.
     const { data: existing, error: memberError } = await this.supabase.client
       .from('organization_members')
@@ -483,7 +527,13 @@ export class OrganizationsService {
     //    body thì ai cũng gửi lời mời mạo danh người khác được.
     const { data, error } = await this.supabase.client
       .from('organization_invites')
-      .insert({ org_id: orgId, to_user_id: toUserId, from_user_id: fromUid, status: 'pending' })
+      .insert({
+        org_id: orgId,
+        to_user_id: toUserId,
+        from_user_id: fromUid,
+        role,
+        status: 'pending',
+      })
       .select()
       .single();
 
@@ -502,11 +552,33 @@ export class OrganizationsService {
       throw new InternalServerErrorException('Không tạo được lời mời');
     }
 
+    // Bắn thông báo về ĐÚNG người được mời qua WebSocket — chuông lời mời phải
+    // sáng lên ngay, không bắt người ta F5 mới thấy.
+    //
+    // Payload có sẵn tên tổ chức + tên người mời để client vẽ được ngay, khỏi
+    // phải gọi thêm GET /organizations/invites/me chỉ để lấy hai cái tên.
+    const [{ data: org }, { data: from }] = await Promise.all([
+      this.supabase.client.from('organizations').select('name').eq('id', orgId).maybeSingle(),
+      this.supabase.client.from('users').select('display_name, email').eq('id', fromUid).maybeSingle(),
+    ]);
+    this.realtime.emitToUser(toUserId, 'invite.created', fromUid, {
+      id: data.id as string,
+      orgId: data.org_id as string,
+      orgName: (org?.name as string) ?? '',
+      role: (data.role as InviteRole) ?? 'member',
+      fromUser: {
+        displayName: (from?.display_name as string) ?? null,
+        email: (from?.email as string) ?? '',
+      },
+      createdAt: data.created_at as string,
+    });
+
     return {
       id: data.id,
       orgId: data.org_id,
       toUserId: data.to_user_id,
       fromUserId: data.from_user_id,
+      role: (data.role as InviteRole) ?? 'member',
       status: data.status,
       createdAt: data.created_at,
     };

@@ -168,7 +168,7 @@
 
 <!-- MODAL: Quản lý Organization (mời/xoá thành viên, đổi tên) -->
 <app-org-manage-modal [isOpen]="showOrgManageModal()" [org]="managingOrg()" [members]="managingOrgMembers()"
-  [pendingInvites]="managingOrgInvites()" (close)="closeManageOrg()" (invite)="inviteMember($event)"
+  [pendingInvites]="managingOrgInvites()" (close)="closeManageOrg()" (invite)="inviteMember($event)" (changeRole)="changeOrgMemberRole($event)"
   (removeMember)="removeOrgMember($event)" (cancelInvite)="cancelOrgInvite($event)" (rename)="renameOrg($event)">
 </app-org-manage-modal>
 

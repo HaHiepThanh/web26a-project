@@ -10,7 +10,8 @@ import {
   LucideX,
 } from '@lucide/angular';
 import { AuthService } from '../../../services/auth.service';
-import { User } from '../../../models';
+import { UserSearchService } from '../../../services/user-search.service';
+import { ApiUserSearchResult, OrgInviteRole, OrgMemberView, Role } from '../../../models';
 import { Organization, OrgInvite, avatarBgFor, initialsOf } from '../../../mocks';
 
 /** Modal quản lý 1 Organization: đổi tên, mời thành viên qua UUID/email/tên,
@@ -33,15 +34,18 @@ import { Organization, OrgInvite, avatarBgFor, initialsOf } from '../../../mocks
 })
 export class OrgManageModal {
   private readonly auth = inject(AuthService);
+  private readonly userSearch = inject(UserSearchService);
 
   readonly isOpen = input<boolean>(false);
   readonly org = input<Organization | null>(null);
-  readonly members = input<User[]>([]);
+  /** Kèm role — trước đây chỉ là `User[]` nên không hiện được ai là quản trị. */
+  readonly members = input<OrgMemberView[]>([]);
   readonly pendingInvites = input<OrgInvite[]>([]);
 
   readonly close = output<void>();
-  readonly invite = output<{ orgId: string; uuid: string }>();
+  readonly invite = output<{ orgId: string; uuid: string; role: OrgInviteRole }>();
   readonly removeMember = output<{ orgId: string; userId: string }>();
+  readonly changeRole = output<{ orgId: string; userId: string; role: Role }>();
   readonly cancelInvite = output<string>();
   readonly rename = output<{ orgId: string; name: string }>();
 
@@ -50,6 +54,8 @@ export class OrgManageModal {
 
   readonly nameInput = signal('');
   readonly searchInput = signal('');
+  /** Quyền người được mời sẽ nhận khi họ bấm Đồng ý. */
+  readonly inviteRole = signal<OrgInviteRole>('member');
   readonly feedback = signal<{ ok: boolean; text: string } | null>(null);
 
 
@@ -65,25 +71,31 @@ export class OrgManageModal {
     return this.nameInput().trim() !== o.name;
   });
 
-  /** Ứng viên để mời: loại người đã là thành viên, đã có lời mời chờ, và chính mình. */
-  readonly searchResults = computed(() => {
-    const q = this.searchInput().trim().toLowerCase();
-    if (!q) return [];
-    const memberIds = new Set(this.members().map((m) => m.id.toLowerCase()));
-    const invitedIds = new Set(this.pendingInvites().map((i) => i.toUserId.toLowerCase()));
-    const meId = this.auth.currentUser()?.id.toLowerCase();
+  readonly searching = this.userSearch.searching;
+  readonly emptyResult = this.userSearch.emptyResult;
 
-    return this.auth
-      .getSearchableUsers()
-      .filter((u) => {
-        const id = u.id.toLowerCase();
-        if (id === meId || memberIds.has(id) || invitedIds.has(id)) return false;
-        return (
-          id.includes(q) || (u.displayName && u.displayName.toLowerCase().includes(q)) || u.email.toLowerCase().includes(q)
-        );
-      })
+  /**
+   * Ứng viên để mời — GỌI BACKEND (`GET /users/search`), lọc bỏ người đã là
+   * thành viên và người đang có lời mời chờ.
+   *
+   * ⚠️ Bản trước tìm trong `AuthService.getSearchableUsers()` — đọc localStorage
+   *    nên chỉ có những người đã ĐĂNG NHẬP TRÊN CHÍNH MÁY NÀY. Dán uid của đồng
+   *    nghiệp vào thì không bao giờ ra, phải bấm "gửi lời mời tới <chuỗi>" mà
+   *    không biết mình đang mời ai.
+   */
+  readonly searchResults = computed<ApiUserSearchResult[]>(() => {
+    const memberIds = new Set(this.members().map((m) => m.user.id));
+    const invitedIds = new Set(this.pendingInvites().map((i) => i.toUserId));
+    return this.userSearch
+      .results()
+      .filter((u) => !memberIds.has(u.id) && !invitedIds.has(u.id))
       .slice(0, 6);
   });
+
+  onSearchChange(value: string): void {
+    this.searchInput.set(value);
+    this.userSearch.search(value);
+  }
 
   constructor() {
     effect(() => {
@@ -91,31 +103,48 @@ export class OrgManageModal {
         const o = this.org();
         this.nameInput.set(o?.name ?? '');
         this.searchInput.set('');
+        this.inviteRole.set('member');
+        this.userSearch.clear();
         this.feedback.set(null);
       }
     });
   }
 
-  onInvite(user: User): void {
+  onInvite(user: ApiUserSearchResult): void {
     const o = this.org();
     if (!o) return;
-    this.invite.emit({ orgId: o.id, uuid: user.id });
+    this.invite.emit({ orgId: o.id, uuid: user.id, role: this.inviteRole() });
     this.searchInput.set('');
+    this.userSearch.clear();
   }
 
-  /** Mời theo UUID gõ tay (trường hợp người dùng dán UUID của người chưa từng đăng nhập máy này). */
+  /**
+   * Mời theo id gõ tay — phương án cuối khi tìm không ra.
+   *
+   * Backend vẫn kiểm tra id có thật không (khoá ngoại `to_user_id` → `users.id`,
+   * sai thì trả 404 "Không tìm thấy người dùng này"), nên ở đây KHÔNG bịa ra
+   * người dùng giả như bản trước nữa.
+   */
   onInviteRaw(): void {
     const o = this.org();
     const raw = this.searchInput().trim();
     if (!o || !raw) return;
-    this.invite.emit({ orgId: o.id, uuid: raw });
+    this.invite.emit({ orgId: o.id, uuid: raw, role: this.inviteRole() });
     this.searchInput.set('');
+    this.userSearch.clear();
   }
 
   onRemove(userId: string): void {
     const o = this.org();
     if (!o) return;
     this.removeMember.emit({ orgId: o.id, userId });
+  }
+
+  /** Owner đổi quyền của 1 thành viên (member ↔ admin). */
+  onChangeRole(userId: string, role: string): void {
+    const o = this.org();
+    if (!o || (role !== 'admin' && role !== 'member')) return;
+    this.changeRole.emit({ orgId: o.id, userId, role });
   }
 
   onSaveName(): void {

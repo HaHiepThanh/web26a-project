@@ -5,6 +5,7 @@ import { AppService } from './app.service';
 import { SupabaseModule } from './common/supabase/supabase.module';
 import { FirebaseModule } from './common/firebase/firebase.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { UsersModule } from './modules/users/users.module';
 import { OrganizationsModule } from './modules/organizations/organizations.module';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module';
 import { BoardsModule } from './modules/boards/boards.module';
@@ -30,6 +31,7 @@ import { RealtimeModule } from './modules/realtime/realtime.module';
     RealtimeModule,
     // Feature modules — lõi
     AuthModule,
+    UsersModule,
     OrganizationsModule,
     WorkspacesModule,
     BoardsModule,

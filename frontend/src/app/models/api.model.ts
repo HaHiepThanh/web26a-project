@@ -72,8 +72,24 @@ export interface ApiMyInvite {
   id: string;
   orgId: string;
   orgName: string;
+  /** Quyền sẽ nhận khi bấm Đồng ý — hiện luôn trong chuông cho người ta biết trước. */
+  role: OrgInviteRole;
   fromUser: { displayName: string | null; email: string };
   createdAt: string;
+}
+
+/** Quyền chọn được khi mời. Không có 'owner' — mỗi tổ chức chỉ đúng 1 owner. */
+export type OrgInviteRole = 'admin' | 'member';
+
+/** GET /users/search?q= — tìm người để mời / thêm vào workspace. */
+export interface ApiUserSearchResult {
+  id: string;
+  email: string;
+  displayName: string | null;
+  username: string | null;
+  avatarUrl: string | null;
+  /** true nếu người này đã cùng tổ chức với mình. */
+  sharesOrg: boolean;
 }
 
 /* ------------------------------------------------------------------ *
@@ -85,8 +101,34 @@ export interface ApiWorkspace {
   orgId: string;
   name: string;
   description: string;
+  /** 'org' = cả tổ chức thấy · 'restricted' = chỉ người trong `memberIds`. */
+  visibility: WorkspaceVisibility;
+  /** Rỗng khi `visibility === 'org'` (lúc đó cả tổ chức đều thấy). */
+  memberIds: string[];
   createdBy: string;
   createdAt: string;
+}
+
+export type WorkspaceVisibility = 'org' | 'restricted';
+
+/**
+ * GET /workspaces/:id/members — VÙNG CHỌN thành viên cho board bên trong.
+ *
+ * Workspace 'org' trả về toàn bộ thành viên tổ chức; workspace 'restricted' chỉ
+ * trả người được chỉ định. Nhờ vậy ô chọn khi tạo board chỉ cần gọi endpoint này,
+ * không phải tự đoán nên lấy danh sách nào.
+ */
+export interface ApiWorkspaceMember {
+  userId: string;
+  role: 'owner' | 'member';
+  joinedAt: string | null;
+  user: { id: string; email: string; displayName: string | null; avatarUrl: string | null } | null;
+}
+
+/** GET /boards/:id/members */
+export interface ApiBoardMember {
+  userId: string;
+  user: { id: string; email: string; displayName: string | null; avatarUrl: string | null } | null;
 }
 
 /* ------------------------------------------------------------------ *

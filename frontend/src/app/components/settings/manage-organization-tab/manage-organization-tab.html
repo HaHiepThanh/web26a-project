@@ -156,27 +156,48 @@
     </div>
 
     <div class="my-4 space-y-4">
+      <!-- Quyền người được mời sẽ nhận khi họ bấm Đồng ý -->
+      <div class="space-y-1.5">
+        <label class="text-xs font-bold text-slate-700 dark:text-slate-300">Vào tổ chức với quyền</label>
+        <div class="join">
+          <button type="button" class="btn join-item btn-sm text-xs font-bold"
+            [class.btn-active]="inviteRole() === 'member'" (click)="inviteRole.set('member')"
+            title="Xem và làm việc trên board, không quản lý được thành viên">Thành viên</button>
+          <button type="button" class="btn join-item btn-sm text-xs font-bold"
+            [class.btn-active]="inviteRole() === 'admin'" (click)="inviteRole.set('admin')"
+            title="Mời/gỡ thành viên, tạo và xoá workspace, board">Quản trị</button>
+        </div>
+      </div>
+
       <!-- Search Input -->
       <div class="space-y-1.5">
-        <label class="text-xs font-bold text-slate-700 dark:text-slate-300">Tìm theo Tên, Email hoặc UUID</label>
-        <input type="text"
-          class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700"
-          placeholder="Nhập từ khóa tìm kiếm..." [ngModel]="orgInviteQuery()"
-          (ngModelChange)="orgInviteQuery.set($event)" />
+        <label class="text-xs font-bold text-slate-700 dark:text-slate-300">Tìm theo Tên, Email hoặc ID người dùng</label>
+        <div class="relative">
+          <input type="text"
+            class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700"
+            placeholder="Gõ đúng email hoặc dán ID để tìm người ngoài tổ chức..." [ngModel]="orgInviteQuery()"
+            (ngModelChange)="onInviteQueryChange($event)" />
+          @if (searching()) {
+            <span class="loading loading-spinner loading-xs absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"></span>
+          }
+        </div>
       </div>
 
       <!-- Candidate list -->
       <div
         class="space-y-1.5 max-h-[180px] overflow-y-auto rounded-2xl border-2 border-slate-200 dark:border-slate-800 p-2 bg-slate-50 dark:bg-slate-800/40">
         @if (orgInviteCandidates().length === 0) {
-        <div class="py-4 text-center text-xs text-slate-400">Không tìm thấy người dùng phù hợp.</div>
+        <div class="py-4 text-center text-xs text-slate-400">
+          @if (searching()) { Đang tìm... }
+          @else if (orgInviteQuery().trim().length < 3) { Gõ ít nhất 3 ký tự để tìm. }
+          @else { Không tìm thấy người dùng phù hợp. }
+        </div>
         } @else {
         @for (cand of orgInviteCandidates(); track cand.id) {
         <button type="button" class="w-full flex items-center justify-between p-2 rounded-xl text-left transition-all"
-          [class.bg-primary/15]="selectedOrgInviteUser()?.id === cand.id"
-          [class.border]="selectedOrgInviteUser()?.id === cand.id"
-          [class.border-primary/40]="selectedOrgInviteUser()?.id === cand.id"
-          [class.hover:bg-slate-200/60]="selectedOrgInviteUser()?.id !== cand.id" (click)="chooseOrgInviteUser(cand)">
+          [ngClass]="selectedOrgInviteUser()?.id === cand.id
+            ? 'bg-primary/15 border border-primary/40'
+            : 'hover:bg-slate-200/60'" (click)="chooseOrgInviteUser(cand)">
           <div class="flex items-center gap-2.5 min-w-0">
             <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-white text-3xs font-black"
               [style.background-color]="avatarBgFor(cand.id)">

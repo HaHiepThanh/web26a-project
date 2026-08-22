@@ -85,13 +85,25 @@
         <button type="button" class="btn btn-ghost btn-circle btn-sm relative hover:bg-base-100"
           [title]="pendingInviteCount() > 0 ? pendingInviteCount() + ' lời mời tổ chức đang chờ' : 'Lời mời tổ chức'"
           (click)="toggleInviteMenu()">
-          <svg lucideUserPlus class="h-[17px] w-[17px]" [strokeWidth]="2"></svg>
+          <svg lucideUserPlus class="h-[17px] w-[17px]" [class.invite-pulse]="bellPulse()" [strokeWidth]="2"></svg>
           @if (pendingInviteCount() > 0) {
           <span
             class="badge badge-error absolute right-0 top-0 h-4 min-w-4 rounded-full border-2 border-base-100 px-1.5 text-3xs font-bold text-white">{{
             pendingInviteCount() }}</span>
           }
         </button>
+
+        @if (inviteToast(); as t) {
+        <button type="button"
+          class="invite-toast absolute right-0 top-[42px] z-[210] w-[268px] rounded-2xl border border-primary/40 bg-base-100 p-3 text-left shadow-xl"
+          (click)="inviteToast.set(null); toggleInviteMenu()">
+          <div class="text-2xs font-black uppercase tracking-wider text-primary">Lời mời mới</div>
+          <div class="mt-1 text-xs font-bold leading-snug text-base-content">
+            {{ t.fromUserName }} mời bạn vào "{{ t.orgName }}"
+          </div>
+          <div class="mt-0.5 text-3xs text-base-content/55">Bấm để xem và trả lời</div>
+        </button>
+        }
 
         @if (inviteMenuOpen()) {
         <div
@@ -108,6 +120,11 @@
                 <div class="min-w-0">
                   <div class="truncate text-xs font-bold text-base-content leading-tight">{{ inv.fromUserName }}</div>
                   <div class="truncate text-2xs text-base-content/55 leading-tight">mời bạn vào "{{ inv.orgName }}"</div>
+                  <div class="mt-0.5 text-3xs font-bold leading-tight"
+                    [class.text-warning]="inv.role === 'admin'"
+                    [class.text-base-content]="inv.role !== 'admin'">
+                    Vào với quyền {{ inv.role === 'admin' ? 'Quản trị' : 'Thành viên' }}
+                  </div>
                 </div>
               </div>
               <div class="mt-2 flex items-center gap-1.5">

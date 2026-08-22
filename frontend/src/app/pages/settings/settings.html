@@ -63,7 +63,7 @@
     <!-- 2. TAB MANAGE ORGANIZATION -->
     @case ('manage-organization') {
     <app-manage-organization-tab [organizations]="orgService.organizations()" [activeOrgId]="orgService.activeOrgId()"
-      [activeOrg]="orgService.activeOrg()" [orgMembers]="orgMembers()" [searchableUsers]="searchableUsers()"
+      [activeOrg]="orgService.activeOrg()" [orgMembers]="orgMembers()"
       [currentUserId]="auth.currentUser()?.id ?? null" (switchOrg)="onSwitchOrg($event)"
       (createOrg)="onCreateOrg($event)"
       (inviteMember)="onInviteOrgMember($event)" (removeMember)="onRemoveOrgMember($event)"

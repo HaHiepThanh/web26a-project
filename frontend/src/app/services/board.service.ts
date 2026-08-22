@@ -213,31 +213,31 @@ export class BoardService {
   async createBoard(
     workspaceId: string,
     name: string,
-    options?: { visibility?: BoardVisibility; background?: BoardBackground; backgroundImageUrl?: string },
+    options?: {
+      visibility?: BoardVisibility;
+      /** Chỉ dùng khi `visibility === 'private'` — ai được xem board này. */
+      memberIds?: string[];
+      background?: BoardBackground;
+      backgroundImageUrl?: string;
+    },
   ): Promise<Board | null> {
     const title = name.trim();
     if (!title) return null;
 
     let row: ApiBoard;
     try {
-      // Backend chỉ nhận workspaceId + name. Id do SERVER cấp — không tự sinh
-      // 'b-new-...' nữa, id tự chế sẽ không khớp gì với database.
-      row = await this.api.post<ApiBoard>('/boards', { workspaceId, name: title });
+      // Id do SERVER cấp — không tự sinh 'b-new-...', id tự chế sẽ không khớp
+      // gì với database. Quyền riêng tư + danh sách người xem gửi LUÔN trong
+      // POST (trước đây phải PATCH thêm một lần nữa sau khi tạo).
+      row = await this.api.post<ApiBoard>('/boards', {
+        workspaceId,
+        name: title,
+        visibility: options?.visibility ?? 'workspace',
+        ...(options?.visibility === 'private' ? { memberIds: options.memberIds ?? [] } : {}),
+      });
     } catch (e) {
       this.loadError.set(describeError(e, 'Không tạo được board.'));
       return null;
-    }
-
-    // visibility là bước thứ hai vì POST không nhận. Hỏng thì board vẫn còn với
-    // giá trị mặc định 'workspace' — báo cho người dùng chứ không nuốt lỗi.
-    if (options?.visibility && options.visibility !== row.visibility) {
-      try {
-        row = await this.api.patch<ApiBoard>(`/boards/${row.id}`, {
-          visibility: options.visibility,
-        });
-      } catch {
-        this.loadError.set('Đã tạo board nhưng chưa đặt được quyền riêng tư.');
-      }
     }
 
     // Màu/ảnh nền backend chưa lưu được → giữ ở trình duyệt, khoá theo id THẬT.

@@ -6,7 +6,7 @@ import {
 } from '@lucide/angular';
 import { AuthService } from '../../services/auth.service';
 import { OrganizationService } from '../../services/organization.service';
-import { User } from '../../models';
+import { OrgInviteRole, User } from '../../models';
 import { NAV_ITEMS, SettingsTab } from './settings.models';
 import {
   WorkspaceItem,
@@ -251,15 +251,18 @@ export class Settings {
     this.flash(`Đã tạo tổ chức "${org.name}" thành công!`);
   }
 
-  async onInviteOrgMember(user: User): Promise<void> {
+  async onInviteOrgMember(data: { user: User; role: OrgInviteRole }): Promise<void> {
     const org = this.orgService.activeOrg();
     if (!org) return;
-    const error = await this.orgService.inviteMember(org.id, user.id);
+    const error = await this.orgService.inviteMember(org.id, data.user.id, data.role);
     if (error) {
       this.flash(error, 'error');
       return;
     }
-    this.flash(`Đã gửi lời mời tham gia "${org.name}" cho ${user.displayName || user.email}.`);
+    const quyen = data.role === 'admin' ? 'quản trị viên' : 'thành viên';
+    this.flash(
+      `Đã gửi lời mời tham gia "${org.name}" cho ${data.user.displayName || data.user.email} (quyền ${quyen}).`,
+    );
   }
 
   async onRemoveOrgMember(memberId: string): Promise<void> {

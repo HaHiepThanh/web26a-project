@@ -60,3 +60,36 @@
 .header-avatar-chip:hover {
   background: var(--bg-hover);
 }
+
+
+/* Chuông rung một nhịp khi lời mời về qua WebSocket — đủ để mắt bắt được mà
+   không phải hiện hộp thoại chặn ngang việc người dùng đang làm. */
+@keyframes invite-pulse {
+  0%, 100% { transform: rotate(0); }
+  20% { transform: rotate(-14deg); }
+  40% { transform: rotate(12deg); }
+  60% { transform: rotate(-8deg); }
+  80% { transform: rotate(6deg); }
+}
+
+.invite-pulse {
+  animation: invite-pulse 0.6s ease-in-out 2;
+  transform-origin: 50% 20%;
+}
+
+@keyframes invite-toast-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.invite-toast {
+  animation: invite-toast-in 0.18s ease-out;
+}
+
+/* Người bật "giảm chuyển động" trong hệ điều hành thì bỏ hết hiệu ứng. */
+@media (prefers-reduced-motion: reduce) {
+  .invite-pulse,
+  .invite-toast {
+    animation: none;
+  }
+}

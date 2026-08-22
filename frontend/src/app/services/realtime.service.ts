@@ -12,7 +12,10 @@ import {
   BoardEvent,
   BoardViewer,
   Comment,
+  OrgInvite,
+  OrgInviteRole,
   PresenceEvent,
+  UserEvent,
   WS,
 } from '../models';
 import { FirebaseService } from './firebase.service';
@@ -23,6 +26,7 @@ import { ChatService } from './chat.service';
 import { CommentService } from './comment.service';
 import { LabelService } from './label.service';
 import { ListService } from './list.service';
+import { OrganizationService } from './organization.service';
 
 /**
  * REALTIME THEO BOARD — mở board là thấy thay đổi của người khác ngay, không F5.
@@ -51,6 +55,7 @@ export class RealtimeService {
   private readonly chat = inject(ChatService);
   private readonly activity = inject(ActivityService);
   private readonly boards = inject(BoardService);
+  private readonly organizations = inject(OrganizationService);
 
   /** Ai đang mở board hiện tại (kể cả mình) — thanh tiêu đề vẽ dãy avatar. */
   readonly viewers = signal<BoardViewer[]>([]);
@@ -58,6 +63,9 @@ export class RealtimeService {
   readonly connected = signal(false);
   /** Board vừa bị người khác xoá — trang Board đọc để rời đi thay vì ngồi lỗi 404. */
   readonly boardDeleted = signal<string | null>(null);
+
+  /** Lời mời vừa nhận qua WebSocket — Header đọc để bật toast "có lời mời mới". */
+  readonly newInvite = signal<OrgInvite | null>(null);
 
   private socket: Socket | null = null;
   /** Đếm số nơi đang cần board này. Chỉ rời phòng khi về 0 — trang Board và khung
@@ -94,10 +102,24 @@ export class RealtimeService {
     });
 
     socket.on(WS.EVENT, (event: BoardEvent) => this.apply(event));
+    socket.on(WS.USER_EVENT, (event: UserEvent) => this.applyUserEvent(event));
     socket.on(WS.PRESENCE, (p: PresenceEvent) => this.viewers.set(p.viewers ?? []));
 
     this.socket = socket;
     return socket;
+  }
+
+  /**
+   * Mở kết nối NGAY khi đăng nhập, không chờ tới lúc mở board.
+   *
+   * ⚠️ Cần thiết cho chuông lời mời: người được mời có thể đang ở Dashboard và
+   *    chưa thuộc tổ chức nào — không có board nào để `joinBoard`. Không gọi
+   *    hàm này thì lời mời chỉ hiện sau khi họ tình cờ mở một board.
+   *
+   * Gọi nhiều lần vô hại: `ensureSocket()` chỉ tạo đúng một kết nối.
+   */
+  ensureConnected(): void {
+    this.ensureSocket();
   }
 
   /**
@@ -125,6 +147,53 @@ export class RealtimeService {
       this.viewers.set([]);
       if (socket.connected) socket.emit(WS.LEAVE, { boardId });
     };
+  }
+
+  /**
+   * Việc riêng của chính người dùng này — không phụ thuộc họ đang mở board nào.
+   *
+   * Socket tự vào phòng `user:<uid>` ngay sau khi xác thực (xem gateway ở
+   * backend), nên không cần đăng ký gì thêm: chuông lời mời sáng lên kể cả khi
+   * người ta đang ngồi ở Dashboard và chưa thuộc tổ chức nào.
+   */
+  private applyUserEvent(event: UserEvent): void {
+    switch (event.type) {
+      case 'invite.created': {
+        const r = event.data as {
+          id: string;
+          orgId: string;
+          orgName: string;
+          role: OrgInviteRole;
+          fromUser: { displayName: string | null; email: string };
+          createdAt: string;
+        };
+        const invite: OrgInvite = {
+          id: r.id,
+          orgId: r.orgId,
+          orgName: r.orgName,
+          toUserId: '',
+          fromUserId: event.actorId,
+          fromUserName: r.fromUser?.displayName || r.fromUser?.email || 'Ai đó',
+          role: r.role ?? 'member',
+          status: 'pending',
+          createdAt: r.createdAt,
+        };
+        this.organizations.applyRemoteInvite(invite);
+        this.newInvite.set(invite);
+        break;
+      }
+
+      case 'invite.responded':
+        // Người ta đã trả lời ở nơi khác → gỡ khỏi chuông và nạp lại danh sách
+        // thành viên (người gửi lời mời cần thấy họ xuất hiện trong tổ chức).
+        this.organizations.removeInviteLocally((event.data as { id: string }).id);
+        void this.organizations.refreshAfterMembershipChange();
+        break;
+
+      case 'member.removed':
+        void this.organizations.refreshAfterMembershipChange();
+        break;
+    }
   }
 
   /**

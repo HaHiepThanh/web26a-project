@@ -80,9 +80,9 @@ export class LabelService {
     if (!trimmed) return null;
     try {
       const row = await this.api.post<ApiLabel>('/labels', { boardId, name: trimmed, color });
-      const label = this.toLabel(row);
-      this.labels.update((all) => [...all, label]);
-      return label;
+      // Upsert theo id — sự kiện `label.created` có thể về trước phản hồi HTTP.
+      this.applyRemoteLabel(row);
+      return this.toLabel(row);
     } catch (e) {
       this.fail(describeError(e, 'Không tạo được nhãn.'));
       return null;

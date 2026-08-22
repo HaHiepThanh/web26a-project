@@ -2,12 +2,14 @@ import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
 import { describeError } from './api-error.util';
-import { Organization, OrgInvite, loadActiveOrgId, persistActiveOrgId } from '../mocks';
+import { OrgInvite, loadActiveOrgId, persistActiveOrgId } from '../mocks';
+import type { Organization } from '../mocks';
 import {
   ApiCreatedOrg,
   ApiMyInvite,
   ApiMyOrg,
   ApiOrgMember,
+  OrgInviteRole,
   OrgMemberView,
   User,
 } from '../models';
@@ -165,6 +167,7 @@ export class OrganizationService {
           toUserId: uid,
           fromUserId: '',
           fromUserName: i.fromUser.displayName || i.fromUser.email,
+          role: i.role ?? 'member',
           status: 'pending' as const,
           createdAt: i.createdAt,
         })),
@@ -227,16 +230,50 @@ export class OrganizationService {
   }
 
   /** Mời 1 user vào tổ chức theo uid. Trả về thông báo lỗi, hoặc null nếu thành công. */
-  async inviteMember(orgId: string, toUserId: string): Promise<string | null> {
+  async inviteMember(
+    orgId: string,
+    toUserId: string,
+    role: OrgInviteRole = 'member',
+  ): Promise<string | null> {
     const me = this.auth.currentUser();
     if (!me) return 'Bạn cần đăng nhập.';
     if (toUserId === me.id) return 'Bạn không thể tự mời chính mình.';
     try {
-      await this.api.post(`/organizations/${orgId}/invites`, { toUserId: toUserId.trim() });
+      await this.api.post(`/organizations/${orgId}/invites`, {
+        toUserId: toUserId.trim(),
+        // Quyền này chỉ có hiệu lực KHI người ta bấm Đồng ý — backend đọc lại
+        // `organization_invites.role` lúc đó, không phải lúc gửi.
+        role,
+      });
       return null;
     } catch (e) {
       return describeError(e, 'Không gửi được lời mời.');
     }
+  }
+
+  /**
+   * Nhét 1 lời mời vừa nhận qua WebSocket vào chuông thông báo — KHÔNG gọi API.
+   *
+   * Sự kiện đã mang sẵn tên tổ chức và tên người mời nên vẽ được ngay; gọi lại
+   * `GET /organizations/invites/me` chỉ để lấy hai cái tên đó là thừa một vòng
+   * mạng, mà đúng lúc người dùng đang nhìn vào chuông.
+   *
+   * Chống trùng theo id: mở hai tab thì cả hai cùng nhận, mỗi tab tự lọc.
+   */
+  applyRemoteInvite(invite: OrgInvite): void {
+    this.myInvites.update((all) =>
+      all.some((i) => i.id === invite.id) ? all : [invite, ...all],
+    );
+  }
+
+  /** Lời mời vừa được trả lời ở nơi khác (tab khác) → bỏ khỏi chuông. */
+  removeInviteLocally(inviteId: string): void {
+    this.myInvites.update((all) => all.filter((i) => i.id !== inviteId));
+  }
+
+  /** Bị gỡ khỏi 1 tổ chức → nạp lại toàn bộ, tổ chức đó biến mất khỏi bộ chuyển. */
+  async refreshAfterMembershipChange(): Promise<void> {
+    await this.reload();
   }
 
   /** Đồng ý / từ chối lời mời. Trả về thông báo lỗi, hoặc null nếu thành công. */

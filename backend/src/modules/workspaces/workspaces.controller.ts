@@ -20,7 +20,6 @@ import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
  * Workspace — nhóm board theo phòng ban/dự án, nằm TRONG 1 tổ chức.
  * Bảng: `workspaces`, `workspace_members` (xem database.sql mục 4).
  *
- * TODO(Huy): tách DTO (CreateWorkspaceDto, UpdateWorkspaceDto) thay cho @Body() inline.
  */
 @UseGuards(FirebaseAuthGuard)
 @Controller('workspaces')
@@ -39,7 +38,14 @@ export class WorkspacesController {
     @CurrentUser() user: CurrentUserInfo,
     @Body() body: CreateWorkspaceDto,
   ) {
-    return this.workspaces.create(user.uid, body.orgId, body.name, body.description);
+    return this.workspaces.create(
+      user.uid,
+      body.orgId,
+      body.name,
+      body.description,
+      body.visibility ?? 'org',
+      body.memberIds ?? [],
+    );
   }
 
   /** PATCH /workspaces/:id — đổi tên / mô tả. */
@@ -50,6 +56,18 @@ export class WorkspacesController {
     @Body() body: UpdateWorkspaceDto,
   ) {
     return this.workspaces.update(user.uid, id, body);
+  }
+
+  /**
+   * GET /workspaces/:id/members — ai đang ở trong workspace này.
+   *
+   * Workspace `org` trả về TOÀN BỘ thành viên tổ chức; workspace `restricted`
+   * chỉ trả người được chỉ định. Nhờ vậy ô chọn thành viên khi tạo board chỉ
+   * cần gọi đúng endpoint này, không phải tự đoán nên lấy danh sách nào.
+   */
+  @Get(':id/members')
+  findMembers(@CurrentUser() user: CurrentUserInfo, @Param('id') id: string) {
+    return this.workspaces.findMembers(user.uid, id);
   }
 
   /** DELETE /workspaces/:id — xoá workspace (kéo theo board/list/card bên trong). */

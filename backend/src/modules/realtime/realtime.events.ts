@@ -28,6 +28,22 @@ export type BoardEventType =
   | 'board.updated'
   | 'board.deleted';
 
+/**
+ * Sự kiện gửi tới ĐÚNG MỘT NGƯỜI, không phụ thuộc họ đang mở board nào.
+ *
+ * Khác `BoardEventType` ở chỗ phòng nhận là `user:<uid>` chứ không phải
+ * `board:<id>` — lời mời vào tổ chức thì người nhận còn chưa thuộc tổ chức đó,
+ * không có board nào để mà vào phòng.
+ */
+export type UserEventType = 'invite.created' | 'invite.responded' | 'member.removed';
+
+export interface UserEvent<T = unknown> {
+  type: UserEventType;
+  /** uid người gây ra (người gửi lời mời). */
+  actorId: string;
+  data: T;
+}
+
 export interface BoardEvent<T = unknown> {
   type: BoardEventType;
   /** Board mà thay đổi này thuộc về — cũng chính là tên phòng đã phát. */
@@ -61,4 +77,6 @@ export const WS = {
   EVENT: 'board:event',
   /** server → client: danh sách người đang mở board thay đổi */
   PRESENCE: 'board:presence',
+  /** server → client: việc riêng của chính người này (lời mời vào tổ chức...) */
+  USER_EVENT: 'user:event',
 } as const;

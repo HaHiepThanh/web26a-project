@@ -83,10 +83,12 @@ export class CommentService {
         createdAt: row.createdAt,
         user: me ?? undefined,
       } as Comment;
-      this.commentsByCard.update((map) => ({
-        ...map,
-        [cardId]: [...(map[cardId] ?? []), comment],
-      }));
+      // Upsert theo id — sự kiện `comment.created` có thể về trước phản hồi HTTP.
+      this.commentsByCard.update((map) => {
+        const current = map[cardId] ?? [];
+        if (current.some((c) => c.id === comment.id)) return map;
+        return { ...map, [cardId]: [...current, comment] };
+      });
     } catch (e) {
       this.fail(describeError(e, 'Không gửi được bình luận.'));
     }

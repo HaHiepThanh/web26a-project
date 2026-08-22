@@ -41,10 +41,33 @@ export class CreateBoardModal {
   readonly initialsOf = initialsOf;
   readonly avatarBgFor = avatarBgFor;
 
+  /**
+   * VÙNG CHỌN thành viên cho board — lấy từ workspace đang chọn, KHÔNG phải từ
+   * tổ chức.
+   *
+   * Tổ chức 10 người mà workspace chỉ mở cho 5 thì ở đây chỉ được xổ ra 5. Danh
+   * sách này do backend quyết định (`WorkspaceItem.members` dựng từ
+   * `GET /workspaces` + roster tổ chức), frontend không tự gom.
+   */
   readonly currentWorkspaceMembers = computed(() => {
     const wsId = this.workspaceIdInput();
     const ws = this.workspaces().find((w) => w.id === wsId);
     return ws?.members || [];
+  });
+
+  readonly memberSearch = signal('');
+
+  /** Lọc tại chỗ theo tên / email / id — danh sách đã nằm sẵn trong bộ nhớ. */
+  readonly filteredMembers = computed(() => {
+    const q = this.memberSearch().trim().toLowerCase();
+    const all = this.currentWorkspaceMembers();
+    if (!q) return all;
+    return all.filter(
+      (m) =>
+        m.id.toLowerCase().includes(q) ||
+        m.email.toLowerCase().includes(q) ||
+        (m.displayName ?? '').toLowerCase().includes(q),
+    );
   });
 
   constructor() {
@@ -61,6 +84,7 @@ export class CreateBoardModal {
         this.selectedBgClass.set('bg-board-blue');
         this.bgImageUrl.set(null);
         this.bgImageError.set(null);
+        this.memberSearch.set('');
 
         const ws = this.workspaces().find((w) => w.id === wsId);
         this.selectedMemberIds.set(ws ? ws.members.map((m) => m.id) : []);
@@ -70,6 +94,7 @@ export class CreateBoardModal {
 
   onWorkspaceChange(wsId: string): void {
     this.workspaceIdInput.set(wsId);
+    this.memberSearch.set('');
     const ws = this.workspaces().find((w) => w.id === wsId);
     this.selectedMemberIds.set(ws ? ws.members.map((m) => m.id) : []);
   }

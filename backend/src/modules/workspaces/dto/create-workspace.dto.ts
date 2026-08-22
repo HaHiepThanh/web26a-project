@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsUUID, MaxLength, MinLength } from 'class-validator';
+import { ArrayMaxSize, IsArray, IsIn, IsOptional, IsString, IsUUID, MaxLength, MinLength } from 'class-validator';
 
 /**
  * Body của POST /workspaces.
@@ -19,4 +19,23 @@ export class CreateWorkspaceDto {
   @IsString()
   @MaxLength(500, { message: 'Mô tả tối đa 500 ký tự.' })
   description?: string;
+
+  /**
+   * 'org'        — mọi thành viên trong tổ chức thấy workspace này (mặc định)
+   * 'restricted' — chỉ những người liệt kê trong `memberIds`
+   */
+  @IsOptional()
+  @IsIn(['org', 'restricted'], { message: "visibility phải là 'org' hoặc 'restricted'." })
+  visibility?: 'org' | 'restricted';
+
+  /** Chỉ có tác dụng khi `visibility === 'restricted'`. Người tạo luôn được thêm sẵn. */
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(200, { message: 'Tối đa 200 thành viên cho mỗi workspace.' })
+  // @IsString chứ KHÔNG phải @IsUUID: `users.id` là Firebase uid (chuỗi 28 ký
+  // tự như 'LtVYmqyWfFRxY2Hwj8Caw7TAgSz2'), không phải uuid. Dùng @IsUUID ở đây
+  // là mọi lần chọn thành viên đều bị trả 400.
+  @IsString({ each: true, message: 'memberIds phải là danh sách id người dùng.' })
+  @MaxLength(128, { each: true, message: 'id người dùng không hợp lệ.' })
+  memberIds?: string[];
 }
