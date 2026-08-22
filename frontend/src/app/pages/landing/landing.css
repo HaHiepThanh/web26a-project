@@ -778,6 +778,18 @@
   border-radius: 50%;
   background: #34d399;
   box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.2);
+  animation: presencePulse 3.2s ease-in-out infinite;
+}
+/* Nhịp thở rất nhẹ cho dot "đang có người xem" — chỉ đổi độ lan của ring,
+   không đổi opacity/scale của chấm để tránh cảm giác nhấp nháy. */
+@keyframes presencePulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(52, 211, 153, 0.12);
+  }
 }
 .chip-a {
   bottom: -18px;
@@ -1308,10 +1320,41 @@
   font-weight: 600;
 }
 
+.detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
 .detail-title {
   font-size: 15px;
   font-weight: 700;
   color: var(--text-primary);
+}
+/* Trạng thái "Đang làm → Hoàn thành" của task — màu đủ đậm (amber-700 /
+   emerald-700) để đạt tối thiểu 4.5:1 trên nền card trắng, khác với
+   .cta-task-badge (tông sáng, chỉ dùng đúng trên nền navy tối của Final CTA). */
+.detail-status-badge {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  background: rgba(180, 83, 9, 0.12);
+  color: #b45309;
+  transition:
+    background-color 0.4s ease,
+    color 0.4s ease;
+}
+.detail-status-badge.done {
+  background: var(--accent-green-soft);
+  color: #047857;
 }
 .detail-desc {
   margin-top: 8px;
@@ -1353,9 +1396,11 @@
 .detail-check-item {
   display: flex;
   align-items: center;
+  width: 100%;
   gap: 8px;
   font-size: 12.5px;
   color: var(--text-muted);
+  text-align: left;
 }
 .detail-check-item .chk-icon {
   flex-shrink: 0;
@@ -1368,18 +1413,24 @@
 .detail-check-item.done .chk-icon {
   color: var(--hhh-primary);
 }
-.detail-complete-badge {
-  margin-top: 12px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 11px;
-  border-radius: 999px;
-  background: var(--accent-green-soft);
-  color: var(--accent-green);
-  font-size: 11.5px;
-  font-weight: 700;
-  animation: taskPop 0.4s var(--ease-out) both;
+/* Checklist bấm được thật trong Product Showcase — mở rộng vùng bấm bằng
+   padding + margin âm (không đẩy layout), thêm hover/focus rõ ràng vì đây là
+   nút thật. Chỉ áp dụng trong .checklist-journey — bản mockup tĩnh ở How It
+   Works vẫn là <div>, không nhận các state này. */
+.checklist-journey .detail-check-item {
+  padding: 4px 6px;
+  margin: -4px -6px;
+  border-radius: 6px;
+  transition:
+    color 0.3s ease,
+    background-color 0.15s ease;
+}
+.checklist-journey .detail-check-item:hover {
+  background: var(--bg-surface-hover);
+}
+.checklist-journey .detail-check-item:focus-visible {
+  outline: 2px solid var(--hhh-primary);
+  outline-offset: 1px;
 }
 .detail-row {
   margin-top: 12px;

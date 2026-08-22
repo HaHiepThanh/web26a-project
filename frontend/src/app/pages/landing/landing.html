@@ -491,64 +491,96 @@
             <li>Gán người phụ trách từ danh sách thành viên tổ chức</li>
           </ul>
         </div>
-        <div class="showcase-visual reveal-scale" aria-hidden="true">
+        <div class="showcase-visual reveal-scale">
           <div class="showcase-window">
-            <div class="window-bar">
+            <div class="window-bar" aria-hidden="true">
               <span class="win-dot win-dot-red"></span><span class="win-dot win-dot-amber"></span
               ><span class="win-dot win-dot-green"></span>
             </div>
             <div class="window-body window-body-detail checklist-journey">
-              <p class="detail-title">Thiết kế trang chủ</p>
-              <p class="detail-desc">Wireframe, UI design và review cho giao diện trang chủ mới.</p>
+              <div class="detail-head" aria-hidden="true">
+                <p class="detail-title">Thiết kế trang chủ</p>
+                <span class="detail-status-badge" [class.done]="checklistProgress() === 3">
+                  @if (checklistProgress() === 3) {
+                    <svg lucideCheck class="h-3 w-3" [strokeWidth]="3"></svg>
+                    Hoàn thành
+                  } @else {
+                    Đang làm
+                  }
+                </span>
+              </div>
+              <p class="detail-desc" aria-hidden="true">
+                Wireframe, UI design và review cho giao diện trang chủ mới.
+              </p>
 
-              <div class="detail-checklist">
+              <div class="detail-checklist" aria-hidden="true">
                 <div class="detail-check-head">
-                  Checklist <span>{{ checklistStage() }}/3</span>
+                  Checklist <span>{{ checklistProgress() }}/3</span>
                 </div>
                 <div class="detail-check-bar">
-                  <span [style.width.%]="(checklistStage() / 3) * 100"></span>
+                  <span [style.width.%]="(checklistProgress() / 3) * 100"></span>
                 </div>
               </div>
 
-              <div class="detail-check-list">
-                <div class="detail-check-item" [class.done]="checklistStage() >= 1">
-                  @if (checklistStage() >= 1) {
+              <!-- Checklist bấm được thật — điểm tương tác duy nhất trên landing
+                   page, chỉ đổi state cục bộ trong component, không lưu/gọi API. -->
+              <div
+                class="detail-check-list"
+                role="group"
+                aria-label="Checklist thử — Thiết kế trang chủ"
+              >
+                <button
+                  type="button"
+                  class="detail-check-item"
+                  role="checkbox"
+                  [class.done]="checklistItems()[0]"
+                  [attr.aria-checked]="checklistItems()[0]"
+                  (click)="toggleChecklistItem(0)"
+                >
+                  @if (checklistItems()[0]) {
                     <svg lucideCheck class="chk-icon h-3.5 w-3.5" [strokeWidth]="2.6"></svg>
                   } @else {
                     <svg lucideCircle class="chk-icon h-3.5 w-3.5" [strokeWidth]="2"></svg>
                   }
                   <span>Wireframe</span>
-                </div>
-                <div class="detail-check-item" [class.done]="checklistStage() >= 2">
-                  @if (checklistStage() >= 2) {
+                </button>
+                <button
+                  type="button"
+                  class="detail-check-item"
+                  role="checkbox"
+                  [class.done]="checklistItems()[1]"
+                  [attr.aria-checked]="checklistItems()[1]"
+                  (click)="toggleChecklistItem(1)"
+                >
+                  @if (checklistItems()[1]) {
                     <svg lucideCheck class="chk-icon h-3.5 w-3.5" [strokeWidth]="2.6"></svg>
                   } @else {
                     <svg lucideCircle class="chk-icon h-3.5 w-3.5" [strokeWidth]="2"></svg>
                   }
                   <span>UI Design</span>
-                </div>
-                <div class="detail-check-item" [class.done]="checklistStage() >= 3">
-                  @if (checklistStage() >= 3) {
+                </button>
+                <button
+                  type="button"
+                  class="detail-check-item"
+                  role="checkbox"
+                  [class.done]="checklistItems()[2]"
+                  [attr.aria-checked]="checklistItems()[2]"
+                  (click)="toggleChecklistItem(2)"
+                >
+                  @if (checklistItems()[2]) {
                     <svg lucideCheck class="chk-icon h-3.5 w-3.5" [strokeWidth]="2.6"></svg>
                   } @else {
                     <svg lucideCircle class="chk-icon h-3.5 w-3.5" [strokeWidth]="2"></svg>
                   }
                   <span>Review</span>
-                </div>
+                </button>
               </div>
 
-              @if (checklistStage() === 3) {
-                <div class="detail-complete-badge">
-                  <svg lucideCheck class="h-3.5 w-3.5" [strokeWidth]="3"></svg>
-                  Hoàn tất
-                </div>
-              }
-
-              <div class="detail-row">
+              <div class="detail-row" aria-hidden="true">
                 <span class="detail-key">Người phụ trách</span
                 ><span class="mini-avatar mini-avatar-violet">LT</span>
               </div>
-              <div class="detail-row">
+              <div class="detail-row" aria-hidden="true">
                 <span class="detail-key">Hạn chót</span><span class="detail-val">15/09/2026</span>
               </div>
             </div>

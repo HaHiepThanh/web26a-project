@@ -5,6 +5,7 @@ import {
   HostListener,
   OnDestroy,
   OnInit,
+  computed,
   inject,
   signal,
 } from '@angular/core';
@@ -127,7 +128,12 @@ export class Landing implements OnInit, AfterViewInit, OnDestroy {
   private stageBoundaries: StageBoundary[] = [{ stage: 'todo', y: 0 }];
 
   // ---------- Product showcase: Checklist Journey của cùng một task ----------
-  readonly checklistStage = signal<0 | 1 | 2 | 3>(0);
+  // 3 item thật (Wireframe/UI Design/Review) — mở đầu bằng auto-play demo,
+  // nhưng có thể bấm tay bất kỳ lúc nào: đây là điểm tương tác THẬT duy nhất
+  // trên landing page (chỉ đổi state cục bộ, không lưu/gọi API).
+  readonly checklistItems = signal<boolean[]>([false, false, false]);
+  readonly checklistProgress = computed(() => this.checklistItems().filter(Boolean).length);
+  private checklistAutoTimers: number[] = [];
 
   // ---------- Final CTA: task hoàn thành ----------
   readonly ctaTaskDone = signal(false);
@@ -420,15 +426,36 @@ export class Landing implements OnInit, AfterViewInit, OnDestroy {
     this.after(8600, () => this.runHeroCycle());
   }
 
-  /** Checklist Journey trong card detail của Product Showcase — chạy một lần. */
+  /** Checklist Journey trong card detail của Product Showcase — demo tự chạy một lần. */
   private runChecklistJourney(): void {
     if (this.reducedMotion) {
-      this.checklistStage.set(3);
+      this.checklistItems.set([true, true, true]);
       return;
     }
-    this.after(500, () => this.checklistStage.set(1));
-    this.after(1500, () => this.checklistStage.set(2));
-    this.after(2500, () => this.checklistStage.set(3));
+    const tickItem = (index: number) => {
+      this.checklistItems.update((items) => items.map((v, i) => (i === index ? true : v)));
+    };
+    this.scheduleChecklistAuto(500, () => tickItem(0));
+    this.scheduleChecklistAuto(1500, () => tickItem(1));
+    this.scheduleChecklistAuto(2500, () => tickItem(2));
+  }
+
+  /** Lên lịch một bước của demo tự chạy — riêng để có thể huỷ khi user bấm tay. */
+  private scheduleChecklistAuto(ms: number, fn: () => void): void {
+    const id = window.setTimeout(fn, ms);
+    this.timers.push(id);
+    this.checklistAutoTimers.push(id);
+  }
+
+  /**
+   * Bấm tay 1 ô checklist trong Product Showcase — điểm tương tác THẬT duy
+   * nhất trên trang, không lưu/gọi API. Bấm lần đầu sẽ huỷ luôn phần demo tự
+   * chạy còn lại, để không bị ghi đè ngược lại lựa chọn của user.
+   */
+  toggleChecklistItem(index: number): void {
+    this.checklistAutoTimers.forEach((id) => clearTimeout(id));
+    this.checklistAutoTimers = [];
+    this.checklistItems.update((items) => items.map((v, i) => (i === index ? !v : v)));
   }
 
   /** Final CTA: task chuyển từ "Đang làm" sang "Hoàn thành" — chạy một lần. */
