@@ -15,7 +15,7 @@
  * phòng của board — thiếu chốt đó thì WebSocket trở thành đường vòng đọc trộm
  * toàn bộ chat và thay đổi thẻ của công ty khác.
  */
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { io } from 'socket.io-client';
@@ -37,7 +37,14 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // ------------------------------------------------------------------ tiện ích
 
 function readEnv(name) {
-  for (const line of readFileSync(join(ROOT, '.env'), 'utf8').split('\n')) {
+  // .env nằm ở GỐC dự án (ngang hàng backend/), không phải trong backend/ —
+  // đúng như `envFilePath: ['../.env', '.env']` mà ConfigModule đang dùng.
+  // Trước đây chỗ này chỉ tìm join(ROOT, '.env'): toàn bộ bài kiểm tra chạy
+  // xong và pass hết, rồi mới ném ENOENT ngay ở bước dọn dẹp cuối cùng, khiến
+  // dữ liệu test bị bỏ lại trong database và bảng kết quả không bao giờ in ra.
+  const file = [join(ROOT, '..', '.env'), join(ROOT, '.env')].find((p) => existsSync(p));
+  if (!file) return null;
+  for (const line of readFileSync(file, 'utf8').split('\n')) {
     const t = line.trim();
     if (!t || t.startsWith('#') || !t.includes('=')) continue;
     const [k, ...rest] = t.split('=');

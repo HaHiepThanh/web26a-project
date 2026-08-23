@@ -16,7 +16,7 @@
  *   - workspace "Kín"    → visibility 'restricted' → chỉ A và B
  *   - trong "Kín": board 'workspace' → A,B thấy; board 'private' chỉ A
  */
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { io } from 'socket.io-client';
@@ -35,7 +35,11 @@ const section = (t) => console.log(`\n${Y}── ${t} ${'─'.repeat(Math.max(0,
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function readEnv(name) {
-  for (const line of readFileSync(join(ROOT, '.env'), 'utf8').split('\n')) {
+  // Xem ghi chú cùng chỗ ở kiem-tra-websocket.mjs — .env nằm ở GỐC dự án
+  // (ngang hàng backend/), khớp với envFilePath của ConfigModule.
+  const file = [join(ROOT, '..', '.env'), join(ROOT, '.env')].find((p) => existsSync(p));
+  if (!file) return null;
+  for (const line of readFileSync(file, 'utf8').split('\n')) {
     const t = line.trim();
     if (!t || t.startsWith('#') || !t.includes('=')) continue;
     const [k, ...rest] = t.split('=');
