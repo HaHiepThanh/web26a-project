@@ -13,14 +13,33 @@ import { orgRedirectGuard, orgSlugGuard } from './guards/org-slug.guard';
  *  ├─ /forgot-password                   ├─ /board/:id        ⭐ màn Trello
  *  └─ /reset-password                    ├─ /members          (roleGuard: owner)
  *                                        └─ /settings
- *  Ngoài layout: /onboarding, /join/:token, ** (not-found)
+ *  Ngoài layout: / (landing), /onboarding, /join/:token, ** (not-found)
  *
  * TODO(học viên): bật lại các guard khi service auth/organization đã hoạt động.
  */
 export const routes: Routes = [
-  // Điều hướng mặc định — phải đứng TRƯỚC route "" bên dưới, nếu không route
-  // "" (prefix match) sẽ luôn khớp trước và redirect không bao giờ chạy.
-  { path: '', pathMatch: 'full', redirectTo: 'login' },
+  // --- Trang giới thiệu ---
+  //
+  // Trước đây chỗ này là `redirectTo: 'login'`. Thay bằng chính trang landing là
+  // cách ít đụng chạm nhất: KHÔNG có route nào khác phải sửa, KHÔNG có guard nào
+  // bị bỏ qua. Lý do nó an toàn nằm ở `pathMatch: 'full'` — route này chỉ khớp
+  // đúng đường dẫn rỗng, nên `/login`, `/onboarding`, `/:orgSlug/workspace`…
+  // vẫn đi tiếp xuống các nhóm bên dưới y như cũ.
+  //
+  // Phải đứng TRƯỚC hai route "" bên dưới: hai route đó khớp theo tiền tố nên
+  // nếu đặt sau, chúng nuốt luôn đường dẫn rỗng và trang này không bao giờ chạy.
+  //
+  // Cố ý KHÔNG gắn guard: đây là trang công khai, người chưa đăng nhập phải xem
+  // được. Người đã đăng nhập vào `/` cũng không bị đá đi đâu — thanh điều hướng
+  // của trang tự đổi nút thành "Vào không gian làm việc" khi thấy đã có phiên.
+  //
+  // Cũng KHÔNG nằm trong layout nào: landing có thanh điều hướng và chân trang
+  // riêng kiểu trang giới thiệu, không dùng header/sidebar của app.
+  {
+    path: '',
+    pathMatch: 'full',
+    loadComponent: () => import('./pages/landing/landing').then((m) => m.Landing),
+  },
 
   // --- Nhóm xác thực (#1) ---
   {

@@ -1,0 +1,611 @@
+/* ==========================================================================
+   Vỏ trang giới thiệu: thanh điều hướng, nút đổi theme, chân trang.
+   Token và các thành phần dùng chung nằm ở `_landing-shared.css`.
+   ========================================================================== */
+
+:host {
+  display: block;
+  background: var(--lp-bg);
+  /* Be Vietnam Pro được dựng riêng cho dấu tiếng Việt: dấu đặt cân, không chồng
+     lấn ở những tổ hợp dày như "ế", "ữ", "ợ" mà font phương Tây hay xử lý ẩu.
+     Chỉ trang này gọi tên nó, phần còn lại của app vẫn dùng --font-family. */
+  font-family: 'Be Vietnam Pro', var(--font-family);
+  /* Khoá phần trồi ngang: mấy vệt cực quang và thẻ trôi cố tình tràn ra ngoài
+     mép, không chặn ở đây thì trên mobile sẽ có thanh cuộn ngang lạc lõng. */
+  overflow-x: clip;
+}
+
+.skip-link {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 100;
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--lp-solid-blue);
+  color: var(--lp-on-solid);
+  font-weight: 600;
+  /* Đẩy khuất lên trên thay vì display:none — phần tử bị ẩn hẳn thì bàn phím
+     không tab tới được, mà tab tới được mới là toàn bộ mục đích của nó. */
+  transform: translateY(-200%);
+  transition: transform 180ms var(--lp-ease);
+}
+
+.skip-link:focus-visible {
+  transform: none;
+  outline: 2px solid var(--lp-text);
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   Vạch tiến độ cuộn
+   -------------------------------------------------------------------------- */
+
+/* Mặc định ẩn. Chỉ hiện khi trình duyệt thật sự chạy được scroll timeline —
+   nếu không, `scaleX` đứng im ở 0 và người dùng thấy một vạch cụt vô nghĩa. */
+.scroll-progress {
+  display: none;
+}
+
+@supports (animation-timeline: scroll()) {
+  .scroll-progress {
+    display: block;
+    position: fixed;
+    inset-inline: 0;
+    top: 0;
+    z-index: 60;
+    height: 2px;
+    background: linear-gradient(90deg, var(--lp-ink-blue), var(--lp-ink-purple));
+    /* Kéo giãn từ mép trái, không phải từ tâm. */
+    transform-origin: 0 50%;
+    animation: progress-grow linear;
+    animation-timeline: scroll();
+  }
+
+  @keyframes progress-grow {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+
+  /* Người bật giảm chuyển động: bỏ hẳn vạch. Nó không mang thông tin gì mà
+     không có ở chỗ khác, và một vạch chạy theo mỗi cú cuộn đúng là loại chuyển
+     động ngoại vi mà chế độ này sinh ra để dập. */
+  @media (prefers-reduced-motion: reduce) {
+    .scroll-progress {
+      display: none;
+    }
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Thanh điều hướng
+   -------------------------------------------------------------------------- */
+
+.nav {
+  position: fixed;
+  inset-inline: 0;
+  top: 0;
+  z-index: 50;
+  transition:
+    background-color 260ms ease,
+    border-color 260ms ease,
+    backdrop-filter 260ms ease;
+  border-bottom: 1px solid transparent;
+}
+
+.nav.is-solid {
+  /* Nền mờ có làm nhoè phía sau: chữ vẫn đọc được khi bảng màu sặc sỡ của hero
+     trôi qua bên dưới, mà không phải dùng một mảng đục kín bưng. */
+  background: color-mix(in oklab, var(--lp-bg) 82%, transparent);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border-bottom-color: var(--lp-border);
+}
+
+.nav-inner {
+  display: flex;
+  align-items: center;
+  /* Khoảng cách CO LẠI ở màn hẹp. Trước đây `gap: var(--lp-5)` (24px) cố định:
+     ở 320px, hai khe 24px ăn mất 48px trong tổng 280px vùng nội dung, khiến
+     brand + theme-toggle + burger cần 320px trong khi chỉ có 280px. Flexbox nén
+     burger từ 31px xuống 22px rồi vẫn tràn 10.8px ra ngoài màn hình — người dùng
+     thấy nửa biểu tượng ☰ dính mép phải. */
+  gap: clamp(8px, 3vw, 24px);
+  height: 68px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  /* Logo cũng là liên kết (về đầu trang) nên phải đạt ngưỡng chạm như mọi
+     control khác — cao theo logo thì chỉ được 32px sau khi thu gọn ở màn hẹp. */
+  min-height: 44px;
+  color: var(--lp-text);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  flex-shrink: 0;
+}
+
+/* Logo hiển thị ở 40px. Ảnh nguồn 128px — gấp hơn ba lần cỡ hiển thị, nên vẫn
+   sắc nét trên màn hình mật độ cao mà chỉ tốn 21kB.
+   40px là mức lớn nhất thanh nav cao 68px còn chứa được cho tử tế. Đây vốn là
+   một hình minh hoạ nhiều chi tiết, ở cỡ này nó đọc ra như một dấu hiệu màu
+   chứ không đọc ra từng nét — nên phần chữ bên cạnh mới là thứ gánh việc nhận
+   diện. Đừng bỏ chữ đi. */
+.brand-logo {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+/* Logo cũng là một liên kết (về đầu trang) nên phải có vòng focus riêng như
+   mọi thứ bấm được khác — không thì người dùng bàn phím tab tới đây sẽ thấy
+   kiểu focus đổi tông giữa chừng, vì rơi về vòng mặc định của trình duyệt. */
+.brand:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 4px;
+  border-radius: var(--radius-sm);
+}
+
+.brand-name {
+  font-size: 1rem;
+}
+
+/* Ba bậc thu gọn thương hiệu theo bề rộng, để thanh nav không bao giờ phải nén
+   nút menu (xem ghi chú ở .nav-inner và .nav-burger):
+     ≤480px — chữ nhỏ lại một bậc, logo 32px  → tiết kiệm ~30px
+     ≤359px — bỏ hẳn phần chữ, chỉ còn logo   → tiết kiệm thêm ~158px
+   Đo ở 360px sau khi thu gọn: nút menu kết thúc ở 340px, đúng bằng mép trong
+   của lề 20px — vừa khít, không lấn. */
+@media (max-width: 480px) {
+  .brand-name {
+    font-size: 0.875rem;
+  }
+
+  .brand-logo {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+.brand-accent {
+  color: var(--lp-ink-blue);
+}
+
+.nav-links {
+  display: none;
+  align-items: center;
+  gap: var(--lp-1);
+  margin-inline: auto;
+}
+
+.nav-links a {
+  /* position: relative — mốc quy chiếu cho gạch chân của mục đang xem. */
+  position: relative;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: var(--lp-text-sm);
+  font-weight: 500;
+  /* Nhãn nào cũng là một cụm từ ngắn, xuống dòng giữa chừng chỉ có hại: khi
+     thanh nav chật, flexbox nén chúng lại và "How it works" tách thành hai
+     dòng, đẩy chiều cao mục lên 58px trong một thanh chỉ cao 68px — nhìn đúng
+     như đang chồng lên hàng xóm. Không cho xuống dòng thì thay vì vỡ hình,
+     flexbox buộc phải tràn, và phần tràn đó được các media query bên dưới xử
+     lý bằng cách bỏ bớt thứ ít thiết yếu. */
+  white-space: nowrap;
+  color: var(--lp-text-2);
+  transition:
+    color 160ms ease,
+    background-color 160ms ease;
+}
+
+.nav-links a:hover {
+  color: var(--lp-text);
+  background: var(--lp-surface-2);
+}
+
+.nav-links a:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+/* Mục đang hiện trên màn hình. Đánh dấu bằng HAI thứ — chữ đậm hơn/đậm màu hơn
+   VÀ một gạch chân — chứ không riêng màu, để người mù màu vẫn đọc ra được mình
+   đang ở đâu trong trang. */
+.nav-links a.is-current {
+  color: var(--lp-text);
+  font-weight: 600;
+}
+
+.nav-links a.is-current::after {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 2px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--lp-ink-blue), var(--lp-ink-purple));
+}
+
+.nav-actions {
+  display: none;
+  align-items: center;
+  gap: var(--lp-2);
+}
+
+/* Thấp hơn 48px mặc định của nút — thanh nav chỉ cao 68px, nút cỡ đầy đủ sẽ
+   chạm sát mép trên dưới. 44px là mức tối thiểu WCAG khuyến nghị và cũng bằng
+   đúng nút đổi theme đứng cạnh, nên hàng nút vẫn đều tăm tắp. */
+.nav-actions .lp-btn {
+  min-height: 44px;
+}
+
+/* --- Nút đổi theme --- */
+
+.theme-toggle {
+  display: grid;
+  place-items: center;
+  /* 44px — đủ lớn để bấm trúng, khớp mức WCAG khuyến nghị. */
+  width: 44px;
+  height: 44px;
+  /* Trên màn hẹp nút này chịu trách nhiệm đẩy cả cụm bên phải sang mép, vì
+     .nav-links và .nav-actions đều đang bị ẩn. Từ 900px trở lên thì
+     .nav-links (margin-inline: auto) lo việc đó, nên bỏ lề tự động đi. */
+  margin-left: auto;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  color: var(--lp-text-2);
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease;
+}
+
+.theme-toggle:hover {
+  background: var(--lp-surface-2);
+  border-color: var(--lp-border);
+  color: var(--lp-text);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+.theme-icons {
+  position: relative;
+  display: block;
+  width: 19px;
+  height: 19px;
+}
+
+/* Hai biểu tượng nằm chồng khít. Cái đang tắt thu nhỏ + xoay 90° + mờ đi, cái
+   đang bật làm ngược lại — mắt đọc ra là MỘT hình xoay chuyển thành hình kia
+   chứ không phải hai hình tráo chỗ. */
+.theme-icons svg {
+  position: absolute;
+  inset: 0;
+  width: 19px;
+  height: 19px;
+  transition:
+    transform 420ms var(--lp-ease),
+    opacity 260ms ease;
+}
+
+.ico-sun {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+}
+
+.ico-moon {
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.4);
+}
+
+:host-context([data-theme='dark']) .ico-sun {
+  opacity: 0;
+  transform: rotate(90deg) scale(0.4);
+}
+
+:host-context([data-theme='dark']) .ico-moon {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+}
+
+/* --- Menu trên màn hẹp --- */
+
+.nav-burger {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  /* `flex-shrink: 0` là vế thứ hai của bản vá tràn nav. Không có nó, flexbox coi
+     44px chỉ là kích thước gợi ý và nén xuống bất kỳ đâu khi chật — chính là lý
+     do nút này đo được 22px ở viewport 320px dù CSS ghi 44px. */
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  color: var(--lp-text);
+}
+
+.nav-burger svg {
+  width: 22px;
+  height: 22px;
+}
+
+.nav-burger:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+.nav-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lp-1);
+  padding: var(--lp-4) clamp(20px, 5vw, 32px) var(--lp-5);
+  border-top: 1px solid var(--lp-border);
+  background: var(--lp-bg);
+  animation: sheet-in 200ms var(--lp-ease) both;
+}
+
+.nav-sheet a:not(.lp-btn) {
+  padding: 12px 4px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--lp-text);
+}
+
+.nav-sheet hr {
+  margin: var(--lp-2) 0;
+  border: none;
+  border-top: 1px solid var(--lp-border);
+}
+
+.nav-sheet .lp-btn {
+  width: 100%;
+  margin-top: var(--lp-2);
+}
+
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -8px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (min-width: 960px) {
+  .nav-links,
+  .nav-actions {
+    display: flex;
+  }
+
+  /* .nav-links đã hút hết khoảng trống hai bên (margin-inline: auto) nên nó tự
+     đẩy nút theme và cụm nút về sát mép phải — không cần lề tự động nữa, để
+     nguyên thì nút theme bị tách rời khỏi cụm nút cạnh nó. */
+  .theme-toggle {
+    margin-left: 0;
+  }
+
+  .nav-burger,
+  .nav-sheet {
+    display: none;
+  }
+}
+
+/* KHÔNG còn quy tắc ẩn nút "Sign in".
+ *
+ * Trước đây nó bị `display: none` dưới 1080px, vì hồi thanh nav còn chật thì đó
+ * là thứ ít thiết yếu nhất để hi sinh. Sau khi tên thương hiệu được giấu tới
+ * 1140px và menu ngang chỉ bật từ 960px, chỗ trống dư ra hẳn: đo ở 960px —
+ * bề rộng hẹp nhất còn hiện cụm nút — vẫn còn 44.9px khe mỗi bên với "Sign in"
+ * hiển thị đầy đủ. Giữ quy tắc cũ chỉ khiến nút biến mất vô cớ ở đúng dải
+ * 960–1080px, là dải bề rộng của laptop 13" phổ biến. */
+
+/* Ngưỡng này từng là 1080px, đo khi cỡ chữ gốc còn bị ép xuống 14px. Sau khi
+   trả root về 16px, mọi thứ trong thanh nav to lên ~14% và 1080 thành ra quá
+   thấp: từ 1081px tên thương hiệu hiện lại (+178px) trong khi chỗ chưa đủ.
+   Cộng thực tế ở trạng thái ĐÃ ĐĂNG NHẬP, nơi nút CTA dài nhất:
+     lề 64 + brand 218 + 24 + menu 478 + 24 + nút theme 44 + 24 + CTA 229 = 1105px
+   Đó là mức khít 0px, nên lấy 1140 để còn ~35px dư cho khác biệt phông chữ.
+   Trạng thái chưa đăng nhập nhẹ hơn (Sign in + Start free ≈ 205px) nhưng dùng
+   chung một ngưỡng cho đỡ phải nhớ hai con số. */
+@media (min-width: 960px) and (max-width: 1139px) {
+  .brand-name {
+    display: none;
+  }
+}
+
+/* Đầu kia của cùng một bài toán. Dưới 360px, ba chữ "Horizon Hub Harmony"
+   (196.8px) cộng nút đổi theme và nút menu vượt quá vùng nội dung 280px, nên
+   flexbox nén nút menu xuống 22px rồi vẫn đẩy nó ra ngoài màn hình.
+   Trên 360px thì vừa (còn dư ~14px) nên tên vẫn hiện ở mọi điện thoại phổ biến;
+   chỉ dải hẹp nhất — iPhone SE đời đầu, màn ngoài Galaxy Fold — rơi về logo
+   trần, vốn vẫn nhận ra được và tên đầy đủ đã có ở tiêu đề tab lẫn chân trang. */
+@media (max-width: 359px) {
+  .brand-name {
+    display: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Thanh CTA dính đáy (chỉ điện thoại)
+   -------------------------------------------------------------------------- */
+
+.cta-dock {
+  position: fixed;
+  z-index: 90; /* dưới .nav (100) để menu thu gọn vẫn phủ lên được */
+  inset: auto 0 0 0;
+  padding: 10px clamp(16px, 4vw, 24px);
+  /* env(safe-area-inset-bottom): tránh thanh gạt Home của iPhone đè lên nút. */
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  background: color-mix(in srgb, var(--lp-bg) 88%, transparent);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--lp-border);
+  animation: dock-in 220ms var(--lp-ease) both;
+}
+
+.cta-dock-btn {
+  width: 100%;
+  min-height: 48px;
+}
+
+@keyframes dock-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 100%, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cta-dock {
+    animation: none;
+  }
+}
+
+/* Từ 960px trở lên, nút "Start free" đã có sẵn trong thanh nav nên thanh này
+   thừa — hai CTA cùng lúc chỉ làm loãng sự chú ý. */
+@media (min-width: 960px) {
+  .cta-dock {
+    display: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Chân trang
+   -------------------------------------------------------------------------- */
+
+.foot {
+  border-top: 1px solid var(--lp-border);
+  background: var(--lp-bg-sunken);
+  padding-top: clamp(48px, 6vw, 72px);
+}
+
+/* Chừa chỗ cho thanh CTA dính đáy, nếu không nó che mất dòng cuối chân trang. */
+@media (max-width: 959px) {
+  .foot {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+.foot-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--lp-7);
+  padding-bottom: var(--lp-7);
+}
+
+.foot-brand {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lp-3);
+}
+
+/* Logo ở chân trang được to gấp rưỡi nav: đây là chỗ duy nhất trên trang nó có
+   đủ không gian để nhìn ra là hình gì. */
+.foot-logo {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+}
+
+.foot-slogan {
+  margin: 0;
+  font-size: var(--lp-text-lead);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.35;
+  color: var(--lp-text);
+}
+
+.foot-tag {
+  max-width: 42ch;
+}
+
+.foot-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--lp-5);
+}
+
+.foot-links h2 {
+  margin: 0 0 var(--lp-3);
+  font-size: var(--lp-text-micro);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--lp-text-3);
+}
+
+/* PHẢI là block (hoặc flex), KHÔNG được inline: các liên kết này nằm sát nhau
+   trong nguồn, để chúng ở dạng inline là cả cột dồn thành một dòng chữ dính
+   liền "Tính năngTrợ lý AICách dùng". Mỗi liên kết một dòng riêng. */
+.foot-links a {
+  display: block;
+  /* padding 5px cho ra hàng cao 31px — dưới ngưỡng chạm 44px, mà chân trang lại
+     là chỗ các liên kết xếp sát nhau nhất nên rất dễ bấm nhầm sang dòng bên.
+     11px trên/dưới đẩy lên đúng 44px mà không làm cột dài thêm đáng kể. */
+  padding: 11px 0;
+  font-size: var(--lp-text-sm);
+  color: var(--lp-text-2);
+  transition: color 160ms ease;
+}
+
+.foot-links a:hover {
+  color: var(--lp-ink-blue);
+}
+
+.foot-links a:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+.nav-sheet a:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.foot-base {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--lp-2) var(--lp-5);
+  padding-block: var(--lp-4) var(--lp-5);
+  border-top: 1px solid var(--lp-border);
+}
+
+@media (min-width: 800px) {
+  .foot-inner {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    gap: var(--lp-9);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav,
+  .skip-link,
+  .theme-icons svg,
+  .nav-links a {
+    transition: none;
+  }
+
+  .nav-sheet {
+    animation: none;
+  }
+}

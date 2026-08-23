@@ -1,0 +1,102 @@
+/* ==========================================================================
+   Cách dùng — bốn bước
+   ========================================================================== */
+
+.lp-steps {
+  background: var(--lp-bg);
+}
+
+.lp-step-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(232px, 1fr));
+  gap: var(--lp-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lp-step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: var(--lp-5);
+  border: 1px solid var(--lp-border);
+  border-radius: var(--radius-lg);
+  background: var(--lp-surface);
+  box-shadow: var(--lp-shadow-sm);
+  overflow: hidden;
+  transition:
+    border-color 240ms var(--lp-ease),
+    transform 240ms var(--lp-ease);
+}
+
+.lp-step:hover {
+  border-color: var(--lp-border-strong);
+  transform: translate3d(0, -3px, 0);
+}
+
+/* Số thứ tự cỡ lớn, mờ, nằm ở góc — dẫn mắt theo trình tự mà không tranh chỗ
+   với tiêu đề. Đặt màu quá đậm là nó thành thứ nổi nhất trong ô, mà số thứ tự
+   thì không đáng được như vậy. */
+.lp-step-no {
+  position: absolute;
+  top: -6px;
+  right: 6px;
+  font-size: 68px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  color: var(--lp-text);
+  opacity: 0.055;
+  pointer-events: none;
+}
+
+.lp-step-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid color-mix(in oklab, var(--accent-blue) 24%, transparent);
+  border-radius: var(--radius-md);
+  background: var(--accent-blue-soft);
+  color: var(--lp-ink-blue);
+}
+
+.lp-step-icon svg {
+  width: 21px;
+  height: 21px;
+  /* Biểu tượng vẽ nét ra khi ô hiện lên. stroke-dashoffset chỉ ảnh hưởng phần
+     vẽ, không đụng layout, nên vẫn nằm trong nhóm hiệu ứng rẻ tiền. */
+  stroke-dasharray: 64;
+  stroke-dashoffset: 64;
+  transition: stroke-dashoffset 900ms var(--lp-ease) 180ms;
+}
+
+.is-revealed .lp-step-icon svg,
+.lp-step.is-revealed .lp-step-icon svg {
+  stroke-dashoffset: 0;
+}
+
+.lp-step-title {
+  margin: 0;
+  color: var(--lp-text);
+}
+
+.lp-step-desc {
+  margin: 0;
+  font-size: var(--lp-text-sm);
+  line-height: 1.65;
+  color: var(--lp-text-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-step {
+    transition: none;
+  }
+
+  .lp-step-icon svg {
+    stroke-dashoffset: 0;
+    transition: none;
+  }
+}

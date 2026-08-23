@@ -1,0 +1,40 @@
+<section class="cta lp-grain" aria-labelledby="cta-title">
+  <div class="cta-aurora" aria-hidden="true">
+    <span class="cta-orb cta-orb-a"></span>
+    <span class="cta-orb cta-orb-b"></span>
+  </div>
+
+  <div class="lp-shell cta-inner">
+    <!-- Khẩu hiệu đặt ở đây chứ không phải chân trang: ở chân trang nó nằm tại
+         97% chiều cao trang, gần như không ai đọc tới. Người cuộn được tới khối
+         này là đã bị thuyết phục rồi — đúng lúc để một câu ngắn chốt lại.
+         aria-hidden vì nó chỉ là câu dẫn trang trí cho tiêu đề ngay bên dưới;
+         trình đọc màn hình đọc cả hai sẽ thành lặp ý. Bản đọc được vẫn còn
+         nguyên ở chân trang. -->
+    <p class="cta-slogan" appReveal aria-hidden="true">One Hub. One Team. One Horizon.</p>
+
+    <h2 id="cta-title" class="cta-title" appReveal [revealDelay]="60">
+      Your first board is <span class="lp-grad">two minutes away</span>
+    </h2>
+
+    <p class="lp-lead cta-lead" appReveal [revealDelay]="120">
+      Sign in with Google, name your team, drag your first card. No card details, no trial clock
+      counting down.
+    </p>
+
+    <div class="cta-actions" appReveal [revealDelay]="200">
+      <a
+        class="lp-btn lp-btn-primary lp-btn-lg"
+        routerLink="/register"
+        appMagnetic
+        [magneticStrength]="12"
+      >
+        Build your first board
+        <svg lucideArrowRight class="lp-btn-arrow" [strokeWidth]="2.2"></svg>
+      </a>
+      <!-- Hạng phụ-mờ, không phải nút thứ hai ngang hàng: người đã có tài khoản
+           biết mình cần gì, không cần một nút to bằng nút kia để tìm ra nó. -->
+      <a class="lp-btn lp-btn-tertiary lp-btn-lg" routerLink="/login">I already have an account</a>
+    </div>
+  </div>
+</section>

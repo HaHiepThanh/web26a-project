@@ -1,0 +1,134 @@
+/* ==========================================================================
+   Câu hỏi thường gặp
+   ========================================================================== */
+
+.faq {
+  background: var(--lp-bg);
+}
+
+.faq-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(32px, 5vw, 64px);
+  align-items: start;
+}
+
+/* Từ 900px trở lên: tiêu đề ghim bên trái, danh sách câu hỏi chạy bên phải.
+   Bố cục hai cột ở đây có lý do — danh sách gập mở làm chiều cao thay đổi liên
+   tục, để tiêu đề nằm trên thì mỗi lần mở một câu là cả khối bên dưới nhảy. */
+@media (min-width: 900px) {
+  .faq-inner {
+    grid-template-columns: minmax(0, 0.75fr) minmax(0, 1fr);
+  }
+
+  .faq-head {
+    position: sticky;
+    top: 100px;
+  }
+}
+
+.faq-head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--lp-4);
+}
+
+.faq-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.faq-item {
+  border-top: 1px solid var(--lp-border);
+}
+
+.faq-item:last-child {
+  border-bottom: 1px solid var(--lp-border);
+}
+
+.faq-q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--lp-4);
+  /* Vùng bấm cao 64px, chạy hết bề ngang — mục gập mở mà chỉ bấm trúng đúng
+     dòng chữ là kiểu thiết kế làm khổ người dùng chuột lẫn ngón tay. */
+  min-height: 64px;
+  padding-block: var(--lp-3);
+  cursor: pointer;
+  font-size: var(--lp-text-lead);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--lp-text);
+  /* Bỏ mũi tam giác mặc định của trình duyệt, đã có dấu cộng riêng bên phải. */
+  list-style: none;
+}
+
+.faq-q::-webkit-details-marker {
+  display: none;
+}
+
+.faq-q:hover {
+  color: var(--lp-ink-blue);
+}
+
+.faq-q:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+/* Dấu cộng vẽ bằng hai vạch, mở ra thì vạch dọc xoay thành dấu trừ. Rẻ hơn một
+   biểu tượng, và xoay được mượt — tráo hai icon thì không. */
+.faq-sign {
+  position: relative;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+
+.faq-sign::before,
+.faq-sign::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 14px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--lp-text-3);
+  transform: translate(-50%, -50%);
+  transition:
+    transform 260ms var(--lp-ease),
+    background-color 200ms ease;
+}
+
+.faq-sign::after {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+
+.faq-item[open] .faq-sign::before,
+.faq-item[open] .faq-sign::after {
+  background: var(--lp-ink-blue);
+}
+
+.faq-item[open] .faq-sign::after {
+  transform: translate(-50%, -50%) rotate(0deg);
+}
+
+.faq-a {
+  margin: 0;
+  padding-bottom: var(--lp-5);
+  font-size: var(--lp-text-body);
+  line-height: 1.65;
+  color: var(--lp-text-2);
+  max-width: var(--lp-measure);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .faq-sign::before,
+  .faq-sign::after {
+    transition: none;
+  }
+}
