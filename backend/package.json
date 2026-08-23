@@ -22,9 +22,10 @@
     "kiem-tra:hoa": "python3 scripts/kiem-tra-hoa.py",
     "kiem-tra:hoang": "python3 scripts/kiem-tra-hoang.py",
     "kiem-tra:websocket": "node scripts/kiem-tra-websocket.mjs",
-    "kiem-tra": "npm run kiem-tra:huy && npm run kiem-tra:hoa && npm run kiem-tra:hoang && npm run kiem-tra:websocket && npm run kiem-tra:pham-vi && npm run kiem-tra:bo-sung",
+    "kiem-tra": "npm run kiem-tra:huy && npm run kiem-tra:hoa && npm run kiem-tra:hoang && npm run kiem-tra:websocket && npm run kiem-tra:pham-vi && npm run kiem-tra:bo-sung && npm run kiem-tra:ai",
     "kiem-tra:pham-vi": "node scripts/kiem-tra-pham-vi.mjs",
-    "kiem-tra:bo-sung": "node scripts/kiem-tra-bo-sung.mjs"
+    "kiem-tra:bo-sung": "node scripts/kiem-tra-bo-sung.mjs",
+    "kiem-tra:ai": "node scripts/kiem-tra-ai.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.115.0",

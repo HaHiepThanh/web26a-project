@@ -7,5 +7,8 @@ import { CardsService } from './cards.service';
   imports: [ActivityModule],
   controllers: [CardsController],
   providers: [CardsService],
+  // task-suggestions tạo thẻ qua CardsService (ăn theo kiểm tra quyền + nhật ký
+  // + WebSocket đã có) nên phải export ra ngoài.
+  exports: [CardsService],
 })
 export class CardsModule {}

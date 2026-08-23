@@ -53,9 +53,10 @@
   </div>
 
   <app-message-list [messages]="messages()" [usersById]="usersById()" [currentUserId]="currentUserId()"
-    [memberNames]="memberNames()" [pendingSuggestion]="pendingSuggestion()"
-    [pendingAssigneeName]="pendingAssigneeName()" (confirmSuggestion)="confirmSuggestion()"
-    (dismissSuggestion)="dismissSuggestion()" />
+    [memberNames]="memberNames()" [members]="members()"
+    [suggestionsByMessageId]="suggestionsByMessageId()"
+    (openSuggestion)="openSuggestion($event)"
+    (dismissSuggestion)="dismissSuggestion($event)" />
 
   <app-chat-input [members]="members()" (send)="onSend($event)" />
 

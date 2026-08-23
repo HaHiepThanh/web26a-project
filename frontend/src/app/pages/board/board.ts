@@ -8,6 +8,7 @@ import {
   Label,
   List,
   MinimapListGeom,
+  SuggestedCard,
   Toast,
   ToastType,
   User,
@@ -22,6 +23,8 @@ import { CommentService } from '../../services/comment.service';
 import { AttachmentService } from '../../services/attachment.service';
 import { RealtimeService } from '../../services/realtime.service';
 import { BoardPrefsService } from '../../services/board-prefs.service';
+import { TaskSuggestionService } from '../../services/task-suggestion.service';
+import { TaskSuggestionModal } from '../../components/chat/task-suggestion-modal/task-suggestion-modal';
 import { BoardList } from '../../components/board/board-list/board-list';
 import { AddList } from '../../components/board/add-list/add-list';
 import { LabelPicker } from '../../components/board/label-picker/label-picker';
@@ -104,6 +107,7 @@ const MINIMAP_OVERFLOW_RATIO = 1.5;
     WorkspaceStatsModal,
     BoardHeaderBar,
     BoardBulkActions,
+    TaskSuggestionModal,
   ],
   templateUrl: './board.html',
   styleUrl: './board.css',
@@ -126,6 +130,7 @@ export class Board {
   private readonly attachmentService = inject(AttachmentService);
   private readonly realtime = inject(RealtimeService);
   private readonly boardPrefs = inject(BoardPrefsService);
+  private readonly taskSuggestions = inject(TaskSuggestionService);
   private readonly router = inject(Router);
 
   readonly boardId = this.route.snapshot.paramMap.get('id') ?? 'demo-board';
@@ -634,6 +639,27 @@ export class Board {
     await this.listService.loadLists(this.boardId);
     const listIds = this.lists().map((l) => l.id);
     await this.cardService.loadCards(this.boardId);
+    // Gợi ý AI còn đang chờ — nạp lại để F5 không mất.
+    await this.taskSuggestions.loadSuggestions(this.boardId);
+  }
+
+  // ---- Gợi ý tạo thẻ do AI phát hiện trong chat ----
+  readonly openedSuggestion = this.taskSuggestions.opened;
+
+  closeSuggestion(): void {
+    this.taskSuggestions.close();
+  }
+
+  async createFromSuggestion(cards: SuggestedCard[]): Promise<void> {
+    const s = this.openedSuggestion();
+    if (!s) return;
+    const error = await this.taskSuggestions.accept(s, cards);
+    if (error) {
+      this.addToast(error, 'error');
+      return;
+    }
+    // Thẻ mới về qua WebSocket (`card.created`) nên không phải nạp lại danh sách.
+    this.addToast(`Đã tạo ${cards.length} thẻ từ gợi ý của AI.`, 'success');
   }
 
   /** Thẻ của 1 list, đã áp sắp xếp hiển thị (#thứ tự lưu thật không đổi trừ khi kéo-thả thủ công). */

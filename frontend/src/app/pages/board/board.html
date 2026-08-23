@@ -239,6 +239,12 @@
     <app-card-detail-modal [card]="card" [boardId]="boardId" [autoFocusTitle]="card.id === justCreatedCardId()" (close)="closeCardDetail()" (deleted)="onCardDetailDeleted()" />
   }
 
+  <!-- Modal: xem lại gợi ý của AI rồi mới tạo thẻ -->
+  @if (openedSuggestion(); as goiY) {
+    <app-task-suggestion-modal [suggestion]="goiY"
+      (close)="closeSuggestion()" (confirm)="createFromSuggestion($event)" />
+  }
+
   <!-- Modal: Thống kê & Báo cáo -->
   @if (showStatsModal()) {
     <app-workspace-stats-modal [boardId]="boardId" [boardName]="board()?.name ?? null" (close)="closeStatsModal()" />

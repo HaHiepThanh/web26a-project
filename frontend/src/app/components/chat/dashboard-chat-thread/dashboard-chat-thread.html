@@ -23,10 +23,10 @@
     [usersById]="usersById()"
     [currentUserId]="currentUserId()"
     [memberNames]="memberNames()"
-    [pendingSuggestion]="pendingSuggestion()"
-    [pendingAssigneeName]="pendingAssigneeName()"
-    (confirmSuggestion)="confirmSuggestion()"
-    (dismissSuggestion)="dismissSuggestion()"
+    [members]="members()"
+    [suggestionsByMessageId]="suggestionsByMessageId()"
+    (openSuggestion)="openSuggestion($event)"
+    (dismissSuggestion)="dismissSuggestion($event)"
   />
 
   <app-chat-input [members]="members()" (send)="onSend($event)" />

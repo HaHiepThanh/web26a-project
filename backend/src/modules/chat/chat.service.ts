@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { SupabaseService } from '../../common/supabase/supabase.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
+import { TaskSuggestionsService } from '../task-suggestions/task-suggestions.service';
 
 /** Khối `users(...)` mà Supabase join kèm — vẫn là snake_case của database. */
 interface JoinedUserRow {
@@ -34,6 +35,7 @@ export class ChatService {
   constructor(
     private readonly supabase: SupabaseService,
     private readonly realtime: RealtimeGateway,
+    private readonly suggestions: TaskSuggestionsService,
   ) {}
 
   /**
@@ -119,6 +121,20 @@ export class ChatService {
     // Đây là lý do chính khiến dự án cần WebSocket: chat mà phải F5 mới thấy tin
     // của người khác thì không gọi là chat được.
     this.realtime.emitToBoard(boardId, 'chat.message', userUid, created);
+
+    // Đưa tin nhắn đi phân tích — KHÔNG `await`.
+    //
+    // ⚠️ Gửi tin nhắn phải trả về NGAY. Chờ Gemini (1–3 giây) trước khi trả lời
+    //    là biến khung chat thành thứ giật cục vì một tính năng phụ. Gợi ý xuất
+    //    hiện sau đó qua WebSocket. `analyze()` tự nuốt mọi lỗi bên trong.
+    void this.suggestions.analyze({
+      id: row.id as string,
+      orgId,
+      boardId,
+      userId: userUid,
+      content,
+    });
+
     return created;
   }
 }
