@@ -1,0 +1,27 @@
+<section class="lp-section lp-stats lp-seam-y" aria-labelledby="stats-title">
+  <div class="lp-shell">
+    <div class="lp-head lp-head--center">
+      <h2 id="stats-title" class="lp-h2" appReveal>
+        Four numbers, <span class="lp-grad">counting down</span>
+      </h2>
+      <p class="lp-lead" appReveal [revealDelay]="80">
+        This has just been built, so you will not find "trusted by a million users" here. Only what
+        it is actually like to use.
+      </p>
+    </div>
+
+    <dl class="lp-stat-row">
+      @for (stat of stats; track stat.label; let i = $index) {
+        <div class="lp-stat" appReveal [revealDelay]="i * 80">
+          <dt class="lp-stat-value">
+            <span appCountUp [countTo]="stat.value" [countSuffix]="stat.suffix"></span>
+          </dt>
+          <dd class="lp-stat-label">
+            {{ stat.label }}
+            <span class="lp-stat-note">{{ stat.note }}</span>
+          </dd>
+        </div>
+      }
+    </dl>
+  </div>
+</section>

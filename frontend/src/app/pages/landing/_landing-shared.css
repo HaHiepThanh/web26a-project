@@ -1,0 +1,465 @@
+/* ==========================================================================
+   Nền tảng dùng chung cho mọi khu vực của trang giới thiệu.
+   Nạp vào `styleUrls` của từng section component — Angular đóng gói riêng cho
+   mỗi component nên không có gì rò ra phần còn lại của app.
+
+   Bảng màu ở đây KHÔNG phải màu mới: mọi điểm nhấn đều đọc thẳng
+   `--accent-blue` / `--accent-purple` từ `styles.css` (hai biến này tự đổi theo
+   [data-theme]). Chỗ duy nhất tự định nghĩa là dải trung tính của riêng landing
+   — app dùng nền xám #f1f5f9 / #22272b hợp cho màn làm việc dài, còn trang giới
+   thiệu cần trắng tinh và đen-gần-tuyệt-đối để tương phản mạnh hơn.
+   ========================================================================== */
+
+:host {
+  /* --- Trung tính (theme sáng) --- */
+  --lp-bg: #ffffff;
+  --lp-bg-sunken: #f5f8fc;
+  --lp-surface: #ffffff;
+  --lp-surface-2: #f3f6fb;
+  --lp-border: rgba(15, 23, 42, 0.1);
+  --lp-border-strong: rgba(15, 23, 42, 0.18);
+
+  /* Ba bậc chữ, đều đạt tối thiểu 4.5:1 trên MỌI nền của trang (Practical UI,
+     "Avoid light grey and pure black text"). Xám nhạt trông thanh thoát nhưng
+     có người thật sự không đọc nổi.
+     Bậc ba là #5f6d82 chứ không phải #64748b như bảng màu app: #64748b chỉ đạt
+     4.76:1 trên nền trắng, tụt xuống 4.39:1 khi đặt lên nền lõm (#f5f8fc) của
+     chân trang và dải số liệu — tức là trượt chuẩn ở đúng những chỗ nó hay được
+     dùng nhất. Tối thêm một nấc là qua ngưỡng ở cả ba nền, mà vẫn nhạt hơn bậc
+     hai đủ để phân biệt. */
+  --lp-text: #0f172a;
+  --lp-text-2: #475569;
+  --lp-text-3: #5f6d82;
+
+  /* ---- Hai họ màu nhấn: dùng làm CHỮ và dùng làm NỀN ĐẶC ----
+     Đây là chỗ phải cẩn thận nhất của cả trang. Bộ token màu nhấn trong
+     `styles.css` được chọn cho nền và viền, chưa từng đo khi đem làm chữ — và
+     đo ra thì trượt: #0284c7 trên nền trắng chỉ 4,1:1, #059669 được 3,77:1,
+     #d97706 được 3,19:1. Đều dưới ngưỡng 4,5:1.
+
+     Nên tách đôi:
+       --lp-ink-*   dùng khi màu nhấn LÀ CHỮ (trên nền trang hoặc nền tô nhạt)
+       --lp-solid-* dùng khi màu nhấn LÀ NỀN, chữ đặt lên trên
+     Mỗi giá trị là chính màu nhấn kéo về phía đen (theme sáng) hoặc phía trắng
+     (theme tối) vừa đủ để qua ngưỡng — sắc màu giữ nguyên, chỉ đổi độ sáng, nên
+     nhìn vẫn là một bảng màu. Tỉ số kèm sau mỗi dòng là kết quả đo thật trên
+     nền trang / nền tô nhạt tương ứng.
+
+     ⚠️ Cố ý ghi hex cứng chứ không viết color-mix() dẫn xuất từ --accent-*:
+     giá trị dẫn xuất nghe thì gọn nhưng không ai biết nó rơi vào đâu, mà ở đây
+     sai một nấc là chữ trượt chuẩn. Đổi lại, ĐỔI BẢNG MÀU TRONG `styles.css`
+     THÌ PHẢI ĐO LẠI 8 GIÁ TRỊ NÀY. Cách đo: mở trang, lấy màu chữ và màu nền
+     đã tổng hợp alpha của phần tử, tính tỉ số tương phản WCAG, kéo dần màu về
+     phía đen/trắng tới khi mọi nền đều ≥ 4.5. */
+  --lp-ink-blue: #026a9f; /* 5.92 · 4.61 */
+  --lp-ink-purple: #6d28d9; /* 7.10 · 5.23 — nguyên bản đã đạt */
+  --lp-ink-green: #04694a; /* 6.73 · 4.64 */
+  --lp-ink-amber: #854904; /* 7.11 · 4.66 */
+
+  --lp-solid-blue: #027cbb; /* chữ trắng: 4.56 */
+  --lp-solid-purple: #6d28d9; /* chữ trắng: 7.10 */
+  --lp-solid-green: #05875f; /* chữ trắng: 4.53 */
+  --lp-solid-amber: #b26205; /* chữ trắng: 4.54 */
+  --lp-on-solid: #ffffff;
+
+  --lp-glow-blue: color-mix(in oklab, var(--accent-blue) 42%, transparent);
+  --lp-glow-purple: color-mix(in oklab, var(--accent-purple) 38%, transparent);
+  --lp-spot: color-mix(in oklab, var(--accent-blue) 14%, transparent);
+
+  /* Độ nổi — ba bậc như Practical UI khuyến nghị, dùng lại token của app. */
+  --lp-shadow-sm: var(--shadow-sm);
+  --lp-shadow-md: var(--shadow-lg);
+  --lp-shadow-lg: var(--shadow-xl);
+
+  /* Khoảng cách: bội số 8, tập hợp hữu hạn để khỏi mỗi chỗ một con số. */
+  --lp-1: 4px;
+  --lp-2: 8px;
+  --lp-3: 12px;
+  --lp-4: 16px;
+  --lp-5: 24px;
+  --lp-6: 32px;
+  --lp-7: 48px;
+  --lp-8: 64px;
+  --lp-9: 96px;
+
+  /* Thang chữ Major Third (1.25) trên nền 18px — Practical UI đề nghị thân bài
+     dài tối thiểu 18px vì đa số người đọc màn hình ở khoảng cách một sải tay. */
+  --lp-text-micro: 0.75rem;
+  --lp-text-sm: 0.875rem;
+  --lp-text-body: 1.125rem;
+  --lp-text-lead: clamp(1.125rem, 0.9rem + 0.7vw, 1.375rem);
+  --lp-text-h3: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
+  --lp-text-h2: clamp(1.875rem, 1.4rem + 2vw, 2.75rem);
+  --lp-text-display: clamp(2.5rem, 1.4rem + 4.6vw, 4.5rem);
+
+  /* Độ dài dòng lý tưởng 40–80 ký tự. */
+  --lp-measure: 62ch;
+
+  --lp-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  display: block;
+  color: var(--lp-text);
+}
+
+:host-context([data-theme='dark']) {
+  /* Nền gần đen chứ không đen tuyền, ngả xanh tím một chút cho ăn với hai màu
+     nhấn — đen tuyệt đối cạnh chữ trắng tạo tương phản gắt gây mỏi mắt khi đọc
+     dài, đúng điều Practical UI cảnh báo ở chương Colour. */
+  --lp-bg: #0b0d14;
+  --lp-bg-sunken: #07080e;
+  --lp-surface: #12151f;
+  --lp-surface-2: #181d29;
+  --lp-border: rgba(255, 255, 255, 0.09);
+  --lp-border-strong: rgba(255, 255, 255, 0.18);
+
+  --lp-text: #ffffff;
+  --lp-text-2: #aab3c7;
+  --lp-text-3: #8791a6;
+
+  /* Ở nền tối, --accent-blue/--accent-purple đã được `styles.css` đổi sang bản
+     SÁNG (#579dff / #9e75ff). Chúng thừa tương phản để làm chữ, nhưng lại quá
+     sáng để đặt chữ TRẮNG lên trên (chỉ 2,7:1). Nên ở đây đảo ngược hoàn toàn
+     so với theme sáng: nền nút giữ nguyên màu nhấn sáng, còn chữ chuyển thành
+     gần-đen (7,1:1). Đây đúng là cách Practical UI xử lý khi màu thương hiệu
+     không đủ tương phản với nền.
+     Riêng tím và xanh lá phải kéo sáng thêm một chút khi làm CHỮ, vì trên nền
+     tô nhạt (chính nó pha 16%) chúng tụt xuống 4,2 và 3,8. */
+  --lp-ink-blue: #579dff; /* 7.09 · 4.74 */
+  --lp-ink-purple: #a680ff; /* 6.61 · 4.58 */
+  --lp-ink-green: #2da781; /* 6.42 · 4.60 */
+  --lp-ink-amber: #fbbf24; /* 11.63 · 7.11 */
+
+  --lp-solid-blue: #579dff; /* chữ gần-đen: 7.09 */
+  --lp-solid-purple: #9e75ff; /* chữ gần-đen: 5.95 */
+  --lp-solid-green: #059669; /* chữ gần-đen: 5.15 */
+  --lp-solid-amber: #fbbf24; /* chữ gần-đen: 11.63 */
+  --lp-on-solid: #0b0d14;
+
+  --lp-glow-blue: color-mix(in oklab, var(--accent-blue) 30%, transparent);
+  --lp-glow-purple: color-mix(in oklab, var(--accent-purple) 28%, transparent);
+  --lp-spot: color-mix(in oklab, var(--accent-blue) 16%, transparent);
+
+  --lp-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --lp-shadow-md: 0 12px 30px -12px rgba(0, 0, 0, 0.75);
+  --lp-shadow-lg: 0 34px 60px -24px rgba(0, 0, 0, 0.85);
+}
+
+/* --------------------------------------------------------------------------
+   Khung trang
+   -------------------------------------------------------------------------- */
+
+.lp-shell {
+  width: 100%;
+  max-width: 1200px;
+  margin-inline: auto;
+  padding-inline: clamp(20px, 5vw, 32px);
+}
+
+.lp-section {
+  position: relative;
+  padding-block: clamp(72px, 9vw, 128px);
+  /* Thanh nav cố định cao 68px. Không có dòng này thì mỗi lần nhảy tới mốc,
+     mép trên khu vực nằm khít ngay dưới nav — chữ vẫn đọc được (nhờ padding
+     lớn) nhưng dính sát, mắt không thấy được đâu là chỗ bắt đầu. */
+  scroll-margin-top: 84px;
+}
+
+/* --------------------------------------------------------------------------
+   Chữ
+   -------------------------------------------------------------------------- */
+
+.lp-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--lp-2);
+  padding: 6px 14px 6px 10px;
+  border: 1px solid var(--lp-border-strong);
+  border-radius: 999px;
+  background: var(--lp-surface);
+  box-shadow: var(--lp-shadow-sm);
+  font-size: var(--lp-text-micro);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--lp-text-2);
+}
+
+.lp-eyebrow-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--accent-blue);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent-blue) 20%, transparent);
+}
+
+.lp-h2 {
+  font-size: var(--lp-text-h2);
+  font-weight: 700;
+  /* Chữ càng to, khoảng cách dòng và chữ càng phải siết lại — giữ nguyên tỉ lệ
+     của thân bài thì tiêu đề trông rời rạc (Practical UI, "Decrease line height
+     as font size increases"). */
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.lp-h3 {
+  font-size: var(--lp-text-h3);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+}
+
+.lp-lead {
+  font-size: var(--lp-text-lead);
+  line-height: 1.6;
+  color: var(--lp-text-2);
+  max-width: var(--lp-measure);
+}
+
+.lp-body {
+  font-size: var(--lp-text-body);
+  line-height: 1.65;
+  color: var(--lp-text-2);
+  max-width: var(--lp-measure);
+}
+
+.lp-small {
+  font-size: var(--lp-text-sm);
+  line-height: 1.6;
+  color: var(--lp-text-3);
+}
+
+/* Chữ tô gradient. Hai màu nhấn đều đủ tương phản với nền ở cả hai theme, nên
+   nếu trình duyệt không hỗ trợ `background-clip: text` (rơi về màu chữ thường)
+   thì vẫn đọc được — không bao giờ có chữ vô hình. */
+.lp-grad {
+  background: linear-gradient(100deg, var(--lp-ink-blue), var(--lp-ink-purple) 70%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  /* Dấu tiếng Việt vươn cao hơn chiều cao chữ hoa; không nới trên–dưới thì "ế"
+     hay "ữ" bị khung gradient cắt cụt phần dấu. */
+  padding-block: 0.08em;
+}
+
+/* Đầu mỗi khu vực: nhãn nhỏ → tiêu đề → câu dẫn, đúng thứ tự đọc. */
+.lp-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lp-4);
+  margin-bottom: var(--lp-7);
+}
+
+.lp-head--center {
+  align-items: center;
+  text-align: center;
+}
+
+/* Căn giữa chỉ dùng cho tiêu đề và câu dẫn ngắn. Practical UI: thân bài dài mà
+   căn giữa thì mắt phải dò lại điểm bắt đầu ở từng dòng. */
+.lp-head--center .lp-lead {
+  margin-inline: auto;
+  text-align: center;
+}
+
+/* --------------------------------------------------------------------------
+   Nút — ba bậc: chính / phụ / phụ-mờ.
+   Mỗi khu vực chỉ được có ĐÚNG MỘT nút chính.
+   -------------------------------------------------------------------------- */
+
+.lp-btn {
+  --magnet-x: 0px;
+  --magnet-y: 0px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--lp-2);
+  /* Cao tối thiểu 48px: vừa khớp lưới 8pt, vừa vượt mức WCAG khuyến nghị (44). */
+  min-height: 48px;
+  padding-inline: var(--lp-5);
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  font-size: var(--lp-text-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transform: translate3d(var(--magnet-x), var(--magnet-y), 0);
+  transition:
+    transform 220ms var(--lp-ease),
+    box-shadow 220ms var(--lp-ease),
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+.lp-btn:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 3px;
+}
+
+.lp-btn-lg {
+  min-height: 56px;
+  padding-inline: var(--lp-6);
+  font-size: 1rem;
+}
+
+/* Gradient dựng từ --lp-solid-*, không phải --accent-* thô: đầu xanh của dải
+   phải đủ tối để chữ trắng trên đó đạt chuẩn (bản thô chỉ được 4,1:1). */
+.lp-btn-primary {
+  background-image: linear-gradient(100deg, var(--lp-solid-blue), var(--lp-solid-purple));
+  color: var(--lp-on-solid);
+  box-shadow:
+    var(--lp-shadow-md),
+    0 0 0 1px color-mix(in oklab, var(--accent-purple) 30%, transparent);
+}
+
+.lp-btn-primary:hover {
+  /* Đậm quầng sáng thay vì đổi màu nền: gradient mà đổi màu lúc di chuột thì dễ
+     tuột khỏi ngưỡng tương phản đã tính cho chữ. */
+  box-shadow:
+    var(--lp-shadow-lg),
+    0 0 0 1px color-mix(in oklab, var(--accent-purple) 55%, transparent),
+    0 0 32px -6px var(--lp-glow-purple);
+}
+
+.lp-btn-primary:active {
+  transform: translate3d(var(--magnet-x), calc(var(--magnet-y) + 1px), 0);
+}
+
+.lp-btn-secondary {
+  background: var(--lp-surface);
+  border-color: var(--lp-border-strong);
+  color: var(--lp-text);
+  box-shadow: var(--lp-shadow-sm);
+}
+
+.lp-btn-secondary:hover {
+  border-color: var(--lp-ink-blue);
+  color: var(--lp-ink-blue);
+}
+
+.lp-btn-tertiary {
+  color: var(--lp-text-2);
+  padding-inline: var(--lp-4);
+}
+
+.lp-btn-tertiary:hover {
+  color: var(--lp-text);
+  background: var(--lp-surface-2);
+}
+
+/* Biểu tượng đi kèm chữ: cùng cỡ, cùng độ dày nét — Practical UI, "Balance icon
+   and text pairs". Nét mảnh hơn chữ sẽ trông như bị mờ khi đứng cạnh chữ đậm. */
+.lp-btn svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.lp-btn-arrow {
+  transition: transform 240ms var(--lp-ease);
+}
+
+.lp-btn:hover .lp-btn-arrow {
+  transform: translateX(3px);
+}
+
+/* --------------------------------------------------------------------------
+   Bề mặt & chất liệu
+   -------------------------------------------------------------------------- */
+
+.lp-card {
+  position: relative;
+  border: 1px solid var(--lp-border);
+  border-radius: var(--radius-lg);
+  background: var(--lp-surface);
+  box-shadow: var(--lp-shadow-sm);
+}
+
+/* Đường nối giữa hai dải có nền khác nhau.
+   Một đường kẻ 1px chạy suốt bề ngang cắt trang thành từng lát rời rạc; vạch
+   này nhạt dần về hai mép nên hai dải trông như tan vào nhau. Vẽ bằng
+   background-image chứ không phải ::before/::after — mấy khu vực này đã dùng
+   hết hai lớp giả cho quầng sáng và lớp hạt rồi.
+   ⚠️ Khu vực nào dùng class này thì phải đặt nền bằng `background-color`, không
+   được dùng shorthand `background` — shorthand xoá sạch background-image. */
+.lp-seam-y {
+  background-image:
+    linear-gradient(
+      90deg,
+      transparent,
+      var(--lp-border-strong) 22%,
+      var(--lp-border-strong) 78%,
+      transparent
+    ),
+    linear-gradient(
+      90deg,
+      transparent,
+      var(--lp-border-strong) 22%,
+      var(--lp-border-strong) 78%,
+      transparent
+    );
+  background-size:
+    100% 1px,
+    100% 1px;
+  background-position:
+    top left,
+    bottom left;
+  background-repeat: no-repeat;
+}
+
+/* Lớp hạt (grain) rất mờ phủ lên nền gradient. Không có nó, mảng màu lớn bị
+   "banding" — những vệt sọc do màn hình chỉ có 8 bit mỗi kênh màu; thêm nhiễu
+   phá vỡ ranh giới giữa các bậc màu. Nhiễu sinh bằng bộ lọc SVG nhúng thẳng
+   trong data-URI: không thêm request ảnh nào. */
+.lp-grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.42;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
+}
+
+/* --------------------------------------------------------------------------
+   Hiện dần khi cuộn tới (đi cùng directive `appReveal`)
+   -------------------------------------------------------------------------- */
+
+.reveal {
+  opacity: 0;
+  transform: translate3d(0, 22px, 0);
+  transition:
+    opacity 620ms var(--lp-ease),
+    transform 620ms var(--lp-ease);
+  /* Báo trước cho trình duyệt để nó tách phần tử ra lớp vẽ riêng, nhưng CHỈ khi
+     chưa hiện — giữ `will-change` vĩnh viễn trên hàng chục phần tử là cách
+     nhanh nhất để ngốn sạch bộ nhớ GPU. */
+  will-change: opacity, transform;
+}
+
+.reveal.is-revealed {
+  opacity: 1;
+  transform: none;
+  will-change: auto;
+}
+
+/* --------------------------------------------------------------------------
+   Giảm chuyển động — bắt buộc, không phải tuỳ chọn.
+   Nguyên tắc: giữ nguyên TRẠNG THÁI CUỐI, chỉ bỏ đường đi tới đó.
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .lp-btn,
+  .lp-btn-arrow {
+    transition: none;
+  }
+}

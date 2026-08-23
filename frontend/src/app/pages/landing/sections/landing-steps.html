@@ -1,0 +1,44 @@
+<section class="lp-section lp-steps" id="how-it-works" aria-labelledby="steps-title">
+  <div class="lp-shell">
+    <div class="lp-head lp-head--center">
+      <p class="lp-eyebrow" appReveal>
+        <span class="lp-eyebrow-dot" aria-hidden="true"></span>
+        How it works
+      </p>
+      <h2 id="steps-title" class="lp-h2" appReveal [revealDelay]="60">
+        Four steps and <span class="lp-grad">your team is working</span>
+      </h2>
+      <p class="lp-lead" appReveal [revealDelay]="120">
+        No trial form to fill in, no sales call to sit through.
+      </p>
+    </div>
+
+    <ol class="lp-step-grid">
+      @for (step of steps; track step.no; let i = $index) {
+        <li class="lp-step" appReveal [revealDelay]="i * 90">
+          <span class="lp-step-no" aria-hidden="true">{{ step.no }}</span>
+
+          <span class="lp-step-icon" aria-hidden="true">
+            @switch (step.icon) {
+              @case ('org') {
+                <svg lucideBuilding2 [strokeWidth]="2.2"></svg>
+              }
+              @case ('invite') {
+                <svg lucideUserPlus [strokeWidth]="2.2"></svg>
+              }
+              @case ('board') {
+                <svg lucideKanban [strokeWidth]="2.2"></svg>
+              }
+              @default {
+                <svg lucideSparkles [strokeWidth]="2.2"></svg>
+              }
+            }
+          </span>
+
+          <h3 class="lp-h3 lp-step-title">{{ step.title }}</h3>
+          <p class="lp-step-desc">{{ step.desc }}</p>
+        </li>
+      }
+    </ol>
+  </div>
+</section>

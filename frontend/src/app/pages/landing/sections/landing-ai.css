@@ -1,0 +1,693 @@
+/* ==========================================================================
+   Khoảnh khắc chữ ký — dải tối, ở CẢ HAI theme.
+
+   Vì sao cố tình tối cả khi trang đang sáng: Practical UI (chương Layout) chỉ
+   ra rằng chia giao diện thành mảng sáng và mảng tối là một cách gom nhóm và
+   dựng phân cấp thị giác. Đây là luận điểm quan trọng nhất của sản phẩm, nên nó
+   được một mảng riêng, tách hẳn khỏi phần còn lại của trang.
+
+   Hệ quả phải xử lý: ở theme sáng, --accent-blue/--accent-purple đang mang giá
+   trị TỐI (#0284c7 / #6d28d9) vì chúng được chọn để đặt trên nền trắng. Đặt lên
+   nền #0b0d14 thì màu tím chỉ còn 2,3:1 — không đọc nổi. Nên trong phạm vi dải
+   này, hai biến được gán lại đúng bộ giá trị mà [data-theme='dark'] của
+   `styles.css` vẫn dùng. Không phải màu mới, chỉ là dùng đúng bản của bảng màu.
+   ========================================================================== */
+
+.ai-band {
+  position: relative;
+  overflow: hidden;
+  padding-block: clamp(80px, 10vw, 136px);
+  isolation: isolate;
+  /* Khu vực này không dùng .lp-section nên phải tự khai chừa chỗ cho thanh nav
+     cố định khi nhảy tới mốc #tro-ly-ai. */
+  scroll-margin-top: 84px;
+
+  /* Bộ token cục bộ — luôn là bản tối, bất kể theme của trang.
+     Phải chép lại đủ CẢ hai họ ink/solid của `_landing-shared.css`: khối
+     :host-context([data-theme='dark']) ở đó chỉ chạy khi cả trang đang tối,
+     còn dải này tối cả lúc trang đang sáng. Thiếu là chữ tím ở thẻ gợi ý rơi
+     xuống 2,3:1 ngay giữa khu vực quan trọng nhất của trang. */
+  --accent-blue: #579dff;
+  --accent-blue-hover: #85b8ff;
+  --accent-blue-soft: rgba(87, 157, 255, 0.15);
+  --accent-purple: #9e75ff;
+  --accent-purple-soft: rgba(158, 117, 255, 0.15);
+
+  /* Màu nhấn dùng làm CHỮ trên nền tối (tỉ số: nền dải · nền tô nhạt). */
+  --lp-ink-blue: #579dff; /* 7.09 · 4.74 */
+  --lp-ink-purple: #a680ff; /* 6.61 · 4.58 */
+  --lp-ink-green: #2da781; /* 6.42 · 4.60 */
+  --lp-ink-amber: #fbbf24; /* 11.63 · 7.11 */
+
+  /* Màu nhấn dùng làm NỀN ĐẶC; chữ trên đó là --lp-on-solid (gần đen). */
+  --lp-solid-blue: #579dff; /* chữ gần-đen: 7.09 */
+  --lp-solid-purple: #9e75ff; /* chữ gần-đen: 5.95 */
+  --lp-solid-green: #059669; /* chữ gần-đen: 5.15 */
+  --lp-solid-amber: #fbbf24; /* chữ gần-đen: 11.63 */
+  --lp-on-solid: #0b0d14;
+
+  --lp-bg: #0b0d14;
+  --lp-surface: #12151f;
+  --lp-surface-2: #181d29;
+  --lp-border: rgba(255, 255, 255, 0.09);
+  --lp-border-strong: rgba(255, 255, 255, 0.2);
+  --lp-text: #ffffff;
+  --lp-text-2: #aab3c7;
+  --lp-text-3: #8791a6;
+  --lp-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --lp-shadow-md: 0 12px 30px -12px rgba(0, 0, 0, 0.8);
+  --lp-shadow-lg: 0 34px 60px -24px rgba(0, 0, 0, 0.9);
+
+  background: var(--lp-bg);
+  color: var(--lp-text);
+}
+
+/* Bo góc trên/dưới để dải tối trông như một tấm đặt lên trang, không phải một
+   vệt sơn chạy hết chiều ngang. Ở theme tối nó gần như vô hình — đúng ý đồ. */
+.ai-band::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-block: 1px solid rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+
+.ai-glow {
+  position: absolute;
+  top: -30%;
+  left: 50%;
+  width: min(1100px, 120%);
+  height: 720px;
+  transform: translateX(-50%);
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    color-mix(in oklab, var(--accent-purple) 26%, transparent) 0%,
+    transparent 62%
+  );
+  z-index: -1;
+  pointer-events: none;
+}
+
+.ai-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(40px, 6vw, 72px);
+  align-items: center;
+}
+
+@media (min-width: 1000px) {
+  .ai-inner {
+    /* Chữ hẹp hơn khung chat: khung chat là nhân vật chính ở khu vực này. */
+    grid-template-columns: minmax(0, 0.86fr) minmax(0, 1fr);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Cột chữ
+   -------------------------------------------------------------------------- */
+
+.ai-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--lp-4);
+}
+
+.ai-body {
+  margin-top: var(--lp-1);
+}
+
+.ai-points {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lp-4);
+  margin: var(--lp-3) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ai-points li {
+  display: flex;
+  gap: var(--lp-3);
+  max-width: var(--lp-measure);
+}
+
+.ai-point-mark {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  margin-top: 2px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--lp-ink-green) 20%, transparent);
+  color: var(--lp-ink-green);
+}
+
+.ai-point-mark svg {
+  width: 13px;
+  height: 13px;
+}
+
+.ai-point-title {
+  margin: 0 0 2px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--lp-text);
+}
+
+.ai-point-desc {
+  margin: 0;
+  font-size: var(--lp-text-sm);
+  line-height: 1.6;
+  color: var(--lp-text-2);
+}
+
+.ai-note {
+  margin-top: var(--lp-2);
+  font-style: italic;
+}
+
+/* --------------------------------------------------------------------------
+   Khung chat
+   -------------------------------------------------------------------------- */
+
+.ai-stage {
+  position: relative;
+}
+
+.lp-chat {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--lp-border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--lp-surface);
+  box-shadow: var(--lp-shadow-lg);
+  overflow: hidden;
+}
+
+.chat-head {
+  display: flex;
+  align-items: center;
+  gap: var(--lp-2);
+  padding: 12px var(--lp-4);
+  border-bottom: 1px solid var(--lp-border);
+  background: var(--lp-surface-2);
+  font-size: var(--lp-text-sm);
+}
+
+.chat-head svg {
+  width: 15px;
+  height: 15px;
+  color: var(--lp-text-3);
+}
+
+.chat-name {
+  font-weight: 600;
+  color: var(--lp-text);
+}
+
+.chat-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  font-size: var(--lp-text-micro);
+  color: var(--lp-text-3);
+}
+
+.chat-live i {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--lp-solid-green);
+  animation: live-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.chat-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lp-3);
+  padding: var(--lp-4);
+  /* Chiều cao tối thiểu cố định: nếu để khung tự co giãn theo nội dung thì mỗi
+     lần thẻ gợi ý hiện ra, cả khối bên dưới trang sẽ bị đẩy xuống — cú giật
+     layout ngay giữa tầm mắt, và cũng là kiểu hoạt ảnh gây tốn kém nhất. */
+  min-height: 328px;
+  justify-content: flex-end;
+}
+
+.msg {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--lp-2);
+  animation: msg-in 380ms var(--lp-ease) both;
+}
+
+.msg-me {
+  justify-content: flex-end;
+}
+
+.msg-avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--lp-on-solid);
+}
+
+.av-blue {
+  background: var(--lp-solid-blue);
+}
+.av-violet {
+  background: var(--lp-solid-purple);
+}
+.av-green {
+  background: var(--lp-solid-green);
+}
+
+.msg-bubble {
+  max-width: 78%;
+  padding: 9px 13px;
+  border: 1px solid var(--lp-border);
+  border-radius: 14px;
+  border-bottom-left-radius: 4px;
+  background: var(--lp-surface-2);
+}
+
+.msg-me .msg-bubble {
+  border-bottom-left-radius: 14px;
+  border-bottom-right-radius: 4px;
+  border-color: color-mix(in oklab, var(--accent-blue) 34%, transparent);
+  background: color-mix(in oklab, var(--accent-blue) 14%, var(--lp-surface-2));
+}
+
+.msg-bubble b {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--lp-text-3);
+}
+
+.msg-bubble p {
+  margin: 0;
+  font-size: var(--lp-text-sm);
+  line-height: 1.5;
+  color: var(--lp-text);
+}
+
+.mention {
+  font-weight: 700;
+  color: var(--lp-ink-blue);
+}
+
+@keyframes msg-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* --- Trợ lý đang đọc --- */
+
+.ai-thinking {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 7px;
+  padding: 7px 13px;
+  border: 1px solid color-mix(in oklab, var(--accent-purple) 32%, transparent);
+  border-radius: 999px;
+  background: var(--accent-purple-soft);
+  font-size: var(--lp-text-micro);
+  font-weight: 600;
+  color: var(--lp-ink-purple);
+  animation: msg-in 300ms var(--lp-ease) both;
+}
+
+.ai-thinking svg {
+  width: 13px;
+  height: 13px;
+}
+
+.dots {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.dots i {
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: currentColor;
+  animation: dot-bounce 1.1s ease-in-out infinite;
+}
+
+.dots i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.dots i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes dot-bounce {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.45;
+  }
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+/* --- Thẻ gợi ý --- */
+
+.suggest {
+  position: relative;
+  align-self: flex-start;
+  width: min(100%, 340px);
+  padding: 13px;
+  border: 1px solid color-mix(in oklab, var(--accent-purple) 55%, transparent);
+  border-radius: var(--radius-md);
+  background: color-mix(in oklab, var(--accent-purple) 12%, var(--lp-surface-2));
+  animation: suggest-in 520ms var(--lp-ease) both;
+}
+
+/* Quầng sáng nhấp nháy quanh viền — dấu hiệu "vừa được phát hiện". Vẽ bằng một
+   lớp giả nằm dưới, chỉ đổi opacity nên trình duyệt không phải vẽ lại thẻ. */
+/* Góc quay phải khai bằng @property thì trình duyệt mới nội suy được nó — biến
+   tuỳ chỉnh thường chỉ là chuỗi ký tự, animate sẽ nhảy cóc từ 0deg sang 360deg
+   chứ không quay. Khai <angle> là nó thành một đại lượng có thể chạy mượt.
+   @property KHÔNG bị Angular đóng gói theo component (at-rule là toàn cục), nên
+   tên phải đủ riêng để không đụng ai. */
+@property --lp-sweep {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+/* Một vệt sáng chạy vòng quanh viền thẻ — như đang được quét qua.
+   Hơn hẳn kiểu quầng sáng nở-tóp đều đều: quầng nở-tóp nói "có gì đó ở đây",
+   còn vệt chạy vòng nói "đang đọc cái này", đúng nghĩa AI vừa soi tin nhắn.
+   Vẽ bằng conic-gradient nên chỉ là một lớp nền, không phải chục phần tử. */
+.suggest::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  border-radius: inherit;
+  background:
+    conic-gradient(
+      from var(--lp-sweep),
+      transparent 0deg,
+      var(--accent-purple) 40deg,
+      var(--accent-blue) 90deg,
+      transparent 150deg,
+      transparent 360deg
+    ),
+    linear-gradient(120deg, var(--accent-purple), var(--accent-blue));
+  filter: blur(7px);
+  opacity: 0.6;
+  animation:
+    lp-sweep 3.4s linear infinite,
+    glow-pulse 2.6s ease-in-out infinite;
+}
+
+@keyframes lp-sweep {
+  to {
+    --lp-sweep: 360deg;
+  }
+}
+
+/* Bấm xác nhận xong thì thôi nhấp nháy: việc đã xong, không còn gì cần chú ý. */
+.suggest.is-locked::before {
+  animation: none;
+  opacity: 0.22;
+}
+
+@keyframes glow-pulse {
+  0%,
+  100% {
+    opacity: 0.28;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes suggest-in {
+  from {
+    opacity: 0;
+    transform: translate3d(-14px, 8px, 0) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.suggest-top {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 7px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--lp-ink-purple);
+}
+
+.suggest-top svg {
+  width: 12px;
+  height: 12px;
+}
+
+.suggest-score {
+  margin-left: auto;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--accent-purple-soft);
+  /* Không kế thừa màu tím của .suggest-top: chữ tím đặt lên chính nền tím nhạt
+     của con chip chỉ được 4,03:1, trượt chuẩn. Đổi sang bậc chữ phụ trung tính
+     vừa qua ngưỡng, vừa đúng phân cấp — con số độ tin cậy là thông tin phụ, để
+     nó cùng màu với nhãn "AI PHÁT HIỆN TASK" là cho nó ngang hàng nhầm. */
+  color: var(--lp-text-2);
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 600;
+}
+
+.suggest-title {
+  margin: 0 0 3px;
+  font-size: var(--lp-text-sm);
+  font-weight: 600;
+  color: var(--lp-text);
+}
+
+.suggest-meta {
+  margin: 0 0 11px;
+  font-size: var(--lp-text-micro);
+  color: var(--lp-text-2);
+}
+
+.suggest-actions {
+  display: flex;
+  gap: var(--lp-2);
+}
+
+.suggest-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  /* 36px thấp hơn mức 48px mà Practical UI khuyến nghị, nhưng vẫn vượt xa mức
+     bắt buộc của WCAG 2.2 AA (24×24). Đây là nút bên trong một khung minh hoạ
+     thu nhỏ — giữ đúng tỉ lệ với giao diện thật quan trọng hơn, và cả hai nút
+     đều rộng rãi theo chiều ngang, cách nhau 8px nên không bấm nhầm. */
+  min-height: 36px;
+  padding-inline: 14px;
+  border-radius: var(--radius-sm);
+  font-size: var(--lp-text-micro);
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    filter 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.suggest-btn svg {
+  width: 12px;
+  height: 12px;
+}
+
+.suggest-btn:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+.suggest-yes {
+  background: var(--lp-solid-purple);
+  /* Nền tím sáng → chữ phải tối, y hệt lý do ở nút chính của trang. */
+  color: var(--lp-on-solid);
+}
+
+.suggest-yes:hover {
+  filter: brightness(1.1);
+}
+
+.suggest-no {
+  background: transparent;
+  color: var(--lp-text-2);
+}
+
+.suggest-no:hover {
+  background: var(--lp-surface);
+  color: var(--lp-text);
+}
+
+.created-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: var(--lp-text-micro);
+  color: var(--lp-ink-green);
+  animation: msg-in 320ms var(--lp-ease) both;
+}
+
+.created-note svg {
+  width: 13px;
+  height: 13px;
+}
+
+.created-note b {
+  color: var(--lp-text);
+}
+
+/* --- Ô nhập --- */
+
+.chat-input {
+  display: flex;
+  align-items: center;
+  gap: var(--lp-2);
+  padding: 10px var(--lp-4) var(--lp-4);
+  border-top: 1px solid var(--lp-border);
+  background: var(--lp-surface);
+}
+
+.chat-field {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid var(--lp-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--lp-surface-2);
+  font-size: var(--lp-text-sm);
+  transition: border-color 200ms ease;
+}
+
+.is-typing .chat-field {
+  border-color: color-mix(in oklab, var(--accent-blue) 55%, transparent);
+}
+
+.chat-text {
+  color: var(--lp-text);
+  /* Câu mẫu dài hơn ô nhập trên màn hẹp — cắt đuôi thay vì xuống dòng làm ô cao
+     lên rồi lại thấp xuống. */
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.chat-placeholder {
+  color: var(--lp-text-3);
+}
+
+.caret {
+  width: 2px;
+  height: 16px;
+  margin-left: 2px;
+  flex-shrink: 0;
+  background: var(--lp-solid-blue);
+  animation: caret-blink 1s steps(1) infinite;
+}
+
+@keyframes caret-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.chat-send {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklab, var(--accent-blue) 18%, transparent);
+  color: var(--lp-ink-blue);
+}
+
+.chat-send svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* --------------------------------------------------------------------------
+   Giảm chuyển động — bỏ mọi thứ nhấp nháy và trượt, giữ nguyên nội dung.
+   Vòng lặp diễn xuất cũng đã bị tắt từ phía TypeScript (xem landing-ai.ts).
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .msg,
+  .ai-thinking,
+  .suggest,
+  .created-note {
+    animation: none;
+  }
+
+  .suggest::before,
+  .chat-live i,
+  .dots i,
+  .caret {
+    animation: none;
+    opacity: 0.4;
+  }
+
+  .caret {
+    opacity: 1;
+  }
+}

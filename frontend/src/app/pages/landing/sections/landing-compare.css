@@ -1,0 +1,123 @@
+/* ==========================================================================
+   "Sao không dùng Trello luôn?"
+   ========================================================================== */
+
+.compare {
+  background: var(--lp-bg);
+}
+
+.compare-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(40px, 6vw, 72px);
+  align-items: start;
+}
+
+@media (min-width: 1000px) {
+  .compare-inner {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  }
+}
+
+.compare-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--lp-4);
+}
+
+.compare-cards {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--lp-4);
+}
+
+@media (min-width: 620px) {
+  .compare-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.cmp-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lp-4);
+  padding: var(--lp-5);
+  border: 1px solid var(--lp-border);
+  border-radius: var(--radius-lg);
+  background: var(--lp-surface);
+  box-shadow: var(--lp-shadow-sm);
+}
+
+/* Cột kết luận nổi hơn bằng BA thứ cùng lúc — viền màu, nền ngả tím, bóng đổ
+   sâu hơn — chứ không riêng màu sắc. Người không phân biệt được màu vẫn thấy nó
+   nổi hơn nhờ độ nổi và độ tương phản của viền. */
+.cmp-ours {
+  border-color: color-mix(in oklab, var(--accent-purple) 42%, transparent);
+  background: linear-gradient(
+    170deg,
+    color-mix(in oklab, var(--accent-purple) 9%, var(--lp-surface)),
+    var(--lp-surface) 62%
+  );
+  box-shadow: var(--lp-shadow-md);
+}
+
+.cmp-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--lp-text);
+}
+
+.cmp-card ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cmp-card li {
+  display: flex;
+  gap: 10px;
+  font-size: var(--lp-text-sm);
+  line-height: 1.6;
+  color: var(--lp-text-2);
+}
+
+.cmp-mark {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  border-radius: 999px;
+}
+
+.cmp-mark svg {
+  width: 11px;
+  height: 11px;
+}
+
+.mark-yes {
+  background: color-mix(in oklab, var(--accent-purple) 18%, transparent);
+  color: var(--lp-ink-purple);
+}
+
+.mark-no {
+  background: var(--lp-surface-2);
+  border: 1px solid var(--lp-border);
+  color: var(--lp-text-3);
+}
+
+.cmp-note {
+  margin: auto 0 0;
+  padding-top: var(--lp-3);
+  border-top: 1px solid var(--lp-border);
+  font-size: var(--lp-text-micro);
+  font-style: italic;
+  color: var(--lp-text-3);
+}

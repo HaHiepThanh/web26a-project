@@ -1,0 +1,213 @@
+<!--
+  Thứ tự khu vực đi theo hành trình đọc:
+    thuyết phục (hero) → chứng minh (tính năng, AI, chi tiết) → tin cậy (so sánh,
+    số liệu) → hành động (CTA cuối).
+  Mọi thứ chỉ để trang trí đều gắn aria-hidden để trình đọc màn hình bỏ qua.
+-->
+
+<!-- Chỉ hiện khi tab tới: cho người dùng bàn phím nhảy thẳng vào nội dung thay
+     vì phải tab qua toàn bộ thanh điều hướng ở mỗi lần vào trang. -->
+<a class="skip-link" href="#noi-dung">Skip to main content</a>
+
+<!-- Vạch tiến độ cuộn. Bề ngang do chính thanh cuộn điều khiển qua
+     `animation-timeline: scroll()` — không một dòng JS, không một lần nghe sự
+     kiện scroll. Trình duyệt chưa hỗ trợ thì nó ẩn hẳn (xem landing.css), chứ
+     không nằm chình ình ở đó với bề ngang bằng 0. -->
+<div class="scroll-progress" aria-hidden="true"></div>
+
+<header class="nav" [class.is-solid]="scrolled() || menuOpen()">
+  <div class="lp-shell nav-inner">
+    <!-- Vẫn là <a href> thật để chuột giữa / Ctrl+bấm mở được tab mới; handler
+         chỉ chặn đúng cú bấm trái đơn thuần rồi cuộn về đỉnh. -->
+    <a
+      class="brand"
+      routerLink="/"
+      (click)="scrollToTop($event)"
+      aria-label="Horizon Hub Harmony — back to top"
+    >
+      <!-- width/height khai san de trinh duyet chua khoang truoc khi anh tai xong,
+           khong bi giat layout. Anh da nen tu 886kB xuong 21kB. -->
+      <img
+        class="brand-logo"
+        src="logo-128.png"
+        width="128"
+        height="128"
+        alt=""
+        aria-hidden="true"
+      />
+      <span class="brand-name">Horizon Hub <span class="brand-accent">Harmony</span></span>
+    </a>
+
+    <nav class="nav-links" aria-label="On this page">
+      @for (link of navLinks; track link.id) {
+        <!-- aria-current="location": báo cho trình đọc màn hình biết đây là mục
+             đang hiện trên màn hình. Phần nhìn thấy được là gạch chân bên dưới
+             cộng chữ đậm lên — hai dấu hiệu, không chỉ mỗi màu. -->
+        <a
+          [href]="'#' + link.id"
+          (click)="scrollTo(link.id, $event)"
+          [class.is-current]="activeSection() === link.id"
+          [attr.aria-current]="activeSection() === link.id ? 'location' : null"
+        >
+          {{ link.label }}
+        </a>
+      }
+    </nav>
+
+    <!-- Nút đổi theme. Hai biểu tượng xếp chồng rồi xoay-mờ vào nhau: chuyển
+         mượt hơn hẳn kiểu tráo thẳng icon, và cũng là một lời quảng cáo nho nhỏ
+         — sản phẩm có nền tối, bấm là thấy ngay.
+         Cố ý nằm NGOÀI .nav-actions: khối đó bị ẩn dưới 900px, để nút vào trong
+         thì trên điện thoại không còn cách nào đổi theme. -->
+    <button
+      type="button"
+      class="theme-toggle"
+      (click)="toggleTheme()"
+      [attr.aria-pressed]="isDark()"
+      [attr.aria-label]="isDark() ? 'Switch to light theme' : 'Switch to dark theme'"
+    >
+      <span class="theme-icons" aria-hidden="true">
+        <svg lucideSun class="ico-sun" [strokeWidth]="2.2"></svg>
+        <svg lucideMoon class="ico-moon" [strokeWidth]="2.2"></svg>
+      </span>
+    </button>
+
+    <div class="nav-actions">
+      @if (isLoggedIn()) {
+        <a class="lp-btn lp-btn-primary" routerLink="/workspace">
+          Open your workspace
+          <svg lucideArrowRight class="lp-btn-arrow" [strokeWidth]="2.2"></svg>
+        </a>
+      } @else {
+        <a class="lp-btn lp-btn-tertiary nav-login" routerLink="/login">Sign in</a>
+        <!-- Ở đỉnh trang, nút chính thuộc về hero — nút này lùi xuống hạng phụ
+             để trên màn hình không có hai nút chính tranh nhau (Practical UI,
+             "Use a single primary button"). Cuộn qua hero rồi, khi hero khuất
+             mắt, nó mới lên hạng chính. -->
+        <a
+          class="lp-btn"
+          [class.lp-btn-primary]="scrolled()"
+          [class.lp-btn-secondary]="!scrolled()"
+          routerLink="/register"
+        >
+          Start free
+        </a>
+      }
+    </div>
+
+    <button
+      type="button"
+      class="nav-burger"
+      (click)="toggleMenu()"
+      [attr.aria-expanded]="menuOpen()"
+      aria-controls="menu-mobile"
+      [attr.aria-label]="menuOpen() ? 'Close menu' : 'Open menu'"
+    >
+      @if (menuOpen()) {
+        <svg lucideX [strokeWidth]="2.2"></svg>
+      } @else {
+        <svg lucideMenu [strokeWidth]="2.2"></svg>
+      }
+    </button>
+  </div>
+
+  @if (menuOpen()) {
+    <div class="nav-sheet" id="menu-mobile">
+      @for (link of navLinks; track link.id) {
+        <a [href]="'#' + link.id" (click)="scrollTo(link.id, $event)">{{ link.label }}</a>
+      }
+      <hr />
+      @if (isLoggedIn()) {
+        <a class="lp-btn lp-btn-primary" routerLink="/workspace" (click)="closeMenu()">
+          Open your workspace
+        </a>
+      } @else {
+        <a class="lp-btn lp-btn-secondary" routerLink="/login" (click)="closeMenu()">Sign in</a>
+        <a class="lp-btn lp-btn-primary" routerLink="/register" (click)="closeMenu()">
+          Start free
+        </a>
+      }
+    </div>
+  }
+</header>
+
+<!--
+  Thứ tự khu vực = thứ tự thuyết phục:
+    hero (đây là cái gì) → tính năng (nó làm được gì) → trợ lý AI (vì sao khác
+    biệt) → bên trong một bảng (nó chạy ra sao) → so sánh (vì sao không dùng
+    Trello) → cách dùng (bắt đầu thế nào) → số liệu (có gì đảm bảo) → CTA.
+  Dải tối của khu vực AI đặt giữa hai khu vực sáng, vừa tách nó ra vừa cho mắt
+  một điểm nghỉ ở đúng đoạn giữa trang.
+-->
+<main id="noi-dung">
+  <app-landing-hero />
+  <app-landing-features />
+  <app-landing-ai />
+  <app-landing-story />
+  <app-landing-compare />
+  <app-landing-steps />
+  <app-landing-stats />
+  <app-landing-faq />
+  <app-landing-cta />
+</main>
+
+<!--
+  Thanh CTA dính đáy, CHỈ trên điện thoại.
+  Trang này dài gần 15 màn cuộn ở 360px, mà nút đăng ký chỉ có ở hero và khu vực
+  cuối. Ai bị thuyết phục ở giữa trang — thường là ngay sau phần trợ lý AI — phải
+  cuộn thêm tám màn hoặc quay ngược lên đỉnh mới tìm được chỗ bấm. Thanh nav trên
+  cùng cũng không cứu được: `.nav-actions` bị ẩn dưới 900px nên trên điện thoại
+  header hoàn toàn không có CTA nào.
+  Đặt ở đáy thay vì nhét thêm vào header vì hai lẽ: header đã chật (xem phần vá
+  tràn ở landing.css), và đáy màn hình là chỗ ngón cái với tới dễ nhất.
+  Chỉ hiện sau khi cuộn qua hero — lúc hero còn trên màn hình thì nút chính của
+  hero đang làm việc đó rồi, hiện thêm là hai CTA tranh nhau.
+-->
+@if (!isLoggedIn() && scrolled()) {
+  <div class="cta-dock" role="region" aria-label="Bắt đầu dùng thử">
+    <a class="lp-btn lp-btn-primary cta-dock-btn" routerLink="/register">
+      Start free
+      <svg lucideArrowRight class="lp-btn-arrow" [strokeWidth]="2.2"></svg>
+    </a>
+  </div>
+}
+
+<footer class="foot">
+  <div class="lp-shell foot-inner">
+    <div class="foot-brand">
+      <img
+        class="foot-logo"
+        src="logo-128.png"
+        width="128"
+        height="128"
+        alt=""
+        aria-hidden="true"
+      />
+      <p class="foot-slogan">One Hub. One Team. One Horizon.</p>
+      <p class="lp-small foot-tag">
+        A task board for small teams who would rather do the work than manage the tool.
+      </p>
+    </div>
+
+    <nav class="foot-links" aria-label="Footer">
+      <div>
+        <h2>On this page</h2>
+        @for (link of navLinks; track link.id) {
+          <a [href]="'#' + link.id" (click)="scrollTo(link.id, $event)">{{ link.label }}</a>
+        }
+      </div>
+      <div>
+        <h2>Get started</h2>
+        <a routerLink="/register">Create an account</a>
+        <a routerLink="/login">Sign in</a>
+      </div>
+    </nav>
+  </div>
+
+  <div class="lp-shell foot-base">
+    <p class="lp-small">© 2026 Horizon Hub Harmony · Web26A</p>
+    <p class="lp-small">
+      Not affiliated with Atlassian’s Trello — we only borrowed the idea of columns and cards.
+    </p>
+  </div>
+</footer>
