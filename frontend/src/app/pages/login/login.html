@@ -3,11 +3,8 @@
   <!-- LEFT: form panel -->
   <div class="form-panel">
     <div class="brand">
-      <div class="brand-mark">
-        <span class="bar bar-1"></span>
-        <span class="bar bar-2"></span>
-      </div>
-      <span class="brand-name">Trello<span class="brand-accent">Pro</span></span>
+      <img src="/HHH-logo.png" alt="Horizon Hub Harmony Logo" class="brand-logo" />
+      <span class="brand-name">Horizon Hub Harmony</span>
     </div>
 
     <div class="form-card">
@@ -24,7 +21,7 @@
               <label class="label pb-1.5" for="input-username">
                 <span class="label-text text-xs font-semibold">Username hoặc Email</span>
               </label>
-              <label class="input input-bordered flex w-full items-center gap-2">
+              <label class="input input-bordered flex min-h-[44px] w-full items-center gap-2">
                 <svg class="h-4 w-4 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M22 6l-10 7L2 6"/><path d="M2 6h20v12H2z"/></svg>
                 <input type="text" id="input-username" class="grow" placeholder="ban@congty.com" autocomplete="username" [(ngModel)]="username" name="username" />
               </label>
@@ -35,10 +32,10 @@
                 <span class="label-text text-xs font-semibold">Mật khẩu</span>
                 <a routerLink="/forgot-password" (click)="onForgotPasswordClick()" class="link link-primary link-hover text-xs font-semibold">Quên mật khẩu?</a>
               </label>
-              <label class="input input-bordered flex w-full items-center gap-2">
+              <label class="input input-bordered flex min-h-[44px] w-full items-center gap-2">
                 <svg class="h-4 w-4 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
                 <input [type]="passwordVisible() ? 'text' : 'password'" id="input-password" class="grow" placeholder="••••••••" autocomplete="current-password" [(ngModel)]="password" name="password" />
-                <button type="button" class="cursor-pointer opacity-50 hover:opacity-80" (click)="togglePasswordVisible()" [attr.aria-label]="passwordVisible() ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'">
+                <button type="button" class="relative cursor-pointer opacity-50 before:absolute before:-left-[6px] before:-right-[15px] before:-top-[15px] before:-bottom-[15px] before:content-[''] hover:opacity-80" (click)="togglePasswordVisible()" [attr.aria-label]="passwordVisible() ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'">
                   @if (!passwordVisible()) {
                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
                   } @else {
@@ -53,7 +50,7 @@
               <span class="label-text text-xs">Ghi nhớ đăng nhập trong 30 ngày</span>
             </label>
 
-            <button type="submit" class="btn btn-primary btn-block" [disabled]="passwordLoading()">
+            <button type="submit" class="btn btn-primary btn-block min-h-[44px]" [disabled]="passwordLoading()">
               @if (passwordLoading()) {
                 <span class="loading loading-spinner loading-sm"></span>
                 <span>Đang đăng nhập…</span>
@@ -66,7 +63,7 @@
 
           <div class="divider text-xs">Hoặc</div>
 
-          <button type="button" class="btn btn-outline btn-block" [disabled]="googleLoading()" (click)="onGoogleLogin()">
+          <button type="button" class="btn btn-outline btn-block min-h-[44px]" [disabled]="googleLoading()" (click)="onGoogleLogin()">
             @if (!googleLoading()) {
               <svg class="h-4 w-4" viewBox="0 0 24 24">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -90,7 +87,7 @@
 
     </div>
 
-    <div class="footer">© 2026 TrelloPro Inc.</div>
+    <div class="footer">© 2026 Horizon Hub Harmony</div>
   </div>
 
   <!-- RIGHT: visual board panel -->

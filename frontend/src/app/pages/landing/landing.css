@@ -1,0 +1,298 @@
+/* Landing page — marketing page, intentionally independent of the app's own
+ * (blue-accent) design tokens in styles.css. Strictly monochromatic per spec:
+ * solid Deep Slate Navy (#0F172A/#1E293B) + solid Teal (#0D9488) only, no
+ * gradients anywhere. Structural/utility classes live in the template via
+ * Tailwind; this file only holds the bits Tailwind can't express cleanly
+ * (the board/chat mockup, decorative dot grid, small reusable "lp-*" chips).
+ */
+
+:host {
+  display: block;
+}
+
+.landing-page {
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- Hero background texture ---------- */
+/* Solid-color dot tile via inline SVG (no CSS gradient function anywhere,
+ * per the strict "solid colors only" spec) — one flat-filled circle, tiled. */
+.lp-dot-grid {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='1' cy='1' r='1' fill='%23cbd5e1'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 24px 24px;
+  opacity: 0.5;
+}
+
+/* ---------- Board/chat showcase window ---------- */
+.lp-window {
+  animation: lpFadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lp-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+/* Side-by-side scrollable columns only once they reliably fit without
+ * hiding content — full width (stacked) below that, see UI-014. */
+@media (min-width: 768px) {
+  .lp-col {
+    width: 200px;
+    flex-shrink: 0;
+  }
+}
+
+.lp-col-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 2px;
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.lp-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.lp-card {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
+}
+
+.lp-card-highlight {
+  border-color: rgba(13, 148, 136, 0.5);
+  box-shadow: 0 0 0 1px rgba(13, 148, 136, 0.35);
+}
+
+.lp-card-done {
+  opacity: 0.7;
+}
+
+.lp-label {
+  display: inline-block;
+  /* Hand-picked px values here used to drift off the page's own Tailwind type
+     scale (audit UI-017) — re-expressed in rem so they land on the same steps
+     (and keep scaling together) as everything else on the page. */
+  font-size: 0.625rem; /* ~text-3xs step */
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 1px 7px;
+  border-radius: 999px;
+}
+
+.lp-card-title {
+  font-size: 0.875rem; /* ~text-sm step */
+  font-weight: 500;
+  line-height: 1.4;
+  color: #e2e8f0;
+  margin-top: 6px;
+}
+
+.lp-card-footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.lp-avatar {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #334155;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.625rem; /* ~text-3xs step, was a hardcoded 8px (UI-017) */
+  font-weight: 700;
+}
+
+.lp-chat-avatar {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  /* #0d9488 fails AA (3.74:1) for white text this small — #0f766e (teal-700)
+     passes at 5.47:1. Reserved for text-on-teal / teal-on-white pairs below
+     the WCAG "large text" size; #0d9488 itself stays for large/bold text and
+     purely decorative (icon, border, low-opacity fill) uses. */
+  background: #0f766e;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.625rem; /* ~text-3xs step, was a hardcoded 9px (UI-017) */
+  font-weight: 700;
+}
+
+/* ---------- AI suggestion card (dark, inside board mockup) ---------- */
+.lp-ai-card {
+  background: rgba(13, 148, 136, 0.08);
+  border: 1px dashed rgba(13, 148, 136, 0.5);
+  border-radius: 8px;
+  padding: 10px;
+  animation: lpPulseBorder 2.6s ease-in-out infinite;
+}
+
+.lp-ai-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.625rem; /* ~text-3xs step, was a hardcoded 9px (UI-017) */
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #2dd4bf;
+  background: rgba(13, 148, 136, 0.18);
+  border: 1px solid rgba(45, 212, 191, 0.35);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.lp-ai-badge-light {
+  color: #0f766e;
+  background: rgba(13, 148, 136, 0.1);
+  border-color: rgba(13, 148, 136, 0.3);
+}
+
+.lp-ai-btn {
+  font-size: 0.75rem; /* ~text-xs step, was a hardcoded 10.5px (UI-017) */
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 4px 9px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  /* Confirm/Dismiss now actually respond (UI-016) — cursor should say so. */
+  cursor: pointer;
+}
+
+.lp-ai-btn-confirm {
+  background: #0f766e;
+  color: #fff;
+}
+
+.lp-ai-btn-dismiss {
+  background: transparent;
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.lp-ai-btn-confirm-light {
+  background: #0f766e;
+  color: #fff;
+  font-size: 0.875rem; /* ~text-sm step, was a hardcoded 12px (UI-017) */
+  padding: 6px 12px;
+}
+
+.lp-ai-btn-dismiss-light {
+  background: #fff;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  font-size: 0.875rem; /* ~text-sm step, was a hardcoded 12px (UI-017) */
+  padding: 6px 12px;
+}
+
+/* Dismissed-state placeholder (UI-016) — replaces the pending card once the
+ * user dismisses it, so the layout doesn't just leave an odd gap. */
+.lp-ai-dismissed {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #64748b;
+  text-align: center;
+  border: 1px dashed rgba(148, 163, 184, 0.4);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+@keyframes lpPulseBorder {
+  0%,
+  100% {
+    border-color: rgba(13, 148, 136, 0.5);
+  }
+  50% {
+    border-color: rgba(13, 148, 136, 0.85);
+  }
+}
+
+/* ---------- Chat panel messages ---------- */
+.lp-chat-msg {
+  font-size: 0.875rem; /* ~text-sm step, was a hardcoded 12px (UI-017) */
+  line-height: 1.45;
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.lp-chat-name {
+  display: block;
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  color: #94a3b8;
+  margin-bottom: 2px;
+}
+
+.lp-chat-ai-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: var(--text-2xs);
+  color: #2dd4bf;
+  border: 1px dashed rgba(45, 212, 191, 0.4);
+  border-radius: 8px;
+  padding: 8px 10px;
+  line-height: 1.5;
+}
+
+/* ---------- AI Assistant section step numbers ---------- */
+.lp-step {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #0f766e;
+  color: #fff;
+  font-size: 0.875rem; /* ~text-sm step, was a hardcoded 13px (UI-017) */
+  font-weight: 700;
+}
+
+.lp-ai-panel {
+  animation: lpFadeUp 0.6s 0.1s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+/* ---------- Architecture hierarchy nodes ---------- */
+.lp-arch-node {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  padding: 14px 18px;
+  min-width: 128px;
+  text-align: center;
+}
+
+@keyframes lpFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

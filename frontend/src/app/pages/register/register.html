@@ -3,11 +3,8 @@
   <!-- LEFT: form panel -->
   <div class="form-panel">
     <a routerLink="/login" class="brand">
-      <div class="brand-mark">
-        <span class="bar bar-1"></span>
-        <span class="bar bar-2"></span>
-      </div>
-      <span class="brand-name">Trello<span class="brand-accent">Pro</span></span>
+      <img src="/HHH-logo.png" alt="Horizon Hub Harmony Logo" class="brand-logo" />
+      <span class="brand-name">Horizon Hub Harmony</span>
     </a>
 
     <div class="form-card">
@@ -22,7 +19,7 @@
           <input
             id="fullName"
             type="text"
-            class="input input-bordered w-full"
+            class="input input-bordered min-h-[44px] w-full"
             [class.input-error]="errors().fullName"
             placeholder="Nguyễn Văn A"
             autocomplete="name"
@@ -38,7 +35,7 @@
             <input
               id="username"
               type="text"
-              class="input input-bordered w-full"
+              class="input input-bordered min-h-[44px] w-full"
               [class.input-error]="errors().username"
               placeholder="vd: minhkhoa"
               autocomplete="username"
@@ -53,7 +50,7 @@
             <input
               id="phone"
               type="tel"
-              class="input input-bordered w-full"
+              class="input input-bordered min-h-[44px] w-full"
               [class.input-error]="errors().phone"
               placeholder="0912345678"
               autocomplete="tel"
@@ -69,7 +66,7 @@
           <input
             id="email"
             type="email"
-            class="input input-bordered w-full"
+            class="input input-bordered min-h-[44px] w-full"
             [class.input-error]="errors().email"
             placeholder="ban@congty.com"
             autocomplete="email"
@@ -82,7 +79,7 @@
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div class="form-control w-full">
             <label class="label pb-1.5" for="password"><span class="label-text text-xs font-semibold">Mật khẩu</span></label>
-            <label class="input input-bordered flex w-full items-center gap-2" [class.input-error]="errors().password">
+            <label class="input input-bordered flex min-h-[44px] w-full items-center gap-2" [class.input-error]="errors().password">
               <input
                 [type]="passwordVisible() ? 'text' : 'password'"
                 id="password"
@@ -92,7 +89,7 @@
                 [(ngModel)]="password"
                 name="password"
               />
-              <button type="button" class="cursor-pointer opacity-50 hover:opacity-80" (click)="passwordVisible.set(!passwordVisible())" [attr.aria-label]="passwordVisible() ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'">
+              <button type="button" class="relative cursor-pointer opacity-50 before:absolute before:-left-[6px] before:-right-[15px] before:-top-[15px] before:-bottom-[15px] before:content-[''] hover:opacity-80" (click)="passwordVisible.set(!passwordVisible())" [attr.aria-label]="passwordVisible() ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'">
                 @if (!passwordVisible()) {
                   <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
                 } @else {
@@ -105,7 +102,7 @@
 
           <div class="form-control w-full">
             <label class="label pb-1.5" for="confirmPassword"><span class="label-text text-xs font-semibold">Nhập lại mật khẩu</span></label>
-            <label class="input input-bordered flex w-full items-center gap-2" [class.input-error]="errors().confirmPassword">
+            <label class="input input-bordered flex min-h-[44px] w-full items-center gap-2" [class.input-error]="errors().confirmPassword">
               <input
                 [type]="confirmVisible() ? 'text' : 'password'"
                 id="confirmPassword"
@@ -115,7 +112,7 @@
                 [(ngModel)]="confirmPassword"
                 name="confirmPassword"
               />
-              <button type="button" class="cursor-pointer opacity-50 hover:opacity-80" (click)="confirmVisible.set(!confirmVisible())" [attr.aria-label]="confirmVisible() ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'">
+              <button type="button" class="relative cursor-pointer opacity-50 before:absolute before:-left-[6px] before:-right-[15px] before:-top-[15px] before:-bottom-[15px] before:content-[''] hover:opacity-80" (click)="confirmVisible.set(!confirmVisible())" [attr.aria-label]="confirmVisible() ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'">
                 @if (!confirmVisible()) {
                   <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
                 } @else {
@@ -127,7 +124,7 @@
           </div>
         </div>
 
-        <button type="submit" class="btn btn-primary btn-block mt-1" [disabled]="submitting()">
+        <button type="submit" class="btn btn-primary btn-block min-h-[44px] mt-1" [disabled]="submitting()">
           @if (!submitting()) {
             <span>Đăng ký tài khoản</span>
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
@@ -145,7 +142,7 @@
 
     </div>
 
-    <div class="footer">© 2026 TrelloPro Inc.</div>
+    <div class="footer">© 2026 Horizon Hub Harmony</div>
   </div>
 
   <!-- RIGHT: showcase panel -->
