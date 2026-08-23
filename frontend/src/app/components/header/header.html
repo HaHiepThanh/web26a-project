@@ -2,13 +2,9 @@
   class="sticky top-0 z-[100] flex h-14 items-center justify-between gap-4 border-b border-base-300/70 bg-base-100 px-4 shadow-sm">
   <a routerLink="/workspace"
     class="flex shrink-0 items-center gap-2 rounded-lg px-1.5 py-1 font-bold text-base-content transition-colors hover:bg-base-200">
-    <div
-      class="flex h-7 w-7 items-center justify-center gap-0.5 rounded-lg bg-gradient-to-br from-[#0052cc] to-[#0747a6] p-[4px] shadow-sm">
-      <div class="h-[14px] w-[7px] rounded-[1px] bg-white"></div>
-      <div class="mt-0.5 h-[9px] w-[7px] self-start rounded-[1px] bg-white"></div>
-    </div>
+    <img src="/HHH-logo.png" alt="Horizon Hub Harmony Logo" class="h-7 w-7 shrink-0 rounded-md object-cover shadow-sm" />
     <div class="flex flex-col leading-[1.05]">
-      <span class="text-base tracking-[-0.3px] text-primary">Trello</span>
+      <span class="text-base tracking-[-0.3px] text-primary">Horizon Hub Harmony</span>
       <span class="text-3xs font-extrabold tracking-[0.6px] text-base-content/40">WORKSPACE</span>
     </div>
   </a>
@@ -211,7 +207,7 @@
         class="h-7 w-7 shrink-0 rounded-full object-cover shadow-sm" (error)="onAvatarError()" />
       } @else {
       <div
-        class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#4f46e5] to-[#7c3aed] text-2xs font-bold text-white shadow-sm">
+        class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-2xs font-bold text-primary-content shadow-sm">
         {{ initials() }}</div>
       }
       <div class="flex max-w-[160px] flex-col leading-tight max-md:hidden">
@@ -235,7 +231,7 @@
         class="h-9 w-9 shrink-0 rounded-full object-cover shadow-sm" (error)="onAvatarError()" />
       } @else {
       <div
-        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#4f46e5] to-[#7c3aed] text-sm font-extrabold text-white shadow-sm">
+        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-extrabold text-primary-content shadow-sm">
         {{ initials() }}</div>
       }
       <div class="min-w-0 flex-1">

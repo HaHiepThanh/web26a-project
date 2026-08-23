@@ -124,7 +124,11 @@ export class ChatPanel {
   }
 
   private loadCollapsed(): boolean {
-    return localStorage.getItem(COLLAPSED_KEY) === '1';
+    const saved = localStorage.getItem(COLLAPSED_KEY);
+    if (saved !== null) return saved === '1';
+    // Chưa có lựa chọn lưu trước đó: trên màn hình hẹp, mặc định thu gọn để chừa
+    // chỗ cho board thay vì chat (300px mặc định) chiếm gần hết viewport mobile.
+    return window.innerWidth < 768;
   }
 
   toggleCollapsed(): void {

@@ -64,7 +64,7 @@
         <!-- Họ và tên -->
         <div class="flex flex-col gap-1.5">
           <label class="text-xs font-bold text-slate-700 dark:text-slate-300" for="fullName">Họ và tên *</label>
-          <input id="fullName" type="text" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700" formControlName="fullName" placeholder="VD: Nguyễn Văn Nam" />
+          <input id="fullName" type="text" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700 text-[12px]" formControlName="fullName" placeholder="VD: Nguyễn Văn Nam" />
           @if (profileForm.get('fullName')?.invalid && profileForm.get('fullName')?.touched) {
             <span class="text-2xs font-bold text-rose-500">Vui lòng nhập họ và tên (tối thiểu 2 ký tự).</span>
           }
@@ -73,7 +73,7 @@
         <!-- Username -->
         <div class="flex flex-col gap-1.5">
           <label class="text-xs font-bold text-slate-700 dark:text-slate-300" for="username">Tên đăng nhập (Username) *</label>
-          <input id="username" type="text" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700" formControlName="username" placeholder="VD: namnguyen" />
+          <input id="username" type="text" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700 text-[12px]" formControlName="username" placeholder="VD: namnguyen" />
           @if (profileForm.get('username')?.invalid && profileForm.get('username')?.touched) {
             <span class="text-2xs font-bold text-rose-500">Tên đăng nhập từ 3-25 ký tự không dấu.</span>
           }
@@ -82,13 +82,13 @@
         <!-- Email -->
         <div class="flex flex-col gap-1.5">
           <label class="text-xs font-bold text-slate-700 dark:text-slate-300" for="email">Địa chỉ Email</label>
-          <input id="email" type="email" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700" formControlName="email" />
+          <input id="email" type="email" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700 text-[12px]" formControlName="email" />
         </div>
 
         <!-- Phone -->
         <div class="flex flex-col gap-1.5">
           <label class="text-xs font-bold text-slate-700 dark:text-slate-300" for="phone">Số điện thoại</label>
-          <input id="phone" type="tel" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700" formControlName="phone" placeholder="VD: 0912345678" />
+          <input id="phone" type="tel" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700 text-[12px]" formControlName="phone" placeholder="VD: 0912345678" />
           @if (profileForm.get('phone')?.invalid && profileForm.get('phone')?.touched) {
             <span class="text-2xs font-bold text-rose-500">Số điện thoại không đúng định dạng.</span>
           }
@@ -97,12 +97,12 @@
         <!-- Job Title -->
         <div class="flex flex-col gap-1.5 sm:col-span-2">
           <label class="text-xs font-bold text-slate-700 dark:text-slate-300" for="jobTitle">Chức vụ / Tiêu đề công việc</label>
-          <input id="jobTitle" type="text" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700" formControlName="jobTitle" placeholder="VD: Trưởng nhóm phát triển phần mềm" />
+          <input id="jobTitle" type="text" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700 text-[12px]" formControlName="jobTitle" placeholder="VD: Trưởng nhóm phát triển phần mềm" />
         </div>
       </div>
 
       <div class="flex justify-end pt-2">
-        <button type="submit" class="btn btn-primary btn-sm gap-1.5 rounded-xl px-5 font-black shadow-xs">
+        <button type="submit" class="btn btn-primary btn-sm gap-1.5 rounded-xl px-5 font-black text-[12px] shadow-xs">
           <svg lucideSave class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg> Lưu thông tin cá nhân
         </button>
       </div>
@@ -120,7 +120,7 @@
       <!-- Mật khẩu hiện tại (Cũ) -->
       <div class="flex flex-col gap-1.5 sm:col-span-2">
         <label class="text-xs font-bold text-slate-700 dark:text-slate-300" for="currentPassword">Mật khẩu hiện tại (Mật khẩu cũ) *</label>
-        <input id="currentPassword" type="password" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700" formControlName="currentPassword" placeholder="Nhập mật khẩu hiện tại..." />
+        <input id="currentPassword" type="password" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700 text-[12px]" formControlName="currentPassword" placeholder="Nhập mật khẩu hiện tại..." />
         @if (passwordForm.get('currentPassword')?.invalid && passwordForm.get('currentPassword')?.touched) {
           <span class="text-2xs font-bold text-rose-500">Vui lòng nhập mật khẩu hiện tại để xác thực.</span>
         }
@@ -129,7 +129,7 @@
       <!-- Mật khẩu mới -->
       <div class="flex flex-col gap-1.5">
         <label class="text-xs font-bold text-slate-700 dark:text-slate-300" for="newPassword">Mật khẩu mới *</label>
-        <input id="newPassword" type="password" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700" formControlName="newPassword" placeholder="Tối thiểu 6 ký tự..." />
+        <input id="newPassword" type="password" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700 text-[12px]" formControlName="newPassword" placeholder="Tối thiểu 6 ký tự..." />
         @if (passwordForm.get('newPassword')?.value) {
           <div class="mt-1 flex items-center gap-2">
             <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
@@ -146,14 +146,14 @@
       <!-- Xác nhận mật khẩu mới -->
       <div class="flex flex-col gap-1.5">
         <label class="text-xs font-bold text-slate-700 dark:text-slate-300" for="confirmPassword">Xác nhận mật khẩu mới *</label>
-        <input id="confirmPassword" type="password" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700" formControlName="confirmPassword" placeholder="Nhập lại mật khẩu mới..." />
+        <input id="confirmPassword" type="password" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700 text-[12px]" formControlName="confirmPassword" placeholder="Nhập lại mật khẩu mới..." />
         @if (passwordForm.hasError('passwordMismatch') && passwordForm.get('confirmPassword')?.touched) {
           <span class="text-2xs font-bold text-rose-500">Mật khẩu xác nhận không khớp.</span>
         }
       </div>
 
       <div class="sm:col-span-2 flex justify-end pt-1">
-        <button type="submit" class="btn btn-primary btn-sm gap-1.5 rounded-xl px-5 font-black shadow-xs" [disabled]="passwordForm.invalid">
+        <button type="submit" class="btn btn-primary btn-sm gap-1.5 rounded-xl px-5 font-black text-[12px] shadow-xs" [disabled]="passwordForm.invalid">
           <svg lucideLock class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg> Cập nhật mật khẩu
         </button>
       </div>

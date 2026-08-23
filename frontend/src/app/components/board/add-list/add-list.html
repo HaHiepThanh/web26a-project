@@ -1,7 +1,7 @@
 @if (!editing()) {
   <button
     type="button"
-    class="flex w-full items-center justify-center gap-1.5 rounded-box border-[1.5px] border-dashed border-base-300 bg-base-200 p-3 text-xs font-semibold text-base-content/50 transition-colors hover:border-base-content/40 hover:bg-base-300 hover:text-base-content/70"
+    class="flex w-full items-center justify-center gap-1.5 rounded-[12px] border-[1.5px] border-dashed border-base-300 bg-base-200 p-3 text-[12px] font-semibold text-base-content/50 transition-colors hover:border-base-content/40 hover:bg-base-300 hover:text-base-content/70"
     (click)="startEditing()"
   >
     <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
@@ -12,7 +12,7 @@
     <input
       #nameInput
       type="text"
-      class="input input-bordered input-sm w-full"
+      class="input input-bordered input-sm w-full text-[12px]"
       placeholder="Nhập tên danh sách..."
       [ngModel]="name()"
       (ngModelChange)="name.set($event)"
