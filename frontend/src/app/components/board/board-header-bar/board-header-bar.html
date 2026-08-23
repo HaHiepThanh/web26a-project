@@ -5,7 +5,7 @@
       <svg lucideArrowLeft class="h-[15px] w-[15px]" [strokeWidth]="2"></svg>
     </a>
     <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-      <svg lucideFolderKanban class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg>
+      <svg lucideFolderKanban class="h-4 w-4" [strokeWidth]="2"></svg>
     </span>
     <div class="flex min-w-0 flex-col">
       <span class="truncate text-base font-bold text-base-content">{{ board()?.name ?? 'Đang tải bảng...' }}</span>
@@ -78,10 +78,10 @@
         <div class="absolute right-0 top-[42px] z-50 max-h-[80vh] w-[320px] overflow-y-auto rounded-2xl border border-base-300/70 bg-base-100 p-3.5 shadow-2xl">
           <div class="mb-3 flex items-center justify-between">
             <span class="flex items-center gap-1.5 text-xs font-black text-base-content">
-              <svg lucideListFilter class="h-3.5 w-3.5 text-primary" [strokeWidth]="2.2"></svg> Bộ lọc thẻ
+              <svg lucideListFilter class="h-4 w-4 text-primary" [strokeWidth]="2"></svg> Bộ lọc thẻ
             </span>
             <button type="button" class="btn btn-ghost btn-circle btn-xs" (click)="toggleFilter.emit()" aria-label="Đóng bộ lọc">
-              <svg lucideX class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg>
+              <svg lucideX class="h-4 w-4" [strokeWidth]="2"></svg>
             </button>
           </div>
 
@@ -89,17 +89,17 @@
             <div class="mb-3.5 flex flex-wrap gap-1.5 rounded-xl border border-base-300/70 bg-base-200/40 p-2">
               @for (f of savedFilters(); track f.id) {
                 <button type="button" class="btn btn-xs gap-1.5 rounded-full" [class]="activeSavedFilterId() === f.id ? 'btn-primary' : 'btn-outline'" (click)="applySavedFilterEvent.emit(f)" title="Bộ lọc theo điều kiện">
-                  <svg lucideStar class="h-2.5 w-2.5" [strokeWidth]="2.4"></svg> {{ f.name }}
+                  <svg lucideStar class="h-2.5 w-2.5" [strokeWidth]="2"></svg> {{ f.name }}
                   <span class="opacity-60 hover:opacity-100" (click)="removeSavedFilterEvent.emit({ id: f.id, event: $event })">
-                    <svg lucideX class="h-2.5 w-2.5" [strokeWidth]="3"></svg>
+                    <svg lucideX class="h-2.5 w-2.5" [strokeWidth]="2"></svg>
                   </span>
                 </button>
               }
               @for (g of savedHighlightGroups(); track g.id) {
                 <button type="button" class="btn btn-xs gap-1.5 rounded-full" [class]="activeHighlightGroupId() === g.id ? 'btn-primary' : 'btn-outline'" (click)="applyHighlightGroupEvent.emit(g)" title="Bộ highlight chọn tay ({{ g.cardIds.length }} thẻ)">
-                  <svg lucidePin class="h-2.5 w-2.5" [strokeWidth]="2.4"></svg> {{ g.name }}
+                  <svg lucidePin class="h-2.5 w-2.5" [strokeWidth]="2"></svg> {{ g.name }}
                   <span class="opacity-60 hover:opacity-100" (click)="removeHighlightGroupEvent.emit({ id: g.id, event: $event })">
-                    <svg lucideX class="h-2.5 w-2.5" [strokeWidth]="3"></svg>
+                    <svg lucideX class="h-2.5 w-2.5" [strokeWidth]="2"></svg>
                   </span>
                 </button>
               }
@@ -173,7 +173,7 @@
           @if (hasActiveFilter()) {
             @if (!showSaveFilterForm()) {
               <button type="button" class="mt-2.5 flex w-full items-center justify-center gap-1 rounded-xl border border-dashed border-base-300 bg-base-200 py-1.5 text-2xs font-bold text-base-content/80 hover:border-primary hover:text-primary" (click)="openSaveFilterFormEvent.emit()">
-                <svg lucideStar class="h-3 w-3" [strokeWidth]="2.4"></svg> Lưu thành nút nhanh</button>
+                <svg lucideStar class="h-3 w-3" [strokeWidth]="2"></svg> Lưu thành nút nhanh</button>
             } @else {
               <div class="mt-2.5 flex gap-1.5">
                 <input

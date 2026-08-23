@@ -1,5 +1,13 @@
+<!--
+  `pt-6` chứ KHÔNG phải `mt-4`.
+  Khối này vừa có `h-full` (= 100% chiều cao cha) vừa từng có `mt-4`, nên margin
+  đẩy nó xuống 16px mà nó vẫn đòi đúng chiều cao của cha → đáy tràn ra ngoài
+  đúng 16px và bị cha (`overflow-hidden`) cắt mất. Đo được: cha kết thúc ở 676px,
+  con kết thúc ở 692px.
+  Đổi sang padding thì khoảng thở vẫn còn nhưng nằm BÊN TRONG chiều cao.
+-->
 <div
-  class="workspace-page mt-4 mx-auto max-w-[1440px] sm:px-3 py-2 w-full h-full min-h-0 flex flex-col overflow-hidden">
+  class="workspace-page mx-auto max-w-[1440px] px-4 sm:px-6 pt-6 pb-2 w-full h-full min-h-0 flex flex-col overflow-hidden">
   <!-- Toast container -->
   <div class="toast toast-top toast-end z-[9999] pointer-events-none">
     @for (t of toasts(); track t.id) {
@@ -16,7 +24,7 @@
       }
       <button class="btn btn-ghost btn-xs btn-circle text-white/70 hover:text-white"
         (click)="removeToast(t.id)">
-        <svg lucideX class="h-3.5 w-3.5" [strokeWidth]="2.6"></svg>
+        <svg lucideX class="h-4 w-4" [strokeWidth]="2"></svg>
       </button>
     </div>
     }
@@ -46,7 +54,7 @@
       <section class="rounded-2xl border border-base-300 bg-base-100 p-4 shadow-xs">
         <div class="mb-3 flex items-center gap-2">
           <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-warning/15 text-warning">
-            <svg lucideStar class="h-3.5 w-3.5" [strokeWidth]="2.2" fill="currentColor"></svg>
+            <svg lucideStar class="h-4 w-4" [strokeWidth]="2" fill="currentColor"></svg>
           </span>
           <h2 class="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Bảng có đánh dấu
             sao</h2>
@@ -54,7 +62,7 @@
         <div class="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2.5">
           @for (board of starredBoards(); track board.id) {
           <div
-            class="board-tile group relative flex h-[92px] cursor-pointer flex-col justify-between overflow-hidden rounded-xl p-2.5 text-white shadow-xs transition hover:-translate-y-1 hover:brightness-110"
+            class="board-tile group relative flex min-h-[104px] cursor-pointer flex-col justify-between overflow-hidden rounded-xl p-2.5 text-white shadow-xs transition hover:-translate-y-1 hover:brightness-110"
             [class]="board.bgClass"
             [style.background-image]="bgImageByBoardId()[board.id] ? 'url(' + bgImageByBoardId()[board.id] + ')' : null"
             [style.background-size]="bgImageByBoardId()[board.id] ? 'cover' : null"
@@ -68,18 +76,18 @@
               <div class="mt-0.5 text-sm font-bold leading-tight [text-shadow:0_1px_2px_rgba(0,0,0,0.2)]">{{
                 board.title }}</div>
             </div>
-            <button class="absolute right-2.5 top-2.5 z-10 text-yellow-400 transition hover:scale-110"
+            <button class="tap-44 absolute right-2.5 top-2.5 z-10 flex h-6 w-6 items-center justify-center text-yellow-400 transition hover:scale-110"
               title="Bỏ đánh dấu sao" (click)="$event.stopPropagation(); toggleStar(board.id)">
-              <svg lucideStar class="h-4 w-4" [strokeWidth]="2.2" fill="currentColor"></svg>
+              <svg lucideStar class="h-4 w-4" [strokeWidth]="2" fill="currentColor"></svg>
             </button>
             <div class="relative z-10 flex items-center justify-between text-3xs font-semibold opacity-95">
               <span class="flex items-center gap-1">
                 @if (board.privacy === 'Private') {
-                <svg lucideLock class="h-2.5 w-2.5 shrink-0" [strokeWidth]="2.4"></svg> Riêng tư
+                <svg lucideLock class="h-2.5 w-2.5 shrink-0" [strokeWidth]="2"></svg> Riêng tư
                 } @else if (board.privacy === 'Public') {
-                <svg lucideGlobe class="h-2.5 w-2.5 shrink-0" [strokeWidth]="2.4"></svg> Công khai
+                <svg lucideGlobe class="h-2.5 w-2.5 shrink-0" [strokeWidth]="2"></svg> Công khai
                 } @else {
-                <svg lucideBuilding2 class="h-2.5 w-2.5 shrink-0" [strokeWidth]="2.4"></svg> Workspace
+                <svg lucideBuilding2 class="h-2.5 w-2.5 shrink-0" [strokeWidth]="2"></svg> Workspace
                 }
               </span>
               <span class="badge badge-xs border-none bg-black/25 text-white font-bold">{{ board.badge }}</span>
@@ -104,7 +112,7 @@
           <button type="button"
             class="badge badge-primary badge-outline badge-sm font-bold gap-1 cursor-pointer hover:bg-primary hover:text-white transition-all"
             (click)="selectWorkspace(null)" title="Bấm để xem lại tất cả Workspace">
-            <svg lucideX class="h-2.5 w-2.5" [strokeWidth]="3"></svg> Hiện tất cả
+            <svg lucideX class="h-2.5 w-2.5" [strokeWidth]="2"></svg> Hiện tất cả
           </button>
           }
         </div>

@@ -3,11 +3,8 @@
   <!-- LEFT: form panel -->
   <div class="form-panel">
     <a routerLink="/login" class="brand">
-      <div class="brand-mark">
-        <span class="bar bar-1"></span>
-        <span class="bar bar-2"></span>
-      </div>
-      <span class="brand-name">Trello<span class="brand-accent">Pro</span></span>
+      <img class="brand-mark" src="logo-128.png" width="128" height="128" alt="" aria-hidden="true" />
+      <span class="brand-name">Horizon Hub <span class="brand-accent">Harmony</span></span>
     </a>
 
     <div class="form-card">
@@ -18,7 +15,7 @@
 
       <form class="mt-5 flex flex-col gap-4" (ngSubmit)="onSubmit()">
         <div class="form-control w-full">
-          <label class="label pb-1.5" for="fullName"><span class="label-text text-xs font-semibold">Họ và tên</span></label>
+          <label class="label pb-1.5" for="fullName"><span class="label-text text-sm font-semibold">Họ và tên</span></label>
           <input
             id="fullName"
             type="text"
@@ -29,12 +26,12 @@
             [(ngModel)]="fullName"
             name="fullName"
           />
-          @if (errors().fullName) { <span class="mt-1 text-xs text-error">{{ errors().fullName }}</span> }
+          @if (errors().fullName) { <span class="mt-1 text-sm text-error">{{ errors().fullName }}</span> }
         </div>
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div class="form-control w-full">
-            <label class="label pb-1.5" for="username"><span class="label-text text-xs font-semibold">Tên đăng nhập</span></label>
+            <label class="label pb-1.5" for="username"><span class="label-text text-sm font-semibold">Tên đăng nhập</span></label>
             <input
               id="username"
               type="text"
@@ -45,11 +42,11 @@
               [(ngModel)]="username"
               name="username"
             />
-            @if (errors().username) { <span class="mt-1 text-xs text-error">{{ errors().username }}</span> }
+            @if (errors().username) { <span class="mt-1 text-sm text-error">{{ errors().username }}</span> }
           </div>
 
           <div class="form-control w-full">
-            <label class="label pb-1.5" for="phone"><span class="label-text text-xs font-semibold">Số điện thoại</span></label>
+            <label class="label pb-1.5" for="phone"><span class="label-text text-sm font-semibold">Số điện thoại</span></label>
             <input
               id="phone"
               type="tel"
@@ -60,12 +57,12 @@
               [(ngModel)]="phone"
               name="phone"
             />
-            @if (errors().phone) { <span class="mt-1 text-xs text-error">{{ errors().phone }}</span> }
+            @if (errors().phone) { <span class="mt-1 text-sm text-error">{{ errors().phone }}</span> }
           </div>
         </div>
 
         <div class="form-control w-full">
-          <label class="label pb-1.5" for="email"><span class="label-text text-xs font-semibold">Email</span></label>
+          <label class="label pb-1.5" for="email"><span class="label-text text-sm font-semibold">Email</span></label>
           <input
             id="email"
             type="email"
@@ -76,12 +73,12 @@
             [(ngModel)]="email"
             name="email"
           />
-          @if (errors().email) { <span class="mt-1 text-xs text-error">{{ errors().email }}</span> }
+          @if (errors().email) { <span class="mt-1 text-sm text-error">{{ errors().email }}</span> }
         </div>
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div class="form-control w-full">
-            <label class="label pb-1.5" for="password"><span class="label-text text-xs font-semibold">Mật khẩu</span></label>
+            <label class="label pb-1.5" for="password"><span class="label-text text-sm font-semibold">Mật khẩu</span></label>
             <label class="input input-bordered flex w-full items-center gap-2" [class.input-error]="errors().password">
               <input
                 [type]="passwordVisible() ? 'text' : 'password'"
@@ -92,19 +89,19 @@
                 [(ngModel)]="password"
                 name="password"
               />
-              <button type="button" class="cursor-pointer opacity-50 hover:opacity-80" (click)="passwordVisible.set(!passwordVisible())" [attr.aria-label]="passwordVisible() ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'">
+              <button type="button" class="tap-44 -mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-base-content/50 transition-colors hover:bg-base-200 hover:text-base-content" (click)="passwordVisible.set(!passwordVisible())" [attr.aria-label]="passwordVisible() ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'">
                 @if (!passwordVisible()) {
-                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
                 } @else {
-                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M17.94 17.94A10.94 10.94 0 0112 19c-7 0-11-7-11-7a20.3 20.3 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 7 11 7a20.5 20.5 0 01-2.16 3.19M14.12 14.12a3 3 0 11-4.24-4.24" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 1l22 22" stroke-linecap="round"/></svg>
+                  <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17.94 17.94A10.94 10.94 0 0112 19c-7 0-11-7-11-7a20.3 20.3 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 7 11 7a20.5 20.5 0 01-2.16 3.19M14.12 14.12a3 3 0 11-4.24-4.24" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 1l22 22" stroke-linecap="round"/></svg>
                 }
               </button>
             </label>
-            @if (errors().password) { <span class="mt-1 text-xs text-error">{{ errors().password }}</span> }
+            @if (errors().password) { <span class="mt-1 text-sm text-error">{{ errors().password }}</span> }
           </div>
 
           <div class="form-control w-full">
-            <label class="label pb-1.5" for="confirmPassword"><span class="label-text text-xs font-semibold">Nhập lại mật khẩu</span></label>
+            <label class="label pb-1.5" for="confirmPassword"><span class="label-text text-sm font-semibold">Nhập lại mật khẩu</span></label>
             <label class="input input-bordered flex w-full items-center gap-2" [class.input-error]="errors().confirmPassword">
               <input
                 [type]="confirmVisible() ? 'text' : 'password'"
@@ -115,37 +112,37 @@
                 [(ngModel)]="confirmPassword"
                 name="confirmPassword"
               />
-              <button type="button" class="cursor-pointer opacity-50 hover:opacity-80" (click)="confirmVisible.set(!confirmVisible())" [attr.aria-label]="confirmVisible() ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'">
+              <button type="button" class="tap-44 -mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-base-content/50 transition-colors hover:bg-base-200 hover:text-base-content" (click)="confirmVisible.set(!confirmVisible())" [attr.aria-label]="confirmVisible() ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'">
                 @if (!confirmVisible()) {
-                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
                 } @else {
-                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M17.94 17.94A10.94 10.94 0 0112 19c-7 0-11-7-11-7a20.3 20.3 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 7 11 7a20.5 20.5 0 01-2.16 3.19M14.12 14.12a3 3 0 11-4.24-4.24" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 1l22 22" stroke-linecap="round"/></svg>
+                  <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17.94 17.94A10.94 10.94 0 0112 19c-7 0-11-7-11-7a20.3 20.3 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 7 11 7a20.5 20.5 0 01-2.16 3.19M14.12 14.12a3 3 0 11-4.24-4.24" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 1l22 22" stroke-linecap="round"/></svg>
                 }
               </button>
             </label>
-            @if (errors().confirmPassword) { <span class="mt-1 text-xs text-error">{{ errors().confirmPassword }}</span> }
+            @if (errors().confirmPassword) { <span class="mt-1 text-sm text-error">{{ errors().confirmPassword }}</span> }
           </div>
         </div>
 
-        <button type="submit" class="btn btn-primary btn-block mt-1" [disabled]="submitting()">
+        <button type="submit" class="btn btn-primary btn-block ctl-lg mt-1 text-base" [disabled]="submitting()">
           @if (!submitting()) {
             <span>Đăng ký tài khoản</span>
-            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           } @else {
             <span class="loading loading-spinner loading-sm"></span>
             <span>Đang xử lý...</span>
           }
         </button>
 
-        <p class="text-center text-xs text-base-content/60">
+        <p class="text-center text-sm text-base-content/70">
           Đã có tài khoản?
-          <a routerLink="/login" class="link link-primary font-semibold">Đăng nhập</a>
+          <a routerLink="/login" class="link-accent tap-44 inline-block py-2 font-semibold">Đăng nhập</a>
         </p>
       </form>
 
     </div>
 
-    <div class="footer">© 2026 TrelloPro Inc.</div>
+    <div class="footer">© 2026 Horizon Hub Harmony · Web26A</div>
   </div>
 
   <!-- RIGHT: showcase panel -->

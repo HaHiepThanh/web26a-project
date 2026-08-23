@@ -10,10 +10,14 @@
  * that range into 2 named, greppable sizes; the 12–16px end reuses
  * Tailwind's existing text-xs/text-sm/text-base (no redefinition needed). */
 @theme {
-  --text-3xs: 0.625rem; /* 10px — micro labels, timestamps, tiny counters */
-  --text-3xs--line-height: 1.35;
-  --text-2xs: 0.6875rem; /* 11px — secondary meta text, section labels */
-  --text-2xs--line-height: 1.35;
+  /* Sàn cỡ chữ nâng lên một bậc. Trước là 10px/11px — dưới ngưỡng 12px mà mọi
+     hệ thiết kế đều lấy làm giới hạn dưới, và ở app này chúng phủ khắp: nhãn
+     mục, số đếm, dấu thời gian, tên vai trò. Đây vẫn là bậc nhỏ nhất của thang,
+     chỉ dùng cho nhãn phụ — không bao giờ cho câu văn phải đọc. */
+  --text-3xs: 0.6875rem; /* 11px — nhãn siêu nhỏ, số đếm trên huy hiệu */
+  --text-3xs--line-height: 1.4;
+  --text-2xs: 0.75rem; /* 12px — chữ phụ, nhãn mục */
+  --text-2xs--line-height: 1.4;
 }
 
 /* ==========================================================================
@@ -55,6 +59,10 @@
   --accent-blue: #0284c7;
   --accent-blue-hover: #0369a1;
   --accent-blue-soft: #e0f2fe;
+  /* Tách màu-cho-CHỮ khỏi màu-cho-NỀN. #0284c7 trên nền trắng chỉ đạt 4.09:1 —
+     đủ cho viền và nền nút (ngưỡng 3:1) nhưng THIẾU cho chữ thường (4.5:1).
+     Mọi link và nhãn dùng token này thay vì --accent-blue. */
+  --accent-text: #0369a1; /* 5.5:1 trên nền trắng */
 
   --accent-purple: #6d28d9;
   --accent-purple-soft: #f3e8ff;
@@ -69,10 +77,30 @@
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
+  /* Thang bo góc — 4 bậc + pill. Trước đây trong CSS có thêm 10 giá trị tự chế
+     (2/3/4/5/8/9/12/14px) chạy song song với 4 token này, nên nút đăng nhập bo
+     3.5px, nút landing bo 10px, board tile bo 12px, modal bo 14px — bốn ngôn ngữ
+     hình khối trong cùng một sản phẩm. */
+  --radius-sm: 6px; /* chip, badge, nhãn */
+  --radius-md: 10px; /* nút, ô nhập */
+  --radius-lg: 16px; /* thẻ, panel */
+  --radius-xl: 24px; /* modal, sheet */
+  --radius-pill: 999px;
+
+  /* ---- Ánh xạ sang biến của daisyUI ----------------------------------------
+     daisyUI tự sinh kích thước control từ mấy biến này. Không đặt thì nó dùng
+     mặc định (radius 0.25rem, field 2.5rem) và ta lại có thêm một bộ số thứ ba
+     nằm ngoài hệ thống. */
+  --radius-selector: var(--radius-sm); /* checkbox, radio, toggle */
+  --radius-field: var(--radius-md); /* nút, input, select */
+  --radius-box: var(--radius-lg); /* card, modal của daisyUI */
+  /* ⚠️ daisyUI dùng hai biến này như HỆ SỐ NHÂN, không phải kích thước tuyệt
+     đối: chiều cao control = --size-field × 10 ở cỡ md. Đặt thẳng 2.5rem vào là
+     nút cao 25rem. Với root 16px, 0.25rem cho ra đúng 40px (md) và 24px cho
+     checkbox — khớp bậc "md" của thang 32/40/48. */
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
 
   --transition-fast: 150ms ease-in-out;
   --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -108,8 +136,11 @@
   --border-subtle: #2c333a;
 
   --text-primary: #ffffff;
-  --text-secondary: #9fadbc;
-  --text-muted: #738496;
+  --text-secondary: #9fadbc; /* 6.6:1 trên --bg-app */
+  /* Trước là #738496 → chỉ 3.92:1 trên nền #22272b, trượt chuẩn AA cho chữ
+     thường. Đây là màu của mọi timestamp, meta và mô tả trong app nên nó phủ
+     rất rộng; ngoài nắng gần như biến mất. #8c9bab đạt 5.1:1. */
+  --text-muted: #8c9bab;
 
   --accent-blue: #579dff;
   --accent-blue-hover: #85b8ff;
@@ -117,6 +148,8 @@
 
   --accent-purple: #9e75ff;
   --accent-purple-soft: rgba(158, 117, 255, 0.15);
+  /* Nền tối đã đủ tương phản với #579dff nên chữ dùng thẳng màu nhấn. */
+  --accent-text: #85b8ff;
 
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
@@ -144,12 +177,22 @@
     padding: 0;
   }
 
+  /* KHÔNG đặt font-size cứng ở đây.
+   *
+   * Trước đây chỗ này là `font-size: 14px`. Vì Tailwind và daisyUI tính mọi thứ
+   * bằng `rem`, một dòng đó nhân 0.875 vào TOÀN BỘ hệ thống: text-sm hoá 12.25px,
+   * text-xs hoá 10.5px, chiều cao nút hoá 35px, radius hoá 3.5px, và mọi khoảng
+   * cách rơi khỏi lưới 4px (5.25px, 8.75px, 17.5px…). Nó cũng ghi đè cỡ chữ mặc
+   * định người dùng tự đặt trong trình duyệt — người mắt kém chỉnh lên 20px vẫn
+   * nhận 14px.
+   *
+   * Giao diện vẫn cần gọn: chỗ nào thật sự cần nhỏ thì dùng `text-sm`/`text-xs`
+   * có chủ đích, chứ không co cả hệ thống. */
   html,
   body {
     width: 100%;
     min-height: 100%;
     font-family: var(--font-family);
-    font-size: 14px;
     background-color: var(--bg-app);
     color: var(--text-primary);
     line-height: 1.5;
@@ -168,15 +211,178 @@
     border: none;
     background: none;
     cursor: pointer;
-    outline: none;
   }
 
   input,
   select,
   textarea {
     font-family: inherit;
-    font-size: inherit;
   }
+
+  /* Ô focus nhìn thấy được — TRƯỚC đây chỉ có 2 khai báo focus trong toàn app,
+     nên người dùng bàn phím mất dấu ngay khi rời khỏi header. Một rule duy nhất
+     phủ mọi control, kể cả những component tự viết.
+     `:focus-visible` (không phải `:focus`) nên chuột bấm không bị viền nháy. */
+  :focus-visible {
+    outline: 2px solid var(--accent-blue);
+    outline-offset: 2px;
+    border-radius: inherit;
+  }
+}
+
+/* ==========================================================================
+   Vùng chạm & hệ chiều cao control
+   ========================================================================== */
+
+/* `.tap-44` — nở vùng bấm lên 44×44 (WCAG 2.5.5, Apple HIG) mà KHÔNG phóng to
+   phần nhìn thấy. Dùng cho nút chỉ có icon, checkbox nhỏ, link phụ.
+   Cố ý là class opt-in chứ không phải rule quét mọi <button>: một lớp phủ 44px
+   vô hình đặt lên nút 14px sẽ đè lên control bên cạnh và cướp cú bấm của nó. */
+.tap-44 {
+  position: relative;
+}
+.tap-44::after {
+  content: '';
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: max(100%, 44px);
+  height: max(100%, 44px);
+  translate: -50% -50%;
+}
+
+/* Sàn 16px cho ô nhập trên điện thoại.
+ *
+ * Trên iOS Safari, ô nhập có cỡ chữ dưới 16px làm trình duyệt TỰ PHÓNG TO trang
+ * lúc focus — và không thu lại. Người dùng phải pinch-zoom thủ công mới bấm
+ * được nút bên dưới. 16px là ngưỡng duy nhất tránh được điều đó.
+ *
+ * ⚠️ Rule này phải nằm NGOÀI `@layer base`. CSS không-layer luôn thắng CSS có
+ * layer bất kể độ đặc hiệu, nên đặt trong base thì `.input` của daisyUI (layer
+ * components) vẫn ghi đè và bốn ô trên trang đăng ký ở nguyên 14px. Đây đúng là
+ * cái bẫy mà ghi chú ở đầu `@layer base` đã cảnh báo. */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea,
+  .input input,
+  .textarea textarea {
+    font-size: max(1rem, 16px);
+  }
+}
+
+/* Trạng thái vô hiệu hoá.
+   Mặc định của daisyUI làm nút mờ đi tới mức chỉ còn chữ xám trên nền trắng,
+   không viền không nền — nhìn hệt một dòng văn bản tĩnh, người dùng không biết
+   đó là nút đang khoá hay chỉ là chữ. Giữ nguyên HÌNH KHỐI của nút (nền đặc +
+   viền) rồi mới giảm độ tương phản, để tín hiệu "đây là nút" không mất đi. */
+.btn:disabled,
+.btn[disabled],
+.btn.btn-disabled {
+  background-color: var(--bg-card-hover) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-muted) !important;
+  opacity: 1 !important;
+  box-shadow: none !important;
+  cursor: not-allowed;
+}
+
+/* Ô nhập bị khoá: nền chìm để phân biệt với ô còn nhập được, chứ không chỉ mờ. */
+.input:disabled,
+input:disabled,
+textarea:disabled,
+select:disabled {
+  background-color: var(--bg-app);
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+/* Link dạng chữ. Dùng --accent-text (đậm hơn --accent-blue) vì màu nền nút chỉ
+   cần 3:1 còn chữ cần 4.5:1. Gạch chân xuất hiện khi hover/focus để tín hiệu
+   "đây là link" không phụ thuộc riêng vào màu. */
+.link-accent {
+  color: var(--accent-text);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+}
+.link-accent:hover,
+.link-accent:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Ba bậc chiều cao control duy nhất của sản phẩm.
+   Trước đây trong CSS có 14 chiều cao khác nhau (24/26/28/30/32/34/36/38/40/42/
+   44/48/52/56) — các cặp lệch 2px không tạo được cấp bậc nào, chỉ làm lệch nhịp
+   khi hai control đứng cạnh nhau. */
+.ctl-sm {
+  min-height: 32px;
+}
+.ctl-md {
+  min-height: 40px;
+}
+.ctl-lg {
+  min-height: 48px;
+}
+
+/* Sàn chiều cao cho control thu nhỏ của daisyUI — áp ở MỌI bề rộng.
+ *
+ * Trước đây rule này bị bọc trong `@media (max-width: 767px)`, nên thang 32/40/48
+ * chỉ có hiệu lực trên điện thoại. Đo lại ở 1280px thấy desktop vẫn còn nguyên
+ * mớ cũ: nút `btn-xs` 24px (7 cái ở Workspace, 10 cái ở Board), nút tròn header
+ * 32px, ô tìm kiếm 36px, ô nhập trong modal 33px — sáu chiều cao khác nhau,
+ * không cái nào thuộc thang.
+ *
+ * 32px là bậc "compact": đủ nhỏ cho thanh công cụ dày đặc dùng chuột, mà vẫn là
+ * một con số trong hệ. Trên cảm ứng thì nâng tiếp lên 44px ở khối bên dưới. */
+.btn-xs,
+.btn-sm,
+.input-xs,
+.input-sm,
+.select-xs,
+.select-sm,
+.textarea-xs,
+.textarea-sm {
+  min-height: 32px;
+  height: auto;
+}
+
+.btn-circle.btn-xs,
+.btn-circle.btn-sm {
+  width: 32px;
+  height: 32px;
+}
+
+/* Trên điện thoại, mọi control thu nhỏ đều nở tiếp lên ngưỡng chạm.
+   Ngón tay có vùng tiếp xúc ~9mm ≈ 44px; ở header chúng còn xếp sát nhau trong
+   một thanh công cụ tròn nên bấm trượt là chuyện thường.
+   Chỉ nới CHIỀU CAO/vùng bấm, không đổi cỡ chữ hay icon bên trong. */
+@media (max-width: 767px) {
+  .btn-xs,
+  .btn-sm,
+  .input-xs,
+  .input-sm,
+  .select-xs,
+  .select-sm,
+  .textarea-xs,
+  .textarea-sm {
+    min-height: 44px;
+  }
+
+  .btn-circle.btn-xs,
+  .btn-circle.btn-sm {
+    width: 44px;
+    height: 44px;
+  }
+
+  .ctl-md {
+    min-height: 44px;
+  }
+}
+
+/* Huy hiệu nhỏ nhất của daisyUI tự đặt cỡ chữ riêng, không đọc token của ta —
+   nên "KANBAN" trên board tile render ở 10px, dưới sàn 11px của hệ. */
+.badge-xs {
+  font-size: var(--text-3xs);
 }
 
 /* Board background palette (models/board.model.ts BoardBackground) — global (not

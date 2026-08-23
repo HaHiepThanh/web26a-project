@@ -6,7 +6,7 @@
 </label>
 
 @if (comments().length > 0) {
-  <div class="mb-2.5 flex max-h-[220px] flex-col gap-2.5 overflow-y-auto">
+  <div class="mb-2.5 flex flex-col gap-2.5 md:max-h-[220px] md:overflow-y-auto">
     @for (c of comments(); track c.id) {
       <div class="group flex gap-2">
         <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-3xs font-bold text-white" [style.background]="userColor(c.userId)">{{ userInitials(c.userId) }}</span>
@@ -39,6 +39,6 @@
     (keydown.enter)="$event.preventDefault(); addComment()"
   ></textarea>
   <button type="button" class="btn btn-square btn-primary btn-sm self-end" [disabled]="!newCommentText().trim()" (click)="addComment()" aria-label="Gửi bình luận">
-    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg>
+    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg>
   </button>
 </div>

@@ -34,12 +34,14 @@
 /* ---------- Layout ---------- */
 .register-frame {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
 }
 
 .form-panel {
   width: 100%;
   min-height: 100vh;
+  min-height: 100dvh;
   background: #fff;
   color: var(--slate-800);
   display: flex;
@@ -79,28 +81,10 @@
   user-select: none;
 }
 .brand-mark {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: var(--primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
-}
-.brand-mark .bar {
-  width: 6px;
-  border-radius: 2px;
-  background: #fff;
-}
-.brand-mark .bar-1 {
-  height: 16px;
-}
-.brand-mark .bar-2 {
-  height: 10px;
-  background: rgba(255, 255, 255, 0.6);
-  align-self: flex-start;
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  flex: 0 0 auto;
 }
 .brand-name {
   font-size: 20px;
@@ -121,6 +105,18 @@
   margin: 0 auto;
   animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+/* Xem ghi chú cùng chỗ ở login.css — iPad dọc để lộ quá nhiều khoảng trắng. */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .form-card {
+    max-width: 520px;
+    padding: 40px;
+    border: 1px solid var(--slate-200, #e2e8f0);
+    border-radius: var(--radius-xl);
+    background: #fff;
+    box-shadow: var(--shadow-lg);
+  }
+}
 @keyframes fadeUp {
   from {
     opacity: 0;
@@ -137,6 +133,7 @@
   display: none;
   width: 60%;
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--slate-900, #0f172a);
   position: relative;
   overflow: hidden;

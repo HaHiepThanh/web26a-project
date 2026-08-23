@@ -8,7 +8,7 @@
     <div class="mb-5 flex items-center justify-between border-b border-base-200 pb-3.5">
       <div class="flex items-center gap-2.5">
         <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-          <svg lucideBuilding2 class="h-5 w-5" [strokeWidth]="2.2"></svg>
+          <svg lucideBuilding2 class="h-5 w-5" [strokeWidth]="2"></svg>
         </div>
         <div>
           <h3 class="text-base font-black text-slate-900 dark:text-white">Tạo Tổ chức mới (Organization)</h3>
@@ -16,7 +16,7 @@
         </div>
       </div>
       <button type="button" class="btn btn-circle btn-ghost btn-sm" (click)="close.emit()" aria-label="Đóng">
-        <svg lucideX class="h-4 w-4" [strokeWidth]="2.4"></svg>
+        <svg lucideX class="h-4 w-4" [strokeWidth]="2"></svg>
       </button>
     </div>
 
@@ -49,7 +49,7 @@
 
         @if (nameError()) {
         <p class="mt-1 text-xs font-bold text-error flex items-center gap-1 animate-pulse">
-          <svg lucideTriangleAlert class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg> {{ nameError() }}
+          <svg lucideTriangleAlert class="h-4 w-4" [strokeWidth]="2"></svg> {{ nameError() }}
         </p>
         }
       </div>
@@ -79,14 +79,14 @@
             name="orgSlug" />
           @if (slugOk()) {
           <span class="flex items-center pr-2.5 text-success">
-            <svg lucideCheck class="h-4 w-4" [strokeWidth]="3"></svg>
+            <svg lucideCheck class="h-4 w-4" [strokeWidth]="2"></svg>
           </span>
           }
         </div>
 
         @if (slugError()) {
         <p class="mt-1 text-xs font-bold text-error flex items-center gap-1">
-          <svg lucideTriangleAlert class="h-3.5 w-3.5 shrink-0" [strokeWidth]="2.4"></svg> {{ slugError() }}
+          <svg lucideTriangleAlert class="h-4 w-4 shrink-0" [strokeWidth]="2"></svg> {{ slugError() }}
         </p>
         } @else if (slugOk()) {
         <p class="mt-1 text-2xs text-slate-500 dark:text-slate-400">
@@ -102,7 +102,7 @@
 
       <!-- Explanatory note -->
       <div class="rounded-xl bg-blue-50/80 dark:bg-blue-950/40 p-3 border border-blue-100 dark:border-blue-900/40 text-xs text-blue-800 dark:text-blue-200 flex items-start gap-2">
-        <svg lucideSparkles class="h-4 w-4 shrink-0 text-blue-500 mt-0.5" [strokeWidth]="2.2"></svg>
+        <svg lucideSparkles class="h-4 w-4 shrink-0 text-blue-500 mt-0.5" [strokeWidth]="2"></svg>
         <span>Bạn sẽ là <strong>Trưởng nhóm (Owner)</strong> của tổ chức này và có thể mời thêm các thành viên khác cùng quản trị.</span>
       </div>
 

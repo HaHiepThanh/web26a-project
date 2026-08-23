@@ -1,14 +1,14 @@
 @if (collapsed()) {
   @if (orientation() === 'row') {
     <button type="button" class="flex w-full items-center gap-2 rounded-box bg-base-100/90 px-3 py-2 text-left shadow-md backdrop-blur-sm hover:bg-base-300" (click)="toggleCollapse.emit()" title="Mở rộng danh sách">
-      <svg class="h-3.5 w-3.5 shrink-0 text-base-content/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"/></svg>
+      <svg class="h-4 w-4 shrink-0 text-base-content/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"/></svg>
       <span class="flex-1 truncate text-xs font-bold text-base-content/80">{{ list().name }}</span>
       <span class="badge badge-ghost badge-sm">{{ cards().length }}</span>
     </button>
   } @else {
     <div class="h-full w-full">
       <button type="button" class="flex h-full min-h-[120px] w-full flex-col items-center gap-2.5 rounded-box bg-base-100/90 py-2.5 text-base-content/80 shadow-md backdrop-blur-sm hover:bg-base-300 hover:text-base-content" (click)="toggleCollapse.emit()" title="Mở rộng danh sách">
-        <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"/></svg>
+        <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"/></svg>
         <span class="rotate-180 whitespace-nowrap text-xs font-bold [writing-mode:vertical-rl]">{{ list().name }}</span>
         <span class="badge badge-ghost badge-sm [writing-mode:horizontal-tb]">{{ cards().length }}</span>
       </button>

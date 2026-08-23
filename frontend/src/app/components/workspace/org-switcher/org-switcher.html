@@ -3,7 +3,7 @@
   <div class="mb-2.5 flex items-center justify-between px-0.5">
     <div class="flex items-center gap-1.5">
       <span class="flex h-5 w-5 items-center justify-center rounded-md bg-primary/10 text-primary">
-        <svg lucideBuilding2 class="h-3 w-3" [strokeWidth]="2.4"></svg>
+        <svg lucideBuilding2 class="h-3 w-3" [strokeWidth]="2"></svg>
       </span>
       <span class="text-2xs font-bold uppercase tracking-wide text-base-content/45">Organization</span>
     </div>
@@ -27,14 +27,14 @@
 
       <div class="flex shrink-0 items-center gap-0.5 pr-1.5">
         @if (org.id === activeOrg()?.id) {
-        <svg lucideCheck class="h-3.5 w-3.5 shrink-0 transition-opacity group-hover:opacity-0" [strokeWidth]="3"></svg>
+        <svg lucideCheck class="h-4 w-4 shrink-0 transition-opacity group-hover:opacity-0" [strokeWidth]="2"></svg>
         }
         <!-- 3 chấm: mở modal quản lý (mời/xoá thành viên, đổi tên) -->
         <button type="button"
-          class="absolute right-1.5 flex h-6 w-6 items-center justify-center rounded-lg opacity-0 transition-all focus-visible:opacity-100 group-hover:opacity-100"
+          class="tap-44 absolute right-1.5 flex h-6 w-6 items-center justify-center rounded-lg opacity-0 transition-all focus-visible:opacity-100 group-hover:opacity-100"
           [class]="org.id === activeOrg()?.id ? 'hover:bg-white/20' : 'hover:bg-base-300'"
           title="Quản lý tổ chức" [attr.aria-label]="'Quản lý ' + org.name" (click)="onManage(org.id, $event)">
-          <svg lucideEllipsisVertical class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg>
+          <svg lucideEllipsisVertical class="h-4 w-4" [strokeWidth]="2"></svg>
         </button>
       </div>
     </div>
@@ -43,9 +43,9 @@
 
   <!-- Nút Tạo Organization mới: Mở popup modal -->
   <button type="button"
-    class="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-base-300 py-1.5 text-2xs font-bold text-primary transition-all hover:border-primary hover:bg-primary/5 cursor-pointer"
+    class="ctl-md mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-base-300 py-2.5 text-sm font-bold text-primary transition-all hover:border-primary hover:bg-primary/5 cursor-pointer"
     (click)="startCreate()">
-    <svg lucidePlus class="h-3 w-3 shrink-0" [strokeWidth]="3"></svg>
+    <svg lucidePlus class="h-3 w-3 shrink-0" [strokeWidth]="2"></svg>
     <span>Tạo tổ chức mới</span>
   </button>
 </div>

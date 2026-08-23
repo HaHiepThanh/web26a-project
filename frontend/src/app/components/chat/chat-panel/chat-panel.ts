@@ -29,6 +29,9 @@ const RESIZE_STEP = 16;
   host: {
     class: 'flex h-full shrink-0',
     '[style.width.px]': 'panelWidth()',
+    // Móc cho CSS: dưới 768px, panel ĐANG MỞ chuyển thành lớp phủ toàn màn hình
+    // thay vì chia đôi bề ngang với bảng. Xem chat-panel.css.
+    '[class.is-collapsed]': 'collapsed()',
   },
 })
 export class ChatPanel {
@@ -123,8 +126,23 @@ export class ChatPanel {
     return Number.isFinite(raw) && raw > 0 ? Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, raw)) : DEFAULT_WIDTH;
   }
 
+  /**
+   * Trạng thái thu gọn lúc mở trang.
+   *
+   * Trên điện thoại MẶC ĐỊNH LÀ THU GỌN. Panel này rộng 300px và nằm trong luồng
+   * (`shrink-0`), nên ở màn 390px nó ăn 77% bề ngang và chỉ chừa 90px cho bảng —
+   * một cột Kanban rộng 220px, tức người dùng mở board ra và thấy chưa tới nửa
+   * cột đầu tiên. Bảng phải là thứ hiện ra trước; chat mở khi người ta cần.
+   *
+   * Lựa chọn đã lưu vẫn được tôn trọng, nhưng chỉ theo hướng "người dùng tự thu
+   * gọn trên máy tính". Nếu họ từng mở chat trên desktop rồi sau đó vào bằng
+   * điện thoại, ta không lôi cái panel 300px đó ra đè lên bảng.
+   */
   private loadCollapsed(): boolean {
-    return localStorage.getItem(COLLAPSED_KEY) === '1';
+    const daLuu = localStorage.getItem(COLLAPSED_KEY);
+    const manHinhHep = typeof matchMedia !== 'undefined' && matchMedia('(max-width: 767px)').matches;
+    if (manHinhHep) return true;
+    return daLuu === '1';
   }
 
   toggleCollapsed(): void {

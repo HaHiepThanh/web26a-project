@@ -1,7 +1,9 @@
 import { Component, inject, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { describeError } from '../../services/api-error.util';
 
 
 import { Toast, ToastType } from '../../models';
@@ -77,7 +79,16 @@ export class Login {
     }
   }
 
-  /** Đổi mã lỗi Firebase thành câu tiếng Việt người dùng đọc hiểu. */
+  /**
+   * Đổi mã lỗi Firebase thành câu tiếng Việt người dùng đọc hiểu.
+   *
+   * ⚠️ Nhánh mặc định TRƯỚC ĐÂY trả thẳng "Backend đã chạy chưa?" cho mọi lỗi
+   * không có mã Firebase. Nghe thì hợp lý nhưng nó đoán mò, và đã một lần khiến
+   * cả buổi đi tìm sai chỗ: nguyên nhân thật là environment.ts chưa được điền
+   * (còn nguyên 'YOUR_FIREBASE_API_KEY'), backend chạy hoàn toàn bình thường.
+   * Giờ mỗi loại hỏng hóc nói đúng tên của nó, và thứ gì không nhận ra thì in
+   * mã lỗi thật ra thay vì bịa một nguyên nhân.
+   */
   private describeLoginError(err: unknown): string {
     const code = (err as { code?: string })?.code ?? '';
     switch (code) {
@@ -91,10 +102,29 @@ export class Login {
         return 'Sai quá nhiều lần. Thử lại sau vài phút nhé.';
       case 'auth/network-request-failed':
         return 'Không kết nối được. Kiểm tra mạng giúp mình.';
-      default:
-        // Không phải lỗi Firebase → gần như chắc chắn là backend chưa chạy.
-        return 'Không đăng nhập được. Backend đã chạy chưa (npm run start:dev)?';
+
+      // Cấu hình client sai — KHÔNG liên quan gì tới backend.
+      case 'auth/invalid-api-key':
+      case 'auth/api-key-not-valid':
+      case 'auth/api-key-not-valid.-please-pass-a-valid-api-key.':
+      case 'auth/configuration-not-found':
+        return 'Cấu hình Firebase chưa đúng. Kiểm tra frontend/src/environments/environment.ts.';
+      case 'auth/operation-not-allowed':
+        return 'Firebase chưa bật đăng nhập bằng email/mật khẩu cho dự án này.';
     }
+
+    // Lỗi HTTP: Firebase đã xác thực xong, hỏng ở bước gọi backend (GET /auth/me).
+    // describeError phân biệt được "không gọi tới nơi" (status 0) với "gọi tới
+    // nơi nhưng bị từ chối", nên để nó trả lời thay vì đoán.
+    if (err instanceof HttpErrorResponse) {
+      return describeError(err, 'Đăng nhập được nhưng không tải được hồ sơ từ máy chủ.');
+    }
+
+    // Còn lại: nói thật là không rõ, kèm mã để còn lần ra.
+    const chiTiet = code || (err as { message?: string })?.message || '';
+    return chiTiet
+      ? `Không đăng nhập được (${chiTiet}).`
+      : 'Không đăng nhập được. Thử lại giúp mình nhé.';
   }
 
   // ---- Forgot password ----

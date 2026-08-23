@@ -7,7 +7,7 @@
 
     <button type="button" class="btn btn-primary btn-sm rounded-xl px-4 font-black shadow-xs gap-1.5"
       (click)="showCreateOrgModal.set(true)">
-      <svg lucidePlus class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg>
+      <svg lucidePlus class="h-4 w-4" [strokeWidth]="2"></svg>
       <span>Tạo tổ chức mới</span>
     </button>
   </header>
@@ -64,7 +64,7 @@
         <button type="button"
           class="btn btn-primary btn-xs gap-1 rounded-xl px-3 font-black shadow-xs hover:scale-105 transition-all"
           (click)="openInviteOrgMember()">
-          <svg lucideUserPlus class="h-3 w-3" [strokeWidth]="2.4"></svg>
+          <svg lucideUserPlus class="h-3 w-3" [strokeWidth]="2"></svg>
           <span>Mời thành viên</span>
         </button>
       </div>
@@ -107,7 +107,7 @@
               <td class="py-3 px-4">
                 @if (mem.role === 'owner') {
                 <span class="badge badge-primary gap-1 font-black text-xs px-2.5 py-1">
-                  <svg lucideCrown class="h-3 w-3" [strokeWidth]="2.2"></svg> Trưởng nhóm</span>
+                  <svg lucideCrown class="h-3 w-3" [strokeWidth]="2"></svg> Trưởng nhóm</span>
                 } @else if (isOwner()) {
                 <select class="select select-bordered select-xs rounded-lg font-bold"
                   title="Đổi quyền của thành viên này"
@@ -161,7 +161,7 @@
       <h3 class="text-base font-black text-slate-900 dark:text-white">Mời thành viên vào {{ activeOrg() ?
         activeOrg()!.name : 'Organization' }}</h3>
       <button type="button" class="btn btn-ghost btn-circle btn-xs" (click)="closeInviteOrgMember()">
-        <svg lucideX class="h-4 w-4" [strokeWidth]="2.4"></svg>
+        <svg lucideX class="h-4 w-4" [strokeWidth]="2"></svg>
       </button>
     </div>
 
@@ -232,7 +232,7 @@
         (click)="closeInviteOrgMember()">Hủy</button>
       <button type="button" class="btn btn-primary btn-sm gap-1.5 rounded-xl px-4 font-black"
         [disabled]="!selectedOrgInviteUser()" (click)="confirmInviteOrgMember()">
-        <svg lucidePlus class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg> Gửi lời mời
+        <svg lucidePlus class="h-4 w-4" [strokeWidth]="2"></svg> Gửi lời mời
       </button>
     </div>
   </div>

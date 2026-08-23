@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["--prefix", "frontend", "run", "start"],
       "port": 4200
+    },
+    {
+      "name": "web26a-landing",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "frontend", "run", "start", "--", "--port", "4301"],
+      "port": 4301
     }
   ]
 }

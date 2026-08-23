@@ -15,7 +15,7 @@
 
   <div class="relative">
     <button type="button" class="btn btn-xs gap-1 rounded-lg border-none bg-white/10 text-neutral-content hover:bg-white/20 font-bold" (click)="toggleBulkLabelPicker()">
-      <svg lucideTag class="h-3 w-3" [strokeWidth]="2.4"></svg> Gắn nhãn
+      <svg lucideTag class="h-3 w-3" [strokeWidth]="2"></svg> Gắn nhãn
     </button>
     @if (showBulkLabelPicker()) {
       <div class="absolute bottom-full left-0 mb-2 max-h-[220px] w-[180px] overflow-y-auto rounded-xl border border-base-300 bg-base-100 p-1.5 text-base-content shadow-2xl">
@@ -32,13 +32,13 @@
   </div>
 
   <button type="button" class="btn btn-xs gap-1 rounded-lg border-none bg-white/10 text-neutral-content hover:bg-white/20 font-bold" (click)="saveHighlight.emit()" title="Lưu đúng những thẻ đang chọn thành 1 chip highlight nhanh">
-    <svg lucidePin class="h-3 w-3" [strokeWidth]="2.4"></svg> Lưu highlight
+    <svg lucidePin class="h-3 w-3" [strokeWidth]="2"></svg> Lưu highlight
   </button>
   <button type="button" class="btn btn-xs gap-1 rounded-lg border-none bg-red-500/30 text-red-200 hover:bg-red-600/60 font-bold" (click)="deleteSelected.emit()">
-    <svg lucideTrash2 class="h-3 w-3" [strokeWidth]="2.4"></svg> Xoá
+    <svg lucideTrash2 class="h-3 w-3" [strokeWidth]="2"></svg> Xoá
   </button>
   <button type="button" class="btn btn-circle btn-ghost btn-xs text-white/70 hover:text-white" (click)="clearSelection.emit()" aria-label="Bỏ chọn">
-    <svg lucideX class="h-3.5 w-3.5" [strokeWidth]="2.6"></svg>
+    <svg lucideX class="h-4 w-4" [strokeWidth]="2"></svg>
   </button>
 </div>
 }

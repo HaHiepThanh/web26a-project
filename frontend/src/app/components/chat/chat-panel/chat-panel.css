@@ -7,6 +7,32 @@
   box-shadow: 6px 0 16px -8px rgba(0, 0, 0, 0.25);
 }
 
+/* --------------------------------------------------------------------------
+   Điện thoại: chat MỞ = lớp phủ toàn màn hình, không chia đôi bề ngang
+   --------------------------------------------------------------------------
+   Trên desktop, panel nằm cạnh bảng là đúng — hai thứ dùng song song được.
+   Trên màn 390px thì không: 300px panel + 220px một cột Kanban đã là 520px,
+   quá bề ngang máy. Kết quả trước khi sửa là bảng chỉ còn 90px, thấy chưa tới
+   nửa cột đầu.
+   Thu gọn (44px) vẫn giữ nguyên trong luồng — nó chỉ là một thanh ray mỏng có
+   nút mở, không cướp chỗ của ai. */
+@media (max-width: 767px) {
+  :host(:not(.is-collapsed)) {
+    position: fixed;
+    inset: 0;
+    /* Ghi đè `[style.width.px]` gắn inline từ component — inline style thắng
+       mọi selector nên buộc phải !important ở đây. */
+    width: 100% !important;
+    z-index: 200;
+  }
+
+  :host(:not(.is-collapsed)) .chat-dock-shell {
+    /* Đã phủ toàn màn thì viền phải và bóng đổ sang phải không còn nghĩa gì. */
+    border-right: 0;
+    box-shadow: none;
+  }
+}
+
 /* Animations kept in CSS (keyframes are not utility-friendly). */
 .pulse {
   animation: bubble-pulse 0.5s ease-in-out 2;

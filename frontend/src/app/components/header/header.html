@@ -2,14 +2,11 @@
   class="sticky top-0 z-[100] flex h-14 items-center justify-between gap-4 border-b border-base-300/70 bg-base-100 px-4 shadow-sm">
   <a routerLink="/workspace"
     class="flex shrink-0 items-center gap-2 rounded-lg px-1.5 py-1 font-bold text-base-content transition-colors hover:bg-base-200">
-    <div
-      class="flex h-7 w-7 items-center justify-center gap-0.5 rounded-lg bg-gradient-to-br from-[#0052cc] to-[#0747a6] p-[4px] shadow-sm">
-      <div class="h-[14px] w-[7px] rounded-[1px] bg-white"></div>
-      <div class="mt-0.5 h-[9px] w-[7px] self-start rounded-[1px] bg-white"></div>
-    </div>
+    <img src="logo-128.png" width="128" height="128" alt="" aria-hidden="true"
+      class="h-8 w-8 shrink-0 object-contain" />
     <div class="flex flex-col leading-[1.05]">
-      <span class="text-base tracking-[-0.3px] text-primary">Trello</span>
-      <span class="text-3xs font-extrabold tracking-[0.6px] text-base-content/40">WORKSPACE</span>
+      <span class="text-base tracking-[-0.3px] text-base-content">Horizon Hub</span>
+      <span class="text-2xs font-extrabold tracking-[0.6px] text-primary">HARMONY</span>
     </div>
   </a>
 
@@ -29,9 +26,9 @@
   <div class="flex shrink-0 items-center gap-2">
     <div class="relative">
       <button class="btn btn-primary btn-sm gap-1.5 rounded-full px-3.5 shadow-sm" (click)="toggleCreateMenu()">
-        <svg lucidePlus class="h-4 w-4" [strokeWidth]="2.4"></svg>
+        <svg lucidePlus class="h-4 w-4" [strokeWidth]="2"></svg>
         <span class="max-sm:hidden">Tạo</span>
-        <svg lucideChevronDown class="h-3 w-3 opacity-70" [strokeWidth]="2.5"></svg>
+        <svg lucideChevronDown class="h-3 w-3 opacity-70" [strokeWidth]="2"></svg>
       </button>
 
       <!-- Create Dropdown Menu -->
@@ -184,10 +181,10 @@
               </div>
               <div class="mt-2 flex items-center gap-1.5">
                 <button type="button" class="btn btn-success btn-xs flex-1 gap-1 rounded-lg text-white" (click)="acceptInvite(inv.id)">
-                  <svg lucideCheck class="h-3 w-3" [strokeWidth]="3"></svg>
+                  <svg lucideCheck class="h-3 w-3" [strokeWidth]="2"></svg>
                   Đồng ý</button>
                 <button type="button" class="btn btn-ghost btn-xs flex-1 gap-1 rounded-lg" (click)="declineInvite(inv.id)">
-                  <svg lucideX class="h-3 w-3" [strokeWidth]="3"></svg>
+                  <svg lucideX class="h-3 w-3" [strokeWidth]="2"></svg>
                   Từ chối</button>
               </div>
             </div>
@@ -222,7 +219,7 @@
         }
       </div>
       <svg lucideChevronDown class="h-3 w-3 shrink-0 text-base-content/35 max-md:hidden transition-transform"
-        [class]="menuOpen() ? '-rotate-180' : ''" [strokeWidth]="2.5"></svg>
+        [class]="menuOpen() ? '-rotate-180' : ''" [strokeWidth]="2"></svg>
     </div>
   </div>
 
@@ -249,16 +246,16 @@
     <div class="my-2 rounded-lg border border-primary/20 bg-primary/5 p-2 text-left">
       <div class="flex items-center justify-between">
         <span class="flex items-center gap-1 text-3xs font-extrabold uppercase tracking-wider text-primary">
-          <svg lucideKeyRound class="h-3 w-3" [strokeWidth]="2.4"></svg>
+          <svg lucideKeyRound class="h-3 w-3" [strokeWidth]="2"></svg>
           UUID CỦA BẠN
         </span>
         <button type="button" class="btn btn-xs gap-1 rounded px-1.5 text-2xs font-bold transition-all"
           [class.btn-success]="copiedUuid()" [class.btn-primary]="!copiedUuid()" [class.btn-outline]="!copiedUuid()"
           (click)="$event.stopPropagation(); copyUuid()" title="Sao chép mã UUID">
           @if (copiedUuid()) {
-          <svg lucideCheck class="h-3 w-3" [strokeWidth]="3"></svg> Đã chép!
+          <svg lucideCheck class="h-3 w-3" [strokeWidth]="2"></svg> Đã chép!
           } @else {
-          <svg lucideCopy class="h-3 w-3" [strokeWidth]="2.4"></svg> Sao chép
+          <svg lucideCopy class="h-3 w-3" [strokeWidth]="2"></svg> Sao chép
           }
         </button>
       </div>

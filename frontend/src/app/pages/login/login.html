@@ -3,11 +3,8 @@
   <!-- LEFT: form panel -->
   <div class="form-panel">
     <div class="brand">
-      <div class="brand-mark">
-        <span class="bar bar-1"></span>
-        <span class="bar bar-2"></span>
-      </div>
-      <span class="brand-name">Trello<span class="brand-accent">Pro</span></span>
+      <img class="brand-mark" src="logo-128.png" width="128" height="128" alt="" aria-hidden="true" />
+      <span class="brand-name">Horizon Hub <span class="brand-accent">Harmony</span></span>
     </div>
 
     <div class="form-card">
@@ -22,7 +19,7 @@
           <form class="method-view active mt-5 flex flex-col gap-4" (ngSubmit)="onPasswordSubmit()">
             <div class="form-control w-full">
               <label class="label pb-1.5" for="input-username">
-                <span class="label-text text-xs font-semibold">Username hoặc Email</span>
+                <span class="label-text text-sm font-semibold">Username hoặc Email</span>
               </label>
               <label class="input input-bordered flex w-full items-center gap-2">
                 <svg class="h-4 w-4 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M22 6l-10 7L2 6"/><path d="M2 6h20v12H2z"/></svg>
@@ -31,14 +28,13 @@
             </div>
 
             <div class="form-control w-full">
-              <label class="label pb-1.5">
-                <span class="label-text text-xs font-semibold">Mật khẩu</span>
-                <a routerLink="/forgot-password" (click)="onForgotPasswordClick()" class="link link-primary link-hover text-xs font-semibold">Quên mật khẩu?</a>
+              <label class="label pb-1.5" for="input-password">
+                <span class="label-text text-sm font-semibold">Mật khẩu</span>
               </label>
               <label class="input input-bordered flex w-full items-center gap-2">
                 <svg class="h-4 w-4 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
                 <input [type]="passwordVisible() ? 'text' : 'password'" id="input-password" class="grow" placeholder="••••••••" autocomplete="current-password" [(ngModel)]="password" name="password" />
-                <button type="button" class="cursor-pointer opacity-50 hover:opacity-80" (click)="togglePasswordVisible()" [attr.aria-label]="passwordVisible() ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'">
+                <button type="button" class="tap-44 -mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-base-content/50 transition-colors hover:bg-base-200 hover:text-base-content" (click)="togglePasswordVisible()" [attr.aria-label]="passwordVisible() ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'">
                   @if (!passwordVisible()) {
                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
                   } @else {
@@ -46,29 +42,37 @@
                   }
                 </button>
               </label>
+              <!-- Đặt DƯỚI ô nhập, không đứng cạnh nhãn: ở hàng nhãn nó cùng cỡ
+                   cùng độ đậm với "Mật khẩu" và chỉ khác màu, nên mắt phải phân
+                   biệt "nhãn" với "hành động" chỉ bằng màu. Xuống đây nó cũng có
+                   chỗ để mang vùng chạm 44px. -->
+              <div class="mt-1.5 flex justify-end">
+                <a routerLink="/forgot-password" (click)="onForgotPasswordClick()"
+                  class="link-accent tap-44 inline-block py-1 text-sm font-medium">Quên mật khẩu?</a>
+              </div>
             </div>
 
-            <label class="label cursor-pointer justify-start gap-2">
-              <input type="checkbox" class="checkbox checkbox-sm checkbox-primary" [(ngModel)]="remember" name="remember" />
-              <span class="label-text text-xs">Ghi nhớ đăng nhập trong 30 ngày</span>
+            <label class="label ctl-md cursor-pointer justify-start gap-2.5">
+              <input type="checkbox" class="checkbox checkbox-primary" [(ngModel)]="remember" name="remember" />
+              <span class="label-text text-sm">Ghi nhớ đăng nhập trong 30 ngày</span>
             </label>
 
-            <button type="submit" class="btn btn-primary btn-block" [disabled]="passwordLoading()">
+            <button type="submit" class="btn btn-primary btn-block ctl-lg text-base" [disabled]="passwordLoading()">
               @if (passwordLoading()) {
                 <span class="loading loading-spinner loading-sm"></span>
                 <span>Đang đăng nhập…</span>
               } @else {
                 <span>Đăng nhập</span>
-                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
               }
             </button>
           </form>
 
           <div class="divider text-xs">Hoặc</div>
 
-          <button type="button" class="btn btn-outline btn-block" [disabled]="googleLoading()" (click)="onGoogleLogin()">
+          <button type="button" class="btn btn-outline btn-block ctl-lg text-base" [disabled]="googleLoading()" (click)="onGoogleLogin()">
             @if (!googleLoading()) {
-              <svg class="h-4 w-4" viewBox="0 0 24 24">
+              <svg class="h-5 w-5" viewBox="0 0 24 24">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.85z" fill="#FBBC05"/>
@@ -82,15 +86,15 @@
           </button>
 
 
-          <p class="mt-6 text-center text-xs text-base-content/60">
+          <p class="mt-6 text-center text-sm text-base-content/70">
             Chưa có tài khoản?
-            <a routerLink="/register" class="link link-primary font-semibold">Đăng ký miễn phí</a>
+            <a routerLink="/register" class="link-accent tap-44 inline-block py-2 font-semibold">Đăng ký miễn phí</a>
           </p>
       </div>
 
     </div>
 
-    <div class="footer">© 2026 TrelloPro Inc.</div>
+    <div class="footer">© 2026 Horizon Hub Harmony · Web26A</div>
   </div>
 
   <!-- RIGHT: visual board panel -->

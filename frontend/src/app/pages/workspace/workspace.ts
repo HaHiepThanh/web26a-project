@@ -257,11 +257,16 @@ export class Workspace {
     const serverWorkspaces = this.workspaceService.workspaces();
 
     // Board của từng workspace — gọi song song, không nối tiếp.
-    const boardsPerWorkspace = await Promise.all(
-      serverWorkspaces.map(async (w) => {
-        await this.boardService.loadBoards(w.id);
-        return this.boardService.boards();
-      }),
+    //
+    // ⚠️ KHÔNG lặp `loadBoards(w.id)` rồi đọc `boards()` trong cùng vòng map:
+    // `boards` là MỘT signal dùng chung, ba lời gọi song song ghi đè lẫn nhau nên
+    // cả ba lần đọc đều nhận về board của workspace hoàn tất sau cùng — mọi
+    // workspace hiện y hệt một danh sách. `loadAllBoards` gom sẵn theo lô rồi
+    // mới lọc, nên không có chuyện đó.
+    await this.boardService.loadAllBoards(serverWorkspaces.map((w) => w.id));
+    const allBoards = this.boardService.allBoards();
+    const boardsPerWorkspace = serverWorkspaces.map((w) =>
+      allBoards.filter((b) => b.workspaceId === w.id),
     );
 
     // Roster thành viên tổ chức — dùng để dựng danh sách thành viên của workspace

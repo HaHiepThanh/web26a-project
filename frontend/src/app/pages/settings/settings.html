@@ -34,11 +34,11 @@
           [class.bg-purple-200]="activeTab() === item.id" [class.dark:bg-purple-900]="activeTab() === item.id"
           [class.bg-slate-100]="activeTab() !== item.id" [class.dark:bg-slate-800]="activeTab() !== item.id">
           @if (item.icon === 'user') {
-          <svg lucideUser class="h-4 w-4" [strokeWidth]="2.2"></svg>
+          <svg lucideUser class="h-4 w-4" [strokeWidth]="2"></svg>
           } @else if (item.icon === 'building') {
-          <svg lucideBuilding2 class="h-4 w-4" [strokeWidth]="2.2"></svg>
+          <svg lucideBuilding2 class="h-4 w-4" [strokeWidth]="2"></svg>
           } @else {
-          <svg lucideUsers class="h-4 w-4" [strokeWidth]="2.2"></svg>
+          <svg lucideUsers class="h-4 w-4" [strokeWidth]="2"></svg>
           }
         </span>
         <span class="min-w-0 flex-1">

@@ -21,7 +21,7 @@
       <div class="flex-1 min-w-0 space-y-3">
         <div class="flex flex-wrap items-center gap-2.5">
           <label class="btn btn-primary btn-sm rounded-xl font-bold cursor-pointer gap-1.5 shadow-xs">
-            <svg lucideCamera class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg>
+            <svg lucideCamera class="h-4 w-4" [strokeWidth]="2"></svg>
             <span>Tải ảnh lên</span>
             <input type="file" accept="image/*" class="sr-only" (change)="onUploadAvatar($event)" />
           </label>
@@ -36,7 +36,7 @@
         <!-- UUID Box with 1-click Copy -->
         <div class="flex items-center gap-2 rounded-2xl border-2 border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-2.5">
           <span class="flex items-center gap-1 text-xs font-black text-slate-500 shrink-0">
-            <svg lucideKeyRound class="h-3 w-3" [strokeWidth]="2.4"></svg> UUID:</span>
+            <svg lucideKeyRound class="h-3 w-3" [strokeWidth]="2"></svg> UUID:</span>
           <code class="font-mono text-xs text-primary font-bold truncate flex-1 select-all">{{ currentUser()?.id || 'Chưa cấp UUID' }}</code>
           <button
             type="button"
@@ -45,9 +45,9 @@
             [class.btn-outline]="!copiedUuid()"
             (click)="copyUuid()">
             @if (copiedUuid()) {
-            <svg lucideCheck class="h-3 w-3" [strokeWidth]="3"></svg> Đã chép
+            <svg lucideCheck class="h-3 w-3" [strokeWidth]="2"></svg> Đã chép
             } @else {
-            <svg lucideCopy class="h-3 w-3" [strokeWidth]="2.4"></svg> Sao chép
+            <svg lucideCopy class="h-3 w-3" [strokeWidth]="2"></svg> Sao chép
             }
           </button>
         </div>
@@ -103,7 +103,7 @@
 
       <div class="flex justify-end pt-2">
         <button type="submit" class="btn btn-primary btn-sm gap-1.5 rounded-xl px-5 font-black shadow-xs">
-          <svg lucideSave class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg> Lưu thông tin cá nhân
+          <svg lucideSave class="h-4 w-4" [strokeWidth]="2"></svg> Lưu thông tin cá nhân
         </button>
       </div>
     </div>
@@ -154,7 +154,7 @@
 
       <div class="sm:col-span-2 flex justify-end pt-1">
         <button type="submit" class="btn btn-primary btn-sm gap-1.5 rounded-xl px-5 font-black shadow-xs" [disabled]="passwordForm.invalid">
-          <svg lucideLock class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg> Cập nhật mật khẩu
+          <svg lucideLock class="h-4 w-4" [strokeWidth]="2"></svg> Cập nhật mật khẩu
         </button>
       </div>
     </form>

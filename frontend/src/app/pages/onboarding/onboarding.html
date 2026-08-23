@@ -4,7 +4,7 @@
     <!-- Header -->
     <div class="mb-6 text-center">
       <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-content shadow-lg">
-        <svg lucideSparkles class="h-7 w-7" [strokeWidth]="2.2"></svg>
+        <svg lucideSparkles class="h-7 w-7" [strokeWidth]="2"></svg>
       </div>
       <h1 class="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
         Chào {{ currentUser()?.displayName || currentUser()?.email }}!
@@ -37,7 +37,7 @@
           <div class="mt-2.5 flex gap-2">
             <button type="button" class="btn btn-success btn-sm flex-1 rounded-xl text-white"
               [disabled]="respondingId() === inv.id" (click)="acceptInvite(inv.id)">
-              <svg lucideCheck class="h-3.5 w-3.5" [strokeWidth]="3"></svg> Đồng ý
+              <svg lucideCheck class="h-4 w-4" [strokeWidth]="2"></svg> Đồng ý
             </button>
             <button type="button" class="btn btn-ghost btn-sm flex-1 rounded-xl"
               [disabled]="respondingId() === inv.id" (click)="declineInvite(inv.id)">
@@ -71,7 +71,7 @@
           </div>
           @if (nameError()) {
           <p class="mt-1 flex items-center gap-1 text-xs font-bold text-error">
-            <svg lucideTriangleAlert class="h-3.5 w-3.5 shrink-0" [strokeWidth]="2.4"></svg> {{ nameError() }}
+            <svg lucideTriangleAlert class="h-4 w-4 shrink-0" [strokeWidth]="2"></svg> {{ nameError() }}
           </p>
           }
         </div>
@@ -97,7 +97,7 @@
               [ngModel]="slugInput()" (ngModelChange)="onSlugChange($event)" name="orgSlug" />
             @if (slugOk()) {
             <span class="flex items-center pr-2.5 text-success">
-              <svg lucideCheck class="h-4 w-4" [strokeWidth]="3"></svg>
+              <svg lucideCheck class="h-4 w-4" [strokeWidth]="2"></svg>
             </span>
             }
           </div>
@@ -109,7 +109,7 @@
 
           @if (slugError()) {
           <p class="mt-1 flex items-center gap-1 text-xs font-bold text-error">
-            <svg lucideTriangleAlert class="h-3.5 w-3.5 shrink-0" [strokeWidth]="2.4"></svg> {{ slugError() }}
+            <svg lucideTriangleAlert class="h-4 w-4 shrink-0" [strokeWidth]="2"></svg> {{ slugError() }}
           </p>
           } @else if (slugOk()) {
           <p class="mt-1 text-2xs text-slate-500 dark:text-slate-400">
@@ -119,14 +119,14 @@
           }
 
           <div class="mt-2.5 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50/80 p-2.5 text-2xs text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-200">
-            <svg lucideTriangleAlert class="mt-0.5 h-3.5 w-3.5 shrink-0" [strokeWidth]="2.4"></svg>
+            <svg lucideTriangleAlert class="mt-0.5 h-4 w-4 shrink-0" [strokeWidth]="2"></svg>
             <span><strong>Không đổi được sau khi tạo.</strong> Đổi đường dẫn sẽ làm chết mọi link bạn đã chia sẻ, nên hãy chọn kỹ.</span>
           </div>
         </div>
 
         <button type="submit" class="btn btn-primary btn-block rounded-xl font-black shadow-sm"
           [disabled]="submitting() || !slugOk() || !nameInput().trim()">
-          <svg lucideBuilding2 class="h-4 w-4" [strokeWidth]="2.4"></svg>
+          <svg lucideBuilding2 class="h-4 w-4" [strokeWidth]="2"></svg>
           Tạo Tổ chức &amp; Bắt đầu
         </button>
       </form>
@@ -137,7 +137,7 @@
       <button type="button"
         class="btn btn-ghost btn-sm gap-1.5 rounded-xl text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
         (click)="onLogout()">
-        <svg lucideLogOut class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg>
+        <svg lucideLogOut class="h-4 w-4" [strokeWidth]="2"></svg>
         Đăng nhập bằng tài khoản khác
       </button>
     </div>

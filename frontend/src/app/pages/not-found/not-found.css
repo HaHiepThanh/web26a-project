@@ -20,6 +20,8 @@
   --font-mono: 'JetBrains Mono', monospace;
 
   min-height: 100vh;
+
+  min-height: 100dvh;
   position: relative;
   overflow: hidden;
   display: flex;
@@ -154,7 +156,7 @@
 .fc-tag {
   display: block;
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.04em;
   color: rgba(148, 163, 184, 0.55);
@@ -315,7 +317,7 @@
   animation: cursorDrift 11s ease-in-out infinite;
 }
 .collab-cursor span {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 500;
   color: #fff;
   background: #ec4899;
@@ -362,28 +364,10 @@
   user-select: none;
 }
 .brand-mark {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: var(--primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
-}
-.brand-mark .bar {
-  width: 6px;
-  border-radius: 2px;
-  background: #fff;
-}
-.brand-mark .bar-1 {
-  height: 16px;
-}
-.brand-mark .bar-2 {
-  height: 10px;
-  background: rgba(255, 255, 255, 0.6);
-  align-self: flex-start;
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  flex: 0 0 auto;
 }
 .brand-name {
   font-size: 20px;

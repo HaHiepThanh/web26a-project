@@ -6,7 +6,7 @@
     <div class="mb-5 flex items-center justify-between">
       <h3 class="text-lg font-black text-slate-900 dark:text-white">Sửa bảng</h3>
       <button class="btn btn-circle btn-ghost btn-sm" (click)="close.emit()">
-        <svg lucideX class="h-4 w-4" [strokeWidth]="2.4"></svg>
+        <svg lucideX class="h-4 w-4" [strokeWidth]="2"></svg>
       </button>
     </div>
 
@@ -31,7 +31,7 @@
         </div>
         @if (titleError()) {
         <p class="mt-1 text-xs font-bold text-error flex items-center gap-1 animate-pulse">
-          <svg lucideTriangleAlert class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg> {{ titleError() }}
+          <svg lucideTriangleAlert class="h-4 w-4" [strokeWidth]="2"></svg> {{ titleError() }}
         </p>
         }
       </div>
@@ -52,21 +52,21 @@
             <button type="button"
               class="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition group-hover:opacity-100"
               title="Bỏ ảnh nền" (click)="clearBgImage()">
-              <svg lucideX class="h-3.5 w-3.5 text-white" [strokeWidth]="2.6"></svg>
+              <svg lucideX class="h-4 w-4 text-white" [strokeWidth]="2"></svg>
             </button>
           </div>
           } @else {
           <label
             class="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-slate-300 text-slate-400 transition hover:border-primary hover:text-primary dark:border-slate-600"
             title="Tải ảnh nền lên">
-            <svg lucideImage class="h-4 w-4" [strokeWidth]="2.2"></svg>
+            <svg lucideImage class="h-4 w-4" [strokeWidth]="2"></svg>
             <input type="file" accept="image/*" class="hidden" (change)="onBgImageSelected($event)" />
           </label>
           }
         </div>
         @if (bgImageError()) {
         <p class="mt-1.5 text-xs font-bold text-error flex items-center gap-1">
-          <svg lucideTriangleAlert class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg> {{ bgImageError() }}
+          <svg lucideTriangleAlert class="h-4 w-4" [strokeWidth]="2"></svg> {{ bgImageError() }}
         </p>
         }
         @if (bgImageUrl()) {

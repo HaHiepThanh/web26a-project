@@ -22,8 +22,18 @@
 
         <!-- Member Avatar Stack & Count -->
         <div class="mt-2.5 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-          <div class="flex items-center -space-x-1.5 overflow-hidden">
-            @for (mem of workspace().members.slice(0, 5); track mem.id) {
+          <!--
+            `shrink-0` + KHÔNG `overflow-hidden`.
+            Trước đây khối này có `overflow-hidden` và để flex nén tự do: ở màn
+            390px nó bị ép còn 52px trong khi 5 avatar cần 76px, nên avatar thứ 4
+            bị nén còn 18px và avatar thứ 5 bị cắt mất 21px — chữ viết tắt đứt
+            đôi theo chiều dọc, trông như lỗi render. `overflow-hidden` không
+            giải quyết gì, nó chỉ giấu chỗ tràn đi.
+            Rút từ 5 xuống 4 avatar để chip "+N" xuất hiện sớm hơn — đó mới là
+            cách đúng để báo "còn nữa", thay vì xén.
+          -->
+          <div class="flex shrink-0 items-center -space-x-1.5">
+            @for (mem of workspace().members.slice(0, 4); track mem.id) {
             <div
               class="inline-flex h-5 w-5 items-center justify-center rounded-full border-2 border-white dark:border-slate-800 text-3xs font-black text-white shadow-xs"
               [style.background-color]="avatarBgFor(mem.id)"
@@ -31,15 +41,17 @@
               {{ initialsOf(mem.displayName || mem.email) }}
             </div>
             }
-            @if (workspace().members.length > 5) {
+            @if (workspace().members.length > 4) {
             <div
-              class="inline-flex h-5 w-5 items-center justify-center rounded-full border-2 border-white dark:border-slate-800 bg-slate-200 dark:bg-slate-700 text-3xs font-bold text-slate-700 dark:text-slate-200 shadow-xs">
-              +{{ workspace().members.length - 5 }}
+              class="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-white dark:border-slate-800 bg-slate-200 dark:bg-slate-700 text-3xs font-bold text-slate-700 dark:text-slate-200 shadow-xs"
+              [title]="'Còn ' + (workspace().members.length - 4) + ' thành viên nữa'">
+              +{{ workspace().members.length - 4 }}
             </div>
             }
           </div>
-          <span class="text-slate-400 dark:text-slate-600">•</span>
-          <span class="text-2xs font-bold text-slate-600 dark:text-slate-400">{{ workspace().members.length }} thành viên</span>
+          <span class="shrink-0 text-slate-400 dark:text-slate-600">•</span>
+          <!-- `truncate` để khi hết chỗ thì CHỮ nhường, không phải avatar bị xén. -->
+          <span class="truncate text-2xs font-bold text-slate-600 dark:text-slate-400">{{ workspace().members.length }} thành viên</span>
         </div>
       </div>
     </div>
@@ -51,7 +63,7 @@
         class="btn btn-ghost btn-xs text-xs rounded-xl font-bold hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 gap-1 px-2.5"
         title="Chỉnh sửa & Thành viên"
         (click)="editWorkspace.emit(workspace())" [class.hidden]="!canManage()">
-        <svg lucidePencil class="h-3 w-3" [strokeWidth]="2.2"></svg>
+        <svg lucidePencil class="h-3 w-3" [strokeWidth]="2"></svg>
         <span>Sửa</span>
       </button>
       <button
@@ -71,7 +83,7 @@
   <div class="grid grid-cols-[repeat(auto-fill,minmax(205px,1fr))] gap-3">
     @for (board of workspace().boards; track board.id) {
     <div
-      class="board-tile group relative flex h-[96px] cursor-pointer flex-col justify-between overflow-hidden rounded-2xl p-3 text-white shadow-xs transition-all duration-200 hover:-translate-y-1 hover:shadow-md hover:brightness-105"
+      class="board-tile group relative flex min-h-[108px] cursor-pointer flex-col justify-between overflow-hidden rounded-2xl p-3 text-white shadow-xs transition-all duration-200 hover:-translate-y-1 hover:shadow-md hover:brightness-105"
       [class]="board.bgClass"
       [style.background-image]="bgImageByBoardId()[board.id] ? 'url(' + bgImageByBoardId()[board.id] + ')' : null"
       [style.background-size]="bgImageByBoardId()[board.id] ? 'cover' : null"
@@ -89,30 +101,30 @@
 
       <!-- 3-chấm: mở menu Sửa / Xoá bảng (hiện khi hover) -->
       <button
-        class="absolute right-8 top-2.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-black/30 text-white opacity-0 transition hover:bg-black/55 focus-visible:opacity-100 group-hover:opacity-100"
+        class="tap-44 absolute right-8 top-2.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-black/30 text-white opacity-0 transition hover:bg-black/55 focus-visible:opacity-100 group-hover:opacity-100"
         title="Tuỳ chọn bảng" [attr.aria-label]="'Tuỳ chọn ' + board.title"
         [class.hidden]="!canManage()"
         (click)="$event.stopPropagation(); toggleBoardMenu(workspace().id + ':' + board.id)">
-        <svg lucideEllipsisVertical class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg>
+        <svg lucideEllipsisVertical class="h-4 w-4" [strokeWidth]="2"></svg>
       </button>
 
       <!-- Star button -->
       <button
-        class="absolute right-2.5 top-2.5 z-10 text-white/70 transition hover:scale-125 hover:text-yellow-400"
+        class="tap-44 absolute right-2.5 top-2.5 z-10 flex h-6 w-6 items-center justify-center text-white/80 transition hover:scale-125 hover:text-yellow-400"
         [class.text-yellow-400]="board.starred" [class.scale-110]="board.starred" title="Đánh dấu sao"
         (click)="$event.stopPropagation(); toggleStar.emit(board.id)">
-        <svg lucideStar class="h-4 w-4" [strokeWidth]="2.2" [attr.fill]="board.starred ? 'currentColor' : 'none'"></svg>
+        <svg lucideStar class="h-4 w-4" [strokeWidth]="2" [attr.fill]="board.starred ? 'currentColor' : 'none'"></svg>
       </button>
 
       <!-- Footer Privacy badge -->
       <div class="relative z-10 flex items-center justify-between text-3xs font-semibold opacity-95">
         <span class="flex min-w-0 items-center gap-1 truncate max-w-[120px]">
           @if (board.privacy === 'Private') {
-          <svg lucideLock class="h-2.5 w-2.5 shrink-0" [strokeWidth]="2.4"></svg> Riêng tư
+          <svg lucideLock class="h-2.5 w-2.5 shrink-0" [strokeWidth]="2"></svg> Riêng tư
           } @else if (board.privacy === 'Public') {
-          <svg lucideGlobe class="h-2.5 w-2.5 shrink-0" [strokeWidth]="2.4"></svg> Công khai
+          <svg lucideGlobe class="h-2.5 w-2.5 shrink-0" [strokeWidth]="2"></svg> Công khai
           } @else {
-          <svg lucideBuilding2 class="h-2.5 w-2.5 shrink-0" [strokeWidth]="2.4"></svg> Workspace
+          <svg lucideBuilding2 class="h-2.5 w-2.5 shrink-0" [strokeWidth]="2"></svg> Workspace
           }
         </span>
         <span class="badge badge-xs border-none bg-black/30 text-white font-black px-1.5">{{ board.badge }}</span>
@@ -128,7 +140,7 @@
         <button type="button"
           class="flex w-full items-center gap-1.5 rounded-xl px-2 py-1.5 text-left text-2xs font-bold text-slate-700 hover:bg-base-200 dark:text-slate-300"
           (click)="onEditBoard(board)">
-          <svg lucidePencil class="h-3 w-3 shrink-0" [strokeWidth]="2.4"></svg> Sửa bảng
+          <svg lucidePencil class="h-3 w-3 shrink-0" [strokeWidth]="2"></svg> Sửa bảng
         </button>
         <button type="button"
           class="flex w-full items-center gap-1.5 rounded-xl px-2 py-1.5 text-left text-2xs font-bold text-error hover:bg-error/10"
@@ -162,7 +174,7 @@
 
     <!-- Tile: Create new board -->
     <div
-      class="flex h-[96px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700/80 bg-slate-50/60 dark:bg-slate-800/30 text-xs font-bold text-slate-500 transition-all duration-200 hover:border-primary hover:bg-primary/5 hover:text-primary hover:scale-[1.02]"
+      class="flex min-h-[108px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700/80 bg-slate-50/60 dark:bg-slate-800/30 text-xs font-bold text-slate-500 transition-all duration-200 hover:border-primary hover:bg-primary/5 hover:text-primary hover:scale-[1.02]"
       (click)="createBoard.emit(workspace().id)" [class.hidden]="!canManage()">
       <span class="flex h-7 w-7 items-center justify-center rounded-full bg-slate-200/70 dark:bg-slate-700/70 text-base font-bold leading-none">+</span>
       <span>Tạo bảng mới</span>

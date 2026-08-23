@@ -1,12 +1,23 @@
-<div class="fixed inset-0 z-[1000] flex items-start justify-center overflow-y-auto bg-black/50 p-4 md:p-8" (click)="attemptClose()">
-  <div class="my-auto flex h-[85vh] max-h-[85vh] w-full max-w-[880px] flex-col overflow-hidden rounded-2xl bg-base-100 shadow-2xl" (click)="$event.stopPropagation()">
+<!--
+  Trên điện thoại: sheet toàn màn hình, không bo góc, không lề.
+  Bản cũ dùng `h-[85vh]` ở mọi kích thước. Trên máy 640px cao, 85vh = 544px cho
+  một biểu mẫu có 8 nhóm trường cộng bình luận — sinh ra hai vùng cuộn lồng nhau
+  (cuộn trong modal, và trang nền cũng cuộn), là kiểu tương tác rất dễ lạc tay.
+  Còn trên màn 1080p thì 85vh = 918px lại quá thừa, modal rỗng ở giữa.
+  Từ md trở lên mới quay về dạng hộp nổi, và chặn trần 720px.
+  `dvh` thay `vh` để thanh URL của trình duyệt di động không cắt mất đáy.
+-->
+<div class="fixed inset-0 z-[1000] flex items-start justify-center overflow-y-auto bg-black/50 md:p-8" (click)="attemptClose()">
+  <div
+    class="flex h-[100dvh] max-h-[100dvh] w-full flex-col overflow-hidden bg-base-100 shadow-2xl md:my-auto md:h-[85vh] md:max-h-[min(85vh,720px)] md:max-w-[880px] md:rounded-2xl"
+    (click)="$event.stopPropagation()">
 
     <!-- ===== Ảnh bìa ===== -->
     @if (cover(); as cov) {
       <div class="relative h-40 w-full shrink-0 bg-base-200">
         <img [src]="cov.dataUrl" [alt]="cov.name" class="h-full w-full object-cover" />
         <button type="button" class="btn btn-sm absolute bottom-3 right-3 gap-1.5 bg-base-100/90 text-base-content shadow hover:bg-base-100" (click)="toggleCover(cov.id)">
-          <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
           Xoá ảnh bìa
         </button>
       </div>
@@ -43,11 +54,18 @@
           </label>
         </div>
 
-        <!-- Meta: người phụ trách + hạn + ưu tiên -->
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <!--
+          Meta: người phụ trách + hạn + ưu tiên.
+          HAI cột, không phải ba. Cột trái của modal rộng ~500px, chia ba thì mỗi
+          ô chỉ còn 151px — trong khi riêng chữ "Trung bình" đã cần 59px cộng đệm,
+          nên chip ưu tiên bị ép xuống hai dòng và cao hơn hai chip bên cạnh.
+          Chia hai thì ô rộng ~242px, ba chip nằm gọn một hàng. Ưu tiên đứng cuối
+          nên nó tự rơi xuống hàng thứ hai và có nguyên một ô cho mình.
+        -->
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div class="min-w-0">
             <label class="mb-1.5 flex items-center gap-1.5 text-2xs font-bold uppercase tracking-wide text-base-content/50" for="detail-assignee-select">
-              <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.4"/><path d="M4.5 20c1.6-3.6 4.6-5.4 7.5-5.4s5.9 1.8 7.5 5.4"/></svg>
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.4"/><path d="M4.5 20c1.6-3.6 4.6-5.4 7.5-5.4s5.9 1.8 7.5 5.4"/></svg>
               Phụ trách
             </label>
             <select id="detail-assignee-select" class="select select-bordered select-sm w-full" [ngModel]="draftAssigneeId()" (ngModelChange)="draftAssigneeId.set($event)">
@@ -60,7 +78,7 @@
 
           <div class="min-w-0">
             <label class="mb-1.5 flex items-center gap-1.5 text-2xs font-bold uppercase tracking-wide text-base-content/50" for="detail-due-input">
-              <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
               Ngày hết hạn
             </label>
             <input type="date" id="detail-due-input" class="input input-bordered input-sm w-full" [value]="draftDueDate()" (input)="draftDueDate.set($any($event.target).value)" />
@@ -68,7 +86,7 @@
 
           <div class="min-w-0">
             <label class="mb-1.5 flex items-center gap-1.5 text-2xs font-bold uppercase tracking-wide text-base-content/50">
-              <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 21V4a1 1 0 011-1h11.4a1 1 0 01.8 1.6L15 9l3.2 4.4a1 1 0 01-.8 1.6H6"/></svg>
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 21V4a1 1 0 011-1h11.4a1 1 0 01.8 1.6L15 9l3.2 4.4a1 1 0 01-.8 1.6H6"/></svg>
               Ưu tiên
             </label>
             <div class="flex gap-1">
@@ -82,7 +100,7 @@
         <!-- Nhãn -->
         <div>
           <label class="mb-1.5 flex items-center gap-1.5 text-2xs font-bold uppercase tracking-wide text-base-content/50">
-            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><circle cx="7" cy="7" r="1.2" fill="currentColor"/></svg>
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><circle cx="7" cy="7" r="1.2" fill="currentColor"/></svg>
             Nhãn
           </label>
           <app-label-picker [boardId]="boardId()" [selectedIds]="selectedLabelIds()" (selectionChange)="onLabelsChange($event)" />
@@ -92,7 +110,7 @@
         <div>
           <div class="mb-1.5 flex items-center justify-between">
             <label class="flex items-center gap-1.5 text-2xs font-bold uppercase tracking-wide text-base-content/50">
-              <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
               Mô tả
             </label>
             @if (!editingDesc()) {
@@ -117,7 +135,7 @@
         <div class="border-t border-base-200 pt-4">
           <div class="mb-2 flex items-center justify-between">
             <label class="flex items-center gap-1.5 text-2xs font-bold uppercase tracking-wide text-base-content/50">
-              <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a5 5 0 01-7.07-7.07l9.19-9.19a3.5 3.5 0 014.95 4.95L9.88 18.56a1.5 1.5 0 01-2.12-2.12l8.49-8.49"/></svg>
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a5 5 0 01-7.07-7.07l9.19-9.19a3.5 3.5 0 014.95 4.95L9.88 18.56a1.5 1.5 0 01-2.12-2.12l8.49-8.49"/></svg>
               Các tập tin đính kèm
             </label>
             <label class="btn btn-ghost btn-xs">
@@ -188,9 +206,13 @@
 
         <!-- Lịch sử thay đổi -->
         <div class="border-t border-base-300 pt-3">
-          <button type="button" class="flex w-full items-center justify-between" (click)="toggleHistory()">
+          <!-- ctl-md + padding: nút này trước đây chỉ cao đúng bằng dòng chữ (17px),
+               không có padding, nên vừa khó bấm vừa không trông giống nút. -->
+          <button type="button"
+            class="ctl-md -mx-2 flex w-full items-center justify-between rounded-lg px-2 transition-colors hover:bg-base-200"
+            [attr.aria-expanded]="historyOpen()" (click)="toggleHistory()">
             <span class="text-2xs font-bold uppercase tracking-wide text-base-content/60">Lịch sử thay đổi ({{ activityLogs().length }})</span>
-            <svg class="h-3.5 w-3.5 text-base-content/50 transition-transform" [class.rotate-90]="historyOpen()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+            <svg class="h-4 w-4 text-base-content/50 transition-transform" [class.rotate-90]="historyOpen()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
           </button>
 
           @if (historyOpen()) {
@@ -200,7 +222,7 @@
               }
               @for (h of activityLogs(); track h.id) {
                 <div class="flex gap-2 text-xs">
-                  <svg class="mt-0.5 h-3.5 w-3.5 shrink-0 text-base-content/30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                  <svg class="mt-0.5 h-4 w-4 shrink-0 text-base-content/30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
                   <div class="min-w-0">
                     <div class="leading-normal text-base-content">{{ h.actionText }}</div>
                     <div class="mt-px text-3xs text-base-content/40">{{ h.createdAt | date: 'HH:mm dd/MM/yyyy' }}</div>

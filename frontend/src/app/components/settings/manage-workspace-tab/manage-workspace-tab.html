@@ -113,7 +113,7 @@
         <button type="button"
           class="btn btn-primary btn-xs rounded-xl px-3 font-black shadow-xs gap-1 hover:scale-105 transition-all"
           (click)="openAddMember()">
-          <svg lucidePlus class="h-3 w-3" [strokeWidth]="2.6"></svg>
+          <svg lucidePlus class="h-3 w-3" [strokeWidth]="2"></svg>
           <span>Thêm thành viên</span>
         </button>
       </div>
@@ -156,7 +156,7 @@
               <td class="py-3 px-4">
                 @if (mem.role === 'owner') {
                 <span class="badge badge-primary gap-1 font-black text-xs px-2.5 py-1">
-                  <svg lucideCrown class="h-3 w-3" [strokeWidth]="2.2"></svg> Trưởng nhóm</span>
+                  <svg lucideCrown class="h-3 w-3" [strokeWidth]="2"></svg> Trưởng nhóm</span>
                 } @else {
                 <select class="select select-bordered select-xs rounded-lg font-bold" [ngModel]="mem.role"
                   (ngModelChange)="onChangeMemberRole(mem.id, $event)">
@@ -211,7 +211,7 @@
         Thêm thành viên vào {{ selectedWorkspace() ? selectedWorkspace()!.name : 'Workspace' }}
       </h3>
       <button type="button" class="btn btn-ghost btn-circle btn-xs" (click)="closeAddMember()">
-        <svg lucideX class="h-4 w-4" [strokeWidth]="2.4"></svg>
+        <svg lucideX class="h-4 w-4" [strokeWidth]="2"></svg>
       </button>
     </div>
 
