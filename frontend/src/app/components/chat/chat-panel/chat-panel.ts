@@ -1,6 +1,7 @@
 import { Component, DestroyRef, computed, effect, inject, input, output, signal } from '@angular/core';
-import { User } from '../../../models';
+import { ChatTaskSuggestion, User } from '../../../models';
 import { ChatService } from '../../../services/chat.service';
+import { TaskSuggestionService } from '../../../services/task-suggestion.service';
 import { BoardService } from '../../../services/board.service';
 import { CardService } from '../../../services/card.service';
 import { ListService } from '../../../services/list.service';
@@ -33,6 +34,7 @@ const RESIZE_STEP = 16;
 })
 export class ChatPanel {
   private readonly chat = inject(ChatService);
+  private readonly suggestions = inject(TaskSuggestionService);
   private readonly boardService = inject(BoardService);
   private readonly cardService = inject(CardService);
   private readonly listService = inject(ListService);
@@ -65,13 +67,8 @@ export class ChatPanel {
   });
   readonly memberNames = computed(() => this.members().map((m) => m.displayName ?? m.email));
 
-  readonly pendingSuggestion = computed(() => this.chat.pendingSuggestion()?.suggestion ?? null);
-  readonly pendingAssigneeName = computed(() => {
-    const s = this.chat.pendingSuggestion()?.suggestion;
-    if (!s?.assigneeId) return null;
-    const u = this.usersById()[s.assigneeId];
-    return u?.displayName ?? u?.email ?? null;
-  });
+  /** Gợi ý tra theo messageId — chip vẽ ngay dưới đúng tin nhắn sinh ra nó. */
+  readonly suggestionsByMessageId = this.suggestions.byMessageId;
 
   // Bóc tiền tố "(số) " nếu tab title đang còn sót từ lần vào board trước — nếu không
   // sẽ chồng thành "(2) (2) ..." mỗi lần vào lại board (ChatPanel tạo mới mỗi lần).
@@ -176,25 +173,11 @@ export class ChatPanel {
     await this.chat.sendMessage(this.boardId(), content, this.members());
   }
 
-  async confirmSuggestion(): Promise<void> {
-    const pending = this.chat.pendingSuggestion();
-    if (!pending) return;
-    const targetList = [...this.listService.lists()].sort((a, b) => a.position - b.position)[0];
-    if (!targetList) return;
-    const card = await this.cardService.createCard(targetList.id, {
-      title: pending.suggestion.title,
-      priority: 'medium',
-      assigneeId: pending.suggestion.assigneeId,
-      dueDate: pending.suggestion.dueDate,
-    });
-    this.chat.dismissSuggestion();
-    if (card) {
-      // 'card_created' do backend ghi (POST /cards), không ghi lại ở đây.
-      this.taskCreated.emit(card.title);
-    }
+  openSuggestion(s: ChatTaskSuggestion): void {
+    this.suggestions.open(s);
   }
 
-  dismissSuggestion(): void {
-    this.chat.dismissSuggestion();
+  dismissSuggestion(s: ChatTaskSuggestion): void {
+    void this.suggestions.dismiss(s);
   }
 }

@@ -1,14 +1,8 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { ApiCreatedMessage, ApiMessage, Message, PendingSuggestion, User } from '../models';
-import { AiService } from './ai.service';
+import { ApiCreatedMessage, ApiMessage, Message, User } from '../models';
 import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
 import { describeError } from './api-error.util';
-
-let idSeq = 1;
-function localId(prefix: string): string {
-  return `${prefix}-${Date.now()}-${idSeq++}`;
-}
 
 /** Số tin giữ lại cho mỗi board ở phần xem trước Dashboard — chỉ cần đủ để đếm
  *  "chưa đọc", không cần cả lịch sử. */
@@ -37,16 +31,17 @@ function loadLastSeen(): Record<string, number> {
  *
  * Tin nhắn của người khác KHÔNG do service này đi hỏi định kỳ: `RealtimeService`
  * nhận sự kiện `chat.message` từ server rồi gọi `applyIncoming()`.
+ *
+ * Phần "AI bắt ý để tạo thẻ" KHÔNG nằm ở đây: server phân tích ngay trong
+ * `POST /chat` rồi phát gợi ý cho cả board — xem `TaskSuggestionService`.
  */
 @Injectable({ providedIn: 'root' })
 export class ChatService {
-  private readonly ai = inject(AiService);
   private readonly api = inject(ApiService);
   private readonly auth = inject(AuthService);
 
   readonly messages = signal<Message[]>([]);
   readonly loadError = signal<string | null>(null);
-  readonly pendingSuggestion = signal<PendingSuggestion | null>(null);
 
   /** uid thật của "Bạn" — quyết định tin nào căn phải, tin nào tính là chưa đọc. */
   readonly currentUserId = this.auth.currentUserId;
@@ -126,19 +121,8 @@ export class ChatService {
     }
     this.applyIncoming(message);
 
-    const result = await this.ai.detectTask({
-      boardId,
-      content: trimmed,
-      members: members.map((m) => ({ id: m.id, displayName: m.displayName ?? m.email })),
-    });
-
-    if (result.isTask && result.suggestion) {
-      this.pendingSuggestion.set({
-        id: localId('sugg'),
-        sourceMessageId: message.id,
-        suggestion: result.suggestion,
-      });
-    }
+    // KHÔNG phân tích AI ở đây nữa. Server tự làm trong `POST /chat` rồi phát gợi
+    // ý qua WebSocket cho CẢ BOARD — xem TaskSuggestionService.
   }
 
   /**
@@ -156,10 +140,6 @@ export class ChatService {
       if (current.some((m) => m.id === message.id)) return map;
       return { ...map, [message.boardId]: [...current, message].slice(-PREVIEW_KEEP) };
     });
-  }
-
-  dismissSuggestion(): void {
-    this.pendingSuggestion.set(null);
   }
 
   // ---- Dashboard Chat hub (#chat-hub) ----
@@ -217,5 +197,3 @@ export class ChatService {
   }
 }
 
-// Kiểu đã chuyển sang models/ — re-export để chỗ nào còn import từ đây vẫn chạy.
-export type { PendingSuggestion };

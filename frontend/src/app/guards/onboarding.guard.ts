@@ -21,6 +21,8 @@ export const onboardingGuard: CanActivateFn = async () => {
   if (!auth.currentUser()) return router.createUrlTree(['/login']);
 
   await orgService.ensureLoaded();
+  // Thử lại một lần nếu lần đầu hỏng (thường do token chưa sẵn sàng).
+  if (orgService.loadError()) await orgService.reload();
 
   // Gọi API hỏng (mất mạng, backend chưa chạy) thì ĐỪNG đá sang onboarding:
   // người dùng sẽ tưởng mất sạch tổ chức và tạo thêm cái mới. Cho vào app,
@@ -43,6 +45,7 @@ export const onboardingDoneGuard: CanActivateFn = async () => {
   if (!auth.currentUser()) return router.createUrlTree(['/login']);
 
   await orgService.ensureLoaded();
+  if (orgService.loadError()) await orgService.reload();
 
   const slug = orgService.activeOrgSlug();
   if (slug) return router.createUrlTree(['/', slug, 'workspace']);

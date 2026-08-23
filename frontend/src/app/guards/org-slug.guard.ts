@@ -16,6 +16,12 @@ export const orgSlugGuard: CanActivateFn = async (route) => {
   // Danh sách tổ chức lấy từ backend → phải chờ nạp xong mới tra được slug.
   await orgService.ensureLoaded();
 
+  // Nạp danh sách tổ chức HỎNG (mất mạng, backend chưa chạy, token chưa sẵn
+  // sàng) thì KHÔNG được kết luận "slug này không tồn tại" — lúc đó ta có mảng
+  // rỗng vì lỗi, chứ không phải vì người dùng không có quyền. Cho vào app, trang
+  // tự hiện banner lỗi. Trả 404 ở đây là nói dối người dùng.
+  if (orgService.loadError()) return true;
+
   const slug = route.paramMap.get('orgSlug') ?? '';
   const org = orgService.orgBySlug(slug);
 
@@ -38,9 +44,17 @@ export const orgRedirectGuard: CanActivateFn = async () => {
 
   await orgService.ensureLoaded();
 
-  const slug = orgService.activeOrgSlug();
-  // Chưa có tổ chức nào → để onboardingGuard xử lý ở /onboarding.
-  if (!slug) return router.createUrlTree(['/onboarding']);
+  // Nạp hỏng thì thử lại MỘT lần. Trường hợp hay gặp: lần nạp đầu chạy trước khi
+  // Firebase kịp khôi phục phiên nên chưa có token.
+  if (orgService.loadError()) await orgService.reload();
 
-  return router.createUrlTree(['/', slug, 'workspace']);
+  const slug = orgService.activeOrgSlug();
+  if (slug) return router.createUrlTree(['/', slug, 'workspace']);
+
+  // Vẫn hỏng → đưa vào app để thấy banner lỗi, ĐỪNG đá sang /onboarding: người
+  // dùng sẽ tưởng mất sạch tổ chức và đi tạo thêm một cái thừa.
+  if (orgService.loadError()) return true;
+
+  // Thật sự chưa có tổ chức nào → onboarding.
+  return router.createUrlTree(['/onboarding']);
 };

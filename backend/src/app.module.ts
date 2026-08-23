@@ -22,6 +22,8 @@ import { ChecklistModule } from './modules/checklist/checklist.module';
 import { AttachmentsModule } from './modules/attachments/attachments.module';
 import { BoardPrefsModule } from './modules/board-prefs/board-prefs.module';
 import { StatsModule } from './modules/stats/stats.module';
+import { AiModule } from './modules/ai/ai.module';
+import { TaskSuggestionsModule } from './modules/task-suggestions/task-suggestions.module';
 
 @Module({
   imports: [
@@ -46,16 +48,13 @@ import { StatsModule } from './modules/stats/stats.module';
     CardsModule,
     LabelsModule,
     ChatModule,
-    // ⏸ AiModule TẠM TẮT — tính năng "AI gợi ý tạo thẻ từ tin nhắn" để làm sau.
+    // Gemini — phân tích tin nhắn chat để đề xuất tạo thẻ.
     //
-    //    Lý do phải tắt hẳn chứ không chỉ bỏ khỏi bài tập: AiService gọi
-    //    config.getOrThrow('ANTHROPIC_API_KEY') ngay trong constructor, mà
-    //    NestJS khởi tạo mọi provider lúc bật app — nên thiếu key là TOÀN BỘ
-    //    backend không chạy được, chứ không riêng gì AI.
-    //
-    //    Bật lại: bỏ comment dòng import ở trên + dòng `AiModule,` dưới đây,
-    //    và thêm ANTHROPIC_API_KEY vào backend/.env.
-    // AiModule,
+    // Trước đây khối này bị TẮT vì AiService cũ gọi `getOrThrow('ANTHROPIC_API_KEY')`
+    // ngay trong constructor: thiếu key là TOÀN BỘ backend không khởi động được.
+    // GeminiService nay đọc key kiểu "thiếu thì tắt tính năng", nên bật lại an toàn.
+    AiModule,
+    TaskSuggestionsModule,
     // Bonus
     ActivityModule,
     CommentsModule,

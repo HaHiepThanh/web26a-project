@@ -1,8 +1,9 @@
 import { Component, computed, effect, inject, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { Board, User } from '../../../models';
+import { Board, ChatTaskSuggestion, User } from '../../../models';
 import { BoardService, avatarColorFor, initialsOf } from '../../../services/board.service';
 import { ChatService } from '../../../services/chat.service';
+import { TaskSuggestionService } from '../../../services/task-suggestion.service';
 import { CardService } from '../../../services/card.service';
 import { ListService } from '../../../services/list.service';
 import { RealtimeService } from '../../../services/realtime.service';
@@ -31,6 +32,7 @@ export class DashboardChatThread {
   /** Link mở board đầy đủ — phải kèm slug tổ chức vì route là /:orgSlug/board/:id. */
   readonly boardLink = computed(() => ['/', this.orgService.activeOrgSlug(), 'board', this.board().id]);
   private readonly chat = inject(ChatService);
+  private readonly suggestions = inject(TaskSuggestionService);
   private readonly cardService = inject(CardService);
   private readonly listService = inject(ListService);
   private readonly realtime = inject(RealtimeService);
@@ -53,13 +55,7 @@ export class DashboardChatThread {
   });
   readonly memberNames = computed(() => this.members().map((m) => m.displayName ?? m.email));
 
-  readonly pendingSuggestion = computed(() => this.chat.pendingSuggestion()?.suggestion ?? null);
-  readonly pendingAssigneeName = computed(() => {
-    const s = this.chat.pendingSuggestion()?.suggestion;
-    if (!s?.assigneeId) return null;
-    const u = this.usersById()[s.assigneeId];
-    return u?.displayName ?? u?.email ?? null;
-  });
+  readonly suggestionsByMessageId = this.suggestions.byMessageId;
 
   constructor() {
     // effect() (không phải constructor body trực tiếp) vì input.required() chỉ có
@@ -89,22 +85,11 @@ export class DashboardChatThread {
     await this.chat.sendMessage(this.board().id, content, this.members());
   }
 
-  async confirmSuggestion(): Promise<void> {
-    const pending = this.chat.pendingSuggestion();
-    if (!pending) return;
-    const targetList = [...this.listService.lists()].sort((a, b) => a.position - b.position)[0];
-    if (!targetList) return;
-    const card = await this.cardService.createCard(targetList.id, {
-      title: pending.suggestion.title,
-      priority: 'medium',
-      assigneeId: pending.suggestion.assigneeId,
-      dueDate: pending.suggestion.dueDate,
-    });
-    this.chat.dismissSuggestion();
-    // 'card_created' do backend ghi (POST /cards), không ghi lại ở đây.
+  openSuggestion(s: ChatTaskSuggestion): void {
+    this.suggestions.open(s);
   }
 
-  dismissSuggestion(): void {
-    this.chat.dismissSuggestion();
+  dismissSuggestion(s: ChatTaskSuggestion): void {
+    void this.suggestions.dismiss(s);
   }
 }

@@ -30,7 +30,11 @@ export type BoardEventType =
   | 'checklist.changed'
   | 'checklist.deleted'
   | 'attachment.changed'
-  | 'attachment.deleted';
+  | 'attachment.deleted'
+  /** AI vừa đề xuất tạo thẻ từ một tin nhắn — chip hiện lên ở mọi người trong board. */
+  | 'suggestion.created'
+  /** Ai đó đã chấp nhận hoặc bỏ qua gợi ý — chip tắt ở mọi máy. */
+  | 'suggestion.resolved';
 
 /**
  * Sự kiện gửi tới ĐÚNG MỘT NGƯỜI, không phụ thuộc họ đang mở board nào.

@@ -1,5 +1,6 @@
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { ApiService } from './api.service';
+import { FirebaseService } from './firebase.service';
 import { AuthService } from './auth.service';
 import { describeError } from './api-error.util';
 import { OrgInvite, loadActiveOrgId, persistActiveOrgId } from '../mocks';
@@ -32,6 +33,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class OrganizationService {
   private readonly api = inject(ApiService);
+  private readonly firebase = inject(FirebaseService);
   private readonly auth = inject(AuthService);
 
   readonly organizations = signal<Organization[]>([]);
@@ -92,14 +94,43 @@ export class OrganizationService {
    *
    * Gọi nhiều lần cùng lúc vẫn chỉ tạo đúng 1 request nhờ cache promise —
    * ba guard chạy nối tiếp nhau trên một route sẽ không gọi API ba lần.
+   *
+   * ⚠️ CHỈ cache lần nạp THÀNH CÔNG. Đây từng là một lỗi rất khó lần ra:
+   *
+   *    `AuthService.currentUser` khởi tạo từ localStorage nên có giá trị NGAY,
+   *    trong khi Firebase còn đang khôi phục phiên từ IndexedDB. Effect ở
+   *    constructor thấy có uid liền gọi `ensureLoaded()` → `getIdToken()` trả
+   *    null → request bay đi không có header → 401 → `organizations` rỗng.
+   *
+   *    Cái độc là ở bước sau: `loadedForUid` đã bị đặt, `loadPromise` đã resolve
+   *    (dù bên trong lỗi), nên MỌI lần gọi `ensureLoaded()` về sau đều trả lại
+   *    đúng cái promise hỏng đó. Người dùng đăng nhập vào tài khoản có sẵn 3 tổ
+   *    chức vẫn bị đá sang /onboarding, và ở đó mãi cho tới khi F5.
+   *
+   *    Nay hỏng thì xoá cache để lần gọi sau thử lại.
    */
   async ensureLoaded(): Promise<void> {
     const uid = this.auth.currentUser()?.id ?? null;
     if (!uid) return;
     if (this.loadedForUid === uid && this.loadPromise) return this.loadPromise;
 
+    // Chờ Firebase khôi phục phiên TRƯỚC. Không có token thì đừng đánh dấu là đã
+    // nạp — request chắc chắn 401 và ta sẽ cache một kết quả sai.
+    const token = await this.firebase.getIdToken();
+    if (!token) {
+      this.loadedForUid = null;
+      this.loadPromise = null;
+      return;
+    }
+
     this.loadedForUid = uid;
-    this.loadPromise = this.fetchFromServer(uid);
+    this.loadPromise = this.fetchFromServer(uid).then((ok) => {
+      // Nạp hỏng → bỏ cache để lần sau thử lại, thay vì kẹt vĩnh viễn.
+      if (!ok) {
+        this.loadedForUid = null;
+        this.loadPromise = null;
+      }
+    });
     return this.loadPromise;
   }
 
@@ -108,11 +139,17 @@ export class OrganizationService {
     const uid = this.auth.currentUser()?.id ?? null;
     if (!uid) return;
     this.loadedForUid = uid;
-    this.loadPromise = this.fetchFromServer(uid);
+    this.loadPromise = this.fetchFromServer(uid).then((ok) => {
+      if (!ok) {
+        this.loadedForUid = null;
+        this.loadPromise = null;
+      }
+    });
     return this.loadPromise;
   }
 
-  private async fetchFromServer(uid: string): Promise<void> {
+  /** Trả `true` khi nạp xong, `false` khi hỏng — chỗ gọi dựa vào đó để bỏ cache. */
+  private async fetchFromServer(uid: string): Promise<boolean> {
     this.loading.set(true);
     this.loadError.set(null);
     try {
@@ -181,10 +218,12 @@ export class OrganizationService {
       const valid = orgs.some((o) => o.id === saved) ? saved : (orgs[0]?.id ?? null);
       this.activeOrgId.set(valid);
       if (valid && valid !== saved) persistActiveOrgId(uid, valid);
+      return true;
     } catch (e) {
       // Không xoá dữ liệu đang có: mất mạng chốc lát mà xoá sạch màn hình thì
       // tệ hơn là hiển thị dữ liệu hơi cũ kèm banner báo lỗi.
       this.loadError.set(describeError(e, 'Không tải được danh sách tổ chức.'));
+      return false;
     } finally {
       this.loading.set(false);
     }

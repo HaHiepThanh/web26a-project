@@ -1,0 +1,106 @@
+<div class="fixed inset-0 z-[1100] flex items-center justify-center bg-black/50 p-4" (click)="close.emit()">
+  <div class="flex max-h-[88vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-base-100 shadow-2xl"
+    (click)="$event.stopPropagation()">
+
+    <div class="flex shrink-0 items-start justify-between border-b border-base-200 px-5 py-3.5">
+      <div class="min-w-0">
+        <div class="flex items-center gap-1.5 text-sm font-bold text-base-content">
+          <svg class="h-4 w-4 text-[var(--accent-purple)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z" />
+          </svg>
+          AI đề xuất tạo {{ rows().length }} thẻ
+        </div>
+        <p class="mt-0.5 text-2xs text-base-content/55">
+          Sửa lại thoải mái trước khi tạo. Bỏ tick những thẻ bạn không cần.
+        </p>
+      </div>
+      <button type="button" class="btn btn-circle btn-ghost btn-sm shrink-0" (click)="close.emit()" aria-label="Đóng">
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="flex flex-col gap-3 overflow-y-auto px-5 py-4">
+      @for (r of rows(); track $index) {
+        <div class="rounded-xl border-2 p-3 transition"
+          [class.border-primary]="r.chon"
+          [class.border-base-300]="!r.chon"
+          [class.opacity-55]="!r.chon">
+
+          <div class="mb-2.5 flex items-center gap-2">
+            <input type="checkbox" class="checkbox checkbox-primary checkbox-sm shrink-0"
+              [checked]="r.chon" (change)="toggle($index)" [attr.aria-label]="'Tạo thẻ ' + r.title" />
+            <input type="text" maxlength="200"
+              class="input input-bordered input-sm min-w-0 flex-1 font-bold"
+              placeholder="Tên thẻ" [ngModel]="r.title"
+              (ngModelChange)="patch($index, { title: $event })" [name]="'title' + $index" />
+          </div>
+
+          <div class="grid grid-cols-1 gap-2 sm:grid-cols-4">
+            <label class="min-w-0">
+              <span class="mb-1 block text-3xs font-bold uppercase tracking-wide text-base-content/50">Phụ trách</span>
+              <select class="select select-bordered select-sm w-full"
+                [ngModel]="r.assigneeId ?? ''" (ngModelChange)="patch($index, { assigneeId: $event })"
+                [name]="'assignee' + $index">
+                <option value="">Chưa gán</option>
+                @for (m of members(); track m.id) {
+                  <option [value]="m.id">{{ m.displayName || m.email }}</option>
+                }
+              </select>
+            </label>
+
+            <label class="min-w-0">
+              <span class="mb-1 block text-3xs font-bold uppercase tracking-wide text-base-content/50">Hạn chót</span>
+              <input type="date" class="input input-bordered input-sm w-full"
+                [ngModel]="r.dueDate ?? ''" (ngModelChange)="patch($index, { dueDate: $event })"
+                [name]="'due' + $index" />
+            </label>
+
+            <label class="min-w-0">
+              <span class="mb-1 block text-3xs font-bold uppercase tracking-wide text-base-content/50">Thêm vào cột</span>
+              <select class="select select-bordered select-sm w-full"
+                [ngModel]="r.listId ?? ''" (ngModelChange)="patch($index, { listId: $event })"
+                [name]="'list' + $index">
+                @for (l of lists(); track l.id) {
+                  <option [value]="l.id">{{ l.name }}</option>
+                }
+              </select>
+            </label>
+
+            <label class="min-w-0">
+              <span class="mb-1 block text-3xs font-bold uppercase tracking-wide text-base-content/50">Ưu tiên</span>
+              <select class="select select-bordered select-sm w-full"
+                [ngModel]="r.priority ?? 'medium'" (ngModelChange)="patch($index, { priority: $event })"
+                [name]="'priority' + $index">
+                @for (p of priorities; track p.id) {
+                  <option [value]="p.id">{{ p.label }}</option>
+                }
+              </select>
+            </label>
+          </div>
+
+          @if (r.description) {
+            <p class="mt-2 rounded-lg bg-base-200/60 px-2.5 py-1.5 text-2xs leading-relaxed text-base-content/70">
+              {{ r.description }}
+            </p>
+          }
+        </div>
+      } @empty {
+        <p class="py-8 text-center text-sm text-base-content/50">Không có thẻ nào để tạo.</p>
+      }
+    </div>
+
+    <div class="flex shrink-0 items-center justify-between gap-2 border-t border-base-200 px-5 py-3">
+      <span class="text-2xs text-base-content/55">
+        Thẻ sẽ hiện ngay với mọi người đang mở bảng này.
+      </span>
+      <span class="flex gap-2">
+        <button type="button" class="btn btn-ghost btn-sm" (click)="close.emit()">Huỷ</button>
+        <button type="button" class="btn btn-primary btn-sm gap-1.5"
+          [disabled]="!canConfirm()" (click)="onConfirm()">
+          @if (saving()) { <span class="loading loading-spinner loading-xs"></span> }
+          Tạo {{ selectedCount() }} thẻ
+        </button>
+      </span>
+    </div>
+  </div>
+</div>

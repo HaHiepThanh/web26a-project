@@ -15,6 +15,7 @@ import {
   BoardViewer,
   Comment,
   CardAssignedPayload,
+  ChatTaskSuggestion,
   OrgInvite,
   OrgInviteRole,
   PresenceEvent,
@@ -33,6 +34,7 @@ import { LabelService } from './label.service';
 import { ListService } from './list.service';
 import { NotificationService } from './notification.service';
 import { OrganizationService } from './organization.service';
+import { TaskSuggestionService } from './task-suggestion.service';
 
 /**
  * REALTIME THEO BOARD — mở board là thấy thay đổi của người khác ngay, không F5.
@@ -65,6 +67,7 @@ export class RealtimeService {
   private readonly boards = inject(BoardService);
   private readonly organizations = inject(OrganizationService);
   private readonly notifications = inject(NotificationService);
+  private readonly taskSuggestions = inject(TaskSuggestionService);
 
   /** Ai đang mở board hiện tại (kể cả mình) — thanh tiêu đề vẽ dãy avatar. */
   readonly viewers = signal<BoardViewer[]>([]);
@@ -326,6 +329,15 @@ export class RealtimeService {
         this.attachments.applyRemoteDeleted(cardId, id);
         break;
       }
+
+      case 'suggestion.created':
+        this.taskSuggestions.applyRemoteCreated(event.data as ChatTaskSuggestion);
+        break;
+      case 'suggestion.resolved':
+        // Ai đó vừa chấp nhận/bỏ qua ở máy khác → gỡ chip ở đây luôn, kể cả khi
+        // người này đang mở modal của đúng gợi ý đó.
+        this.taskSuggestions.applyRemoteResolved((event.data as { id: string }).id);
+        break;
     }
   }
 }
