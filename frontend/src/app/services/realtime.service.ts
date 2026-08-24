@@ -2,20 +2,15 @@ import { Injectable, inject, signal } from '@angular/core';
 import { Socket, io } from 'socket.io-client';
 import { environment } from '../../environments/environment';
 import {
-  ApiBoard,
   ApiCard,
   ApiAttachment,
   ApiChecklistItem,
   ApiComment,
-  ApiCreatedMessage,
   ApiLabel,
-  ApiList,
-  ActivityLog,
   BoardEvent,
   BoardViewer,
   Comment,
   CardAssignedPayload,
-  ChatTaskSuggestion,
   OrgInvite,
   OrgInviteRole,
   PresenceEvent,
@@ -23,18 +18,13 @@ import {
   WS,
 } from '../models';
 import { FirebaseService } from './firebase.service';
-import { ActivityService } from './activity.service';
-import { BoardService } from './board.service';
 import { CardService } from './card.service';
-import { ChatService } from './chat.service';
 import { AttachmentService } from './attachment.service';
 import { ChecklistService } from './checklist.service';
 import { CommentService } from './comment.service';
 import { LabelService } from './label.service';
-import { ListService } from './list.service';
 import { NotificationService } from './notification.service';
 import { OrganizationService } from './organization.service';
-import { TaskSuggestionService } from './task-suggestion.service';
 
 /**
  * REALTIME THEO BOARD — mở board là thấy thay đổi của người khác ngay, không F5.
@@ -56,18 +46,13 @@ import { TaskSuggestionService } from './task-suggestion.service';
 @Injectable({ providedIn: 'root' })
 export class RealtimeService {
   private readonly firebase = inject(FirebaseService);
-  private readonly lists = inject(ListService);
   private readonly cards = inject(CardService);
   private readonly labels = inject(LabelService);
   private readonly comments = inject(CommentService);
   private readonly checklist = inject(ChecklistService);
   private readonly attachments = inject(AttachmentService);
-  private readonly chat = inject(ChatService);
-  private readonly activity = inject(ActivityService);
-  private readonly boards = inject(BoardService);
   private readonly organizations = inject(OrganizationService);
   private readonly notifications = inject(NotificationService);
-  private readonly taskSuggestions = inject(TaskSuggestionService);
 
   /** Ai đang mở board hiện tại (kể cả mình) — thanh tiêu đề vẽ dãy avatar. */
   readonly viewers = signal<BoardViewer[]>([]);
@@ -78,6 +63,17 @@ export class RealtimeService {
 
   /** Lời mời vừa nhận qua WebSocket — Header đọc để bật toast "có lời mời mới". */
   readonly newInvite = signal<OrgInvite | null>(null);
+
+  /**
+   * Sự kiện board thô, mới nhất — bộ điều phối THUẦN cho các domain đã chuyển
+   * sang NgRx SignalStore (List/Board/Activity/Chat/TaskSuggestion). Mỗi store tự
+   * đăng ký handler qua `ngrx/shared/realtime.feature.ts` (`onBoardEvent`), lọc
+   * đúng loại sự kiện mình quan tâm — xem mục "Giai đoạn 0" trong
+   * `docs/ngrx/HOA-board-cong-tac.md`. Domain nào CHƯA chuyển (card/label/
+   * checklist/comment/attachment — Hoàng; organization/workspace — Huy) vẫn được
+   * xử lý trực tiếp ở `apply()`/`applyUserEvent()` bên dưới như trước.
+   */
+  readonly lastEvent = signal<BoardEvent | null>(null);
 
   private socket: Socket | null = null;
   /** Đếm số nơi đang cần board này. Chỉ rời phòng khi về 0 — trang Board và khung
@@ -231,14 +227,17 @@ export class RealtimeService {
    * "có id rồi thì ghi đè" nên nhận lại thay đổi của mình cũng không nhân đôi.
    */
   private apply(event: BoardEvent): void {
+    // Phát thô cho mọi store NgRx đang lắng nghe — LUÔN chạy trước switch bên
+    // dưới, kể cả với những loại sự kiện switch không còn case (list.*,
+    // activity.created, chat.message, suggestion.*, board.updated).
+    this.lastEvent.set(event);
+
     switch (event.type) {
-      case 'list.created':
-      case 'list.updated':
-        this.lists.applyRemoteList(event.data as ApiList);
-        break;
+      // list.created/updated/deleted: ListStore tự đăng ký (ngrx/list/list.realtime.ts).
+      // Side-effect xoá card khi list biến mất vẫn ở ĐÂY vì CardService (Hoàng)
+      // chưa chuyển sang store — chỉ realtime.service.ts mới biết gọi cả hai bên.
       case 'list.deleted': {
         const { id } = event.data as { id: string };
-        this.lists.applyRemoteListDeleted(id);
         this.cards.clearListCards(id); // thẻ bên trong đã bị CASCADE xoá dưới database
         break;
       }
@@ -288,27 +287,13 @@ export class RealtimeService {
         break;
       }
 
-      case 'chat.message': {
-        const r = event.data as ApiCreatedMessage;
-        this.chat.applyIncoming({
-          id: r.id,
-          orgId: r.orgId,
-          boardId: r.boardId,
-          userId: r.userId,
-          content: r.content,
-          createdAt: r.createdAt,
-        });
-        break;
-      }
+      // chat.message: ChatStore tự đăng ký (ngrx/chat/chat.realtime.ts).
+      // activity.created: ActivityStore tự đăng ký (ngrx/activity/activity.realtime.ts).
+      // board.updated: BoardStore tự đăng ký (ngrx/board/board.realtime.ts).
 
-      case 'activity.created':
-        this.activity.applyRemoteLog(event.data as ActivityLog);
-        break;
-
-      case 'board.updated':
-        this.boards.applyRemoteBoard(event.data as ApiBoard);
-        break;
       case 'board.deleted':
+        // Không phải state của BoardStore — đây là tín hiệu "rời trang ngay" cho
+        // pages/board/board.ts, không phải một thay đổi dữ liệu cần lưu lại.
         this.boardDeleted.set((event.data as { id: string }).id);
         break;
 
@@ -330,14 +315,8 @@ export class RealtimeService {
         break;
       }
 
-      case 'suggestion.created':
-        this.taskSuggestions.applyRemoteCreated(event.data as ChatTaskSuggestion);
-        break;
-      case 'suggestion.resolved':
-        // Ai đó vừa chấp nhận/bỏ qua ở máy khác → gỡ chip ở đây luôn, kể cả khi
-        // người này đang mở modal của đúng gợi ý đó.
-        this.taskSuggestions.applyRemoteResolved((event.data as { id: string }).id);
-        break;
+      // suggestion.created/resolved: TaskSuggestionStore tự đăng ký
+      // (ngrx/task-suggestion/task-suggestion.realtime.ts).
     }
   }
 }

@@ -1,7 +1,8 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { User } from '../../../models';
 import { CommentService } from '../../../services/comment.service';
-import { BoardService, avatarColorFor, initialsOf } from '../../../services/board.service';
+import { BoardStore } from '../../../ngrx/board/board.store';
+import { avatarColorFor, initialsOf } from '../../../utils/avatar.util';
 import { AuthService } from '../../../services/auth.service';
 
 /** [BONUS #4] Bình luận trong card: thêm, xoá bình luận của chính mình. */
@@ -13,7 +14,7 @@ import { AuthService } from '../../../services/auth.service';
 })
 export class CommentList {
   private readonly commentService = inject(CommentService);
-  private readonly boardService = inject(BoardService);
+  private readonly boardService = inject(BoardStore);
   private readonly auth = inject(AuthService);
 
   readonly cardId = input.required<string>();

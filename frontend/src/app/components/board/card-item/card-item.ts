@@ -1,6 +1,6 @@
 import { Component, computed, input } from '@angular/core';
 import { Card, CardPriority, Label, User } from '../../../models';
-import { avatarColorFor, initialsOf } from '../../../services/board.service';
+import { avatarColorFor, initialsOf } from '../../../utils/avatar.util';
 
 const PRIORITY_LABEL: Record<CardPriority, string> = { high: 'High', medium: 'Medium', low: 'Low' };
 const PRIORITY_TEXT: Record<CardPriority, string> = { high: 'text-[#BE123C]', medium: 'text-[#B45309]', low: 'text-[#334155]' };
