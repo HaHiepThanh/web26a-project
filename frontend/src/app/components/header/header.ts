@@ -23,7 +23,7 @@ import { ThemeService } from '../../services/theme.service';
 import { WorkspaceUiService } from '../../services/workspace-ui.service';
 import { CardService } from '../../services/card.service';
 import { NotificationService } from '../../services/notification.service';
-import { OrganizationService } from '../../services/organization.service';
+import { OrganizationStore } from '../../ngrx/organization/organization.store';
 import { RealtimeService } from '../../services/realtime.service';
 
 /** Dải nhắc "có lời mời mới" tự tắt sau ngần này. */
@@ -59,7 +59,7 @@ export class Header {
   private readonly router = inject(Router);
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly cardService = inject(CardService);
-  private readonly orgService = inject(OrganizationService);
+  private readonly orgService = inject(OrganizationStore);
   private readonly realtime = inject(RealtimeService);
   private readonly notificationService = inject(NotificationService);
 

@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { LucideBuilding2, LucideCheck, LucideLogOut, LucideSparkles, LucideTriangleAlert } from '@lucide/angular';
 import { AuthService } from '../../services/auth.service';
-import { OrganizationService } from '../../services/organization.service';
+import { OrganizationStore } from '../../ngrx/organization/organization.store';
 
 import { SLUG_MAX_LENGTH, slugify, validateSlugFormat } from '../../utils/slug.util';
 
@@ -23,7 +23,7 @@ import { SLUG_MAX_LENGTH, slugify, validateSlugFormat } from '../../utils/slug.u
 })
 export class Onboarding {
   private readonly auth = inject(AuthService);
-  private readonly orgService = inject(OrganizationService);
+  private readonly orgService = inject(OrganizationStore);
   private readonly router = inject(Router);
 
   readonly currentUser = this.auth.currentUser;

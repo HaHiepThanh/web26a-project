@@ -8,7 +8,7 @@ import {
   BoardVisibility,
   User,
 } from '../models';
-import { OrganizationService } from './organization.service';
+import { OrganizationStore } from '../ngrx/organization/organization.store';
 /** Board người dùng tạo được lưu lại để F5 không mất tên/nền/quyền riêng tư.
  *  Đây là nơi DUY NHẤT giữ ảnh nền (base64) — trang Workspace đọc lại qua
  *  `backgroundImageByBoardId` chứ không lưu thêm bản sao, tránh nhân đôi dung lượng. */
@@ -88,7 +88,7 @@ export const MOCK_MEMBERS: User[] = [
 @Injectable({ providedIn: 'root' })
 export class BoardService {
   private readonly api = inject(ApiService);
-  private readonly organizations = inject(OrganizationService);
+  private readonly organizations = inject(OrganizationStore);
   readonly loading = signal(false);
   readonly loadError = signal<string | null>(null);
   readonly boards = signal<Board[]>([]); // danh sách board trong 1 workspace

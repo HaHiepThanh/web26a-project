@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
-import { OrganizationService } from '../services/organization.service';
+import { OrganizationStore } from '../ngrx/organization/organization.store';
 
 /**
  * Chặn vào app khi user chưa có tổ chức nào → đưa sang /onboarding.
@@ -15,19 +15,19 @@ import { OrganizationService } from '../services/organization.service';
  */
 export const onboardingGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
-  const orgService = inject(OrganizationService);
+  const orgService = inject(OrganizationStore);
   const router = inject(Router);
 
   if (!auth.currentUser()) return router.createUrlTree(['/login']);
 
   await orgService.ensureLoaded();
   // Thử lại một lần nếu lần đầu hỏng (thường do token chưa sẵn sàng).
-  if (orgService.loadError()) await orgService.reload();
+  if (orgService.lastError()) await orgService.reload();
 
   // Gọi API hỏng (mất mạng, backend chưa chạy) thì ĐỪNG đá sang onboarding:
   // người dùng sẽ tưởng mất sạch tổ chức và tạo thêm cái mới. Cho vào app,
   // trang tự hiện banner lỗi.
-  if (orgService.loadError()) return true;
+  if (orgService.lastError()) return true;
 
   if (orgService.organizations().length === 0) return router.createUrlTree(['/onboarding']);
   return true;
@@ -39,13 +39,13 @@ export const onboardingGuard: CanActivateFn = async () => {
  */
 export const onboardingDoneGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
-  const orgService = inject(OrganizationService);
+  const orgService = inject(OrganizationStore);
   const router = inject(Router);
 
   if (!auth.currentUser()) return router.createUrlTree(['/login']);
 
   await orgService.ensureLoaded();
-  if (orgService.loadError()) await orgService.reload();
+  if (orgService.lastError()) await orgService.reload();
 
   const slug = orgService.activeOrgSlug();
   if (slug) return router.createUrlTree(['/', slug, 'workspace']);

@@ -2,7 +2,7 @@ import { Component, computed, effect, inject, input, output, signal } from '@ang
 import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LucideTriangleAlert } from '@lucide/angular';
-import { OrganizationService } from '../../../services/organization.service';
+import { OrganizationStore } from '../../../ngrx/organization/organization.store';
 import { User, WorkspaceVisibility } from '../../../models';
 import { WorkspaceItem, WorkspaceMember, avatarBgFor, initialsOf } from '../../../mocks';
 
@@ -28,7 +28,7 @@ import { WorkspaceItem, WorkspaceMember, avatarBgFor, initialsOf } from '../../.
   templateUrl: './workspace-form-modal.html',
 })
 export class WorkspaceFormModal {
-  private readonly orgService = inject(OrganizationService);
+  private readonly orgService = inject(OrganizationStore);
 
   readonly isOpen = input<boolean>(false);
   readonly mode = input<'create' | 'edit'>('create');

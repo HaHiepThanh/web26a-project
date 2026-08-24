@@ -4,7 +4,7 @@ import { LucideBuilding2, LucideGlobe, LucideLock, LucideSearch, LucideStar, Luc
 import { WorkspaceUiService } from '../../services/workspace-ui.service';
 import { BoardService } from '../../services/board.service';
 import { AuthService } from '../../services/auth.service';
-import { OrganizationService } from '../../services/organization.service';
+import { OrganizationStore } from '../../ngrx/organization/organization.store';
 import { WorkspaceService } from '../../services/workspace.service';
 import { BoardPrefsService } from '../../services/board-prefs.service';
 import {
@@ -80,7 +80,7 @@ export class Workspace {
   private readonly workspaceUi = inject(WorkspaceUiService);
   private readonly boardService = inject(BoardService);
   private readonly auth = inject(AuthService);
-  private readonly orgService = inject(OrganizationService);
+  private readonly orgService = inject(OrganizationStore);
   private readonly workspaceService = inject(WorkspaceService);
   private readonly boardPrefs = inject(BoardPrefsService);
   private readonly router = inject(Router);

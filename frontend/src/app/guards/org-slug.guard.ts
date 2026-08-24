@@ -1,6 +1,6 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { OrganizationService } from '../services/organization.service';
+import { OrganizationStore } from '../ngrx/organization/organization.store';
 
 /**
  * Route dạng /:orgSlug/... — đổi slug trên URL thành tổ chức đang chọn.
@@ -10,7 +10,7 @@ import { OrganizationService } from '../services/organization.service';
  * trang được dựng, thay vì hiển thị dữ liệu của tổ chức sai.
  */
 export const orgSlugGuard: CanActivateFn = async (route) => {
-  const orgService = inject(OrganizationService);
+  const orgService = inject(OrganizationStore);
   const router = inject(Router);
 
   // Danh sách tổ chức lấy từ backend → phải chờ nạp xong mới tra được slug.
@@ -20,7 +20,7 @@ export const orgSlugGuard: CanActivateFn = async (route) => {
   // sàng) thì KHÔNG được kết luận "slug này không tồn tại" — lúc đó ta có mảng
   // rỗng vì lỗi, chứ không phải vì người dùng không có quyền. Cho vào app, trang
   // tự hiện banner lỗi. Trả 404 ở đây là nói dối người dùng.
-  if (orgService.loadError()) return true;
+  if (orgService.lastError()) return true;
 
   const slug = route.paramMap.get('orgSlug') ?? '';
   const org = orgService.orgBySlug(slug);
@@ -39,21 +39,21 @@ export const orgSlugGuard: CanActivateFn = async (route) => {
  * Guard này đưa về đúng /:slug/workspace của tổ chức đang chọn.
  */
 export const orgRedirectGuard: CanActivateFn = async () => {
-  const orgService = inject(OrganizationService);
+  const orgService = inject(OrganizationStore);
   const router = inject(Router);
 
   await orgService.ensureLoaded();
 
   // Nạp hỏng thì thử lại MỘT lần. Trường hợp hay gặp: lần nạp đầu chạy trước khi
   // Firebase kịp khôi phục phiên nên chưa có token.
-  if (orgService.loadError()) await orgService.reload();
+  if (orgService.lastError()) await orgService.reload();
 
   const slug = orgService.activeOrgSlug();
   if (slug) return router.createUrlTree(['/', slug, 'workspace']);
 
   // Vẫn hỏng → đưa vào app để thấy banner lỗi, ĐỪNG đá sang /onboarding: người
   // dùng sẽ tưởng mất sạch tổ chức và đi tạo thêm một cái thừa.
-  if (orgService.loadError()) return true;
+  if (orgService.lastError()) return true;
 
   // Thật sự chưa có tổ chức nào → onboarding.
   return router.createUrlTree(['/onboarding']);
