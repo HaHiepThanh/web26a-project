@@ -656,6 +656,7 @@ export class Board {
   private async bootstrap(): Promise<void> {
     await this.labelService.loadLabels(this.boardId);
     await this.cardService.loadCards(this.boardId);
+    void this.attachmentService.loadAttachmentsForBoard(this.boardId);
   }
 
   // ---- Gợi ý tạo thẻ do AI phát hiện trong chat ----

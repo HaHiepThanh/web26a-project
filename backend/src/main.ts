@@ -1,9 +1,16 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { json, urlencoded } from 'express';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Avatar profile gửi ảnh base64 trong JSON body (PATCH /auth/profile).
+  // Mặc định Express giới hạn body 100kb — ảnh base64 (~5MB gốc -> ~6.7MB
+  // sau khi encode) sẽ bị chặn với lỗi 413 trước khi tới controller.
+  app.use(json({ limit: '10mb' }));
+  app.use(urlencoded({ extended: true, limit: '10mb' }));
 
   // Cho phép frontend (Angular) gọi API. TODO: giới hạn origin theo môi trường.
   app.enableCors({ origin: true, credentials: true });

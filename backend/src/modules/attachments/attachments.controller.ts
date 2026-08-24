@@ -25,12 +25,20 @@ const MAX_BYTES = 10 * 1024 * 1024;
 export class AttachmentsController {
   constructor(private readonly attachments: AttachmentsService) {}
 
-  /** GET /attachments?cardId= — kèm link tải ký tạm (1 giờ). */
+  /**
+   * GET /attachments?cardId= — đính kèm của 1 thẻ.
+   * GET /attachments?boardId= — đính kèm của TOÀN BỘ thẻ trong board (nạp một
+   * lần khi mở board, để bìa/số đếm đính kèm hiện đúng trên mặt thẻ ngay cả
+   * với những thẻ chưa từng được mở modal — xem ghi chú ở `findAllByBoard`).
+   * Kèm link tải ký tạm (1 giờ) ở cả hai trường hợp.
+   */
   @Get()
   findAll(
     @CurrentUser() user: CurrentUserInfo,
     @Query('cardId') cardId: string,
+    @Query('boardId') boardId: string,
   ) {
+    if (boardId) return this.attachments.findAllByBoard(user.uid, boardId);
     return this.attachments.findAll(user.uid, cardId);
   }
 

@@ -90,11 +90,15 @@
   --transition-fast: 150ms ease-in-out;
   --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
 
-  /* Aliases so the ported Settings page (own naming) reads the same tokens */
+  /* Aliases so the ported Settings page (own naming) reads the same tokens.
+     NOTE: no `--border`/`--border-strong` alias here on purpose — daisyUI's
+     .btn/.btn-outline components read `--border` as a *border-width* token
+     (default 1px). An earlier alias here redefined it to a color value,
+     which made `border-width: var(--border)` invalid and made every daisyUI
+     button fall back to the browser default ~3px border. Settings.css uses
+     `var(--border-color)` directly instead. */
   --bg-surface-2: var(--bg-app);
   --bg-hover: var(--bg-card-hover);
-  --border: var(--border-color);
-  --border-strong: var(--border-color);
   --accent: var(--accent-blue);
   --accent-hover: var(--accent-blue-hover);
   --accent-soft: var(--accent-blue-soft);

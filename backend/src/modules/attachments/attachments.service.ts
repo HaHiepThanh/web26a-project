@@ -120,6 +120,56 @@ export class AttachmentsService {
     return this.toResponse(data as AttachmentRow[]);
   }
 
+  /**
+   * Toàn bộ đính kèm của MỌI thẻ trong 1 board, nạp 1 lần khi mở board.
+   *
+   * Trước đây đính kèm chỉ nạp khi mở modal của TỪNG thẻ (`findAll` ở trên) —
+   * nên bìa/số đếm đính kèm trên mặt thẻ ngoài board chỉ hiện đúng với thẻ đã
+   * từng được mở ít nhất 1 lần trong phiên hiện tại. Thẻ do người khác thêm
+   * ảnh, hoặc thêm ở phiên trước, thì mặt thẻ trống trơn cho tới khi ai đó mở
+   * nó ra. Endpoint này nạp trước toàn bộ để mặt thẻ đúng ngay từ lúc vào board.
+   *
+   * `cards` không có board_id nên phải đi vòng qua `lists`, giống `CardsService.findAll`.
+   */
+  async findAllByBoard(
+    uid: string,
+    boardId: string,
+  ): Promise<AttachmentResponse[]> {
+    if (!boardId) return [];
+    await this.access.assertBoardAccess(uid, boardId);
+
+    const sb = this.supabase.client;
+    const { data: lists } = await sb
+      .from('lists')
+      .select('id')
+      .eq('board_id', boardId);
+    if (!lists?.length) return [];
+
+    const { data: cards } = await sb
+      .from('cards')
+      .select('id')
+      .in(
+        'list_id',
+        lists.map((l) => l.id),
+      );
+    if (!cards?.length) return [];
+
+    const { data, error } = await this.supabase.client
+      .from('card_attachments')
+      .select('*')
+      .in(
+        'card_id',
+        cards.map((c) => c.id),
+      )
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      this.logger.error(`Đọc đính kèm theo board thất bại: ${error.message}`);
+      throw new InternalServerErrorException('Failed to load attachments');
+    }
+    return this.toResponse(data as AttachmentRow[]);
+  }
+
   async upload(
     uid: string,
     cardId: string,
