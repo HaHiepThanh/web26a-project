@@ -70,6 +70,11 @@ export class Settings {
   // ---------------------------------------------------------------------
   async onSaveProfile(user: User): Promise<void> {
     try {
+      // Gửi cả form — kể cả field đang để trống (`''`) — là ĐÚNG Ý ở đây: người
+      // dùng đang nhìn thấy và chủ động sửa toàn bộ form, để trống rồi bấm Lưu
+      // nghĩa là họ MUỐN xoá field đó, không phải "chưa đụng tới". Backend
+      // (UpdateProfileDto) đã phân biệt "vắng mặt = giữ nguyên" khác "chuỗi
+      // rỗng = xoá" nên gửi `''` an toàn, không còn vỡ 400 như trước.
       await this.auth.updateProfile({
         displayName: user.displayName ?? '',
         username: user.username ?? '',

@@ -120,6 +120,56 @@ export class AttachmentsService {
     return this.toResponse(data as AttachmentRow[]);
   }
 
+  /**
+   * Toàn bộ đính kèm của MỌI thẻ trong 1 board, nạp 1 lần khi mở board.
+   *
+   * Trước đây đính kèm chỉ nạp khi mở modal của TỪNG thẻ (`findAll` ở trên) —
+   * nên bìa/số đếm đính kèm trên mặt thẻ ngoài board chỉ hiện đúng với thẻ đã
+   * từng được mở ít nhất 1 lần trong phiên hiện tại. Thẻ do người khác thêm
+   * ảnh, hoặc thêm ở phiên trước, thì mặt thẻ trống trơn cho tới khi ai đó mở
+   * nó ra. Endpoint này nạp trước toàn bộ để mặt thẻ đúng ngay từ lúc vào board.
+   *
+   * `cards` không có board_id nên phải đi vòng qua `lists`, giống `CardsService.findAll`.
+   */
+  async findAllByBoard(
+    uid: string,
+    boardId: string,
+  ): Promise<AttachmentResponse[]> {
+    if (!boardId) return [];
+    await this.access.assertBoardAccess(uid, boardId);
+
+    const sb = this.supabase.client;
+    const { data: lists } = await sb
+      .from('lists')
+      .select('id')
+      .eq('board_id', boardId);
+    if (!lists?.length) return [];
+
+    const { data: cards } = await sb
+      .from('cards')
+      .select('id')
+      .in(
+        'list_id',
+        lists.map((l) => l.id),
+      );
+    if (!cards?.length) return [];
+
+    const { data, error } = await this.supabase.client
+      .from('card_attachments')
+      .select('*')
+      .in(
+        'card_id',
+        cards.map((c) => c.id),
+      )
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      this.logger.error(`Đọc đính kèm theo board thất bại: ${error.message}`);
+      throw new InternalServerErrorException('Failed to load attachments');
+    }
+    return this.toResponse(data as AttachmentRow[]);
+  }
+
   async upload(
     uid: string,
     cardId: string,
@@ -165,6 +215,23 @@ export class AttachmentsService {
       throw new InternalServerErrorException('Failed to upload file');
     }
 
+    const isImage = file.mimetype.startsWith('image/');
+    // Ảnh ĐẦU TIÊN của thẻ tự động thành bìa — trước đây phải bấm riêng "Set as
+    // cover" mới thấy, còn mặt thẻ ngoài board thì không có gì báo hiệu "thẻ
+    // này có đính kèm" nên gần như không ai biết mà bấm. Chỉ tự set khi thẻ
+    // CHƯA có bìa nào — ảnh thứ hai trở đi vẫn cần bấm tay, không tự ý thay bìa
+    // người dùng đã chọn.
+    let isCover = false;
+    if (isImage) {
+      const { data: existingCover } = await this.supabase.client
+        .from('card_attachments')
+        .select('id')
+        .eq('card_id', cardId)
+        .eq('is_cover', true)
+        .maybeSingle();
+      isCover = !existingCover;
+    }
+
     const { data, error } = await this.supabase.client
       .from('card_attachments')
       .insert({
@@ -173,7 +240,8 @@ export class AttachmentsService {
         mime_type: file.mimetype,
         storage_path: storagePath,
         size_bytes: file.size,
-        is_image: file.mimetype.startsWith('image/'),
+        is_image: isImage,
+        is_cover: isCover,
         uploaded_by: uid,
       })
       .select()

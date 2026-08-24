@@ -59,6 +59,24 @@ export function withAttachmentMethods() {
       },
 
       /**
+       * Nạp đính kèm của TOÀN BỘ thẻ trong 1 board, 1 lần khi mở board — để bìa/
+       * số đếm đính kèm hiện đúng trên mặt thẻ ngay cả với thẻ chưa từng mở modal
+       * (trước đây phải mở modal của từng thẻ thì `loadAttachments` mới chạy).
+       */
+      async loadAttachmentsForBoard(boardId: string): Promise<void> {
+        if (!boardId) return;
+        try {
+          const rows = await api.get<ApiAttachment[]>(`/attachments?boardId=${encodeURIComponent(boardId)}`);
+          const now = Date.now();
+          const nextLoadedAt = { ...store.loadedAt() };
+          for (const r of rows) nextLoadedAt[r.cardId] = now;
+          patchState(store, upsertEntities(rows.map(toAttachment)), { loadedAt: nextLoadedAt });
+        } catch (e) {
+          store.fail(describeError(e, 'Failed to load attachments.'));
+        }
+      },
+
+      /**
        * Tải lên lần lượt từng tệp.
        *
        * Cố tình KHÔNG chạy song song: chọn 10 tệp một lúc mà bắn 10 request cùng

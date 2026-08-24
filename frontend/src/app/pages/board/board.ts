@@ -99,6 +99,7 @@ const MINIMAP_OVERFLOW_RATIO = 1.5;
   imports: [
     FormsModule,
     DragDropModule,
+    RouterLink,
     BoardList,
     AddList,
     CardItem,
@@ -137,6 +138,11 @@ export class Board {
   readonly boardId = this.route.snapshot.paramMap.get('id') ?? 'demo-board';
 
   readonly board = this.boardService.currentBoard;
+  /** Board không tồn tại / đã bị xoá / không thuộc tổ chức của mình — `loadBoard()`
+   *  ghi message vào đây thay vì để `board()` mãi mãi null với UI vẫn hiện
+   *  "Loading board..." như đang tải dở. Reset về null ở ĐẦU mỗi lần loadBoard()
+   *  chạy, nên chuyển sang board khác hợp lệ thì tự dọn sạch, không kẹt lại. */
+  readonly boardLoadError = this.boardService.loadError;
   /** Màu nền trang chọn lúc tạo board (Workspace) — không có thì giữ nền xám mặc định
    *  (board demo cũ). Nền màu để trang Board + danh sách nổi bật hơn, không bị chìm. */
   readonly pageBgClass = computed(() => (this.board()?.backgroundImageUrl ? 'bg-base-200' : this.board()?.background ?? 'bg-base-200'));
@@ -152,6 +158,7 @@ export class Board {
   readonly checklistProgressByCardId = this.checklistService.progressByCard;
   readonly commentCountByCardId = this.commentService.countByCard;
   readonly coverUrlByCardId = this.attachmentService.coverUrlByCard;
+  readonly attachmentCountByCardId = this.attachmentService.countByCard;
 
   readonly today = new Date().toISOString().slice(0, 10);
   readonly priorities = PRIORITIES;
@@ -649,6 +656,7 @@ export class Board {
   private async bootstrap(): Promise<void> {
     await this.labelService.loadLabels(this.boardId);
     await this.cardService.loadCards(this.boardId);
+    void this.attachmentService.loadAttachmentsForBoard(this.boardId);
   }
 
   // ---- Gợi ý tạo thẻ do AI phát hiện trong chat ----
@@ -740,11 +748,22 @@ export class Board {
   // tiêu đề sẽ tự bôi đen sẵn để gõ đè tên ngay, không cần điền tên trước. ----
   readonly justCreatedCardId = signal<string | null>(null);
 
+  /** Chặn double/triple-click bắn nhiều request tạo thẻ cùng lúc cho CÙNG một
+   *  list — "Add card" tạo thật ngay lập tức (không phải form nháp), nên spam
+   *  click trước đây tạo ra từng đó thẻ "New card" trùng lặp. */
+  private readonly creatingCardForListId = new Set<string>();
+
   async createCard(listId: string): Promise<void> {
-    const card = await this.cardService.createCard(listId, { title: 'New card', priority: 'medium' });
-    if (!card) return;
-    this.justCreatedCardId.set(card.id);
-    this.openCardDetail(card);
+    if (this.creatingCardForListId.has(listId)) return;
+    this.creatingCardForListId.add(listId);
+    try {
+      const card = await this.cardService.createCard(listId, { title: 'New card', priority: 'medium' });
+      if (!card) return;
+      this.justCreatedCardId.set(card.id);
+      this.openCardDetail(card);
+    } finally {
+      this.creatingCardForListId.delete(listId);
+    }
   }
 
   // ---- Xoá / đổi tên danh sách ----

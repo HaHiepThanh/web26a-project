@@ -39,6 +39,10 @@ export class CardItem {
   readonly checklistProgress = input<{ done: number; total: number } | null>(null);
   /** [BONUS #4] Số bình luận — 0 nghĩa là chưa có bình luận nào. */
   readonly commentCount = input(0);
+  /** Số tệp đính kèm — hiện icon ghim giấy trên mặt thẻ NGAY CẢ KHI chưa có
+   *  ảnh nào được đặt làm bìa (coverUrl), để người dùng biết thẻ có đính kèm
+   *  mà không phải mở ra mới thấy. */
+  readonly attachmentCount = input(0);
 
   readonly flagPath = FLAG_PATH;
   readonly clipId = `flag-clip-${clipSeq++}`;
@@ -72,5 +76,7 @@ export class CardItem {
 
   /** Có ít nhất 1 dấu hiệu meta (mô tả/checklist/bình luận) để hiện hàng icon — tránh
    *  render hàng rỗng tốn khoảng trắng cho những thẻ chưa có gì thêm ngoài tiêu đề. */
-  readonly hasMeta = computed(() => !!this.card().description || (this.checklistProgress()?.total ?? 0) > 0 || this.commentCount() > 0);
+  readonly hasMeta = computed(
+    () => !!this.card().description || (this.checklistProgress()?.total ?? 0) > 0 || this.commentCount() > 0 || this.attachmentCount() > 0,
+  );
 }

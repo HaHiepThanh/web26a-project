@@ -53,13 +53,20 @@ export class AuthService {
       if (this.firebase?.auth) {
         onAuthStateChanged(this.firebase.auth, (fbUser) => {
           if (fbUser) {
-            const user: User = {
-              id: fbUser.uid,
-              email: fbUser.email ?? '',
-              displayName: fbUser.displayName ?? undefined,
-              avatarUrl: fbUser.photoURL ?? undefined,
-            };
-            this.setUser(user);
+            // ⚠️ TRƯỚC ĐÂY dựng `User` chỉ từ 3 field Firebase có sẵn
+            // (uid/email/displayName/photoURL) rồi `setUser()` thẳng — ghi ĐÈ
+            // LÊN hồ sơ đầy đủ (avatar thật đã lưu qua PATCH /auth/profile,
+            // username, phone, jobTitle) mà `getInitialUser()` vừa nạp từ
+            // localStorage. `onAuthStateChanged` tự bắn lại MỖI LẦN tải trang
+            // (Firebase khôi phục phiên đã lưu) nên hồ sơ đầy đủ bị xoá ngay
+            // sau F5, dù dữ liệu vẫn còn nguyên trên server — reload là "mất"
+            // avatar/username dù chưa hề đổi gì. Gọi lại `syncFromBackend()` —
+            // nguồn DUY NHẤT có avatarUrl thật — thay vì tự dựng user cụt.
+            void this.syncFromBackend().catch(() => {
+              // Backend/mạng lỗi đúng lúc này thì vẫn còn bản localStorage cũ
+              // trong currentUser() (nạp từ getInitialUser() lúc khởi tạo) —
+              // để nguyên, còn hơn xoá sạch về "chưa đăng nhập".
+            });
           }
         });
       }

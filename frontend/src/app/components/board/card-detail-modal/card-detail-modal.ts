@@ -1,4 +1,4 @@
-import { Component, ElementRef, computed, effect, inject, input, output, signal, untracked, viewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, computed, effect, inject, input, output, signal, untracked, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { Card, CardPriority, User } from '../../../models';
@@ -199,8 +199,7 @@ export class CardDetailModal {
     this.saving.set(false);
 
     for (const d of nhatKy) this.log(d);
-    this.justSaved.set(true);
-    setTimeout(() => this.justSaved.set(false), 2000);
+    this.flashSaved();
   }
 
   /** Bỏ mọi thay đổi, quay lại đúng dữ liệu đang có trên server. */
@@ -209,6 +208,35 @@ export class CardDetailModal {
     this.editingDesc.set(false);
   }
 
+  /** Phím Esc — cùng một đường đóng có xác nhận với nền ngoài/nút X, không tự
+   *  ý bỏ qua bản nháp chưa lưu. Gắn ở `document` vì phím tắt phải ăn dù đang
+   *  focus ở đâu trong modal (input tiêu đề, ô mô tả...), không chỉ khi
+   *  phần tử gốc của component đang được focus. */
+  @HostListener('document:keydown.escape')
+  onEscapeKey(): void {
+    this.attemptClose();
+  }
+
+  /**
+   * Thẻ vừa tạo (autoFocusTitle) mà đóng modal ngay, KHÔNG đụng gì tới bất kỳ
+   * trường nào (kể cả nhãn/checklist/đính kèm/bình luận — những thứ lưu ngay,
+   * không nằm trong bản nháp) → coi là bấm "Add card" nhầm/bỏ dở, xoá thẻ rác
+   * thay vì để lại một thẻ "New card" vô chủ trên board mãi mãi.
+   *
+   * Cố ý kiểm tra CẢ checklist/đính kèm/bình luận, không chỉ bản nháp: nếu
+   * người dùng đã kịp đính 1 tệp thật rồi mới đóng, đó là dữ liệu thật của họ
+   * — xoá nhầm còn tệ hơn để lại một thẻ "New card" thừa.
+   */
+  private readonly isAbandonedFreshCard = computed(
+    () =>
+      this.autoFocusTitle() &&
+      !this.dirty() &&
+      this.attachments().length === 0 &&
+      this.selectedLabelIds().length === 0 &&
+      this.checklistService.itemsFor(this.card().id).length === 0 &&
+      this.commentService.commentsFor(this.card().id).length === 0,
+  );
+
   /**
    * Bấm nền ngoài / nút X / Esc.
    *
@@ -216,6 +244,11 @@ export class CardDetailModal {
    * chỗ người dùng mất dữ liệu ở bản trước.
    */
   attemptClose(): void {
+    if (this.isAbandonedFreshCard()) {
+      void this.cardService.deleteCard(this.card().id, this.card().listId);
+      this.close.emit();
+      return;
+    }
     if (this.dirty()) {
       this.confirmClose.set(true);
       return;
@@ -251,6 +284,7 @@ export class CardDetailModal {
   onLabelsChange(labelIds: string[]): void {
     this.labelService.setCardLabels(this.card().id, labelIds);
     this.log('updated labels');
+    this.flashSaved();
   }
 
   // ---- Đính kèm tệp/hình ----
@@ -263,6 +297,16 @@ export class CardDetailModal {
     this.editingDesc.update((v) => !v);
   }
 
+  /** Nhãn/checklist/đính kèm/bình luận lưu NGAY khi bấm, không qua nút "Save
+   *  changes" (xem chú thích đầu file) — nút đó vì vậy đứng im/disabled sau
+   *  các thao tác này, dễ khiến người dùng tưởng "chưa lưu được gì". Bật lại
+   *  ĐÚNG cái badge "Saved" cạnh tiêu đề (vốn chỉ chạy cho save() ở trên) cho
+   *  các thao tác này luôn, để luôn có tín hiệu xác nhận dù không đụng nút Save. */
+  private flashSaved(): void {
+    this.justSaved.set(true);
+    setTimeout(() => this.justSaved.set(false), 2000);
+  }
+
   async onFilesSelected(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const files = input.files ? Array.from(input.files) : [];
@@ -270,15 +314,18 @@ export class CardDetailModal {
     const added = await this.attachmentService.addFiles(this.card().id, files);
     input.value = ''; // cho phép chọn lại cùng tệp
     for (const a of added) this.log(`attached "${a.name}"`);
+    if (added.length) this.flashSaved();
   }
 
   removeAttachment(id: string, name: string): void {
     void this.attachmentService.remove(this.card().id, id);
     this.log(`removed attachment "${name}"`);
+    this.flashSaved();
   }
 
   toggleCover(id: string): void {
     void this.attachmentService.toggleCover(this.card().id, id);
+    this.flashSaved();
   }
 
   /** Mở tệp bằng link ký. `null` nghĩa là link chưa cấp được — báo thay vì mở tab trắng. */

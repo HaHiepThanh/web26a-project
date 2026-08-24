@@ -29,6 +29,7 @@ export class BoardList {
   readonly checklistProgressByCardId = input<Record<string, { done: number; total: number } | undefined>>({});
   readonly commentCountByCardId = input<Record<string, number | undefined>>({});
   readonly coverUrlByCardId = input<Record<string, string | undefined>>({});
+  readonly attachmentCountByCardId = input<Record<string, number | undefined>>({});
   readonly savingCardIds = input<ReadonlySet<string>>(new Set());
   readonly errorCardIds = input<ReadonlySet<string>>(new Set());
   readonly today = input('');
