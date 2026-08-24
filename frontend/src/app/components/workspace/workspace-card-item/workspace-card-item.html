@@ -58,7 +58,7 @@
         type="button"
         class="btn btn-primary btn-xs rounded-xl px-3 font-black text-2xs shadow-xs hover:shadow-sm gap-1"
         (click)="createBoard.emit(workspace().id)" [class.hidden]="!canManage()">
-        <span>+</span>
+        <svg lucidePlus class="h-3 w-3 shrink-0" [strokeWidth]="3"></svg>
         <span>Add board</span>
       </button>
     </div>

@@ -18,10 +18,8 @@ import { orgRedirectGuard, orgSlugGuard } from './guards/org-slug.guard';
  * TODO(học viên): bật lại các guard khi service auth/organization đã hoạt động.
  */
 export const routes: Routes = [
-  // Landing page marketing (public, không dính auth-layout/app-layout) — nút
-  // Sign In / Sign Up trên trang này chỉ điều hướng sang /login /register,
-  // không tự động đăng nhập hay redirect.
-  { path: '', pathMatch: 'full', loadComponent: () => import('./pages/landing/landing').then((m) => m.Landing) },
+  // Không còn landing page marketing — vào thẳng /login.
+  { path: '', pathMatch: 'full', redirectTo: 'login' },
 
   // --- Nhóm xác thực (#1) ---
   {

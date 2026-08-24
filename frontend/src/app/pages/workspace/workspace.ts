@@ -1,6 +1,6 @@
 import { Component, DestroyRef, HostListener, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
-import { LucideBuilding2, LucideGlobe, LucideLock, LucideSearch, LucideStar, LucideX } from '@lucide/angular';
+import { LucideBuilding2, LucideGlobe, LucideLock, LucidePlus, LucideSearch, LucideStar, LucideX } from '@lucide/angular';
 import { WorkspaceUiService } from '../../services/workspace-ui.service';
 import { BoardService } from '../../services/board.service';
 import { AuthService } from '../../services/auth.service';
@@ -68,6 +68,7 @@ function toPrivacy(visibility: string): Privacy {
     LucideBuilding2,
     LucideGlobe,
     LucideLock,
+    LucidePlus,
     LucideSearch,
     LucideStar,
     LucideX,

@@ -111,7 +111,8 @@
 
         <button type="button" class="btn btn-primary btn-xs rounded-xl px-3.5 font-black gap-1 shadow-xs"
           (click)="openCreateWorkspace()" [class.hidden]="!canManage()">
-          <span>+ New Workspace</span>
+          <svg lucidePlus class="h-3 w-3 shrink-0" [strokeWidth]="3"></svg>
+          <span>New Workspace</span>
         </button>
       </div>
 
