@@ -1,6 +1,7 @@
 import { Component, inject, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { LabelService, LABEL_COLOR_PALETTE } from '../../../services/label.service';
+import { LabelStore } from '../../../ngrx/label/label.store';
+import { LABEL_COLOR_PALETTE } from '../../../ngrx/label/label.state';
 
 /** Chọn nhiều nhãn cùng lúc cho 1 thẻ + tự tạo nhãn mới (#5). Bảng màu tự tạo loại
  *  trừ đỏ/vàng/xám vì 3 màu đó đã khoá riêng cho mức ưu tiên (#4). */
@@ -11,7 +12,7 @@ import { LabelService, LABEL_COLOR_PALETTE } from '../../../services/label.servi
   styleUrl: './label-picker.css',
 })
 export class LabelPicker {
-  private readonly labelService = inject(LabelService);
+  private readonly labelService = inject(LabelStore);
 
   readonly boardId = input.required<string>();
   readonly selectedIds = input<string[]>([]);

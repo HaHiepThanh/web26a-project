@@ -1,5 +1,5 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
-import { ChecklistService } from '../../../services/checklist.service';
+import { ChecklistStore } from '../../../ngrx/checklist/checklist.store';
 import { ActivityStore } from '../../../ngrx/activity/activity.store';
 
 /** [BONUS #4] Checklist nhỏ trong card: thêm/tick/xoá item, thanh tiến độ. */
@@ -10,7 +10,7 @@ import { ActivityStore } from '../../../ngrx/activity/activity.store';
   styleUrl: './checklist.css',
 })
 export class Checklist {
-  private readonly checklistService = inject(ChecklistService);
+  private readonly checklistService = inject(ChecklistStore);
   private readonly activityService = inject(ActivityStore);
 
   readonly cardId = input.required<string>();

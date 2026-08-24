@@ -18,11 +18,11 @@ import {
   WS,
 } from '../models';
 import { FirebaseService } from './firebase.service';
-import { CardService } from './card.service';
-import { AttachmentService } from './attachment.service';
-import { ChecklistService } from './checklist.service';
-import { CommentService } from './comment.service';
-import { LabelService } from './label.service';
+import { CardStore } from '../ngrx/card/card.store';
+import { AttachmentStore } from '../ngrx/attachment/attachment.store';
+import { ChecklistStore } from '../ngrx/checklist/checklist.store';
+import { CommentStore } from '../ngrx/comment/comment.store';
+import { LabelStore } from '../ngrx/label/label.store';
 import { NotificationService } from './notification.service';
 import { OrganizationService } from './organization.service';
 
@@ -46,11 +46,13 @@ import { OrganizationService } from './organization.service';
 @Injectable({ providedIn: 'root' })
 export class RealtimeService {
   private readonly firebase = inject(FirebaseService);
-  private readonly cards = inject(CardService);
-  private readonly labels = inject(LabelService);
-  private readonly comments = inject(CommentService);
-  private readonly checklist = inject(ChecklistService);
-  private readonly attachments = inject(AttachmentService);
+  // Miền của Hoàng đã sang store; miền của Hoà (board/list/chat/activity) KHÔNG
+  // còn inject ở đây — store của bạn ấy tự đăng ký handler qua realtime.feature.
+  private readonly cards = inject(CardStore);
+  private readonly labels = inject(LabelStore);
+  private readonly comments = inject(CommentStore);
+  private readonly checklist = inject(ChecklistStore);
+  private readonly attachments = inject(AttachmentStore);
   private readonly organizations = inject(OrganizationService);
   private readonly notifications = inject(NotificationService);
 

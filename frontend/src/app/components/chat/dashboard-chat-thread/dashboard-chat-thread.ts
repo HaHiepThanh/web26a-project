@@ -5,8 +5,9 @@ import { BoardStore } from '../../../ngrx/board/board.store';
 import { avatarColorFor, initialsOf } from '../../../utils/avatar.util';
 import { ChatStore } from '../../../ngrx/chat/chat.store';
 import { TaskSuggestionStore } from '../../../ngrx/task-suggestion/task-suggestion.store';
-import { CardService } from '../../../services/card.service';
+import { CardStore } from '../../../ngrx/card/card.store';
 import { ListStore } from '../../../ngrx/list/list.store';
+import { BoardService, avatarColorFor, initialsOf } from '../../../services/board.service';
 import { RealtimeService } from '../../../services/realtime.service';
 import { OrganizationService } from '../../../services/organization.service';
 import { MessageList } from '../message-list/message-list';
@@ -34,7 +35,7 @@ export class DashboardChatThread {
   readonly boardLink = computed(() => ['/', this.orgService.activeOrgSlug(), 'board', this.board().id]);
   private readonly chat = inject(ChatStore);
   private readonly suggestions = inject(TaskSuggestionStore);
-  private readonly cardService = inject(CardService);
+  private readonly cardService = inject(CardStore);
   private readonly listService = inject(ListStore);
   private readonly realtime = inject(RealtimeService);
 

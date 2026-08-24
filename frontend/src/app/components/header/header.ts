@@ -21,7 +21,7 @@ import { relativeTimeFrom } from '../../utils/avatar.util';
 import { AuthService } from '../../services/auth.service';
 import { ThemeService } from '../../services/theme.service';
 import { WorkspaceUiService } from '../../services/workspace-ui.service';
-import { CardService } from '../../services/card.service';
+import { CardStore } from '../../ngrx/card/card.store';
 import { NotificationService } from '../../services/notification.service';
 import { OrganizationService } from '../../services/organization.service';
 import { RealtimeService } from '../../services/realtime.service';
@@ -58,7 +58,7 @@ export class Header {
   private readonly workspaceUi = inject(WorkspaceUiService);
   private readonly router = inject(Router);
   private readonly host = inject(ElementRef<HTMLElement>);
-  private readonly cardService = inject(CardService);
+  private readonly cardService = inject(CardStore);
   private readonly orgService = inject(OrganizationService);
   private readonly realtime = inject(RealtimeService);
   private readonly notificationService = inject(NotificationService);
@@ -128,7 +128,7 @@ export class Header {
   }
 
   /** Nhắc hạn Mức 1 (#10): đếm thẻ của "tôi" quá hạn/sắp đến hạn ở board vừa mở gần
-   *  nhất (CardService là singleton, còn dữ liệu ngay cả khi rời board qua trang khác). */
+   *  nhất (CardStore là singleton `providedIn: 'root'`, còn dữ liệu ngay cả khi rời board qua trang khác). */
   readonly dueBadgeCount = computed(() => {
     const c = this.cardService.myDueCounts();
     return c.overdue + c.dueSoon;
