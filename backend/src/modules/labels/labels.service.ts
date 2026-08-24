@@ -5,6 +5,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import { AccessService } from '../../common/access/access.service';
 import { SupabaseService } from '../../common/supabase/supabase.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 
@@ -59,49 +60,14 @@ export class LabelsService {
   constructor(
     private readonly supabase: SupabaseService,
     private readonly realtime: RealtimeGateway,
+    private readonly access: AccessService,
   ) {}
-
-  /**
-   * Kiểm tra user có được truy cập board này không, trả về `org_id` của nó.
-   * `labels.org_id` là NOT NULL nhưng client chỉ gửi `boardId`, nên phải đi
-   * qua board để lấy — đồng thời tiện kiểm tra quyền luôn.
-   */
-  private async assertBoardAccess(uid: string, boardId: string): Promise<string> {
-    const { data: board, error: boardError } = await this.supabase.client
-      .from('boards')
-      .select('id, org_id')
-      .eq('id', boardId)
-      .maybeSingle();
-    if (boardError) {
-      // id gõ sai định dạng uuid → coi như không tồn tại, đừng để lọt thành 500.
-      if (laUuidSai(boardError)) throw new NotFoundException('Board not found.');
-      throw new InternalServerErrorException('Failed to load board.');
-    }
-    if (!board) {
-      throw new NotFoundException('Board not found.');
-    }
-
-    const { data: member, error: memberError } = await this.supabase.client
-      .from('organization_members')
-      .select('role')
-      .eq('org_id', board.org_id)
-      .eq('user_id', uid)
-      .maybeSingle();
-    if (memberError) {
-      throw new InternalServerErrorException('Failed to check permissions.');
-    }
-    if (!member) {
-      throw new ForbiddenException('You are not a member of this board\'s organization.');
-    }
-
-    return board.org_id;
-  }
 
   /** Danh sách nhãn của 1 board. Thiếu `boardId` → trả `[]` thay vì lỗi. */
   async findAll(uid: string, boardId: string): Promise<LabelResponse[]> {
     if (!boardId) return [];
 
-    await this.assertBoardAccess(uid, boardId);
+    await this.access.assertBoardAccess(uid, boardId);
 
     const { data, error } = await this.supabase.client
       .from('labels')
@@ -122,7 +88,7 @@ export class LabelsService {
       throw new BadRequestException('color must be a hex value like #rrggbb.');
     }
 
-    const orgId = await this.assertBoardAccess(uid, boardId);
+    const { orgId } = await this.access.assertBoardAccess(uid, boardId);
 
     const { data, error } = await this.supabase.client
       .from('labels')
@@ -159,16 +125,11 @@ export class LabelsService {
       throw new NotFoundException('Label not found.');
     }
 
-    const { data: member, error: memberError } = await this.supabase.client
-      .from('organization_members')
-      .select('role')
-      .eq('org_id', label.org_id)
-      .eq('user_id', uid)
-      .maybeSingle();
-    if (memberError) {
-      throw new InternalServerErrorException('Failed to check permissions.');
-    }
-    if (!member) {
+    // Nhãn thuộc về board, nên kiểm quyền theo BOARD để ăn đủ ba tầng. Kiểm mỗi
+    // organization_members là người cùng tổ chức nhưng ngoài board vẫn sửa được.
+    try {
+      await this.access.assertBoardAccess(uid, label.board_id as string);
+    } catch {
       throw new NotFoundException('Label not found.');
     }
 
@@ -231,16 +192,11 @@ export class LabelsService {
       throw new NotFoundException('Label not found.');
     }
 
-    const { data: member, error: memberError } = await this.supabase.client
-      .from('organization_members')
-      .select('role')
-      .eq('org_id', label.org_id)
-      .eq('user_id', uid)
-      .maybeSingle();
-    if (memberError) {
-      throw new InternalServerErrorException('Failed to check permissions.');
-    }
-    if (!member) {
+    // Nhãn thuộc về board, nên kiểm quyền theo BOARD để ăn đủ ba tầng. Kiểm mỗi
+    // organization_members là người cùng tổ chức nhưng ngoài board vẫn sửa được.
+    try {
+      await this.access.assertBoardAccess(uid, label.board_id as string);
+    } catch {
       throw new NotFoundException('Label not found.');
     }
 

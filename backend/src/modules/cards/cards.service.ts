@@ -6,6 +6,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { AccessService } from '../../common/access/access.service';
 import { SupabaseService } from '../../common/supabase/supabase.service';
 import { ActivityService } from '../activity/activity.service';
 import { UpdateCardDto } from './dto/update-card.dto';
@@ -78,6 +79,7 @@ export class CardsService {
     private readonly supabase: SupabaseService,
     private readonly activity: ActivityService,
     private readonly realtime: RealtimeGateway,
+    private readonly access: AccessService,
   ) {}
 
   /**
@@ -95,43 +97,6 @@ export class CardsService {
     return (data?.board_id as string) ?? '';
   }
 
-  /**
-   * Người gọi có thuộc tổ chức này không? Không thuộc → 404.
-   *
-   * ⚠️ Backend dùng service_role key nên RLS bị bỏ qua — database KHÔNG chặn gì.
-   *    Thiếu hàm này thì bất kỳ ai đăng nhập cũng đọc/sửa/xoá được thẻ của mọi
-   *    công ty khác, chỉ cần đoán đúng id.
-   */
-  private async assertOrgMember(uid: string, orgId: string): Promise<void> {
-    const { data, error } = await this.supabase.client
-      .from('organization_members')
-      .select('role')
-      .eq('org_id', orgId)
-      .eq('user_id', uid)
-      .maybeSingle();
-    if (error) {
-      this.logger.error(`Kiểm tra quyền thất bại (uid=${uid}, org=${orgId}): ${error.message}`);
-      throw new InternalServerErrorException('Failed to check permissions');
-    }
-    // 404 chứ không phải 403: trả 403 là vô tình xác nhận "id này có thật".
-    if (!data) throw new NotFoundException('Data not found.');
-  }
-
-  /** Tìm board và xác nhận người gọi được phép đụng vào nó. */
-  private async assertBoardAccess(uid: string, boardId: string): Promise<void> {
-    const { data: board, error } = await this.supabase.client
-      .from('boards')
-      .select('id, org_id')
-      .eq('id', boardId)
-      .maybeSingle();
-    if (error) {
-      if (laUuidSai(error)) throw new NotFoundException('Board not found.');
-      throw new InternalServerErrorException('Failed to load board');
-    }
-    if (!board) throw new NotFoundException('Board not found.');
-    await this.assertOrgMember(uid, board.org_id as string);
-  }
-
   /** Tìm thẻ và xác nhận người gọi được phép đụng vào nó. */
   private async assertCardAccess(uid: string, cardId: string): Promise<CardRow> {
     const { data: card, error } = await this.supabase.client
@@ -144,14 +109,17 @@ export class CardsService {
       throw new InternalServerErrorException('Failed to load card');
     }
     if (!card) throw new NotFoundException('Card not found.');
-    await this.assertOrgMember(uid, (card as CardRow).org_id);
+    // Bản dùng chung đi qua list → board → workspace → tổ chức, nên bắt được cả
+    // board 'private' và workspace 'restricted'. Kiểm mỗi organization_members
+    // như trước là người cùng tổ chức nhưng ngoài board vẫn sửa được thẻ.
+    await this.access.assertCardAccess(uid, cardId);
     return card as CardRow;
   }
 
   /** Toàn bộ thẻ của 1 board. `cards` không có board_id nên phải đi vòng qua `lists`. */
   async findAll(uid: string, boardId: string): Promise<CardResponse[]> {
     if (!boardId) return [];
-    await this.assertBoardAccess(uid, boardId);
+    await this.access.assertBoardAccess(uid, boardId);
 
     const sb = this.supabase.client;
     const { data: lists } = await sb.from('lists').select('id').eq('board_id', boardId);
@@ -184,7 +152,7 @@ export class CardsService {
     if (listError && laUuidSai(listError)) throw new NotFoundException('List not found.');
     if (!list) throw new NotFoundException('List not found.');
 
-    await this.assertOrgMember(uid, list.org_id as string);
+    await this.access.assertBoardAccess(uid, list.board_id as string);
 
     const { data: last } = await sb
       .from('cards')

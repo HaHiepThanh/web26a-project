@@ -5,6 +5,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import { AccessService } from '../../common/access/access.service';
 import { SupabaseService } from '../../common/supabase/supabase.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 
@@ -60,43 +61,8 @@ export class ListsService {
   constructor(
     private readonly supabase: SupabaseService,
     private readonly realtime: RealtimeGateway,
+    private readonly access: AccessService,
   ) {}
-
-  /**
-   * Kiểm tra user có được truy cập board này không, trả về `org_id` của nó.
-   * `lists.org_id` là NOT NULL nhưng client chỉ gửi `boardId` lên, nên phải đi
-   * qua board để lấy — đồng thời tiện kiểm tra quyền luôn.
-   */
-  private async assertBoardAccess(uid: string, boardId: string): Promise<string> {
-    const { data: board, error: boardError } = await this.supabase.client
-      .from('boards')
-      .select('id, org_id')
-      .eq('id', boardId)
-      .maybeSingle();
-    if (boardError) {
-      // id gõ sai định dạng uuid → coi như không tồn tại, đừng để lọt thành 500.
-      if (laUuidSai(boardError)) throw new NotFoundException('Board not found.');
-      throw new InternalServerErrorException('Failed to load board.');
-    }
-    if (!board) {
-      throw new NotFoundException('Board not found.');
-    }
-
-    const { data: member, error: memberError } = await this.supabase.client
-      .from('organization_members')
-      .select('role')
-      .eq('org_id', board.org_id)
-      .eq('user_id', uid)
-      .maybeSingle();
-    if (memberError) {
-      throw new InternalServerErrorException('Failed to check permissions.');
-    }
-    if (!member) {
-      throw new ForbiddenException('You are not a member of this board\'s organization.');
-    }
-
-    return board.org_id;
-  }
 
   /**
    * Danh sách list trong 1 board, sắp theo `position` tăng dần.
@@ -105,7 +71,7 @@ export class ListsService {
   async findAll(uid: string, boardId: string): Promise<ListResponse[]> {
     if (!boardId) return [];
 
-    await this.assertBoardAccess(uid, boardId);
+    await this.access.assertBoardAccess(uid, boardId);
 
     const { data, error } = await this.supabase.client
       .from('lists')
@@ -129,7 +95,7 @@ export class ListsService {
       throw new BadRequestException('Missing boardId or name.');
     }
 
-    const orgId = await this.assertBoardAccess(uid, boardId);
+    const { orgId } = await this.access.assertBoardAccess(uid, boardId);
 
     const { data: last, error: lastError } = await this.supabase.client
       .from('lists')
@@ -178,16 +144,12 @@ export class ListsService {
       throw new NotFoundException('List not found.');
     }
 
-    const { data: member, error: memberError } = await this.supabase.client
-      .from('organization_members')
-      .select('role')
-      .eq('org_id', list.org_id)
-      .eq('user_id', uid)
-      .maybeSingle();
-    if (memberError) {
-      throw new InternalServerErrorException('Failed to check permissions.');
-    }
-    if (!member) {
+    // Đi qua board để ăn ĐỦ ba tầng (tổ chức → workspace restricted → board
+    // private). Kiểm mỗi `organization_members` như trước là bỏ lọt hai tầng
+    // sau: người cùng tổ chức nhưng không có tên trong board vẫn sửa được cột.
+    try {
+      await this.access.assertBoardAccess(uid, list.board_id as string);
+    } catch {
       throw new NotFoundException('List not found.');
     }
 

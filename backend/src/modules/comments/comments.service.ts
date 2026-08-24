@@ -5,6 +5,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { AccessService } from '../../common/access/access.service';
 import { SupabaseService } from '../../common/supabase/supabase.service';
 import { ActivityService } from '../activity/activity.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
@@ -37,6 +38,7 @@ export class CommentsService {
     private readonly supabase: SupabaseService,
     private readonly activity: ActivityService,
     private readonly realtime: RealtimeGateway,
+    private readonly access: AccessService,
   ) {}
 
   /**
@@ -55,14 +57,10 @@ export class CommentsService {
     // 22P02 = id gõ sai định dạng uuid → coi như không tồn tại.
     if (error?.code === '22P02' || !card) throw new NotFoundException('Card not found.');
 
-    const { data: member } = await sb
-      .from('organization_members')
-      .select('role')
-      .eq('org_id', card.org_id as string)
-      .eq('user_id', uid)
-      .maybeSingle();
-    // 404 chứ không phải 403: đừng xác nhận "thẻ này có thật" cho người ngoài.
-    if (!member) throw new NotFoundException('Card not found.');
+    // Bản dùng chung kiểm đủ ba tầng (tổ chức → workspace restricted → board
+    // private) và cũng trả 404 cho mọi trường hợp, nên không lộ thẻ có thật hay
+    // không. Kiểm mỗi organization_members như trước là bỏ lọt hai tầng sau.
+    await this.access.assertCardAccess(uid, cardId);
 
     return {
       title: card.title as string,
