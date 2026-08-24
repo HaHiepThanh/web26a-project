@@ -43,6 +43,24 @@ export class Login {
     }
   }
 
+  /**
+   * Đi đâu sau khi đăng nhập xong.
+   *
+   * `returnUrl` do trang khác gắn vào khi nó đá người chưa đăng nhập tới đây
+   * (hiện có /join/:token). Không có nó thì người bấm link mời đăng nhập xong sẽ
+   * rơi vào /workspace và mất hẳn lời mời đang cầm.
+   *
+   * ⚠️ Chỉ nhận đường dẫn nội bộ bắt đầu bằng MỘT dấu '/'. Chuỗi kiểu
+   *    `//ke-xau.com` cũng hợp lệ với navigateByUrl nhưng trình duyệt hiểu là
+   *    tên miền khác — đó là lỗ hổng chuyển hướng mở kinh điển.
+   */
+  private afterLoginUrl(needsOnboarding: boolean): string {
+    if (needsOnboarding) return '/onboarding';
+    const back = this.route.snapshot.queryParamMap.get('returnUrl') ?? '';
+    if (back.startsWith('/') && !back.startsWith('//')) return back;
+    return '/workspace';
+  }
+
   togglePasswordVisible(): void {
     this.passwordVisible.update((v) => !v);
   }
@@ -69,7 +87,7 @@ export class Login {
     this.passwordLoading.set(true);
     try {
       const { needsOnboarding } = await this.auth.loginWithEmail(email, this.password);
-      void this.router.navigateByUrl(needsOnboarding ? '/onboarding' : '/workspace');
+      void this.router.navigateByUrl(this.afterLoginUrl(needsOnboarding));
     } catch (err) {
       this.addToast(this.describeLoginError(err), 'error');
     } finally {
@@ -112,8 +130,9 @@ export class Login {
     try {
       const { needsOnboarding } = await this.auth.loginWithGoogle();
       // Chưa thuộc tổ chức nào → đi tạo tổ chức trước. Có rồi → vào thẳng app
-      // (/workspace tự chuyển sang /:orgSlug/workspace).
-      void this.router.navigateByUrl(needsOnboarding ? '/onboarding' : '/workspace');
+      // (/workspace tự chuyển sang /:orgSlug/workspace), hoặc quay lại đúng
+      // trang đã đưa họ tới đây.
+      void this.router.navigateByUrl(this.afterLoginUrl(needsOnboarding));
     } catch (err) {
       // Người dùng tự đóng popup thì không phải lỗi — đừng doạ họ bằng toast đỏ.
       const code = (err as { code?: string })?.code ?? '';

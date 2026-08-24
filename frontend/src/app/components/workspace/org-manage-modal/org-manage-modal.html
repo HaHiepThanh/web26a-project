@@ -114,6 +114,120 @@
         }
       </section>
 
+
+      <!--
+        2b. Mời bằng link.
+        Chỉ owner/admin thấy — phần này hiện `token`, tức là chính bí mật của link.
+      -->
+      @if (canManageLinks()) {
+      <section class="mb-5">
+        <h4 class="mb-2 flex items-center gap-1.5 text-2xs font-black uppercase tracking-wide text-base-content/45">
+          <svg lucideLink class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg>
+          Invite with a link
+        </h4>
+
+        <!-- Tuỳ chọn khi tạo -->
+        <div class="mb-2 flex flex-wrap items-center gap-2">
+          <label class="flex items-center gap-1.5">
+            <span class="text-3xs font-black uppercase tracking-wide text-base-content/45">Expires</span>
+            <select class="select select-sm rounded-lg text-xs font-semibold"
+              [ngModel]="linkExpiryDays()" (ngModelChange)="linkExpiryDays.set(+$event)"
+              name="linkExpiryDays">
+              <option [value]="1">1 day</option>
+              <option [value]="7">7 days</option>
+              <option [value]="30">30 days</option>
+            </select>
+          </label>
+
+          <label class="flex items-center gap-1.5">
+            <span class="text-3xs font-black uppercase tracking-wide text-base-content/45">Joins as</span>
+            <select class="select select-sm rounded-lg text-xs font-semibold"
+              [ngModel]="linkRole()" (ngModelChange)="linkRole.set($event)" name="linkRole">
+              <option value="member">Member</option>
+              <option value="admin">Admin</option>
+            </select>
+          </label>
+
+          <label class="flex items-center gap-1.5">
+            <span class="text-3xs font-black uppercase tracking-wide text-base-content/45">Max uses</span>
+            <input type="number" min="1" max="500" placeholder="No limit"
+              class="input input-sm w-24 rounded-lg text-xs font-semibold"
+              [ngModel]="linkMaxUses()" (ngModelChange)="linkMaxUses.set($event)" name="linkMaxUses" />
+          </label>
+
+          <button type="button" class="btn btn-primary btn-sm rounded-lg gap-1.5 px-3 text-xs font-bold"
+            [disabled]="linksLoading()" (click)="onCreateLink()">
+            @if (linksLoading()) {
+            <span class="loading loading-spinner loading-xs"></span>
+            } @else {
+            <svg lucideLink class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg>
+            }
+            Create link
+          </button>
+        </div>
+
+        <!-- Link vừa tạo: hiện ngay để sao chép, khỏi đi tìm trong danh sách -->
+        @if (justCreated(); as fresh) {
+        <div class="mb-2 flex items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/5 p-1.5">
+          <input #freshInput type="text" readonly [value]="fullLink(fresh.token)"
+            class="input input-sm grow rounded-lg font-mono text-2xs"
+            (focus)="freshInput.select()" />
+          <button type="button" class="btn btn-primary btn-sm shrink-0 rounded-lg gap-1 px-2.5 text-2xs font-bold"
+            (click)="onCopy(fresh, freshInput)">
+            @if (copiedId() === fresh.id) {
+            <svg lucideCheck class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg> Copied
+            } @else {
+            <svg lucideCopy class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg> Copy
+            }
+          </button>
+        </div>
+        }
+
+        <!--
+          Danh sách link còn sống.
+          Lọc theo `active` do SERVER tính — không tự so hạn ở client.
+        -->
+        @if (activeLinks().length) {
+        <div class="flex flex-col gap-1">
+          @for (link of activeLinks(); track link.id) {
+          <div class="flex items-center gap-2 rounded-xl border border-base-300 px-2.5 py-2">
+            <input #rowInput type="text" readonly [value]="fullLink(link.token)"
+              class="input input-xs grow rounded-lg font-mono text-3xs" (focus)="rowInput.select()" />
+
+            <span class="shrink-0 whitespace-nowrap text-3xs font-bold text-base-content/70">
+              {{ link.role === 'admin' ? 'Admin' : 'Member' }} · {{ expiryLabel(link.expiresAt) }} ·
+              {{ usageLabel(link) }}
+            </span>
+
+            <button type="button" class="btn btn-ghost btn-xs shrink-0 rounded-lg px-1.5"
+              [title]="'Copy this link'" (click)="onCopy(link, rowInput)">
+              @if (copiedId() === link.id) {
+              <svg lucideCheck class="h-3.5 w-3.5 text-success" [strokeWidth]="2.4"></svg>
+              } @else {
+              <svg lucideCopy class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg>
+              }
+            </button>
+
+            <button type="button" class="btn btn-ghost btn-xs shrink-0 rounded-lg px-1.5 text-error"
+              title="Revoke this link" [disabled]="revokingIds().has(link.id)"
+              (click)="onRevokeLink(link.id)">
+              @if (revokingIds().has(link.id)) {
+              <span class="loading loading-spinner loading-xs"></span>
+              } @else {
+              <svg lucideTrash2 class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg>
+              }
+            </button>
+          </div>
+          }
+        </div>
+        } @else if (!linksLoading()) {
+        <p class="rounded-xl border border-dashed border-base-300 px-2.5 py-2.5 text-2xs font-semibold text-base-content/70">
+          No active invite links. Create one to let people join without an individual invite.
+        </p>
+        }
+      </section>
+      }
+
       <!-- 3. Lời mời đang chờ -->
       @if (pendingInvites().length) {
       <section class="mb-5">

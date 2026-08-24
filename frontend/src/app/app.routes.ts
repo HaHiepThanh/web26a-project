@@ -64,6 +64,16 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/onboarding/onboarding').then((m) => m.Onboarding),
   },
 
+  // --- Link mời vào tổ chức ---
+  // Cũng nằm NGOÀI app-layout, cùng lý do với /onboarding: người bấm link có
+  // thể chưa thuộc tổ chức nào, mà onboardingGuard của layout app sẽ đá họ sang
+  // /onboarding trước khi trang kịp chạy — đúng lúc họ đang cầm lời mời.
+  // Trang tự lo phần chưa đăng nhập (chuyển sang /login kèm returnUrl).
+  {
+    path: 'join/:token',
+    loadComponent: () => import('./pages/join/join').then((m) => m.Join),
+  },
+
   // --- Phần app đã đăng nhập (#3, #4, #8, #9) ---
   {
     path: '',

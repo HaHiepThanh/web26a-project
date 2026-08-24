@@ -3,6 +3,7 @@ export * from './user.model';
 export * from './organization.model';
 export * from './organization-member.model';
 export * from './invite.model';
+export * from './invite-link.model';
 export * from './workspace.model';
 export * from './workspace-item.model';
 export * from './board.model';

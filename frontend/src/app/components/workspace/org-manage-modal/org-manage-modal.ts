@@ -3,7 +3,9 @@ import { FormsModule } from '@angular/forms';
 import {
   LucideBuilding2,
   LucideCheck,
+  LucideCopy,
   LucideCrown,
+  LucideLink,
   LucideSearch,
   LucideTrash2,
   LucideUserPlus,
@@ -11,7 +13,15 @@ import {
 } from '@lucide/angular';
 import { AuthService } from '../../../services/auth.service';
 import { UserSearchService } from '../../../services/user-search.service';
-import { ApiUserSearchResult, OrgInviteRole, OrgMemberView, Role } from '../../../models';
+import {
+  ApiInviteLink,
+  ApiUserSearchResult,
+  InviteLinkRole,
+  OrgInviteRole,
+  OrgMemberView,
+  Role,
+} from '../../../models';
+import { InviteLinkStore } from '../../../ngrx/invite-link/invite-link.store';
 import { Organization, OrgInvite, avatarBgFor, initialsOf } from '../../../mocks';
 
 /** Modal quản lý 1 Organization: đổi tên, mời thành viên qua UUID/email/tên,
@@ -24,7 +34,9 @@ import { Organization, OrgInvite, avatarBgFor, initialsOf } from '../../../mocks
     FormsModule,
     LucideBuilding2,
     LucideCheck,
+    LucideCopy,
     LucideCrown,
+    LucideLink,
     LucideSearch,
     LucideTrash2,
     LucideUserPlus,
@@ -35,6 +47,7 @@ import { Organization, OrgInvite, avatarBgFor, initialsOf } from '../../../mocks
 export class OrgManageModal {
   private readonly auth = inject(AuthService);
   private readonly userSearch = inject(UserSearchService);
+  private readonly inviteLinks = inject(InviteLinkStore);
 
   readonly isOpen = input<boolean>(false);
   readonly org = input<Organization | null>(null);
@@ -71,6 +84,35 @@ export class OrgManageModal {
     return this.nameInput().trim() !== o.name;
   });
 
+  // ------------------------------------------------------------ link mời
+
+  /**
+   * Ai được quản lý link: owner HOẶC admin — khác `isOwner` ở trên (chỉ owner).
+   *
+   * Đây chỉ để ẩn/hiện giao diện cho gọn mắt, KHÔNG phải lớp bảo mật: backend
+   * đã chặn thành viên thường gọi nhóm endpoint này. Nhưng vẫn phải ẩn, vì phần
+   * trả về có `token` — không nên vẽ chỗ để nó lỡ hiện ra.
+   */
+  readonly canManageLinks = computed(() => {
+    const o = this.org();
+    const me = this.auth.currentUser()?.id;
+    if (!o || !me) return false;
+    if (o.ownerId === me) return true;
+    return this.members().some((m) => m.user.id === me && m.role === 'admin');
+  });
+
+  readonly activeLinks = this.inviteLinks.activeLinks;
+  readonly linksLoading = this.inviteLinks.loading;
+  readonly revokingIds = this.inviteLinks.revoking;
+
+  readonly linkExpiryDays = signal<number>(7);
+  readonly linkRole = signal<InviteLinkRole>('member');
+  /** Chuỗi rỗng = không giới hạn lượt. Giữ dạng chuỗi vì ô nhập trả về chuỗi. */
+  readonly linkMaxUses = signal<string>('');
+  /** Link vừa tạo — hiện ô sao chép ngay, khỏi phải đi tìm trong danh sách. */
+  readonly justCreated = signal<ApiInviteLink | null>(null);
+  readonly copiedId = signal<string | null>(null);
+
   readonly searching = this.userSearch.searching;
   readonly emptyResult = this.userSearch.emptyResult;
 
@@ -106,6 +148,19 @@ export class OrgManageModal {
         this.inviteRole.set('member');
         this.userSearch.clear();
         this.feedback.set(null);
+        this.justCreated.set(null);
+        this.copiedId.set(null);
+        this.linkExpiryDays.set(7);
+        this.linkRole.set('member');
+        this.linkMaxUses.set('');
+
+        // Chỉ hỏi server khi người này có quyền — thành viên thường gọi vào là
+        // ăn 403 vô ích.
+        if (o && this.canManageLinks()) void this.inviteLinks.loadLinks(o.id);
+      } else {
+        // Đóng modal thì bỏ token khỏi bộ nhớ. Nó không có lý do gì sống lâu
+        // hơn màn hình đang dùng tới nó.
+        this.inviteLinks.clearLinks();
       }
     });
   }
@@ -152,6 +207,86 @@ export class OrgManageModal {
     const name = this.nameInput().trim();
     if (!o || !name) return;
     this.rename.emit({ orgId: o.id, name });
+  }
+
+  // ------------------------------------------------------------ link mời
+
+  /**
+   * Link đầy đủ để đưa cho người khác.
+   *
+   * Ghép ở client bằng `location.origin` chứ không lấy từ server: cùng một
+   * backend có thể phục vụ localhost lúc chạy thử và tên miền thật khi triển
+   * khai, server không biết người dùng đang mở app ở đâu.
+   */
+  fullLink(token: string): string {
+    return `${location.origin}/join/${token}`;
+  }
+
+  async onCreateLink(): Promise<void> {
+    const o = this.org();
+    if (!o) return;
+
+    // Ô để trống = không giới hạn lượt. Chỉ gửi `maxUses` khi người dùng thật sự
+    // gõ một số hợp lệ — gửi 0 hay NaN là ValidationPipe của backend đánh trượt.
+    const raw = this.linkMaxUses().trim();
+    const parsed = raw ? Number(raw) : NaN;
+    const maxUses = Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
+
+    const link = await this.inviteLinks.createLink(o.id, {
+      expiresInDays: this.linkExpiryDays(),
+      role: this.linkRole(),
+      ...(maxUses === undefined ? {} : { maxUses }),
+    });
+    if (link) {
+      this.justCreated.set(link);
+      this.linkMaxUses.set('');
+    }
+  }
+
+  /**
+   * Sao chép link.
+   *
+   * `navigator.clipboard` cần ngữ cảnh bảo mật (https hoặc localhost) và có thể
+   * bị từ chối quyền — hỏng thì chọn sẵn chữ trong ô để người dùng tự Ctrl+C,
+   * thay vì im lặng không làm gì.
+   */
+  async onCopy(link: ApiInviteLink, input: HTMLInputElement): Promise<void> {
+    const text = this.fullLink(link.token);
+    try {
+      await navigator.clipboard.writeText(text);
+      this.copiedId.set(link.id);
+      setTimeout(() => {
+        if (this.copiedId() === link.id) this.copiedId.set(null);
+      }, 2000);
+    } catch {
+      input.select();
+    }
+  }
+
+  onRevokeLink(linkId: string): void {
+    void this.inviteLinks.revokeLink(linkId);
+    if (this.justCreated()?.id === linkId) this.justCreated.set(null);
+  }
+
+  /** Còn bao lâu, dạng đọc được. Chỉ HIỂN THỊ — sống hay chết đọc `active` của server. */
+  expiryLabel(iso: string): string {
+    const ms = new Date(iso).getTime() - Date.now();
+    if (Number.isNaN(ms)) return '';
+    if (ms <= 0) return 'expired';
+    // ceil chứ không phải floor: link vừa tạo với hạn 7 ngày còn 6,999 ngày,
+    // floor ra '6d left' ngay sau khi người dùng chọn '7 days' — trông như
+    // hệ thống ăn bớt mất một ngày.
+    const days = Math.ceil(ms / 86_400_000);
+    if (days >= 1) return `${days}d left`;
+    const hours = Math.max(1, Math.floor(ms / 3_600_000));
+    return `${hours}h left`;
+  }
+
+  /** '3 / 10 used', hoặc '3 used' khi không giới hạn. */
+  usageLabel(link: ApiInviteLink): string {
+    return link.maxUses === null
+      ? `${link.usedCount} used`
+      : `${link.usedCount} / ${link.maxUses} used`;
   }
 
   /** Component cha gọi lại sau khi service xử lý xong, để hiện kết quả ngay trong modal. */
