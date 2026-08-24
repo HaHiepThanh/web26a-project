@@ -85,6 +85,24 @@ const TU_KHOA_GIAO_VIEC = [
   'viet',
   'kiểm tra',
   'test',
+  'lên kế hoạch',
+  'len ke hoach',
+  'chuẩn bị',
+  'chuan bi',
+  'tiếp tục',
+  'tiep tuc',
+  'hoàn thiện',
+  'hoan thien',
+  'bổ sung',
+  'bo sung',
+  'cập nhật',
+  'cap nhat',
+  'xử lý',
+  'xu ly',
+  'thiết kế',
+  'thiet ke',
+  'tối ưu',
+  'toi uu',
   // Anh
   'do ',
   'build',
@@ -230,9 +248,24 @@ export class GeminiService {
       lower.includes('@') ||
       memberNames.some((n) => n && lower.includes(n.toLowerCase()));
 
-    // Cần ít nhất HAI dấu hiệu. Chỉ một mình từ "làm" thì "hôm nay làm biếng quá"
-    // cũng lọt, mà đó rõ ràng không phải giao việc.
-    return [coDongTu, coThoiGian, coNhacTen].filter(Boolean).length >= 2;
+    // GỌI ĐÍCH DANH LÀ ĐỦ, không cần dấu hiệu thứ hai.
+    //
+    // Trong chat công việc của một board, nhắn thẳng tên đồng đội ("WebsocketB
+    // ơi, ...") hay @nhắc gần như luôn là giao việc. Bản trước bắt buộc ≥2 trong
+    // 3 dấu hiệu nên những câu rất rõ ràng vẫn bị chặn:
+    //
+    //   "WebsocketB ơi, lên tiếp kế hoạch phân quyền nha."
+    //     → có tên, KHÔNG có mốc thời gian, và "lên kế hoạch" không nằm trong
+    //       danh sách động từ → 1/3 → bỏ qua, Gemini không hề được gọi.
+    //
+    // Cân nhắc đánh đổi: bỏ sót một gợi ý làm hỏng CẢ tính năng, còn báo nhầm
+    // chỉ tốn đúng một lượt gọi rẻ rồi model trả `isTask: false` và không hiện
+    // gì. Quota vẫn được chặn bởi độ dài tối thiểu và giới hạn lượt/phút.
+    if (coNhacTen) return true;
+
+    // Không nhắc ai thì phải có CẢ động từ giao việc lẫn mốc thời gian — nếu
+    // không, "hôm nay làm biếng quá" cũng lọt.
+    return coDongTu && coThoiGian;
   }
 
   /** Gọi model, rồi KIỂM TRA LẠI toàn bộ kết quả trước khi trả ra. */

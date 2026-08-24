@@ -176,6 +176,32 @@ try {
     check('1.4', 'báo việc ĐÃ xong → không sinh gợi ý', goiY === null, JSON.stringify(goiY?.cards));
   }
 
+  // ── Giao việc KHÔNG kèm mốc thời gian ───────────────────────────────────
+  //
+  // Bản đầu của bộ lọc bắt buộc ≥2 trong 3 dấu hiệu (động từ · thời gian ·
+  // nhắc tên), nên những câu dưới đây bị chặn thẳng — model không hề được gọi:
+  //
+  //   "Hoà ơi, lên tiếp kế hoạch phân quyền nha."
+  //     có tên, KHÔNG có thời gian, và "lên kế hoạch" không nằm trong danh
+  //     sách động từ → 1/3 → bỏ qua.
+  //
+  // Giờ luật là: gọi ĐÍCH DANH đồng đội thì đủ một mình. Bốn phép thử này giữ
+  // luật đó — siết bộ lọc lại là chúng đỏ ngay.
+  {
+    const { goiY } = await nhanTinRoiCho(A, BID, 'Hoà ơi, lên tiếp kế hoạch phân quyền nha.', 12000);
+    check('1.5', 'nhắc tên, KHÔNG có mốc thời gian → vẫn sinh gợi ý',
+      goiY !== null, 'bị bộ lọc chặn — model không được gọi');
+    check('1.6', '  … và giao đúng cho người được nhắc',
+      goiY?.cards?.[0]?.assigneeId === B_UID, `assigneeId=${goiY?.cards?.[0]?.assigneeId}`);
+    check('1.7', '  … và KHÔNG bịa ra hạn chót',
+      !goiY?.cards?.[0]?.dueDate, `dueDate=${goiY?.cards?.[0]?.dueDate}`);
+  }
+  {
+    const { goiY } = await nhanTinRoiCho(A, BID, 'Lên tiếp kế hoạch phân quyền nha H.', 6000);
+    check('1.8', 'gọi tắt "H." (không khớp tên thật) → vẫn bỏ qua, ĐÚNG THIẾT KẾ',
+      goiY === null, 'khớp một chữ cái là mọi câu tiếng Việt đều lọt');
+  }
+
   if (BO_QUA_LLM) {
     console.log(`\n${DIM}Bỏ qua mục 2–6 (--skip-llm).${RS}`);
   } else {
