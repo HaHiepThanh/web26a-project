@@ -162,7 +162,11 @@
     width: 100%;
     min-height: 100%;
     font-family: var(--font-family);
-    font-size: 14px;
+    /* 100% (không phải px cứng) — giữ 1rem = cỡ chữ mặc định của trình duyệt/
+       người dùng. Trước đây ghim 14px làm mọi utility class theo rem (text-sm,
+       gap-6, p-4...) nhỏ hơn 12.5% so với giá trị tên class hứa hẹn, và bỏ qua
+       tuỳ chọn tăng cỡ chữ mặc định của người dùng ở trình duyệt. */
+    font-size: 100%;
     background-color: var(--bg-app);
     color: var(--text-primary);
     line-height: 1.5;

@@ -35,6 +35,12 @@
         <button type="button" class="h-5 w-5 rounded-full border-2 border-transparent" [style.background]="c" [class.border-base-content]="newColor() === c" (click)="newColor.set(c)"></button>
       }
     </div>
+    @if (isDuplicateColor()) {
+      <div class="mb-2 flex items-center gap-1 text-3xs font-semibold text-warning">
+        <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 9v4M12 17h.01M10.3 3.9L2.5 17a1.8 1.8 0 001.5 2.7h16a1.8 1.8 0 001.5-2.7L13.7 3.9a1.8 1.8 0 00-3.4 0z"/></svg>
+        Another label already uses this color.
+      </div>
+    }
     <div class="flex justify-end gap-1.5">
       <button type="button" class="btn btn-ghost btn-xs" (click)="cancelCreateForm()">Cancel</button>
       <button type="button" class="btn btn-primary btn-xs" [disabled]="!newName().trim()" (click)="submitCreateForm()">Create label</button>

@@ -116,8 +116,27 @@
         </button>
       </div>
 
+      <!-- 0. Đang nạp lần đầu: khoảng chờ API trả về sau khi đăng nhập — nếu không
+           chặn ở đây, workspaces() rỗng tạm thời sẽ khớp nhánh "Zero state" bên dưới
+           và người dùng thấy banner "Start building..." nháy lên rồi biến mất ngay
+           khi dữ liệu thật về, trông như một lỗi UI. -->
+      @if (!workspacesReady()) {
+      <div class="flex flex-col gap-6 pb-12" aria-hidden="true">
+        @for (i of [0, 1]; track i) {
+        <div class="animate-pulse rounded-2xl border border-base-300 bg-base-100 p-4 shadow-xs">
+          <div class="mb-3 h-4 w-40 rounded bg-base-300"></div>
+          <div class="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2.5">
+            @for (j of [0, 1, 2]; track j) {
+            <div class="h-[92px] rounded-xl bg-base-200"></div>
+            }
+          </div>
+        </div>
+        }
+      </div>
+      }
+
       <!-- 1. Zero state: Show Welcome Banner Component -->
-      @if (workspaces().length === 0) {
+      @else if (workspaces().length === 0) {
       <app-workspace-welcome-banner [canManage]="canManage()" (createWorkspace)="openCreateWorkspace()" (loadSamples)="loadSampleWorkspaces()">
       </app-workspace-welcome-banner>
       }

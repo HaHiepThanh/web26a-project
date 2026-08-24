@@ -1,4 +1,4 @@
-import { Component, inject, input, output, signal } from '@angular/core';
+import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LabelService, LABEL_COLOR_PALETTE } from '../../../services/label.service';
 
@@ -23,6 +23,11 @@ export class LabelPicker {
   readonly showCreateForm = signal(false);
   readonly newName = signal('');
   readonly newColor = signal(LABEL_COLOR_PALETTE[0]);
+
+  /** Palette chỉ có ~8 màu cố định — hết màu là chuyện sớm muộn với board nhiều
+   *  nhãn. Không chặn tạo (màu trùng vẫn hợp lệ), chỉ cảnh báo để người tạo biết
+   *  mà đổi tên/màu cho dễ phân biệt trên mặt thẻ. */
+  readonly isDuplicateColor = computed(() => this.labels().some((l) => l.color === this.newColor()));
 
   isSelected(labelId: string): boolean {
     return this.selectedIds().includes(labelId);

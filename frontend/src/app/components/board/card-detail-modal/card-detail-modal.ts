@@ -235,7 +235,10 @@ export class CardDetailModal {
 
   /** Class Tailwind/DaisyUI cho nút chọn mức ưu tiên (tô màu khi đang được chọn). */
   priorityChoiceClass(id: CardPriority): string {
-    const base = 'flex-1 rounded-md border-[1.5px] px-1 py-1.5 text-center text-[11.5px] font-semibold transition-colors';
+    // h-8 (32px) — khớp chiều cao select-sm/input-sm ở 2 ô cùng hàng (Assignee,
+    // Due date); trước đây pill này chỉ cao theo padding chữ (py-1.5 ≈ 26px),
+    // thấp hơn rõ rệt so với 2 ô bên cạnh trong cùng lưới 3 cột.
+    const base = 'flex h-8 flex-1 items-center justify-center rounded-md border-[1.5px] px-1 text-center text-[11.5px] font-semibold transition-colors';
     if (this.draftPriority() !== id) return `${base} border-base-300 bg-base-100 text-base-content/80 hover:bg-base-200`;
     const selected: Record<CardPriority, string> = {
       high: 'border-error bg-error/10 text-error',

@@ -30,6 +30,8 @@ const RESIZE_STEP = 16;
   host: {
     class: 'flex h-full shrink-0',
     '[style.width.px]': 'panelWidth()',
+    '[class.chat-mobile-fab]': 'isMobile() && collapsed()',
+    '[class.chat-mobile-overlay]': 'isMobile() && !collapsed()',
   },
 })
 export class ChatPanel {
@@ -50,6 +52,13 @@ export class ChatPanel {
   readonly width = signal(this.loadWidth());
   readonly panelWidth = computed(() => (this.collapsed() ? COLLAPSED_WIDTH : this.width()));
   readonly resizing = signal(false);
+
+  /** <768px: rail thu gọn (44px cố định chiếm chỗ layout) đổi thành nút tròn nổi
+   *  (position:fixed, không chiếm layout) và panel mở rộng thành overlay toàn màn
+   *  hình thay vì ép Board co hẹp lại — theo dõi qua resize vì CSS media query
+   *  không override được inline [style.width.px] mà không cần !important lan rộng. */
+  private readonly viewportWidth = signal(window.innerWidth);
+  readonly isMobile = computed(() => this.viewportWidth() < 768);
 
   readonly unreadCount = signal(0);
   readonly pulse = signal(false);
@@ -76,8 +85,12 @@ export class ChatPanel {
   private lastSeenCount = 0;
 
   constructor() {
+    const onResize = () => this.viewportWidth.set(window.innerWidth);
+    window.addEventListener('resize', onResize);
+
     // Rời board (ChatPanel bị huỷ) → trả tab title về sạch, không để badge "(n)" dính lại.
     inject(DestroyRef).onDestroy(() => {
+      window.removeEventListener('resize', onResize);
       document.title = this.originalTitle;
     });
 
