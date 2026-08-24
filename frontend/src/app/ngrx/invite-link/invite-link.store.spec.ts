@@ -34,9 +34,12 @@ class FakeApi {
   postError: unknown = null;
   lastPostBody: unknown = null;
   paths: string[] = [];
+  /** Chan request lai de soi trang thai dang cho. */
+  delayUntil: Promise<void> | null = null;
 
   async get<T>(path: string): Promise<T> {
     this.paths.push('GET ' + path);
+    if (this.delayUntil) await this.delayUntil;
     if (this.getError) throw this.getError;
     return this.getResult as T;
   }
@@ -141,14 +144,35 @@ describe('InviteLinkStore', () => {
       expect(store.links()).toEqual([]);
     });
 
-    it('doi to chuc thi xoa link cu truoc khi nap, khong de lan', async () => {
+    it('doi to chuc thi xoa link cu NGAY, khong de lan trong luc cho', async () => {
       api.getResult = [link({ id: 'cua-o1', orgId: 'o1' })];
       await store.loadLinks('o1');
       expect(store.links().length).toBe(1);
 
+      // Chan request lai giua chung de soi trang thai DANG CHO.
+      //
+      // Kiem trang thai CUOI la vo dung: du co xoa hay khong thi ket qua cuoi
+      // van la link cua o2, vi buoc cuoi ghi de ca mang. Cho duy nhat viec xoa
+      // co y nghia la khoang request bay di chua ve — dung luc nguoi dung dang
+      // nhin man hinh. (Ban dau bai test nay kiem trang thai cuoi nen khong bat
+      // duoc gi; phat hien ra khi thu bo dong xoa ma test van xanh.)
+      let thaChoChay: () => void = () => {};
+      const dangCho = new Promise<void>((res) => {
+        thaChoChay = res;
+      });
       api.getResult = [link({ id: 'cua-o2', orgId: 'o2' })];
-      await store.loadLinks('o2');
+      api.delayUntil = dangCho;
 
+      const xong = store.loadLinks('o2');
+      await Promise.resolve();
+
+      // Con link cua o1 o day nghia la nguoi dung dang nhin link cua to chuc
+      // KHAC va co the di sao chep nham.
+      expect(store.links()).toEqual([]);
+
+      thaChoChay();
+      await xong;
+      api.delayUntil = null;
       expect(store.links().map((l) => l.id)).toEqual(['cua-o2']);
     });
 
