@@ -1,31 +1,39 @@
 <header
-  class="sticky top-0 z-[100] flex h-14 items-center justify-between gap-4 border-b border-base-300/70 bg-base-100 px-4 shadow-sm">
+  class="glass sticky top-0 z-[100] flex h-14 items-center justify-between gap-4 border-b border-base-300/60 px-4">
   <a routerLink="/workspace"
     class="flex shrink-0 items-center gap-2 rounded-lg px-1.5 py-1 font-bold text-base-content transition-colors hover:bg-base-200">
     <img src="logo-128.png" width="128" height="128" alt="" aria-hidden="true"
       class="h-8 w-8 shrink-0 object-contain" />
-    <div class="flex flex-col leading-[1.05]">
+    <!--
+      Chữ "Horizon Hub / HARMONY" ẩn dưới 480px.
+      Đo ở 375px: cụm trái 145px + cụm phải 266px + khoảng cách 48px = 459px cho
+      một thanh rộng 375px, nên avatar bên phải bị đẩy ra ngoài mép. Bỏ phần chữ
+      còn 44px cho logo, tổng xuống 358px là vừa. Logo vẫn ở nguyên đó nên link
+      về Workspace không mất, và tên sản phẩm không phải thứ người dùng cần đọc
+      lại mỗi màn hình.
+    -->
+    <div class="flex flex-col leading-[1.05] max-[479px]:hidden">
       <span class="text-base tracking-[-0.3px] text-base-content">Horizon Hub</span>
-      <span class="text-2xs font-extrabold tracking-[0.6px] text-primary">HARMONY</span>
+      <span class="text-2xs font-extrabold tracking-[0.6px] text-[var(--accent-purple-text)]">HARMONY</span>
     </div>
   </a>
 
   <div class="max-w-[480px] flex-1 max-md:hidden">
     <div class="group relative w-full">
       <svg lucideSearch
-        class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-base-content/35 transition-colors group-focus-within:text-primary"
+        class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-base-content/70 transition-colors group-focus-within:text-primary"
         [strokeWidth]="2"></svg>
       <input type="text"
-        class="input input-sm h-9 w-full appearance-none rounded-full border-none bg-base-200/70 pl-10 pr-9 text-sm text-base-content shadow-none transition-all placeholder:text-base-content/40 hover:bg-base-200 focus:bg-base-100 focus:shadow-sm focus:ring-2 focus:ring-primary/25 focus:outline-none"
+        class="input input-sm h-9 w-full appearance-none rounded-full border-none bg-base-200/70 pl-10 pr-9 text-sm text-base-content shadow-none transition-all placeholder:text-base-content/70 hover:bg-base-200 focus:bg-base-100 focus:shadow-sm focus:ring-2 focus:ring-primary/25 focus:outline-none"
         placeholder="Tìm kiếm bảng dự án..." (input)="onSearchInput($event)" />
       <span
-        class="kbd kbd-sm pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 border-none bg-base-300/70 text-base-content/50 opacity-0 transition-opacity group-focus-within:opacity-0 group-hover:opacity-100">/</span>
+        class="kbd kbd-sm pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 border-none bg-base-300/70 text-base-content/70 opacity-0 transition-opacity group-focus-within:opacity-0 group-hover:opacity-100">/</span>
     </div>
   </div>
 
   <div class="flex shrink-0 items-center gap-2">
     <div class="relative">
-      <button class="btn btn-primary btn-sm gap-1.5 rounded-full px-3.5 shadow-sm" (click)="toggleCreateMenu()">
+      <button class="btn btn-brand btn-sm gap-1.5 rounded-full px-3.5" (click)="toggleCreateMenu()">
         <svg lucidePlus class="h-4 w-4" [strokeWidth]="2"></svg>
         <span class="max-sm:hidden">Tạo</span>
         <svg lucideChevronDown class="h-3 w-3 opacity-70" [strokeWidth]="2"></svg>
@@ -50,7 +58,7 @@
           </div>
           <div class="min-w-0">
             <div class="text-xs font-bold text-base-content leading-tight">Tạo bảng mới</div>
-            <div class="text-2xs text-base-content/50 leading-tight">Bảng dự án Kanban</div>
+            <div class="text-2xs text-base-content/70 leading-tight">Bảng dự án Kanban</div>
           </div>
         </button>
         <button type="button"
@@ -62,7 +70,7 @@
           </div>
           <div class="min-w-0">
             <div class="text-xs font-bold text-base-content leading-tight">Tạo Workspace mới</div>
-            <div class="text-2xs text-base-content/50 leading-tight">Chọn ai thấy được workspace</div>
+            <div class="text-2xs text-base-content/70 leading-tight">Chọn ai thấy được workspace</div>
           </div>
         </button>
         }
@@ -80,7 +88,7 @@
           <svg lucideBell class="h-[17px] w-[17px]" [class.invite-pulse]="notifyPulse()" [strokeWidth]="2"></svg>
           @if (bellBadgeCount() > 0) {
           <span
-            class="badge badge-error absolute right-0 top-0 h-4 min-w-4 rounded-full border-2 border-base-100 px-1.5 text-3xs font-bold text-white">{{
+            class="badge badge-count absolute right-0 top-0 h-4 min-w-4 rounded-full border-2 border-base-100 px-1.5 text-3xs font-bold">{{
             bellBadgeCount() }}</span>
           }
         </button>
@@ -89,7 +97,7 @@
         <div
           class="absolute right-0 top-[42px] z-[200] w-[320px] rounded-2xl border border-base-300/70 bg-base-100 p-2 shadow-xl">
           <div class="flex items-center justify-between px-1.5 pb-1.5 pt-1">
-            <span class="text-2xs font-black uppercase tracking-wider text-base-content/45">Thông báo</span>
+            <span class="text-2xs font-black uppercase tracking-wider text-base-content/70">Thông báo</span>
             @if (unreadNotifications() > 0) {
             <button type="button" class="text-3xs font-bold text-primary hover:underline"
               (click)="markAllNotificationsRead()">Đánh dấu đã đọc</button>
@@ -105,7 +113,7 @@
           }
 
           @if (notifications().length === 0) {
-          <div class="px-1.5 py-4 text-center text-xs text-base-content/50">Chưa có thông báo nào.</div>
+          <div class="px-1.5 py-4 text-center text-xs text-base-content/70">Chưa có thông báo nào.</div>
           } @else {
           <div class="flex max-h-[320px] flex-col gap-1 overflow-y-auto">
             @for (n of notifications(); track n.id) {
@@ -121,7 +129,7 @@
                 }
                 <span class="min-w-0">
                   <span class="block text-2xs font-semibold leading-snug text-base-content">{{ n.text }}</span>
-                  <span class="mt-0.5 block text-3xs text-base-content/45">{{ relativeTimeFrom(n.createdAt) }} · bấm để mở bảng</span>
+                  <span class="mt-0.5 block text-3xs text-base-content/70">{{ relativeTimeFrom(n.createdAt) }} · bấm để mở bảng</span>
                 </span>
               </div>
             </button>
@@ -140,7 +148,7 @@
           <svg lucideUserPlus class="h-[17px] w-[17px]" [class.invite-pulse]="bellPulse()" [strokeWidth]="2"></svg>
           @if (pendingInviteCount() > 0) {
           <span
-            class="badge badge-error absolute right-0 top-0 h-4 min-w-4 rounded-full border-2 border-base-100 px-1.5 text-3xs font-bold text-white">{{
+            class="badge badge-count absolute right-0 top-0 h-4 min-w-4 rounded-full border-2 border-base-100 px-1.5 text-3xs font-bold">{{
             pendingInviteCount() }}</span>
           }
         </button>
@@ -160,10 +168,10 @@
         @if (inviteMenuOpen()) {
         <div
           class="absolute right-0 top-[42px] z-[200] w-[300px] rounded-2xl border border-base-300/70 bg-base-100 p-2 shadow-xl">
-          <div class="px-1.5 pb-1.5 pt-1 text-2xs font-black uppercase tracking-wider text-base-content/45">Lời mời tổ
+          <div class="px-1.5 pb-1.5 pt-1 text-2xs font-black uppercase tracking-wider text-base-content/70">Lời mời tổ
             chức</div>
           @if (myInvites().length === 0) {
-          <div class="px-1.5 py-4 text-center text-xs text-base-content/50">Chưa có lời mời nào.</div>
+          <div class="px-1.5 py-4 text-center text-xs text-base-content/70">Chưa có lời mời nào.</div>
           } @else {
           <div class="flex flex-col gap-1.5">
             @for (inv of myInvites(); track inv.id) {
@@ -215,10 +223,10 @@
         <span class="truncate text-xs font-bold text-base-content">{{
           currentUser()?.displayName ?? 'Người dùng' }}</span>
         @if (currentUser()?.id; as uid) {
-        <span class="truncate text-3xs font-mono text-base-content/45">ID: {{ uid.slice(0, 8) }}...</span>
+        <span class="truncate text-3xs font-mono text-base-content/70">ID: {{ uid.slice(0, 8) }}...</span>
         }
       </div>
-      <svg lucideChevronDown class="h-3 w-3 shrink-0 text-base-content/35 max-md:hidden transition-transform"
+      <svg lucideChevronDown class="h-3 w-3 shrink-0 text-base-content/70 max-md:hidden transition-transform"
         [class]="menuOpen() ? '-rotate-180' : ''" [strokeWidth]="2"></svg>
     </div>
   </div>
@@ -238,7 +246,7 @@
       <div class="min-w-0 flex-1">
         <div class="truncate text-sm font-bold text-base-content">{{ currentUser()?.displayName ?? 'Người dùng' }}
         </div>
-        <div class="truncate text-2xs text-base-content/60">{{ currentUser()?.email ?? '—' }}</div>
+        <div class="truncate text-2xs text-base-content/70">{{ currentUser()?.email ?? '—' }}</div>
       </div>
     </div>
 
@@ -266,7 +274,7 @@
           {{ currentUser()?.id ?? 'Chưa cấp UUID' }}
         </code>
       </div>
-      <p class="mt-1 text-3xs leading-tight text-base-content/50">
+      <p class="mt-1 text-3xs leading-tight text-base-content/70">
         Dùng UUID này để thêm vào Không gian làm việc.
       </p>
     </div>

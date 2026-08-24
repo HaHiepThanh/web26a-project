@@ -1,14 +1,14 @@
 <div>
   <header class="mb-6">
     <div>
-      <a routerLink="/settings" class="mb-2 inline-block text-[0.8125rem] text-base-content/50 hover:text-base-content">← Cài đặt</a>
+      <a routerLink="/settings" class="mb-2 inline-block text-[0.8125rem] text-base-content/70 hover:text-base-content">← Cài đặt</a>
       <h1 class="mb-1.5 text-2xl font-bold text-base-content">Manage Workspace</h1>
-      <p class="text-[0.9rem] text-base-content/50">Các dự án bạn đang tham gia trong Workspace.</p>
+      <p class="text-[0.9rem] text-base-content/70">Các dự án bạn đang tham gia trong Workspace.</p>
     </div>
   </header>
 
   <div class="relative mb-6 max-w-[360px]">
-    <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-base-content/50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-base-content/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <circle cx="11" cy="11" r="8"></circle>
       <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
     </svg>
@@ -22,7 +22,7 @@
   </div>
 
   @if (filteredProjects().length === 0) {
-    <div class="flex flex-col items-center gap-4 rounded-box border border-dashed border-base-300 bg-base-100 px-4 py-12 text-center text-base-content/50">
+    <div class="flex flex-col items-center gap-4 rounded-box border border-dashed border-base-300 bg-base-100 px-4 py-12 text-center text-base-content/70">
       @if (searchQuery()) {
         <p>Không tìm thấy project nào khớp với "{{ searchQuery() }}".</p>
       } @else {
@@ -38,14 +38,14 @@
             <span class="text-[0.95rem] font-bold leading-tight">{{ project.name }}</span>
             <span class="badge badge-sm shrink-0" [class]="roleBadge[project.myRole]">{{ roleLabel(project.myRole) }}</span>
           </div>
-          <span class="text-[0.72rem] uppercase tracking-wide text-base-content/50">{{ project.workspaceName }}</span>
+          <span class="text-[0.72rem] uppercase tracking-wide text-base-content/70">{{ project.workspaceName }}</span>
           <div class="mt-1 flex items-center justify-between">
             <div class="flex">
               @for (avatarUrl of project.memberAvatars; track avatarUrl) {
                 <img [src]="avatarUrl" alt="" class="-ml-2 h-[26px] w-[26px] rounded-full border-2 border-base-100 object-cover first:ml-0" />
               }
             </div>
-            <span class="text-xs text-base-content/50">{{ project.memberCount }} thành viên</span>
+            <span class="text-xs text-base-content/70">{{ project.memberCount }} thành viên</span>
           </div>
         </a>
       }

@@ -1,7 +1,7 @@
-<label class="mb-1.5 block text-2xs font-bold uppercase tracking-wide text-base-content/50">
+<label class="mb-1.5 block text-2xs font-bold uppercase tracking-wide text-base-content/70">
   Bình luận
   @if (comments().length > 0) {
-    <span class="normal-case tracking-normal text-base-content/40">({{ comments().length }})</span>
+    <span class="normal-case tracking-normal text-base-content/70">({{ comments().length }})</span>
   }
 </label>
 
@@ -13,9 +13,9 @@
         <div class="min-w-0 flex-1">
           <div class="flex items-baseline gap-1.5">
             <span class="text-2xs font-semibold text-base-content/80">{{ userLabel(c.userId) }}</span>
-            <span class="text-3xs text-base-content/40">{{ timeLabel(c.createdAt) }}</span>
+            <span class="text-3xs text-base-content/70">{{ timeLabel(c.createdAt) }}</span>
             @if (c.userId === currentUserId()) {
-              <button type="button" class="ml-auto text-3xs text-base-content/40 opacity-0 transition-opacity hover:text-error group-hover:opacity-100" (click)="deleteComment(c.id)">
+              <button type="button" class="ml-auto text-3xs text-base-content/70 opacity-0 transition-opacity hover:text-error group-hover:opacity-100" (click)="deleteComment(c.id)">
                 Xoá
               </button>
             }
@@ -26,7 +26,7 @@
     }
   </div>
 } @else {
-  <div class="mb-2.5 text-2xs text-base-content/50">Chưa có bình luận nào.</div>
+  <div class="mb-2.5 text-2xs text-base-content/70">Chưa có bình luận nào.</div>
 }
 
 <div class="flex gap-1.5">

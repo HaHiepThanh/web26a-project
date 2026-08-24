@@ -3,6 +3,22 @@
 @import 'tailwindcss';
 @plugin 'daisyui';
 
+/* Cho biến thể `dark:` đi theo NÚT ĐỔI THEME, không theo cài đặt hệ điều hành.
+ *
+ * Tailwind v4 mặc định định nghĩa `dark:` là `@media (prefers-color-scheme: dark)`.
+ * Nhưng cả app lại đổi giao diện bằng `[data-theme]` trên <html> (ThemeService
+ * ghi, styles.css đọc để tráo bộ token màu, daisyUI cũng đọc). Hai cơ chế đó
+ * chưa từng được nối với nhau, nên hơn 300 tiện ích `dark:*` rải khắp template
+ * KHÔNG hề phản ứng với nút đổi theme.
+ *
+ * Hậu quả nhìn thấy được: máy đang để chế độ sáng mà bấm nút chuyển app sang
+ * tối thì nền hoá tối (token làm được) còn chữ vẫn đen (`dark:text-white` không
+ * kích hoạt) — chữ đen trên nền đen, không đọc nổi. Đúng cảnh trang Workspace
+ * gặp phải: tên workspace và ô "Tạo bảng mới" chìm hẳn.
+ *
+ * Một dòng này nối `dark:` vào cùng một nguồn sự thật với bộ token. */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
 /* Type scale additions — the app's compact UI needs sizes smaller than
  * Tailwind's default text-xs (12px). Before this, components hand-tuned
  * one-off arbitrary sizes (text-[10.5px], text-[11.5px], text-[9px]...) —
@@ -64,6 +80,16 @@
      Mọi link và nhãn dùng token này thay vì --accent-blue. */
   --accent-text: #0369a1; /* 5.5:1 trên nền trắng */
 
+  /* Cùng lý do như --accent-text, nhưng cho mức ưu tiên. Nhãn "Cao"/"Trung
+     bình" đang lấy thẳng text-error/text-warning của daisyUI — đó là màu để TÔ
+     NỀN. Đặt làm chữ 12px thì "Cao" chỉ được 2.86:1, "Trung bình" 1.76:1. */
+  --prio-high-text: #e11d48; /* 4.70:1 trên nền trắng */
+  --prio-med-text: #b45309; /* 5.02:1 */
+  /* Tím thương hiệu dùng làm CHỮ. Trên nền sáng thì --accent-purple đã đủ đậm,
+     nên hai giá trị trùng nhau ở đây; tách token ra để dark mode bên dưới đảo
+     chiều được mà không kéo theo màu nền. */
+  --accent-purple-text: #6d28d9; /* 7.10:1 trên trắng, 6.02:1 trên nền tím nhạt */
+
   --accent-purple: #6d28d9;
   --accent-purple-soft: #f3e8ff;
 
@@ -104,6 +130,34 @@
 
   --transition-fast: 150ms ease-in-out;
   --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  /* Đường cong của trang giới thiệu — bung nhanh rồi hãm mượt. Dùng chung để
+     app và landing "chuyển động cùng một tay". */
+  --ease-brand: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* ---- Lớp thương hiệu, kéo từ trang giới thiệu sang -----------------------
+     Landing có gu riêng rất rõ (dải cực quang, kính mờ, gradient xanh→tím) còn
+     app thì là daisyUI trần. Người dùng bấm "Start free" xong rơi vào một sản
+     phẩm trông như của đội khác. Bốn token dưới đây là phần TỐI THIỂU đủ để hai
+     bên nói cùng một ngôn ngữ, không phải chép cả bảng màu sang. */
+  /* ⚠️ Gradient dùng --brand-solid-* CHỨ KHÔNG dùng thẳng --accent-*.
+     Bộ --accent-* được chọn cho nền và viền, chưa từng đo khi đặt chữ lên trên:
+     chữ trắng trên #0284c7 chỉ đạt 4.1:1, dưới ngưỡng 4.5:1 cho chữ thường — mà
+     chữ trong nút chính là 12–14px. #027cbb là chính màu đó kéo tối một nấc, đủ
+     4.56:1, sắc màu không đổi. Hai giá trị này lấy từ bộ đã đo sẵn của trang
+     giới thiệu (--lp-solid-*), giữ nguyên để hai bên khớp nhau.
+     ĐỔI BẢNG MÀU THÌ PHẢI ĐO LẠI. */
+  --brand-solid-blue: #027cbb; /* chữ trắng: 4.56 */
+  --brand-solid-purple: #6d28d9; /* chữ trắng: 7.10 */
+  --brand-on-solid: #ffffff;
+  --brand-grad: linear-gradient(135deg, var(--brand-solid-blue), var(--brand-solid-purple));
+  /* Bóng đổ ám sắc thương hiệu thay vì đen trung tính — thứ khiến bề mặt trông
+     "thuộc về" bảng màu chứ không phải dán lên trên nó. */
+  --brand-shadow: 0 10px 30px -12px color-mix(in oklab, var(--accent-purple) 45%, transparent);
+  --brand-shadow-sm: 0 4px 14px -8px color-mix(in oklab, var(--accent-purple) 40%, transparent);
+  /* Hai vệt sáng nền, cùng công thức với `.aurora` của landing nhưng nhạt hơn
+     nhiều: đây là màn làm việc nhìn hàng giờ, không phải trang để trầm trồ. */
+  --aurora-blue: color-mix(in oklab, var(--accent-blue) 16%, transparent);
+  --aurora-purple: color-mix(in oklab, var(--accent-purple) 14%, transparent);
 
   /* Aliases so the ported Settings page (own naming) reads the same tokens */
   --bg-surface-2: var(--bg-app);
@@ -122,6 +176,13 @@
 }
 
 [data-theme='dark'] {
+  /* Nền tối thì ĐẢO VAI: màu nhấn sáng lên, và chữ trên nút gradient phải
+     chuyển sang gần-đen. Giữ chữ trắng ở đây là hỏng — trắng trên #579dff chỉ
+     khoảng 2:1. Hai tỉ số ghi kèm đo với chữ #0b0d14. */
+  --brand-solid-blue: #579dff; /* chữ gần-đen: 7.09 */
+  --brand-solid-purple: #9e75ff; /* chữ gần-đen: 5.95 */
+  --brand-on-solid: #0b0d14;
+
   --bg-app: #22272b;
   --bg-navbar: #1d2125;
   --bg-header: #14171a;
@@ -150,6 +211,19 @@
   --accent-purple-soft: rgba(158, 117, 255, 0.15);
   /* Nền tối đã đủ tương phản với #579dff nên chữ dùng thẳng màu nhấn. */
   --accent-text: #85b8ff;
+
+  /* Cùng lý do như --accent-text, nhưng cho mức ưu tiên. Nhãn "Cao"/"Trung
+     bình" đang lấy thẳng text-error/text-warning của daisyUI — đó là màu để TÔ
+     NỀN. Đặt làm chữ 12px thì nền tối lật ngược bài toán: phải SÁNG lên. */
+  --prio-high-text: #ff8fa3; /* 7.49:1 trên #1d2125 */
+  --prio-med-text: #fbbf24; /* 9.70:1 */
+  /* #9e75ff chỉ đạt 3.94:1 khi đặt trên chip nền tím mờ của panel chat — sáng
+     thêm một bậc để chữ 11px vẫn đọc được. */
+  --accent-purple-text: #b49bff; /* 5.55:1 trên chip, 6.92:1 trên nền chính */
+
+  /* Nền primary của dark theme (#605dff) sáng hơn bản light, nên chữ đi kèm
+     phải là TRẮNG tinh mới đạt 4.66:1 — mặc định ngả xanh chỉ được 4.13:1. */
+  --color-primary-content: #ffffff;
 
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
@@ -347,7 +421,9 @@ select:disabled {
 }
 
 .btn-circle.btn-xs,
-.btn-circle.btn-sm {
+.btn-circle.btn-sm,
+.btn-square.btn-xs,
+.btn-square.btn-sm {
   width: 32px;
   height: 32px;
 }
@@ -369,7 +445,9 @@ select:disabled {
   }
 
   .btn-circle.btn-xs,
-  .btn-circle.btn-sm {
+  .btn-circle.btn-sm,
+  .btn-square.btn-xs,
+  .btn-square.btn-sm {
     width: 44px;
     height: 44px;
   }
@@ -383,6 +461,118 @@ select:disabled {
    nên "KANBAN" trên board tile render ở 10px, dưới sàn 11px của hệ. */
 .badge-xs {
   font-size: var(--text-3xs);
+}
+
+/* ==========================================================================
+   Lớp bề mặt thương hiệu — dùng chung cho Workspace và Board
+   ========================================================================== */
+
+/* `.aurora-bg` — hai vệt sáng mờ nằm sau nội dung, cùng thủ pháp với hero của
+   trang giới thiệu. Vẽ bằng radial-gradient chứ KHÔNG dùng filter: blur():
+   làm mờ một khối lớn buộc trình duyệt vẽ lại rồi lấy mẫu cả vùng mỗi khung
+   hình, còn gradient thì GPU vẽ một lần. Trên màn làm việc cuộn liên tục,
+   khác biệt đó thấy rõ.
+   Cường độ cố ý nhạt hơn landing nhiều — đây là nền cho công việc, không phải
+   sân khấu. */
+.aurora-bg {
+  position: relative;
+  isolation: isolate;
+}
+
+.aurora-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(58% 42% at 12% 0%, var(--aurora-blue) 0%, transparent 62%),
+    radial-gradient(48% 38% at 92% 6%, var(--aurora-purple) 0%, transparent 60%);
+  /* Tan dần xuống dưới để không có đường cắt ngang giữa trang. */
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 32%, transparent 78%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 32%, transparent 78%);
+}
+
+/* `.glass` — bề mặt kính mờ, đúng công thức thanh điều hướng của landing.
+   Chỉ dùng cho lớp NỔI ở trên (header, panel dính) — không dùng cho vùng nội
+   dung, vì backdrop-filter tính lại mỗi khung hình và một trang đầy kính mờ
+   thì cuộn giật ngay trên máy tích hợp card đồ hoạ. */
+.glass {
+  background: color-mix(in srgb, var(--bg-navbar) 82%, transparent);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+}
+
+/* Trình duyệt không hỗ trợ thì rơi về nền đặc — đục còn hơn chữ nổi trên nền
+   trong suốt không đọc được. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass {
+    background: var(--bg-navbar);
+  }
+}
+
+/* `.panel` — thẻ nổi tiêu chuẩn của app: bo 16px, viền mảnh, bóng ám sắc
+   thương hiệu. Thay cho mớ `rounded-2xl border shadow-sm` lặp lại mỗi nơi một
+   kiểu. */
+.panel {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  box-shadow: var(--brand-shadow-sm);
+}
+
+/* Nút hành động chính — dải xanh→tím của landing, không phải màu tím phẳng của
+   daisyUI. Đây là chi tiết đắt nhất trong việc nối hai bên lại với nhau: nút
+   "Start free" ở landing và nút "Tạo" trong app giờ là cùng một vật. */
+.btn-brand {
+  background-image: var(--brand-grad);
+  border: 0;
+  /* Không hard-code #fff: ở nền tối màu nhấn sáng lên nên chữ phải là gần-đen.
+     Token tự đảo theo [data-theme]. */
+  color: var(--brand-on-solid);
+  box-shadow: var(--brand-shadow-sm);
+  transition:
+    box-shadow 200ms var(--ease-brand),
+    transform 200ms var(--ease-brand),
+    filter 200ms var(--ease-brand);
+}
+.btn-brand:hover {
+  box-shadow: var(--brand-shadow);
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+}
+.btn-brand:active {
+  transform: translateY(0);
+  filter: brightness(0.97);
+}
+.btn-brand:disabled,
+.btn-brand.btn-disabled {
+  background-image: none;
+}
+
+/* Nâng nhẹ khi rê chuột — chỉ transform và shadow, hai thuộc tính GPU xử lý
+   được mà không phải tính lại bố cục. */
+.lift {
+  transition:
+    transform 220ms var(--ease-brand),
+    box-shadow 220ms var(--ease-brand);
+}
+.lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--brand-shadow);
+}
+
+/* Ai bật giảm chuyển động thì bỏ hết phần dịch chuyển — giữ lại đổi bóng để
+   vẫn còn phản hồi khi rê chuột. */
+@media (prefers-reduced-motion: reduce) {
+  .btn-brand,
+  .lift {
+    transition: box-shadow 120ms linear;
+  }
+  .btn-brand:hover,
+  .lift:hover {
+    transform: none;
+  }
 }
 
 /* Board background palette (models/board.model.ts BoardBackground) — global (not
@@ -407,3 +597,13 @@ select:disabled {
 .bg-board-red {
   background: linear-gradient(135deg, #4c0a0a 0%, #dc2626 50%, #fb7185 100%);
 }
+
+/* Chữ mức ưu tiên. Xem --prio-high-text ở phần token. */
+.prio-high { color: var(--prio-high-text); }
+.prio-med { color: var(--prio-med-text); }
+.prio-low { color: var(--text-muted); }
+
+/* Số đếm trên chuông thông báo. badge-error của daisyUI là hồng-đỏ sáng, dùng
+   để TÔ NỀN cho chữ tối; chữ trắng 11px trên đó chỉ đạt 2.86:1. Đổi sang đỏ
+   đậm hơn để chữ trắng lên 6.29:1, viền ngăn cách với icon vẫn giữ nguyên. */
+.badge-count { background-color: #be123c; color: #fff; }

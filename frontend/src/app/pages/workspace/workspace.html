@@ -7,7 +7,7 @@
   Đổi sang padding thì khoảng thở vẫn còn nhưng nằm BÊN TRONG chiều cao.
 -->
 <div
-  class="workspace-page mx-auto max-w-[1440px] px-4 sm:px-6 pt-6 pb-2 w-full h-full min-h-0 flex flex-col overflow-hidden">
+  class="workspace-page aurora-bg mx-auto max-w-[1440px] px-4 sm:px-6 pt-6 pb-2 w-full h-full min-h-0 flex flex-col overflow-hidden">
   <!-- Toast container -->
   <div class="toast toast-top toast-end z-[9999] pointer-events-none">
     @for (t of toasts(); track t.id) {
@@ -34,7 +34,7 @@
     class="flex flex-col lg:flex-row gap-4 lg:gap-5 items-stretch flex-1 min-h-0 h-full max-lg:overflow-y-auto lg:overflow-hidden">
     <!-- Left Sidebar Component (Fixed on desktop / Natural stack on mobile) -->
     <aside class="w-full lg:w-64 shrink-0 max-lg:h-auto lg:h-full lg:overflow-y-auto lg:pr-1">
-      <div class="divide-y divide-base-200 overflow-hidden rounded-3xl border border-base-300/70 bg-base-100 shadow-sm">
+      <div class="panel divide-y divide-base-200 overflow-hidden rounded-3xl">
         <app-org-switcher [organizations]="organizations()" [activeOrg]="activeOrg()"
           (switchOrg)="switchOrg($event)" (openCreateOrg)="showOrgCreateModal.set(true)" (manageOrg)="openManageOrg($event)">
         </app-org-switcher>
@@ -51,7 +51,7 @@
     <div class="min-w-0 flex-1 w-full max-lg:h-auto lg:h-full lg:overflow-y-auto lg:pr-2 space-y-4">
       <!-- Starred boards section (Placed inside the right workspace area) -->
       @if (starredBoards().length > 0) {
-      <section class="rounded-2xl border border-base-300 bg-base-100 p-4 shadow-xs">
+      <section class="panel p-4">
         <div class="mb-3 flex items-center gap-2">
           <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-warning/15 text-warning">
             <svg lucideStar class="h-4 w-4" [strokeWidth]="2" fill="currentColor"></svg>
@@ -62,7 +62,7 @@
         <div class="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2.5">
           @for (board of starredBoards(); track board.id) {
           <div
-            class="board-tile group relative flex min-h-[104px] cursor-pointer flex-col justify-between overflow-hidden rounded-xl p-2.5 text-white shadow-xs transition hover:-translate-y-1 hover:brightness-110"
+            class="board-tile lift group relative flex min-h-[104px] cursor-pointer flex-col justify-between overflow-hidden rounded-2xl p-3 text-white"
             [class]="board.bgClass"
             [style.background-image]="bgImageByBoardId()[board.id] ? 'url(' + bgImageByBoardId()[board.id] + ')' : null"
             [style.background-size]="bgImageByBoardId()[board.id] ? 'cover' : null"
@@ -98,28 +98,39 @@
       </section>
       }
 
-      <!-- Header Controls / Filter Indicator -->
-      <div class="flex items-center justify-between gap-2 flex-wrap pb-1">
-        <div class="flex items-center gap-2">
-          <h2 class="text-sm font-black uppercase tracking-wide text-slate-800 dark:text-slate-200">
+      <!--
+        Tiêu đề trang.
+        Trước đây đây là một dòng chữ hoa 14px — đúng cỡ của một NHÃN, không phải
+        của tiêu đề trang, nên vào Workspace mắt không có chỗ để bám. Trang giới
+        thiệu thì dùng chữ lớn rất tự tin; đưa cùng sự tự tin đó sang app là thứ
+        nối hai bên lại rõ nhất, mạnh hơn cả việc đổi màu.
+        Dòng phụ bên dưới trả lời câu "tôi đang nhìn cái gì" bằng số liệu thật.
+      -->
+      <div class="flex flex-wrap items-end justify-between gap-3 pb-1">
+        <div class="min-w-0">
+          <h1 class="truncate text-2xl font-extrabold tracking-tight text-base-content">
             @if (activeWorkspaceId()) {
-            Không gian làm việc đang lọc
+            {{ activeWorkspaceName() }}
             } @else {
-            Tất cả không gian làm việc của bạn
+            Không gian làm việc
             }
-          </h2>
-          @if (activeWorkspaceId()) {
-          <button type="button"
-            class="badge badge-primary badge-outline badge-sm font-bold gap-1 cursor-pointer hover:bg-primary hover:text-white transition-all"
-            (click)="selectWorkspace(null)" title="Bấm để xem lại tất cả Workspace">
-            <svg lucideX class="h-2.5 w-2.5" [strokeWidth]="2"></svg> Hiện tất cả
-          </button>
-          }
+          </h1>
+          <p class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-base-content/70">
+            @if (activeWorkspaceId()) {
+            <span>Đang lọc theo một không gian</span>
+            <button type="button"
+              class="link-accent rounded-md font-semibold underline-offset-2 hover:underline"
+              (click)="selectWorkspace(null)">Xem tất cả</button>
+            } @else {
+            <span>{{ filteredWorkspaces().length }} không gian · {{ totalBoardsCount() }} bảng</span>
+            }
+          </p>
         </div>
 
-        <button type="button" class="btn btn-primary btn-xs rounded-xl px-3.5 font-black gap-1 shadow-xs"
+        <button type="button" class="btn btn-brand ctl-md rounded-full px-5 font-bold gap-1.5"
           (click)="openCreateWorkspace()" [class.hidden]="!canManage()">
-          <span>+ Tạo Workspace</span>
+          <svg lucidePlus class="h-4 w-4" [strokeWidth]="2"></svg>
+          <span>Tạo Workspace</span>
         </button>
       </div>
 
@@ -133,7 +144,7 @@
       @else if (searchHasNoResults()) {
       <div
         class="flex flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-base-300 bg-base-100/60 px-4 py-12 text-center">
-        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-base-200 text-base-content/40">
+        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-base-200 text-base-content/70">
           <svg lucideSearch class="h-5 w-5" [strokeWidth]="2"></svg>
         </div>
         <p class="text-sm font-bold text-slate-800 dark:text-slate-200">Không tìm thấy bảng nào khớp với "{{

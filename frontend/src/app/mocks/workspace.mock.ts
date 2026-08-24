@@ -41,7 +41,7 @@ export function initialsOf(name: string): string {
   return (first + last).toUpperCase();
 }
 
-const AVATAR_COLORS = ['#0284c7', '#7c3aed', '#059669', '#ea580c', '#dc2626', '#0d9488', '#4f46e5'];
+const AVATAR_COLORS = ['#0369a1', '#7c3aed', '#047857', '#c2410c', '#b91c1c', '#0f766e', '#4f46e5'];
 
 export function avatarBgFor(id: string): string {
   let hash = 0;

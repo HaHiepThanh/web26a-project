@@ -2,7 +2,7 @@
   <div class="flex flex-shrink-0 items-center justify-between border-b border-base-300 px-4 py-3.5">
     <h2 class="text-lg font-extrabold text-base-content">💬 Đoạn chat</h2>
     @if (totalUnread() > 0) {
-      <span class="badge badge-error badge-sm text-white">{{ totalUnread() }}</span>
+      <span class="badge badge-count badge-sm">{{ totalUnread() }}</span>
     }
   </div>
 
@@ -36,16 +36,16 @@
           <div class="flex items-center justify-between gap-2">
             <span class="truncate text-sm" [class.font-bold]="row.unreadCount > 0" [class.font-semibold]="row.unreadCount === 0">{{ row.board.name }}</span>
             @if (row.lastMessageAt) {
-              <span class="flex-shrink-0 text-xs text-base-content/50">{{ relativeTimeFrom(row.lastMessageAt) }}</span>
+              <span class="flex-shrink-0 text-xs text-base-content/70">{{ relativeTimeFrom(row.lastMessageAt) }}</span>
             }
           </div>
           <div class="mt-0.5 flex items-center justify-between gap-2">
             @if (row.lastSenderLabel && row.lastMessageText) {
-              <span [class]="'truncate text-sm ' + (row.unreadCount > 0 ? 'font-semibold text-base-content' : 'text-base-content/60')">
-                <span class="text-base-content/60">{{ row.lastSenderLabel }}:</span> {{ row.lastMessageText }}
+              <span [class]="'truncate text-sm ' + (row.unreadCount > 0 ? 'font-semibold text-base-content' : 'text-base-content/70')">
+                <span class="text-base-content/70">{{ row.lastSenderLabel }}:</span> {{ row.lastMessageText }}
               </span>
             } @else {
-              <span class="truncate text-sm text-base-content/50">Chưa có tin nhắn</span>
+              <span class="truncate text-sm text-base-content/70">Chưa có tin nhắn</span>
             }
             @if (row.unreadCount > 0) {
               <span class="badge badge-primary badge-sm flex-shrink-0 text-white">{{ row.unreadCount }}</span>
@@ -56,7 +56,7 @@
     }
 
     @if (!conversations().length) {
-      <div class="p-6 text-center text-sm text-base-content/50">Chưa có board nào.</div>
+      <div class="p-6 text-center text-sm text-base-content/70">Chưa có board nào.</div>
     }
   </div>
 </div>

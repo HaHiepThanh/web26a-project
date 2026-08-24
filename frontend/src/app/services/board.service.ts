@@ -27,7 +27,7 @@ function loadStoredBoards(): Record<string, Board> {
 }
 
 /** Bảng màu avatar cố định theo id — dùng chung cho card assignee + avatar stack. */
-const AVATAR_PALETTE = ['#0284c7', '#7c3aed', '#059669', '#ea580c', '#dc2626', '#0d9488'];
+const AVATAR_PALETTE = ['#0369a1', '#7c3aed', '#047857', '#c2410c', '#b91c1c', '#0f766e'];
 
 export function avatarColorFor(id: string): string {
   let hash = 0;

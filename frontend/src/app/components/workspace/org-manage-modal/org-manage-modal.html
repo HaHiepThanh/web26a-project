@@ -9,7 +9,7 @@
       <div class="flex min-w-0 items-center gap-2.5">
         <div class="min-w-0">
           <h3 class="truncate text-base font-black text-base-content">Quản lý tổ chức</h3>
-          <p class="truncate text-2xs text-base-content/50">{{ o.name }} · {{ members().length }} thành viên</p>
+          <p class="truncate text-2xs text-base-content/70">{{ o.name }} · {{ members().length }} thành viên</p>
         </div>
       </div>
       <button type="button" class="btn btn-ghost btn-circle btn-sm" (click)="close.emit()" aria-label="Đóng">
@@ -28,7 +28,7 @@
       <!-- 1. Thông tin tổ chức -->
       @if (isOwner()) {
       <section class="mb-5">
-        <h4 class="mb-2 text-2xs font-black uppercase tracking-wide text-base-content/45">Thông tin tổ chức</h4>
+        <h4 class="mb-2 text-2xs font-black uppercase tracking-wide text-base-content/70">Thông tin tổ chức</h4>
         <div class="flex items-center gap-2">
           <input type="text" maxlength="50" class="input input-bordered input-sm w-full rounded-xl border-2 font-semibold"
             placeholder="Tên tổ chức (tối đa 50 ký tự)..." [ngModel]="nameInput()" (ngModelChange)="nameInput.set($event)"
@@ -43,10 +43,10 @@
 
       <!-- 2. Mời thành viên -->
       <section class="mb-5">
-        <h4 class="mb-2 text-2xs font-black uppercase tracking-wide text-base-content/45">Mời thành viên</h4>
+        <h4 class="mb-2 text-2xs font-black uppercase tracking-wide text-base-content/70">Mời thành viên</h4>
         <!-- Quyền người được mời sẽ nhận khi họ bấm Đồng ý -->
         <div class="mb-2 flex items-center gap-2">
-          <span class="text-3xs font-black uppercase tracking-wide text-base-content/45">Vào với quyền</span>
+          <span class="text-3xs font-black uppercase tracking-wide text-base-content/70">Vào với quyền</span>
           <div class="join">
             <button type="button" class="btn join-item btn-xs text-3xs font-bold"
               [class.btn-active]="inviteRole() === 'member'"
@@ -64,15 +64,15 @@
         </div>
 
         <div class="relative">
-          <svg lucideSearch class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-base-content/35" [strokeWidth]="2"></svg>
+          <svg lucideSearch class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-base-content/70" [strokeWidth]="2"></svg>
           <input type="text" class="input input-bordered input-sm w-full rounded-xl border-2 pl-9 font-semibold"
             placeholder="Tìm theo tên, email hoặc dán ID người dùng..." [ngModel]="searchInput()"
             (ngModelChange)="onSearchChange($event)" (keydown.enter)="onInviteRaw()" />
           @if (searching()) {
-            <span class="loading loading-spinner loading-xs absolute right-3 top-1/2 -translate-y-1/2 text-base-content/40"></span>
+            <span class="loading loading-spinner loading-xs absolute right-3 top-1/2 -translate-y-1/2 text-base-content/70"></span>
           }
         </div>
-        <p class="mt-1 px-1 text-3xs leading-snug text-base-content/45">
+        <p class="mt-1 px-1 text-3xs leading-snug text-base-content/70">
           Gõ đúng email hoặc dán ID để tìm người ngoài tổ chức; gõ tên chỉ tìm trong người cùng tổ chức.
         </p>
 
@@ -85,7 +85,7 @@
               [style.background-color]="avatarBgFor(u.id)">{{ initialsOf(u.displayName || u.email) }}</span>
             <span class="min-w-0 flex-1">
               <span class="block truncate text-2xs font-bold text-base-content">{{ u.displayName || 'Người dùng' }}</span>
-              <span class="block truncate text-3xs text-base-content/50">{{ u.email }}</span>
+              <span class="block truncate text-3xs text-base-content/70">{{ u.email }}</span>
             </span>
             <span class="flex shrink-0 items-center gap-1 text-3xs font-bold text-primary">
               <svg lucideUserPlus class="h-3 w-3" [strokeWidth]="2"></svg>
@@ -94,7 +94,7 @@
           </button>
           } @empty {
             @if (searching()) {
-            <p class="px-2.5 py-2.5 text-2xs font-semibold text-base-content/50">Đang tìm...</p>
+            <p class="px-2.5 py-2.5 text-2xs font-semibold text-base-content/70">Đang tìm...</p>
             } @else {
             <button type="button" class="flex w-full items-center gap-2 px-2.5 py-2.5 text-left transition-colors hover:bg-base-200"
               (click)="onInviteRaw()">
@@ -103,7 +103,7 @@
                 <span class="block truncate">
                   Không tìm thấy ai — vẫn gửi tới "<span class="font-mono">{{ searchInput().trim() }}</span>"?
                 </span>
-                <span class="block text-3xs text-base-content/45">
+                <span class="block text-3xs text-base-content/70">
                   Chỉ gửi được nếu đó đúng là ID người dùng có thật.
                 </span>
               </span>
@@ -117,7 +117,7 @@
       <!-- 3. Lời mời đang chờ -->
       @if (pendingInvites().length) {
       <section class="mb-5">
-        <h4 class="mb-2 text-2xs font-black uppercase tracking-wide text-base-content/45">
+        <h4 class="mb-2 text-2xs font-black uppercase tracking-wide text-base-content/70">
           Đang chờ đồng ý ({{ pendingInvites().length }})
         </h4>
         <div class="flex flex-col gap-1">
@@ -127,7 +127,7 @@
               [style.background-color]="avatarBgFor(inv.toUserId)">?</span>
             <span class="min-w-0 flex-1">
               <span class="block truncate font-mono text-3xs text-base-content/70">{{ inv.toUserId }}</span>
-              <span class="block text-3xs text-base-content/45">Chờ người này bấm đồng ý ở chuông thông báo</span>
+              <span class="block text-3xs text-base-content/70">Chờ người này bấm đồng ý ở chuông thông báo</span>
             </span>
             @if (isOwner()) {
             <button type="button" class="btn btn-ghost btn-xs shrink-0 rounded-lg text-2xs font-bold text-error"
@@ -141,7 +141,7 @@
 
       <!-- 4. Danh sách thành viên -->
       <section>
-        <h4 class="mb-2 text-2xs font-black uppercase tracking-wide text-base-content/45">
+        <h4 class="mb-2 text-2xs font-black uppercase tracking-wide text-base-content/70">
           Thành viên ({{ members().length }})
         </h4>
         <div class="flex flex-col gap-1">
@@ -151,7 +151,7 @@
               [style.background-color]="avatarBgFor(mem.user.id)">{{ initialsOf(mem.user.displayName || mem.user.email) }}</span>
             <span class="min-w-0 flex-1">
               <span class="block truncate text-xs font-bold text-base-content">{{ mem.user.displayName || mem.user.email }}</span>
-              <span class="block truncate text-3xs text-base-content/50">{{ mem.user.email }}</span>
+              <span class="block truncate text-3xs text-base-content/70">{{ mem.user.email }}</span>
             </span>
 
             @if (mem.role === 'owner') {
@@ -185,7 +185,7 @@
         </div>
 
         @if (!isOwner()) {
-        <p class="mt-2 flex items-center gap-1.5 text-3xs text-base-content/45">
+        <p class="mt-2 flex items-center gap-1.5 text-3xs text-base-content/70">
           <svg lucideBuilding2 class="h-3 w-3 shrink-0" [strokeWidth]="2"></svg>
           Chỉ Trưởng nhóm mới đổi được thông tin tổ chức và xoá thành viên.
         </p>

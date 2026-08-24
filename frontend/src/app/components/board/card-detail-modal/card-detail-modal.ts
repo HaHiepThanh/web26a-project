@@ -235,8 +235,8 @@ export class CardDetailModal {
       'ctl-md flex-1 whitespace-nowrap rounded-lg border-[1.5px] px-2 text-center text-xs font-semibold transition-colors';
     if (this.draftPriority() !== id) return `${base} border-base-300 bg-base-100 text-base-content/80 hover:bg-base-200`;
     const selected: Record<CardPriority, string> = {
-      high: 'border-error bg-error/10 text-error',
-      medium: 'border-warning bg-warning/10 text-warning',
+      high: 'border-error bg-error/10 prio-high',
+      medium: 'border-warning bg-warning/10 prio-med',
       low: 'border-base-content/40 bg-base-200 text-base-content/80',
     };
     return `${base} ${selected[id]}`;

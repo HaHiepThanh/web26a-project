@@ -5,9 +5,9 @@
       <span class="flex h-5 w-5 items-center justify-center rounded-md bg-primary/10 text-primary">
         <svg lucideBuilding2 class="h-3 w-3" [strokeWidth]="2"></svg>
       </span>
-      <span class="text-2xs font-bold uppercase tracking-wide text-base-content/45">Organization</span>
+      <span class="text-2xs font-bold uppercase tracking-wide text-base-content/70">Organization</span>
     </div>
-    <span class="text-2xs font-bold text-base-content/35">{{ organizations().length }}</span>
+    <span class="text-2xs font-bold text-base-content/70">{{ organizations().length }}</span>
   </div>
 
   <div class="space-y-1">
@@ -19,7 +19,7 @@
         <span class="min-w-0 flex-1">
           <span class="block truncate text-xs font-bold leading-tight">{{ org.name }}</span>
           <span class="block truncate text-2xs font-medium leading-tight"
-            [class]="org.id === activeOrg()?.id ? 'text-primary-content/70' : 'text-base-content/45'">
+            [class]="org.id === activeOrg()?.id ? 'text-primary-content' : 'text-base-content/70'">
             {{ org.memberIds.length }} thành viên
           </span>
         </span>
@@ -43,7 +43,7 @@
 
   <!-- Nút Tạo Organization mới: Mở popup modal -->
   <button type="button"
-    class="ctl-md mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-base-300 py-2.5 text-sm font-bold text-primary transition-all hover:border-primary hover:bg-primary/5 cursor-pointer"
+    class="ctl-md mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-base-300 py-2.5 text-sm font-bold text-[var(--accent-purple-text)] transition-all hover:border-primary hover:bg-primary/5 cursor-pointer"
     (click)="startCreate()">
     <svg lucidePlus class="h-3 w-3 shrink-0" [strokeWidth]="2"></svg>
     <span>Tạo tổ chức mới</span>

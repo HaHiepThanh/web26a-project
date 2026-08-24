@@ -1,6 +1,6 @@
-<div class="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/95 p-5 shadow-xs hover:shadow-md transition-all duration-200">
+<div class="panel rounded-3xl p-5 transition-shadow duration-200 hover:shadow-[var(--brand-shadow)]">
   <!-- Header Section -->
-  <div class="flex items-start justify-between gap-4 min-w-0">
+  <div class="flex items-start justify-between gap-4 min-w-0 max-sm:flex-col max-sm:gap-3">
     <div class="flex items-start gap-3.5 min-w-0 flex-1">
       <div class="min-w-0 flex-1">
         <!-- Name & Badge -->
@@ -8,7 +8,7 @@
           <h3 class="truncate text-base font-black text-slate-900 dark:text-white tracking-tight" [title]="workspace().name">
             {{ workspace().name }}
           </h3>
-          <span class="inline-flex items-center rounded-full bg-primary/10 dark:bg-primary/20 px-2.5 py-0.5 text-2xs font-black text-primary border border-primary/20">
+          <span class="inline-flex items-center rounded-full bg-primary/10 dark:bg-primary/20 px-2.5 py-0.5 text-2xs font-black text-[var(--accent-purple-text)] border border-primary/20">
             {{ workspace().boards.length }} bảng
           </span>
         </div>
@@ -32,10 +32,10 @@
             Rút từ 5 xuống 4 avatar để chip "+N" xuất hiện sớm hơn — đó mới là
             cách đúng để báo "còn nữa", thay vì xén.
           -->
-          <div class="flex shrink-0 items-center -space-x-1.5">
+          <div class="flex shrink-0 items-center -space-x-1">
             @for (mem of workspace().members.slice(0, 4); track mem.id) {
             <div
-              class="inline-flex h-5 w-5 items-center justify-center rounded-full border-2 border-white dark:border-slate-800 text-3xs font-black text-white shadow-xs"
+              class="inline-flex h-6 w-6 items-center justify-center rounded-full border-2 border-white dark:border-slate-900 text-3xs font-black text-white shadow-xs"
               [style.background-color]="avatarBgFor(mem.id)"
               [title]="mem.displayName + ' (UUID: ' + mem.id + ')'">
               {{ initialsOf(mem.displayName || mem.email) }}
@@ -43,13 +43,13 @@
             }
             @if (workspace().members.length > 4) {
             <div
-              class="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-white dark:border-slate-800 bg-slate-200 dark:bg-slate-700 text-3xs font-bold text-slate-700 dark:text-slate-200 shadow-xs"
+              class="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 border-white dark:border-slate-900 bg-slate-200 dark:bg-slate-700 text-3xs font-bold text-slate-700 dark:text-slate-200 shadow-xs"
               [title]="'Còn ' + (workspace().members.length - 4) + ' thành viên nữa'">
               +{{ workspace().members.length - 4 }}
             </div>
             }
           </div>
-          <span class="shrink-0 text-slate-400 dark:text-slate-600">•</span>
+          <span class="shrink-0 text-slate-500 dark:text-slate-400">•</span>
           <!-- `truncate` để khi hết chỗ thì CHỮ nhường, không phải avatar bị xén. -->
           <span class="truncate text-2xs font-bold text-slate-600 dark:text-slate-400">{{ workspace().members.length }} thành viên</span>
         </div>
@@ -57,18 +57,18 @@
     </div>
 
     <!-- Action buttons -->
-    <div class="flex shrink-0 items-center gap-2 pt-0.5">
+    <div class="flex shrink-0 items-center gap-2 pt-0.5 max-sm:w-full max-sm:justify-end">
       <button
         type="button"
-        class="btn btn-ghost btn-xs text-xs rounded-xl font-bold hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 gap-1 px-2.5"
+        class="btn btn-ghost btn-sm rounded-full text-xs font-bold text-slate-700 dark:text-slate-300 gap-1 px-3"
         title="Chỉnh sửa & Thành viên"
         (click)="editWorkspace.emit(workspace())" [class.hidden]="!canManage()">
-        <svg lucidePencil class="h-3 w-3" [strokeWidth]="2"></svg>
+        <svg lucidePencil class="h-4 w-4" [strokeWidth]="2"></svg>
         <span>Sửa</span>
       </button>
       <button
         type="button"
-        class="btn btn-primary btn-xs rounded-xl px-3 font-black text-2xs shadow-xs hover:shadow-sm gap-1"
+        class="btn btn-brand btn-sm rounded-full px-3.5 font-bold text-xs gap-1"
         (click)="createBoard.emit(workspace().id)" [class.hidden]="!canManage()">
         <span>+</span>
         <span>Thêm bảng</span>
@@ -83,7 +83,7 @@
   <div class="grid grid-cols-[repeat(auto-fill,minmax(205px,1fr))] gap-3">
     @for (board of workspace().boards; track board.id) {
     <div
-      class="board-tile group relative flex min-h-[108px] cursor-pointer flex-col justify-between overflow-hidden rounded-2xl p-3 text-white shadow-xs transition-all duration-200 hover:-translate-y-1 hover:shadow-md hover:brightness-105"
+      class="board-tile lift group relative flex min-h-[108px] cursor-pointer flex-col justify-between overflow-hidden rounded-2xl p-3 text-white"
       [class]="board.bgClass"
       [style.background-image]="bgImageByBoardId()[board.id] ? 'url(' + bgImageByBoardId()[board.id] + ')' : null"
       [style.background-size]="bgImageByBoardId()[board.id] ? 'cover' : null"
@@ -174,9 +174,9 @@
 
     <!-- Tile: Create new board -->
     <div
-      class="flex min-h-[108px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700/80 bg-slate-50/60 dark:bg-slate-800/30 text-xs font-bold text-slate-500 transition-all duration-200 hover:border-primary hover:bg-primary/5 hover:text-primary hover:scale-[1.02]"
+      class="flex min-h-[108px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700/80 bg-slate-50/60 dark:bg-slate-800/30 text-xs font-bold text-slate-500 dark:text-slate-400 transition-all duration-200 hover:border-primary hover:bg-primary/5 hover:text-primary hover:scale-[1.02]"
       (click)="createBoard.emit(workspace().id)" [class.hidden]="!canManage()">
-      <span class="flex h-7 w-7 items-center justify-center rounded-full bg-slate-200/70 dark:bg-slate-700/70 text-base font-bold leading-none">+</span>
+      <span class="flex h-7 w-7 items-center justify-center rounded-full bg-slate-200/70 dark:bg-slate-700/70 text-base font-bold leading-none text-slate-600 dark:text-slate-300">+</span>
       <span>Tạo bảng mới</span>
     </div>
   </div>

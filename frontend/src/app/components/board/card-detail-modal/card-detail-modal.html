@@ -25,7 +25,7 @@
 
     <!-- ===== Header: tiêu đề + presence + đóng ===== -->
     <div class="flex shrink-0 items-start gap-2 border-b border-base-200 px-5 pb-3 pt-4">
-      <svg class="mt-2 h-5 w-5 shrink-0 text-base-content/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
+      <svg class="mt-2 h-5 w-5 shrink-0 text-base-content/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
       <input #titleInput class="min-w-0 flex-1 rounded-md bg-transparent px-1.5 py-1 text-lg font-bold text-base-content outline-none hover:bg-base-200 focus:bg-base-200" [value]="draftTitle()" spellcheck="false" (input)="draftTitle.set($any($event.target).value)" />
 
       @if (dirty()) {
@@ -64,7 +64,7 @@
         -->
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div class="min-w-0">
-            <label class="mb-1.5 flex items-center gap-1.5 text-2xs font-bold uppercase tracking-wide text-base-content/50" for="detail-assignee-select">
+            <label class="mb-1.5 flex items-center gap-1.5 text-2xs font-bold uppercase tracking-wide text-base-content/70" for="detail-assignee-select">
               <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.4"/><path d="M4.5 20c1.6-3.6 4.6-5.4 7.5-5.4s5.9 1.8 7.5 5.4"/></svg>
               Phụ trách
             </label>
@@ -77,7 +77,7 @@
           </div>
 
           <div class="min-w-0">
-            <label class="mb-1.5 flex items-center gap-1.5 text-2xs font-bold uppercase tracking-wide text-base-content/50" for="detail-due-input">
+            <label class="mb-1.5 flex items-center gap-1.5 text-2xs font-bold uppercase tracking-wide text-base-content/70" for="detail-due-input">
               <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
               Ngày hết hạn
             </label>
@@ -85,7 +85,7 @@
           </div>
 
           <div class="min-w-0">
-            <label class="mb-1.5 flex items-center gap-1.5 text-2xs font-bold uppercase tracking-wide text-base-content/50">
+            <label class="mb-1.5 flex items-center gap-1.5 text-2xs font-bold uppercase tracking-wide text-base-content/70">
               <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 21V4a1 1 0 011-1h11.4a1 1 0 01.8 1.6L15 9l3.2 4.4a1 1 0 01-.8 1.6H6"/></svg>
               Ưu tiên
             </label>
@@ -99,7 +99,7 @@
 
         <!-- Nhãn -->
         <div>
-          <label class="mb-1.5 flex items-center gap-1.5 text-2xs font-bold uppercase tracking-wide text-base-content/50">
+          <label class="mb-1.5 flex items-center gap-1.5 text-2xs font-bold uppercase tracking-wide text-base-content/70">
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><circle cx="7" cy="7" r="1.2" fill="currentColor"/></svg>
             Nhãn
           </label>
@@ -109,7 +109,7 @@
         <!-- Mô tả -->
         <div>
           <div class="mb-1.5 flex items-center justify-between">
-            <label class="flex items-center gap-1.5 text-2xs font-bold uppercase tracking-wide text-base-content/50">
+            <label class="flex items-center gap-1.5 text-2xs font-bold uppercase tracking-wide text-base-content/70">
               <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
               Mô tả
             </label>
@@ -122,7 +122,7 @@
           } @else if (draftDescription()) {
             <div class="cursor-text whitespace-pre-wrap break-words rounded-lg bg-base-200/60 px-3 py-2.5 text-sm text-base-content" (click)="toggleEditDesc()">{{ draftDescription() }}</div>
           } @else {
-            <button type="button" class="w-full rounded-lg bg-base-200/60 px-3 py-2.5 text-left text-sm text-base-content/50 hover:bg-base-200" (click)="toggleEditDesc()">Thêm mô tả chi tiết hơn...</button>
+            <button type="button" class="w-full rounded-lg bg-base-200/60 px-3 py-2.5 text-left text-sm text-base-content/70 hover:bg-base-200" (click)="toggleEditDesc()">Thêm mô tả chi tiết hơn...</button>
           }
         </div>
 
@@ -134,7 +134,7 @@
         <!-- Các tập tin đính kèm -->
         <div class="border-t border-base-200 pt-4">
           <div class="mb-2 flex items-center justify-between">
-            <label class="flex items-center gap-1.5 text-2xs font-bold uppercase tracking-wide text-base-content/50">
+            <label class="flex items-center gap-1.5 text-2xs font-bold uppercase tracking-wide text-base-content/70">
               <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a5 5 0 01-7.07-7.07l9.19-9.19a3.5 3.5 0 014.95 4.95L9.88 18.56a1.5 1.5 0 01-2.12-2.12l8.49-8.49"/></svg>
               Các tập tin đính kèm
             </label>
@@ -145,7 +145,7 @@
           </div>
 
           @if (attachments().length === 0) {
-            <p class="text-xs text-base-content/40">Chưa có tập tin nào — bấm "Đính kèm" để thêm ảnh hoặc tài liệu.</p>
+            <p class="text-xs text-base-content/70">Chưa có tập tin nào — bấm "Đính kèm" để thêm ảnh hoặc tài liệu.</p>
           } @else {
             <div class="flex flex-col gap-2">
               @for (att of attachments(); track att.id) {
@@ -154,12 +154,12 @@
                     @if (att.isImage) {
                       <img [src]="att.dataUrl" [alt]="att.name" class="h-full w-full object-cover" />
                     } @else {
-                      <span class="flex h-full w-full items-center justify-center bg-base-300 text-2xs font-bold text-base-content/60">{{ fileBadge(att) }}</span>
+                      <span class="flex h-full w-full items-center justify-center bg-base-300 text-2xs font-bold text-base-content/70">{{ fileBadge(att) }}</span>
                     }
                   </button>
                   <div class="min-w-0 flex-1">
                     <div class="truncate text-sm font-semibold text-base-content" [title]="att.name">{{ att.name }}</div>
-                    <div class="flex items-center gap-1.5 text-2xs text-base-content/50">
+                    <div class="flex items-center gap-1.5 text-2xs text-base-content/70">
                       <span>{{ formatSize(att.size) }}</span>
                       @if (att.isCover) {
                         <span class="badge badge-primary badge-xs gap-0.5">Ảnh bìa</span>
@@ -175,7 +175,7 @@
                     <button type="button" class="btn btn-ghost btn-xs btn-square" (click)="openAttachment(att.dataUrl)" title="Mở trong tab mới">
                       <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
                     </button>
-                    <button type="button" class="btn btn-ghost btn-xs btn-square text-base-content/50 hover:text-error" (click)="removeAttachment(att.id, att.name)" title="Gỡ đính kèm">
+                    <button type="button" class="btn btn-ghost btn-xs btn-square text-base-content/70 hover:text-error" (click)="removeAttachment(att.id, att.name)" title="Gỡ đính kèm">
                       <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>
                     </button>
                   </div>
@@ -197,7 +197,7 @@
       <!-- ---------- CỘT PHẢI: nhận xét & hoạt động ---------- -->
       <div class="flex flex-col gap-4 border-t border-base-200 bg-base-200/40 p-5 md:h-full md:min-h-0 md:overflow-y-auto md:border-l md:border-t-0">
         <div class="flex items-center gap-1.5">
-          <svg class="h-4 w-4 text-base-content/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          <svg class="h-4 w-4 text-base-content/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
           <h3 class="text-sm font-bold text-base-content">Nhận xét và hoạt động</h3>
         </div>
 
@@ -211,21 +211,21 @@
           <button type="button"
             class="ctl-md -mx-2 flex w-full items-center justify-between rounded-lg px-2 transition-colors hover:bg-base-200"
             [attr.aria-expanded]="historyOpen()" (click)="toggleHistory()">
-            <span class="text-2xs font-bold uppercase tracking-wide text-base-content/60">Lịch sử thay đổi ({{ activityLogs().length }})</span>
-            <svg class="h-4 w-4 text-base-content/50 transition-transform" [class.rotate-90]="historyOpen()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+            <span class="text-2xs font-bold uppercase tracking-wide text-base-content/70">Lịch sử thay đổi ({{ activityLogs().length }})</span>
+            <svg class="h-4 w-4 text-base-content/70 transition-transform" [class.rotate-90]="historyOpen()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
           </button>
 
           @if (historyOpen()) {
             <div class="mt-2.5 flex flex-col gap-2.5">
               @if (activityLogs().length === 0) {
-                <div class="text-2xs text-base-content/50">Chưa có thay đổi nào được ghi lại.</div>
+                <div class="text-2xs text-base-content/70">Chưa có thay đổi nào được ghi lại.</div>
               }
               @for (h of activityLogs(); track h.id) {
                 <div class="flex gap-2 text-xs">
-                  <svg class="mt-0.5 h-4 w-4 shrink-0 text-base-content/30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                  <svg class="mt-0.5 h-4 w-4 shrink-0 text-base-content/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
                   <div class="min-w-0">
                     <div class="leading-normal text-base-content">{{ h.actionText }}</div>
-                    <div class="mt-px text-3xs text-base-content/40">{{ h.createdAt | date: 'HH:mm dd/MM/yyyy' }}</div>
+                    <div class="mt-px text-3xs text-base-content/70">{{ h.createdAt | date: 'HH:mm dd/MM/yyyy' }}</div>
                   </div>
                 </div>
               }
@@ -249,7 +249,7 @@
       }
 
       <div class="flex items-center gap-2">
-        <span class="min-w-0 flex-1 text-2xs text-base-content/50">
+        <span class="min-w-0 flex-1 text-2xs text-base-content/70">
           @if (dirty()) { Thay đổi chỉ được lưu khi bạn bấm "Lưu thay đổi". }
           @else { Nhãn, checklist, bình luận và tệp đính kèm được lưu ngay khi thao tác. }
         </span>

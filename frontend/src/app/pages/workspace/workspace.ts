@@ -1,6 +1,8 @@
 import { Component, DestroyRef, HostListener, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
-import { LucideBuilding2, LucideGlobe, LucideLock, LucideSearch, LucideStar, LucideX } from '@lucide/angular';
+import { LucideBuilding2, LucideGlobe, LucideLock, LucideSearch, LucideStar, LucideX,
+  LucidePlus,
+} from '@lucide/angular';
 import { WorkspaceUiService } from '../../services/workspace-ui.service';
 import { BoardService } from '../../services/board.service';
 import { AuthService } from '../../services/auth.service';
@@ -67,6 +69,7 @@ function toPrivacy(visibility: string): Privacy {
     LucideBuilding2,
     LucideGlobe,
     LucideLock,
+    LucidePlus,
     LucideSearch,
     LucideStar,
     LucideX,
@@ -169,6 +172,13 @@ export class Workspace {
         return null;
       })
       .filter((ws): ws is WorkspaceItem => ws !== null);
+  });
+
+  /** Tên workspace đang lọc — tiêu đề trang hiển thị nó thay cho câu chung chung. */
+  readonly activeWorkspaceName = computed(() => {
+    const id = this.activeWorkspaceId();
+    if (!id) return '';
+    return this.workspaces().find((ws) => ws.id === id)?.name ?? 'Không gian làm việc';
   });
 
   readonly searchHasNoResults = computed(() => {

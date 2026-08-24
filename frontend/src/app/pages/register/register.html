@@ -10,7 +10,7 @@
     <div class="form-card">
       <div class="text-center">
         <h1 class="text-2xl font-bold tracking-tight">Tạo tài khoản mới</h1>
-        <p class="mt-1.5 text-sm text-base-content/60">Đăng ký để bắt đầu quản lý công việc cùng đội nhóm.</p>
+        <p class="mt-1.5 text-sm text-base-content/70">Đăng ký để bắt đầu quản lý công việc cùng đội nhóm.</p>
       </div>
 
       <form class="mt-5 flex flex-col gap-4" (ngSubmit)="onSubmit()">
@@ -89,7 +89,7 @@
                 [(ngModel)]="password"
                 name="password"
               />
-              <button type="button" class="tap-44 -mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-base-content/50 transition-colors hover:bg-base-200 hover:text-base-content" (click)="passwordVisible.set(!passwordVisible())" [attr.aria-label]="passwordVisible() ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'">
+              <button type="button" class="tap-44 -mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-base-content/70 transition-colors hover:bg-base-200 hover:text-base-content" (click)="passwordVisible.set(!passwordVisible())" [attr.aria-label]="passwordVisible() ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'">
                 @if (!passwordVisible()) {
                   <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
                 } @else {
@@ -112,7 +112,7 @@
                 [(ngModel)]="confirmPassword"
                 name="confirmPassword"
               />
-              <button type="button" class="tap-44 -mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-base-content/50 transition-colors hover:bg-base-200 hover:text-base-content" (click)="confirmVisible.set(!confirmVisible())" [attr.aria-label]="confirmVisible() ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'">
+              <button type="button" class="tap-44 -mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-base-content/70 transition-colors hover:bg-base-200 hover:text-base-content" (click)="confirmVisible.set(!confirmVisible())" [attr.aria-label]="confirmVisible() ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'">
                 @if (!confirmVisible()) {
                   <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
                 } @else {

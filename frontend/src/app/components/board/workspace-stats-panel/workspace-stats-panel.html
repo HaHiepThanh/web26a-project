@@ -45,8 +45,8 @@
 
     <!-- Khối 2 (tiếp): tiến độ / khối lượng công việc theo thành viên -->
     <section class="space-y-2">
-      <h2 class="text-xs font-bold uppercase tracking-wide text-base-content/60">Khối lượng công việc theo thành viên</h2>
-      <div class="flex items-center gap-4 text-xs text-base-content/60">
+      <h2 class="text-xs font-bold uppercase tracking-wide text-base-content/70">Khối lượng công việc theo thành viên</h2>
+      <div class="flex items-center gap-4 text-xs text-base-content/70">
         <span class="flex items-center gap-1"><span class="h-2 w-2 rounded-full bg-success"></span>Hoàn thành</span>
         <span class="flex items-center gap-1"><span class="h-2 w-2 rounded-full bg-info"></span>Đang làm</span>
         <span class="flex items-center gap-1"><span class="h-2 w-2 rounded-full bg-error"></span>Quá hạn</span>
@@ -65,7 +65,7 @@
               <div class="h-full bg-info" [style.width.%]="m.doingPct"></div>
               <div class="h-full bg-error" [style.width.%]="m.overduePct"></div>
             </div>
-            <span class="w-6 text-right text-xs text-base-content/60">{{ m.assignedCount }}</span>
+            <span class="w-6 text-right text-xs text-base-content/70">{{ m.assignedCount }}</span>
           </div>
         }
       </div>
@@ -74,7 +74,7 @@
     <!-- Khối 3: bộ lọc + nhật ký hoạt động -->
     <section class="space-y-2">
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <h2 class="text-xs font-bold uppercase tracking-wide text-base-content/60">Nhật ký hoạt động</h2>
+        <h2 class="text-xs font-bold uppercase tracking-wide text-base-content/70">Nhật ký hoạt động</h2>
         <div class="flex flex-wrap items-center gap-2">
           <input
             class="input input-bordered input-sm w-48"
@@ -103,7 +103,7 @@
 
       <div class="divide-y divide-base-300 overflow-hidden rounded-box border border-base-300 bg-base-100">
         @if (filteredActivityLogs().length === 0) {
-          <p class="p-4 text-sm text-base-content/50">Không có hoạt động nào khớp với bộ lọc hiện tại.</p>
+          <p class="p-4 text-sm text-base-content/70">Không có hoạt động nào khớp với bộ lọc hiện tại.</p>
         }
         @for (log of filteredActivityLogs(); track trackByLogId($index, log)) {
           <div class="flex items-start gap-3 p-3">
@@ -115,7 +115,7 @@
             <span class="text-sm leading-7">{{ actionIcon(log.actionType) }}</span>
             <div class="flex flex-col gap-0.5">
               <p class="text-sm text-base-content">{{ log.actionText }}</p>
-              <p class="text-xs text-base-content/50">{{ relativeTime(log.createdAt) }}</p>
+              <p class="text-xs text-base-content/70">{{ relativeTime(log.createdAt) }}</p>
             </div>
           </div>
         }
@@ -139,7 +139,7 @@
           <div class="py-3 first:pt-0">
             <p class="text-sm text-base-content">{{ card.title }}</p>
             <div class="mt-1 flex items-center justify-between text-xs">
-              <span class="text-base-content/60">{{ card.assigneeName }}</span>
+              <span class="text-base-content/70">{{ card.assigneeName }}</span>
               <span class="font-semibold text-error">Quá hạn {{ card.daysOverdue }} ngày</span>
             </div>
           </div>
