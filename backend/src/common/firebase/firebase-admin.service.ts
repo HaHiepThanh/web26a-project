@@ -42,8 +42,8 @@ export class FirebaseAdminService implements OnModuleInit {
         raw = readFileSync(full, 'utf8');
       } catch {
         throw new Error(
-          `Không đọc được file service account tại "${full}". ` +
-            `Kiểm tra lại FIREBASE_SERVICE_ACCOUNT_PATH trong backend/.env.`,
+          `Could not read service account file at "${full}". ` +
+            `Check FIREBASE_SERVICE_ACCOUNT_PATH in backend/.env.`,
         );
       }
       const json = JSON.parse(raw) as {
@@ -53,7 +53,7 @@ export class FirebaseAdminService implements OnModuleInit {
       };
       if (!json.project_id || !json.client_email || !json.private_key) {
         throw new Error(
-          `File service account "${full}" thiếu project_id / client_email / private_key.`,
+          `Service account file "${full}" is missing project_id / client_email / private_key.`,
         );
       }
       return {
@@ -69,8 +69,8 @@ export class FirebaseAdminService implements OnModuleInit {
     const privateKey = this.config.get<string>('FIREBASE_PRIVATE_KEY');
     if (!projectId || !clientEmail || !privateKey) {
       throw new Error(
-        'Thiếu cấu hình Firebase Admin. Đặt FIREBASE_SERVICE_ACCOUNT_PATH, ' +
-          'hoặc đủ bộ FIREBASE_PROJECT_ID + FIREBASE_CLIENT_EMAIL + FIREBASE_PRIVATE_KEY.',
+        'Missing Firebase Admin configuration. Set FIREBASE_SERVICE_ACCOUNT_PATH, ' +
+          'or all of FIREBASE_PROJECT_ID + FIREBASE_CLIENT_EMAIL + FIREBASE_PRIVATE_KEY.',
       );
     }
     // Khi private key nằm trong .env, ký tự xuống dòng bị lưu thành 2 ký tự "\\n"

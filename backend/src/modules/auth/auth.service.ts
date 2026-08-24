@@ -125,7 +125,7 @@ export class AuthService {
     );
     if (insertError) {
       this.logger.error(`Tạo users thất bại (uid=${user.uid}): ${insertError.message}`);
-      throw new InternalServerErrorException('Không lưu được hồ sơ người dùng');
+      throw new InternalServerErrorException('Failed to save user profile');
     }
 
     const { data, error } = await this.supabase.client
@@ -135,7 +135,7 @@ export class AuthService {
       .single();
     if (error) {
       this.logger.error(`Đọc users thất bại (uid=${user.uid}): ${error.message}`);
-      throw new InternalServerErrorException('Không đọc được hồ sơ người dùng');
+      throw new InternalServerErrorException('Failed to load user profile');
     }
 
     let row = data as UserRow;
@@ -227,7 +227,7 @@ export class AuthService {
       // `users.username` có ràng buộc UNIQUE — người khác lấy mất thì báo rõ,
       // nhưng KHÔNG làm hỏng việc đăng ký: tài khoản đã tạo xong rồi.
       if (error.code === '23505') {
-        throw new ConflictException(`Tên đăng nhập "${patch.username}" đã có người dùng.`);
+        throw new ConflictException(`Username "${patch.username}" is already taken.`);
       }
       this.logger.error(`Cập nhật hồ sơ ban đầu thất bại (uid=${row.id}): ${error.message}`);
       return row;
@@ -260,10 +260,10 @@ export class AuthService {
 
     if (error) {
       if (error.code === '23505') {
-        throw new ConflictException(`Tên đăng nhập "${dto.username}" đã có người dùng.`);
+        throw new ConflictException(`Username "${dto.username}" is already taken.`);
       }
       this.logger.error(`Cập nhật hồ sơ thất bại (uid=${user.uid}): ${error.message}`);
-      throw new InternalServerErrorException('Không lưu được hồ sơ');
+      throw new InternalServerErrorException('Failed to save profile');
     }
     return data as UserRow;
   }
@@ -284,7 +284,7 @@ export class AuthService {
 
     if (error) {
       this.logger.error(`Đọc organization_members thất bại (uid=${user.uid}): ${error.message}`);
-      throw new InternalServerErrorException('Không đọc được danh sách tổ chức');
+      throw new InternalServerErrorException('Failed to load organizations');
     }
 
     type Row = {

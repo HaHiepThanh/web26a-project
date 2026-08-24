@@ -196,7 +196,7 @@ export class RealtimeService {
           orgName: r.orgName,
           toUserId: '',
           fromUserId: event.actorId,
-          fromUserName: r.fromUser?.displayName || r.fromUser?.email || 'Ai đó',
+          fromUserName: r.fromUser?.displayName || r.fromUser?.email || 'Someone',
           role: r.role ?? 'member',
           status: 'pending',
           createdAt: r.createdAt,

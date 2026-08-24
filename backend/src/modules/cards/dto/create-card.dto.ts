@@ -5,11 +5,11 @@ export class CreateCardDto {
   // Bắt buộc vì id seed sinh bằng md5(...)::uuid — nibble version/variant là
   // ngẫu nhiên theo hash, phần lớn KHÔNG khớp version 1-8 chuẩn RFC4122, nên
   // 'all' (mặc định) hay '4' đều trượt nhầm những id có thật trong DB.
-  @IsUUID('loose', { message: 'listId phải là uuid.' })
+  @IsUUID('loose', { message: 'listId must be a uuid.' })
   listId: string;
 
   @IsString()
-  @MinLength(1, { message: 'Tên thẻ không được để trống.' })
-  @MaxLength(200, { message: 'Tên thẻ tối đa 200 ký tự.' })
+  @MinLength(1, { message: 'Card title is required.' })
+  @MaxLength(200, { message: 'Card title must be at most 200 characters.' })
   title: string;
 }

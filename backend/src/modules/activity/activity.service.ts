@@ -54,7 +54,7 @@ export class ActivityService {
       .eq('id', boardId)
       .maybeSingle();
     // 22P02 = id gõ sai định dạng uuid → coi như không tồn tại.
-    if (error?.code === '22P02' || !board) throw new NotFoundException('Không tìm thấy board.');
+    if (error?.code === '22P02' || !board) throw new NotFoundException('Board not found.');
 
     const { data: member } = await sb
       .from('organization_members')
@@ -62,7 +62,7 @@ export class ActivityService {
       .eq('org_id', board.org_id as string)
       .eq('user_id', uid)
       .maybeSingle();
-    if (!member) throw new NotFoundException('Không tìm thấy board.');
+    if (!member) throw new NotFoundException('Board not found.');
   }
 
   // Lấy log của board, mới nhất trước.
@@ -79,7 +79,7 @@ export class ActivityService {
 
     if (error) {
       this.logger.error(`Đọc nhật ký thất bại: ${error.message}`);
-      throw new InternalServerErrorException('Không đọc được nhật ký');
+      throw new InternalServerErrorException('Failed to load activity log');
     }
 
     // Đổi sang camelCase cho khớp phần còn lại của API.

@@ -30,7 +30,7 @@ export class OrgCreateModal {
     if (!slug) return null; // chưa gõ thì chưa báo lỗi, để onSubmit lo
     const formatError = validateSlugFormat(slug);
     if (formatError) return formatError;
-    if (this.isSlugTaken()(slug)) return `Đường dẫn "${slug}" đã có tổ chức khác dùng rồi!`;
+    if (this.isSlugTaken()(slug)) return `The URL "${slug}" is already used by another organization!`;
     return null;
   });
 
@@ -64,11 +64,11 @@ export class OrgCreateModal {
   onSubmit(): void {
     const name = this.nameInput().trim();
     if (!name) {
-      this.nameError.set('Vui lòng nhập tên Tổ chức (Organization)!');
+      this.nameError.set('Please enter an Organization name!');
       return;
     }
     if (name.length > 50) {
-      this.nameError.set('Tên Tổ chức tối đa 50 ký tự!');
+      this.nameError.set('Organization name must be at most 50 characters!');
       return;
     }
     this.nameError.set(null);

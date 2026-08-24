@@ -50,7 +50,7 @@ export class CommentList {
 
   userLabel(userId: string): string {
     const u = this.membersById()[userId];
-    return u?.displayName ?? u?.email ?? 'Ai đó';
+    return u?.displayName ?? u?.email ?? 'Someone';
   }
 
   userInitials(userId: string): string {

@@ -113,7 +113,7 @@ export class AttachmentsService {
 
     if (error) {
       this.logger.error(`Đọc đính kèm thất bại: ${error.message}`);
-      throw new InternalServerErrorException('Không đọc được danh sách đính kèm');
+      throw new InternalServerErrorException('Failed to load attachments');
     }
     return this.toResponse(data as AttachmentRow[]);
   }
@@ -123,9 +123,9 @@ export class AttachmentsService {
     cardId: string,
     file: { originalname: string; mimetype: string; size: number; buffer: Buffer },
   ): Promise<AttachmentResponse> {
-    if (!file) throw new BadRequestException('Chưa chọn tệp nào.');
+    if (!file) throw new BadRequestException('No file selected.');
     if (file.size > MAX_BYTES) {
-      throw new BadRequestException(`Tệp tối đa ${MAX_BYTES / 1024 / 1024}MB.`);
+      throw new BadRequestException(`File must be at most ${MAX_BYTES / 1024 / 1024}MB.`);
     }
 
     const card = await this.access.assertCardAccess(uid, cardId);
@@ -145,7 +145,7 @@ export class AttachmentsService {
 
     if (uploadError) {
       this.logger.error(`Tải tệp lên Storage thất bại: ${uploadError.message}`);
-      throw new InternalServerErrorException('Không tải được tệp lên');
+      throw new InternalServerErrorException('Failed to upload file');
     }
 
     const { data, error } = await this.supabase.client
@@ -166,7 +166,7 @@ export class AttachmentsService {
       // Ghi bảng hỏng thì dọn file vừa lên, tránh để lại rác không ai tham chiếu.
       await this.supabase.client.storage.from(BUCKET).remove([storagePath]);
       this.logger.error(`Ghi card_attachments thất bại: ${error.message}`);
-      throw new InternalServerErrorException('Không lưu được đính kèm');
+      throw new InternalServerErrorException('Failed to save attachment');
     }
 
     const [created] = await this.toResponse([data as AttachmentRow]);
@@ -180,7 +180,7 @@ export class AttachmentsService {
       .select('*')
       .eq('id', id)
       .maybeSingle();
-    if (error?.code === '22P02' || !data) throw new NotFoundException('Không tìm thấy tệp đính kèm.');
+    if (error?.code === '22P02' || !data) throw new NotFoundException('Attachment not found.');
 
     const card = await this.access.assertCardAccess(uid, (data as AttachmentRow).card_id);
     return { row: data as AttachmentRow, boardId: card.boardId };
@@ -190,7 +190,7 @@ export class AttachmentsService {
   async setCover(uid: string, id: string, isCover: boolean): Promise<AttachmentResponse> {
     const { row, boardId } = await this.assertAttachment(uid, id);
     if (isCover && !row.is_image) {
-      throw new BadRequestException('Chỉ ảnh mới đặt làm ảnh bìa được.');
+      throw new BadRequestException('Only images can be set as the cover.');
     }
 
     const sb = this.supabase.client;
@@ -207,7 +207,7 @@ export class AttachmentsService {
 
     if (error) {
       this.logger.error(`Đặt ảnh bìa thất bại: ${error.message}`);
-      throw new InternalServerErrorException('Không đặt được ảnh bìa');
+      throw new InternalServerErrorException('Failed to set cover image');
     }
 
     const [updated] = await this.toResponse([data as AttachmentRow]);
@@ -221,7 +221,7 @@ export class AttachmentsService {
     const { error } = await this.supabase.client.from('card_attachments').delete().eq('id', id);
     if (error) {
       this.logger.error(`Xoá đính kèm thất bại: ${error.message}`);
-      throw new InternalServerErrorException('Không xoá được đính kèm');
+      throw new InternalServerErrorException('Failed to delete attachment');
     }
 
     // Xoá file khỏi Storage SAU khi xoá dòng. Ngược lại thì file mất mà dòng còn

@@ -90,7 +90,7 @@ export class AttachmentService {
       this.byCard.update((map) => ({ ...map, [cardId]: rows.map((r) => this.toAttachment(r)) }));
       this.loadedAt.set(cardId, Date.now());
     } catch (e) {
-      this.fail(describeError(e, 'Không tải được danh sách đính kèm.'));
+      this.fail(describeError(e, 'Failed to load attachments.'));
     }
   }
 
@@ -107,7 +107,7 @@ export class AttachmentService {
     try {
       for (const file of files) {
         if (file.size > MAX_BYTES) {
-          this.fail(`"${file.name}" nặng quá ${MAX_BYTES / 1024 / 1024}MB nên không tải lên được.`);
+          this.fail(`"${file.name}" exceeds ${MAX_BYTES / 1024 / 1024}MB and could not be uploaded.`);
           continue;
         }
         const form = new FormData();
@@ -118,7 +118,7 @@ export class AttachmentService {
           this.applyRemote(row);
           added.push(this.toAttachment(row));
         } catch (e) {
-          this.fail(describeError(e, `Không tải lên được "${file.name}".`));
+          this.fail(describeError(e, `Failed to upload "${file.name}".`));
         }
       }
     } finally {
@@ -137,7 +137,7 @@ export class AttachmentService {
       await this.api.delete(`/attachments/${id}`);
     } catch (e) {
       this.byCard.set(previous);
-      this.fail(describeError(e, 'Không xoá được tệp đính kèm.'));
+      this.fail(describeError(e, 'Failed to delete attachment.'));
     }
   }
 
@@ -161,7 +161,7 @@ export class AttachmentService {
       await this.api.patch<ApiAttachment>(`/attachments/${id}/cover`, { isCover });
     } catch (e) {
       this.byCard.set(previous);
-      this.fail(describeError(e, 'Không đặt được ảnh bìa.'));
+      this.fail(describeError(e, 'Failed to set cover image.'));
     }
   }
 

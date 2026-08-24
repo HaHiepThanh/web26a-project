@@ -12,18 +12,18 @@ import { SLUG_MAX_LENGTH, SLUG_MIN_LENGTH } from '../constants/reserved-slugs';
  */
 export class CreateOrganizationDto {
   @IsString()
-  @MinLength(1, { message: 'Tên tổ chức không được để trống.' })
-  @MaxLength(100, { message: 'Tên tổ chức tối đa 100 ký tự.' })
+  @MinLength(1, { message: 'Organization name is required.' })
+  @MaxLength(100, { message: 'Organization name must be at most 100 characters.' })
   name: string;
 
   @IsString()
-  @MinLength(SLUG_MIN_LENGTH, { message: `Đường dẫn phải có ít nhất ${SLUG_MIN_LENGTH} ký tự.` })
-  @MaxLength(SLUG_MAX_LENGTH, { message: `Đường dẫn tối đa ${SLUG_MAX_LENGTH} ký tự.` })
+  @MinLength(SLUG_MIN_LENGTH, { message: `URL must be at least ${SLUG_MIN_LENGTH} characters.` })
+  @MaxLength(SLUG_MAX_LENGTH, { message: `URL must be at most ${SLUG_MAX_LENGTH} characters.` })
   // Khớp đúng CHECK constraint của cột `organizations.slug` trong database.sql.
   // Chặn ở đây để client nhận 400 có lời nhắn, thay vì để DB vỡ thành 500.
   @Matches(/^[a-z0-9]+(-[a-z0-9]+)*$/, {
     message:
-      'Đường dẫn chỉ gồm chữ thường không dấu, số và gạch ngang (không bắt đầu/kết thúc bằng gạch ngang).',
+      'Only lowercase letters, numbers, and hyphens are allowed (cannot start or end with a hyphen).',
   })
   slug: string;
 }

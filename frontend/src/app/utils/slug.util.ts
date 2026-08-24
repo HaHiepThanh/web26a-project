@@ -56,14 +56,14 @@ export function slugify(input: string): string {
   );
 }
 
-/** Trả về thông báo lỗi tiếng Việt, hoặc null nếu slug hợp lệ. */
+/** Returns an English error message, or null if the slug is valid. */
 export function validateSlugFormat(slug: string): string | null {
-  if (!slug) return 'Vui lòng nhập đường dẫn cho tổ chức!';
-  if (slug.length < SLUG_MIN_LENGTH) return `Đường dẫn phải có ít nhất ${SLUG_MIN_LENGTH} ký tự!`;
-  if (slug.length > SLUG_MAX_LENGTH) return `Đường dẫn tối đa ${SLUG_MAX_LENGTH} ký tự!`;
+  if (!slug) return 'Please enter a URL for the organization!';
+  if (slug.length < SLUG_MIN_LENGTH) return `URL must be at least ${SLUG_MIN_LENGTH} characters!`;
+  if (slug.length > SLUG_MAX_LENGTH) return `URL must be at most ${SLUG_MAX_LENGTH} characters!`;
   if (!SLUG_PATTERN.test(slug)) {
-    return 'Chỉ dùng chữ thường không dấu, số và gạch ngang (không bắt đầu/kết thúc bằng gạch ngang).';
+    return 'Only lowercase letters, numbers, and hyphens are allowed (cannot start or end with a hyphen).';
   }
-  if (RESERVED_SLUGS.includes(slug)) return `"${slug}" là đường dẫn hệ thống, vui lòng chọn tên khác!`;
+  if (RESERVED_SLUGS.includes(slug)) return `"${slug}" is a reserved system URL, please choose another name!`;
   return null;
 }

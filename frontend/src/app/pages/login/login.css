@@ -9,8 +9,21 @@
 
 /* ---------- Design tokens (used by layout + board showcase) ---------- */
 .login-frame {
-  --primary: #2563eb;
-  --primary-dark: #1d4ed8;
+  --primary: #0d9488;
+  --primary-dark: #0f766e;
+  /* Nhánh CTA của DaisyUI (.btn-primary) đọc 2 biến theme này, không đọc --primary
+     ở trên — override tại đây để riêng 2 trang auth đổi màu, không đụng chạm màu
+     primary (xanh dương) dùng cho phần còn lại của app (Header, modal, v.v.).
+     #0d9488 + chữ trắng chỉ đạt 3.74:1 ở cỡ chữ nút (dưới chuẩn AA 4.5:1) —
+     dùng #0f766e (teal-700, 5.47:1) cho nút thay vì đúng hex gốc, theo quyết
+     định audit UI-004: giữ #0d9488 cho chữ lớn/đậm, đổi đậm hơn cho chữ nhỏ. */
+  --color-primary: #0f766e;
+  --color-primary-content: #ffffff;
+  /* DaisyUI's field radius (inputs + buttons) defaults to 0.25rem (~3.5px
+     rendered) — near-square, and visibly different from the landing page's
+     16px button radius. Match it here so the two pages read as one product
+     (audit UI-003). */
+  --radius-field: 16px;
   --slate-50: #f8fafc;
   --slate-100: #f1f5f9;
   --slate-300: #cbd5e1;
@@ -81,43 +94,21 @@
 .brand {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   user-select: none;
 }
-.brand-mark {
+.brand-logo {
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  background: var(--primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
-}
-.brand-mark .bar {
-  width: 6px;
-  border-radius: 2px;
-  background: #fff;
-}
-.brand-mark .bar-1 {
-  height: 16px;
-}
-.brand-mark .bar-2 {
-  height: 10px;
-  background: rgba(255, 255, 255, 0.6);
-  align-self: flex-start;
+  object-fit: cover;
+  box-shadow: 0 4px 10px rgba(13, 148, 136, 0.25);
 }
 .brand-name {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--slate-800);
-}
-.brand-accent {
-  color: var(--primary);
-  font-weight: 800;
-  font-family: var(--font-mono);
 }
 
 /* ---------- Form card ---------- */

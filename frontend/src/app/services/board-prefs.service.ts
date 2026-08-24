@@ -60,7 +60,7 @@ export class BoardPrefsService {
       else await this.api.post(`/stars/${boardId}`, {});
     } catch (e) {
       this.starredBoardIds.set(truoc);
-      this.fail(describeError(e, 'Không lưu được đánh dấu sao.'));
+      this.fail(describeError(e, 'Failed to save star.'));
     }
   }
 
@@ -72,7 +72,7 @@ export class BoardPrefsService {
         `/saved-filters?boardId=${encodeURIComponent(boardId)}`,
       );
     } catch (e) {
-      this.fail(describeError(e, 'Không tải được bộ lọc đã lưu.'));
+      this.fail(describeError(e, 'Failed to load saved filters.'));
       return [];
     }
   }
@@ -88,7 +88,7 @@ export class BoardPrefsService {
     try {
       return await this.api.post<ApiSavedFilter>('/saved-filters', input);
     } catch (e) {
-      this.fail(describeError(e, 'Không lưu được bộ lọc.'));
+      this.fail(describeError(e, 'Failed to save filter.'));
       return null;
     }
   }
@@ -98,7 +98,7 @@ export class BoardPrefsService {
       await this.api.delete(`/saved-filters/${id}`);
       return true;
     } catch (e) {
-      this.fail(describeError(e, 'Không xoá được bộ lọc.'));
+      this.fail(describeError(e, 'Failed to delete filter.'));
       return false;
     }
   }
@@ -111,7 +111,7 @@ export class BoardPrefsService {
         `/highlight-groups?boardId=${encodeURIComponent(boardId)}`,
       );
     } catch (e) {
-      this.fail(describeError(e, 'Không tải được nhóm highlight.'));
+      this.fail(describeError(e, 'Failed to load highlight groups.'));
       return [];
     }
   }
@@ -124,7 +124,7 @@ export class BoardPrefsService {
     try {
       return await this.api.post<ApiHighlightGroup>('/highlight-groups', input);
     } catch (e) {
-      this.fail(describeError(e, 'Không lưu được nhóm highlight.'));
+      this.fail(describeError(e, 'Failed to save highlight group.'));
       return null;
     }
   }
@@ -134,7 +134,7 @@ export class BoardPrefsService {
       await this.api.delete(`/highlight-groups/${id}`);
       return true;
     } catch (e) {
-      this.fail(describeError(e, 'Không xoá được nhóm highlight.'));
+      this.fail(describeError(e, 'Failed to delete highlight group.'));
       return false;
     }
   }

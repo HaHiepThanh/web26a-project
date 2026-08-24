@@ -1,27 +1,27 @@
 @if (!editing()) {
   <button
     type="button"
-    class="flex w-full items-center justify-center gap-1.5 rounded-box border-[1.5px] border-dashed border-base-300 bg-base-200 p-3 text-xs font-semibold text-base-content/50 transition-colors hover:border-base-content/40 hover:bg-base-300 hover:text-base-content/70"
+    class="flex w-full items-center justify-center gap-1.5 rounded-[12px] border-[1.5px] border-dashed border-base-300 bg-base-200 p-3 text-[12px] font-semibold text-base-content/50 transition-colors hover:border-base-content/40 hover:bg-base-300 hover:text-base-content/70"
     (click)="startEditing()"
   >
     <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-    Thêm danh sách
+    Add list
   </button>
 } @else {
   <div class="flex flex-col gap-1.5 rounded-box border border-base-300 bg-base-100 p-1.5 shadow-sm">
     <input
       #nameInput
       type="text"
-      class="input input-bordered input-sm w-full"
-      placeholder="Nhập tên danh sách..."
+      class="input input-bordered input-sm w-full text-[12px]"
+      placeholder="Enter list name..."
       [ngModel]="name()"
       (ngModelChange)="name.set($event)"
       (keydown.enter)="submit()"
       (keydown.escape)="cancel()"
     />
     <div class="flex items-center gap-1.5">
-      <button type="button" class="btn btn-primary btn-sm" (click)="submit()">Thêm danh sách</button>
-      <button type="button" class="btn btn-ghost btn-sm btn-square" (click)="cancel()" aria-label="Huỷ">
+      <button type="button" class="btn btn-primary btn-sm" (click)="submit()">Add list</button>
+      <button type="button" class="btn btn-ghost btn-sm btn-square" (click)="cancel()" aria-label="Cancel">
         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </button>
     </div>

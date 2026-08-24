@@ -102,7 +102,7 @@ export class OrganizationsService {
     // Định dạng slug đã được DTO chặn. Còn lại là luật nghiệp vụ: slug nằm ở gốc
     // URL nên không được trùng route hệ thống.
     if (RESERVED_SLUGS.has(slug)) {
-      throw new BadRequestException(`"${slug}" là đường dẫn hệ thống, vui lòng chọn tên khác.`);
+      throw new BadRequestException(`"${slug}" is a reserved system URL, please choose another name.`);
     }
 
     // Không "kiểm tra tồn tại rồi mới insert": giữa 2 bước đó người khác vẫn
@@ -116,10 +116,10 @@ export class OrganizationsService {
 
     if (error) {
       if (error.code === '23505') {
-        throw new ConflictException(`Đường dẫn "${slug}" đã có người dùng.`);
+        throw new ConflictException(`URL "${slug}" is already taken.`);
       }
       this.logger.error(`Tạo tổ chức thất bại (uid=${ownerUid}): ${error.message}`);
-      throw new InternalServerErrorException('Không tạo được tổ chức');
+      throw new InternalServerErrorException('Failed to create organization');
     }
 
     // Bước 2 — người tạo thành owner.
@@ -134,7 +134,7 @@ export class OrganizationsService {
       this.logger.error(
         `Thêm owner thất bại, đã xoá tổ chức ${org.id}: ${memberError.message}`,
       );
-      throw new InternalServerErrorException('Không tạo được tổ chức');
+      throw new InternalServerErrorException('Failed to create organization');
     }
 
     // API của dự án trả camelCase, còn Supabase trả tên cột snake_case.
@@ -163,10 +163,10 @@ export class OrganizationsService {
 
     if (error) {
       this.logger.error(`Kiểm tra thành viên thất bại (uid=${uid}, org=${orgId}): ${error.message}`);
-      throw new InternalServerErrorException('Không kiểm tra được quyền truy cập');
+      throw new InternalServerErrorException('Failed to check access permissions');
     }
     if (!data) {
-      throw new ForbiddenException('Bạn không thuộc tổ chức này.');
+      throw new ForbiddenException('You are not a member of this organization.');
     }
     return data.role as MyOrganization['role'];
   }
@@ -186,7 +186,7 @@ export class OrganizationsService {
 
     if (error) {
       this.logger.error(`Đọc danh sách tổ chức thất bại (uid=${uid}): ${error.message}`);
-      throw new InternalServerErrorException('Không đọc được danh sách tổ chức');
+      throw new InternalServerErrorException('Failed to load organizations');
     }
 
     // Supabase trả dạng lồng { role, organizations: {...} } — map phẳng lại cho
@@ -222,7 +222,7 @@ export class OrganizationsService {
 
     if (error) {
       this.logger.error(`Đọc lời mời thất bại (uid=${uid}): ${error.message}`);
-      throw new InternalServerErrorException('Không đọc được danh sách lời mời');
+      throw new InternalServerErrorException('Failed to load invites');
     }
 
     type Row = {
@@ -268,18 +268,18 @@ export class OrganizationsService {
 
     if (error) {
       this.logger.error(`Đọc lời mời thất bại (id=${inviteId}): ${error.message}`);
-      throw new InternalServerErrorException('Không đọc được lời mời');
+      throw new InternalServerErrorException('Failed to load invite');
     }
     if (!data) {
-      throw new NotFoundException('Không tìm thấy lời mời.');
+      throw new NotFoundException('Invite not found.');
     }
 
     // Lời mời gửi cho người khác — thiếu bước này là ai cũng bấm đồng ý hộ.
     if (data.to_user_id !== uid) {
-      throw new ForbiddenException('Lời mời này không phải của bạn.');
+      throw new ForbiddenException('This invite is not addressed to you.');
     }
     if (data.status !== 'pending') {
-      throw new ConflictException('Lời mời này đã được trả lời rồi.');
+      throw new ConflictException('This invite has already been responded to.');
     }
 
     const status = accept ? 'accepted' : 'declined';
@@ -291,7 +291,7 @@ export class OrganizationsService {
 
     if (updateError) {
       this.logger.error(`Cập nhật lời mời thất bại (id=${inviteId}): ${updateError.message}`);
-      throw new InternalServerErrorException('Không cập nhật được lời mời');
+      throw new InternalServerErrorException('Failed to update invite');
     }
 
     if (accept) {
@@ -313,7 +313,7 @@ export class OrganizationsService {
           .eq('id', inviteId);
 
         this.logger.error(`Thêm thành viên thất bại (invite=${inviteId}): ${memberError.message}`);
-        throw new InternalServerErrorException('Không thêm được bạn vào tổ chức');
+        throw new InternalServerErrorException('Failed to add you to the organization');
       }
     }
 
@@ -352,7 +352,7 @@ export class OrganizationsService {
 
     if (error) {
       this.logger.error(`Đọc thành viên thất bại (org=${orgId}): ${error.message}`);
-      throw new InternalServerErrorException('Không đọc được danh sách thành viên');
+      throw new InternalServerErrorException('Failed to load member list');
     }
 
     type Row = {
@@ -398,10 +398,10 @@ export class OrganizationsService {
 
     if (error) {
       this.logger.error(`Đọc thành viên thất bại (org=${orgId}): ${error.message}`);
-      throw new InternalServerErrorException('Không đọc được thành viên');
+      throw new InternalServerErrorException('Failed to load member');
     }
     if (!target) {
-      throw new NotFoundException('Không tìm thấy thành viên này trong tổ chức.');
+      throw new NotFoundException('This member was not found in the organization.');
     }
     if (target.role === role) {
       return { userId, role }; // không đổi gì thì khỏi gọi database
@@ -426,7 +426,7 @@ export class OrganizationsService {
 
         if (demoteError) {
           this.logger.error(`Hạ owner cũ thất bại (org=${orgId}): ${demoteError.message}`);
-          throw new InternalServerErrorException('Không chuyển được quyền owner');
+          throw new InternalServerErrorException('Failed to transfer owner role');
         }
         demotedOwnerId = currentOwner.user_id as string;
       }
@@ -450,7 +450,7 @@ export class OrganizationsService {
           .eq('user_id', demotedOwnerId);
       }
       this.logger.error(`Đổi vai trò thất bại (org=${orgId}, user=${userId}): ${updateError.message}`);
-      throw new InternalServerErrorException('Không đổi được vai trò');
+      throw new InternalServerErrorException('Failed to change role');
     }
 
     return { userId, role };
@@ -473,14 +473,14 @@ export class OrganizationsService {
 
     if (error) {
       this.logger.error(`Đọc thành viên thất bại (org=${orgId}): ${error.message}`);
-      throw new InternalServerErrorException('Không đọc được thành viên');
+      throw new InternalServerErrorException('Failed to load member');
     }
     if (!target) {
-      throw new NotFoundException('Không tìm thấy thành viên này trong tổ chức.');
+      throw new NotFoundException('This member was not found in the organization.');
     }
     if (target.role === 'owner') {
       throw new BadRequestException(
-        'Không xoá được owner. Hãy chuyển quyền owner cho người khác trước.',
+        'Cannot remove the owner. Transfer ownership to someone else first.',
       );
     }
 
@@ -492,7 +492,7 @@ export class OrganizationsService {
 
     if (deleteError) {
       this.logger.error(`Xoá thành viên thất bại (org=${orgId}, user=${userId}): ${deleteError.message}`);
-      throw new InternalServerErrorException('Không xoá được thành viên');
+      throw new InternalServerErrorException('Failed to remove member');
     }
 
     // Người bị gỡ cần biết ngay — nếu không họ vẫn thao tác trên tổ chức đó rồi
@@ -510,11 +510,11 @@ export class OrganizationsService {
    */
   async rename(uid: string, orgId: string, name: string): Promise<MyOrganization> {
     const ten = name?.trim();
-    if (!ten) throw new BadRequestException('Tên tổ chức không được để trống.');
+    if (!ten) throw new BadRequestException('Organization name is required.');
 
     const role = await this.assertMember(uid, orgId);
     if (role !== 'owner' && role !== 'admin') {
-      throw new ForbiddenException('Chỉ chủ tổ chức hoặc quản trị viên mới đổi được tên.');
+      throw new ForbiddenException('Only the organization owner or an admin can rename it.');
     }
 
     const { data, error } = await this.supabase.client
@@ -526,7 +526,7 @@ export class OrganizationsService {
 
     if (error) {
       this.logger.error(`Đổi tên tổ chức thất bại (org=${orgId}): ${error.message}`);
-      throw new InternalServerErrorException('Không đổi được tên tổ chức');
+      throw new InternalServerErrorException('Failed to rename organization');
     }
     return { id: data.id as string, name: data.name as string, slug: data.slug as string, role };
   }
@@ -541,7 +541,7 @@ export class OrganizationsService {
   async findPendingInvites(uid: string, orgId: string): Promise<PendingInvite[]> {
     const role = await this.assertMember(uid, orgId);
     if (role !== 'owner' && role !== 'admin') {
-      throw new ForbiddenException('Chỉ chủ tổ chức hoặc quản trị viên mới xem được lời mời đã gửi.');
+      throw new ForbiddenException('Only the organization owner or an admin can view sent invites.');
     }
 
     const { data, error } = await this.supabase.client
@@ -553,7 +553,7 @@ export class OrganizationsService {
 
     if (error) {
       this.logger.error(`Đọc lời mời đã gửi thất bại (org=${orgId}): ${error.message}`);
-      throw new InternalServerErrorException('Không đọc được danh sách lời mời');
+      throw new InternalServerErrorException('Failed to load invites');
     }
 
     type Row = {
@@ -589,16 +589,16 @@ export class OrganizationsService {
       .select('id, org_id, status')
       .eq('id', inviteId)
       .maybeSingle();
-    if (error?.code === '22P02' || !invite) throw new NotFoundException('Không tìm thấy lời mời.');
+    if (error?.code === '22P02' || !invite) throw new NotFoundException('Invite not found.');
 
     const role = await this.assertMember(uid, invite.org_id as string);
     if (role !== 'owner' && role !== 'admin') {
-      throw new ForbiddenException('Chỉ chủ tổ chức hoặc quản trị viên mới huỷ được lời mời.');
+      throw new ForbiddenException('Only the organization owner or an admin can cancel invites.');
     }
     // Đã đồng ý/từ chối rồi thì không "huỷ" được nữa — người ta đã ở trong tổ
     // chức, muốn gỡ thì dùng DELETE /organizations/:id/members/:userId.
     if (invite.status !== 'pending') {
-      throw new ConflictException('Lời mời này đã được trả lời rồi, không huỷ được.');
+      throw new ConflictException('This invite has already been responded to and cannot be cancelled.');
     }
 
     const { error: deleteError } = await this.supabase.client
@@ -607,7 +607,7 @@ export class OrganizationsService {
       .eq('id', inviteId);
     if (deleteError) {
       this.logger.error(`Huỷ lời mời thất bại (id=${inviteId}): ${deleteError.message}`);
-      throw new InternalServerErrorException('Không huỷ được lời mời');
+      throw new InternalServerErrorException('Failed to cancel invite');
     }
     return { id: inviteId, cancelled: true };
   }
@@ -625,7 +625,7 @@ export class OrganizationsService {
     role: InviteRole = 'member',
   ): Promise<InviteResponse> {
     if (!INVITE_ROLES.includes(role)) {
-      throw new BadRequestException("role phải là 'admin' hoặc 'member'.");
+      throw new BadRequestException("role must be 'admin' or 'member'.");
     }
 
     // 1. Đã là thành viên rồi thì mời làm gì nữa.
@@ -638,10 +638,10 @@ export class OrganizationsService {
 
     if (memberError) {
       this.logger.error(`Kiểm tra thành viên thất bại (org=${orgId}): ${memberError.message}`);
-      throw new InternalServerErrorException('Không kiểm tra được thành viên');
+      throw new InternalServerErrorException('Failed to check membership');
     }
     if (existing) {
-      throw new ConflictException('Người này đã là thành viên của tổ chức.');
+      throw new ConflictException('This person is already a member of the organization.');
     }
 
     // 2. Tạo lời mời. `from_user_id` lấy từ TOKEN, không lấy từ body — lấy từ
@@ -663,14 +663,14 @@ export class OrganizationsService {
       // Là partial (chỉ áp dụng cho status='pending') nên người đã TỪ CHỐI trước
       // đó vẫn mời lại được — đúng như mong muốn.
       if (error.code === '23505') {
-        throw new ConflictException('Đã có lời mời đang chờ người này trả lời.');
+        throw new ConflictException('There is already a pending invite for this person.');
       }
       // 23503 = vi phạm khoá ngoại: to_user_id không có trong bảng users.
       if (error.code === '23503') {
-        throw new NotFoundException('Không tìm thấy người dùng này.');
+        throw new NotFoundException('User not found.');
       }
       this.logger.error(`Tạo lời mời thất bại (org=${orgId}): ${error.message}`);
-      throw new InternalServerErrorException('Không tạo được lời mời');
+      throw new InternalServerErrorException('Failed to create invite');
     }
 
     // Bắn thông báo về ĐÚNG người được mời qua WebSocket — chuông lời mời phải

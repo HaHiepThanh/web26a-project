@@ -50,7 +50,7 @@ export class DashboardChat {
       return {
         board,
         lastMessageText: last?.content ?? null,
-        lastSenderLabel: last ? (last.userId === me ? 'Bạn' : (sender?.displayName ?? sender?.email ?? 'Ẩn danh')) : null,
+        lastSenderLabel: last ? (last.userId === me ? 'You' : (sender?.displayName ?? sender?.email ?? 'Anonymous')) : null,
         lastMessageAt: last?.createdAt ?? null,
         unreadCount: preview.unreadCount,
         avatarColor: avatarColorFor(board.id),

@@ -7,10 +7,10 @@
         <svg lucideSparkles class="h-7 w-7" [strokeWidth]="2.2"></svg>
       </div>
       <h1 class="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-        Chào {{ currentUser()?.displayName || currentUser()?.email }}!
+        Hi {{ currentUser()?.displayName || currentUser()?.email }}!
       </h1>
       <p class="mt-1.5 text-sm text-slate-600 dark:text-slate-400">
-        Tạo Tổ chức đầu tiên để bắt đầu. Mọi Workspace và Bảng của bạn sẽ nằm trong đây.
+        Create your first Organization to get started. All your Workspaces and Boards will live inside it.
       </p>
     </div>
 
@@ -18,30 +18,30 @@
     @if (invites().length) {
     <div class="mb-4 rounded-3xl border-2 border-primary/40 bg-base-100 p-5 shadow-xl">
       <h2 class="mb-1 text-sm font-black text-slate-900 dark:text-white">
-        Bạn có {{ invites().length }} lời mời
+        You have {{ invites().length }} invitation(s)
       </h2>
       <p class="mb-3 text-2xs text-slate-500 dark:text-slate-400">
-        Đồng ý một lời mời là vào được app ngay — không cần tự tạo tổ chức.
+        Accepting an invite gets you into the app right away — no need to create your own organization.
       </p>
       <div class="flex flex-col gap-2">
         @for (inv of invites(); track inv.id) {
         <div class="rounded-2xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/60">
           <div class="text-xs font-bold text-slate-900 dark:text-white">
-            {{ inv.fromUserName }} mời bạn vào "{{ inv.orgName }}"
+            {{ inv.fromUserName }} invited you to "{{ inv.orgName }}"
           </div>
           <div class="mt-0.5 text-3xs font-bold"
             [class.text-warning]="inv.role === 'admin'"
             [class.text-slate-500]="inv.role !== 'admin'">
-            Vào với quyền {{ inv.role === 'admin' ? 'Quản trị' : 'Thành viên' }}
+            Joining as {{ inv.role === 'admin' ? 'Admin' : 'Member' }}
           </div>
           <div class="mt-2.5 flex gap-2">
             <button type="button" class="btn btn-success btn-sm flex-1 rounded-xl text-white"
               [disabled]="respondingId() === inv.id" (click)="acceptInvite(inv.id)">
-              <svg lucideCheck class="h-3.5 w-3.5" [strokeWidth]="3"></svg> Đồng ý
+              <svg lucideCheck class="h-3.5 w-3.5" [strokeWidth]="3"></svg> Accept
             </button>
             <button type="button" class="btn btn-ghost btn-sm flex-1 rounded-xl"
               [disabled]="respondingId() === inv.id" (click)="declineInvite(inv.id)">
-              Từ chối
+              Decline
             </button>
           </div>
         </div>
@@ -57,7 +57,7 @@
         <div class="mb-4">
           <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200"
             for="onboarding-name">
-            Tên tổ chức <span class="text-error">*</span>
+            Organization name <span class="text-error">*</span>
           </label>
           <input type="text" id="onboarding-name" maxlength="50"
             class="input input-bordered border-2 w-full rounded-xl font-bold text-slate-900 dark:text-white bg-white dark:bg-slate-800 shadow-xs text-sm"
@@ -66,7 +66,7 @@
             [class.dark:border-slate-600]="!nameError()"
             [ngModel]="nameInput()" (ngModelChange)="onNameChange($event)" name="orgName" />
           <div class="mt-1 flex items-center justify-between px-1 text-2xs font-semibold text-slate-400">
-            <span>Đổi được bất cứ lúc nào sau này</span>
+            <span>You can change this anytime later</span>
             <span>{{ nameInput().length }}/50</span>
           </div>
           @if (nameError()) {
@@ -80,7 +80,7 @@
         <div class="mb-5">
           <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200"
             for="onboarding-slug">
-            Đường dẫn riêng của bạn <span class="text-error">*</span>
+            Your custom URL <span class="text-error">*</span>
           </label>
 
           <div class="flex items-stretch overflow-hidden rounded-xl border-2 bg-white dark:bg-slate-800 shadow-xs"
@@ -93,7 +93,7 @@
             </span>
             <input type="text" id="onboarding-slug" [attr.maxlength]="maxSlug"
               class="min-w-0 flex-1 bg-transparent px-2.5 py-2 font-mono text-sm font-bold text-slate-900 dark:text-white outline-none"
-              placeholder="ten-cua-ban"
+              placeholder="your-name"
               [ngModel]="slugInput()" (ngModelChange)="onSlugChange($event)" name="orgSlug" />
             @if (slugOk()) {
             <span class="flex items-center pr-2.5 text-success">
@@ -103,7 +103,7 @@
           </div>
 
           <div class="mt-1 flex items-center justify-between px-1 text-2xs font-semibold text-slate-400">
-            <span>Chữ thường không dấu, số và gạch ngang</span>
+            <span>Lowercase letters, numbers, and hyphens only</span>
             <span>{{ slugInput().length }}/{{ maxSlug }}</span>
           </div>
 
@@ -113,21 +113,21 @@
           </p>
           } @else if (slugOk()) {
           <p class="mt-1 text-2xs text-slate-500 dark:text-slate-400">
-            Bảng của bạn sẽ ở địa chỉ
+            Your board will live at
             <span class="font-mono font-bold text-slate-700 dark:text-slate-300">/{{ slugInput() }}/board/…</span>
           </p>
           }
 
           <div class="mt-2.5 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50/80 p-2.5 text-2xs text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-200">
             <svg lucideTriangleAlert class="mt-0.5 h-3.5 w-3.5 shrink-0" [strokeWidth]="2.4"></svg>
-            <span><strong>Không đổi được sau khi tạo.</strong> Đổi đường dẫn sẽ làm chết mọi link bạn đã chia sẻ, nên hãy chọn kỹ.</span>
+            <span><strong>Cannot be changed after creation.</strong> Changing the URL later would break any links you've already shared, so choose carefully.</span>
           </div>
         </div>
 
         <button type="submit" class="btn btn-primary btn-block rounded-xl font-black shadow-sm"
           [disabled]="submitting() || !slugOk() || !nameInput().trim()">
           <svg lucideBuilding2 class="h-4 w-4" [strokeWidth]="2.4"></svg>
-          Tạo Tổ chức &amp; Bắt đầu
+          Create Organization &amp; Get Started
         </button>
       </form>
     </div>
@@ -138,7 +138,7 @@
         class="btn btn-ghost btn-sm gap-1.5 rounded-xl text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
         (click)="onLogout()">
         <svg lucideLogOut class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg>
-        Đăng nhập bằng tài khoản khác
+        Sign in with a different account
       </button>
     </div>
   </div>

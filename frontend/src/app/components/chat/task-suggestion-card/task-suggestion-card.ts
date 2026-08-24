@@ -31,7 +31,7 @@ export class TaskSuggestionCard {
   readonly lines = computed(() =>
     this.suggestion().cards.map((c) => ({
       title: c.title,
-      assignee: c.assigneeId ? (this.nameById()[c.assigneeId] ?? 'Ai đó') : null,
+      assignee: c.assigneeId ? (this.nameById()[c.assigneeId] ?? 'Someone') : null,
       dueDate: c.dueDate ?? null,
     })),
   );

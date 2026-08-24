@@ -92,11 +92,11 @@ export class Onboarding {
   async onSubmit(): Promise<void> {
     const name = this.nameInput().trim();
     if (!name) {
-      this.nameError.set('Vui lòng nhập tên tổ chức!');
+      this.nameError.set('Please enter an organization name!');
       return;
     }
     if (name.length > 50) {
-      this.nameError.set('Tên tổ chức tối đa 50 ký tự!');
+      this.nameError.set('Organization name must be at most 50 characters!');
       return;
     }
     this.nameError.set(null);
@@ -114,7 +114,7 @@ export class Onboarding {
     if (!org) {
       this.submitting.set(false);
       this.slugTouched.set(true);
-      this.serverError.set({ slug, message: error ?? 'Không tạo được tổ chức, thử lại giúp mình.' });
+      this.serverError.set({ slug, message: error ?? 'Failed to create the organization, please try again.' });
       return;
     }
     void this.router.navigate(['/', org.slug, 'workspace']);

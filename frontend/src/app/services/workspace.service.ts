@@ -64,7 +64,7 @@ export class WorkspaceService {
       const rows = await this.api.get<ApiWorkspace[]>(`/workspaces?orgId=${orgId}`);
       this.workspaces.set(rows.map((w) => this.toModel(w)));
     } catch (e) {
-      this.loadError.set(describeError(e, 'Không tải được danh sách workspace.'));
+      this.loadError.set(describeError(e, 'Failed to load workspaces.'));
     } finally {
       this.loading.set(false);
     }
@@ -91,7 +91,7 @@ export class WorkspaceService {
       this.workspaces.update((list) => [...list, ws]);
       return { workspace: ws };
     } catch (e) {
-      return { error: describeError(e, 'Không tạo được workspace.') };
+      return { error: describeError(e, 'Failed to create workspace.') };
     }
   }
 
@@ -111,7 +111,7 @@ export class WorkspaceService {
       this.workspaces.update((list) => list.map((w) => (w.id === id ? ws : w)));
       return null;
     } catch (e) {
-      return describeError(e, 'Không sửa được workspace.');
+      return describeError(e, 'Failed to update workspace.');
     }
   }
 
@@ -125,7 +125,7 @@ export class WorkspaceService {
       this.workspaces.update((list) => list.filter((w) => w.id !== id));
       return null;
     } catch (e) {
-      return describeError(e, 'Không xoá được workspace.');
+      return describeError(e, 'Failed to delete workspace.');
     }
   }
 }

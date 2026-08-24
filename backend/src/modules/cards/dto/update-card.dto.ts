@@ -3,7 +3,7 @@ import { IsDateString, IsIn, IsOptional, IsString, MaxLength } from 'class-valid
 export class UpdateCardDto {
   @IsOptional()
   @IsString()
-  @MaxLength(200, { message: 'Tên thẻ tối đa 200 ký tự.' })
+  @MaxLength(200, { message: 'Card title must be at most 200 characters.' })
   title?: string;
 
   @IsOptional()
@@ -12,12 +12,12 @@ export class UpdateCardDto {
 
   @IsOptional()
   @IsIn(['low', 'medium', 'high'], {
-    message: 'priority chỉ nhận low, medium hoặc high.',
+    message: 'priority must be low, medium, or high.',
   })
   priority?: string;
 
   @IsOptional()
-  @IsDateString({}, { message: 'dueDate phải đúng định dạng ngày (ISO 8601).' })
+  @IsDateString({}, { message: 'dueDate must be a valid date (ISO 8601).' })
   dueDate?: string;
 
   @IsOptional()

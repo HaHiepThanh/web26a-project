@@ -52,7 +52,7 @@ export class ChatService {
       .eq('id', boardId)
       .maybeSingle();
     // 22P02 = id gõ sai định dạng uuid → coi như không tồn tại.
-    if (error?.code === '22P02' || !board) throw new NotFoundException('Không tìm thấy board.');
+    if (error?.code === '22P02' || !board) throw new NotFoundException('Board not found.');
 
     const { data: member } = await sb
       .from('organization_members')
@@ -60,7 +60,7 @@ export class ChatService {
       .eq('org_id', board.org_id as string)
       .eq('user_id', uid)
       .maybeSingle();
-    if (!member) throw new NotFoundException('Không tìm thấy board.');
+    if (!member) throw new NotFoundException('Board not found.');
 
     return board.org_id as string;
   }
@@ -78,7 +78,7 @@ export class ChatService {
 
     if (error) {
       this.logger.error(`Đọc tin nhắn thất bại: ${error.message}`);
-      throw new InternalServerErrorException('Không đọc được tin nhắn');
+      throw new InternalServerErrorException('Failed to load messages');
     }
 
     // userId là BẮT BUỘC: frontend cần nó để biết tin nào của mình (căn trái/phải)
@@ -104,7 +104,7 @@ export class ChatService {
 
     if (error) {
       this.logger.error(`Gửi tin nhắn thất bại: ${error.message}`);
-      throw new InternalServerErrorException('Không gửi được tin nhắn');
+      throw new InternalServerErrorException('Failed to send message');
     }
 
     // Đổi sang camelCase cho khớp phần còn lại của API — đừng trả thẳng dòng Supabase.

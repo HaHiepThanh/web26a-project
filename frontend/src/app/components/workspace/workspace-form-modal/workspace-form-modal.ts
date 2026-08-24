@@ -138,11 +138,11 @@ export class WorkspaceFormModal {
   onSubmit(): void {
     const name = this.nameInput().trim();
     if (!name) {
-      this.nameError.set('Vui lòng nhập tên Không gian làm việc!');
+      this.nameError.set('Please enter a Workspace name!');
       return;
     }
     if (name.length > 50) {
-      this.nameError.set('Tên Không gian làm việc tối đa 50 ký tự!');
+      this.nameError.set('Workspace name must be at most 50 characters!');
       return;
     }
     this.nameError.set(null);

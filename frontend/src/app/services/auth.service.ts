@@ -163,11 +163,11 @@ export class AuthService {
    */
   async loginWithGoogle(): Promise<{ needsOnboarding: boolean }> {
     if (!this.firebase?.auth) {
-      throw new Error('Firebase chưa được cấu hình.');
+      throw new Error('Firebase is not configured.');
     }
 
     const res = await signInWithPopup(this.firebase.auth, new GoogleAuthProvider());
-    if (!res.user) throw new Error('Đăng nhập Google không trả về người dùng.');
+    if (!res.user) throw new Error('Google sign-in did not return a user.');
 
     // GET /auth/me vừa upsert hồ sơ, vừa trả về danh sách tổ chức — 1 request là đủ.
     return this.syncFromBackend();
@@ -191,7 +191,7 @@ export class AuthService {
     username?: string;
     phone?: string;
   }): Promise<{ needsOnboarding: boolean }> {
-    if (!this.firebase?.auth) throw new Error('Firebase chưa được cấu hình.');
+    if (!this.firebase?.auth) throw new Error('Firebase is not configured.');
 
     const cred = await createUserWithEmailAndPassword(
       this.firebase.auth,
@@ -215,7 +215,7 @@ export class AuthService {
 
   /** Đăng nhập bằng email + mật khẩu (Firebase). */
   async loginWithEmail(email: string, password: string): Promise<{ needsOnboarding: boolean }> {
-    if (!this.firebase?.auth) throw new Error('Firebase chưa được cấu hình.');
+    if (!this.firebase?.auth) throw new Error('Firebase is not configured.');
     await signInWithEmailAndPassword(this.firebase.auth, email.trim(), password);
     return this.syncFromBackend();
   }

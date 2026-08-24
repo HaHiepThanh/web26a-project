@@ -1,8 +1,7 @@
 <section class="mx-auto max-w-[920px] space-y-6">
   <header>
-    <h2 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Quản lý Workspace</h2>
-    <p class="mt-1 text-sm text-slate-500">Xem và quản lý các thành viên trong Workspace theo từng Tổ chức
-      (Organization).</p>
+    <h2 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Manage Workspace</h2>
+    <p class="mt-1 text-sm text-slate-500">View and manage Workspace members across your Organizations.</p>
   </header>
 
   <!-- 1. BỘ LỌC THEO ORGANIZATION -->
@@ -10,10 +9,10 @@
     class="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 shadow-xs space-y-2">
     <div class="flex items-center justify-between px-1">
       <span class="text-2xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
-        Tổ chức (Organization):
+        Organization:
       </span>
       <span class="text-2xs font-bold text-slate-400">
-        {{ workspaces().length }} workspace
+        {{ workspaces().length }} workspace(s)
       </span>
     </div>
 
@@ -28,7 +27,7 @@
         [class.dark:border-slate-800]="selectedOrgFilter() !== null"
         [class.hover:bg-slate-100]="selectedOrgFilter() !== null" (click)="changeOrgFilter.emit(null)">
         <span class="text-sm">🌐</span>
-        <span>Tất cả Organization</span>
+        <span>All Organizations</span>
       </button>
 
       <!-- Each Organization -->
@@ -92,14 +91,14 @@
             }
           </div>
           <p class="text-xs text-slate-500 mt-0.5 truncate block max-w-full"
-            [title]="curWs.description || 'Không có mô tả'">
-            {{ curWs.description || 'Không có mô tả' }}
+            [title]="curWs.description || 'No description'">
+            {{ curWs.description || 'No description' }}
           </p>
         </div>
       </div>
 
       <div class="text-right shrink-0">
-        <span class="badge badge-primary badge-outline badge-sm font-black">{{ curWs.boards.length }} Bảng dự án</span>
+        <span class="badge badge-primary badge-outline badge-sm font-black">{{ curWs.boards.length }} board(s)</span>
       </div>
     </div>
 
@@ -107,14 +106,14 @@
     <div>
       <div class="flex items-center justify-between mb-3 gap-3">
         <h4 class="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
-          Danh sách thành viên ({{ curWs.members.length }})
+          Members ({{ curWs.members.length }})
         </h4>
 
         <button type="button"
           class="btn btn-primary btn-xs rounded-xl px-3 font-black shadow-xs gap-1 hover:scale-105 transition-all"
           (click)="openAddMember()">
           <svg lucidePlus class="h-3 w-3" [strokeWidth]="2.6"></svg>
-          <span>Thêm thành viên</span>
+          <span>Add member</span>
         </button>
       </div>
 
@@ -123,10 +122,10 @@
           <thead>
             <tr
               class="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 text-xs uppercase font-black">
-              <th class="py-3 px-4">Thành viên</th>
-              <th class="py-3 px-4">Mã UUID</th>
-              <th class="py-3 px-4">Vai trò</th>
-              <th class="py-3 px-4 text-right">Thao tác</th>
+              <th class="py-3 px-4">Member</th>
+              <th class="py-3 px-4">UUID</th>
+              <th class="py-3 px-4">Role</th>
+              <th class="py-3 px-4 text-right">Actions</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-xs font-medium">
@@ -156,12 +155,12 @@
               <td class="py-3 px-4">
                 @if (mem.role === 'owner') {
                 <span class="badge badge-primary gap-1 font-black text-xs px-2.5 py-1">
-                  <svg lucideCrown class="h-3 w-3" [strokeWidth]="2.2"></svg> Trưởng nhóm</span>
+                  <svg lucideCrown class="h-3 w-3" [strokeWidth]="2.2"></svg> Owner</span>
                 } @else {
                 <select class="select select-bordered select-xs rounded-lg font-bold" [ngModel]="mem.role"
                   (ngModelChange)="onChangeMemberRole(mem.id, $event)">
-                  <option value="member">Thành viên</option>
-                  <option value="owner">Trưởng nhóm (Owner)</option>
+                  <option value="member">Member</option>
+                  <option value="owner">Owner</option>
                 </select>
                 }
               </td>
@@ -171,7 +170,7 @@
                 @if (mem.role !== 'owner') {
                 <button type="button" class="btn btn-ghost btn-xs text-rose-600 hover:bg-rose-50 rounded-lg font-bold"
                   (click)="onRemoveMember(mem)">
-                  Xóa
+                  Remove
                 </button>
                 }
               </td>
@@ -186,12 +185,12 @@
   <div
     class="rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-8 text-center shadow-xs space-y-3">
     <div class="flex h-14 w-14 mx-auto items-center justify-center rounded-2xl bg-primary/10 text-primary"><svg lucideBuilding2 class="h-7 w-7" [strokeWidth]="2"></svg></div>
-    <h3 class="text-base font-black text-slate-800 dark:text-slate-200">Chưa có Workspace nào</h3>
+    <h3 class="text-base font-black text-slate-800 dark:text-slate-200">No Workspace yet</h3>
     <p class="text-xs text-slate-500 max-w-md mx-auto">
       @if (selectedOrgFilter() !== null) {
-      Tổ chức này hiện chưa có Workspace nào. Bạn có thể tạo Workspace mới ở trang Không gian làm việc.
+      This organization has no Workspace yet. You can create one from the Workspace page.
       } @else {
-      Hiện chưa có Workspace nào được tạo. Bạn có thể tạo Không gian làm việc mới ở trang Workspace.
+      No Workspace has been created yet. You can create one from the Workspace page.
       }
     </p>
   </div>
@@ -208,7 +207,7 @@
     <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
       <h3 class="text-base font-black text-slate-900 dark:text-white truncate"
         [title]="selectedWorkspace() ? selectedWorkspace()!.name : ''">
-        Thêm thành viên vào {{ selectedWorkspace() ? selectedWorkspace()!.name : 'Workspace' }}
+        Add a member to {{ selectedWorkspace() ? selectedWorkspace()!.name : 'Workspace' }}
       </h3>
       <button type="button" class="btn btn-ghost btn-circle btn-xs" (click)="closeAddMember()">
         <svg lucideX class="h-4 w-4" [strokeWidth]="2.4"></svg>
@@ -218,9 +217,9 @@
     <div class="my-4 space-y-4">
       <!-- Search Input -->
       <div class="space-y-1.5">
-        <label class="text-xs font-bold text-slate-700 dark:text-slate-300">Tìm theo Tên, Email hoặc UUID</label>
+        <label class="text-xs font-bold text-slate-700 dark:text-slate-300">Search by name, email, or UUID</label>
         <input type="text" class="input input-bordered input-sm rounded-xl w-full font-semibold"
-          placeholder="Nhập từ khóa tìm kiếm..." [ngModel]="memberSearchQuery()"
+          placeholder="Type a search term..." [ngModel]="memberSearchQuery()"
           (ngModelChange)="memberSearchQuery.set($event)" />
       </div>
 
@@ -228,7 +227,7 @@
       <div
         class="space-y-1.5 max-h-[180px] overflow-y-auto rounded-2xl border border-slate-100 dark:border-slate-800 p-2 bg-slate-50 dark:bg-slate-800/40">
         @if (searchCandidateUsers().length === 0) {
-        <div class="py-4 text-center text-xs text-slate-400">Không tìm thấy người dùng phù hợp.</div>
+        <div class="py-4 text-center text-xs text-slate-400">No matching users found.</div>
         } @else {
         @for (cand of searchCandidateUsers(); track cand.id) {
         <button type="button" class="w-full flex items-center justify-between p-2 rounded-xl text-left transition-all"
@@ -242,7 +241,7 @@
               {{ initialsOf(cand.displayName || cand.email) }}
             </div>
             <div class="min-w-0">
-              <div class="text-xs font-bold truncate text-slate-900 dark:text-white">{{ cand.displayName || 'Người dùng'
+              <div class="text-xs font-bold truncate text-slate-900 dark:text-white">{{ cand.displayName || 'User'
                 }}</div>
               <div class="text-3xs text-slate-400 truncate">{{ cand.email }}</div>
             </div>
@@ -255,21 +254,21 @@
 
       <!-- Role Select -->
       <div class="space-y-1.5">
-        <label class="text-xs font-bold text-slate-700 dark:text-slate-300">Phân quyền ban đầu</label>
+        <label class="text-xs font-bold text-slate-700 dark:text-slate-300">Initial role</label>
         <select class="select select-bordered select-sm rounded-xl w-full font-semibold" [ngModel]="memberRoleSelect()"
           (ngModelChange)="memberRoleSelect.set($event)">
-          <option value="member">Thành viên (Member)</option>
-          <option value="owner">Trưởng nhóm (Owner)</option>
+          <option value="member">Member</option>
+          <option value="owner">Owner</option>
         </select>
       </div>
     </div>
 
     <!-- Actions -->
     <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-      <button type="button" class="btn btn-ghost btn-sm rounded-xl font-bold" (click)="closeAddMember()">Hủy</button>
+      <button type="button" class="btn btn-ghost btn-sm rounded-xl font-bold" (click)="closeAddMember()">Cancel</button>
       <button type="button" class="btn btn-primary btn-sm rounded-xl px-4 font-black" [disabled]="!selectedUserToAdd()"
         (click)="confirmAddMember()">
-        + Thêm ngay
+        + Add now
       </button>
     </div>
   </div>

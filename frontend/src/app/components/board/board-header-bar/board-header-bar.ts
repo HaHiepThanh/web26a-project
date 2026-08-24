@@ -8,7 +8,7 @@ import { FLAG_PATH } from '../card-item/card-item';
 
 /** Cùng bảng màu với card-item.ts (PRIORITY_TEXT) — để nút lọc "Mức ưu tiên" khớp
  *  màu với cờ ưu tiên hiển thị trên mặt thẻ, tránh lệch màu giữa 2 nơi. */
-const PRIORITY_TEXT: Record<CardPriority, string> = { high: 'text-error', medium: 'text-warning', low: 'text-base-content/60' };
+const PRIORITY_TEXT: Record<CardPriority, string> = { high: 'text-[#BE123C]', medium: 'text-[#B45309]', low: 'text-[#334155]' };
 const PRIORITY_ACTIVE: Record<CardPriority, string> = {
   high: 'bg-error text-error-content border-error',
   medium: 'bg-warning text-warning-content border-warning',
@@ -34,7 +34,7 @@ export class BoardHeaderBar {
   readonly VIEWERS_SHOWN = 4;
 
   viewerLabel(v: BoardViewer): string {
-    return v.displayName ?? 'Ẩn danh';
+    return v.displayName ?? 'Anonymous';
   }
   readonly listsCount = input<number>(0);
   readonly totalCards = input<number>(0);
@@ -61,16 +61,16 @@ export class BoardHeaderBar {
   readonly newFilterName = input<string>('');
 
   readonly priorities: { id: CardPriority; label: string }[] = [
-    { id: 'high', label: 'Cao' },
-    { id: 'medium', label: 'Trung bình' },
-    { id: 'low', label: 'Thấp' },
+    { id: 'high', label: 'High' },
+    { id: 'medium', label: 'Medium' },
+    { id: 'low', label: 'Low' },
   ];
 
   readonly dateOptions = [
-    { id: 'overdue', label: 'Đã quá hạn' },
-    { id: 'today', label: 'Hôm nay' },
-    { id: 'week', label: 'Trong 7 ngày tới' },
-    { id: 'no_due', label: 'Không có ngày' },
+    { id: 'overdue', label: 'Overdue' },
+    { id: 'today', label: 'Today' },
+    { id: 'week', label: 'Next 7 days' },
+    { id: 'no_due', label: 'No due date' },
   ];
 
   readonly UNASSIGNED = '__UNASSIGNED__';

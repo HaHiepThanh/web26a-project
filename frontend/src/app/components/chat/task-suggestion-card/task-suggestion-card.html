@@ -3,7 +3,7 @@
     <svg class="h-[11px] w-[11px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
       <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z" />
     </svg>
-    AI đề xuất {{ count() }} thẻ
+    AI suggested {{ count() }} card(s)
   </div>
 
   <div class="mb-2 flex flex-col gap-1">
@@ -11,8 +11,8 @@
       <div class="rounded-md bg-base-100/70 px-2 py-1.5">
         <div class="text-xs font-semibold leading-snug text-base-content">{{ l.title }}</div>
         <div class="text-3xs text-base-content/70">
-          {{ l.assignee ?? 'Chưa rõ người phụ trách' }}
-          @if (l.dueDate) { · hạn {{ l.dueDate }} }
+          {{ l.assignee ?? 'Unassigned' }}
+          @if (l.dueDate) { · Due: {{ l.dueDate }} }
         </div>
       </div>
     }
@@ -21,7 +21,7 @@
   <div class="flex gap-1.5">
     <button type="button"
       class="btn btn-xs border-none bg-[var(--accent-purple)] text-white hover:brightness-110"
-      (click)="open.emit()">Xem &amp; tạo</button>
-    <button type="button" class="btn btn-ghost btn-xs" (click)="dismiss.emit()">Bỏ qua</button>
+      (click)="open.emit()">Review &amp; create</button>
+    <button type="button" class="btn btn-ghost btn-xs" (click)="dismiss.emit()">Dismiss</button>
   </div>
 </div>

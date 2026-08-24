@@ -2,8 +2,8 @@ import { Component, computed, input } from '@angular/core';
 import { Card, CardPriority, Label, User } from '../../../models';
 import { avatarColorFor, initialsOf } from '../../../services/board.service';
 
-const PRIORITY_LABEL: Record<CardPriority, string> = { high: 'Cao', medium: 'Trung bình', low: 'Thấp' };
-const PRIORITY_TEXT: Record<CardPriority, string> = { high: 'text-error', medium: 'text-warning', low: 'text-base-content/50' };
+const PRIORITY_LABEL: Record<CardPriority, string> = { high: 'High', medium: 'Medium', low: 'Low' };
+const PRIORITY_TEXT: Record<CardPriority, string> = { high: 'text-[#BE123C]', medium: 'text-[#B45309]', low: 'text-[#334155]' };
 
 /** Hình cờ dùng chung cho mức ưu tiên (#4, phương án A đã chốt trong demo 04):
  *  high = tô đặc, medium = tô nửa (clip trái), low = chỉ viền. */

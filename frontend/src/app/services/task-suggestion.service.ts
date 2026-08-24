@@ -82,7 +82,7 @@ export class TaskSuggestionService {
       // Gợi ý đã bị người khác xử lý → gỡ khỏi màn hình luôn, giữ lại chỉ gây rối.
       this.removeLocally(suggestion);
       this.close();
-      return describeError(e, 'Không tạo được thẻ từ gợi ý.');
+      return describeError(e, 'Could not create cards from the suggestion.');
     }
   }
 
@@ -92,7 +92,7 @@ export class TaskSuggestionService {
     try {
       await this.api.post(`/task-suggestions/${suggestion.id}/dismiss`, {});
     } catch (e) {
-      this.fail(describeError(e, 'Không bỏ qua được gợi ý.'));
+      this.fail(describeError(e, 'Could not dismiss the suggestion.'));
     }
   }
 

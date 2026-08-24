@@ -97,7 +97,7 @@ export class ManageOrganizationTab {
     const org = this.activeOrg();
     const user = this.selectedOrgInviteUser();
     if (!org || !user) {
-      this.flashMessage.emit({ message: 'Vui lòng chọn một người dùng để mời.', type: 'error' });
+      this.flashMessage.emit({ message: 'Please select a user to invite.', type: 'error' });
       return;
     }
 
@@ -121,7 +121,7 @@ export class ManageOrganizationTab {
   }
 
   roleLabel(role: Role): string {
-    if (role === 'owner') return 'Trưởng nhóm';
-    return role === 'admin' ? 'Quản trị' : 'Thành viên';
+    if (role === 'owner') return 'Owner';
+    return role === 'admin' ? 'Admin' : 'Member';
   }
 }

@@ -97,10 +97,10 @@ export class WorkspacesService {
 
     if (error) {
       this.logger.error(`Kiểm tra thành viên thất bại (uid=${uid}, org=${orgId}): ${error.message}`);
-      throw new InternalServerErrorException('Không kiểm tra được quyền truy cập');
+      throw new InternalServerErrorException('Failed to check access permissions');
     }
     if (!data) {
-      throw new ForbiddenException('Bạn không thuộc tổ chức này.');
+      throw new ForbiddenException('You are not a member of this organization.');
     }
     return data.role as OrgRole;
   }
@@ -119,7 +119,7 @@ export class WorkspacesService {
     const role = await this.assertMember(uid, orgId);
     if (role !== 'owner' && role !== 'admin') {
       throw new ForbiddenException(
-        'Chỉ chủ tổ chức hoặc quản trị viên mới quản lý được workspace.',
+        'Only the organization owner or an admin can manage workspaces.',
       );
     }
     return role;
@@ -177,7 +177,7 @@ export class WorkspacesService {
 
     if (error) {
       this.logger.error(`Đọc workspace thất bại (org=${orgId}): ${error.message}`);
-      throw new InternalServerErrorException('Không đọc được danh sách workspace');
+      throw new InternalServerErrorException('Failed to load workspaces');
     }
 
     const rows = data as WorkspaceRow[];
@@ -222,14 +222,14 @@ export class WorkspacesService {
 
     if (error) {
       this.logger.error(`Lọc thành viên thất bại (org=${orgId}): ${error.message}`);
-      throw new InternalServerErrorException('Không kiểm tra được danh sách thành viên');
+      throw new InternalServerErrorException('Failed to check member list');
     }
 
     const hopLe = new Set((data ?? []).map((r) => r.user_id as string));
     const bo = wanted.filter((id) => !hopLe.has(id));
     if (bo.length) {
       throw new BadRequestException(
-        `Có ${bo.length} người không thuộc tổ chức này nên không thêm vào workspace được.`,
+        `${bo.length} people are not members of this organization and cannot be added to the workspace.`,
       );
     }
     return wanted;
@@ -248,7 +248,7 @@ export class WorkspacesService {
     const { error } = await sb.from('workspace_members').insert(rows);
     if (error) {
       this.logger.error(`Ghi workspace_members thất bại (ws=${workspaceId}): ${error.message}`);
-      throw new InternalServerErrorException('Không lưu được danh sách thành viên');
+      throw new InternalServerErrorException('Failed to save member list');
     }
   }
 
@@ -267,7 +267,7 @@ export class WorkspacesService {
     memberIds: string[] = [],
   ): Promise<WorkspaceResponse> {
     if (!VISIBILITIES.includes(visibility)) {
-      throw new BadRequestException("visibility phải là 'org' hoặc 'restricted'.");
+      throw new BadRequestException("visibility must be 'org' or 'restricted'.");
     }
 
     // 1. Kiểm tra quyền TRƯỚC khi ghi. Bỏ bước này là ai cũng tạo được workspace
@@ -293,7 +293,7 @@ export class WorkspacesService {
 
     if (error) {
       this.logger.error(`Tạo workspace thất bại (uid=${uid}, org=${orgId}): ${error.message}`);
-      throw new InternalServerErrorException('Không tạo được workspace');
+      throw new InternalServerErrorException('Failed to create workspace');
     }
 
     // 4. Ghi thành viên. Hỏng thì dọn lại workspace vừa tạo, tránh để lại
@@ -326,24 +326,24 @@ export class WorkspacesService {
 
     if (error) {
       // id gõ sai định dạng uuid → coi như không tồn tại, đừng để lọt thành 500.
-      if (error.code === '22P02') throw new NotFoundException('Không tìm thấy workspace.');
+      if (error.code === '22P02') throw new NotFoundException('Workspace not found.');
       this.logger.error(`Đọc workspace thất bại (id=${id}): ${error.message}`);
-      throw new InternalServerErrorException('Không đọc được workspace');
+      throw new InternalServerErrorException('Failed to load workspace');
     }
     if (!data) {
-      throw new NotFoundException('Không tìm thấy workspace.');
+      throw new NotFoundException('Workspace not found.');
     }
 
     const ws = data as WorkspaceRow;
     try {
       await this.assertMember(uid, ws.org_id);
     } catch {
-      throw new NotFoundException('Không tìm thấy workspace.');
+      throw new NotFoundException('Workspace not found.');
     }
 
     if ((ws.visibility ?? 'org') === 'restricted') {
       const ids = await this.memberIdsOf(ws.id);
-      if (!ids.includes(uid)) throw new NotFoundException('Không tìm thấy workspace.');
+      if (!ids.includes(uid)) throw new NotFoundException('Workspace not found.');
     }
     return ws;
   }
@@ -366,7 +366,7 @@ export class WorkspacesService {
         .eq('org_id', ws.org_id);
       if (error) {
         this.logger.error(`Đọc thành viên tổ chức thất bại (ws=${id}): ${error.message}`);
-        throw new InternalServerErrorException('Không đọc được danh sách thành viên');
+        throw new InternalServerErrorException('Failed to load member list');
       }
       return (data ?? []).map((r) => ({
         userId: r.user_id as string,
@@ -382,7 +382,7 @@ export class WorkspacesService {
       .eq('workspace_id', id);
     if (error) {
       this.logger.error(`Đọc workspace_members thất bại (ws=${id}): ${error.message}`);
-      throw new InternalServerErrorException('Không đọc được danh sách thành viên');
+      throw new InternalServerErrorException('Failed to load member list');
     }
     return (data ?? []).map((r) => ({
       userId: r.user_id as string,
@@ -413,7 +413,7 @@ export class WorkspacesService {
     await this.assertCanManage(uid, current.org_id);
 
     if (changes.visibility !== undefined && !VISIBILITIES.includes(changes.visibility)) {
-      throw new BadRequestException("visibility phải là 'org' hoặc 'restricted'.");
+      throw new BadRequestException("visibility must be 'org' or 'restricted'.");
     }
 
     const patch: Record<string, string> = {};
@@ -450,7 +450,7 @@ export class WorkspacesService {
 
       if (error) {
         this.logger.error(`Sửa workspace thất bại (id=${id}): ${error.message}`);
-        throw new InternalServerErrorException('Không sửa được workspace');
+        throw new InternalServerErrorException('Failed to update workspace');
       }
       row = data as WorkspaceRow;
     }
@@ -477,7 +477,7 @@ export class WorkspacesService {
 
     if (error) {
       this.logger.error(`Xoá workspace thất bại (id=${id}): ${error.message}`);
-      throw new InternalServerErrorException('Không xoá được workspace');
+      throw new InternalServerErrorException('Failed to delete workspace');
     }
 
     // Trả về id vừa xoá thay vì body rỗng, để client biết chắc đã xoá cái nào.

@@ -15,20 +15,20 @@ export interface NavItem {
 export const NAV_ITEMS: NavItem[] = [
   {
     id: 'profile',
-    label: 'Trang cá nhân',
-    description: 'Ảnh đại diện, thông tin tài khoản & đổi mật khẩu',
+    label: 'Profile',
+    description: 'Avatar, account info & password',
     icon: 'user',
   },
   {
     id: 'manage-organization',
-    label: 'Quản lý Organization',
-    description: 'Thành viên, lời mời & chuyển đổi tổ chức',
+    label: 'Manage Organization',
+    description: 'Members, invites & switching organizations',
     icon: 'building',
   },
   {
     id: 'manage-workspace',
     label: 'Manage Workspace',
-    description: 'Quản lý thành viên trong các Workspace của bạn',
+    description: 'Manage members across your Workspaces',
     icon: 'org',
   },
 ];

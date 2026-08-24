@@ -10,9 +10,9 @@ interface DongThe extends SuggestedCard {
 }
 
 const MUC_UU_TIEN: { id: SuggestedPriority; label: string }[] = [
-  { id: 'high', label: 'Cao' },
-  { id: 'medium', label: 'Trung bình' },
-  { id: 'low', label: 'Thấp' },
+  { id: 'high', label: 'High' },
+  { id: 'medium', label: 'Medium' },
+  { id: 'low', label: 'Low' },
 ];
 
 /**
