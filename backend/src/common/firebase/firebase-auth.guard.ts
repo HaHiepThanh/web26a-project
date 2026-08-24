@@ -23,11 +23,11 @@ export class FirebaseAuthGuard implements CanActivate {
     const req = context.switchToHttp().getRequest<Request & { user?: CurrentUserInfo }>();
     const header = req.headers.authorization;
     if (!header?.startsWith('Bearer ')) {
-      throw new UnauthorizedException('Thiếu header Authorization: Bearer <idToken>');
+      throw new UnauthorizedException('Missing Authorization header: Bearer <idToken>');
     }
 
     const idToken = header.slice('Bearer '.length).trim();
-    if (!idToken) throw new UnauthorizedException('Bearer token rỗng');
+    if (!idToken) throw new UnauthorizedException('Bearer token is empty');
 
     try {
       const decoded = await this.firebase.verifyIdToken(idToken);
@@ -42,7 +42,7 @@ export class FirebaseAuthGuard implements CanActivate {
       // Ghi log chi tiết cho dev, nhưng CHỈ trả 401 chung chung cho client:
       // thông báo cụ thể ("token hết hạn" / "sai chữ ký") giúp kẻ tấn công dò tìm.
       this.logger.warn(`Verify ID token thất bại: ${(err as Error).message}`);
-      throw new UnauthorizedException('Token không hợp lệ hoặc đã hết hạn');
+      throw new UnauthorizedException('Invalid or expired token');
     }
   }
 }

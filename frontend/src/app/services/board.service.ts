@@ -47,14 +47,14 @@ export function initialsOf(name: string): string {
 export function relativeTimeFrom(iso: string): string {
   const diffMs = Date.now() - Date.parse(iso);
   const minutes = Math.floor(diffMs / 60000);
-  if (minutes < 1) return 'Vừa xong';
-  if (minutes < 60) return `${minutes} phút trước`;
+  if (minutes < 1) return 'Just now';
+  if (minutes < 60) return `${minutes}m ago`;
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} giờ trước`;
+  if (hours < 24) return `${hours}h ago`;
   const days = Math.floor(hours / 24);
-  if (days === 1) return 'Hôm qua';
-  if (days < 7) return `${days} ngày trước`;
-  return new Date(iso).toLocaleDateString('vi-VN');
+  if (days === 1) return 'Yesterday';
+  if (days < 7) return `${days}d ago`;
+  return new Date(iso).toLocaleDateString('en-US');
 }
 
 /* "Bạn" là ai giờ lấy từ `AuthService.currentUserId` (Firebase uid thật).
@@ -168,7 +168,7 @@ export class BoardService {
       const rows = await this.api.get<ApiBoard[]>(`/boards?workspaceId=${workspaceId}`);
       this.boards.set(rows.map((r) => this.toBoard(r)));
     } catch (e) {
-      this.loadError.set(describeError(e, 'Không tải được danh sách board.'));
+      this.loadError.set(describeError(e, 'Failed to load boards.'));
       this.boards.set([]);
     } finally {
       this.loading.set(false);
@@ -215,7 +215,7 @@ export class BoardService {
       // 404 = không tồn tại HOẶC không thuộc tổ chức của mình — backend cố ý gộp
       // hai trường hợp để người ngoài không dò được id nào có thật.
       this.currentBoard.set(null);
-      this.loadError.set(describeError(e, 'Không mở được board.'));
+      this.loadError.set(describeError(e, 'Failed to open board.'));
     }
   }
 
@@ -250,11 +250,11 @@ export class BoardService {
         try {
           row = await this.api.patch<ApiBoard>(`/boards/${row.id}`, { background: options.background });
         } catch {
-          this.loadError.set('Đã tạo board nhưng chưa lưu được màu nền.');
+          this.loadError.set('Board created, but background color failed to save.');
         }
       }
     } catch (e) {
-      this.loadError.set(describeError(e, 'Không tạo được board.'));
+      this.loadError.set(describeError(e, 'Failed to create board.'));
       return null;
     }
 
@@ -288,7 +288,7 @@ export class BoardService {
       try {
         await this.api.patch<ApiBoard>(`/boards/${id}`, patch);
       } catch (e) {
-        return describeError(e, 'Không sửa được board.');
+        return describeError(e, 'Failed to update board.');
       }
     }
 
@@ -308,7 +308,7 @@ export class BoardService {
     if (!board?.backgroundImageUrl) return;
     this.createdBoards.update((map) => ({ ...map, [boardId]: { ...map[boardId], backgroundImageUrl: undefined } }));
     this.persist();
-    this.storageWarning.set('Bộ nhớ trình duyệt đã đầy — đã lưu board nhưng ảnh nền không lưu được.');
+    this.storageWarning.set('Browser storage is full — board was saved but the background image could not be.');
   }
 
   async deleteBoard(id: string): Promise<string | null> {
@@ -317,7 +317,7 @@ export class BoardService {
     try {
       await this.api.delete(`/boards/${id}`);
     } catch (e) {
-      return describeError(e, 'Không xoá được board.');
+      return describeError(e, 'Failed to delete board.');
     }
     this.createdBoards.update((map) => {
       const next = { ...map };

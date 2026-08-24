@@ -83,14 +83,14 @@ export class ProjectMembers {
 
   onChangeRole(member: BoardMember, role: BoardRole): void {
     if (member.userId === CURRENT_USER_ID && this.isLastAdmin(member) && role !== 'admin') {
-      this.flash('Không thể tự hạ quyền — bạn là Admin duy nhất của dự án này.', 'error');
+      this.flash("You can't demote yourself — you're the only Admin on this project.", 'error');
       return;
     }
     this.project.update((p) => {
       if (!p) return p;
       return { ...p, members: p.members.map((m) => (m.userId === member.userId ? { ...m, role } : m)) };
     });
-    this.flash(`Đã đổi vai trò của ${member.name} thành ${roleLabel(role)}.`, 'success');
+    this.flash(`Changed ${member.name}'s role to ${roleLabel(role)}.`, 'success');
   }
 
   // ---- Remove member ----
@@ -98,7 +98,7 @@ export class ProjectMembers {
 
   openRemoveConfirm(member: BoardMember): void {
     if (member.userId === CURRENT_USER_ID && this.isLastAdmin(member)) {
-      this.flash('Không thể rời dự án — bạn là Admin duy nhất. Hãy chuyển quyền Admin cho người khác trước.', 'error');
+      this.flash("You can't leave — you're the only Admin. Transfer the Admin role to someone else first.", 'error');
       return;
     }
     this.memberToRemove.set(member);
@@ -112,7 +112,7 @@ export class ProjectMembers {
     const member = this.memberToRemove();
     if (!member) return;
     this.project.update((p) => (p ? { ...p, members: p.members.filter((m) => m.userId !== member.userId) } : p));
-    this.flash(`Đã gỡ ${member.name} khỏi dự án.`, 'success');
+    this.flash(`Removed ${member.name} from the project.`, 'success');
     this.memberToRemove.set(null);
   }
 
@@ -134,7 +134,7 @@ export class ProjectMembers {
   submitInvite(): void {
     const email = this.inviteEmail().trim();
     if (!email || !email.includes('@')) {
-      this.flash('Vui lòng nhập email hợp lệ.', 'error');
+      this.flash('Please enter a valid email.', 'error');
       return;
     }
     this.project.update((p) => {
@@ -143,18 +143,18 @@ export class ProjectMembers {
         id: `inv${Date.now()}`,
         email,
         role: this.inviteRole(),
-        invitedBy: 'Bạn',
+        invitedBy: 'You',
         invitedAt: new Date().toISOString().slice(0, 10),
       };
       return { ...p, pendingInvitations: [invitation, ...p.pendingInvitations] };
     });
-    this.flash(`Đã gửi lời mời tới ${email}.`, 'success');
+    this.flash(`Invite sent to ${email}.`, 'success');
     this.closeInviteModal();
   }
 
   revokeInvitation(id: string): void {
     this.project.update((p) => (p ? { ...p, pendingInvitations: p.pendingInvitations.filter((i) => i.id !== id) } : p));
-    this.flash('Đã thu hồi lời mời.', 'info');
+    this.flash('Invite revoked.', 'info');
   }
 
   // ---- Join requests ----
@@ -177,12 +177,12 @@ export class ProjectMembers {
         joinRequests: p.joinRequests.filter((r) => r.id !== id),
       };
     });
-    this.flash('Đã duyệt yêu cầu tham gia.', 'success');
+    this.flash('Join request approved.', 'success');
   }
 
   rejectJoinRequest(id: string): void {
     this.project.update((p) => (p ? { ...p, joinRequests: p.joinRequests.filter((r) => r.id !== id) } : p));
-    this.flash('Đã từ chối yêu cầu tham gia.', 'info');
+    this.flash('Join request declined.', 'info');
   }
 
   // ---- Toasts ----

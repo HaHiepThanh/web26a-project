@@ -10,12 +10,12 @@ import { IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-valid
 export class SyncProfileDto {
   @IsOptional()
   @IsString()
-  @MinLength(3, { message: 'Tên đăng nhập cần tối thiểu 3 ký tự.' })
-  @MaxLength(30, { message: 'Tên đăng nhập tối đa 30 ký tự.' })
+  @MinLength(3, { message: 'Username must be at least 3 characters.' })
+  @MaxLength(30, { message: 'Username must be at most 30 characters.' })
   username?: string;
 
   @IsOptional()
   @IsString()
-  @Matches(/^0\d{9}$/, { message: 'Số điện thoại không hợp lệ (VD: 0912345678).' })
+  @Matches(/^0\d{9}$/, { message: 'Invalid phone number (e.g. 0912345678).' })
   phone?: string;
 }

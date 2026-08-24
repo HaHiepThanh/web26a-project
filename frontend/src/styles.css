@@ -3,6 +3,14 @@
 @import 'tailwindcss';
 @plugin 'daisyui';
 
+/* ThemeService khoá cứng light-mode (không bao giờ set class .dark lên <html>),
+ * nhưng mặc định Tailwind v4 xét dark: theo prefers-color-scheme của HĐH, không
+ * theo class — nên máy/trình duyệt nào để dark mode thì các class dark:* rải rác
+ * khắp app (còn sót từ trước khi dark mode bị khoá) tự nhiên "sống lại" đè lên
+ * màu light-mode, dù app đang ở light. Khoá dark: theo đúng cơ chế .dark của
+ * ThemeService để nó không bao giờ tự kích hoạt ngoài ý muốn nữa. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Type scale additions — the app's compact UI needs sizes smaller than
  * Tailwind's default text-xs (12px). Before this, components hand-tuned
  * one-off arbitrary sizes (text-[10.5px], text-[11.5px], text-[9px]...) —
@@ -22,6 +30,11 @@
    ========================================================================== */
 :root {
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+  /* DaisyUI primary — đồng bộ với teal đã dùng ở Login/Register (Login/Register tự
+     override lại y hệt giá trị này trong login.css/register.css, không xung đột). */
+  --color-primary: #0f766e;
+  --color-primary-content: #ffffff;
 
   --space-xs: 4px;
   --space-sm: 8px;

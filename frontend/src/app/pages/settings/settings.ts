@@ -77,16 +77,16 @@ export class Settings {
         jobTitle: user.jobTitle ?? '',
         avatarUrl: user.avatarUrl ?? '',
       });
-      this.flash('Đã cập nhật thông tin cá nhân thành công!');
+      this.flash('Profile updated successfully!');
     } catch (err) {
       const status = (err as { status?: number })?.status;
       if (status === 409) {
-        this.flash('Tên đăng nhập này đã có người dùng, chọn tên khác nhé.', 'error');
+        this.flash('This username is already taken — please choose another.', 'error');
         return;
       }
       const detail = (err as { error?: { message?: string | string[] } })?.error?.message;
       this.flash(
-        Array.isArray(detail) ? detail[0] : (detail ?? 'Lưu hồ sơ thất bại. Vui lòng thử lại.'),
+        Array.isArray(detail) ? detail[0] : (detail ?? 'Failed to save profile. Please try again.'),
         'error',
       );
     }
@@ -95,14 +95,14 @@ export class Settings {
   onChangePassword(event: { currentPassword: string; newPassword: string }): void {
     const cur = this.currentUser();
     if (cur?.password && cur.password !== event.currentPassword) {
-      this.flash('Mật khẩu hiện tại không chính xác. Vui lòng thử lại!', 'error');
+      this.flash('Current password is incorrect. Please try again!', 'error');
       return;
     }
 
     if (cur) {
       this.auth.setUser({ ...cur, password: event.newPassword });
     }
-    this.flash('Đã đổi mật khẩu thành công!');
+    this.flash('Password changed successfully!');
   }
 
   // ---------------------------------------------------------------------
@@ -127,7 +127,7 @@ export class Settings {
         list = orgWorkspaces.map((w) => ({
           ...w,
           orgId: orgFilter,
-          orgName: foundOrg?.name ?? 'Tổ chức',
+          orgName: foundOrg?.name ?? 'Organization',
         }));
       }
 
@@ -181,7 +181,7 @@ export class Settings {
     if (targetUpdatedWs) {
       this.persistWorkspaceItem(event.workspaceId, targetUpdatedWs, event.orgId);
     }
-    this.flash(`Đã thêm ${newMember.displayName} vào Workspace.`);
+    this.flash(`Added ${newMember.displayName} to the Workspace.`);
   }
 
   onChangeWorkspaceRole(event: { workspaceId: string; orgId?: string; memberId: string; newRole: 'owner' | 'member' }): void {
@@ -199,13 +199,13 @@ export class Settings {
     if (targetUpdatedWs) {
       this.persistWorkspaceItem(event.workspaceId, targetUpdatedWs, event.orgId);
     }
-    this.flash('Đã cập nhật vai trò thành viên.');
+    this.flash('Member role updated.');
   }
 
   onRemoveWorkspaceMember(event: { workspaceId: string; orgId?: string; member: WorkspaceMember }): void {
     const currentWs = this.workspaces().find((w) => w.id === event.workspaceId);
     if (event.member.role === 'owner' && (currentWs?.members.filter((m) => m.role === 'owner').length ?? 0) <= 1) {
-      this.flash('Workspace phải có ít nhất 1 Trưởng nhóm (Owner).', 'error');
+      this.flash('The Workspace must have at least 1 Owner.', 'error');
       return;
     }
 
@@ -223,7 +223,7 @@ export class Settings {
     if (targetUpdatedWs) {
       this.persistWorkspaceItem(event.workspaceId, targetUpdatedWs, event.orgId);
     }
-    this.flash(`Đã xóa ${event.member.displayName} khỏi Workspace.`);
+    this.flash(`Removed ${event.member.displayName} from the Workspace.`);
   }
 
   // ---------------------------------------------------------------------
@@ -249,13 +249,13 @@ export class Settings {
     const org = this.orgService.activeOrg();
     if (!org) return;
     const member = this.orgMembers().find((m) => m.user.id === data.userId);
-    const name = member?.user.displayName ?? member?.user.email ?? 'thành viên';
+    const name = member?.user.displayName ?? member?.user.email ?? 'member';
     const error = await this.orgService.changeRole(org.id, data.userId, data.role);
     if (error) {
       this.flash(error, 'error');
       return;
     }
-    this.flash(`Đã đổi ${name} thành ${data.role === 'admin' ? 'Quản trị' : 'Thành viên'}.`);
+    this.flash(`Changed ${name} to ${data.role === 'admin' ? 'Admin' : 'Member'}.`);
   }
 
   /** Slug đã bị chiếm hay chưa thì CHỈ backend biết (nó giữ tổ chức của mọi người,
@@ -265,10 +265,10 @@ export class Settings {
   async onCreateOrg(event: { name: string; slug: string }): Promise<void> {
     const { org, error } = await this.orgService.createOrg(event.name, event.slug);
     if (!org) {
-      this.flash(error ?? 'Không tạo được tổ chức, thử lại nhé!', 'error');
+      this.flash(error ?? 'Failed to create the organization, please try again!', 'error');
       return;
     }
-    this.flash(`Đã tạo tổ chức "${org.name}" thành công!`);
+    this.flash(`Created organization "${org.name}" successfully!`);
   }
 
   async onInviteOrgMember(data: { user: User; role: OrgInviteRole }): Promise<void> {
@@ -279,9 +279,9 @@ export class Settings {
       this.flash(error, 'error');
       return;
     }
-    const quyen = data.role === 'admin' ? 'quản trị viên' : 'thành viên';
+    const quyen = data.role === 'admin' ? 'admin' : 'member';
     this.flash(
-      `Đã gửi lời mời tham gia "${org.name}" cho ${data.user.displayName || data.user.email} (quyền ${quyen}).`,
+      `Sent invite to join "${org.name}" to ${data.user.displayName || data.user.email} (as ${quyen}).`,
     );
   }
 
@@ -293,6 +293,6 @@ export class Settings {
       this.flash(error, 'error');
       return;
     }
-    this.flash('Đã xóa thành viên khỏi Organization.');
+    this.flash('Removed member from the Organization.');
   }
 }

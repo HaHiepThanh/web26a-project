@@ -61,7 +61,7 @@ export class BoardPrefsService {
       .from('board_stars')
       .select('board_id')
       .eq('user_id', uid);
-    if (error) throw this.loi('Không đọc được danh sách board đã gắn sao', error.message);
+    if (error) throw this.loi('Failed to load starred boards', error.message);
     return (data ?? []).map((r) => r.board_id as string);
   }
 
@@ -73,7 +73,7 @@ export class BoardPrefsService {
     const { error } = await this.supabase.client
       .from('board_stars')
       .upsert({ board_id: boardId, user_id: uid }, { onConflict: 'board_id,user_id', ignoreDuplicates: true });
-    if (error) throw this.loi('Không gắn được sao', error.message);
+    if (error) throw this.loi('Failed to star board', error.message);
     return { boardId, starred: true };
   }
 
@@ -84,7 +84,7 @@ export class BoardPrefsService {
       .delete()
       .eq('board_id', boardId)
       .eq('user_id', uid);
-    if (error) throw this.loi('Không bỏ được sao', error.message);
+    if (error) throw this.loi('Failed to unstar board', error.message);
     return { boardId, starred: false };
   }
 
@@ -100,7 +100,7 @@ export class BoardPrefsService {
       .eq('board_id', boardId)
       .eq('user_id', uid) // ⚠️ bắt buộc — xem ghi chú đầu lớp
       .order('created_at', { ascending: true });
-    if (error) throw this.loi('Không đọc được bộ lọc đã lưu', error.message);
+    if (error) throw this.loi('Failed to load saved filters', error.message);
 
     return (data ?? []).map((r) => ({
       id: r.id as string,
@@ -126,7 +126,7 @@ export class BoardPrefsService {
     },
   ): Promise<SavedFilterResponse> {
     const name = input.name?.trim();
-    if (!name) throw new BadRequestException('Tên bộ lọc không được để trống.');
+    if (!name) throw new BadRequestException('Filter name is required.');
     await this.access.assertBoardAccess(uid, input.boardId);
 
     const { data, error } = await this.supabase.client
@@ -142,7 +142,7 @@ export class BoardPrefsService {
       })
       .select()
       .single();
-    if (error) throw this.loi('Không lưu được bộ lọc', error.message);
+    if (error) throw this.loi('Failed to save filter', error.message);
 
     return {
       id: data.id as string,
@@ -163,9 +163,9 @@ export class BoardPrefsService {
       .eq('id', id)
       .eq('user_id', uid) // ⚠️ chốt: chỉ xoá được bộ lọc CỦA MÌNH
       .select();
-    if (error && error.code !== '22P02') throw this.loi('Không xoá được bộ lọc', error.message);
+    if (error && error.code !== '22P02') throw this.loi('Failed to delete filter', error.message);
     // Không khớp dòng nào → hoặc không tồn tại, hoặc của người khác. Cùng trả 404.
-    if (!data || data.length === 0) throw new NotFoundException('Không tìm thấy bộ lọc.');
+    if (!data || data.length === 0) throw new NotFoundException('Filter not found.');
   }
 
   // -------------------------------------------------------- nhóm highlight
@@ -180,7 +180,7 @@ export class BoardPrefsService {
       .eq('board_id', boardId)
       .eq('user_id', uid)
       .order('created_at', { ascending: true });
-    if (error) throw this.loi('Không đọc được nhóm highlight', error.message);
+    if (error) throw this.loi('Failed to load highlight groups', error.message);
 
     return (data ?? []).map((r) => ({
       id: r.id as string,
@@ -196,7 +196,7 @@ export class BoardPrefsService {
     input: { boardId: string; name: string; cardIds?: string[] },
   ): Promise<HighlightGroupResponse> {
     const name = input.name?.trim();
-    if (!name) throw new BadRequestException('Tên nhóm không được để trống.');
+    if (!name) throw new BadRequestException('Group name is required.');
     await this.access.assertBoardAccess(uid, input.boardId);
 
     const { data, error } = await this.supabase.client
@@ -204,7 +204,7 @@ export class BoardPrefsService {
       .insert({ board_id: input.boardId, user_id: uid, name, card_ids: input.cardIds ?? [] })
       .select()
       .single();
-    if (error) throw this.loi('Không lưu được nhóm highlight', error.message);
+    if (error) throw this.loi('Failed to save highlight group', error.message);
 
     return {
       id: data.id as string,
@@ -222,7 +222,7 @@ export class BoardPrefsService {
       .eq('id', id)
       .eq('user_id', uid)
       .select();
-    if (error && error.code !== '22P02') throw this.loi('Không xoá được nhóm highlight', error.message);
-    if (!data || data.length === 0) throw new NotFoundException('Không tìm thấy nhóm highlight.');
+    if (error && error.code !== '22P02') throw this.loi('Failed to delete highlight group', error.message);
+    if (!data || data.length === 0) throw new NotFoundException('Highlight group not found.');
   }
 }

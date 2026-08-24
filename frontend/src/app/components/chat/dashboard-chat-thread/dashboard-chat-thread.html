@@ -1,7 +1,7 @@
 <div class="flex h-full min-h-0 flex-col">
   <div class="flex flex-shrink-0 items-center justify-between border-b border-base-300 bg-base-100 px-4 py-2.5">
     <div class="flex min-w-0 items-center gap-2.5">
-      <button type="button" class="btn btn-square btn-ghost btn-sm flex-shrink-0 md:hidden" (click)="back.emit()" aria-label="Quay lại danh sách đoạn chat">
+      <button type="button" class="btn btn-square btn-ghost btn-sm flex-shrink-0 md:hidden" (click)="back.emit()" aria-label="Back to chat list">
         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
       </button>
 
@@ -11,8 +11,8 @@
       <span class="truncate text-base font-bold text-base-content">{{ board().name }}</span>
     </div>
 
-    <a [routerLink]="boardLink()" class="btn btn-primary btn-sm gap-1.5 shadow-sm flex-shrink-0" title="Mở bảng này ở chế độ đầy đủ">
-      Mở board
+    <a [routerLink]="boardLink()" class="btn btn-primary btn-sm gap-1.5 shadow-sm flex-shrink-0" title="Open this board in full view">
+      Open board
       <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M7 7h10v10" /></svg>
     </a>
   </div>

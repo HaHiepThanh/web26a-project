@@ -7,16 +7,16 @@ import { HttpErrorResponse } from '@angular/common/http';
  * có thể là chuỗi (do ta tự ném `ForbiddenException('...')`) hoặc MẢNG chuỗi (do
  * ValidationPipe gom lỗi của từng field trong DTO). Phải xử lý cả hai.
  */
-export function describeError(e: unknown, macDinh = 'Có lỗi xảy ra, thử lại sau.'): string {
+export function describeError(e: unknown, macDinh = 'Something went wrong, please try again later.'): string {
   if (e instanceof HttpErrorResponse) {
     // status 0 = trình duyệt không gọi tới nơi: backend chưa chạy, sai cổng, hoặc CORS.
     if (e.status === 0) {
-      return 'Không kết nối được máy chủ. Backend đã chạy chưa (npm run start:dev)?';
+      return "Couldn't reach the server. Is the backend running (npm run start:dev)?";
     }
     const msg = (e.error as { message?: string | string[] } | null)?.message;
     if (Array.isArray(msg) && msg.length) return msg.join(' ');
     if (typeof msg === 'string' && msg) return msg;
-    if (e.status === 401) return 'Phiên đăng nhập đã hết hạn. Đăng nhập lại giúp mình nhé.';
+    if (e.status === 401) return 'Your session has expired. Please sign in again.';
     return macDinh;
   }
   return macDinh;

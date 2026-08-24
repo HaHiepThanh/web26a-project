@@ -128,11 +128,11 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   ): Promise<{ ok: boolean; error?: string }> {
     const uid = (client.data as SocketData)?.uid;
     const boardId = body?.boardId;
-    if (!uid || !boardId) return { ok: false, error: 'Thiếu boardId.' };
+    if (!uid || !boardId) return { ok: false, error: 'Missing boardId.' };
 
     if (!(await this.isBoardMember(uid, boardId))) {
       this.logger.warn(`Từ chối join board ${boardId} cho uid ${uid} (không thuộc tổ chức)`);
-      return { ok: false, error: 'Không tìm thấy board.' };
+      return { ok: false, error: 'Board not found.' };
     }
 
     await client.join(room(boardId));

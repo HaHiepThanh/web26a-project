@@ -3,28 +3,25 @@
   <!-- LEFT: form panel -->
   <div class="form-panel">
     <a routerLink="/login" class="brand">
-      <div class="brand-mark">
-        <span class="bar bar-1"></span>
-        <span class="bar bar-2"></span>
-      </div>
-      <span class="brand-name">Trello<span class="brand-accent">Pro</span></span>
+      <img src="/HHH-logo.png" alt="Horizon Hub Harmony Logo" class="brand-logo" />
+      <span class="brand-name">Horizon Hub Harmony</span>
     </a>
 
     <div class="form-card">
       <div class="text-center">
-        <h1 class="text-2xl font-bold tracking-tight">Tạo tài khoản mới</h1>
-        <p class="mt-1.5 text-sm text-base-content/60">Đăng ký để bắt đầu quản lý công việc cùng đội nhóm.</p>
+        <h1 class="text-2xl font-bold tracking-tight">Create your account</h1>
+        <p class="mt-1.5 text-sm text-base-content/60">Sign up to start managing work with your team.</p>
       </div>
 
       <form class="mt-5 flex flex-col gap-4" (ngSubmit)="onSubmit()">
         <div class="form-control w-full">
-          <label class="label pb-1.5" for="fullName"><span class="label-text text-xs font-semibold">Họ và tên</span></label>
+          <label class="label pb-1.5" for="fullName"><span class="label-text text-xs font-semibold">Full name</span></label>
           <input
             id="fullName"
             type="text"
-            class="input input-bordered w-full"
+            class="input input-bordered min-h-[44px] w-full"
             [class.input-error]="errors().fullName"
-            placeholder="Nguyễn Văn A"
+            placeholder="Jane Doe"
             autocomplete="name"
             [(ngModel)]="fullName"
             name="fullName"
@@ -34,13 +31,13 @@
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div class="form-control w-full">
-            <label class="label pb-1.5" for="username"><span class="label-text text-xs font-semibold">Tên đăng nhập</span></label>
+            <label class="label pb-1.5" for="username"><span class="label-text text-xs font-semibold">Username</span></label>
             <input
               id="username"
               type="text"
-              class="input input-bordered w-full"
+              class="input input-bordered min-h-[44px] w-full"
               [class.input-error]="errors().username"
-              placeholder="vd: minhkhoa"
+              placeholder="e.g. janedoe"
               autocomplete="username"
               [(ngModel)]="username"
               name="username"
@@ -49,11 +46,11 @@
           </div>
 
           <div class="form-control w-full">
-            <label class="label pb-1.5" for="phone"><span class="label-text text-xs font-semibold">Số điện thoại</span></label>
+            <label class="label pb-1.5" for="phone"><span class="label-text text-xs font-semibold">Phone number</span></label>
             <input
               id="phone"
               type="tel"
-              class="input input-bordered w-full"
+              class="input input-bordered min-h-[44px] w-full"
               [class.input-error]="errors().phone"
               placeholder="0912345678"
               autocomplete="tel"
@@ -69,9 +66,9 @@
           <input
             id="email"
             type="email"
-            class="input input-bordered w-full"
+            class="input input-bordered min-h-[44px] w-full"
             [class.input-error]="errors().email"
-            placeholder="ban@congty.com"
+            placeholder="you@company.com"
             autocomplete="email"
             [(ngModel)]="email"
             name="email"
@@ -81,8 +78,8 @@
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div class="form-control w-full">
-            <label class="label pb-1.5" for="password"><span class="label-text text-xs font-semibold">Mật khẩu</span></label>
-            <label class="input input-bordered flex w-full items-center gap-2" [class.input-error]="errors().password">
+            <label class="label pb-1.5" for="password"><span class="label-text text-xs font-semibold">Password</span></label>
+            <label class="input input-bordered flex min-h-[44px] w-full items-center gap-2" [class.input-error]="errors().password">
               <input
                 [type]="passwordVisible() ? 'text' : 'password'"
                 id="password"
@@ -92,7 +89,7 @@
                 [(ngModel)]="password"
                 name="password"
               />
-              <button type="button" class="cursor-pointer opacity-50 hover:opacity-80" (click)="passwordVisible.set(!passwordVisible())" [attr.aria-label]="passwordVisible() ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'">
+              <button type="button" class="relative cursor-pointer opacity-50 before:absolute before:-left-[6px] before:-right-[15px] before:-top-[15px] before:-bottom-[15px] before:content-[''] hover:opacity-80" (click)="passwordVisible.set(!passwordVisible())" [attr.aria-label]="passwordVisible() ? 'Hide password' : 'Show password'">
                 @if (!passwordVisible()) {
                   <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
                 } @else {
@@ -104,8 +101,8 @@
           </div>
 
           <div class="form-control w-full">
-            <label class="label pb-1.5" for="confirmPassword"><span class="label-text text-xs font-semibold">Nhập lại mật khẩu</span></label>
-            <label class="input input-bordered flex w-full items-center gap-2" [class.input-error]="errors().confirmPassword">
+            <label class="label pb-1.5" for="confirmPassword"><span class="label-text text-xs font-semibold">Confirm password</span></label>
+            <label class="input input-bordered flex min-h-[44px] w-full items-center gap-2" [class.input-error]="errors().confirmPassword">
               <input
                 [type]="confirmVisible() ? 'text' : 'password'"
                 id="confirmPassword"
@@ -115,7 +112,7 @@
                 [(ngModel)]="confirmPassword"
                 name="confirmPassword"
               />
-              <button type="button" class="cursor-pointer opacity-50 hover:opacity-80" (click)="confirmVisible.set(!confirmVisible())" [attr.aria-label]="confirmVisible() ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'">
+              <button type="button" class="relative cursor-pointer opacity-50 before:absolute before:-left-[6px] before:-right-[15px] before:-top-[15px] before:-bottom-[15px] before:content-[''] hover:opacity-80" (click)="confirmVisible.set(!confirmVisible())" [attr.aria-label]="confirmVisible() ? 'Hide password' : 'Show password'">
                 @if (!confirmVisible()) {
                   <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
                 } @else {
@@ -127,25 +124,25 @@
           </div>
         </div>
 
-        <button type="submit" class="btn btn-primary btn-block mt-1" [disabled]="submitting()">
+        <button type="submit" class="btn btn-primary btn-block min-h-[44px] mt-1" [disabled]="submitting()">
           @if (!submitting()) {
-            <span>Đăng ký tài khoản</span>
+            <span>Create account</span>
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           } @else {
             <span class="loading loading-spinner loading-sm"></span>
-            <span>Đang xử lý...</span>
+            <span>Processing...</span>
           }
         </button>
 
         <p class="text-center text-xs text-base-content/60">
-          Đã có tài khoản?
-          <a routerLink="/login" class="link link-primary font-semibold">Đăng nhập</a>
+          Already have an account?
+          <a routerLink="/login" class="link link-primary font-semibold">Sign in</a>
         </p>
       </form>
 
     </div>
 
-    <div class="footer">© 2026 TrelloPro Inc.</div>
+    <div class="footer">© 2026 Horizon Hub Harmony</div>
   </div>
 
   <!-- RIGHT: showcase panel -->
@@ -155,41 +152,41 @@
     <div class="glow glow-indigo"></div>
 
     <div class="showcase-heading">
-      <h1>Bắt đầu hành trình<br />quản lý công việc</h1>
-      <p>Tạo tài khoản miễn phí, mời cả đội và cùng theo dõi tiến độ trên một bảng Kanban duy nhất.</p>
+      <h1>Start your journey<br />to organized work</h1>
+      <p>Create a free account, invite your team, and track progress together on one Kanban board.</p>
     </div>
 
     <div class="perk-list">
       <div class="perk-item">
         <span class="perk-icon">🗂️</span>
         <div>
-          <div class="perk-title">Không gian làm việc không giới hạn</div>
-          <div class="perk-desc">Tạo bao nhiêu Workspace, Board tùy thích cho từng dự án.</div>
+          <div class="perk-title">Unlimited workspaces</div>
+          <div class="perk-desc">Create as many Workspaces and Boards as you need for every project.</div>
         </div>
       </div>
       <div class="perk-item">
         <span class="perk-icon">👥</span>
         <div>
-          <div class="perk-title">Cộng tác cùng đội nhóm</div>
-          <div class="perk-desc">Gán việc, bình luận và theo dõi hoạt động theo thời gian thực.</div>
+          <div class="perk-title">Collaborate with your team</div>
+          <div class="perk-desc">Assign tasks, comment, and track activity in real time.</div>
         </div>
       </div>
       <div class="perk-item">
         <span class="perk-icon">📊</span>
         <div>
-          <div class="perk-title">Thống kê tiến độ trực quan</div>
-          <div class="perk-desc">Theo dõi hạn chót, ưu tiên công việc và báo cáo Workspace.</div>
+          <div class="perk-title">Visual progress tracking</div>
+          <div class="perk-desc">Track due dates, task priority, and Workspace reports.</div>
         </div>
       </div>
     </div>
 
     <div class="stat-chip stat-chip-a">
       <span class="stat-icon stat-icon-orange">🔥</span>
-      128 việc hoàn thành hôm nay
+      128 tasks completed today
     </div>
     <div class="stat-chip stat-chip-b">
       <span class="stat-icon stat-icon-cyan">👥</span>
-      12 thành viên đang trực tuyến
+      12 members online
     </div>
   </div>
 

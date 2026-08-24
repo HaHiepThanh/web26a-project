@@ -5,7 +5,7 @@
       <span class="flex h-5 w-5 items-center justify-center rounded-md bg-primary/10 text-primary">
         <svg lucideFolderKanban class="h-3 w-3" [strokeWidth]="2.4"></svg>
       </span>
-      <span class="text-2xs font-bold uppercase tracking-wide text-base-content/45">Không gian làm việc</span>
+      <span class="text-2xs font-bold uppercase tracking-wide text-base-content/45">Workspace</span>
     </div>
   </div>
 
@@ -19,7 +19,7 @@
         <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-base-300/70">
           <svg lucideFolderKanban class="h-4 w-4" [strokeWidth]="2"></svg>
         </span>
-        <span class="truncate text-xs font-bold">Tất cả Workspace</span>
+        <span class="truncate text-xs font-bold">All Workspaces</span>
       </div>
       <span class="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-2xs font-bold"
         [class]="activeWorkspaceId() === null ? 'bg-white/20' : 'bg-base-300/70 text-base-content/60'">
@@ -37,7 +37,7 @@
           <span class="block truncate text-xs font-bold leading-tight">{{ ws.name }}</span>
           <span class="block truncate text-2xs font-medium leading-tight"
             [class]="activeWorkspaceId() === ws.id ? 'text-primary-content/70' : 'text-base-content/45'">
-            {{ ws.members.length }} thành viên
+            {{ ws.members.length }} member(s)
           </span>
         </span>
       </button>
@@ -51,7 +51,7 @@
         <button type="button"
           class="absolute right-1.5 flex h-6 w-6 items-center justify-center rounded-lg opacity-0 transition-all focus-visible:opacity-100 group-hover:opacity-100"
           [class]="activeWorkspaceId() === ws.id ? 'hover:bg-white/20' : 'hover:bg-base-300'"
-          title="Quản lý Workspace" [attr.aria-label]="'Quản lý ' + ws.name" (click)="onManage(ws, $event)">
+          title="Manage Workspace" [attr.aria-label]="'Manage ' + ws.name" (click)="onManage(ws, $event)">
           <svg lucideEllipsisVertical class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg>
         </button>
       </div>
@@ -63,6 +63,6 @@
     class="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-base-300 py-1.5 text-2xs font-bold text-primary transition-all hover:border-primary hover:bg-primary/5"
     (click)="createWorkspace.emit()" [class.hidden]="!canManage()">
     <svg lucidePlus class="h-3 w-3 shrink-0" [strokeWidth]="3"></svg>
-    <span>Tạo Không gian mới</span>
+    <span>New Workspace</span>
   </button>
 </div>

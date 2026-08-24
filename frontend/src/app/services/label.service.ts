@@ -71,7 +71,7 @@ export class LabelService {
       this.labels.set(rows.map((r) => this.toLabel(r)));
     } catch (e) {
       this.labels.set([]);
-      this.fail(describeError(e, 'Không tải được danh sách nhãn.'));
+      this.fail(describeError(e, 'Failed to load labels.'));
     }
   }
 
@@ -84,7 +84,7 @@ export class LabelService {
       this.applyRemoteLabel(row);
       return this.toLabel(row);
     } catch (e) {
-      this.fail(describeError(e, 'Không tạo được nhãn.'));
+      this.fail(describeError(e, 'Failed to create label.'));
       return null;
     }
   }
@@ -112,7 +112,7 @@ export class LabelService {
       await this.api.post(`/labels/cards/${cardId}/${labelId}`, {});
     } catch (e) {
       this.cardLabelIds.set(previous);
-      this.fail(describeError(e, 'Không gắn được nhãn.'));
+      this.fail(describeError(e, 'Failed to attach label.'));
     }
   }
 
@@ -127,7 +127,7 @@ export class LabelService {
       await this.api.delete(`/labels/cards/${cardId}/${labelId}`);
     } catch (e) {
       this.cardLabelIds.set(previous);
-      this.fail(describeError(e, 'Không gỡ được nhãn.'));
+      this.fail(describeError(e, 'Failed to remove label.'));
     }
   }
 

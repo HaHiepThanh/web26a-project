@@ -9,8 +9,8 @@ import { IsIn, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validat
  */
 export class InviteMemberDto {
   @IsString()
-  @IsNotEmpty({ message: 'toUserId không được để trống.' })
-  @MaxLength(128, { message: 'toUserId không hợp lệ.' })
+  @IsNotEmpty({ message: 'toUserId is required.' })
+  @MaxLength(128, { message: 'Invalid toUserId.' })
   toUserId: string;
 
   /**
@@ -21,6 +21,6 @@ export class InviteMemberDto {
    * PATCH /organizations/:id/members/:userId/role.
    */
   @IsOptional()
-  @IsIn(['admin', 'member'], { message: "role chỉ nhận 'admin' hoặc 'member'." })
+  @IsIn(['admin', 'member'], { message: "role must be 'admin' or 'member'." })
   role?: 'admin' | 'member';
 }

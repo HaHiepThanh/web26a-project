@@ -17,9 +17,9 @@
   <div class="mb-2 flex flex-col gap-0.5">
     @for (item of items(); track item.id) {
       <div class="group flex items-center gap-2 rounded-md px-1.5 py-1 hover:bg-base-200">
-        <input type="checkbox" class="checkbox checkbox-sm" [checked]="item.isDone" (change)="toggleItem(item.id)" [attr.aria-label]="'Đánh dấu \'' + item.content + '\' đã xong'" />
+        <input type="checkbox" class="checkbox checkbox-sm" [checked]="item.isDone" (change)="toggleItem(item.id)" [attr.aria-label]="'Mark \'' + item.content + '\' as done'" />
         <span class="min-w-0 flex-1 break-words text-xs text-base-content" [class.line-through]="item.isDone" [class.text-base-content]="!item.isDone" [class.text-base-content/40]="item.isDone">{{ item.content }}</span>
-        <button type="button" class="btn btn-square btn-ghost btn-xs opacity-0 transition-opacity group-hover:opacity-100" (click)="deleteItem(item.id)" aria-label="Xoá mục checklist">
+        <button type="button" class="btn btn-square btn-ghost btn-xs relative rounded-[8px] opacity-0 transition-opacity before:absolute before:-inset-2 before:content-[''] group-hover:opacity-100" (click)="deleteItem(item.id)" aria-label="Delete checklist item">
           <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
       </div>
@@ -31,10 +31,10 @@
   <input
     type="text"
     class="input input-bordered input-sm min-w-0 flex-1"
-    placeholder="Thêm mục checklist..."
+    placeholder="Add a checklist item..."
     [value]="newItemText()"
     (input)="onInput($event)"
     (keydown.enter)="addItem()"
   />
-  <button type="button" class="btn btn-sm" [disabled]="!newItemText().trim()" (click)="addItem()">Thêm</button>
+  <button type="button" class="btn btn-sm" [disabled]="!newItemText().trim()" (click)="addItem()">Add</button>
 </div>

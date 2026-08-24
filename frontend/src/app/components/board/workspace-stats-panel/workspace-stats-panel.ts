@@ -28,12 +28,12 @@ const ACTION_GROUP: Record<ActivityActionType, ActionGroup> = {
 };
 
 const ACTION_GROUP_LABEL: Record<ActionGroup, string> = {
-  all: 'Tất cả hành động',
-  created: 'Tạo mới',
-  moved: 'Chuyển trạng thái',
-  assigned: 'Gán người phụ trách',
-  updated: 'Bình luận/Cập nhật',
-  deleted: 'Xoá',
+  all: 'All actions',
+  created: 'Created',
+  moved: 'Status change',
+  assigned: 'Assigned',
+  updated: 'Comment/Update',
+  deleted: 'Deleted',
 };
 
 const ACTION_GROUPS: ActionGroup[] = ['all', 'created', 'moved', 'assigned', 'updated', 'deleted'];
@@ -134,28 +134,28 @@ export class WorkspaceStatsPanel {
   relativeTime(iso: string): string {
     const diffMs = Date.now() - new Date(iso).getTime();
     const minutes = Math.floor(diffMs / 60000);
-    if (minutes < 1) return 'vừa xong';
-    if (minutes < 60) return `${minutes} phút trước`;
+    if (minutes < 1) return 'just now';
+    if (minutes < 60) return `${minutes}m ago`;
     const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours} giờ trước`;
+    if (hours < 24) return `${hours}h ago`;
     const days = Math.floor(hours / 24);
-    return `${days} ngày trước`;
+    return `${days}d ago`;
   }
 
   lastActiveLabel(stat: MemberWorkloadStat): string {
-    return stat.lastActiveAt ? this.relativeTime(stat.lastActiveAt) : 'Chưa có hoạt động';
+    return stat.lastActiveAt ? this.relativeTime(stat.lastActiveAt) : 'No activity yet';
   }
 
   // Xuất CSV chạy hoàn toàn phía trình duyệt (Blob + link ẩn) — không gửi dữ liệu đi đâu cả.
   exportWorkloadCsv(): void {
-    const header = ['Thành viên', 'Được giao', 'Hoàn thành', 'Đang thực hiện', 'Quá hạn', 'Hoạt động gần nhất'];
+    const header = ['Member', 'Assigned', 'Completed', 'In Progress', 'Overdue', 'Last Active'];
     const rows = this.sortedWorkload().map((m) => [
       m.name,
       String(m.assignedCount),
       String(m.completedCount),
       String(m.doingCount),
       String(m.overdueCount),
-      m.lastActiveAt ?? 'Chưa có hoạt động',
+      m.lastActiveAt ?? 'No activity yet',
     ]);
     const csv = [header, ...rows].map((row) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(',')).join('\r\n');
 

@@ -71,7 +71,7 @@ export class ListService {
       this.lists.set(rows.map((r) => this.toList(r)));
     } catch (e) {
       this.lists.set([]);
-      this.fail(describeError(e, 'Không tải được danh sách cột.'));
+      this.fail(describeError(e, 'Failed to load lists.'));
     }
   }
 
@@ -89,7 +89,7 @@ export class ListService {
       this.applyRemoteList(row);
       return this.toList(row);
     } catch (e) {
-      this.fail(describeError(e, 'Không tạo được cột.'));
+      this.fail(describeError(e, 'Failed to create list.'));
       return null;
     }
   }
@@ -103,7 +103,7 @@ export class ListService {
       await this.api.patch<ApiList>(`/lists/${id}`, { name: trimmed });
     } catch (e) {
       this.lists.set(previous);
-      this.fail(describeError(e, 'Không đổi được tên cột.'));
+      this.fail(describeError(e, 'Failed to rename list.'));
     }
   }
 
@@ -114,7 +114,7 @@ export class ListService {
       await this.api.delete(`/lists/${id}`);
     } catch (e) {
       this.lists.set(previous);
-      this.fail(describeError(e, 'Không xoá được cột.'));
+      this.fail(describeError(e, 'Failed to delete list.'));
     }
   }
 
@@ -172,7 +172,7 @@ export class ListService {
       await this.api.patch<ApiList>(`/lists/${movedId}/position`, { position });
     } catch (e) {
       this.lists.set(previous);
-      this.fail(describeError(e, 'Không lưu được thứ tự cột — đã hoàn tác.'));
+      this.fail(describeError(e, 'Failed to save list order — reverted.'));
     }
   }
 }

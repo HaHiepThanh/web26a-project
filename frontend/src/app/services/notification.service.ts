@@ -76,8 +76,8 @@ export class NotificationService {
     orgSlug: string;
   }): void {
     const noiDung = p.workspaceName
-      ? `Bạn được giao nhiệm vụ ở thẻ "${p.cardTitle}" nằm ở workspace ${p.workspaceName}`
-      : `Bạn được giao nhiệm vụ ở thẻ "${p.cardTitle}"`;
+      ? `You were assigned to the card "${p.cardTitle}" in workspace ${p.workspaceName}`
+      : `You were assigned to the card "${p.cardTitle}"`;
 
     this.add({
       // id gắn với THẺ + thời điểm: gán đi gán lại cùng một thẻ vẫn là hai lần

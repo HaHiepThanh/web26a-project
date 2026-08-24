@@ -1,14 +1,14 @@
 <section class="mx-auto max-w-[920px] space-y-6">
   <header class="flex flex-wrap items-center justify-between gap-3">
     <div>
-      <h2 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Quản lý Organization</h2>
-      <p class="mt-1 text-sm text-slate-500">Chuyển đổi tổ chức, xem thành viên và mời người mới qua UUID.</p>
+      <h2 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Manage Organization</h2>
+      <p class="mt-1 text-sm text-slate-500">Switch organizations, view members, and invite new people by UUID.</p>
     </div>
 
     <button type="button" class="btn btn-primary btn-sm rounded-xl px-4 font-black shadow-xs gap-1.5"
       (click)="showCreateOrgModal.set(true)">
       <svg lucidePlus class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg>
-      <span>Tạo tổ chức mới</span>
+      <span>New organization</span>
     </button>
   </header>
 
@@ -49,8 +49,7 @@
       </div>
 
       <div class="text-right shrink-0">
-        <span class="badge badge-primary badge-outline badge-sm font-black">{{ curOrg.memberIds.length }} thành
-          viên</span>
+        <span class="badge badge-primary badge-outline badge-sm font-black">{{ curOrg.memberIds.length }} member(s)</span>
       </div>
     </div>
 
@@ -58,14 +57,14 @@
     <div>
       <div class="flex items-center justify-between mb-3 gap-3">
         <h4 class="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
-          Danh sách thành viên ({{ orgMembers().length }})
+          Members ({{ orgMembers().length }})
         </h4>
 
         <button type="button"
           class="btn btn-primary btn-xs gap-1 rounded-xl px-3 font-black shadow-xs hover:scale-105 transition-all"
           (click)="openInviteOrgMember()">
           <svg lucideUserPlus class="h-3 w-3" [strokeWidth]="2.4"></svg>
-          <span>Mời thành viên</span>
+          <span>Invite member</span>
         </button>
       </div>
 
@@ -74,10 +73,10 @@
           <thead>
             <tr
               class="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 text-xs uppercase font-black">
-              <th class="py-3 px-4">Thành viên</th>
-              <th class="py-3 px-4">Mã UUID</th>
-              <th class="py-3 px-4">Vai trò</th>
-              <th class="py-3 px-4 text-right">Thao tác</th>
+              <th class="py-3 px-4">Member</th>
+              <th class="py-3 px-4">UUID</th>
+              <th class="py-3 px-4">Role</th>
+              <th class="py-3 px-4 text-right">Actions</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-xs font-medium">
@@ -107,14 +106,14 @@
               <td class="py-3 px-4">
                 @if (mem.role === 'owner') {
                 <span class="badge badge-primary gap-1 font-black text-xs px-2.5 py-1">
-                  <svg lucideCrown class="h-3 w-3" [strokeWidth]="2.2"></svg> Trưởng nhóm</span>
+                  <svg lucideCrown class="h-3 w-3" [strokeWidth]="2.2"></svg> Owner</span>
                 } @else if (isOwner()) {
                 <select class="select select-bordered select-xs rounded-lg font-bold"
-                  title="Đổi quyền của thành viên này"
+                  title="Change this member's role"
                   [value]="mem.role"
                   (change)="onChangeRole(mem.user.id, $any($event.target).value)">
-                  <option value="member">Thành viên</option>
-                  <option value="admin">Quản trị</option>
+                  <option value="member">Member</option>
+                  <option value="admin">Admin</option>
                 </select>
                 } @else {
                 <span class="badge font-bold text-xs px-2.5 py-1"
@@ -128,7 +127,7 @@
                 @if (mem.role !== 'owner' && isOwner()) {
                 <button type="button" class="btn btn-ghost btn-xs text-rose-600 hover:bg-rose-50 rounded-lg font-bold"
                   (click)="onRemoveOrgMember(mem.user.id)">
-                  Xóa
+                  Remove
                 </button>
                 }
               </td>
@@ -143,9 +142,9 @@
   <div
     class="rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-8 text-center shadow-xs space-y-3">
     <div class="flex h-14 w-14 mx-auto items-center justify-center rounded-2xl bg-primary/10 text-primary"><svg lucideBuilding2 class="h-7 w-7" [strokeWidth]="2"></svg></div>
-    <h3 class="text-base font-black text-slate-800 dark:text-slate-200">Chưa có Organization nào</h3>
-    <p class="text-xs text-slate-500 max-w-md mx-auto">Bạn chưa tham gia Organization nào hoặc chưa chọn Organization
-      hoạt động.</p>
+    <h3 class="text-base font-black text-slate-800 dark:text-slate-200">No Organization yet</h3>
+    <p class="text-xs text-slate-500 max-w-md mx-auto">You haven't joined any Organization yet, or none is currently
+      active.</p>
   </div>
   }
 </section>
@@ -158,7 +157,7 @@
     class="w-full max-w-[460px] rounded-3xl bg-white dark:bg-slate-900 p-6 shadow-2xl border-2 border-slate-300 dark:border-slate-700"
     (click)="$event.stopPropagation()">
     <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-      <h3 class="text-base font-black text-slate-900 dark:text-white">Mời thành viên vào {{ activeOrg() ?
+      <h3 class="text-base font-black text-slate-900 dark:text-white">Invite a member to {{ activeOrg() ?
         activeOrg()!.name : 'Organization' }}</h3>
       <button type="button" class="btn btn-ghost btn-circle btn-xs" (click)="closeInviteOrgMember()">
         <svg lucideX class="h-4 w-4" [strokeWidth]="2.4"></svg>
@@ -168,24 +167,24 @@
     <div class="my-4 space-y-4">
       <!-- Quyền người được mời sẽ nhận khi họ bấm Đồng ý -->
       <div class="space-y-1.5">
-        <label class="text-xs font-bold text-slate-700 dark:text-slate-300">Vào tổ chức với quyền</label>
+        <label class="text-xs font-bold text-slate-700 dark:text-slate-300">Join the organization as</label>
         <div class="join">
           <button type="button" class="btn join-item btn-sm text-xs font-bold"
             [class.btn-active]="inviteRole() === 'member'" (click)="inviteRole.set('member')"
-            title="Xem và làm việc trên board, không quản lý được thành viên">Thành viên</button>
+            title="View and work on boards, cannot manage members">Member</button>
           <button type="button" class="btn join-item btn-sm text-xs font-bold"
             [class.btn-active]="inviteRole() === 'admin'" (click)="inviteRole.set('admin')"
-            title="Mời/gỡ thành viên, tạo và xoá workspace, board">Quản trị</button>
+            title="Invite/remove members, create and delete workspaces and boards">Admin</button>
         </div>
       </div>
 
       <!-- Search Input -->
       <div class="space-y-1.5">
-        <label class="text-xs font-bold text-slate-700 dark:text-slate-300">Tìm theo Tên, Email hoặc ID người dùng</label>
+        <label class="text-xs font-bold text-slate-700 dark:text-slate-300">Search by name, email, or user ID</label>
         <div class="relative">
           <input type="text"
             class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700"
-            placeholder="Gõ đúng email hoặc dán ID để tìm người ngoài tổ chức..." [ngModel]="orgInviteQuery()"
+            placeholder="Enter an exact email or paste an ID to find people outside the organization..." [ngModel]="orgInviteQuery()"
             (ngModelChange)="onInviteQueryChange($event)" />
           @if (searching()) {
             <span class="loading loading-spinner loading-xs absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"></span>
@@ -198,9 +197,9 @@
         class="space-y-1.5 max-h-[180px] overflow-y-auto rounded-2xl border-2 border-slate-200 dark:border-slate-800 p-2 bg-slate-50 dark:bg-slate-800/40">
         @if (orgInviteCandidates().length === 0) {
         <div class="py-4 text-center text-xs text-slate-400">
-          @if (searching()) { Đang tìm... }
-          @else if (orgInviteQuery().trim().length < 3) { Gõ ít nhất 3 ký tự để tìm. }
-          @else { Không tìm thấy người dùng phù hợp. }
+          @if (searching()) { Searching... }
+          @else if (orgInviteQuery().trim().length < 3) { Type at least 3 characters to search. }
+          @else { No matching users found. }
         </div>
         } @else {
         @for (cand of orgInviteCandidates(); track cand.id) {
@@ -214,7 +213,7 @@
               {{ initialsOf(cand.displayName || cand.email) }}
             </div>
             <div class="min-w-0">
-              <div class="text-xs font-bold truncate text-slate-900 dark:text-white">{{ cand.displayName || 'Người dùng'
+              <div class="text-xs font-bold truncate text-slate-900 dark:text-white">{{ cand.displayName || 'User'
                 }}</div>
               <div class="text-3xs text-slate-400 truncate">{{ cand.email }}</div>
             </div>
@@ -229,10 +228,10 @@
     <!-- Actions -->
     <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
       <button type="button" class="btn btn-ghost btn-sm rounded-xl font-bold"
-        (click)="closeInviteOrgMember()">Hủy</button>
+        (click)="closeInviteOrgMember()">Cancel</button>
       <button type="button" class="btn btn-primary btn-sm gap-1.5 rounded-xl px-4 font-black"
         [disabled]="!selectedOrgInviteUser()" (click)="confirmInviteOrgMember()">
-        <svg lucidePlus class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg> Gửi lời mời
+        <svg lucidePlus class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg> Send invite
       </button>
     </div>
   </div>

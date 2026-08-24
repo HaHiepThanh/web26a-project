@@ -75,11 +75,11 @@ export class ListsService {
       .maybeSingle();
     if (boardError) {
       // id gõ sai định dạng uuid → coi như không tồn tại, đừng để lọt thành 500.
-      if (laUuidSai(boardError)) throw new NotFoundException('Không tìm thấy board.');
-      throw new InternalServerErrorException('Không đọc được board.');
+      if (laUuidSai(boardError)) throw new NotFoundException('Board not found.');
+      throw new InternalServerErrorException('Failed to load board.');
     }
     if (!board) {
-      throw new NotFoundException('Không tìm thấy board.');
+      throw new NotFoundException('Board not found.');
     }
 
     const { data: member, error: memberError } = await this.supabase.client
@@ -89,10 +89,10 @@ export class ListsService {
       .eq('user_id', uid)
       .maybeSingle();
     if (memberError) {
-      throw new InternalServerErrorException('Không kiểm tra được quyền.');
+      throw new InternalServerErrorException('Failed to check permissions.');
     }
     if (!member) {
-      throw new ForbiddenException('Bạn không thuộc tổ chức của board này.');
+      throw new ForbiddenException('You are not a member of this board\'s organization.');
     }
 
     return board.org_id;
@@ -113,7 +113,7 @@ export class ListsService {
       .eq('board_id', boardId)
       .order('position', { ascending: true });
     if (error) {
-      throw new InternalServerErrorException('Không đọc được danh sách list.');
+      throw new InternalServerErrorException('Failed to load lists.');
     }
     return (data as ListRow[]).map(toList);
   }
@@ -126,7 +126,7 @@ export class ListsService {
    */
   async create(uid: string, boardId: string, name: string): Promise<ListResponse> {
     if (!boardId || !name?.trim()) {
-      throw new BadRequestException('Thiếu boardId hoặc name.');
+      throw new BadRequestException('Missing boardId or name.');
     }
 
     const orgId = await this.assertBoardAccess(uid, boardId);
@@ -139,7 +139,7 @@ export class ListsService {
       .limit(1)
       .maybeSingle();
     if (lastError) {
-      throw new InternalServerErrorException('Không đọc được vị trí cột.');
+      throw new InternalServerErrorException('Failed to load list position.');
     }
     const position = last ? last.position + 1 : 1;
 
@@ -149,7 +149,7 @@ export class ListsService {
       .select()
       .single();
     if (error) {
-      throw new InternalServerErrorException('Không tạo được list.');
+      throw new InternalServerErrorException('Failed to create list.');
     }
     const created = toList(data as ListRow);
     this.realtime.emitToBoard(boardId, 'list.created', uid, created);
@@ -171,11 +171,11 @@ export class ListsService {
       .maybeSingle();
     if (error) {
       // id gõ sai định dạng uuid → coi như không tồn tại, đừng để lọt thành 500.
-      if (laUuidSai(error)) throw new NotFoundException('Không tìm thấy cột.');
-      throw new InternalServerErrorException('Không đọc được list.');
+      if (laUuidSai(error)) throw new NotFoundException('List not found.');
+      throw new InternalServerErrorException('Failed to load list.');
     }
     if (!list) {
-      throw new NotFoundException('Không tìm thấy list.');
+      throw new NotFoundException('List not found.');
     }
 
     const { data: member, error: memberError } = await this.supabase.client
@@ -185,10 +185,10 @@ export class ListsService {
       .eq('user_id', uid)
       .maybeSingle();
     if (memberError) {
-      throw new InternalServerErrorException('Không kiểm tra được quyền.');
+      throw new InternalServerErrorException('Failed to check permissions.');
     }
     if (!member) {
-      throw new NotFoundException('Không tìm thấy list.');
+      throw new NotFoundException('List not found.');
     }
 
     return list;
@@ -197,7 +197,7 @@ export class ListsService {
   /** Đổi tên list. Không tồn tại / khác tổ chức → 404. */
   async rename(uid: string, id: string, name: string): Promise<ListResponse> {
     if (!name?.trim()) {
-      throw new BadRequestException('Thiếu name.');
+      throw new BadRequestException('Missing name.');
     }
 
     await this.assertListAccess(uid, id);
@@ -209,7 +209,7 @@ export class ListsService {
       .select()
       .single();
     if (error) {
-      throw new InternalServerErrorException('Không đổi được tên list.');
+      throw new InternalServerErrorException('Failed to rename list.');
     }
     const renamed = toList(data as ListRow);
     this.realtime.emitToBoard(renamed.boardId, 'list.updated', uid, renamed);
@@ -225,7 +225,7 @@ export class ListsService {
    */
   async reorder(uid: string, id: string, position: number): Promise<ListResponse> {
     if (typeof position !== 'number' || Number.isNaN(position)) {
-      throw new BadRequestException('position phải là số.');
+      throw new BadRequestException('position must be a number.');
     }
 
     await this.assertListAccess(uid, id);
@@ -237,7 +237,7 @@ export class ListsService {
       .select()
       .single();
     if (error) {
-      throw new InternalServerErrorException('Không cập nhật được vị trí.');
+      throw new InternalServerErrorException('Failed to update position.');
     }
     const moved = toList(data as ListRow);
     this.realtime.emitToBoard(moved.boardId, 'list.updated', uid, moved);
@@ -250,7 +250,7 @@ export class ListsService {
 
     const { error } = await this.supabase.client.from('lists').delete().eq('id', id);
     if (error) {
-      throw new InternalServerErrorException('Không xoá được list.');
+      throw new InternalServerErrorException('Failed to delete list.');
     }
     // Thẻ bên trong bị CASCADE xoá theo — client tự dọn khi nhận 'list.deleted',
     // không cần phát thêm 'card.deleted' cho từng thẻ.

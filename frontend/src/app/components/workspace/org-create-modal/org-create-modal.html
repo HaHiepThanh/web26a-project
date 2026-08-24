@@ -11,11 +11,11 @@
           <svg lucideBuilding2 class="h-5 w-5" [strokeWidth]="2.2"></svg>
         </div>
         <div>
-          <h3 class="text-base font-black text-slate-900 dark:text-white">Tạo Tổ chức mới (Organization)</h3>
-          <p class="text-2xs text-slate-500">Gom nhóm các Workspace và cộng tác cùng các thành viên</p>
+          <h3 class="text-base font-black text-slate-900 dark:text-white">Create a new Organization</h3>
+          <p class="text-2xs text-slate-500">Group your Workspaces and collaborate with members</p>
         </div>
       </div>
-      <button type="button" class="btn btn-circle btn-ghost btn-sm" (click)="close.emit()" aria-label="Đóng">
+      <button type="button" class="btn btn-circle btn-ghost btn-sm" (click)="close.emit()" aria-label="Close">
         <svg lucideX class="h-4 w-4" [strokeWidth]="2.4"></svg>
       </button>
     </div>
@@ -24,7 +24,7 @@
       <!-- Organization Name Input -->
       <div>
         <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200" for="org-create-name-input">
-          Tên Tổ chức <span class="text-error">*</span>
+          Organization name <span class="text-error">*</span>
         </label>
         <input
           #nameInputField
@@ -37,13 +37,13 @@
           [class.border-slate-300]="!nameError()"
           [class.dark:border-slate-600]="!nameError()"
           [class.focus:border-primary]="!nameError()"
-          placeholder="Ví dụ: Công ty Công nghệ Acme, Nhóm Freelance... (tối đa 50 ký tự)"
+          placeholder="e.g. Acme Technologies, Freelance Team... (max 50 characters)"
           [ngModel]="nameInput()"
           (ngModelChange)="onNameChange($event)"
           name="orgName" />
-        
+
         <div class="mt-1 flex items-center justify-between text-2xs text-slate-400 font-semibold px-1">
-          <span>Tối đa 50 ký tự</span>
+          <span>Max 50 characters</span>
           <span>{{ nameInput().length }}/50</span>
         </div>
 
@@ -57,7 +57,7 @@
       <!-- Organization Slug (đường dẫn riêng) -->
       <div>
         <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200" for="org-create-slug-input">
-          Đường dẫn riêng <span class="text-error">*</span>
+          Custom URL <span class="text-error">*</span>
         </label>
 
         <div class="flex items-stretch rounded-xl border-2 bg-white dark:bg-slate-800 shadow-xs transition-all overflow-hidden"
@@ -73,7 +73,7 @@
             id="org-create-slug-input"
             maxlength="40"
             class="flex-1 min-w-0 bg-transparent px-2.5 py-2 font-mono text-sm font-bold text-slate-900 dark:text-white outline-none"
-            placeholder="cong-ty-cua-toi"
+            placeholder="my-company"
             [ngModel]="slugInput()"
             (ngModelChange)="onSlugChange($event)"
             name="orgSlug" />
@@ -90,12 +90,12 @@
         </p>
         } @else if (slugOk()) {
         <p class="mt-1 text-2xs text-slate-500 dark:text-slate-400">
-          Bảng của bạn sẽ có địa chỉ dạng
+          Your board will live at an address like
           <span class="font-mono font-bold text-slate-700 dark:text-slate-300">/{{ slugInput() }}/board/…</span>
         </p>
         } @else {
         <p class="mt-1 text-2xs text-slate-500 dark:text-slate-400">
-          Chữ thường không dấu, số và gạch ngang. <strong>Không đổi được sau khi tạo.</strong>
+          Lowercase letters, numbers, and hyphens only. <strong>Cannot be changed after creation.</strong>
         </p>
         }
       </div>
@@ -103,14 +103,14 @@
       <!-- Explanatory note -->
       <div class="rounded-xl bg-blue-50/80 dark:bg-blue-950/40 p-3 border border-blue-100 dark:border-blue-900/40 text-xs text-blue-800 dark:text-blue-200 flex items-start gap-2">
         <svg lucideSparkles class="h-4 w-4 shrink-0 text-blue-500 mt-0.5" [strokeWidth]="2.2"></svg>
-        <span>Bạn sẽ là <strong>Trưởng nhóm (Owner)</strong> của tổ chức này và có thể mời thêm các thành viên khác cùng quản trị.</span>
+        <span>You'll be the <strong>Owner</strong> of this organization and can invite other members to help manage it.</span>
       </div>
 
       <!-- Actions -->
       <div class="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
-        <button type="button" class="btn btn-ghost rounded-xl font-bold" (click)="close.emit()">Hủy</button>
+        <button type="button" class="btn btn-ghost rounded-xl font-bold" (click)="close.emit()">Cancel</button>
         <button type="submit" class="btn btn-primary rounded-xl font-black px-5 shadow-xs">
-          + Tạo Tổ chức
+          + Create Organization
         </button>
       </div>
     </form>

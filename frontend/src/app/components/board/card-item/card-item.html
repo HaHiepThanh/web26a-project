@@ -13,10 +13,10 @@
   }
 
   @if (coverUrl(); as cover) {
-    <img [src]="cover" alt="Ảnh bìa thẻ" class="-mx-3 -mt-2.5 mb-2 h-24 w-[calc(100%+1.5rem)] max-w-none object-cover" />
+    <img [src]="cover" alt="Card cover image" class="-mx-3 -mt-2.5 mb-2 h-24 w-[calc(100%+1.5rem)] max-w-none object-cover" />
   }
 
-  <div class="mb-2 flex items-center gap-1 text-2xs font-bold" [class]="priorityColorClass()">
+  <div class="mb-2 flex items-center gap-1 text-[12px] font-bold" [class]="priorityColorClass()">
     <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
       @if (card().priority === 'high') {
         <path [attr.d]="flagPath" fill="currentColor" stroke="none" />
@@ -45,7 +45,7 @@
   @if (hasMeta()) {
     <div class="mb-2 flex flex-wrap items-center gap-3 text-2xs text-base-content/50">
       @if (card().description) {
-        <span class="inline-flex items-center gap-1" title="Thẻ có mô tả">
+        <span class="inline-flex items-center gap-1" title="Card has a description">
           <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
         </span>
       }
@@ -58,7 +58,7 @@
         }
       }
       @if (commentCount() > 0) {
-        <span class="inline-flex items-center gap-1" [title]="commentCount() + ' bình luận'">
+        <span class="inline-flex items-center gap-1" [title]="commentCount() + ' comment(s)'">
           <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
           {{ commentCount() }}
         </span>

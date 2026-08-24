@@ -55,7 +55,7 @@ export class WorkspaceStatsModal {
       this.stats.set(s);
     } catch (e) {
       this.stats.set(null);
-      this.loadError.set(describeError(e, 'Không tải được số liệu thống kê.'));
+      this.loadError.set(describeError(e, 'Failed to load stats.'));
     } finally {
       this.loading.set(false);
     }
@@ -69,7 +69,7 @@ export class WorkspaceStatsModal {
     const anhTheoId = new Map(roster.map((m) => [m.id, m.avatarUrl ?? '']));
 
     return {
-      workspaceName: s?.overview?.boardName || this.boardName() || 'Bảng này',
+      workspaceName: s?.overview?.boardName || this.boardName() || 'This board',
       overview: {
         completedCount: s?.overview?.completedCount ?? 0,
         inProgressCount: s?.overview?.inProgressCount ?? 0,
@@ -80,7 +80,7 @@ export class WorkspaceStatsModal {
       },
       memberWorkload: (s?.memberWorkload ?? []).map((m) => ({
         userId: m.userId,
-        name: m.displayName || tenTheoId.get(m.userId) || 'Ẩn danh',
+        name: m.displayName || tenTheoId.get(m.userId) || 'Anonymous',
         avatarUrl: anhTheoId.get(m.userId) ?? '',
         assignedCount: m.assignedCount,
         completedCount: m.completedCount,
@@ -92,7 +92,7 @@ export class WorkspaceStatsModal {
         id: c.cardId,
         title: c.title,
         assigneeId: c.assigneeId ?? '',
-        assigneeName: c.assigneeName || tenTheoId.get(c.assigneeId ?? '') || 'Chưa gán',
+        assigneeName: c.assigneeName || tenTheoId.get(c.assigneeId ?? '') || 'Unassigned',
         dueDate: c.dueDate ?? '',
         daysOverdue: c.daysOverdue,
       })),

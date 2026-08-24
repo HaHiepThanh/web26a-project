@@ -65,7 +65,7 @@ export class ChecklistService {
       this.itemsByCard.update((map) => ({ ...map, [cardId]: rows.map((r) => this.toItem(r)) }));
     } catch (e) {
       this.loaded.delete(cardId); // cho phép thử lại lần sau
-      this.fail(describeError(e, 'Không tải được checklist.'));
+      this.fail(describeError(e, 'Failed to load checklist.'));
     }
   }
 
@@ -76,7 +76,7 @@ export class ChecklistService {
       const row = await this.api.post<ApiChecklistItem>('/checklist', { cardId, content: text });
       this.applyRemoteItem(row);
     } catch (e) {
-      this.fail(describeError(e, 'Không thêm được mục checklist.'));
+      this.fail(describeError(e, 'Failed to add checklist item.'));
     }
   }
 
@@ -95,7 +95,7 @@ export class ChecklistService {
       await this.api.patch<ApiChecklistItem>(`/checklist/${itemId}`, { isDone });
     } catch (e) {
       this.itemsByCard.set(previous);
-      this.fail(describeError(e, 'Không lưu được trạng thái mục checklist.'));
+      this.fail(describeError(e, 'Failed to save checklist item status.'));
     }
   }
 
@@ -111,7 +111,7 @@ export class ChecklistService {
       await this.api.patch<ApiChecklistItem>(`/checklist/${itemId}`, { content: text });
     } catch (e) {
       this.itemsByCard.set(previous);
-      this.fail(describeError(e, 'Không đổi được nội dung mục checklist.'));
+      this.fail(describeError(e, 'Failed to update checklist item content.'));
     }
   }
 
@@ -125,7 +125,7 @@ export class ChecklistService {
       await this.api.delete(`/checklist/${itemId}`);
     } catch (e) {
       this.itemsByCard.set(previous);
-      this.fail(describeError(e, 'Không xoá được mục checklist.'));
+      this.fail(describeError(e, 'Failed to delete checklist item.'));
     }
   }
 

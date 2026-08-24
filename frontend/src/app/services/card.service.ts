@@ -144,7 +144,7 @@ export class CardService {
       this.cardsByList.set(grouped);
     } catch (e) {
       this.cardsByList.set({});
-      this.fail(describeError(e, 'Không tải được danh sách thẻ.'));
+      this.fail(describeError(e, 'Failed to load cards.'));
     }
   }
 
@@ -169,7 +169,7 @@ export class CardService {
         try {
           final = await this.api.patch<ApiCard>(`/cards/${row.id}`, patch);
         } catch {
-          this.fail('Đã tạo thẻ nhưng chưa lưu được đầy đủ chi tiết.');
+          this.fail('Card created, but some details failed to save.');
         }
       }
 
@@ -178,7 +178,7 @@ export class CardService {
       this.applyRemoteCard(final);
       return this.toCard(final);
     } catch (e) {
-      this.fail(describeError(e, 'Không tạo được thẻ.'));
+      this.fail(describeError(e, 'Failed to create card.'));
       return null;
     }
   }
@@ -208,7 +208,7 @@ export class CardService {
       await this.api.patch<ApiCard>(`/cards/${id}`, patch);
     } catch (e) {
       this.cardsByList.set(previous);
-      this.fail(describeError(e, 'Không lưu được thay đổi của thẻ.'));
+      this.fail(describeError(e, 'Failed to save card changes.'));
     }
   }
 
@@ -219,7 +219,7 @@ export class CardService {
       await this.api.delete(`/cards/${id}`);
     } catch (e) {
       this.cardsByList.set(previous);
-      this.fail(describeError(e, 'Không xoá được thẻ.'));
+      this.fail(describeError(e, 'Failed to delete card.'));
     }
   }
 
@@ -291,7 +291,7 @@ export class CardService {
       });
       this.errorCardIds.update((s) => new Set(s).add(cardId));
       this.fail(
-        describeError(e, `Không lưu được vị trí thẻ "${moving.title}" — đã hoàn tác.`),
+        describeError(e, `Failed to save the position of "${moving.title}" — change reverted.`),
       );
       setTimeout(() => {
         this.errorCardIds.update((s) => {

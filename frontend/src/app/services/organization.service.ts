@@ -222,7 +222,7 @@ export class OrganizationService {
     } catch (e) {
       // Không xoá dữ liệu đang có: mất mạng chốc lát mà xoá sạch màn hình thì
       // tệ hơn là hiển thị dữ liệu hơi cũ kèm banner báo lỗi.
-      this.loadError.set(describeError(e, 'Không tải được danh sách tổ chức.'));
+      this.loadError.set(describeError(e, 'Failed to load organizations.'));
       return false;
     } finally {
       this.loading.set(false);
@@ -267,7 +267,7 @@ export class OrganizationService {
       if (org) this.switchOrg(org.id);
       return { org: org ?? undefined };
     } catch (e) {
-      return { error: describeError(e, 'Không tạo được tổ chức.') };
+      return { error: describeError(e, 'Failed to create organization.') };
     }
   }
 
@@ -278,8 +278,8 @@ export class OrganizationService {
     role: OrgInviteRole = 'member',
   ): Promise<string | null> {
     const me = this.auth.currentUser();
-    if (!me) return 'Bạn cần đăng nhập.';
-    if (toUserId === me.id) return 'Bạn không thể tự mời chính mình.';
+    if (!me) return 'You need to sign in.';
+    if (toUserId === me.id) return 'You cannot invite yourself.';
     try {
       await this.api.post(`/organizations/${orgId}/invites`, {
         toUserId: toUserId.trim(),
@@ -289,7 +289,7 @@ export class OrganizationService {
       });
       return null;
     } catch (e) {
-      return describeError(e, 'Không gửi được lời mời.');
+      return describeError(e, 'Failed to send invite.');
     }
   }
 
@@ -325,7 +325,7 @@ export class OrganizationService {
       await this.reload();
       return null;
     } catch (e) {
-      return describeError(e, 'Không trả lời được lời mời.');
+      return describeError(e, 'Failed to respond to invite.');
     }
   }
 
@@ -336,7 +336,7 @@ export class OrganizationService {
       await this.reload();
       return null;
     } catch (e) {
-      return describeError(e, 'Không xoá được thành viên.');
+      return describeError(e, 'Failed to remove member.');
     }
   }
 
@@ -351,7 +351,7 @@ export class OrganizationService {
       await this.reload();
       return null;
     } catch (e) {
-      return describeError(e, 'Không đổi được vai trò.');
+      return describeError(e, 'Failed to change role.');
     }
   }
 
@@ -367,14 +367,14 @@ export class OrganizationService {
   /** Đổi tên tổ chức. `slug` KHÔNG đổi được — nó nằm trong mọi URL đã lưu/chia sẻ. */
   async updateOrg(orgId: string, changes: { name?: string }): Promise<string | null> {
     const name = changes.name?.trim();
-    if (!name) return 'Tên tổ chức không được để trống.';
+    if (!name) return 'Organization name is required.';
     try {
       await this.api.patch(`/organizations/${orgId}`, { name });
       // Nạp lại để tên mới hiện ở bộ chuyển tổ chức, sidebar và mọi chỗ khác.
       await this.reload();
       return null;
     } catch (e) {
-      return describeError(e, 'Không đổi được tên tổ chức.');
+      return describeError(e, 'Failed to rename organization.');
     }
   }
 
@@ -429,7 +429,7 @@ export class OrganizationService {
       if (orgId) await this.loadPendingInvites(orgId);
       return null;
     } catch (e) {
-      return describeError(e, 'Không huỷ được lời mời.');
+      return describeError(e, 'Failed to cancel invite.');
     }
   }
 }

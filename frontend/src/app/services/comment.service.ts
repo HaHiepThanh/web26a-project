@@ -65,7 +65,7 @@ export class CommentService {
         })) as Comment[],
       }));
     } catch (e) {
-      this.fail(describeError(e, 'Không tải được bình luận.'));
+      this.fail(describeError(e, 'Failed to load comments.'));
     }
   }
 
@@ -90,7 +90,7 @@ export class CommentService {
         return { ...map, [cardId]: [...current, comment] };
       });
     } catch (e) {
-      this.fail(describeError(e, 'Không gửi được bình luận.'));
+      this.fail(describeError(e, 'Failed to send comment.'));
     }
   }
 
@@ -129,7 +129,7 @@ export class CommentService {
       await this.api.delete(`/comments/${commentId}`);
     } catch (e) {
       this.commentsByCard.set(previous);
-      this.fail(describeError(e, 'Không xoá được bình luận.'));
+      this.fail(describeError(e, 'Failed to delete comment.'));
     }
   }
 

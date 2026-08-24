@@ -7,6 +7,6 @@ import { IsBoolean } from 'class-validator';
  * này thì không biết người dùng đồng ý hay từ chối — đoán bừa là sai nghiệp vụ.
  */
 export class RespondInviteDto {
-  @IsBoolean({ message: 'accept phải là true hoặc false.' })
+  @IsBoolean({ message: 'accept must be true or false.' })
   accept: boolean;
 }

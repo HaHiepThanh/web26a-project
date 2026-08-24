@@ -4,17 +4,17 @@
   <div class="drawer-content space-y-6">
 
     <div class="flex flex-wrap items-center justify-end gap-2">
-      <button class="btn btn-outline btn-sm" (click)="exportWorkloadCsv()">⬇ Xuất CSV</button>
+      <button class="btn btn-outline btn-sm" (click)="exportWorkloadCsv()">⬇ Export CSV</button>
     </div>
 
     <!-- Khối 1: dải chỉ số -->
     <div class="stats stats-vertical w-full border border-base-300 bg-base-100 shadow-sm sm:stats-horizontal">
       <div class="stat">
-        <div class="stat-title">Task hoàn thành</div>
+        <div class="stat-title">Completed tasks</div>
         <div class="stat-value text-success">{{ overview().completedCount }}</div>
       </div>
       <div class="stat">
-        <div class="stat-title">Đang thực hiện</div>
+        <div class="stat-title">In progress</div>
         <div class="stat-value text-info">{{ overview().inProgressCount }}</div>
       </div>
       <label
@@ -23,14 +23,14 @@
         [class.cursor-pointer]="overdueCards().length > 0"
         [class.hover:bg-error/5]="overdueCards().length > 0"
       >
-        <div class="stat-title">Quá hạn</div>
+        <div class="stat-title">Overdue</div>
         <div class="stat-value text-error">{{ overview().overdueCount }}</div>
         @if (overdueCards().length > 0) {
-          <div class="stat-desc text-error">Xem chi tiết →</div>
+          <div class="stat-desc text-error">View details →</div>
         }
       </label>
       <div class="stat">
-        <div class="stat-title">Tỷ lệ đúng hạn</div>
+        <div class="stat-title">On-time rate</div>
         <div class="stat-value text-warning">{{ overview().onTimeRatePct === null ? '—' : overview().onTimeRatePct + '%' }}</div>
       </div>
     </div>
@@ -39,17 +39,17 @@
     @if (inactiveMembers().length > 0) {
       <div role="alert" class="alert alert-warning alert-soft text-sm">
         <svg lucideTriangleAlert class="h-4 w-4" [strokeWidth]="2"></svg>
-        <span>{{ inactiveMembers().length }} thành viên chưa hoạt động từ 3 ngày trở lên: {{ inactiveMembersLabel() }}</span>
+        <span>{{ inactiveMembers().length }} member(s) inactive for 3+ days: {{ inactiveMembersLabel() }}</span>
       </div>
     }
 
     <!-- Khối 2 (tiếp): tiến độ / khối lượng công việc theo thành viên -->
     <section class="space-y-2">
-      <h2 class="text-xs font-bold uppercase tracking-wide text-base-content/60">Khối lượng công việc theo thành viên</h2>
+      <h2 class="text-xs font-bold uppercase tracking-wide text-base-content/60">Workload by member</h2>
       <div class="flex items-center gap-4 text-xs text-base-content/60">
-        <span class="flex items-center gap-1"><span class="h-2 w-2 rounded-full bg-success"></span>Hoàn thành</span>
-        <span class="flex items-center gap-1"><span class="h-2 w-2 rounded-full bg-info"></span>Đang làm</span>
-        <span class="flex items-center gap-1"><span class="h-2 w-2 rounded-full bg-error"></span>Quá hạn</span>
+        <span class="flex items-center gap-1"><span class="h-2 w-2 rounded-full bg-success"></span>Done</span>
+        <span class="flex items-center gap-1"><span class="h-2 w-2 rounded-full bg-info"></span>In progress</span>
+        <span class="flex items-center gap-1"><span class="h-2 w-2 rounded-full bg-error"></span>Overdue</span>
       </div>
       <div class="space-y-2">
         @for (m of sortedWorkload(); track trackByUserId($index, m)) {
@@ -74,12 +74,12 @@
     <!-- Khối 3: bộ lọc + nhật ký hoạt động -->
     <section class="space-y-2">
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <h2 class="text-xs font-bold uppercase tracking-wide text-base-content/60">Nhật ký hoạt động</h2>
+        <h2 class="text-xs font-bold uppercase tracking-wide text-base-content/60">Activity log</h2>
         <div class="flex flex-wrap items-center gap-2">
           <input
             class="input input-bordered input-sm w-48"
             type="text"
-            placeholder="Tìm theo tên task, từ khoá..."
+            placeholder="Search by task name, keyword..."
             [ngModel]="logSearch()"
             (ngModelChange)="logSearch.set($event)"
           />
@@ -89,21 +89,21 @@
             }
           </select>
           <select class="select select-bordered select-sm" [ngModel]="selectedMemberId()" (ngModelChange)="selectedMemberId.set($event)">
-            <option value="all">Tất cả thành viên</option>
+            <option value="all">All members</option>
             @for (m of memberWorkload(); track trackByUserId($index, m)) {
               <option [value]="m.userId">{{ m.name }}</option>
             }
           </select>
           <div class="join">
-            <button class="btn btn-sm join-item" [class.btn-active]="logScope() === 'mine'" (click)="logScope.set('mine')">Của tôi</button>
-            <button class="btn btn-sm join-item" [class.btn-active]="logScope() === 'team'" (click)="logScope.set('team')">Cả nhóm</button>
+            <button class="btn btn-sm join-item" [class.btn-active]="logScope() === 'mine'" (click)="logScope.set('mine')">Mine</button>
+            <button class="btn btn-sm join-item" [class.btn-active]="logScope() === 'team'" (click)="logScope.set('team')">Whole team</button>
           </div>
         </div>
       </div>
 
       <div class="divide-y divide-base-300 overflow-hidden rounded-box border border-base-300 bg-base-100">
         @if (filteredActivityLogs().length === 0) {
-          <p class="p-4 text-sm text-base-content/50">Không có hoạt động nào khớp với bộ lọc hiện tại.</p>
+          <p class="p-4 text-sm text-base-content/50">No activity matches the current filters.</p>
         }
         @for (log of filteredActivityLogs(); track trackByLogId($index, log)) {
           <div class="flex items-start gap-3 p-3">
@@ -126,11 +126,11 @@
 
   <!-- Overdue drawer -->
   <div class="drawer-side z-50">
-    <label [attr.for]="overdueDrawerId" aria-label="Đóng" class="drawer-overlay"></label>
+    <label [attr.for]="overdueDrawerId" aria-label="Close" class="drawer-overlay"></label>
     <div class="min-h-full w-80 bg-base-100">
       <div class="flex items-center justify-between border-b border-base-300 p-4">
-        <h3 class="text-base font-semibold">{{ overdueCards().length }} công việc quá hạn</h3>
-        <label [attr.for]="overdueDrawerId" class="btn btn-circle btn-ghost btn-sm" aria-label="Đóng">
+        <h3 class="text-base font-semibold">{{ overdueCards().length }} overdue task(s)</h3>
+        <label [attr.for]="overdueDrawerId" class="btn btn-circle btn-ghost btn-sm" aria-label="Close">
           <svg lucideX class="h-4 w-4" [strokeWidth]="2.4"></svg>
         </label>
       </div>
@@ -140,7 +140,7 @@
             <p class="text-sm text-base-content">{{ card.title }}</p>
             <div class="mt-1 flex items-center justify-between text-xs">
               <span class="text-base-content/60">{{ card.assigneeName }}</span>
-              <span class="font-semibold text-error">Quá hạn {{ card.daysOverdue }} ngày</span>
+              <span class="font-semibold text-error">Overdue by {{ card.daysOverdue }} day(s)</span>
             </div>
           </div>
         }

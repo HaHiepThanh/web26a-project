@@ -2,12 +2,12 @@
   <div class="flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-box bg-base-100 shadow-xl" (click)="$event.stopPropagation()">
     <div class="flex shrink-0 items-center justify-between border-b border-base-300 px-5 py-3.5">
       <div class="flex min-w-0 flex-col">
-        <span class="text-base font-bold text-base-content">📊 Thống kê &amp; Báo cáo</span>
+        <span class="text-base font-bold text-base-content">📊 Stats &amp; Reports</span>
         @if (boardName(); as name) {
           <span class="truncate text-xs text-base-content/50">{{ name }}</span>
         }
       </div>
-      <button type="button" class="btn btn-square btn-ghost btn-sm" (click)="close.emit()" aria-label="Đóng">
+      <button type="button" class="btn btn-square btn-ghost btn-sm" (click)="close.emit()" aria-label="Close">
         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </button>
     </div>
@@ -15,7 +15,7 @@
     <div class="overflow-y-auto px-5 py-5">
       @if (loading()) {
         <div class="flex items-center justify-center gap-2 py-16 text-sm text-base-content/60">
-          <span class="loading loading-spinner loading-sm"></span> Đang tính số liệu...
+          <span class="loading loading-spinner loading-sm"></span> Calculating stats...
         </div>
       } @else if (loadError(); as err) {
         <div class="rounded-xl border border-error/40 bg-error/10 px-4 py-6 text-center">

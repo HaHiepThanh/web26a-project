@@ -70,7 +70,7 @@ export class StatsService {
     const loi = overviewRes.error ?? workloadRes.error ?? overdueRes.error;
     if (loi) {
       this.logger.error(`Đọc thống kê thất bại (board=${boardId}): ${loi.message}`);
-      throw new InternalServerErrorException('Không đọc được thống kê');
+      throw new InternalServerErrorException('Failed to load statistics');
     }
 
     const o = overviewRes.data as Record<string, unknown> | null;
