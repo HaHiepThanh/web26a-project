@@ -1,12 +1,12 @@
 <section class="mx-auto max-w-[840px] space-y-6">
   <header>
-    <h2 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Trang cá nhân</h2>
-    <p class="mt-1 text-sm text-slate-500">Cập nhật ảnh đại diện, thông tin tài khoản đăng ký và đổi mật khẩu bảo mật.</p>
+    <h2 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Profile</h2>
+    <p class="mt-1 text-sm text-slate-500">Update your avatar, account information, and password.</p>
   </header>
 
   <!-- 1. Ảnh đại diện LỚN & UUID -->
   <div class="rounded-3xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 shadow-xs">
-    <h3 class="mb-4 text-sm font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Ảnh đại diện & Định danh</h3>
+    <h3 class="mb-4 text-sm font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Avatar & Identity</h3>
     <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6">
       <!-- Large Avatar -->
       <div class="relative flex h-24 w-24 sm:h-28 sm:w-28 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white dark:border-slate-800 shadow-md bg-gradient-to-br from-primary to-purple-600 text-3xl font-black text-white">
@@ -22,22 +22,22 @@
         <div class="flex flex-wrap items-center gap-2.5">
           <label class="btn btn-primary btn-sm rounded-xl font-bold cursor-pointer gap-1.5 shadow-xs">
             <svg lucideCamera class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg>
-            <span>Tải ảnh lên</span>
+            <span>Upload photo</span>
             <input type="file" accept="image/*" class="sr-only" (change)="onUploadAvatar($event)" />
           </label>
           @if (avatarPreview()) {
           <button type="button" class="btn btn-ghost btn-sm rounded-xl font-bold text-rose-600 hover:bg-rose-50" (click)="onRemoveAvatar()">
-            Gỡ ảnh
+            Remove photo
           </button>
           }
         </div>
-        <p class="text-xs text-slate-400">Định dạng JPG, PNG hoặc GIF. Tối đa 5MB.</p>
+        <p class="text-xs text-slate-400">JPG, PNG, or GIF. Max 5MB.</p>
 
         <!-- UUID Box with 1-click Copy -->
         <div class="flex items-center gap-2 rounded-2xl border-2 border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-2.5">
           <span class="flex items-center gap-1 text-xs font-black text-slate-500 shrink-0">
             <svg lucideKeyRound class="h-3 w-3" [strokeWidth]="2.4"></svg> UUID:</span>
-          <code class="font-mono text-xs text-primary font-bold truncate flex-1 select-all">{{ currentUser()?.id || 'Chưa cấp UUID' }}</code>
+          <code class="font-mono text-xs text-primary font-bold truncate flex-1 select-all">{{ currentUser()?.id || 'No UUID assigned' }}</code>
           <button
             type="button"
             class="btn btn-xs rounded-xl font-bold gap-1 shrink-0"
@@ -45,9 +45,9 @@
             [class.btn-outline]="!copiedUuid()"
             (click)="copyUuid()">
             @if (copiedUuid()) {
-            <svg lucideCheck class="h-3 w-3" [strokeWidth]="3"></svg> Đã chép
+            <svg lucideCheck class="h-3 w-3" [strokeWidth]="3"></svg> Copied
             } @else {
-            <svg lucideCopy class="h-3 w-3" [strokeWidth]="2.4"></svg> Sao chép
+            <svg lucideCopy class="h-3 w-3" [strokeWidth]="2.4"></svg> Copy
             }
           </button>
         </div>
@@ -58,52 +58,52 @@
   <!-- 2. Thông tin cơ bản của User khi đăng ký -->
   <form [formGroup]="profileForm" (ngSubmit)="onSubmitProfile()" class="space-y-6">
     <div class="rounded-3xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 shadow-xs space-y-5">
-      <h3 class="text-sm font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Thông tin tài khoản</h3>
+      <h3 class="text-sm font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Account information</h3>
 
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <!-- Họ và tên -->
         <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-bold text-slate-700 dark:text-slate-300" for="fullName">Họ và tên *</label>
-          <input id="fullName" type="text" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700 text-[12px]" formControlName="fullName" placeholder="VD: Nguyễn Văn Nam" />
+          <label class="text-xs font-bold text-slate-700 dark:text-slate-300" for="fullName">Full name *</label>
+          <input id="fullName" type="text" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700 text-[12px]" formControlName="fullName" placeholder="e.g. Jane Doe" />
           @if (profileForm.get('fullName')?.invalid && profileForm.get('fullName')?.touched) {
-            <span class="text-2xs font-bold text-rose-500">Vui lòng nhập họ và tên (tối thiểu 2 ký tự).</span>
+            <span class="text-2xs font-bold text-rose-500">Please enter your full name (at least 2 characters).</span>
           }
         </div>
 
         <!-- Username -->
         <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-bold text-slate-700 dark:text-slate-300" for="username">Tên đăng nhập (Username) *</label>
-          <input id="username" type="text" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700 text-[12px]" formControlName="username" placeholder="VD: namnguyen" />
+          <label class="text-xs font-bold text-slate-700 dark:text-slate-300" for="username">Username *</label>
+          <input id="username" type="text" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700 text-[12px]" formControlName="username" placeholder="e.g. janedoe" />
           @if (profileForm.get('username')?.invalid && profileForm.get('username')?.touched) {
-            <span class="text-2xs font-bold text-rose-500">Tên đăng nhập từ 3-25 ký tự không dấu.</span>
+            <span class="text-2xs font-bold text-rose-500">Username must be 3-25 characters, no diacritics.</span>
           }
         </div>
 
         <!-- Email -->
         <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-bold text-slate-700 dark:text-slate-300" for="email">Địa chỉ Email</label>
+          <label class="text-xs font-bold text-slate-700 dark:text-slate-300" for="email">Email address</label>
           <input id="email" type="email" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700 text-[12px]" formControlName="email" />
         </div>
 
         <!-- Phone -->
         <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-bold text-slate-700 dark:text-slate-300" for="phone">Số điện thoại</label>
-          <input id="phone" type="tel" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700 text-[12px]" formControlName="phone" placeholder="VD: 0912345678" />
+          <label class="text-xs font-bold text-slate-700 dark:text-slate-300" for="phone">Phone number</label>
+          <input id="phone" type="tel" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700 text-[12px]" formControlName="phone" placeholder="e.g. 0912345678" />
           @if (profileForm.get('phone')?.invalid && profileForm.get('phone')?.touched) {
-            <span class="text-2xs font-bold text-rose-500">Số điện thoại không đúng định dạng.</span>
+            <span class="text-2xs font-bold text-rose-500">Invalid phone number format.</span>
           }
         </div>
 
         <!-- Job Title -->
         <div class="flex flex-col gap-1.5 sm:col-span-2">
-          <label class="text-xs font-bold text-slate-700 dark:text-slate-300" for="jobTitle">Chức vụ / Tiêu đề công việc</label>
-          <input id="jobTitle" type="text" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700 text-[12px]" formControlName="jobTitle" placeholder="VD: Trưởng nhóm phát triển phần mềm" />
+          <label class="text-xs font-bold text-slate-700 dark:text-slate-300" for="jobTitle">Job title</label>
+          <input id="jobTitle" type="text" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700 text-[12px]" formControlName="jobTitle" placeholder="e.g. Lead Software Engineer" />
         </div>
       </div>
 
       <div class="flex justify-end pt-2">
         <button type="submit" class="btn btn-primary btn-sm gap-1.5 rounded-xl px-5 font-black text-[12px] shadow-xs">
-          <svg lucideSave class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg> Lưu thông tin cá nhân
+          <svg lucideSave class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg> Save profile
         </button>
       </div>
     </div>
@@ -112,24 +112,24 @@
   <!-- 3. Đổi mật khẩu (Xác thực mật khẩu cũ) -->
   <div class="rounded-3xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 shadow-xs space-y-4">
     <div>
-      <h3 class="text-sm font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Đổi mật khẩu bảo mật</h3>
-      <p class="text-xs text-slate-500 mt-0.5">Xác thực mật khẩu cũ để thiết lập mật khẩu đăng nhập mới.</p>
+      <h3 class="text-sm font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Change password</h3>
+      <p class="text-xs text-slate-500 mt-0.5">Verify your current password to set a new one.</p>
     </div>
 
     <form [formGroup]="passwordForm" (ngSubmit)="onSubmitPassword()" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <!-- Mật khẩu hiện tại (Cũ) -->
       <div class="flex flex-col gap-1.5 sm:col-span-2">
-        <label class="text-xs font-bold text-slate-700 dark:text-slate-300" for="currentPassword">Mật khẩu hiện tại (Mật khẩu cũ) *</label>
-        <input id="currentPassword" type="password" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700 text-[12px]" formControlName="currentPassword" placeholder="Nhập mật khẩu hiện tại..." />
+        <label class="text-xs font-bold text-slate-700 dark:text-slate-300" for="currentPassword">Current password *</label>
+        <input id="currentPassword" type="password" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700 text-[12px]" formControlName="currentPassword" placeholder="Enter your current password..." />
         @if (passwordForm.get('currentPassword')?.invalid && passwordForm.get('currentPassword')?.touched) {
-          <span class="text-2xs font-bold text-rose-500">Vui lòng nhập mật khẩu hiện tại để xác thực.</span>
+          <span class="text-2xs font-bold text-rose-500">Please enter your current password to verify.</span>
         }
       </div>
 
       <!-- Mật khẩu mới -->
       <div class="flex flex-col gap-1.5">
-        <label class="text-xs font-bold text-slate-700 dark:text-slate-300" for="newPassword">Mật khẩu mới *</label>
-        <input id="newPassword" type="password" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700 text-[12px]" formControlName="newPassword" placeholder="Tối thiểu 6 ký tự..." />
+        <label class="text-xs font-bold text-slate-700 dark:text-slate-300" for="newPassword">New password *</label>
+        <input id="newPassword" type="password" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700 text-[12px]" formControlName="newPassword" placeholder="At least 6 characters..." />
         @if (passwordForm.get('newPassword')?.value) {
           <div class="mt-1 flex items-center gap-2">
             <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
@@ -139,22 +139,22 @@
           </div>
         }
         @if (passwordForm.get('newPassword')?.invalid && passwordForm.get('newPassword')?.touched) {
-          <span class="text-2xs font-bold text-rose-500">Mật khẩu mới phải có tối thiểu 6 ký tự.</span>
+          <span class="text-2xs font-bold text-rose-500">New password must be at least 6 characters.</span>
         }
       </div>
 
       <!-- Xác nhận mật khẩu mới -->
       <div class="flex flex-col gap-1.5">
-        <label class="text-xs font-bold text-slate-700 dark:text-slate-300" for="confirmPassword">Xác nhận mật khẩu mới *</label>
-        <input id="confirmPassword" type="password" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700 text-[12px]" formControlName="confirmPassword" placeholder="Nhập lại mật khẩu mới..." />
+        <label class="text-xs font-bold text-slate-700 dark:text-slate-300" for="confirmPassword">Confirm new password *</label>
+        <input id="confirmPassword" type="password" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700 text-[12px]" formControlName="confirmPassword" placeholder="Re-enter your new password..." />
         @if (passwordForm.hasError('passwordMismatch') && passwordForm.get('confirmPassword')?.touched) {
-          <span class="text-2xs font-bold text-rose-500">Mật khẩu xác nhận không khớp.</span>
+          <span class="text-2xs font-bold text-rose-500">Passwords do not match.</span>
         }
       </div>
 
       <div class="sm:col-span-2 flex justify-end pt-1">
         <button type="submit" class="btn btn-primary btn-sm gap-1.5 rounded-xl px-5 font-black text-[12px] shadow-xs" [disabled]="passwordForm.invalid">
-          <svg lucideLock class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg> Cập nhật mật khẩu
+          <svg lucideLock class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg> Update password
         </button>
       </div>
     </form>

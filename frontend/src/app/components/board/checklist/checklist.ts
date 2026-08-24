@@ -43,7 +43,7 @@ export class Checklist {
     const text = this.newItemText().trim();
     if (!text) return;
     void this.checklistService.addItem(this.cardId(), text);
-    this.activityService.record(this.boardId(), this.cardId(), `đã thêm mục checklist "${text}"`);
+    this.activityService.record(this.boardId(), this.cardId(), `added checklist item "${text}"`);
     this.newItemText.set('');
   }
 
@@ -54,6 +54,6 @@ export class Checklist {
   deleteItem(itemId: string): void {
     const item = this.items().find((i) => i.id === itemId);
     void this.checklistService.deleteItem(this.cardId(), itemId);
-    if (item) this.activityService.record(this.boardId(), this.cardId(), `đã xoá mục checklist "${item.content}"`);
+    if (item) this.activityService.record(this.boardId(), this.cardId(), `deleted checklist item "${item.content}"`);
   }
 }

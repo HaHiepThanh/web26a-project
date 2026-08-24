@@ -63,14 +63,14 @@ export class ChecklistService {
 
     if (error) {
       this.logger.error(`Đọc checklist thất bại: ${error.message}`);
-      throw new InternalServerErrorException('Không đọc được checklist');
+      throw new InternalServerErrorException('Failed to load checklist');
     }
     return (data as ChecklistRow[]).map(toItem);
   }
 
   async create(uid: string, cardId: string, content: string): Promise<ChecklistItemResponse> {
     const text = content?.trim();
-    if (!text) throw new BadRequestException('Nội dung không được để trống.');
+    if (!text) throw new BadRequestException('Content is required.');
 
     const card = await this.access.assertCardAccess(uid, cardId);
 
@@ -92,7 +92,7 @@ export class ChecklistService {
 
     if (error) {
       this.logger.error(`Tạo mục checklist thất bại: ${error.message}`);
-      throw new InternalServerErrorException('Không tạo được mục checklist');
+      throw new InternalServerErrorException('Failed to create checklist item');
     }
 
     const created = toItem(data as ChecklistRow);
@@ -107,7 +107,7 @@ export class ChecklistService {
       .select('*')
       .eq('id', id)
       .maybeSingle();
-    if (error?.code === '22P02' || !data) throw new NotFoundException('Không tìm thấy mục checklist.');
+    if (error?.code === '22P02' || !data) throw new NotFoundException('Checklist item not found.');
 
     const card = await this.access.assertCardAccess(uid, (data as ChecklistRow).card_id);
     return { row: data as ChecklistRow, boardId: card.boardId };
@@ -123,7 +123,7 @@ export class ChecklistService {
     const patch: Record<string, unknown> = {};
     if (changes.content !== undefined) {
       const text = changes.content.trim();
-      if (!text) throw new BadRequestException('Nội dung không được để trống.');
+      if (!text) throw new BadRequestException('Content is required.');
       patch.content = text;
     }
     if (changes.isDone !== undefined) patch.is_done = changes.isDone;
@@ -140,7 +140,7 @@ export class ChecklistService {
 
     if (error) {
       this.logger.error(`Cập nhật checklist thất bại: ${error.message}`);
-      throw new InternalServerErrorException('Không cập nhật được mục checklist');
+      throw new InternalServerErrorException('Failed to update checklist item');
     }
 
     const updated = toItem(data as ChecklistRow);
@@ -154,7 +154,7 @@ export class ChecklistService {
     const { error } = await this.supabase.client.from('checklist_items').delete().eq('id', id);
     if (error) {
       this.logger.error(`Xoá mục checklist thất bại: ${error.message}`);
-      throw new InternalServerErrorException('Không xoá được mục checklist');
+      throw new InternalServerErrorException('Failed to delete checklist item');
     }
     this.realtime.emitToBoard(boardId, 'checklist.deleted', uid, { cardId: row.card_id, id });
   }

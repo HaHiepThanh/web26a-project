@@ -55,11 +55,11 @@ export class BoardEditModal {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      this.bgImageError.set('Vui lòng chọn một tệp hình ảnh!');
+      this.bgImageError.set('Please choose an image file!');
       return;
     }
     if (file.size > MAX_BG_IMAGE_BYTES) {
-      this.bgImageError.set('Ảnh quá lớn (tối đa 10MB)!');
+      this.bgImageError.set('Image is too large (max 10MB)!');
       return;
     }
 
@@ -67,7 +67,7 @@ export class BoardEditModal {
     try {
       this.bgImageUrl.set(await compressImage(file));
     } catch {
-      this.bgImageError.set('Không đọc được ảnh này, thử ảnh khác nhé!');
+      this.bgImageError.set("Couldn't read this image, please try another one!");
     }
   }
 
@@ -81,11 +81,11 @@ export class BoardEditModal {
     if (!board) return;
     const title = this.titleInput().trim();
     if (!title) {
-      this.titleError.set('Vui lòng nhập tên bảng dự án!');
+      this.titleError.set('Please enter a board name!');
       return;
     }
     if (title.length > 50) {
-      this.titleError.set('Tên bảng dự án tối đa 50 ký tự!');
+      this.titleError.set('Board name must be at most 50 characters!');
       return;
     }
     this.titleError.set(null);

@@ -53,7 +53,7 @@ export class CommentsService {
       .eq('id', cardId)
       .maybeSingle();
     // 22P02 = id gõ sai định dạng uuid → coi như không tồn tại.
-    if (error?.code === '22P02' || !card) throw new NotFoundException('Không tìm thấy thẻ.');
+    if (error?.code === '22P02' || !card) throw new NotFoundException('Card not found.');
 
     const { data: member } = await sb
       .from('organization_members')
@@ -62,7 +62,7 @@ export class CommentsService {
       .eq('user_id', uid)
       .maybeSingle();
     // 404 chứ không phải 403: đừng xác nhận "thẻ này có thật" cho người ngoài.
-    if (!member) throw new NotFoundException('Không tìm thấy thẻ.');
+    if (!member) throw new NotFoundException('Card not found.');
 
     return {
       title: card.title as string,
@@ -83,7 +83,7 @@ export class CommentsService {
 
     if (error) {
       this.logger.error(`Đọc bình luận thất bại: ${error.message}`);
-      throw new InternalServerErrorException('Không đọc được bình luận');
+      throw new InternalServerErrorException('Failed to load comments');
     }
 
     // userId là BẮT BUỘC: frontend dùng nó để chỉ hiện nút Xoá trên bình luận của
@@ -109,7 +109,7 @@ export class CommentsService {
 
     if (error) {
       this.logger.error(`Tạo bình luận thất bại: ${error.message}`);
-      throw new InternalServerErrorException('Không lưu được bình luận');
+      throw new InternalServerErrorException('Failed to save comment');
     }
 
     // Đổi sang camelCase cho khớp phần còn lại của API.
@@ -128,7 +128,7 @@ export class CommentsService {
         card.boardId,
         userUid,
         'comment_added',
-        `Đã bình luận vào thẻ "${card.title}"`,
+        `Commented on card "${card.title}"`,
         cardId,
       );
     }
@@ -145,17 +145,17 @@ export class CommentsService {
       .eq('id', id)
       .maybeSingle();
 
-    if (!comment) throw new NotFoundException('Không tìm thấy bình luận.');
+    if (!comment) throw new NotFoundException('Comment not found.');
 
     if (comment.user_id !== userUid) {
-      throw new ForbiddenException('Bạn chỉ xoá được bình luận của mình.');
+      throw new ForbiddenException('You can only delete your own comments.');
     }
 
     const { error } = await sb.from('comments').delete().eq('id', id);
 
     if (error) {
       this.logger.error(`Xoá bình luận thất bại: ${error.message}`);
-      throw new InternalServerErrorException('Không xoá được bình luận');
+      throw new InternalServerErrorException('Failed to delete comment');
     }
 
     const boardId = (comment.cards as unknown as { lists: { board_id: string } | null } | null)

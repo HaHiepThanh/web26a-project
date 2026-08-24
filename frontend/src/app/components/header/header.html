@@ -16,7 +16,7 @@
         [strokeWidth]="2"></svg>
       <input type="text"
         class="input input-sm h-9 w-full appearance-none rounded-full border-none bg-base-200/70 pl-10 pr-9 text-sm text-base-content shadow-none transition-all placeholder:text-base-content/40 hover:bg-base-200 focus:bg-base-100 focus:shadow-sm focus:ring-2 focus:ring-primary/25 focus:outline-none"
-        placeholder="Tìm kiếm bảng dự án..." (input)="onSearchInput($event)" />
+        placeholder="Search boards..." (input)="onSearchInput($event)" />
       <span
         class="kbd kbd-sm pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 border-none bg-base-300/70 text-base-content/50 opacity-0 transition-opacity group-focus-within:opacity-0 group-hover:opacity-100">/</span>
     </div>
@@ -26,7 +26,7 @@
     <div class="relative">
       <button class="btn btn-primary btn-sm gap-1.5 rounded-full px-3.5 shadow-sm" (click)="toggleCreateMenu()">
         <svg lucidePlus class="h-4 w-4" [strokeWidth]="2.4"></svg>
-        <span class="max-sm:hidden">Tạo</span>
+        <span class="max-sm:hidden">Create</span>
         <svg lucideChevronDown class="h-3 w-3 opacity-70" [strokeWidth]="2.5"></svg>
       </button>
 
@@ -36,8 +36,8 @@
         class="absolute left-0 top-[42px] z-[200] w-[240px] rounded-2xl border border-base-300/70 bg-base-100 p-1.5 shadow-xl">
         @if (!canManage()) {
         <p class="px-2 py-3 text-2xs leading-snug text-base-content/55">
-          Bạn là <b>thành viên</b> của tổ chức này nên không tạo được workspace hay bảng mới.
-          Nhờ chủ tổ chức hoặc quản trị viên tạo giúp.
+          You're a <b>member</b> of this organization, so you can't create new workspaces or boards.
+          Ask the organization owner or an admin to create one for you.
         </p>
         } @else {
         <button type="button"
@@ -48,8 +48,8 @@
             <svg lucideKanban class="h-4 w-4" [strokeWidth]="2"></svg>
           </div>
           <div class="min-w-0">
-            <div class="text-xs font-bold text-base-content leading-tight">Tạo bảng mới</div>
-            <div class="text-2xs text-base-content/50 leading-tight">Bảng dự án Kanban</div>
+            <div class="text-xs font-bold text-base-content leading-tight">New board</div>
+            <div class="text-2xs text-base-content/50 leading-tight">Kanban project board</div>
           </div>
         </button>
         <button type="button"
@@ -60,8 +60,8 @@
             <svg lucideFolderKanban class="h-4 w-4" [strokeWidth]="2"></svg>
           </div>
           <div class="min-w-0">
-            <div class="text-xs font-bold text-base-content leading-tight">Tạo Workspace mới</div>
-            <div class="text-2xs text-base-content/50 leading-tight">Chọn ai thấy được workspace</div>
+            <div class="text-xs font-bold text-base-content leading-tight">New Workspace</div>
+            <div class="text-2xs text-base-content/50 leading-tight">Choose who can see this workspace</div>
           </div>
         </button>
         }
@@ -88,23 +88,23 @@
         <div
           class="absolute right-0 top-[42px] z-[200] w-[320px] rounded-2xl border border-base-300/70 bg-base-100 p-2 shadow-xl">
           <div class="flex items-center justify-between px-1.5 pb-1.5 pt-1">
-            <span class="text-2xs font-black uppercase tracking-wider text-base-content/45">Thông báo</span>
+            <span class="text-2xs font-black uppercase tracking-wider text-base-content/45">Notifications</span>
             @if (unreadNotifications() > 0) {
             <button type="button" class="text-3xs font-bold text-primary hover:underline"
-              (click)="markAllNotificationsRead()">Đánh dấu đã đọc</button>
+              (click)="markAllNotificationsRead()">Mark all read</button>
             }
           </div>
 
           @if (dueBadgeCount() > 0) {
           <div class="mb-1 rounded-xl border border-warning/40 bg-warning/10 px-2.5 py-2">
             <div class="text-2xs font-bold leading-snug text-base-content">
-              {{ dueBadgeCount() }} thẻ của bạn sắp hoặc đã quá hạn
+              {{ dueBadgeCount() }} of your cards are due soon or overdue
             </div>
           </div>
           }
 
           @if (notifications().length === 0) {
-          <div class="px-1.5 py-4 text-center text-xs text-base-content/50">Chưa có thông báo nào.</div>
+          <div class="px-1.5 py-4 text-center text-xs text-base-content/50">No notifications yet.</div>
           } @else {
           <div class="flex max-h-[320px] flex-col gap-1 overflow-y-auto">
             @for (n of notifications(); track n.id) {
@@ -120,7 +120,7 @@
                 }
                 <span class="min-w-0">
                   <span class="block text-2xs font-semibold leading-snug text-base-content">{{ n.text }}</span>
-                  <span class="mt-0.5 block text-3xs text-base-content/45">{{ relativeTimeFrom(n.createdAt) }} · bấm để mở bảng</span>
+                  <span class="mt-0.5 block text-3xs text-base-content/45">{{ relativeTimeFrom(n.createdAt) }} · click to open board</span>
                 </span>
               </div>
             </button>
@@ -134,7 +134,7 @@
       <!-- Lời mời tham gia Organization -->
       <div class="relative">
         <button type="button" class="btn btn-ghost btn-circle btn-sm relative hover:bg-base-100"
-          [title]="pendingInviteCount() > 0 ? pendingInviteCount() + ' lời mời tổ chức đang chờ' : 'Lời mời tổ chức'"
+          [title]="pendingInviteCount() > 0 ? pendingInviteCount() + ' pending organization invite(s)' : 'Organization invites'"
           (click)="toggleInviteMenu()">
           <svg lucideUserPlus class="h-[17px] w-[17px]" [class.invite-pulse]="bellPulse()" [strokeWidth]="2"></svg>
           @if (pendingInviteCount() > 0) {
@@ -148,21 +148,21 @@
         <button type="button"
           class="invite-toast absolute right-0 top-[42px] z-[210] w-[268px] rounded-2xl border border-primary/40 bg-base-100 p-3 text-left shadow-xl"
           (click)="inviteToast.set(null); toggleInviteMenu()">
-          <div class="text-2xs font-black uppercase tracking-wider text-primary">Lời mời mới</div>
+          <div class="text-2xs font-black uppercase tracking-wider text-primary">New invite</div>
           <div class="mt-1 text-xs font-bold leading-snug text-base-content">
-            {{ t.fromUserName }} mời bạn vào "{{ t.orgName }}"
+            {{ t.fromUserName }} invited you to "{{ t.orgName }}"
           </div>
-          <div class="mt-0.5 text-3xs text-base-content/55">Bấm để xem và trả lời</div>
+          <div class="mt-0.5 text-3xs text-base-content/55">Click to view and respond</div>
         </button>
         }
 
         @if (inviteMenuOpen()) {
         <div
           class="absolute right-0 top-[42px] z-[200] w-[300px] rounded-2xl border border-base-300/70 bg-base-100 p-2 shadow-xl">
-          <div class="px-1.5 pb-1.5 pt-1 text-2xs font-black uppercase tracking-wider text-base-content/45">Lời mời tổ
-            chức</div>
+          <div class="px-1.5 pb-1.5 pt-1 text-2xs font-black uppercase tracking-wider text-base-content/45">Organization
+            invites</div>
           @if (myInvites().length === 0) {
-          <div class="px-1.5 py-4 text-center text-xs text-base-content/50">Chưa có lời mời nào.</div>
+          <div class="px-1.5 py-4 text-center text-xs text-base-content/50">No invites yet.</div>
           } @else {
           <div class="flex flex-col gap-1.5">
             @for (inv of myInvites(); track inv.id) {
@@ -170,21 +170,21 @@
               <div class="flex items-center gap-2">
                 <div class="min-w-0">
                   <div class="truncate text-xs font-bold text-base-content leading-tight">{{ inv.fromUserName }}</div>
-                  <div class="truncate text-2xs text-base-content/55 leading-tight">mời bạn vào "{{ inv.orgName }}"</div>
+                  <div class="truncate text-2xs text-base-content/55 leading-tight">invited you to "{{ inv.orgName }}"</div>
                   <div class="mt-0.5 text-3xs font-bold leading-tight"
                     [class.text-warning]="inv.role === 'admin'"
                     [class.text-base-content]="inv.role !== 'admin'">
-                    Vào với quyền {{ inv.role === 'admin' ? 'Quản trị' : 'Thành viên' }}
+                    Joining as {{ inv.role === 'admin' ? 'Admin' : 'Member' }}
                   </div>
                 </div>
               </div>
               <div class="mt-2 flex items-center gap-1.5">
                 <button type="button" class="btn btn-success btn-xs flex-1 gap-1 rounded-lg text-white" (click)="acceptInvite(inv.id)">
                   <svg lucideCheck class="h-3 w-3" [strokeWidth]="3"></svg>
-                  Đồng ý</button>
+                  Accept</button>
                 <button type="button" class="btn btn-ghost btn-xs flex-1 gap-1 rounded-lg" (click)="declineInvite(inv.id)">
                   <svg lucideX class="h-3 w-3" [strokeWidth]="3"></svg>
-                  Từ chối</button>
+                  Decline</button>
               </div>
             </div>
             }
@@ -194,7 +194,7 @@
         }
       </div>
 
-      <a class="btn btn-ghost btn-circle btn-sm hover:bg-base-100" routerLink="/settings" title="Cài đặt">
+      <a class="btn btn-ghost btn-circle btn-sm hover:bg-base-100" routerLink="/settings" title="Settings">
         <svg lucideSettings class="h-[17px] w-[17px]" [strokeWidth]="2"></svg>
       </a>
     </div>
@@ -203,7 +203,7 @@
       class="ml-0.5 flex cursor-pointer items-center gap-1.5 rounded-full bg-base-200/60 py-[3px] pl-1 pr-2.5 transition-all hover:bg-base-200"
       (click)="toggleUserMenu()">
       @if (!avatarBroken() && currentUser()?.avatarUrl; as photo) {
-      <img [src]="photo" alt="Ảnh đại diện" referrerpolicy="no-referrer"
+      <img [src]="photo" alt="Avatar" referrerpolicy="no-referrer"
         class="h-7 w-7 shrink-0 rounded-full object-cover shadow-sm" (error)="onAvatarError()" />
       } @else {
       <div
@@ -212,7 +212,7 @@
       }
       <div class="flex max-w-[160px] flex-col leading-tight max-md:hidden">
         <span class="truncate text-xs font-bold text-base-content">{{
-          currentUser()?.displayName ?? 'Người dùng' }}</span>
+          currentUser()?.displayName ?? 'User' }}</span>
         @if (currentUser()?.id; as uid) {
         <span class="truncate text-3xs font-mono text-base-content/45">ID: {{ uid.slice(0, 8) }}...</span>
         }
@@ -227,7 +227,7 @@
     [class.hidden]="!menuOpen()">
     <div class="flex items-center gap-2.5 px-1.5 py-1">
       @if (!avatarBroken() && currentUser()?.avatarUrl; as photo) {
-      <img [src]="photo" alt="Ảnh đại diện" referrerpolicy="no-referrer"
+      <img [src]="photo" alt="Avatar" referrerpolicy="no-referrer"
         class="h-9 w-9 shrink-0 rounded-full object-cover shadow-sm" (error)="onAvatarError()" />
       } @else {
       <div
@@ -235,7 +235,7 @@
         {{ initials() }}</div>
       }
       <div class="min-w-0 flex-1">
-        <div class="truncate text-sm font-bold text-base-content">{{ currentUser()?.displayName ?? 'Người dùng' }}
+        <div class="truncate text-sm font-bold text-base-content">{{ currentUser()?.displayName ?? 'User' }}
         </div>
         <div class="truncate text-2xs text-base-content/60">{{ currentUser()?.email ?? '—' }}</div>
       </div>
@@ -246,15 +246,15 @@
       <div class="flex items-center justify-between">
         <span class="flex items-center gap-1 text-3xs font-extrabold uppercase tracking-wider text-primary">
           <svg lucideKeyRound class="h-3 w-3" [strokeWidth]="2.4"></svg>
-          UUID CỦA BẠN
+          YOUR UUID
         </span>
         <button type="button" class="btn btn-xs gap-1 rounded px-1.5 text-2xs font-bold transition-all"
           [class.btn-success]="copiedUuid()" [class.btn-primary]="!copiedUuid()" [class.btn-outline]="!copiedUuid()"
-          (click)="$event.stopPropagation(); copyUuid()" title="Sao chép mã UUID">
+          (click)="$event.stopPropagation(); copyUuid()" title="Copy UUID">
           @if (copiedUuid()) {
-          <svg lucideCheck class="h-3 w-3" [strokeWidth]="3"></svg> Đã chép!
+          <svg lucideCheck class="h-3 w-3" [strokeWidth]="3"></svg> Copied!
           } @else {
-          <svg lucideCopy class="h-3 w-3" [strokeWidth]="2.4"></svg> Sao chép
+          <svg lucideCopy class="h-3 w-3" [strokeWidth]="2.4"></svg> Copy
           }
         </button>
       </div>
@@ -262,11 +262,11 @@
         <code
           class="block w-full select-all truncate rounded bg-base-100 px-1.5 py-1 font-mono text-2xs text-base-content/85 shadow-inner"
           [title]="currentUser()?.id ?? ''">
-          {{ currentUser()?.id ?? 'Chưa cấp UUID' }}
+          {{ currentUser()?.id ?? 'No UUID assigned' }}
         </code>
       </div>
       <p class="mt-1 text-3xs leading-tight text-base-content/50">
-        Dùng UUID này để thêm vào Không gian làm việc.
+        Use this UUID to add yourself to a Workspace.
       </p>
     </div>
 
@@ -274,11 +274,11 @@
     <a class="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm text-base-content hover:bg-base-200"
       routerLink="/settings" (click)="menuOpen.set(false)">
       <svg lucideUser class="h-4 w-4" [strokeWidth]="2"></svg>
-      Hồ sơ và cài đặt</a>
+      Profile &amp; settings</a>
     <div
       class="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold text-error hover:bg-error/10"
       (click)="logout()">
       <svg lucideLogOut class="h-4 w-4" [strokeWidth]="2"></svg>
-      Đăng xuất</div>
+      Log out</div>
   </div>
 </header>

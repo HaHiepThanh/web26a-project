@@ -115,11 +115,11 @@ export class BoardsService {
       .maybeSingle();
     if (wsError) {
       // id gõ sai định dạng uuid → coi như không tồn tại, đừng để lọt thành 500.
-      if (laUuidSai(wsError)) throw new NotFoundException('Không tìm thấy workspace.');
-      throw new InternalServerErrorException('Không đọc được workspace.');
+      if (laUuidSai(wsError)) throw new NotFoundException('Workspace not found.');
+      throw new InternalServerErrorException('Failed to load workspace.');
     }
     if (!ws) {
-      throw new NotFoundException('Không tìm thấy workspace.');
+      throw new NotFoundException('Workspace not found.');
     }
 
     const { data: member, error: memberError } = await this.supabase.client
@@ -129,17 +129,17 @@ export class BoardsService {
       .eq('user_id', uid)
       .maybeSingle();
     if (memberError) {
-      throw new InternalServerErrorException('Không kiểm tra được quyền.');
+      throw new InternalServerErrorException('Failed to check permissions.');
     }
     if (!member) {
-      throw new ForbiddenException('Bạn không thuộc tổ chức của workspace này.');
+      throw new ForbiddenException('You are not a member of this workspace\'s organization.');
     }
 
     // Workspace `restricted` chỉ mở cho người được chỉ định — kể cả khi họ vẫn
     // thuộc tổ chức. Thiếu chốt này thì đặt phạm vi cho workspace là vô nghĩa:
     // ai cũng lách vào qua đường /boards?workspaceId=.
     if ((ws.visibility as string) === 'restricted' && !(await this.laThanhVienWorkspace(uid, workspaceId))) {
-      throw new NotFoundException('Không tìm thấy workspace.');
+      throw new NotFoundException('Workspace not found.');
     }
 
     return ws.org_id;
@@ -163,7 +163,7 @@ export class BoardsService {
       .maybeSingle();
     const role = data?.role as string | undefined;
     if (role !== 'owner' && role !== 'admin') {
-      throw new ForbiddenException('Chỉ chủ tổ chức hoặc quản trị viên mới quản lý được board.');
+      throw new ForbiddenException('Only the organization owner or an admin can manage boards.');
     }
   }
 
@@ -205,7 +205,7 @@ export class BoardsService {
       .select('org_id, visibility')
       .eq('id', workspaceId)
       .maybeSingle();
-    if (!ws) throw new NotFoundException('Không tìm thấy workspace.');
+    if (!ws) throw new NotFoundException('Workspace not found.');
 
     // Workspace mở cho cả tổ chức → vùng chọn là thành viên tổ chức.
     // Workspace `restricted` → vùng chọn hẹp lại đúng bằng workspace_members.
@@ -223,7 +223,7 @@ export class BoardsService {
     const bo = wanted.filter((id) => !hopLe.has(id));
     if (bo.length) {
       throw new BadRequestException(
-        `Có ${bo.length} người không nằm trong workspace này nên không thêm vào board được.`,
+        `${bo.length} people are not in this workspace and cannot be added to the board.`,
       );
     }
     return wanted;
@@ -238,7 +238,7 @@ export class BoardsService {
       .from('board_members')
       .insert(ids.map((id) => ({ board_id: boardId, user_id: id })));
     if (error) {
-      throw new InternalServerErrorException('Không lưu được danh sách thành viên board');
+      throw new InternalServerErrorException('Failed to save board member list');
     }
   }
 
@@ -256,7 +256,7 @@ export class BoardsService {
       .select()
       .eq('workspace_id', workspaceId);
     if (error) {
-      throw new InternalServerErrorException('Không đọc được danh sách board.');
+      throw new InternalServerErrorException('Failed to load boards.');
     }
 
     const rows = data as BoardRow[];
@@ -298,11 +298,11 @@ export class BoardsService {
       .maybeSingle();
     if (error) {
       // id gõ sai định dạng uuid → coi như không tồn tại, đừng để lọt thành 500.
-      if (laUuidSai(error)) throw new NotFoundException('Không tìm thấy board.');
-      throw new InternalServerErrorException('Không đọc được board.');
+      if (laUuidSai(error)) throw new NotFoundException('Board not found.');
+      throw new InternalServerErrorException('Failed to load board.');
     }
     if (!board) {
-      throw new NotFoundException('Không tìm thấy board.');
+      throw new NotFoundException('Board not found.');
     }
 
     const { data: member, error: memberError } = await this.supabase.client
@@ -313,10 +313,10 @@ export class BoardsService {
       .eq('user_id', uid)
       .maybeSingle();
     if (memberError) {
-      throw new InternalServerErrorException('Không kiểm tra được quyền.');
+      throw new InternalServerErrorException('Failed to check permissions.');
     }
     if (!member) {
-      throw new NotFoundException('Không tìm thấy board.');
+      throw new NotFoundException('Board not found.');
     }
 
     const row = board as BoardRow;
@@ -331,12 +331,12 @@ export class BoardsService {
       (ws?.visibility as string) === 'restricted' &&
       !(await this.laThanhVienWorkspace(uid, row.workspace_id))
     ) {
-      throw new NotFoundException('Không tìm thấy board.');
+      throw new NotFoundException('Board not found.');
     }
 
     const ids = await this.memberIdsOf(row.id);
     if (row.visibility === 'private' && !ids.includes(uid)) {
-      throw new NotFoundException('Không tìm thấy board.');
+      throw new NotFoundException('Board not found.');
     }
 
     return toBoard(row, ids);
@@ -357,10 +357,10 @@ export class BoardsService {
     memberIds: string[] = [],
   ): Promise<BoardResponse> {
     if (!workspaceId || !name?.trim()) {
-      throw new BadRequestException('Thiếu workspaceId hoặc name.');
+      throw new BadRequestException('Missing workspaceId or name.');
     }
     if (!VISIBILITIES.includes(visibility)) {
-      throw new BadRequestException('visibility phải là workspace, private hoặc public.');
+      throw new BadRequestException('visibility must be workspace, private, or public.');
     }
 
     const orgId = await this.assertWorkspaceAccess(uid, workspaceId);
@@ -382,7 +382,7 @@ export class BoardsService {
       .select()
       .single();
     if (error) {
-      throw new InternalServerErrorException('Không tạo được board.');
+      throw new InternalServerErrorException('Failed to create board.');
     }
 
     const row = data as BoardRow;
@@ -453,7 +453,7 @@ export class BoardsService {
     await this.assertCanManage(uid, current.orgId);
 
     if (changes.visibility !== undefined && !VISIBILITIES.includes(changes.visibility)) {
-      throw new BadRequestException('visibility phải là workspace, private hoặc public.');
+      throw new BadRequestException('visibility must be workspace, private, or public.');
     }
 
     const patch: Record<string, string | null> = {};
@@ -481,7 +481,7 @@ export class BoardsService {
     }
 
     if (Object.keys(patch).length === 0 && !phaiGhiThanhVien) {
-      throw new BadRequestException('Không có gì để cập nhật.');
+      throw new BadRequestException('Nothing to update.');
     }
 
     let row: BoardRow = {
@@ -504,7 +504,7 @@ export class BoardsService {
         .select()
         .single();
       if (error) {
-        throw new InternalServerErrorException('Không cập nhật được board.');
+        throw new InternalServerErrorException('Failed to update board.');
       }
       row = data as BoardRow;
     }
@@ -534,15 +534,15 @@ export class BoardsService {
       .eq('user_id', uid)
       .maybeSingle();
     if (memberError) {
-      throw new InternalServerErrorException('Không kiểm tra được quyền.');
+      throw new InternalServerErrorException('Failed to check permissions.');
     }
     if (!member || (member.role !== 'owner' && member.role !== 'admin')) {
-      throw new ForbiddenException('Chỉ owner hoặc admin mới xoá được board.');
+      throw new ForbiddenException('Only the owner or an admin can delete boards.');
     }
 
     const { error } = await this.supabase.client.from('boards').delete().eq('id', id);
     if (error) {
-      throw new InternalServerErrorException('Không xoá được board.');
+      throw new InternalServerErrorException('Failed to delete board.');
     }
     // Ai đang mở board này cần biết ngay để rời trang, thay vì ngồi thao tác tiếp
     // trên một board không còn tồn tại rồi nhận 404 ở mọi thao tác.

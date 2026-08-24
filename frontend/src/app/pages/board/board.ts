@@ -63,21 +63,21 @@ interface SavedHighlightGroup {
 }
 
 const PRIORITIES: { id: CardPriority; label: string }[] = [
-  { id: 'high', label: 'Cao' },
-  { id: 'medium', label: 'Trung bình' },
-  { id: 'low', label: 'Thấp' },
+  { id: 'high', label: 'High' },
+  { id: 'medium', label: 'Medium' },
+  { id: 'low', label: 'Low' },
 ];
 const PRIORITY_RANK: Record<CardPriority, number> = { high: 0, medium: 1, low: 2 };
 const SORT_OPTIONS: { id: SortMode; label: string }[] = [
-  { id: 'manual', label: 'Sắp xếp: Thủ công' },
-  { id: 'priority', label: 'Sắp xếp: Mức ưu tiên' },
-  { id: 'due', label: 'Sắp xếp: Hạn chót' },
-  { id: 'new', label: 'Sắp xếp: Mới tạo' },
+  { id: 'manual', label: 'Sort: Manual' },
+  { id: 'priority', label: 'Sort: Priority' },
+  { id: 'due', label: 'Sort: Due date' },
+  { id: 'new', label: 'Sort: Newest' },
 ];
 const DATE_OPTIONS: { id: DateFilter; label: string }[] = [
-  { id: 'overdue', label: 'Quá hạn' },
-  { id: 'today', label: 'Hôm nay' },
-  { id: 'week', label: 'Tuần này' },
+  { id: 'overdue', label: 'Overdue' },
+  { id: 'today', label: 'Today' },
+  { id: 'week', label: 'This week' },
 ];
 /** Mini Map (#13) chỉ hiện khi board đủ "lớn": nhiều list hoặc nội dung tràn viewport. */
 const MINIMAP_LIST_COUNT_THRESHOLD = 8;
@@ -444,7 +444,7 @@ export class Board {
   async saveSelectionAsHighlightGroup(): Promise<void> {
     const cardIds = [...this.selectedCardIds()];
     if (!cardIds.length) return;
-    const name = window.prompt('Đặt tên cho bộ highlight này:');
+    const name = window.prompt('Name this highlight group:');
     if (!name?.trim()) return;
 
     const row = await this.boardPrefs.createGroup({ boardId: this.boardId, name: name.trim(), cardIds });
@@ -452,7 +452,7 @@ export class Board {
 
     this.savedHighlightGroups.update((all) => [...all, { id: row.id, name: row.name, cardIds: row.cardIds }]);
     this.clearSelection();
-    this.addToast(`Đã lưu bộ highlight "${row.name}" (${row.cardIds.length} thẻ).`, 'success');
+    this.addToast(`Saved highlight group "${row.name}" (${row.cardIds.length} card(s)).`, 'success');
   }
 
   applyHighlightGroup(g: SavedHighlightGroup): void {
@@ -608,7 +608,7 @@ export class Board {
     // thao tác tiếp rồi ăn 404 ở mọi nút bấm.
     effect(() => {
       if (this.realtime.boardDeleted() === this.boardId) {
-        this.addToast('Board này vừa bị xoá bởi một thành viên khác.', 'error');
+        this.addToast('This board was just deleted by another member.', 'error');
         void this.router.navigate(['/workspace']);
       }
     });
@@ -698,7 +698,7 @@ export class Board {
   // ---- Tạo danh sách inline (bấm "+ Thêm danh sách" → gõ tên → Enter, kiểu Trello) ----
   async createList(name: string): Promise<void> {
     const list = await this.listService.createList(this.boardId, name);
-    if (list) this.addToast(`Đã tạo danh sách "${name}"`, 'success');
+    if (list) this.addToast(`Created list "${name}"`, 'success');
   }
 
   // ---- Tạo thẻ (bấm "+ Thêm thẻ" → tạo ngay với tên mặc định, mở thẳng
@@ -707,7 +707,7 @@ export class Board {
   readonly justCreatedCardId = signal<string | null>(null);
 
   async createCard(listId: string): Promise<void> {
-    const card = await this.cardService.createCard(listId, { title: 'Thẻ mới', priority: 'medium' });
+    const card = await this.cardService.createCard(listId, { title: 'New card', priority: 'medium' });
     if (!card) return;
     this.justCreatedCardId.set(card.id);
     this.openCardDetail(card);
@@ -716,7 +716,7 @@ export class Board {
   // ---- Xoá / đổi tên danh sách ----
   requestDeleteList(list: List): void {
     const count = this.cardsFor(list.id).length;
-    const message = count > 0 ? `Danh sách "${list.name}" còn ${count} thẻ bên trong — xoá luôn cả thẻ?` : `Xoá danh sách "${list.name}"?`;
+    const message = count > 0 ? `List "${list.name}" still has ${count} card(s) inside — delete them too?` : `Delete list "${list.name}"?`;
     if (!window.confirm(message)) return;
     this.cardService.clearListCards(list.id);
     void this.listService.deleteList(list.id);
@@ -728,7 +728,7 @@ export class Board {
 
   // ---- Chat panel + AI detect-task (#8) ----
   onChatTaskCreated(title: string): void {
-    this.addToast(`AI đã tạo thẻ "${title}" từ tin nhắn chat.`, 'success');
+    this.addToast(`AI created card "${title}" from a chat message.`, 'success');
   }
 
   // ---- Modal chi tiết thẻ (appRequirement #4) ----
@@ -753,7 +753,7 @@ export class Board {
   onCardDetailDeleted(): void {
     const title = this.selectedCard()?.title;
     this.closeCardDetail();
-    if (title) this.addToast(`Đã xoá thẻ "${title}".`, 'info');
+    if (title) this.addToast(`Deleted card "${title}".`, 'info');
   }
 
   // ---- Chọn nhiều thẻ (#12) — Shift+click, thanh hành động hàng loạt ----
@@ -790,25 +790,25 @@ export class Board {
       if (!card || card.listId === toListId) continue;
       void this.cardService.moveCardOptimistic(cardId, card.listId, toListId, this.cardsFor(toListId).length);
     }
-    this.addToast(`Đã chuyển ${ids.length} thẻ sang "${this.listNameFor(toListId)}".`, 'success');
+    this.addToast(`Moved ${ids.length} card(s) to "${this.listNameFor(toListId)}".`, 'success');
     this.clearSelection();
   }
 
   handleBulkLabel(labelId: string): void {
     const ids = [...this.selectedCardIds()];
     for (const cardId of ids) void this.labelService.attachLabel(cardId, labelId);
-    this.addToast(`Đã gắn nhãn cho ${ids.length} thẻ.`, 'success');
+    this.addToast(`Applied label to ${ids.length} card(s).`, 'success');
     this.clearSelection();
   }
 
   handleBulkDelete(): void {
     const ids = [...this.selectedCardIds()];
-    if (!window.confirm(`Xoá ${ids.length} thẻ đã chọn? Không thể hoàn tác.`)) return;
+    if (!window.confirm(`Delete ${ids.length} selected card(s)? This cannot be undone.`)) return;
     for (const cardId of ids) {
       const card = this.allCards().find((c) => c.id === cardId);
       if (card) void this.cardService.deleteCard(cardId, card.listId);
     }
-    this.addToast(`Đã xoá ${ids.length} thẻ.`, 'info');
+    this.addToast(`Deleted ${ids.length} card(s).`, 'info');
     this.clearSelection();
   }
 

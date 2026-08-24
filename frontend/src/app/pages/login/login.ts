@@ -39,7 +39,7 @@ export class Login {
     const prefillUsername = params.get('username');
     if (prefillUsername) this.username = prefillUsername;
     if (params.get('registered')) {
-      this.addToast('Đăng ký thành công! Vui lòng đăng nhập để tiếp tục.', 'success');
+      this.addToast('Account created! Please sign in to continue.', 'success');
     }
   }
 
@@ -52,17 +52,17 @@ export class Login {
   async onPasswordSubmit(): Promise<void> {
     const email = this.username.trim();
     if (!email) {
-      this.addToast('Vui lòng nhập email!', 'error');
+      this.addToast('Please enter your email!', 'error');
       return;
     }
     if (!this.password) {
-      this.addToast('Vui lòng nhập mật khẩu!', 'error');
+      this.addToast('Please enter your password!', 'error');
       return;
     }
     // Firebase chỉ nhận email, không nhận username. Nói rõ ngay thay vì để nó
     // trả về lỗi 'auth/invalid-email' khó hiểu.
     if (!email.includes('@')) {
-      this.addToast('Đăng nhập bằng EMAIL, không phải tên đăng nhập.', 'error');
+      this.addToast('Sign in with your EMAIL, not a username.', 'error');
       return;
     }
 
@@ -84,23 +84,23 @@ export class Login {
       case 'auth/invalid-credential':
       case 'auth/wrong-password':
       case 'auth/user-not-found':
-        return 'Email hoặc mật khẩu không đúng.';
+        return 'Incorrect email or password.';
       case 'auth/invalid-email':
-        return 'Email không hợp lệ.';
+        return 'Invalid email.';
       case 'auth/too-many-requests':
-        return 'Sai quá nhiều lần. Thử lại sau vài phút nhé.';
+        return 'Too many failed attempts. Try again in a few minutes.';
       case 'auth/network-request-failed':
-        return 'Không kết nối được. Kiểm tra mạng giúp mình.';
+        return "Couldn't connect. Please check your network.";
       default:
         // Không phải lỗi Firebase → gần như chắc chắn là backend chưa chạy.
-        return 'Không đăng nhập được. Backend đã chạy chưa (npm run start:dev)?';
+        return "Couldn't sign in. Is the backend running (npm run start:dev)?";
     }
   }
 
   // ---- Forgot password ----
   onForgotPasswordClick(): void {
     if (!this.username.trim()) {
-      this.addToast('Vui lòng nhập email của bạn vào ô đăng nhập trước.', 'info');
+      this.addToast('Please enter your email in the field above first.', 'info');
     }
   }
 
@@ -121,10 +121,10 @@ export class Login {
 
       const message =
         code === 'auth/unauthorized-domain'
-          ? 'Tên miền này chưa được cho phép trong Firebase Console → Authentication → Settings → Authorized domains.'
+          ? 'This domain is not authorized yet in Firebase Console → Authentication → Settings → Authorized domains.'
           : code === 'auth/operation-not-allowed'
-            ? 'Nhà cung cấp Google chưa được bật trong Firebase Console → Authentication → Sign-in method.'
-            : 'Đăng nhập Google thất bại. Vui lòng thử lại.';
+            ? 'The Google provider is not enabled in Firebase Console → Authentication → Sign-in method.'
+            : 'Google sign-in failed. Please try again.';
       this.addToast(message, 'error');
       console.error('[Google login]', err);
     } finally {

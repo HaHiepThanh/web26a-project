@@ -8,7 +8,7 @@ import { IsIn } from 'class-validator';
  */
 export class ChangeRoleDto {
   @IsIn(['owner', 'admin', 'member'], {
-    message: 'role chỉ nhận owner, admin hoặc member.',
+    message: 'role must be owner, admin, or member.',
   })
   role: 'owner' | 'admin' | 'member';
 }

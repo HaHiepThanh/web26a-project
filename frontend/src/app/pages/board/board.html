@@ -58,19 +58,19 @@
     <div class="flex shrink-0 items-center gap-2 border-b border-base-300 bg-warning/10 px-4 py-2 text-xs text-warning">
       <svg class="h-[15px] w-[15px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
       <span class="flex-1 text-base-content">
-        Bạn có
+        You have
         @if (myDueCounts().overdue > 0) {
-          <strong>{{ myDueCounts().overdue }} thẻ đã quá hạn</strong>
+          <strong>{{ myDueCounts().overdue }} overdue card(s)</strong>
         }
         @if (myDueCounts().overdue > 0 && myDueCounts().dueSoon > 0) {
-          và
+          and
         }
         @if (myDueCounts().dueSoon > 0) {
-          <strong>{{ myDueCounts().dueSoon }} thẻ sắp đến hạn</strong>
+          <strong>{{ myDueCounts().dueSoon }} card(s) due soon</strong>
         }
-        trên bảng này.
+        on this board.
       </span>
-      <button type="button" class="btn btn-square btn-ghost btn-xs relative shrink-0 rounded-[8px] before:absolute before:-inset-3 before:content-['']" (click)="dismissDueBanner()" aria-label="Đóng thông báo">
+      <button type="button" class="btn btn-square btn-ghost btn-xs relative shrink-0 rounded-[8px] before:absolute before:-inset-3 before:content-['']" (click)="dismissDueBanner()" aria-label="Dismiss notification">
         <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </button>
     </div>
@@ -95,7 +95,7 @@
               <div class="list-drag-wrap" [attr.data-list-id]="list.id" [class.collapsed]="collapsedListIds().has(list.id)" cdkDrag [cdkDragData]="list" cdkDragLockAxis="x">
                 <div class="list-drop-placeholder" *cdkDragPlaceholder></div>
 
-                <div class="list-grip" cdkDragHandle title="Kéo để đổi thứ tự danh sách">
+                <div class="list-grip" cdkDragHandle title="Drag to reorder lists">
                   <svg class="h-2.5 w-3.5" viewBox="0 0 24 24" fill="currentColor"><circle cx="7" cy="6" r="1.3"/><circle cx="13" cy="6" r="1.3"/><circle cx="7" cy="12" r="1.3"/><circle cx="13" cy="12" r="1.3"/><circle cx="7" cy="18" r="1.3"/><circle cx="13" cy="18" r="1.3"/></svg>
                 </div>
 
@@ -142,7 +142,7 @@
               <div class="row-list-wrap" [attr.data-list-id]="list.id" [class.collapsed]="collapsedListIds().has(list.id)" cdkDrag [cdkDragData]="list" cdkDragLockAxis="y">
                 <div class="row-list-drop-placeholder" *cdkDragPlaceholder></div>
 
-                <div class="row-list-grip" cdkDragHandle title="Kéo để đổi thứ tự danh sách">
+                <div class="row-list-grip" cdkDragHandle title="Drag to reorder lists">
                   <svg class="h-3.5 w-2.5" viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="7" r="1.3"/><circle cx="6" cy="13" r="1.3"/><circle cx="6" cy="19" r="1.3"/><circle cx="12" cy="7" r="1.3"/><circle cx="12" cy="13" r="1.3"/><circle cx="12" cy="19" r="1.3"/></svg>
                 </div>
 

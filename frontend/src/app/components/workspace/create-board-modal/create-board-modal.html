@@ -4,7 +4,7 @@
   <div class="w-full max-w-[480px] max-h-[90vh] overflow-y-auto rounded-2xl border-2 border-slate-300 dark:border-slate-600 bg-base-100 p-6 shadow-2xl"
     (click)="$event.stopPropagation()">
     <div class="mb-5 flex items-center justify-between">
-      <h3 class="text-lg font-black text-slate-900 dark:text-white">Tạo bảng làm việc mới</h3>
+      <h3 class="text-lg font-black text-slate-900 dark:text-white">Create a new board</h3>
       <button class="btn btn-circle btn-ghost btn-sm" (click)="close.emit()">
         <svg lucideX class="h-4 w-4" [strokeWidth]="2.4"></svg>
       </button>
@@ -14,7 +14,7 @@
       <!-- Board Title Input -->
       <div class="mb-4">
         <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200" for="board-title-input">
-          Tên bảng dự án <span class="text-error">*</span>
+          Board name <span class="text-error">*</span>
         </label>
         <input type="text" id="board-title-input"
           class="input input-bordered border-2 w-full rounded-xl font-bold text-slate-900 dark:text-white bg-white dark:bg-slate-800 shadow-xs text-sm transition-all"
@@ -23,10 +23,10 @@
           [class.border-slate-300]="!titleError()"
           [class.dark:border-slate-600]="!titleError()"
           [class.focus:border-primary]="!titleError()"
-          placeholder="Ví dụ: Quản lý Sprint 12, Kế hoạch MVP... (tối đa 50 ký tự)" [ngModel]="titleInput()"
+          placeholder="e.g. Sprint 12 Planning, MVP Roadmap... (max 50 characters)" [ngModel]="titleInput()"
           (ngModelChange)="titleInput.set($event); titleError.set(null)" name="boardTitle" maxlength="50" />
         <div class="mt-1 flex items-center justify-between text-2xs text-slate-400 font-semibold px-1">
-          <span>Tối đa 50 ký tự</span>
+          <span>Max 50 characters</span>
           <span>{{ titleInput().length }}/50</span>
         </div>
         @if (titleError()) {
@@ -53,7 +53,7 @@
       <!-- Privacy Radio -->
       <div class="mb-4">
         <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-          Quyền riêng tư & Quyền truy cập
+          Privacy & access
         </label>
         <div class="grid grid-cols-2 gap-2.5">
           <!-- Option 1: Tất cả thành viên Workspace -->
@@ -65,8 +65,8 @@
               [checked]="privacyInput() === 'Workspace'" (change)="privacyInput.set('Workspace')" />
             <div class="text-xs leading-tight">
               <span class="flex items-center gap-1 font-bold text-slate-900 dark:text-white">
-                <svg lucideBuilding2 class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg> Tất cả thành viên</span>
-              <p class="text-2xs text-slate-500 dark:text-slate-400 mt-1">Toàn bộ {{ currentWorkspaceMembers().length }} thành viên trong workspace đều xem được</p>
+                <svg lucideBuilding2 class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg> All members</span>
+              <p class="text-2xs text-slate-500 dark:text-slate-400 mt-1">All {{ currentWorkspaceMembers().length }} members of the workspace can see it</p>
             </div>
           </label>
 
@@ -79,8 +79,8 @@
               [checked]="privacyInput() === 'Private'" (change)="privacyInput.set('Private')" />
             <div class="text-xs leading-tight">
               <span class="flex items-center gap-1 font-bold text-slate-900 dark:text-white">
-                <svg lucideLock class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg> Thành viên được chọn</span>
-              <p class="text-2xs text-slate-500 dark:text-slate-400 mt-1">Chỉ những người được tích chọn trong workspace này</p>
+                <svg lucideLock class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg> Selected members</span>
+              <p class="text-2xs text-slate-500 dark:text-slate-400 mt-1">Only the people checked in this workspace</p>
             </div>
           </label>
         </div>
@@ -90,11 +90,11 @@
         <div class="mt-3 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-3.5 shadow-xs transition-all">
           <div class="mb-2.5 flex items-center justify-between">
             <span class="text-2xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-              Chọn thành viên trong Workspace ({{ selectedMemberIds().length }}/{{ currentWorkspaceMembers().length }}):
+              Select Workspace members ({{ selectedMemberIds().length }}/{{ currentWorkspaceMembers().length }}):
             </span>
             <div class="flex gap-1.5">
-              <button type="button" class="btn btn-ghost btn-xs text-2xs font-bold text-primary hover:bg-primary/10" (click)="selectAllMembers()">Tất cả</button>
-              <button type="button" class="btn btn-ghost btn-xs text-2xs font-bold text-slate-500 hover:bg-slate-200" (click)="deselectAllMembers()">Bỏ chọn</button>
+              <button type="button" class="btn btn-ghost btn-xs text-2xs font-bold text-primary hover:bg-primary/10" (click)="selectAllMembers()">Select all</button>
+              <button type="button" class="btn btn-ghost btn-xs text-2xs font-bold text-slate-500 hover:bg-slate-200" (click)="deselectAllMembers()">Deselect all</button>
             </div>
           </div>
 
@@ -106,7 +106,7 @@
             </svg>
             <input type="text"
               class="input input-sm w-full rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 pl-9 text-xs font-medium text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 shadow-xs"
-              placeholder="Tìm theo tên, email hoặc ID..." [ngModel]="memberSearch()"
+              placeholder="Search by name, email, or ID..." [ngModel]="memberSearch()"
               (ngModelChange)="memberSearch.set($event)"
               (keydown.enter)="$event.preventDefault()" name="boardMemberSearch" />
           </div>
@@ -127,7 +127,7 @@
                   <div class="flex items-center gap-1.5">
                     <span class="truncate text-xs font-bold text-slate-900 dark:text-white">{{ mem.displayName }}</span>
                     @if (mem.role === 'owner') {
-                    <span class="badge badge-warning badge-xs font-bold text-3xs">Trưởng nhóm</span>
+                    <span class="badge badge-warning badge-xs font-bold text-3xs">Owner</span>
                     }
                   </div>
                   <span class="truncate text-3xs text-slate-500 dark:text-slate-400 block font-mono">UUID: {{ mem.id.slice(0, 8) }}...</span>
@@ -141,8 +141,8 @@
             </label>
             } @empty {
             <p class="px-1 py-3 text-center text-xs font-semibold text-slate-400">
-              @if (memberSearch()) { Không có ai khớp "{{ memberSearch() }}". }
-              @else { Workspace này chưa có thành viên nào. }
+              @if (memberSearch()) { No matches for "{{ memberSearch() }}". }
+              @else { This workspace has no members yet. }
             </p>
             }
           </div>
@@ -152,7 +152,7 @@
 
       <!-- Background: color palette or custom image -->
       <div class="mb-5">
-        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Nền bảng</label>
+        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Board background</label>
         <div class="flex flex-wrap items-center gap-2">
           @for (bg of bgClasses; track bg) {
           <div class="h-8 w-8 cursor-pointer rounded-xl transition hover:scale-110 shadow-xs" [class]="bg"
@@ -162,17 +162,17 @@
 
           @if (bgImageUrl(); as img) {
           <div class="group relative h-8 w-8 shrink-0 overflow-hidden rounded-xl ring-2 ring-primary ring-offset-2 shadow-xs">
-            <img [src]="img" alt="Ảnh nền tuỳ chọn" class="h-full w-full object-cover" />
+            <img [src]="img" alt="Custom background" class="h-full w-full object-cover" />
             <button type="button"
               class="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition group-hover:opacity-100"
-              title="Bỏ ảnh nền" (click)="clearBgImage()">
+              title="Remove background image" (click)="clearBgImage()">
               <svg lucideX class="h-3.5 w-3.5 text-white" [strokeWidth]="2.6"></svg>
             </button>
           </div>
           } @else {
           <label
             class="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-slate-300 text-slate-400 transition hover:border-primary hover:text-primary dark:border-slate-600"
-            title="Tải ảnh nền lên">
+            title="Upload a background image">
             <svg lucideImage class="h-4 w-4" [strokeWidth]="2.2"></svg>
             <input type="file" accept="image/*" class="hidden" (change)="onBgImageSelected($event)" />
           </label>
@@ -184,14 +184,14 @@
         </p>
         }
         @if (bgImageUrl()) {
-        <p class="mt-1.5 text-2xs text-slate-500 dark:text-slate-400">Đang dùng ảnh tuỳ chọn thay cho màu nền có sẵn.</p>
+        <p class="mt-1.5 text-2xs text-slate-500 dark:text-slate-400">Using a custom image instead of a preset color.</p>
         }
       </div>
 
       <!-- Actions -->
       <div class="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-700">
-        <button type="button" class="btn btn-ghost rounded-xl font-bold" (click)="close.emit()">Hủy</button>
-        <button type="submit" class="btn btn-primary rounded-xl font-black px-5 shadow-sm">Tạo bảng</button>
+        <button type="button" class="btn btn-ghost rounded-xl font-bold" (click)="close.emit()">Cancel</button>
+        <button type="submit" class="btn btn-primary rounded-xl font-black px-5 shadow-sm">Create board</button>
       </div>
     </form>
   </div>

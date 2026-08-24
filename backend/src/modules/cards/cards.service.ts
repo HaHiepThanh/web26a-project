@@ -111,10 +111,10 @@ export class CardsService {
       .maybeSingle();
     if (error) {
       this.logger.error(`Kiểm tra quyền thất bại (uid=${uid}, org=${orgId}): ${error.message}`);
-      throw new InternalServerErrorException('Không kiểm tra được quyền');
+      throw new InternalServerErrorException('Failed to check permissions');
     }
     // 404 chứ không phải 403: trả 403 là vô tình xác nhận "id này có thật".
-    if (!data) throw new NotFoundException('Không tìm thấy dữ liệu.');
+    if (!data) throw new NotFoundException('Data not found.');
   }
 
   /** Tìm board và xác nhận người gọi được phép đụng vào nó. */
@@ -125,10 +125,10 @@ export class CardsService {
       .eq('id', boardId)
       .maybeSingle();
     if (error) {
-      if (laUuidSai(error)) throw new NotFoundException('Không tìm thấy board.');
-      throw new InternalServerErrorException('Không đọc được board');
+      if (laUuidSai(error)) throw new NotFoundException('Board not found.');
+      throw new InternalServerErrorException('Failed to load board');
     }
-    if (!board) throw new NotFoundException('Không tìm thấy board.');
+    if (!board) throw new NotFoundException('Board not found.');
     await this.assertOrgMember(uid, board.org_id as string);
   }
 
@@ -140,10 +140,10 @@ export class CardsService {
       .eq('id', cardId)
       .maybeSingle();
     if (error) {
-      if (laUuidSai(error)) throw new NotFoundException('Không tìm thấy thẻ.');
-      throw new InternalServerErrorException('Không đọc được thẻ');
+      if (laUuidSai(error)) throw new NotFoundException('Card not found.');
+      throw new InternalServerErrorException('Failed to load card');
     }
-    if (!card) throw new NotFoundException('Không tìm thấy thẻ.');
+    if (!card) throw new NotFoundException('Card not found.');
     await this.assertOrgMember(uid, (card as CardRow).org_id);
     return card as CardRow;
   }
@@ -168,7 +168,7 @@ export class CardsService {
 
     if (error) {
       this.logger.error(`Đọc danh sách thẻ thất bại: ${error.message}`);
-      throw new InternalServerErrorException('Không đọc được danh sách thẻ');
+      throw new InternalServerErrorException('Failed to load cards');
     }
     return (data as CardRow[]).map(toCard);
   }
@@ -181,8 +181,8 @@ export class CardsService {
       .select('id, org_id, board_id')
       .eq('id', listId)
       .maybeSingle();
-    if (listError && laUuidSai(listError)) throw new NotFoundException('Không tìm thấy cột.');
-    if (!list) throw new NotFoundException('Không tìm thấy cột.');
+    if (listError && laUuidSai(listError)) throw new NotFoundException('List not found.');
+    if (!list) throw new NotFoundException('List not found.');
 
     await this.assertOrgMember(uid, list.org_id as string);
 
@@ -204,14 +204,14 @@ export class CardsService {
 
     if (error) {
       this.logger.error(`Tạo thẻ thất bại: ${error.message}`);
-      throw new InternalServerErrorException('Không tạo được thẻ');
+      throw new InternalServerErrorException('Failed to create card');
     }
 
     await this.activity.record(
       list.board_id as string,
       uid,
       'card_created',
-      `Đã tạo thẻ "${title}"`,
+      `Created card "${title}"`,
       (data as CardRow).id,
     );
     const created = toCard(data as CardRow);
@@ -231,7 +231,7 @@ export class CardsService {
     if (changes.assigneeId !== undefined) patch.assignee_id = changes.assigneeId;
 
     if (Object.keys(patch).length === 0) {
-      throw new BadRequestException('Không có gì để cập nhật.');
+      throw new BadRequestException('Nothing to update.');
     }
 
     const { data, error } = await this.supabase.client
@@ -243,7 +243,7 @@ export class CardsService {
 
     if (error) {
       this.logger.error(`Cập nhật thẻ thất bại: ${error.message}`);
-      throw new InternalServerErrorException('Không cập nhật được thẻ');
+      throw new InternalServerErrorException('Failed to update card');
     }
     const updated = toCard(data as CardRow);
     const boardId = await this.boardIdOfList(updated.listId);
@@ -292,7 +292,7 @@ export class CardsService {
           ((board?.workspaces as unknown as { name: string } | null)?.name as string) ?? '',
         orgSlug:
           ((board?.organizations as unknown as { slug: string } | null)?.slug as string) ?? '',
-        byUserName: (actor?.display_name as string) || (actor?.email as string) || 'Ai đó',
+        byUserName: (actor?.display_name as string) || (actor?.email as string) || 'Someone',
       });
     } catch (e) {
       this.logger.warn(`Không gửi được thông báo giao việc: ${(e as Error).message}`);
@@ -308,13 +308,13 @@ export class CardsService {
       .eq('id', toListId)
       .maybeSingle();
     if (toListError && laUuidSai(toListError)) {
-      throw new NotFoundException('Không tìm thấy cột đích.');
+      throw new NotFoundException('Destination list not found.');
     }
-    if (!toList) throw new NotFoundException('Không tìm thấy cột đích.');
+    if (!toList) throw new NotFoundException('Destination list not found.');
 
     // Không có dòng này thì kéo được thẻ sang board của công ty khác.
     if (toList.org_id !== card.org_id) {
-      throw new ForbiddenException('Không thể chuyển thẻ sang tổ chức khác.');
+      throw new ForbiddenException('Cannot move card to another organization.');
     }
 
     const { data, error } = await this.supabase.client
@@ -326,14 +326,14 @@ export class CardsService {
 
     if (error) {
       this.logger.error(`Chuyển thẻ thất bại: ${error.message}`);
-      throw new InternalServerErrorException('Không chuyển được thẻ');
+      throw new InternalServerErrorException('Failed to move card');
     }
 
     await this.activity.record(
       toList.board_id as string,
       uid,
       'card_moved',
-      `Đã chuyển thẻ "${card.title}"`,
+      `Moved card "${card.title}"`,
       id,
     );
 
@@ -352,7 +352,7 @@ export class CardsService {
     const { error } = await this.supabase.client.from('cards').delete().eq('id', id);
     if (error) {
       this.logger.error(`Xoá thẻ thất bại: ${error.message}`);
-      throw new InternalServerErrorException('Không xoá được thẻ');
+      throw new InternalServerErrorException('Failed to delete card');
     }
     this.realtime.emitToBoard(boardId, 'card.deleted', uid, { id, listId: card.list_id });
   }

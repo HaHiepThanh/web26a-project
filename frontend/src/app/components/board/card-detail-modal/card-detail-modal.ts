@@ -14,11 +14,11 @@ import { Checklist } from '../checklist/checklist';
 import { CommentList } from '../comment-list/comment-list';
 
 const PRIORITIES: { id: CardPriority; label: string }[] = [
-  { id: 'high', label: 'Cao' },
-  { id: 'medium', label: 'Trung bình' },
-  { id: 'low', label: 'Thấp' },
+  { id: 'high', label: 'High' },
+  { id: 'medium', label: 'Medium' },
+  { id: 'low', label: 'Low' },
 ];
-const PRIORITY_LABEL: Record<CardPriority, string> = { high: 'Cao', medium: 'Trung bình', low: 'Thấp' };
+const PRIORITY_LABEL: Record<CardPriority, string> = { high: 'High', medium: 'Medium', low: 'Low' };
 
 /**
  * Modal chi tiết thẻ: sửa tiêu đề / mô tả / phụ trách / hạn / ưu tiên / nhãn + xoá thẻ.
@@ -103,7 +103,7 @@ export class CardDetailModal {
   });
 
   private memberName(id: string | undefined): string {
-    if (!id) return 'chưa gán';
+    if (!id) return 'unassigned';
     const m = this.membersById()[id];
     return m?.displayName ?? m?.email ?? id;
   }
@@ -170,26 +170,26 @@ export class CardDetailModal {
     const title = this.draftTitle().trim();
     if (title !== c.title) {
       changes.title = title;
-      nhatKy.push(`đã đổi tên thẻ từ "${c.title}" thành "${title}"`);
+      nhatKy.push(`renamed card from "${c.title}" to "${title}"`);
     }
     if (this.draftDescription() !== (c.description ?? '')) {
       changes.description = this.draftDescription() || undefined;
-      nhatKy.push('đã cập nhật mô tả');
+      nhatKy.push('updated the description');
     }
     if (this.draftAssigneeId() !== (c.assigneeId ?? null)) {
       changes.assigneeId = this.draftAssigneeId() ?? undefined;
       nhatKy.push(
-        `đã đổi người phụ trách từ "${this.memberName(c.assigneeId)}" thành "${this.memberName(this.draftAssigneeId() ?? undefined)}"`,
+        `changed assignee from "${this.memberName(c.assigneeId)}" to "${this.memberName(this.draftAssigneeId() ?? undefined)}"`,
       );
     }
     if (this.draftDueDate() !== (c.dueDate ?? '')) {
       changes.dueDate = this.draftDueDate() || undefined;
-      nhatKy.push(`đã đổi hạn chót từ "${c.dueDate ?? 'chưa có'}" thành "${this.draftDueDate() || 'chưa có'}"`);
+      nhatKy.push(`changed due date from "${c.dueDate ?? 'none'}" to "${this.draftDueDate() || 'none'}"`);
     }
     if (this.draftPriority() !== c.priority) {
       changes.priority = this.draftPriority();
       nhatKy.push(
-        `đã đổi mức ưu tiên từ "${PRIORITY_LABEL[c.priority]}" thành "${PRIORITY_LABEL[this.draftPriority()]}"`,
+        `changed priority from "${PRIORITY_LABEL[c.priority]}" to "${PRIORITY_LABEL[this.draftPriority()]}"`,
       );
     }
 
@@ -247,7 +247,7 @@ export class CardDetailModal {
 
   onLabelsChange(labelIds: string[]): void {
     this.labelService.setCardLabels(this.card().id, labelIds);
-    this.log('đã cập nhật nhãn');
+    this.log('updated labels');
   }
 
   // ---- Đính kèm tệp/hình ----
@@ -266,12 +266,12 @@ export class CardDetailModal {
     if (!files.length) return;
     const added = await this.attachmentService.addFiles(this.card().id, files);
     input.value = ''; // cho phép chọn lại cùng tệp
-    for (const a of added) this.log(`đã đính kèm "${a.name}"`);
+    for (const a of added) this.log(`attached "${a.name}"`);
   }
 
   removeAttachment(id: string, name: string): void {
     void this.attachmentService.remove(this.card().id, id);
-    this.log(`đã gỡ đính kèm "${name}"`);
+    this.log(`removed attachment "${name}"`);
   }
 
   toggleCover(id: string): void {
@@ -294,7 +294,7 @@ export class CardDetailModal {
   fileBadge(att: { name: string; mimeType: string }): string {
     const ext = att.name.split('.').pop()?.toUpperCase();
     if (ext && ext.length <= 4) return ext;
-    return att.mimeType.split('/').pop()?.slice(0, 4).toUpperCase() ?? 'TỆP';
+    return att.mimeType.split('/').pop()?.slice(0, 4).toUpperCase() ?? 'FILE';
   }
 
   formatSize(bytes: number): string {
@@ -304,7 +304,7 @@ export class CardDetailModal {
   }
 
   requestDelete(): void {
-    if (!window.confirm(`Xoá thẻ "${this.card().title}"? Không thể hoàn tác.`)) return;
+    if (!window.confirm(`Delete card "${this.card().title}"? This cannot be undone.`)) return;
     void this.cardService.deleteCard(this.card().id, this.card().listId);
     this.checklistService.clearCard(this.card().id);
     this.commentService.clearCard(this.card().id);

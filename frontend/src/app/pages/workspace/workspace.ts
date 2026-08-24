@@ -347,10 +347,10 @@ export class Workspace {
   async createOrg(data: { name: string; slug: string }): Promise<void> {
     const { org, error } = await this.orgService.createOrg(data.name, data.slug);
     if (!org) {
-      this.addToast(error ?? 'Không tạo được tổ chức, thử lại nhé!', 'error');
+      this.addToast(error ?? 'Failed to create the organization, please try again!', 'error');
       return;
     }
-    this.addToast(`Đã tạo tổ chức "${org.name}" tại /${org.slug}`, 'success');
+    this.addToast(`Created organization "${org.name}" at /${org.slug}`, 'success');
     void this.router.navigate(['/', org.slug, 'workspace']);
   }
 
@@ -389,40 +389,40 @@ export class Workspace {
 
   async inviteMember(data: { orgId: string; uuid: string; role: OrgInviteRole }): Promise<void> {
     const error = await this.orgService.inviteMember(data.orgId, data.uuid, data.role);
-    const quyen = data.role === 'admin' ? 'quản trị viên' : 'thành viên';
+    const quyen = data.role === 'admin' ? 'admin' : 'member';
     this.orgManageModal()?.showResult(
       error,
-      `Đã gửi lời mời (vào với quyền ${quyen})! Chờ họ đồng ý ở chuông thông báo.`,
+      `Invite sent (joining as ${quyen})! Waiting for them to accept via the notification bell.`,
     );
-    if (!error) this.addToast(`📨 Đã gửi lời mời làm ${quyen}!`, 'success');
+    if (!error) this.addToast(`📨 Invite sent as ${quyen}!`, 'success');
   }
 
   async removeOrgMember(data: { orgId: string; userId: string }): Promise<void> {
     const member = this.managingOrgMembers().find((m) => m.user.id === data.userId);
-    const name = member?.user.displayName ?? member?.user.email ?? 'thành viên';
+    const name = member?.user.displayName ?? member?.user.email ?? 'member';
     const error = await this.orgService.removeMember(data.orgId, data.userId);
-    this.orgManageModal()?.showResult(error, `Đã xoá ${name} khỏi tổ chức.`);
-    if (!error) this.addToast(`Đã xoá ${name} khỏi tổ chức.`, 'info');
+    this.orgManageModal()?.showResult(error, `Removed ${name} from the organization.`);
+    if (!error) this.addToast(`Removed ${name} from the organization.`, 'info');
   }
 
   async changeOrgMemberRole(data: { orgId: string; userId: string; role: Role }): Promise<void> {
     const member = this.managingOrgMembers().find((m) => m.user.id === data.userId);
-    const name = member?.user.displayName ?? member?.user.email ?? 'thành viên';
-    const quyen = data.role === 'admin' ? 'Quản trị' : 'Thành viên';
+    const name = member?.user.displayName ?? member?.user.email ?? 'member';
+    const quyen = data.role === 'admin' ? 'Admin' : 'Member';
     const error = await this.orgService.changeRole(data.orgId, data.userId, data.role);
-    this.orgManageModal()?.showResult(error, `Đã đổi ${name} thành ${quyen}.`);
-    if (!error) this.addToast(`Đã đổi quyền của ${name} thành ${quyen}.`, 'success');
+    this.orgManageModal()?.showResult(error, `Changed ${name} to ${quyen}.`);
+    if (!error) this.addToast(`Changed ${name}'s role to ${quyen}.`, 'success');
   }
 
   async cancelOrgInvite(inviteId: string): Promise<void> {
     const error = await this.orgService.cancelInvite(inviteId);
-    this.orgManageModal()?.showResult(error, 'Đã huỷ lời mời.');
+    this.orgManageModal()?.showResult(error, 'Invite canceled.');
   }
 
   async renameOrg(data: { orgId: string; name: string }): Promise<void> {
     const error = await this.orgService.updateOrg(data.orgId, { name: data.name });
-    this.orgManageModal()?.showResult(error, 'Đã cập nhật thông tin tổ chức.');
-    if (!error) this.addToast(`Đã cập nhật tổ chức "${data.name}".`, 'success');
+    this.orgManageModal()?.showResult(error, 'Organization info updated.');
+    if (!error) this.addToast(`Updated organization "${data.name}".`, 'success');
   }
 
   copyMyUuid(): void {
@@ -431,7 +431,7 @@ export class Workspace {
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
       void navigator.clipboard.writeText(uid);
       this.copiedMyUuid.set(true);
-      this.addToast(`Đã sao chép UUID của bạn: ${uid}`, 'success');
+      this.addToast(`Copied your UUID: ${uid}`, 'success');
       setTimeout(() => this.copiedMyUuid.set(false), 2500);
     }
   }
@@ -445,7 +445,7 @@ export class Workspace {
     this.workspaces.set(samples);
     this.persist(samples);
     this.activeWorkspaceId.set(null);
-    this.addToast('Đã tải lại toàn bộ Workspace mẫu thành công!', 'success');
+    this.addToast('Reloaded all sample Workspaces successfully!', 'success');
   }
 
   onBoardClick(board: BoardItem): void {
@@ -492,7 +492,7 @@ export class Workspace {
       this.persist(updated);
       return updated;
     });
-    this.addToast(`Đã xóa bảng "${board.title}"`, 'info');
+    this.addToast(`Deleted board "${board.title}"`, 'info');
   }
 
   // ---- Board Edit Modal ----
@@ -533,7 +533,7 @@ export class Workspace {
 
     this.showBoardEditModal.set(false);
     this.editingBoard.set(null);
-    this.addToast(`Đã lưu thay đổi cho bảng "${title}"!`, 'success');
+    this.addToast(`Saved changes to board "${title}"!`, 'success');
     const warning = this.boardService.storageWarning();
     if (warning) this.addToast(warning, 'error');
   }
@@ -541,7 +541,7 @@ export class Workspace {
   // ---- Board Modal Actions ----
   openCreateBoard(defaultWorkspaceId: string | null = null): void {
     if (this.workspaces().length === 0) {
-      this.addToast('Bạn cần tạo Workspace trước khi tạo bảng.', 'info');
+      this.addToast('Create a Workspace before you can create a board.', 'info');
       this.openCreateWorkspace();
       return;
     }
@@ -558,7 +558,7 @@ export class Workspace {
     this.createBoardInitialWorkspaceId.set(null);
     this.createBoardInitialTitle.set(template.title);
     this.showCreateBoardModal.set(true);
-    this.addToast(`Đang tạo bảng từ mẫu "${template.title}"`);
+    this.addToast(`Creating board from template "${template.title}"`);
   }
 
   async handleBoardSubmit(data: {
@@ -600,7 +600,7 @@ export class Workspace {
       return updated;
     });
 
-    this.addToast(`Đã tạo bảng mới "${newBoard.title}"!`, 'success');
+    this.addToast(`Created new board "${newBoard.title}"!`, 'success');
     const warning = this.boardService.storageWarning();
     if (warning) this.addToast(warning, 'error');
     this.showCreateBoardModal.set(false);
@@ -640,7 +640,7 @@ export class Workspace {
         memberIds,
       );
       if (!workspace) {
-        this.addToast(error ?? 'Không tạo được workspace.', 'error');
+        this.addToast(error ?? 'Failed to create the workspace.', 'error');
         return;
       }
       // id lấy từ server, KHÔNG tự sinh 'ws-' + Date.now() nữa — id tự sinh sẽ
@@ -652,7 +652,7 @@ export class Workspace {
         memberIds: workspace.memberIds,
         membersCount: members.length,
         members,
-        description: description || 'Không gian làm việc mới vừa được khởi tạo.',
+        description: description || 'A brand-new Workspace just got created.',
         boards: [],
       };
       this.workspaces.update((list) => {
@@ -661,7 +661,7 @@ export class Workspace {
         return updated;
       });
       this.activeWorkspaceId.set(newWs.id);
-      this.addToast(`🎉 Đã tạo Không gian làm việc "${newWs.name}"!`, 'success');
+      this.addToast(`🎉 Created Workspace "${newWs.name}"!`, 'success');
     } else {
       const editingWs = this.selectedWorkspaceForEdit();
       if (!editingWs) return;
@@ -686,7 +686,7 @@ export class Workspace {
         this.persist(updated);
         return updated;
       });
-      this.addToast(`Đã cập nhật Workspace "${name}"`, 'success');
+      this.addToast(`Updated Workspace "${name}"`, 'success');
     }
     this.showWorkspaceModal.set(false);
   }
@@ -711,7 +711,7 @@ export class Workspace {
       this.activeWorkspaceId.set(null);
     }
     this.showWorkspaceModal.set(false);
-    this.addToast(`Đã xóa Workspace "${ws?.name || ''}"`, 'info');
+    this.addToast(`Deleted Workspace "${ws?.name || ''}"`, 'info');
   }
 
   // ---- Toast notifications ----

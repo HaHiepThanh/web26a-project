@@ -74,7 +74,7 @@ export class ManageWorkspaceTab {
     const ws = this.selectedWorkspace();
     const user = this.selectedUserToAdd();
     if (!ws || !user) {
-      this.flashMessage.emit({ message: 'Vui lòng chọn một người dùng để thêm.', type: 'error' });
+      this.flashMessage.emit({ message: 'Please select a user to add.', type: 'error' });
       return;
     }
 

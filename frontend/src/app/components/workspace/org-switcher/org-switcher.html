@@ -20,7 +20,7 @@
           <span class="block truncate text-xs font-bold leading-tight">{{ org.name }}</span>
           <span class="block truncate text-2xs font-medium leading-tight"
             [class]="org.id === activeOrg()?.id ? 'text-primary-content/70' : 'text-base-content/45'">
-            {{ org.memberIds.length }} thành viên
+            {{ org.memberIds.length }} member(s)
           </span>
         </span>
       </button>
@@ -33,7 +33,7 @@
         <button type="button"
           class="absolute right-1.5 flex h-6 w-6 items-center justify-center rounded-lg opacity-0 transition-all focus-visible:opacity-100 group-hover:opacity-100"
           [class]="org.id === activeOrg()?.id ? 'hover:bg-white/20' : 'hover:bg-base-300'"
-          title="Quản lý tổ chức" [attr.aria-label]="'Quản lý ' + org.name" (click)="onManage(org.id, $event)">
+          title="Manage organization" [attr.aria-label]="'Manage ' + org.name" (click)="onManage(org.id, $event)">
           <svg lucideEllipsisVertical class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg>
         </button>
       </div>
@@ -46,6 +46,6 @@
     class="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-base-300 py-1.5 text-2xs font-bold text-primary transition-all hover:border-primary hover:bg-primary/5 cursor-pointer"
     (click)="startCreate()">
     <svg lucidePlus class="h-3 w-3 shrink-0" [strokeWidth]="3"></svg>
-    <span>Tạo tổ chức mới</span>
+    <span>New organization</span>
   </button>
 </div>

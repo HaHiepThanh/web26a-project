@@ -48,8 +48,8 @@
           <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-warning/15 text-warning">
             <svg lucideStar class="h-3.5 w-3.5" [strokeWidth]="2.2" fill="currentColor"></svg>
           </span>
-          <h2 class="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Bảng có đánh dấu
-            sao</h2>
+          <h2 class="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Starred
+            boards</h2>
         </div>
         <div class="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2.5">
           @for (board of starredBoards(); track board.id) {
@@ -69,15 +69,15 @@
                 board.title }}</div>
             </div>
             <button class="absolute right-2.5 top-2.5 z-10 text-yellow-400 transition hover:scale-110"
-              title="Bỏ đánh dấu sao" (click)="$event.stopPropagation(); toggleStar(board.id)">
+              title="Unstar" (click)="$event.stopPropagation(); toggleStar(board.id)">
               <svg lucideStar class="h-4 w-4" [strokeWidth]="2.2" fill="currentColor"></svg>
             </button>
             <div class="relative z-10 flex items-center justify-between text-3xs font-semibold opacity-95">
               <span class="flex items-center gap-1">
                 @if (board.privacy === 'Private') {
-                <svg lucideLock class="h-2.5 w-2.5 shrink-0" [strokeWidth]="2.4"></svg> Riêng tư
+                <svg lucideLock class="h-2.5 w-2.5 shrink-0" [strokeWidth]="2.4"></svg> Private
                 } @else if (board.privacy === 'Public') {
-                <svg lucideGlobe class="h-2.5 w-2.5 shrink-0" [strokeWidth]="2.4"></svg> Công khai
+                <svg lucideGlobe class="h-2.5 w-2.5 shrink-0" [strokeWidth]="2.4"></svg> Public
                 } @else {
                 <svg lucideBuilding2 class="h-2.5 w-2.5 shrink-0" [strokeWidth]="2.4"></svg> Workspace
                 }
@@ -95,23 +95,23 @@
         <div class="flex items-center gap-2">
           <h2 class="text-sm font-black uppercase tracking-wide text-slate-800 dark:text-slate-200">
             @if (activeWorkspaceId()) {
-            Không gian làm việc đang lọc
+            Filtered by workspace
             } @else {
-            Tất cả không gian làm việc của bạn
+            All your workspaces
             }
           </h2>
           @if (activeWorkspaceId()) {
           <button type="button"
             class="badge badge-primary badge-outline badge-sm font-bold gap-1 cursor-pointer hover:bg-primary hover:text-white transition-all"
-            (click)="selectWorkspace(null)" title="Bấm để xem lại tất cả Workspace">
-            <svg lucideX class="h-2.5 w-2.5" [strokeWidth]="3"></svg> Hiện tất cả
+            (click)="selectWorkspace(null)" title="Click to show all Workspaces">
+            <svg lucideX class="h-2.5 w-2.5" [strokeWidth]="3"></svg> Show all
           </button>
           }
         </div>
 
         <button type="button" class="btn btn-primary btn-xs rounded-xl px-3.5 font-black gap-1 shadow-xs"
           (click)="openCreateWorkspace()" [class.hidden]="!canManage()">
-          <span>+ Tạo Workspace</span>
+          <span>+ New Workspace</span>
         </button>
       </div>
 
@@ -128,9 +128,9 @@
         <div class="flex h-12 w-12 items-center justify-center rounded-full bg-base-200 text-base-content/40">
           <svg lucideSearch class="h-5 w-5" [strokeWidth]="2"></svg>
         </div>
-        <p class="text-sm font-bold text-slate-800 dark:text-slate-200">Không tìm thấy bảng nào khớp với "{{
+        <p class="text-sm font-bold text-slate-800 dark:text-slate-200">No boards found matching "{{
           searchQuery() }}"</p>
-        <p class="text-xs text-slate-500">Thử từ khóa khác hoặc kiểm tra lại chính tả.</p>
+        <p class="text-xs text-slate-500">Try a different search term or check your spelling.</p>
       </div>
       }
 

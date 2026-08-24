@@ -74,11 +74,11 @@ export class LabelsService {
       .maybeSingle();
     if (boardError) {
       // id gõ sai định dạng uuid → coi như không tồn tại, đừng để lọt thành 500.
-      if (laUuidSai(boardError)) throw new NotFoundException('Không tìm thấy board.');
-      throw new InternalServerErrorException('Không đọc được board.');
+      if (laUuidSai(boardError)) throw new NotFoundException('Board not found.');
+      throw new InternalServerErrorException('Failed to load board.');
     }
     if (!board) {
-      throw new NotFoundException('Không tìm thấy board.');
+      throw new NotFoundException('Board not found.');
     }
 
     const { data: member, error: memberError } = await this.supabase.client
@@ -88,10 +88,10 @@ export class LabelsService {
       .eq('user_id', uid)
       .maybeSingle();
     if (memberError) {
-      throw new InternalServerErrorException('Không kiểm tra được quyền.');
+      throw new InternalServerErrorException('Failed to check permissions.');
     }
     if (!member) {
-      throw new ForbiddenException('Bạn không thuộc tổ chức của board này.');
+      throw new ForbiddenException('You are not a member of this board\'s organization.');
     }
 
     return board.org_id;
@@ -108,7 +108,7 @@ export class LabelsService {
       .select()
       .eq('board_id', boardId);
     if (error) {
-      throw new InternalServerErrorException('Không đọc được danh sách nhãn.');
+      throw new InternalServerErrorException('Failed to load labels.');
     }
     return (data as LabelRow[]).map(toLabel);
   }
@@ -116,10 +116,10 @@ export class LabelsService {
   /** Tạo nhãn mới cho board. `color` phải đúng định dạng hex `#rrggbb`. */
   async create(uid: string, boardId: string, name: string, color: string): Promise<LabelResponse> {
     if (!boardId || !name?.trim()) {
-      throw new BadRequestException('Thiếu boardId hoặc name.');
+      throw new BadRequestException('Missing boardId or name.');
     }
     if (!color || !HEX_COLOR.test(color)) {
-      throw new BadRequestException('color phải là mã hex dạng #rrggbb.');
+      throw new BadRequestException('color must be a hex value like #rrggbb.');
     }
 
     const orgId = await this.assertBoardAccess(uid, boardId);
@@ -130,7 +130,7 @@ export class LabelsService {
       .select()
       .single();
     if (error) {
-      throw new InternalServerErrorException('Không tạo được nhãn.');
+      throw new InternalServerErrorException('Failed to create label.');
     }
     const created = toLabel(data as LabelRow);
     this.realtime.emitToBoard(created.boardId, 'label.created', uid, created);
@@ -152,11 +152,11 @@ export class LabelsService {
       .maybeSingle();
     if (labelError) {
       // id gõ sai định dạng uuid → coi như không tồn tại, đừng để lọt thành 500.
-      if (laUuidSai(labelError)) throw new NotFoundException('Không tìm thấy nhãn.');
-      throw new InternalServerErrorException('Không đọc được nhãn.');
+      if (laUuidSai(labelError)) throw new NotFoundException('Label not found.');
+      throw new InternalServerErrorException('Failed to load label.');
     }
     if (!label) {
-      throw new NotFoundException('Không tìm thấy nhãn.');
+      throw new NotFoundException('Label not found.');
     }
 
     const { data: member, error: memberError } = await this.supabase.client
@@ -166,10 +166,10 @@ export class LabelsService {
       .eq('user_id', uid)
       .maybeSingle();
     if (memberError) {
-      throw new InternalServerErrorException('Không kiểm tra được quyền.');
+      throw new InternalServerErrorException('Failed to check permissions.');
     }
     if (!member) {
-      throw new NotFoundException('Không tìm thấy nhãn.');
+      throw new NotFoundException('Label not found.');
     }
 
     const { data: card, error: cardError } = await this.supabase.client
@@ -179,11 +179,11 @@ export class LabelsService {
       .maybeSingle();
     if (cardError) {
       // id gõ sai định dạng uuid → coi như không tồn tại, đừng để lọt thành 500.
-      if (laUuidSai(cardError)) throw new NotFoundException('Không tìm thấy card.');
-      throw new InternalServerErrorException('Không đọc được card.');
+      if (laUuidSai(cardError)) throw new NotFoundException('Card not found.');
+      throw new InternalServerErrorException('Failed to load card.');
     }
     if (!card) {
-      throw new NotFoundException('Không tìm thấy card.');
+      throw new NotFoundException('Card not found.');
     }
 
     const { data: list, error: listError } = await this.supabase.client
@@ -192,11 +192,11 @@ export class LabelsService {
       .eq('id', card.list_id)
       .maybeSingle();
     if (listError || !list) {
-      throw new InternalServerErrorException('Không đọc được list của card.');
+      throw new InternalServerErrorException('Failed to load the card\'s list.');
     }
 
     if (list.board_id !== label.board_id) {
-      throw new BadRequestException('Card và nhãn không cùng board.');
+      throw new BadRequestException('Card and label are not on the same board.');
     }
 
     // ignoreDuplicates: gắn lại nhãn đã có thì không ném lỗi, cũng không trả về
@@ -205,7 +205,7 @@ export class LabelsService {
       .from('card_labels')
       .upsert({ card_id: cardId, label_id: labelId }, { onConflict: 'card_id,label_id', ignoreDuplicates: true });
     if (error) {
-      throw new InternalServerErrorException('Không gắn được nhãn.');
+      throw new InternalServerErrorException('Failed to attach label.');
     }
     this.realtime.emitToBoard(label.board_id as string, 'label.attached', uid, { cardId, labelId });
     return { cardId, labelId };
@@ -224,11 +224,11 @@ export class LabelsService {
       .maybeSingle();
     if (labelError) {
       // id gõ sai định dạng uuid → coi như không tồn tại, đừng để lọt thành 500.
-      if (laUuidSai(labelError)) throw new NotFoundException('Không tìm thấy nhãn.');
-      throw new InternalServerErrorException('Không đọc được nhãn.');
+      if (laUuidSai(labelError)) throw new NotFoundException('Label not found.');
+      throw new InternalServerErrorException('Failed to load label.');
     }
     if (!label) {
-      throw new NotFoundException('Không tìm thấy nhãn.');
+      throw new NotFoundException('Label not found.');
     }
 
     const { data: member, error: memberError } = await this.supabase.client
@@ -238,10 +238,10 @@ export class LabelsService {
       .eq('user_id', uid)
       .maybeSingle();
     if (memberError) {
-      throw new InternalServerErrorException('Không kiểm tra được quyền.');
+      throw new InternalServerErrorException('Failed to check permissions.');
     }
     if (!member) {
-      throw new NotFoundException('Không tìm thấy nhãn.');
+      throw new NotFoundException('Label not found.');
     }
 
     const { data, error } = await this.supabase.client
@@ -251,10 +251,10 @@ export class LabelsService {
       .eq('label_id', labelId)
       .select();
     if (error) {
-      throw new InternalServerErrorException('Không gỡ được nhãn.');
+      throw new InternalServerErrorException('Failed to remove label.');
     }
     if (!data || data.length === 0) {
-      throw new NotFoundException('Nhãn này chưa được gắn vào thẻ.');
+      throw new NotFoundException('This label is not attached to the card.');
     }
     this.realtime.emitToBoard(label.board_id as string, 'label.detached', uid, { cardId, labelId });
   }

@@ -37,7 +37,7 @@
            font-size, so it doesn't inherit the app-wide 14px-root scaling issue
            (see audit UI-013) that shrank this to 35x35 before. -->
       <button type="button" class="flex h-[44px] w-[44px] items-center justify-center lg:hidden" (click)="toggleMobileMenu()"
-              [attr.aria-label]="mobileMenuOpen() ? 'Đóng menu' : 'Mở menu'">
+              [attr.aria-label]="mobileMenuOpen() ? 'Close menu' : 'Open menu'">
         @if (!mobileMenuOpen()) {
           <svg lucideMenu class="h-6 w-6 text-slate-700"></svg>
         } @else {
@@ -132,12 +132,12 @@
                 <div class="flex flex-wrap gap-1">
                   <span class="lp-label bg-[#0D9488]/25 text-teal-100">Design</span>
                 </div>
-                <p class="lp-card-title">Thiết kế wireframe trang chủ</p>
+                <p class="lp-card-title">Design homepage wireframe</p>
                 <div class="lp-card-footer">
                   <span class="lp-avatar">LT</span>
                   <span class="inline-flex items-center gap-1 text-3xs text-slate-500">
                     <svg lucideClock class="h-3 w-3" [strokeWidth]="2"></svg>
-                    2 ngày
+                    2 days
                   </span>
                 </div>
               </div>
@@ -145,7 +145,7 @@
                 <div class="flex flex-wrap gap-1">
                   <span class="lp-label bg-slate-600/40 text-slate-300">Backend</span>
                 </div>
-                <p class="lp-card-title">Viết API xác thực người dùng</p>
+                <p class="lp-card-title">Build user authentication API</p>
                 <div class="lp-card-footer">
                   <span class="lp-avatar">MK</span>
                 </div>
@@ -161,7 +161,7 @@
                 <div class="flex flex-wrap gap-1">
                   <span class="lp-label bg-[#0D9488]/25 text-teal-100">Sprint 4</span>
                 </div>
-                <p class="lp-card-title">Tích hợp Socket.io realtime sync</p>
+                <p class="lp-card-title">Integrate Socket.io realtime sync</p>
                 <div class="lp-card-footer">
                   <span class="lp-avatar">HN</span>
                 </div>
@@ -176,7 +176,7 @@
                     AI Card Suggestion
                   </div>
                   <p class="lp-card-title">Fix pagination bug on board list</p>
-                  <p class="mt-1 text-3xs text-slate-400">Detected from #dev-chat · assignee: Đạt</p>
+                  <p class="mt-1 text-3xs text-slate-400">Detected from #dev-chat · assignee: Dat</p>
                   <div class="mt-2.5 flex gap-1.5">
                     <button type="button" class="lp-ai-btn lp-ai-btn-confirm" (click)="heroAiState.set('confirmed')">
                       <svg lucideCheck class="h-3 w-3" [strokeWidth]="2.5"></svg>
@@ -192,7 +192,7 @@
                   </div>
                   <p class="lp-card-title">Fix pagination bug on board list</p>
                   <div class="lp-card-footer">
-                    <span class="lp-avatar">Đ</span>
+                    <span class="lp-avatar">D</span>
                   </div>
                 </div>
               } @else {
@@ -209,7 +209,7 @@
                 <div class="flex flex-wrap gap-1">
                   <span class="lp-label bg-slate-600/40 text-slate-300">Docs</span>
                 </div>
-                <p class="lp-card-title">Chuẩn bị demo cho giảng viên</p>
+                <p class="lp-card-title">Prepare demo for instructor</p>
                 <div class="lp-card-footer">
                   <span class="lp-avatar">TA</span>
                 </div>
@@ -227,15 +227,15 @@
             <div class="flex flex-col gap-3">
               <div class="lp-chat-msg">
                 <span class="lp-chat-name">Linh</span>
-                <p>Board mới đẹp quá, mọi người check thử nhé</p>
+                <p>Love the new board, everyone go check it out</p>
               </div>
               <div class="lp-chat-msg">
-                <span class="lp-chat-name">Đạt</span>
-                <p>Mình cần fix cái bug phân trang trên board list trước thứ 6 nha</p>
+                <span class="lp-chat-name">Dat</span>
+                <p>Need to fix the pagination bug on the board list before Friday</p>
               </div>
               <div class="lp-chat-ai-hint">
                 <svg lucideSparkles class="h-3 w-3 shrink-0" [strokeWidth]="2.2"></svg>
-                Task phát hiện → thẻ gợi ý đã hiện trong cột "In Progress"
+                Task detected → suggested card appeared in the "In Progress" column
               </div>
             </div>
           </div>
@@ -319,7 +319,7 @@
             <span class="lp-step">1</span>
             <div>
               <p class="font-semibold text-slate-900">A message lands in chat</p>
-              <p class="mt-0.5 text-sm text-slate-600">"Mình cần fix cái bug phân trang trên board list trước thứ 6 nha."</p>
+              <p class="mt-0.5 text-sm text-slate-600">"Need to fix the pagination bug on the board list before Friday."</p>
             </div>
           </li>
           <li class="flex gap-4">
@@ -342,10 +342,10 @@
       <div class="lp-ai-panel rounded-2xl border border-slate-200 bg-slate-50 p-6">
         <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <div class="flex items-center gap-2 text-xs font-semibold text-slate-500">
-            <span class="lp-chat-avatar">Đ</span>
-            Đạt · #dev-chat
+            <span class="lp-chat-avatar">D</span>
+            Dat · #dev-chat
           </div>
-          <p class="mt-2 text-sm text-slate-700">Mình cần fix cái bug phân trang trên board list trước thứ 6 nha</p>
+          <p class="mt-2 text-sm text-slate-700">Need to fix the pagination bug on the board list before Friday</p>
         </div>
 
         <div class="mt-4 flex items-center gap-2 text-xs font-semibold text-[#0f766e]">
@@ -360,7 +360,7 @@
               AI Card Suggestion
             </div>
             <p class="mt-2 text-sm font-semibold text-slate-900">Fix pagination bug on board list</p>
-            <p class="mt-1 text-xs text-slate-500">Assignee: Đạt · Due: this Friday</p>
+            <p class="mt-1 text-xs text-slate-500">Assignee: Dat · Due: this Friday</p>
             <div class="mt-3 flex gap-2">
               <button type="button" class="lp-ai-btn lp-ai-btn-confirm-light" (click)="assistantAiState.set('confirmed')">
                 <svg lucideCheck class="h-3.5 w-3.5" [strokeWidth]="2.5"></svg>
@@ -376,7 +376,7 @@
               Added to board
             </div>
             <p class="mt-2 text-sm font-semibold text-slate-900">Fix pagination bug on board list</p>
-            <p class="mt-1 text-xs text-slate-500">Assignee: Đạt · Due: this Friday</p>
+            <p class="mt-1 text-xs text-slate-500">Assignee: Dat · Due: this Friday</p>
           </div>
         } @else {
           <div class="mt-3 rounded-xl border border-slate-200 bg-white p-4 text-center text-sm text-slate-400">Suggestion dismissed</div>

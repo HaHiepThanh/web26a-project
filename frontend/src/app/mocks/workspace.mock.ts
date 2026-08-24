@@ -156,7 +156,7 @@ export function loadAllWorkspacesForUser(
   for (const ws of guestList) {
     if (!seenIds.has(ws.id)) {
       seenIds.add(ws.id);
-      result.push({ ...ws, orgId: '', orgName: 'Cá nhân' });
+      result.push({ ...ws, orgId: '', orgName: 'Personal' });
     }
   }
 

@@ -108,7 +108,7 @@ export class ChatPanel {
 
       const last = fromOthers[fromOthers.length - 1];
       const sender = this.usersById()[last.userId];
-      this.toastMessage.set({ name: sender?.displayName ?? sender?.email ?? 'Ai đó', text: last.content });
+      this.toastMessage.set({ name: sender?.displayName ?? sender?.email ?? 'Someone', text: last.content });
       setTimeout(() => this.toastMessage.set(null), 3200);
     });
   }

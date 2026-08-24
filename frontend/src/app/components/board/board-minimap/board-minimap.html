@@ -3,7 +3,7 @@
   [class.opacity-100]="!dimmed()"
   [class.opacity-35]="dimmed()"
   role="navigation"
-  [attr.aria-label]="layoutMode() === 'column' ? 'Sơ đồ thu nhỏ danh sách (dạng cột)' : 'Sơ đồ thu nhỏ danh sách (dạng hàng)'"
+  [attr.aria-label]="layoutMode() === 'column' ? 'List mini map (column layout)' : 'List mini map (row layout)'"
   (mouseenter)="onContainerHover(true)"
   (mouseleave)="onContainerHover(false)"
 >
@@ -29,8 +29,8 @@
           [style.top.px]="r.rect.top"
           [style.width.px]="r.rect.width"
           [style.height.px]="r.rect.height"
-          [attr.title]="r.item.name + ' — ' + r.item.cardCount + ' thẻ'"
-          [attr.aria-label]="r.item.name + ', ' + r.item.cardCount + ' thẻ'"
+          [attr.title]="r.item.name + ' — ' + r.item.cardCount + ' card(s)'"
+          [attr.aria-label]="r.item.name + ', ' + r.item.cardCount + ' card(s)'"
           [attr.aria-describedby]="hoveredId() === r.item.id ? 'minimap-tooltip' : null"
           (click)="onActivate(r.item.id)"
           (mouseenter)="onHover(r.item.id)"
@@ -58,7 +58,7 @@
           [style.left.px]="tooltipLeft()"
           [style.top.px]="tooltipTop()"
         >
-          {{ h.name }} · {{ h.cardCount }} thẻ
+          {{ h.name }} · {{ h.cardCount }} card(s)
         </div>
       </div>
     }

@@ -34,7 +34,7 @@ export class BoardHeaderBar {
   readonly VIEWERS_SHOWN = 4;
 
   viewerLabel(v: BoardViewer): string {
-    return v.displayName ?? 'Ẩn danh';
+    return v.displayName ?? 'Anonymous';
   }
   readonly listsCount = input<number>(0);
   readonly totalCards = input<number>(0);
@@ -61,16 +61,16 @@ export class BoardHeaderBar {
   readonly newFilterName = input<string>('');
 
   readonly priorities: { id: CardPriority; label: string }[] = [
-    { id: 'high', label: 'Cao' },
-    { id: 'medium', label: 'Trung bình' },
-    { id: 'low', label: 'Thấp' },
+    { id: 'high', label: 'High' },
+    { id: 'medium', label: 'Medium' },
+    { id: 'low', label: 'Low' },
   ];
 
   readonly dateOptions = [
-    { id: 'overdue', label: 'Đã quá hạn' },
-    { id: 'today', label: 'Hôm nay' },
-    { id: 'week', label: 'Trong 7 ngày tới' },
-    { id: 'no_due', label: 'Không có ngày' },
+    { id: 'overdue', label: 'Overdue' },
+    { id: 'today', label: 'Today' },
+    { id: 'week', label: 'Next 7 days' },
+    { id: 'no_due', label: 'No due date' },
   ];
 
   readonly UNASSIGNED = '__UNASSIGNED__';

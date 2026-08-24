@@ -10,16 +10,16 @@
 
   <span class="relative flex shrink-0 items-center gap-1">
     <span class="badge badge-ghost badge-sm">{{ cardCount() }}</span>
-    <button class="btn btn-square btn-ghost btn-xs relative rounded-[8px] before:absolute before:-inset-1 before:content-['']" (click)="collapseToggle.emit()" title="Thu gọn danh sách" aria-label="Thu gọn danh sách">
+    <button class="btn btn-square btn-ghost btn-xs relative rounded-[8px] before:absolute before:-inset-1 before:content-['']" (click)="collapseToggle.emit()" title="Collapse list" aria-label="Collapse list">
       <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18l-6-6 6-6"/></svg>
     </button>
-    <button class="btn btn-square btn-ghost btn-xs relative rounded-[8px] before:absolute before:-inset-1 before:content-['']" (click)="toggleMenu()" aria-label="Tuỳ chọn danh sách">
+    <button class="btn btn-square btn-ghost btn-xs relative rounded-[8px] before:absolute before:-inset-1 before:content-['']" (click)="toggleMenu()" aria-label="List options">
       <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg>
     </button>
 
     @if (menuOpen()) {
       <ul class="menu absolute right-0 top-7 z-10 min-w-[140px] rounded-box bg-base-100 p-1 shadow-md">
-        <li><button class="text-error" (click)="onDeleteClick()">Xoá danh sách</button></li>
+        <li><button class="text-error" (click)="onDeleteClick()">Delete list</button></li>
       </ul>
     }
   </span>

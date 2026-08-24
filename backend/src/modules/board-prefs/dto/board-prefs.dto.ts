@@ -10,12 +10,12 @@ import {
 } from 'class-validator';
 
 export class CreateSavedFilterDto {
-  @IsUUID('4', { message: 'boardId phải là uuid hợp lệ.' })
+  @IsUUID('4', { message: 'boardId must be a valid uuid.' })
   boardId: string;
 
   @IsString()
-  @MinLength(1, { message: 'Tên bộ lọc không được để trống.' })
-  @MaxLength(80, { message: 'Tên bộ lọc tối đa 80 ký tự.' })
+  @MinLength(1, { message: 'Filter name is required.' })
+  @MaxLength(80, { message: 'Filter name must be at most 80 characters.' })
   name: string;
 
   // ⚠️ @IsString chứ KHÔNG phải @IsUUID: assignee là Firebase uid (chuỗi 28 ký
@@ -30,32 +30,32 @@ export class CreateSavedFilterDto {
   @IsOptional()
   @IsArray()
   @ArrayMaxSize(100)
-  @IsUUID('4', { each: true, message: 'labelIds phải là danh sách uuid.' })
+  @IsUUID('4', { each: true, message: 'labelIds must be a list of uuids.' })
   labelIds?: string[];
 
   @IsOptional()
   @IsArray()
   @ArrayMaxSize(3)
-  @IsIn(['high', 'medium', 'low'], { each: true, message: 'priorities chỉ nhận high, medium, low.' })
+  @IsIn(['high', 'medium', 'low'], { each: true, message: 'priorities must be high, medium, or low.' })
   priorities?: string[];
 
   @IsOptional()
-  @IsIn(['overdue', 'today', 'week'], { message: 'dateFilter chỉ nhận overdue, today hoặc week.' })
+  @IsIn(['overdue', 'today', 'week'], { message: 'dateFilter must be overdue, today, or week.' })
   dateFilter?: string | null;
 }
 
 export class CreateHighlightGroupDto {
-  @IsUUID('4', { message: 'boardId phải là uuid hợp lệ.' })
+  @IsUUID('4', { message: 'boardId must be a valid uuid.' })
   boardId: string;
 
   @IsString()
-  @MinLength(1, { message: 'Tên nhóm không được để trống.' })
-  @MaxLength(80, { message: 'Tên nhóm tối đa 80 ký tự.' })
+  @MinLength(1, { message: 'Group name is required.' })
+  @MaxLength(80, { message: 'Group name must be at most 80 characters.' })
   name: string;
 
   @IsOptional()
   @IsArray()
   @ArrayMaxSize(500)
-  @IsUUID('4', { each: true, message: 'cardIds phải là danh sách uuid.' })
+  @IsUUID('4', { each: true, message: 'cardIds must be a list of uuids.' })
   cardIds?: string[];
 }

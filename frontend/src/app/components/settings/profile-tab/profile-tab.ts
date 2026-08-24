@@ -46,11 +46,11 @@ function computePasswordStrength(password: string): PasswordStrength {
 
   const clamped = Math.min(score, 4) as PasswordStrength['score'];
   const table: Record<number, { label: string; colorVar: string }> = {
-    0: { label: 'Rất yếu', colorVar: '#ef4444' },
-    1: { label: 'Yếu', colorVar: '#f97316' },
-    2: { label: 'Trung bình', colorVar: '#eab308' },
-    3: { label: 'Mạnh', colorVar: '#22c55e' },
-    4: { label: 'Rất mạnh', colorVar: '#10b981' },
+    0: { label: 'Very weak', colorVar: '#ef4444' },
+    1: { label: 'Weak', colorVar: '#f97316' },
+    2: { label: 'Fair', colorVar: '#eab308' },
+    3: { label: 'Strong', colorVar: '#22c55e' },
+    4: { label: 'Very strong', colorVar: '#10b981' },
   };
 
   return { score: clamped, percent: (clamped / 4) * 100, ...table[clamped] };
@@ -135,7 +135,7 @@ export class ProfileTab {
       if (user) {
         this.saveProfile.emit({ ...user, avatarUrl: dataUrl });
       }
-      this.flashMessage.emit({ message: 'Đã cập nhật ảnh đại diện mới.', type: 'success' });
+      this.flashMessage.emit({ message: 'Avatar updated.', type: 'success' });
     };
     reader.readAsDataURL(file);
     input.value = '';
@@ -147,7 +147,7 @@ export class ProfileTab {
     if (user) {
       this.saveProfile.emit({ ...user, avatarUrl: '' });
     }
-    this.flashMessage.emit({ message: 'Đã gỡ bỏ ảnh đại diện.', type: 'info' });
+    this.flashMessage.emit({ message: 'Avatar removed.', type: 'info' });
   }
 
   copyUuid(): void {
@@ -156,14 +156,14 @@ export class ProfileTab {
     navigator.clipboard.writeText(uuid).then(() => {
       this.copiedUuid.set(true);
       setTimeout(() => this.copiedUuid.set(false), 2000);
-      this.flashMessage.emit({ message: 'Đã sao chép mã UUID cá nhân.', type: 'success' });
+      this.flashMessage.emit({ message: 'Copied your UUID.', type: 'success' });
     });
   }
 
   onSubmitProfile(): void {
     if (this.profileForm.invalid) {
       this.profileForm.markAllAsTouched();
-      this.flashMessage.emit({ message: 'Vui lòng kiểm tra lại thông tin biểu mẫu.', type: 'error' });
+      this.flashMessage.emit({ message: 'Please check the form fields.', type: 'error' });
       return;
     }
 

@@ -10,26 +10,26 @@ import { IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-valid
 export class UpdateProfileDto {
   @IsOptional()
   @IsString()
-  @MaxLength(50, { message: 'Họ tên tối đa 50 ký tự.' })
+  @MaxLength(50, { message: 'Display name must be at most 50 characters.' })
   displayName?: string;
 
   @IsOptional()
   @IsString()
-  @MinLength(3, { message: 'Tên đăng nhập cần tối thiểu 3 ký tự.' })
-  @MaxLength(25, { message: 'Tên đăng nhập tối đa 25 ký tự.' })
+  @MinLength(3, { message: 'Username must be at least 3 characters.' })
+  @MaxLength(25, { message: 'Username must be at most 25 characters.' })
   @Matches(/^[a-zA-Z0-9_.]+$/, {
-    message: 'Tên đăng nhập chỉ gồm chữ, số, dấu chấm và gạch dưới.',
+    message: 'Username can only contain letters, numbers, dots, and underscores.',
   })
   username?: string;
 
   @IsOptional()
   @IsString()
-  @Matches(/^0\d{9}$/, { message: 'Số điện thoại không hợp lệ (VD: 0912345678).' })
+  @Matches(/^0\d{9}$/, { message: 'Invalid phone number (e.g. 0912345678).' })
   phone?: string;
 
   @IsOptional()
   @IsString()
-  @MaxLength(60, { message: 'Chức vụ tối đa 60 ký tự.' })
+  @MaxLength(60, { message: 'Job title must be at most 60 characters.' })
   jobTitle?: string;
 
   @IsOptional()

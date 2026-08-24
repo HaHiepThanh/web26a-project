@@ -92,10 +92,10 @@ export class Header {
   readonly bellTitle = computed(() => {
     const n = this.unreadNotifications();
     const due = this.dueBadgeCount();
-    if (!n && !due) return 'Thông báo';
+    if (!n && !due) return 'Notifications';
     const phan: string[] = [];
-    if (n) phan.push(`${n} thông báo chưa đọc`);
-    if (due) phan.push(`${due} thẻ sắp/đã quá hạn`);
+    if (n) phan.push(`${n} unread notification(s)`);
+    if (due) phan.push(`${due} card(s) due soon/overdue`);
     return phan.join(' · ');
   });
 

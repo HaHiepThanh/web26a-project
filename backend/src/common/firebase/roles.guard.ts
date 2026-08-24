@@ -41,12 +41,12 @@ export class RolesGuard implements CanActivate {
     // Không có uid nghĩa là FirebaseAuthGuard chưa chạy (route quên gắn nó).
     // Chặn luôn thay vì cho qua — thà hỏng lộ liễu còn hơn thủng âm thầm.
     if (!uid) {
-      throw new ForbiddenException('Không xác định được người gọi.');
+      throw new ForbiddenException('Could not identify the caller.');
     }
 
     const orgId = this.resolveOrgId(req);
     if (!orgId) {
-      throw new ForbiddenException('Không xác định được tổ chức của yêu cầu này.');
+      throw new ForbiddenException('Could not determine the organization for this request.');
     }
 
     const { data, error } = await this.supabase.client
@@ -58,10 +58,10 @@ export class RolesGuard implements CanActivate {
 
     if (error) {
       this.logger.error(`Đọc role thất bại (uid=${uid}, org=${orgId}): ${error.message}`);
-      throw new InternalServerErrorException('Không kiểm tra được quyền');
+      throw new InternalServerErrorException('Failed to check permissions');
     }
     if (!data) {
-      throw new ForbiddenException('Bạn không thuộc tổ chức này.');
+      throw new ForbiddenException('You are not a member of this organization.');
     }
 
     const role = data.role as Role;
@@ -69,7 +69,7 @@ export class RolesGuard implements CanActivate {
       // Ném exception kèm lời nhắn thay vì `return false`: return false cho ra
       // 403 với message rỗng tuếch, người dùng đọc không hiểu vì sao bị chặn.
       throw new ForbiddenException(
-        `Hành động này cần quyền ${required.join(' hoặc ')}. Bạn đang là ${role}.`,
+        `This action requires ${required.join(' or ')} permission. You are currently ${role}.`,
       );
     }
     return true;

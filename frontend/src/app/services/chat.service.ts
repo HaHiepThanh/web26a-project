@@ -98,7 +98,7 @@ export class ChatService {
       this.cachePreview(boardId, list);
     } catch (e) {
       this.messages.set([]);
-      this.loadError.set(describeError(e, 'Không tải được tin nhắn.'));
+      this.loadError.set(describeError(e, 'Failed to load messages.'));
     }
   }
 
@@ -121,7 +121,7 @@ export class ChatService {
         createdAt: row.createdAt,
       };
     } catch (e) {
-      this.loadError.set(describeError(e, 'Không gửi được tin nhắn.'));
+      this.loadError.set(describeError(e, 'Failed to send message.'));
       return;
     }
     this.applyIncoming(message);

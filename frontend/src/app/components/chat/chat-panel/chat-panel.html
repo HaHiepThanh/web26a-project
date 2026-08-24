@@ -17,7 +17,7 @@
   @if (collapsed()) {
   <button type="button"
     class="relative flex h-full w-full flex-col items-center gap-2.5 bg-[var(--accent-purple-soft)] py-3 text-[var(--accent-purple)] hover:brightness-95"
-    [class.pulse]="pulse()" (click)="toggleCollapsed()" aria-label="Mở khung chat">
+    [class.pulse]="pulse()" (click)="toggleCollapsed()" aria-label="Open chat panel">
     <span
       class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--accent-purple)] text-white shadow-sm">
       <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -40,11 +40,11 @@
           <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
         </svg>
       </span>
-      <span class="truncate">Chat nhóm — board này</span>
+      <span class="truncate">Team chat — this board</span>
     </h3>
     <div class="flex shrink-0 items-center gap-1">
       <button type="button" class="btn btn-square btn-ghost btn-xs relative rounded-[8px] before:absolute before:-inset-3 before:content-['']" (click)="toggleCollapsed()"
-        aria-label="Thu gọn khung chat" title="Thu gọn khung chat">
+        aria-label="Collapse chat panel" title="Collapse chat panel">
         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M15 18l-6-6 6-6" />
         </svg>
@@ -62,7 +62,7 @@
   <div
     class="resize-handle group absolute right-0 top-0 z-10 flex h-full w-2.5 cursor-col-resize touch-none items-center justify-center hover:bg-primary/15"
     [class.bg-primary]="resizing()" role="separator" aria-orientation="vertical" [attr.aria-valuenow]="width()"
-    [attr.aria-valuemin]="minWidth" [attr.aria-valuemax]="maxWidth" aria-label="Kéo để đổi bề rộng khung chat"
+    [attr.aria-valuemin]="minWidth" [attr.aria-valuemax]="maxWidth" aria-label="Drag to resize chat panel"
     tabindex="0" (pointerdown)="onResizeStart($event)" (keydown)="onResizeKeydown($event)">
     <span class="h-8 w-[3px] rounded-full bg-base-content/15 transition-colors group-hover:bg-primary"
       [class.bg-primary]="resizing()"></span>

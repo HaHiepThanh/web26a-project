@@ -1,9 +1,9 @@
 <div>
   <header class="mb-6">
     <div>
-      <a routerLink="/settings" class="mb-2 inline-block text-[0.8125rem] text-base-content/50 hover:text-base-content">← Cài đặt</a>
+      <a routerLink="/settings" class="mb-2 inline-block text-[0.8125rem] text-base-content/50 hover:text-base-content">← Settings</a>
       <h1 class="mb-1.5 text-2xl font-bold text-base-content">Manage Workspace</h1>
-      <p class="text-[0.9rem] text-base-content/50">Các dự án bạn đang tham gia trong Workspace.</p>
+      <p class="text-[0.9rem] text-base-content/50">Projects you're a member of in this Workspace.</p>
     </div>
   </header>
 
@@ -15,7 +15,7 @@
     <input
       type="text"
       class="input input-bordered h-[38px] w-full pl-9"
-      placeholder="Tìm project..."
+      placeholder="Search projects..."
       [value]="searchQuery()"
       (input)="searchQuery.set($any($event.target).value)"
     />
@@ -24,10 +24,10 @@
   @if (filteredProjects().length === 0) {
     <div class="flex flex-col items-center gap-4 rounded-box border border-dashed border-base-300 bg-base-100 px-4 py-12 text-center text-base-content/50">
       @if (searchQuery()) {
-        <p>Không tìm thấy project nào khớp với "{{ searchQuery() }}".</p>
+        <p>No projects found matching "{{ searchQuery() }}".</p>
       } @else {
-        <p>Bạn chưa tham gia dự án nào trong workspace này.</p>
-        <a routerLink="/workspace" class="btn btn-primary">Khám phá Workspace</a>
+        <p>You haven't joined any project in this workspace yet.</p>
+        <a routerLink="/workspace" class="btn btn-primary">Explore Workspace</a>
       }
     </div>
   } @else {
@@ -45,7 +45,7 @@
                 <img [src]="avatarUrl" alt="" class="-ml-2 h-[26px] w-[26px] rounded-full border-2 border-base-100 object-cover first:ml-0" />
               }
             </div>
-            <span class="text-xs text-base-content/50">{{ project.memberCount }} thành viên</span>
+            <span class="text-xs text-base-content/50">{{ project.memberCount }} member(s)</span>
           </div>
         </a>
       }

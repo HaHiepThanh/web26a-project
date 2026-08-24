@@ -17,7 +17,7 @@ export async function compressImage(file: File): Promise<string> {
   const img = new Image();
   await new Promise<void>((resolve, reject) => {
     img.onload = () => resolve();
-    img.onerror = () => reject(new Error('Không đọc được ảnh'));
+    img.onerror = () => reject(new Error('Failed to read image'));
     img.src = originalUrl;
   });
 

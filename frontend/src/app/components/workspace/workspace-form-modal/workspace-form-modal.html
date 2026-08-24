@@ -6,7 +6,7 @@
     (click)="$event.stopPropagation()">
     <div class="mb-5 flex items-center justify-between">
       <h3 class="text-lg font-black text-slate-900 dark:text-white">
-        {{ mode() === 'create' ? 'Tạo Không gian làm việc mới' : 'Chỉnh sửa Không gian làm việc' }}
+        {{ mode() === 'create' ? 'Create a new Workspace' : 'Edit Workspace' }}
       </h3>
       <button class="btn btn-circle btn-ghost btn-sm text-xl" (click)="close.emit()">&times;</button>
     </div>
@@ -16,7 +16,7 @@
       <div class="mb-4">
         <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200"
           for="workspace-name-input">
-          Tên Workspace <span class="text-error">*</span>
+          Workspace name <span class="text-error">*</span>
         </label>
         <input type="text" id="workspace-name-input" maxlength="50"
           class="input input-bordered border-2 w-full rounded-xl font-bold text-slate-900 dark:text-white bg-white dark:bg-slate-800 shadow-xs text-sm transition-all"
@@ -24,10 +24,10 @@
           [class.focus:border-error]="nameError()"
           [class.border-slate-300]="!nameError()"
           [class.dark:border-slate-600]="!nameError()"
-          placeholder="Ví dụ: Đồ án Tốt nghiệp CNTT, Dự án SaaS... (tối đa 50 ký tự)" [ngModel]="nameInput()"
+          placeholder="e.g. CS Capstone Project, SaaS Project... (max 50 characters)" [ngModel]="nameInput()"
           (ngModelChange)="nameInput.set($event); nameError.set(null)" name="workspaceName" />
         <div class="mt-1 flex items-center justify-between px-1 text-2xs font-semibold text-slate-400">
-          <span>Tối đa 50 ký tự</span>
+          <span>Max 50 characters</span>
           <span>{{ nameInput().length }}/50</span>
         </div>
         @if (nameError()) {
@@ -41,17 +41,17 @@
       <div class="mb-4">
         <div class="flex items-center justify-between mb-1.5">
           <label class="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200" for="workspace-desc-input">
-            Mô tả
+            Description
           </label>
           <span class="text-2xs font-semibold text-slate-400">
-            {{ descInput().length }}/300 ký tự
+            {{ descInput().length }}/300 characters
           </span>
         </div>
         <textarea id="workspace-desc-input"
           maxlength="300"
           class="textarea textarea-bordered border-2 border-slate-300 dark:border-slate-600 focus:border-primary focus:ring-2 focus:ring-primary/20 w-full rounded-xl font-medium text-slate-900 dark:text-white bg-white dark:bg-slate-800 shadow-xs text-sm leading-relaxed"
           rows="3"
-          placeholder="Mô tả mục tiêu của không gian làm việc này..." [ngModel]="descInput()"
+          placeholder="Describe the purpose of this workspace..." [ngModel]="descInput()"
           (ngModelChange)="descInput.set($event)" name="workspaceDesc"></textarea>
       </div>
 
@@ -59,7 +59,7 @@
       <div class="my-4 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 p-4 shadow-xs">
         <div class="mb-3 flex items-center gap-1.5">
           <span class="text-sm font-bold text-primary">👥</span>
-          <span class="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Ai thấy được workspace này</span>
+          <span class="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Who can see this workspace</span>
         </div>
 
         <div class="mb-3 grid gap-2 sm:grid-cols-2">
@@ -71,9 +71,9 @@
             (click)="setVisibility('org')">
             <span class="mt-0.5 text-base">🏢</span>
             <span class="min-w-0">
-              <span class="block text-xs font-black text-slate-900 dark:text-white">Cả tổ chức</span>
+              <span class="block text-xs font-black text-slate-900 dark:text-white">Whole organization</span>
               <span class="block text-3xs leading-snug text-slate-500 dark:text-slate-400">
-                Mọi thành viên trong tổ chức đều thấy và vào được
+                Every member of the organization can see and access it
               </span>
             </span>
           </button>
@@ -86,9 +86,9 @@
             (click)="setVisibility('restricted')">
             <span class="mt-0.5 text-base">🔒</span>
             <span class="min-w-0">
-              <span class="block text-xs font-black text-slate-900 dark:text-white">Chỉ định thành viên</span>
+              <span class="block text-xs font-black text-slate-900 dark:text-white">Specific members</span>
               <span class="block text-3xs leading-snug text-slate-500 dark:text-slate-400">
-                Chỉ những người bạn chọn bên dưới
+                Only the people you select below
               </span>
             </span>
           </button>
@@ -97,9 +97,9 @@
         @if (visibility() === 'restricted') {
           <div class="mb-2 flex items-center justify-between">
             <span class="text-3xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
-              Chọn từ thành viên tổ chức
+              Select from organization members
             </span>
-            <span class="badge badge-primary badge-sm font-black">{{ selectedCount() }} người</span>
+            <span class="badge badge-primary badge-sm font-black">{{ selectedCount() }} selected</span>
           </div>
 
           <div class="relative mb-2">
@@ -110,7 +110,7 @@
             </svg>
             <input type="text"
               class="input input-sm w-full rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 pl-9 text-xs font-medium text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 shadow-xs"
-              placeholder="Tìm theo tên, email hoặc ID..." [ngModel]="memberSearch()"
+              placeholder="Search by name, email, or ID..." [ngModel]="memberSearch()"
               (ngModelChange)="memberSearch.set($event)"
               (keydown.enter)="$event.preventDefault()" name="memberSearch" />
           </div>
@@ -136,7 +136,7 @@
                         {{ m.user.displayName || m.user.email.split('@')[0] }}
                       </span>
                       @if (isLocked(m.user.id)) {
-                        <span class="badge badge-warning badge-xs text-3xs font-black">Bạn</span>
+                        <span class="badge badge-warning badge-xs text-3xs font-black">You</span>
                       }
                       @if (m.role !== 'member') {
                         <span class="badge badge-ghost badge-xs text-3xs font-bold">{{ m.role }}</span>
@@ -149,15 +149,15 @@
               </button>
             } @empty {
               <p class="px-1 py-3 text-center text-xs font-semibold text-slate-400">
-                @if (memberSearch()) { Không có ai khớp "{{ memberSearch() }}". }
-                @else { Tổ chức chưa có thành viên nào khác — mời thêm người ở "Quản lý tổ chức". }
+                @if (memberSearch()) { No matches for "{{ memberSearch() }}". }
+                @else { This organization has no other members yet — invite more from "Manage organization". }
               </p>
             }
           </div>
         } @else {
           <p class="rounded-xl bg-white/60 px-3 py-2.5 text-3xs font-semibold leading-relaxed text-slate-500 dark:bg-slate-900/40 dark:text-slate-400">
-            Tất cả {{ orgMembers().length }} thành viên của tổ chức sẽ thấy workspace này.
-            Board bên trong vẫn đặt riêng được quyền xem.
+            All {{ orgMembers().length }} members of the organization will see this workspace.
+            Boards inside can still have their own visibility.
           </p>
         }
       </div>
@@ -167,16 +167,16 @@
         @if (mode() === 'edit') {
         <button type="button" class="btn btn-error btn-outline btn-sm rounded-xl font-bold"
           (click)="confirmDelete()">
-          {{ deleteConfirmArmed() ? '⚠️ Xác nhận xóa?' : '🗑️ Xóa Workspace' }}
+          {{ deleteConfirmArmed() ? '⚠️ Confirm delete?' : '🗑️ Delete Workspace' }}
         </button>
         } @else {
         <div></div>
         }
 
         <div class="flex gap-2">
-          <button type="button" class="btn btn-ghost btn-sm rounded-xl font-bold" (click)="close.emit()">Hủy</button>
+          <button type="button" class="btn btn-ghost btn-sm rounded-xl font-bold" (click)="close.emit()">Cancel</button>
           <button type="submit" class="btn btn-primary btn-sm rounded-xl font-black px-5 shadow-sm">
-            {{ mode() === 'create' ? 'Tạo Workspace' : 'Lưu thay đổi' }}
+            {{ mode() === 'create' ? 'Create Workspace' : 'Save changes' }}
           </button>
         </div>
       </div>

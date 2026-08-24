@@ -126,7 +126,7 @@ export class UsersService {
 
   private loi(message: string): InternalServerErrorException {
     this.logger.error(`Tìm người dùng thất bại: ${message}`);
-    return new InternalServerErrorException('Không tìm được người dùng');
+    return new InternalServerErrorException('Failed to search users');
   }
 
   /** Các tổ chức mà user này thuộc về. */

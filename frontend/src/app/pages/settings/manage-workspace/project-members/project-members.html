@@ -1,20 +1,20 @@
 @if (!project() || !isMember()) {
   <div class="mx-auto max-w-[1000px] px-10 pb-16 pt-8">
-    <a routerLink="/settings/manage-workspace" class="mb-4 inline-block text-[0.8125rem] text-base-content/50 hover:text-base-content">← Danh sách dự án</a>
+    <a routerLink="/settings/manage-workspace" class="mb-4 inline-block text-[0.8125rem] text-base-content/50 hover:text-base-content">← Project list</a>
     <div class="rounded-box border border-dashed border-base-300 bg-base-100 px-4 py-12 text-center text-base-content/50">
-      <p>{{ project() ? 'Bạn không phải thành viên của dự án này.' : 'Không tìm thấy dự án.' }}</p>
+      <p>{{ project() ? "You're not a member of this project." : 'Project not found.' }}</p>
     </div>
   </div>
 } @else {
   <div class="mx-auto max-w-[1000px] px-10 pb-16 pt-8">
-    <a routerLink="/settings/manage-workspace" class="mb-4 inline-block text-[0.8125rem] text-base-content/50 hover:text-base-content">← Danh sách dự án</a>
+    <a routerLink="/settings/manage-workspace" class="mb-4 inline-block text-[0.8125rem] text-base-content/50 hover:text-base-content">← Project list</a>
 
     <header class="mb-6 flex items-start justify-between gap-4">
       <div>
         <h1 class="mb-1 text-[1.4rem] font-bold text-base-content">{{ project()!.name }}</h1>
         <span class="text-xs uppercase tracking-wide text-base-content/50">{{ project()!.workspaceName }}</span>
       </div>
-      <span class="badge shrink-0" [class]="roleBadge[myRole()!]">Role của bạn: {{ roleLabel(myRole()!) }}</span>
+      <span class="badge shrink-0" [class]="roleBadge[myRole()!]">Your role: {{ roleLabel(myRole()!) }}</span>
     </header>
 
     <div class="mb-5 flex flex-wrap items-center justify-between gap-4 border-b border-base-300">
@@ -50,16 +50,16 @@
           <circle cx="11" cy="11" r="8"></circle>
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
-        <input type="text" class="input input-bordered h-9 w-full pl-9" placeholder="Tìm thành viên..." [value]="searchQuery()" (input)="searchQuery.set($any($event.target).value)" />
+        <input type="text" class="input input-bordered h-9 w-full pl-9" placeholder="Search members..." [value]="searchQuery()" (input)="searchQuery.set($any($event.target).value)" />
       </div>
 
       <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
         <table class="table">
           <thead>
             <tr>
-              <th>Thành viên</th>
+              <th>Member</th>
               <th>Role</th>
-              <th>Đang giữ</th>
+              <th>Assigned</th>
               @if (isAdmin()) { <th></th> }
             </tr>
           </thead>
@@ -72,7 +72,7 @@
                     <div>
                       <div class="flex items-center gap-1.5 font-semibold">
                         {{ member.name }}
-                        @if (member.userId === CURRENT_USER_ID) { <span class="badge badge-primary badge-soft badge-sm">Bạn</span> }
+                        @if (member.userId === CURRENT_USER_ID) { <span class="badge badge-primary badge-soft badge-sm">You</span> }
                       </div>
                       <div class="text-[0.76rem] text-base-content/50">{{ member.email }}</div>
                     </div>
@@ -96,7 +96,7 @@
                 </td>
                 <td>
                   @if (member.assignedCards.length === 0) {
-                    <span class="text-sm text-base-content/50">Không có thẻ nào</span>
+                    <span class="text-sm text-base-content/50">No cards</span>
                   } @else {
                     <button type="button" class="inline-flex items-center gap-1 text-sm font-semibold text-primary" (click)="toggleExpandedCards(member.userId)">
                       {{ member.assignedCards.length }} card{{ member.assignedCards.length > 1 ? 's' : '' }}
@@ -107,7 +107,7 @@
                         @for (card of member.assignedCards; track card.id) {
                           <li class="flex flex-col gap-0.5 rounded-md bg-base-200 px-2.5 py-1.5">
                             <span class="text-sm font-semibold">{{ card.title }}</span>
-                            <span class="text-[0.72rem] text-base-content/50">{{ card.listName }}@if (card.dueDate) { · hạn {{ card.dueDate }} }</span>
+                            <span class="text-[0.72rem] text-base-content/50">{{ card.listName }}@if (card.dueDate) { · due {{ card.dueDate }} }</span>
                           </li>
                         }
                       </ul>
@@ -118,7 +118,7 @@
                   <td class="whitespace-nowrap text-right">
                     @if (member.userId !== CURRENT_USER_ID || !isLastAdmin(member)) {
                       <button type="button" class="btn btn-ghost btn-sm text-error hover:bg-error/10" (click)="openRemoveConfirm(member)">
-                        {{ member.userId === CURRENT_USER_ID ? 'Rời dự án' : 'Xoá' }}
+                        {{ member.userId === CURRENT_USER_ID ? 'Leave project' : 'Remove' }}
                       </button>
                     }
                   </td>
@@ -133,16 +133,16 @@
     <!-- ======================= TAB: PENDING INVITATIONS (admin only) ======================= -->
     @if (activeTab() === 'invitations' && isAdmin()) {
       @if (project()!.pendingInvitations.length === 0) {
-        <div class="rounded-box border border-dashed border-base-300 bg-base-100 px-4 py-7 text-center text-base-content/50">Không có lời mời nào đang chờ.</div>
+        <div class="rounded-box border border-dashed border-base-300 bg-base-100 px-4 py-7 text-center text-base-content/50">No pending invitations.</div>
       } @else {
         <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
           <table class="table">
             <thead>
               <tr>
                 <th>Email</th>
-                <th>Role dự kiến</th>
-                <th>Người mời</th>
-                <th>Ngày mời</th>
+                <th>Intended role</th>
+                <th>Invited by</th>
+                <th>Invited on</th>
                 <th></th>
               </tr>
             </thead>
@@ -154,7 +154,7 @@
                   <td>{{ inv.invitedBy }}</td>
                   <td>{{ inv.invitedAt }}</td>
                   <td class="whitespace-nowrap text-right">
-                    <button type="button" class="btn btn-ghost btn-sm text-error hover:bg-error/10" (click)="revokeInvitation(inv.id)">Thu hồi</button>
+                    <button type="button" class="btn btn-ghost btn-sm text-error hover:bg-error/10" (click)="revokeInvitation(inv.id)">Revoke</button>
                   </td>
                 </tr>
               }
@@ -167,7 +167,7 @@
     <!-- ======================= TAB: JOIN REQUESTS (admin only) ======================= -->
     @if (activeTab() === 'requests' && isAdmin()) {
       @if (project()!.joinRequests.length === 0) {
-        <div class="rounded-box border border-dashed border-base-300 bg-base-100 px-4 py-7 text-center text-base-content/50">Không có yêu cầu tham gia nào.</div>
+        <div class="rounded-box border border-dashed border-base-300 bg-base-100 px-4 py-7 text-center text-base-content/50">No pending join requests.</div>
       } @else {
         <ul class="flex flex-col gap-2.5">
           @for (req of project()!.joinRequests; track trackByInvitationId($index, req)) {
@@ -175,11 +175,11 @@
               <img [src]="req.avatarUrl" [alt]="req.name" class="h-[34px] w-[34px] shrink-0 rounded-full object-cover" />
               <div class="min-w-0 flex-1">
                 <div class="font-semibold">{{ req.name }}</div>
-                <div class="text-[0.76rem] text-base-content/50">{{ req.email }} · yêu cầu ngày {{ req.requestedAt }}</div>
+                <div class="text-[0.76rem] text-base-content/50">{{ req.email }} · requested on {{ req.requestedAt }}</div>
               </div>
               <div class="flex shrink-0 gap-2">
-                <button type="button" class="btn btn-ghost btn-sm" (click)="rejectJoinRequest(req.id)">Từ chối</button>
-                <button type="button" class="btn btn-primary btn-sm" (click)="approveJoinRequest(req.id)">Duyệt</button>
+                <button type="button" class="btn btn-ghost btn-sm" (click)="rejectJoinRequest(req.id)">Decline</button>
+                <button type="button" class="btn btn-primary btn-sm" (click)="approveJoinRequest(req.id)">Approve</button>
               </div>
             </li>
           }
@@ -192,13 +192,13 @@
   @if (showInviteModal()) {
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4" (click)="closeInviteModal()">
       <div class="w-full max-w-[400px] rounded-box bg-base-100 p-6 shadow-lg" (click)="$event.stopPropagation()">
-        <h3 class="mb-4 text-[1.05rem] font-semibold text-base-content">Mời thành viên vào dự án</h3>
+        <h3 class="mb-4 text-[1.05rem] font-semibold text-base-content">Invite a member to the project</h3>
         <div class="mb-4 flex flex-col gap-1.5">
           <label class="text-sm font-semibold text-base-content/80" for="inviteEmail">Email</label>
-          <input id="inviteEmail" type="email" class="input input-bordered w-full" placeholder="ten@congty.com" [ngModel]="inviteEmail()" (ngModelChange)="inviteEmail.set($event)" />
+          <input id="inviteEmail" type="email" class="input input-bordered w-full" placeholder="you@company.com" [ngModel]="inviteEmail()" (ngModelChange)="inviteEmail.set($event)" />
         </div>
         <div class="mb-4 flex flex-col gap-1.5">
-          <label class="text-sm font-semibold text-base-content/80" for="inviteRole">Vai trò</label>
+          <label class="text-sm font-semibold text-base-content/80" for="inviteRole">Role</label>
           <select id="inviteRole" class="select select-bordered w-full" [ngModel]="inviteRole()" (ngModelChange)="inviteRole.set($event)">
             @for (role of roleOptions; track role) {
               <option [value]="role">{{ roleLabel(role) }}</option>
@@ -206,8 +206,8 @@
           </select>
         </div>
         <div class="mt-1 flex justify-end gap-2.5">
-          <button type="button" class="btn btn-ghost" (click)="closeInviteModal()">Huỷ</button>
-          <button type="button" class="btn btn-primary" (click)="submitInvite()">Gửi lời mời</button>
+          <button type="button" class="btn btn-ghost" (click)="closeInviteModal()">Cancel</button>
+          <button type="button" class="btn btn-primary" (click)="submitInvite()">Send invite</button>
         </div>
       </div>
     </div>
@@ -216,16 +216,16 @@
   @if (memberToRemove(); as member) {
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4" (click)="closeRemoveConfirm()">
       <div class="w-full max-w-[400px] rounded-box bg-base-100 p-6 shadow-lg" (click)="$event.stopPropagation()">
-        <h3 class="mb-4 text-[1.05rem] font-semibold text-base-content">{{ member.userId === CURRENT_USER_ID ? 'Rời khỏi dự án?' : 'Gỡ thành viên?' }}</h3>
+        <h3 class="mb-4 text-[1.05rem] font-semibold text-base-content">{{ member.userId === CURRENT_USER_ID ? 'Leave this project?' : 'Remove member?' }}</h3>
         <p class="mb-5 text-sm leading-relaxed text-base-content/80">
           {{ member.userId === CURRENT_USER_ID
-            ? 'Bạn sẽ mất quyền truy cập dự án này.'
-            : (member.name + ' sẽ bị gỡ khỏi dự án và mất quyền truy cập.') }}
+            ? "You'll lose access to this project."
+            : (member.name + ' will be removed from the project and lose access.') }}
         </p>
         <div class="mt-1 flex justify-end gap-2.5">
-          <button type="button" class="btn btn-ghost" (click)="closeRemoveConfirm()">Huỷ</button>
+          <button type="button" class="btn btn-ghost" (click)="closeRemoveConfirm()">Cancel</button>
           <button type="button" class="btn btn-error" (click)="confirmRemove()">
-            {{ member.userId === CURRENT_USER_ID ? 'Rời dự án' : 'Gỡ thành viên' }}
+            {{ member.userId === CURRENT_USER_ID ? 'Leave project' : 'Remove member' }}
           </button>
         </div>
       </div>

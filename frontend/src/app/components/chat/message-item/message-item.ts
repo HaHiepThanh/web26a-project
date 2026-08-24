@@ -25,9 +25,9 @@ export class MessageItem {
   readonly memberNames = input<string[]>([]);
 
   readonly senderLabel = computed(() => {
-    if (this.isOwn()) return 'Bạn';
+    if (this.isOwn()) return 'You';
     const s = this.sender();
-    return s?.displayName ?? s?.email ?? 'Ẩn danh';
+    return s?.displayName ?? s?.email ?? 'Anonymous';
   });
 
   readonly initials = computed(() => initialsOf(this.senderLabel()));

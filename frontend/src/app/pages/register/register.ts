@@ -70,22 +70,22 @@ export class Register {
     const phone = this.phone.trim();
     const email = this.email.trim();
 
-    if (!fullName) errors.fullName = 'Vui lòng nhập họ và tên.';
+    if (!fullName) errors.fullName = 'Please enter your full name.';
 
-    if (!username) errors.username = 'Vui lòng nhập tên đăng nhập.';
-    else if (username.length < 3) errors.username = 'Tên đăng nhập cần tối thiểu 3 ký tự.';
+    if (!username) errors.username = 'Please enter a username.';
+    else if (username.length < 3) errors.username = 'Username must be at least 3 characters.';
 
-    if (!phone) errors.phone = 'Vui lòng nhập số điện thoại.';
-    else if (!PHONE_RE.test(phone)) errors.phone = 'Số điện thoại không hợp lệ (VD: 0912345678).';
+    if (!phone) errors.phone = 'Please enter your phone number.';
+    else if (!PHONE_RE.test(phone)) errors.phone = 'Invalid phone number (e.g. 0912345678).';
 
-    if (!email) errors.email = 'Vui lòng nhập email.';
-    else if (!EMAIL_RE.test(email)) errors.email = 'Email không đúng định dạng.';
+    if (!email) errors.email = 'Please enter your email.';
+    else if (!EMAIL_RE.test(email)) errors.email = 'Invalid email format.';
 
-    if (!this.password) errors.password = 'Vui lòng nhập mật khẩu.';
-    else if (this.password.length < 6) errors.password = 'Mật khẩu cần tối thiểu 6 ký tự.';
+    if (!this.password) errors.password = 'Please enter a password.';
+    else if (this.password.length < 6) errors.password = 'Password must be at least 6 characters.';
 
-    if (!this.confirmPassword) errors.confirmPassword = 'Vui lòng nhập lại mật khẩu.';
-    else if (this.confirmPassword !== this.password) errors.confirmPassword = 'Mật khẩu nhập lại không khớp.';
+    if (!this.confirmPassword) errors.confirmPassword = 'Please confirm your password.';
+    else if (this.confirmPassword !== this.password) errors.confirmPassword = 'Passwords do not match.';
 
     return errors;
   }
@@ -98,7 +98,7 @@ export class Register {
 
   async onSubmit(): Promise<void> {
     if (!this.runValidation()) {
-      this.addToast('Vui lòng kiểm tra lại các trường được đánh dấu đỏ.', 'error');
+      this.addToast('Please check the fields marked in red.', 'error');
       return;
     }
 
@@ -114,42 +114,42 @@ export class Register {
         phone: this.phone.trim(),
       });
 
-      this.addToast(`Chào mừng ${this.fullName.trim()}! Tài khoản đã được tạo.`, 'success');
+      this.addToast(`Welcome, ${this.fullName.trim()}! Your account has been created.`, 'success');
       // Đăng ký xong là đã đăng nhập luôn — không bắt gõ lại mật khẩu.
       void this.router.navigateByUrl(needsOnboarding ? '/onboarding' : '/workspace');
     } catch (err) {
       const code = (err as { code?: string })?.code ?? '';
       switch (code) {
         case 'auth/email-already-in-use':
-          this.errors.update((e) => ({ ...e, email: 'Email này đã được đăng ký.' }));
-          this.addToast('Email này đã được đăng ký. Hãy đăng nhập hoặc dùng email khác.', 'error');
+          this.errors.update((e) => ({ ...e, email: 'This email is already registered.' }));
+          this.addToast('This email is already registered. Sign in or use a different email.', 'error');
           break;
         case 'auth/invalid-email':
-          this.errors.update((e) => ({ ...e, email: 'Email không đúng định dạng.' }));
-          this.addToast('Email không đúng định dạng.', 'error');
+          this.errors.update((e) => ({ ...e, email: 'Invalid email format.' }));
+          this.addToast('Invalid email format.', 'error');
           break;
         case 'auth/weak-password':
-          this.errors.update((e) => ({ ...e, password: 'Mật khẩu quá yếu (tối thiểu 6 ký tự).' }));
-          this.addToast('Mật khẩu quá yếu — cần tối thiểu 6 ký tự.', 'error');
+          this.errors.update((e) => ({ ...e, password: 'Password is too weak (min. 6 characters).' }));
+          this.addToast('Password is too weak — must be at least 6 characters.', 'error');
           break;
         case 'auth/operation-not-allowed':
-          this.addToast('Đăng ký bằng email chưa được bật trong Firebase Console.', 'error');
+          this.addToast('Email sign-up is not enabled in Firebase Console.', 'error');
           break;
         case 'auth/network-request-failed':
-          this.addToast('Mất kết nối mạng. Kiểm tra lại đường truyền rồi thử lại.', 'error');
+          this.addToast('Network connection lost. Check your connection and try again.', 'error');
           break;
         default: {
           // Backend trả 409 khi username đã có người dùng (ràng buộc UNIQUE ở DB).
           const status = (err as { status?: number })?.status;
           if (status === 409) {
-            this.errors.update((e) => ({ ...e, username: 'Tên đăng nhập này đã được sử dụng.' }));
-            this.addToast('Tên đăng nhập này đã được sử dụng, chọn tên khác nhé.', 'error');
+            this.errors.update((e) => ({ ...e, username: 'This username is already taken.' }));
+            this.addToast('This username is already taken — please choose another.', 'error');
             break;
           }
-          this.addToast('Đăng ký thất bại. Vui lòng thử lại.', 'error');
+          this.addToast('Sign-up failed. Please try again.', 'error');
         }
       }
-      console.error('[Đăng ký]', err);
+      console.error('[Register]', err);
     } finally {
       this.submitting.set(false);
     }
