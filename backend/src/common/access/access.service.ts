@@ -12,6 +12,23 @@ const LOI_UUID_SAI = '22P02';
 
 export type OrgRole = 'owner' | 'admin' | 'member';
 
+/** Hình dạng một dòng RPC `kiem_tra_quyen_board` trả về — xem migrations/0006_*.sql. */
+interface KetQuaQuyenBoard {
+  allowed: boolean;
+  out_board_id: string | null;
+  out_org_id: string | null;
+  out_workspace_id: string | null;
+}
+
+/** Hình dạng một dòng RPC `kiem_tra_quyen_the` trả về — xem migrations/0006_*.sql. */
+interface KetQuaQuyenThe {
+  allowed: boolean;
+  out_card_id: string | null;
+  out_board_id: string | null;
+  out_org_id: string | null;
+  out_title: string | null;
+}
+
 /**
  * KIỂM TRA QUYỀN DÙNG CHUNG.
  *
@@ -93,46 +110,32 @@ export class AccessService {
   ): Promise<{ boardId: string; orgId: string; workspaceId: string }> {
     if (!boardId) throw new NotFoundException('Board not found.');
 
-    const sb = this.supabase.client;
-    const { data: board, error } = await sb
-      .from('boards')
-      .select('id, org_id, workspace_id, visibility')
-      .eq('id', boardId)
-      .maybeSingle();
-    if (this.laUuidSai(error) || !board)
-      throw new NotFoundException('Board not found.');
+    // Trước đây đây là 4 truy vấn NỐI TIẾP (board → tổ chức → workspace →
+    // workspace_members/board_members). Đo trên máy dev: ~94ms mỗi vòng gọi
+    // Supabase, nên riêng hàm này tốn ~280-370ms trên MỌI endpoint của board.
+    // Gộp thành 1 hàm SQL (migrations/0006_*.sql): 4 phép JOIN đó chạy trong
+    // Postgres dưới 1ms, và ứng dụng chỉ còn đi ĐÚNG MỘT chuyến khứ hồi.
+    //
+    // ⚠️ Logic BÊN TRONG hàm SQL đó phải giống hệt bản cũ — sửa quyền thì sửa
+    //    ở CẢ HAI nơi, hoặc tốt hơn là chỉ sửa trong SQL rồi xoá code cũ hẳn.
+    const { data, error } = await this.supabase.client
+      .rpc('kiem_tra_quyen_board', { p_uid: uid, p_board_id: boardId })
+      .maybeSingle<KetQuaQuyenBoard>();
 
-    await this.assertOrgMember(uid, board.org_id as string, 'Board not found.');
-
-    const { data: ws } = await sb
-      .from('workspaces')
-      .select('visibility')
-      .eq('id', board.workspace_id as string)
-      .maybeSingle();
-    if ((ws?.visibility as string) === 'restricted') {
-      const { data: wm } = await sb
-        .from('workspace_members')
-        .select('user_id')
-        .eq('workspace_id', board.workspace_id as string)
-        .eq('user_id', uid)
-        .maybeSingle();
-      if (!wm) throw new NotFoundException('Board not found.');
+    if (error) {
+      this.logger.error(
+        `RPC kiem_tra_quyen_board thất bại (uid=${uid}, board=${boardId}): ${error.message}`,
+      );
+      throw new InternalServerErrorException('Failed to check permissions');
     }
-
-    if ((board.visibility as string) === 'private') {
-      const { data: bm } = await sb
-        .from('board_members')
-        .select('user_id')
-        .eq('board_id', boardId)
-        .eq('user_id', uid)
-        .maybeSingle();
-      if (!bm) throw new NotFoundException('Board not found.');
+    if (!data || !data.allowed) {
+      throw new NotFoundException('Board not found.');
     }
 
     return {
-      boardId,
-      orgId: board.org_id as string,
-      workspaceId: board.workspace_id as string,
+      boardId: data.out_board_id as string,
+      orgId: data.out_org_id as string,
+      workspaceId: data.out_workspace_id as string,
     };
   }
 
@@ -153,26 +156,28 @@ export class AccessService {
   }> {
     if (!cardId) throw new NotFoundException('Card not found.');
 
-    const { data: card, error } = await this.supabase.client
-      .from('cards')
-      .select('id, org_id, title, lists(board_id)')
-      .eq('id', cardId)
-      .maybeSingle();
-    if (this.laUuidSai(error) || !card)
+    // Bản cũ gọi lại assertBoardAccess() — tức 4 vòng thêm nữa CỘNG DỒN vào
+    // vòng tra thẻ, tổng 5 chuyến khứ hồi. Hàm SQL này gọi kiem_tra_quyen_board
+    // NGAY TRONG Postgres, nên vẫn ăn đủ ba tầng mà chỉ tốn 1 chuyến từ Node.
+    const { data, error } = await this.supabase.client
+      .rpc('kiem_tra_quyen_the', { p_uid: uid, p_card_id: cardId })
+      .maybeSingle<KetQuaQuyenThe>();
+
+    if (error) {
+      this.logger.error(
+        `RPC kiem_tra_quyen_the thất bại (uid=${uid}, card=${cardId}): ${error.message}`,
+      );
+      throw new InternalServerErrorException('Failed to check permissions');
+    }
+    if (!data || !data.allowed) {
       throw new NotFoundException('Card not found.');
-
-    const boardId = (card.lists as unknown as { board_id: string } | null)
-      ?.board_id;
-    if (!boardId) throw new NotFoundException('Card not found.');
-
-    // Đi qua board để ăn luôn cả ba tầng kiểm tra ở trên.
-    await this.assertBoardAccess(uid, boardId);
+    }
 
     return {
-      cardId,
-      boardId,
-      orgId: card.org_id as string,
-      title: card.title as string,
+      cardId: data.out_card_id as string,
+      boardId: data.out_board_id as string,
+      orgId: data.out_org_id as string,
+      title: data.out_title as string,
     };
   }
 }

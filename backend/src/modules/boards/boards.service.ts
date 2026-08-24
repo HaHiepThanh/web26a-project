@@ -5,6 +5,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import { AccessService } from '../../common/access/access.service';
 import { SupabaseService } from '../../common/supabase/supabase.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 
@@ -103,6 +104,7 @@ export class BoardsService {
   constructor(
     private readonly supabase: SupabaseService,
     private readonly realtime: RealtimeGateway,
+    private readonly access: AccessService,
   ) {}
 
   /**
@@ -320,55 +322,33 @@ export class BoardsService {
    * không để lộ "board này có thật nhưng bạn không có quyền", tránh dò id.
    */
   async findOne(uid: string, id: string): Promise<BoardResponse> {
-    const { data: board, error } = await this.supabase.client
-      .from('boards')
-      .select()
-      .eq('id', id)
-      .maybeSingle();
-    if (error) {
-      // id gõ sai định dạng uuid → coi như không tồn tại, đừng để lọt thành 500.
-      if (laUuidSai(error)) throw new NotFoundException('Board not found.');
+    // Trước đây chỗ này tự chép lại ĐÚNG ba tầng kiểm tra của AccessService —
+    // 5 truy vấn nối tiếp (board → tổ chức → workspace → workspace_members →
+    // board_members). Đo được ~354ms, và `findMembers` gọi lại hàm này nên nó
+    // gánh luôn 7 truy vấn (~683ms).
+    //
+    // Giờ dùng chung `assertBoardAccess`, vốn đã gói cả ba tầng vào MỘT hàm SQL
+    // (migrations/0006_*.sql). Vừa nhanh hơn, vừa hết một bản sao logic quyền —
+    // chính kiểu chép tay này là chỗ đã để lọt 6 lỗ hổng lần trước.
+    await this.access.assertBoardAccess(uid, id);
+
+    // Qua được cửa rồi mới lấy dữ liệu. Hai truy vấn này độc lập nhau nên chạy
+    // SONG SONG — tốn 1 chuyến khứ hồi chứ không phải 2.
+    const [boardRes, ids] = await Promise.all([
+      this.supabase.client.from('boards').select().eq('id', id).maybeSingle(),
+      this.memberIdsOf(id),
+    ]);
+
+    if (boardRes.error) {
       throw new InternalServerErrorException('Failed to load board.');
     }
-    if (!board) {
+    // assertBoardAccess đã xác nhận board tồn tại, nên tới đây mà rỗng là dữ
+    // liệu vừa bị xoá giữa chừng — vẫn trả 404 như cũ.
+    if (!boardRes.data) {
       throw new NotFoundException('Board not found.');
     }
 
-    const { data: member, error: memberError } = await this.supabase.client
-      .from('organization_members')
-      .select('role')
-      // `board` ở đây là DÒNG THÔ từ Supabase (snake_case) — chưa qua toBoard().
-      .eq('org_id', (board as BoardRow).org_id)
-      .eq('user_id', uid)
-      .maybeSingle();
-    if (memberError) {
-      throw new InternalServerErrorException('Failed to check permissions.');
-    }
-    if (!member) {
-      throw new NotFoundException('Board not found.');
-    }
-
-    const row = board as BoardRow;
-
-    // Board nằm trong workspace `restricted` mà mình không thuộc → coi như không có.
-    const { data: ws } = await this.supabase.client
-      .from('workspaces')
-      .select('visibility')
-      .eq('id', row.workspace_id)
-      .maybeSingle();
-    if (
-      (ws?.visibility as string) === 'restricted' &&
-      !(await this.laThanhVienWorkspace(uid, row.workspace_id))
-    ) {
-      throw new NotFoundException('Board not found.');
-    }
-
-    const ids = await this.memberIdsOf(row.id);
-    if (row.visibility === 'private' && !ids.includes(uid)) {
-      throw new NotFoundException('Board not found.');
-    }
-
-    return toBoard(row, ids);
+    return toBoard(boardRes.data as BoardRow, ids);
   }
 
   /**
