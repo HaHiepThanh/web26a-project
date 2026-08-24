@@ -310,6 +310,7 @@ cái sau chỉ đụng bảng nối, không đụng entity nhãn.
 |---|---|
 | `realtime.service.ts` | Đóng sau Giai đoạn 0, không ai sửa |
 | `ngrx/route-context/` | Giai đoạn 0 |
+| `ngrx/shared/` | Giai đoạn 0 — cần thêm helper dùng chung thì báo nhóm, đừng tự sửa |
 | `ngrx/organization*/`, `ngrx/workspace*/`, `ngrx/auth*/`, `ngrx/notification*/` | Huy |
 | `ngrx/board*/`, `ngrx/list*/`, `ngrx/chat*/`, `ngrx/activity*/` | Hoà |
 | `pages/board/board.ts` | Hoà — gửi thay đổi cho Hoà gộp, đừng tự sửa |
@@ -321,6 +322,8 @@ cái sau chỉ đụng bảng nối, không đụng entity nhãn.
 Mỗi PR phải đủ:
 
 - [ ] Service cũ **đã xoá** trong cùng PR
+- [ ] Code nằm trong `ngrx/<mien>/`, `*.store.ts` **chỉ ghép các mảnh** —
+      không có logic bên trong nó
 - [ ] State **phẳng** (`withEntities`), gom nhóm ở `withComputed`
 - [ ] `upsertEntity` ở mọi nơi, không có `addEntity`
 - [ ] Hoàn tác **theo từng entity**, không `set()` cả collection — mục 4

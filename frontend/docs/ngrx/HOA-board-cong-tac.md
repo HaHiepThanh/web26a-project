@@ -248,6 +248,7 @@ Là state của *người dùng* chứ không phải của *board*, nên đừng
 |---|---|
 | `realtime.service.ts` | Đóng sau Giai đoạn 0, không ai sửa |
 | `ngrx/route-context/` | Giai đoạn 0 |
+| `ngrx/shared/` | Giai đoạn 0 — cần thêm helper dùng chung thì báo nhóm, đừng tự sửa |
 | `ngrx/organization*/`, `ngrx/workspace*/`, `ngrx/auth*/`, `ngrx/notification*/` | Huy |
 | `ngrx/card*/`, `ngrx/label*/`, `ngrx/checklist*/`, `ngrx/comment*/`, `ngrx/attachment*/` | Hoàng |
 | `guards/*.ts` | Huy |
@@ -262,6 +263,8 @@ nối store, hãy gộp mọi thay đổi ở file này vào cuối ngày, một
 Mỗi PR phải đủ:
 
 - [ ] Service cũ **đã xoá** trong cùng PR
+- [ ] Code nằm trong `ngrx/<mien>/`, `*.store.ts` **chỉ ghép các mảnh** —
+      không có logic bên trong nó
 - [ ] Danh sách dùng `withEntities` + `upsertEntity`, không có `addEntity`
 - [ ] Store **tự phản ứng** theo `RouteContextStore`, không chờ `board.ts` gọi
 - [ ] Handler WebSocket đăng ký trong store, `realtime.service.ts` không đổi

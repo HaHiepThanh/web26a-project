@@ -253,7 +253,8 @@ nguyên vẹn, `AuthStore` chỉ giữ *trạng thái* người dùng hiện t�
 |---|---|
 | `realtime.service.ts` | Đóng sau Giai đoạn 0, không ai sửa |
 | `ngrx/route-context/` | Giai đoạn 0 |
-| `store/board*.store.ts`, `ngrx/list*/`, `ngrx/chat*/` | Hoà |
+| `ngrx/shared/` | Giai đoạn 0 — cần thêm helper dùng chung thì báo nhóm, đừng tự sửa |
+| `ngrx/board*/`, `ngrx/list*/`, `ngrx/chat*/`, `ngrx/activity*/` | Hoà |
 | `ngrx/card*/`, `ngrx/label*/`, `ngrx/checklist*/`, `ngrx/comment*/`, `ngrx/attachment*/` | Hoàng |
 | `pages/board/board.ts` | Hoà |
 
@@ -266,6 +267,8 @@ Cần một thay đổi ngoài ranh giới → nhắn trong nhóm, đừng tự 
 Mỗi PR phải đủ:
 
 - [ ] Service cũ **đã xoá** trong cùng PR
+- [ ] Code nằm trong `ngrx/<mien>/`, `*.store.ts` **chỉ ghép các mảnh** —
+      không có logic bên trong nó
 - [ ] Danh sách dùng `withEntities` + `upsertEntity`, không có `addEntity`
 - [ ] Handler WebSocket đăng ký trong store, `realtime.service.ts` không đổi
 - [ ] Có test cuộc đua token (mục 4) cho `OrganizationStore`
