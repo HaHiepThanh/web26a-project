@@ -173,6 +173,61 @@ describe('ManageWorkspaceStore', () => {
       expect(store.membersOf('b2').map((m) => m.userId)).toEqual(['u9', 'u10']);
     });
 
+    it('chan lenh ghi thu hai khi lenh dau chua ve', async () => {
+      api.get.mockResolvedValue([apiMember('me')]);
+      await store.loadBoardMembers('b1');
+
+      const pending = deferred<unknown>();
+      api.patch.mockReturnValue(pending.promise);
+
+      const first = store.setBoardMembers('b1', [view('me'), view('X')]);
+      const second = await store.setBoardMembers('b1', [view('me'), view('X'), view('Y')]);
+
+      // Lệnh thứ hai bị từ chối THẲNG, chưa từng bay đi.
+      expect(second).toContain('still saving');
+      expect(api.patch).toHaveBeenCalledTimes(1);
+
+      pending.resolve({});
+      expect(await first).toBeNull();
+
+      // Khoá phải mở lại, không thì bấm lần sau bị chặn vĩnh viễn.
+      api.patch.mockResolvedValue({});
+      expect(await store.setBoardMembers('b1', [view('me')])).toBeNull();
+    });
+
+    it('lenh hong KHONG dap ban hoan tac cu len ket qua cua lenh sau', async () => {
+      // Đây là hình dạng của lỗi đã tái hiện trên trình duyệt: hai lệnh chồng
+      // nhau, lệnh đầu hỏng, bản chụp hoàn tác của nó đã cũ → đắp đè lên là xoá
+      // sạch người mà lệnh sau vừa thêm thành công. Khoá phải làm nó bất khả thi.
+      api.get.mockResolvedValue([apiMember('me')]);
+      await store.loadBoardMembers('b1');
+
+      const pending = deferred<unknown>();
+      api.patch.mockReturnValueOnce(pending.promise);
+
+      const first = store.setBoardMembers('b1', [view('me'), view('X')]);
+      await store.setBoardMembers('b1', [view('me'), view('X'), view('Y')]); // bị chặn
+      pending.reject(new Error('500'));
+      await first;
+
+      // Chỉ lệnh đầu từng chạy, nên hoàn tác về đúng trạng thái trước nó.
+      expect(store.membersOf('b1').map((m) => m.userId)).toEqual(['me']);
+    });
+
+    it('khoa la theo TUNG board, khong chan board khac', async () => {
+      const pending = deferred<unknown>();
+      api.patch.mockReturnValueOnce(pending.promise).mockResolvedValue({});
+
+      const onB1 = store.setBoardMembers('b1', [view('X')]);
+      const onB2 = await store.setBoardMembers('b2', [view('Y')]);
+
+      expect(onB2).toBeNull();
+      expect(api.patch).toHaveBeenCalledWith('/boards/b2', { memberIds: ['Y'] });
+
+      pending.resolve({});
+      await onB1;
+    });
+
     it('hỏng khi board chưa từng nạp → xoá hẳn khoá, không để lại danh sách ma', async () => {
       api.patch.mockRejectedValue(new Error('400'));
       const error = await store.setBoardMembers('b1', [view('u1')]);

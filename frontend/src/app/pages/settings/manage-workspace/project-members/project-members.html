@@ -162,7 +162,7 @@
                         <button
                           type="button"
                           class="btn btn-ghost btn-sm text-error hover:bg-error/10"
-                          [disabled]="busyUserId() === member.userId"
+                          [disabled]="savingMembership()"
                           (click)="openRemoveConfirm(member)"
                         >
                           {{ member.userId === currentUserId() ? 'Leave project' : 'Remove' }}
@@ -252,13 +252,18 @@
                     class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[0.7rem] font-bold text-white"
                     [style.background-color]="avatarColorFor(candidate.userId)"
                   >{{ initialsOf(candidateName(candidate)) }}</span>
-                  <span class="min-w-0 flex-1 truncate text-sm font-semibold">{{ candidateName(candidate) }}</span>
+                  <span class="min-w-0 flex-1">
+                    <span class="block truncate text-sm font-semibold">{{ candidateName(candidate) }}</span>
+                    @if (candidate.user?.email) {
+                      <span class="block truncate text-[0.72rem] text-base-content/50">{{ candidate.user!.email }}</span>
+                    }
+                  </span>
                   <button
                     type="button"
                     class="btn btn-primary btn-xs shrink-0"
-                    [disabled]="busyUserId() === candidate.userId"
+                    [disabled]="savingMembership()"
                     (click)="addMember(candidate)"
-                  >Add</button>
+                  >{{ busyUserId() === candidate.userId ? 'Adding…' : 'Add' }}</button>
                 </li>
               }
             </ul>

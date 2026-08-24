@@ -166,6 +166,15 @@ export class ProjectMembers {
   readonly expandedMemberId = signal<string | null>(null);
   readonly busyUserId = signal<string | null>(null);
 
+  /**
+   * Đang có một lệnh ghi danh sách thành viên bay dở.
+   *
+   * Khác `busyUserId` (chỉ để làm mờ đúng một dòng): cờ này khoá MỌI nút thêm/gỡ,
+   * vì `PATCH /boards/:id` thay cả tập nên hai lệnh chồng nhau sẽ nuốt mất người
+   * vừa thêm — xem chú thích dài trong `manage-workspace.methods.ts`.
+   */
+  readonly savingMembership = signal(false);
+
   readonly members = computed<ProjectMember[]>(() => {
     const b = this.board();
     if (!b) return [];
@@ -268,11 +277,13 @@ export class ProjectMembers {
     if (!member || !b) return;
     this.memberToRemove.set(null);
     this.busyUserId.set(member.userId);
+    this.savingMembership.set(true);
 
     // `PATCH /boards/:id` thay THẲNG cả tập, nên gửi danh sách đầy đủ sau khi bớt.
     const next = this.boardMembers.membersOf(b.id).filter((m) => m.userId !== member.userId);
     const error = await this.boardMembers.setBoardMembers(b.id, next);
     this.busyUserId.set(null);
+    this.savingMembership.set(false);
 
     if (error) {
       this.flash(error, 'error');
@@ -349,9 +360,11 @@ export class ProjectMembers {
     const b = this.board();
     if (!b) return;
     this.busyUserId.set(candidate.userId);
+    this.savingMembership.set(true);
     const next = [...this.boardMembers.membersOf(b.id), candidate];
     const error = await this.boardMembers.setBoardMembers(b.id, next);
     this.busyUserId.set(null);
+    this.savingMembership.set(false);
 
     if (error) {
       this.flash(error, 'error');

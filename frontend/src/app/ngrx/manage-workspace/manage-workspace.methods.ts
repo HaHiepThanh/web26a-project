@@ -21,6 +21,15 @@ type Store = WritableStateSource<ManageWorkspaceState & ErrorState> & {
 /** Hàm generic thuần — xem chú thích trong `ngrx/list/list.methods.ts` về lý do
  *  không tự bọc `signalStoreFeature` riêng cho từng file. */
 export function manageWorkspaceMethods<S extends Store>(store: S, api = inject(ApiService)) {
+  /**
+   * Board đang có một lệnh ghi thành viên bay dở.
+   *
+   * Để NGOÀI state vì đây là chi tiết điều phối, không phải dữ liệu — nhét vào
+   * state là DevTools ghi lại thứ không tuần tự hoá được (cùng lý do với
+   * `loadPromise` trong `organization.methods.ts`).
+   */
+  const dangGhi = new Set<string>();
+
   /** Không ném lỗi ra ngoài: `loadMany` gọi hàm này N lần song song, một board
    *  hỏng không được phép làm hỏng cả mẻ. */
   async function fetchOne(
@@ -109,8 +118,25 @@ export function manageWorkspaceMethods<S extends Store>(store: S, api = inject(A
      *
      * `PATCH /boards/:id` thay THẲNG cả tập (backend xoá sạch rồi chèn lại), nên
      * truyền vào danh sách ĐẦY ĐỦ sau khi sửa, không phải phần chênh lệch.
+     *
+     * ⚠️ MỖI BOARD CHỈ MỘT LỆNH GHI MỘT LÚC — chính vì "thay cả tập". Hai lệnh
+     *    bay song song là hỏng theo hai đường, đã tái hiện được cả hai:
+     *
+     *    1. Server xử lý xong lệnh sau TRƯỚC lệnh trước → tập cuối cùng là của
+     *       lệnh trước, người vừa thêm biến mất khỏi database.
+     *    2. Lệnh trước hỏng, lệnh sau thành công → bản hoàn tác của lệnh trước
+     *       (chụp lúc nó bắt đầu) đã CŨ, đắp đè lên là xoá luôn thành quả của
+     *       lệnh sau. Đo được: server có [tôi, X, Y] mà màn hình hiện [tôi].
+     *
+     *    Không có cách hoàn tác từng phần cho một endpoint thay-cả-tập, nên
+     *    chặn từ đầu. Giao diện đã khoá nút khi đang ghi; đây là lưới an toàn
+     *    cho mọi nơi gọi khác.
      */
     async setBoardMembers(boardId: string, members: BoardMemberView[]): Promise<string | null> {
+      if (dangGhi.has(boardId)) {
+        return 'Another member change is still saving — wait for it to finish, then try again.';
+      }
+      dangGhi.add(boardId);
       const before = store.membersByBoard()[boardId];
 
       // Cập nhật giao diện trước cho mượt — hỏng thì trả lại ĐÚNG khoá này,
@@ -128,6 +154,8 @@ export function manageWorkspaceMethods<S extends Store>(store: S, api = inject(A
         else delete next[boardId];
         patchState(store, { membersByBoard: next });
         return describeError(e, 'Failed to save the project member list.');
+      } finally {
+        dangGhi.delete(boardId);
       }
     },
 
