@@ -2,7 +2,12 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { readFileSync } from 'node:fs';
 import { isAbsolute, resolve } from 'node:path';
-import { cert, getApps, initializeApp, ServiceAccount } from 'firebase-admin/app';
+import {
+  cert,
+  getApps,
+  initializeApp,
+  ServiceAccount,
+} from 'firebase-admin/app';
 import { DecodedIdToken, getAuth } from 'firebase-admin/auth';
 
 /**
@@ -29,7 +34,9 @@ export class FirebaseAdminService implements OnModuleInit {
 
     const account = this.loadServiceAccount();
     initializeApp({ credential: cert(account) });
-    this.logger.log(`Firebase Admin đã sẵn sàng (project: ${account.projectId})`);
+    this.logger.log(
+      `Firebase Admin đã sẵn sàng (project: ${account.projectId})`,
+    );
   }
 
   private loadServiceAccount(): ServiceAccount {
@@ -75,7 +82,11 @@ export class FirebaseAdminService implements OnModuleInit {
     }
     // Khi private key nằm trong .env, ký tự xuống dòng bị lưu thành 2 ký tự "\\n"
     // — phải đổi lại thành xuống dòng thật, nếu không cert() sẽ báo key hỏng.
-    return { projectId, clientEmail, privateKey: privateKey.replace(/\\n/g, '\n') };
+    return {
+      projectId,
+      clientEmail,
+      privateKey: privateKey.replace(/\\n/g, '\n'),
+    };
   }
 
   /** Verify ID token. Token sai/hết hạn/bị sửa → ném lỗi. */

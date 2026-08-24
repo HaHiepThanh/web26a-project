@@ -13,17 +13,18 @@ import {
   ToastType,
   User,
 } from '../../models';
-import { BoardService } from '../../services/board.service';
-import { ListService } from '../../services/list.service';
-import { CardService } from '../../services/card.service';
-import { LabelService } from '../../services/label.service';
-import { ActivityService } from '../../services/activity.service';
-import { ChecklistService } from '../../services/checklist.service';
-import { CommentService } from '../../services/comment.service';
-import { AttachmentService } from '../../services/attachment.service';
+import { BoardStore } from '../../ngrx/board/board.store';
+import { RouteContextStore } from '../../ngrx/route-context/route-context.store';
+import { ListStore } from '../../ngrx/list/list.store';
+import { CardStore } from '../../ngrx/card/card.store';
+import { LabelStore } from '../../ngrx/label/label.store';
+import { ActivityStore } from '../../ngrx/activity/activity.store';
+import { ChecklistStore } from '../../ngrx/checklist/checklist.store';
+import { CommentStore } from '../../ngrx/comment/comment.store';
+import { AttachmentStore } from '../../ngrx/attachment/attachment.store';
 import { RealtimeService } from '../../services/realtime.service';
-import { BoardPrefsService } from '../../services/board-prefs.service';
-import { TaskSuggestionService } from '../../services/task-suggestion.service';
+import { BoardPrefsStore } from '../../ngrx/board-prefs/board-prefs.store';
+import { TaskSuggestionStore } from '../../ngrx/task-suggestion/task-suggestion.store';
 import { TaskSuggestionModal } from '../../components/chat/task-suggestion-modal/task-suggestion-modal';
 import { BoardList } from '../../components/board/board-list/board-list';
 import { AddList } from '../../components/board/add-list/add-list';
@@ -89,7 +90,7 @@ const MINIMAP_OVERFLOW_RATIO = 1.5;
 /**
  * Màn Trello chính. Lớp 🔴: #1 cuộn ngang không rớt dòng, #2 tự tạo list/thẻ,
  * #3 optimistic drag-drop. Lớp 🟠: #4 mức ưu tiên đầy đủ, #5 nhiều nhãn + tự tạo nhãn.
- * Dữ liệu qua ListService/CardService/LabelService/BoardService — hiện là mock tại
+ * Dữ liệu qua ListService/CardStore/LabelStore/BoardService — hiện là mock tại
  * chỗ (chưa nối backend thật), optimistic update + rollback qua MockNetworkService
  * khi kéo-thả.
  */
@@ -120,17 +121,17 @@ const MINIMAP_OVERFLOW_RATIO = 1.5;
 })
 export class Board {
   private readonly route = inject(ActivatedRoute);
-  private readonly boardService = inject(BoardService);
-  private readonly listService = inject(ListService);
-  private readonly cardService = inject(CardService);
-  private readonly labelService = inject(LabelService);
-  private readonly activityService = inject(ActivityService);
-  private readonly checklistService = inject(ChecklistService);
-  private readonly commentService = inject(CommentService);
-  private readonly attachmentService = inject(AttachmentService);
+  private readonly boardService = inject(BoardStore);
+  private readonly listService = inject(ListStore);
+  private readonly cardService = inject(CardStore);
+  private readonly labelService = inject(LabelStore);
+  private readonly activityService = inject(ActivityStore);
+  private readonly checklistService = inject(ChecklistStore);
+  private readonly commentService = inject(CommentStore);
+  private readonly attachmentService = inject(AttachmentStore);
   private readonly realtime = inject(RealtimeService);
-  private readonly boardPrefs = inject(BoardPrefsService);
-  private readonly taskSuggestions = inject(TaskSuggestionService);
+  private readonly boardPrefs = inject(BoardPrefsStore);
+  private readonly taskSuggestions = inject(TaskSuggestionStore);
   private readonly router = inject(Router);
 
   readonly boardId = this.route.snapshot.paramMap.get('id') ?? 'demo-board';
@@ -602,6 +603,14 @@ export class Board {
   readonly realtimeConnected = this.realtime.connected;
 
   constructor() {
+    // Báo cho mọi store domain (List/Board/TaskSuggestion...) biết đang mở board
+    // nào — mỗi store TỰ effect() theo giá trị này rồi tự load (mục 4: gỡ nút
+    // thắt board.ts). Rời trang thì trả về `null` để store không tưởng nhầm vẫn
+    // còn đang mở board này.
+    const routeContext = inject(RouteContextStore);
+    routeContext.setActiveBoard(this.boardId);
+    inject(DestroyRef).onDestroy(() => routeContext.setActiveBoard(null));
+
     void this.bootstrap();
 
     // Vào phòng WebSocket của board này, và RỜI khi rời trang. Thiếu vế thứ hai
@@ -633,14 +642,13 @@ export class Board {
     });
   }
 
+  /**
+   * Board/List/gợi ý AI (Hoà) tự nạp qua `RouteContextStore` — xem constructor.
+   * Label/Card (Hoàng) chưa chuyển sang store nên vẫn nạp tay ở đây.
+   */
   private async bootstrap(): Promise<void> {
-    await this.boardService.loadBoard(this.boardId);
     await this.labelService.loadLabels(this.boardId);
-    await this.listService.loadLists(this.boardId);
-    const listIds = this.lists().map((l) => l.id);
     await this.cardService.loadCards(this.boardId);
-    // Gợi ý AI còn đang chờ — nạp lại để F5 không mất.
-    await this.taskSuggestions.loadSuggestions(this.boardId);
   }
 
   // ---- Gợi ý tạo thẻ do AI phát hiện trong chat ----
@@ -759,7 +767,7 @@ export class Board {
 
   // ---- Modal chi tiết thẻ (appRequirement #4) ----
   // Lưu id chứ không lưu cả Card — để selectedCard() luôn đọc lại bản mới nhất từ
-  // CardService sau khi sửa trong modal (nếu lưu snapshot Card, sửa xong modal sẽ hiện dữ liệu cũ).
+  // CardStore sau khi sửa trong modal (nếu lưu snapshot Card, sửa xong modal sẽ hiện dữ liệu cũ).
   private readonly selectedCardId = signal<string | null>(null);
   readonly selectedCard = computed(() => {
     const id = this.selectedCardId();

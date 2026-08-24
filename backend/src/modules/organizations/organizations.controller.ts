@@ -1,4 +1,13 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { FirebaseAuthGuard } from '../../common/firebase/firebase-auth.guard';
 import { RolesGuard } from '../../common/firebase/roles.guard';
 import { Roles } from '../../common/firebase/roles.decorator';
@@ -24,7 +33,10 @@ export class OrganizationsController {
 
   /** POST /organizations — tạo tổ chức mới, người tạo thành owner. */
   @Post()
-  create(@CurrentUser() user: CurrentUserInfo, @Body() body: CreateOrganizationDto) {
+  create(
+    @CurrentUser() user: CurrentUserInfo,
+    @Body() body: CreateOrganizationDto,
+  ) {
     return this.organizations.create(user.uid, body.name, body.slug);
   }
 
@@ -94,7 +106,10 @@ export class OrganizationsController {
   @UseGuards(RolesGuard)
   @Roles('owner', 'admin')
   @Get(':id/invites')
-  pendingInvites(@CurrentUser() user: CurrentUserInfo, @Param('id') id: string) {
+  pendingInvites(
+    @CurrentUser() user: CurrentUserInfo,
+    @Param('id') id: string,
+  ) {
     return this.organizations.findPendingInvites(user.uid, id);
   }
 
@@ -106,7 +121,10 @@ export class OrganizationsController {
    *    thuộc tổ chức nào — việc đó nằm trong service (giống DELETE /boards/:id).
    */
   @Delete('invites/:inviteId')
-  cancelInvite(@CurrentUser() user: CurrentUserInfo, @Param('inviteId') inviteId: string) {
+  cancelInvite(
+    @CurrentUser() user: CurrentUserInfo,
+    @Param('inviteId') inviteId: string,
+  ) {
     return this.organizations.cancelInvite(user.uid, inviteId);
   }
 
@@ -119,6 +137,11 @@ export class OrganizationsController {
     @Param('id') id: string,
     @Body() body: InviteMemberDto,
   ) {
-    return this.organizations.invite(id, user.uid, body.toUserId, body.role ?? 'member');
+    return this.organizations.invite(
+      id,
+      user.uid,
+      body.toUserId,
+      body.role ?? 'member',
+    );
   }
 }

@@ -6,6 +6,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { AccessService } from '../../common/access/access.service';
 import { SupabaseService } from '../../common/supabase/supabase.service';
 import { ActivityService } from '../activity/activity.service';
 import { UpdateCardDto } from './dto/update-card.dto';
@@ -78,6 +79,7 @@ export class CardsService {
     private readonly supabase: SupabaseService,
     private readonly activity: ActivityService,
     private readonly realtime: RealtimeGateway,
+    private readonly access: AccessService,
   ) {}
 
   /**
@@ -95,45 +97,11 @@ export class CardsService {
     return (data?.board_id as string) ?? '';
   }
 
-  /**
-   * Người gọi có thuộc tổ chức này không? Không thuộc → 404.
-   *
-   * ⚠️ Backend dùng service_role key nên RLS bị bỏ qua — database KHÔNG chặn gì.
-   *    Thiếu hàm này thì bất kỳ ai đăng nhập cũng đọc/sửa/xoá được thẻ của mọi
-   *    công ty khác, chỉ cần đoán đúng id.
-   */
-  private async assertOrgMember(uid: string, orgId: string): Promise<void> {
-    const { data, error } = await this.supabase.client
-      .from('organization_members')
-      .select('role')
-      .eq('org_id', orgId)
-      .eq('user_id', uid)
-      .maybeSingle();
-    if (error) {
-      this.logger.error(`Kiểm tra quyền thất bại (uid=${uid}, org=${orgId}): ${error.message}`);
-      throw new InternalServerErrorException('Failed to check permissions');
-    }
-    // 404 chứ không phải 403: trả 403 là vô tình xác nhận "id này có thật".
-    if (!data) throw new NotFoundException('Data not found.');
-  }
-
-  /** Tìm board và xác nhận người gọi được phép đụng vào nó. */
-  private async assertBoardAccess(uid: string, boardId: string): Promise<void> {
-    const { data: board, error } = await this.supabase.client
-      .from('boards')
-      .select('id, org_id')
-      .eq('id', boardId)
-      .maybeSingle();
-    if (error) {
-      if (laUuidSai(error)) throw new NotFoundException('Board not found.');
-      throw new InternalServerErrorException('Failed to load board');
-    }
-    if (!board) throw new NotFoundException('Board not found.');
-    await this.assertOrgMember(uid, board.org_id as string);
-  }
-
   /** Tìm thẻ và xác nhận người gọi được phép đụng vào nó. */
-  private async assertCardAccess(uid: string, cardId: string): Promise<CardRow> {
+  private async assertCardAccess(
+    uid: string,
+    cardId: string,
+  ): Promise<CardRow> {
     const { data: card, error } = await this.supabase.client
       .from('cards')
       .select('*')
@@ -144,17 +112,23 @@ export class CardsService {
       throw new InternalServerErrorException('Failed to load card');
     }
     if (!card) throw new NotFoundException('Card not found.');
-    await this.assertOrgMember(uid, (card as CardRow).org_id);
+    // Bản dùng chung đi qua list → board → workspace → tổ chức, nên bắt được cả
+    // board 'private' và workspace 'restricted'. Kiểm mỗi organization_members
+    // như trước là người cùng tổ chức nhưng ngoài board vẫn sửa được thẻ.
+    await this.access.assertCardAccess(uid, cardId);
     return card as CardRow;
   }
 
   /** Toàn bộ thẻ của 1 board. `cards` không có board_id nên phải đi vòng qua `lists`. */
   async findAll(uid: string, boardId: string): Promise<CardResponse[]> {
     if (!boardId) return [];
-    await this.assertBoardAccess(uid, boardId);
+    await this.access.assertBoardAccess(uid, boardId);
 
     const sb = this.supabase.client;
-    const { data: lists } = await sb.from('lists').select('id').eq('board_id', boardId);
+    const { data: lists } = await sb
+      .from('lists')
+      .select('id')
+      .eq('board_id', boardId);
     if (!lists?.length) return [];
 
     const { data, error } = await sb
@@ -173,7 +147,11 @@ export class CardsService {
     return (data as CardRow[]).map(toCard);
   }
 
-  async create(listId: string, title: string, uid: string): Promise<CardResponse> {
+  async create(
+    listId: string,
+    title: string,
+    uid: string,
+  ): Promise<CardResponse> {
     const sb = this.supabase.client;
 
     const { data: list, error: listError } = await sb
@@ -181,10 +159,11 @@ export class CardsService {
       .select('id, org_id, board_id')
       .eq('id', listId)
       .maybeSingle();
-    if (listError && laUuidSai(listError)) throw new NotFoundException('List not found.');
+    if (listError && laUuidSai(listError))
+      throw new NotFoundException('List not found.');
     if (!list) throw new NotFoundException('List not found.');
 
-    await this.assertOrgMember(uid, list.org_id as string);
+    await this.access.assertBoardAccess(uid, list.board_id as string);
 
     const { data: last } = await sb
       .from('cards')
@@ -198,7 +177,13 @@ export class CardsService {
 
     const { data, error } = await sb
       .from('cards')
-      .insert({ org_id: list.org_id, list_id: listId, title, position, created_by: uid })
+      .insert({
+        org_id: list.org_id,
+        list_id: listId,
+        title,
+        position,
+        created_by: uid,
+      })
       .select()
       .single();
 
@@ -215,20 +200,31 @@ export class CardsService {
       (data as CardRow).id,
     );
     const created = toCard(data as CardRow);
-    this.realtime.emitToBoard(list.board_id as string, 'card.created', uid, created);
+    this.realtime.emitToBoard(
+      list.board_id as string,
+      'card.created',
+      uid,
+      created,
+    );
     return created;
   }
 
-  async update(uid: string, id: string, changes: UpdateCardDto): Promise<CardResponse> {
+  async update(
+    uid: string,
+    id: string,
+    changes: UpdateCardDto,
+  ): Promise<CardResponse> {
     const truoc = await this.assertCardAccess(uid, id);
     const truocKhiSua = truoc.assignee_id;
 
     const patch: Record<string, unknown> = {};
     if (changes.title !== undefined) patch.title = changes.title;
-    if (changes.description !== undefined) patch.description = changes.description;
+    if (changes.description !== undefined)
+      patch.description = changes.description;
     if (changes.priority !== undefined) patch.priority = changes.priority;
     if (changes.dueDate !== undefined) patch.due_date = changes.dueDate;
-    if (changes.assigneeId !== undefined) patch.assignee_id = changes.assigneeId;
+    if (changes.assigneeId !== undefined)
+      patch.assignee_id = changes.assigneeId;
 
     if (Object.keys(patch).length === 0) {
       throw new BadRequestException('Nothing to update.');
@@ -251,7 +247,11 @@ export class CardsService {
 
     // Vừa GIAO việc cho người khác → báo riêng cho đúng người đó.
     // Chỉ báo khi assignee THỰC SỰ đổi, và không tự báo cho chính mình.
-    if (updated.assigneeId && updated.assigneeId !== uid && updated.assigneeId !== truocKhiSua) {
+    if (
+      updated.assigneeId &&
+      updated.assigneeId !== uid &&
+      updated.assigneeId !== truocKhiSua
+    ) {
       await this.baoDuocGiaoViec(uid, updated, boardId);
     }
     return updated;
@@ -280,26 +280,47 @@ export class CardsService {
           .select('id, name, workspaces(name), organizations(slug)')
           .eq('id', boardId)
           .maybeSingle(),
-        sb.from('users').select('display_name, email').eq('id', actorUid).maybeSingle(),
+        sb
+          .from('users')
+          .select('display_name, email')
+          .eq('id', actorUid)
+          .maybeSingle(),
       ]);
 
-      this.realtime.emitToUser(card.assigneeId as string, 'card.assigned', actorUid, {
-        cardId: card.id,
-        cardTitle: card.title,
-        boardId,
-        boardName: (board?.name as string) ?? '',
-        workspaceName:
-          ((board?.workspaces as unknown as { name: string } | null)?.name as string) ?? '',
-        orgSlug:
-          ((board?.organizations as unknown as { slug: string } | null)?.slug as string) ?? '',
-        byUserName: (actor?.display_name as string) || (actor?.email as string) || 'Someone',
-      });
+      this.realtime.emitToUser(
+        card.assigneeId as string,
+        'card.assigned',
+        actorUid,
+        {
+          cardId: card.id,
+          cardTitle: card.title,
+          boardId,
+          boardName: (board?.name as string) ?? '',
+          workspaceName:
+            ((board?.workspaces as unknown as { name: string } | null)
+              ?.name as string) ?? '',
+          orgSlug:
+            ((board?.organizations as unknown as { slug: string } | null)
+              ?.slug as string) ?? '',
+          byUserName:
+            (actor?.display_name as string) ||
+            (actor?.email as string) ||
+            'Someone',
+        },
+      );
     } catch (e) {
-      this.logger.warn(`Không gửi được thông báo giao việc: ${(e as Error).message}`);
+      this.logger.warn(
+        `Không gửi được thông báo giao việc: ${(e as Error).message}`,
+      );
     }
   }
 
-  async move(id: string, toListId: string, position: number, uid: string): Promise<CardResponse> {
+  async move(
+    id: string,
+    toListId: string,
+    position: number,
+    uid: string,
+  ): Promise<CardResponse> {
     const card = await this.assertCardAccess(uid, id);
 
     const { data: toList, error: toListError } = await this.supabase.client
@@ -340,7 +361,12 @@ export class CardsService {
     const moved = toCard(data as CardRow);
     // Kéo thẻ sang board khác đã bị chặn ở trên, nên board cũ và mới luôn giống
     // nhau — chỉ cần phát 1 lần vào board đích.
-    this.realtime.emitToBoard(toList.board_id as string, 'card.moved', uid, moved);
+    this.realtime.emitToBoard(
+      toList.board_id as string,
+      'card.moved',
+      uid,
+      moved,
+    );
     return moved;
   }
 
@@ -349,11 +375,17 @@ export class CardsService {
     // Tra board TRƯỚC khi xoá: xoá xong thì không còn dòng nào để lần ra list nữa.
     const boardId = await this.boardIdOfList(card.list_id);
 
-    const { error } = await this.supabase.client.from('cards').delete().eq('id', id);
+    const { error } = await this.supabase.client
+      .from('cards')
+      .delete()
+      .eq('id', id);
     if (error) {
       this.logger.error(`Xoá thẻ thất bại: ${error.message}`);
       throw new InternalServerErrorException('Failed to delete card');
     }
-    this.realtime.emitToBoard(boardId, 'card.deleted', uid, { id, listId: card.list_id });
+    this.realtime.emitToBoard(boardId, 'card.deleted', uid, {
+      id,
+      listId: card.list_id,
+    });
   }
 }

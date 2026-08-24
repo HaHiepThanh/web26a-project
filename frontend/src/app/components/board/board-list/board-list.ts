@@ -1,8 +1,8 @@
 import { Component, inject, input, output } from '@angular/core';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { Card, Label, List, User } from '../../../models';
-import { CardService } from '../../../services/card.service';
-import { ListService } from '../../../services/list.service';
+import { CardStore } from '../../../ngrx/card/card.store';
+import { ListStore } from '../../../ngrx/list/list.store';
 import { ListHeader } from '../list-header/list-header';
 import { CardItem } from '../card-item/card-item';
 import { AddCard } from '../add-card/add-card';
@@ -17,8 +17,8 @@ import { AddCard } from '../add-card/add-card';
   styleUrl: './board-list.css',
 })
 export class BoardList {
-  private readonly cardService = inject(CardService);
-  private readonly listService = inject(ListService);
+  private readonly cardService = inject(CardStore);
+  private readonly listStore = inject(ListStore);
 
   readonly list = input.required<List>();
   readonly boardId = input.required<string>();
@@ -63,7 +63,7 @@ export class BoardList {
     void this.cardService.moveCardOptimistic(card.id, fromListId, toListId, targetIndex);
 
     if (fromListId !== toListId) {
-      const toName = this.listService.lists().find((l) => l.id === toListId)?.name ?? '—';
+      const toName = this.listStore.lists().find((l) => l.id === toListId)?.name ?? '—';
       // 'card_moved' do backend ghi (PATCH /cards/:id/move), không ghi lại ở đây.
     }
   }

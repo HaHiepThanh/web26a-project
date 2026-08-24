@@ -40,7 +40,9 @@ export class AcceptedCardDto {
   listId: string;
 
   @IsOptional()
-  @IsIn(['high', 'medium', 'low'], { message: 'priority chỉ nhận high, medium hoặc low.' })
+  @IsIn(['high', 'medium', 'low'], {
+    message: 'priority chỉ nhận high, medium hoặc low.',
+  })
   priority?: 'high' | 'medium' | 'low';
 }
 

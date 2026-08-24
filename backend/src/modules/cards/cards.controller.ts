@@ -23,7 +23,10 @@ export class CardsController {
   constructor(private readonly cards: CardsService) {}
 
   @Get()
-  findAll(@CurrentUser() user: CurrentUserInfo, @Query('boardId') boardId: string) {
+  findAll(
+    @CurrentUser() user: CurrentUserInfo,
+    @Query('boardId') boardId: string,
+  ) {
     return this.cards.findAll(user.uid, boardId);
   }
 

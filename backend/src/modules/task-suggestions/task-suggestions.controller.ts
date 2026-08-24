@@ -1,4 +1,14 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { FirebaseAuthGuard } from '../../common/firebase/firebase-auth.guard';
 import { CurrentUser } from '../../common/firebase/current-user.decorator';
 import type { CurrentUserInfo } from '../../common/firebase/current-user.decorator';
@@ -18,7 +28,10 @@ export class TaskSuggestionsController {
 
   /** GET /task-suggestions?boardId= — các gợi ý còn đang chờ trả lời. */
   @Get()
-  findPending(@CurrentUser() user: CurrentUserInfo, @Query('boardId') boardId: string) {
+  findPending(
+    @CurrentUser() user: CurrentUserInfo,
+    @Query('boardId') boardId: string,
+  ) {
     return this.suggestions.findPending(user.uid, boardId);
   }
 

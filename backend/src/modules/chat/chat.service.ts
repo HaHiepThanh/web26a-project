@@ -2,8 +2,8 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
-  NotFoundException,
 } from '@nestjs/common';
+import { AccessService } from '../../common/access/access.service';
 import { SupabaseService } from '../../common/supabase/supabase.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 import { TaskSuggestionsService } from '../task-suggestions/task-suggestions.service';
@@ -21,10 +21,15 @@ interface JoinedUserRow {
  *    (`userId`, `createdAt`) còn khối `user` lại snake_case (`display_name`) —
  *    frontend phải nhớ chỗ nào viết kiểu nào.
  */
-function toUser(row: unknown): { displayName: string | null; avatarUrl: string | null } | null {
+function toUser(
+  row: unknown,
+): { displayName: string | null; avatarUrl: string | null } | null {
   const u = row as JoinedUserRow | null;
   if (!u) return null;
-  return { displayName: u.display_name ?? null, avatarUrl: u.avatar_url ?? null };
+  return {
+    displayName: u.display_name ?? null,
+    avatarUrl: u.avatar_url ?? null,
+  };
 }
 
 /** [AI-CHAT] Tin nhắn chat theo board (cần bảng messages). */
@@ -36,43 +41,19 @@ export class ChatService {
     private readonly supabase: SupabaseService,
     private readonly realtime: RealtimeGateway,
     private readonly suggestions: TaskSuggestionsService,
+    private readonly access: AccessService,
   ) {}
-
-  /**
-   * Người gọi có được đụng vào board này không? Không thì 404.
-   *
-   * ⚠️ Thiếu hàm này thì ai đăng nhập cũng đọc được toàn bộ chat nội bộ của mọi
-   *    công ty khác, chỉ cần đoán đúng boardId.
-   */
-  private async assertBoardAccess(uid: string, boardId: string): Promise<string> {
-    const sb = this.supabase.client;
-    const { data: board, error } = await sb
-      .from('boards')
-      .select('id, org_id')
-      .eq('id', boardId)
-      .maybeSingle();
-    // 22P02 = id gõ sai định dạng uuid → coi như không tồn tại.
-    if (error?.code === '22P02' || !board) throw new NotFoundException('Board not found.');
-
-    const { data: member } = await sb
-      .from('organization_members')
-      .select('role')
-      .eq('org_id', board.org_id as string)
-      .eq('user_id', uid)
-      .maybeSingle();
-    if (!member) throw new NotFoundException('Board not found.');
-
-    return board.org_id as string;
-  }
 
   async findAll(uid: string, boardId: string): Promise<unknown[]> {
     if (!boardId) return [];
-    await this.assertBoardAccess(uid, boardId);
+    await this.access.assertBoardAccess(uid, boardId);
     const sb = this.supabase.client;
 
     const { data, error } = await sb
       .from('messages')
-      .select('id, user_id, content, created_at, users(display_name, avatar_url)')
+      .select(
+        'id, user_id, content, created_at, users(display_name, avatar_url)',
+      )
       .eq('board_id', boardId)
       .order('created_at', { ascending: true });
 
@@ -92,8 +73,12 @@ export class ChatService {
     }));
   }
 
-  async create(boardId: string, userUid: string, content: string): Promise<unknown> {
-    const orgId = await this.assertBoardAccess(userUid, boardId);
+  async create(
+    boardId: string,
+    userUid: string,
+    content: string,
+  ): Promise<unknown> {
+    const { orgId } = await this.access.assertBoardAccess(userUid, boardId);
     const sb = this.supabase.client;
 
     const { data, error } = await sb

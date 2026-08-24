@@ -2,13 +2,13 @@ import { Component, ElementRef, computed, effect, inject, input, output, signal,
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { Card, CardPriority, User } from '../../../models';
-import { CardService } from '../../../services/card.service';
-import { LabelService } from '../../../services/label.service';
-import { BoardService } from '../../../services/board.service';
-import { ActivityService } from '../../../services/activity.service';
-import { ChecklistService } from '../../../services/checklist.service';
-import { CommentService } from '../../../services/comment.service';
-import { AttachmentService } from '../../../services/attachment.service';
+import { CardStore } from '../../../ngrx/card/card.store';
+import { LabelStore } from '../../../ngrx/label/label.store';
+import { BoardStore } from '../../../ngrx/board/board.store';
+import { ActivityStore } from '../../../ngrx/activity/activity.store';
+import { ChecklistStore } from '../../../ngrx/checklist/checklist.store';
+import { CommentStore } from '../../../ngrx/comment/comment.store';
+import { AttachmentStore } from '../../../ngrx/attachment/attachment.store';
 import { LabelPicker } from '../label-picker/label-picker';
 import { Checklist } from '../checklist/checklist';
 import { CommentList } from '../comment-list/comment-list';
@@ -45,13 +45,13 @@ const PRIORITY_LABEL: Record<CardPriority, string> = { high: 'High', medium: 'Me
   styleUrl: './card-detail-modal.css',
 })
 export class CardDetailModal {
-  private readonly cardService = inject(CardService);
-  private readonly labelService = inject(LabelService);
-  private readonly boardService = inject(BoardService);
-  private readonly activityService = inject(ActivityService);
-  private readonly checklistService = inject(ChecklistService);
-  private readonly commentService = inject(CommentService);
-  private readonly attachmentService = inject(AttachmentService);
+  private readonly cardService = inject(CardStore);
+  private readonly labelService = inject(LabelStore);
+  private readonly boardService = inject(BoardStore);
+  private readonly activityService = inject(ActivityStore);
+  private readonly checklistService = inject(ChecklistStore);
+  private readonly commentService = inject(CommentStore);
+  private readonly attachmentService = inject(AttachmentStore);
 
   readonly card = input.required<Card>();
   readonly boardId = input.required<string>();
@@ -66,7 +66,7 @@ export class CardDetailModal {
 
   constructor() {
     // Mở thẻ nào thì nạp bản nháp của thẻ đó. `card()` là computed đọc lại từ
-    // CardService nên nó cũng đổi khi người khác sửa thẻ qua WebSocket — chỉ nạp
+    // CardStore nên nó cũng đổi khi người khác sửa thẻ qua WebSocket — chỉ nạp
     // lại khi ĐỔI SANG THẺ KHÁC, nếu không thì đang gõ dở bị ghi đè mất.
     let thẻĐangMở: string | null = null;
     effect(() => {

@@ -27,7 +27,10 @@ export class AttachmentsController {
 
   /** GET /attachments?cardId= — kèm link tải ký tạm (1 giờ). */
   @Get()
-  findAll(@CurrentUser() user: CurrentUserInfo, @Query('cardId') cardId: string) {
+  findAll(
+    @CurrentUser() user: CurrentUserInfo,
+    @Query('cardId') cardId: string,
+  ) {
     return this.attachments.findAll(user.uid, cardId);
   }
 

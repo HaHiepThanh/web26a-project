@@ -96,11 +96,17 @@ export class WorkspacesService {
       .maybeSingle(); // maybeSingle: không có dòng thì trả null, single() sẽ NÉM LỖI
 
     if (error) {
-      this.logger.error(`Kiểm tra thành viên thất bại (uid=${uid}, org=${orgId}): ${error.message}`);
-      throw new InternalServerErrorException('Failed to check access permissions');
+      this.logger.error(
+        `Kiểm tra thành viên thất bại (uid=${uid}, org=${orgId}): ${error.message}`,
+      );
+      throw new InternalServerErrorException(
+        'Failed to check access permissions',
+      );
     }
     if (!data) {
-      throw new ForbiddenException('You are not a member of this organization.');
+      throw new ForbiddenException(
+        'You are not a member of this organization.',
+      );
     }
     return data.role as OrgRole;
   }
@@ -176,7 +182,9 @@ export class WorkspacesService {
       .order('created_at');
 
     if (error) {
-      this.logger.error(`Đọc workspace thất bại (org=${orgId}): ${error.message}`);
+      this.logger.error(
+        `Đọc workspace thất bại (org=${orgId}): ${error.message}`,
+      );
       throw new InternalServerErrorException('Failed to load workspaces');
     }
 
@@ -196,11 +204,18 @@ export class WorkspacesService {
     const byWorkspace = new Map<string, string[]>();
     for (const m of memberRows ?? []) {
       const key = m.workspace_id as string;
-      byWorkspace.set(key, [...(byWorkspace.get(key) ?? []), m.user_id as string]);
+      byWorkspace.set(key, [
+        ...(byWorkspace.get(key) ?? []),
+        m.user_id as string,
+      ]);
     }
 
     return rows
-      .filter((w) => (w.visibility ?? 'org') === 'org' || (byWorkspace.get(w.id) ?? []).includes(uid))
+      .filter(
+        (w) =>
+          (w.visibility ?? 'org') === 'org' ||
+          (byWorkspace.get(w.id) ?? []).includes(uid),
+      )
       .map((w) => this.toResponse(w, byWorkspace.get(w.id) ?? []));
   }
 
@@ -211,7 +226,11 @@ export class WorkspacesService {
    * ⚠️ Không kiểm tra thì client gửi lên uuid bất kỳ là thêm được người ngoài
    *    công ty vào workspace — họ sẽ thấy toàn bộ board bên trong.
    */
-  private async loc(orgId: string, creatorUid: string, memberIds: string[]): Promise<string[]> {
+  private async loc(
+    orgId: string,
+    creatorUid: string,
+    memberIds: string[],
+  ): Promise<string[]> {
     const wanted = [...new Set([creatorUid, ...(memberIds ?? [])])];
 
     const { data, error } = await this.supabase.client
@@ -221,7 +240,9 @@ export class WorkspacesService {
       .in('user_id', wanted);
 
     if (error) {
-      this.logger.error(`Lọc thành viên thất bại (org=${orgId}): ${error.message}`);
+      this.logger.error(
+        `Lọc thành viên thất bại (org=${orgId}): ${error.message}`,
+      );
       throw new InternalServerErrorException('Failed to check member list');
     }
 
@@ -236,7 +257,11 @@ export class WorkspacesService {
   }
 
   /** Ghi lại đúng tập thành viên mong muốn (xoá hết rồi thêm lại cho chắc chắn khớp). */
-  private async ghiThanhVien(workspaceId: string, ownerUid: string, ids: string[]): Promise<void> {
+  private async ghiThanhVien(
+    workspaceId: string,
+    ownerUid: string,
+    ids: string[],
+  ): Promise<void> {
     const sb = this.supabase.client;
     await sb.from('workspace_members').delete().eq('workspace_id', workspaceId);
 
@@ -247,7 +272,9 @@ export class WorkspacesService {
     }));
     const { error } = await sb.from('workspace_members').insert(rows);
     if (error) {
-      this.logger.error(`Ghi workspace_members thất bại (ws=${workspaceId}): ${error.message}`);
+      this.logger.error(
+        `Ghi workspace_members thất bại (ws=${workspaceId}): ${error.message}`,
+      );
       throw new InternalServerErrorException('Failed to save member list');
     }
   }
@@ -267,7 +294,9 @@ export class WorkspacesService {
     memberIds: string[] = [],
   ): Promise<WorkspaceResponse> {
     if (!VISIBILITIES.includes(visibility)) {
-      throw new BadRequestException("visibility must be 'org' or 'restricted'.");
+      throw new BadRequestException(
+        "visibility must be 'org' or 'restricted'.",
+      );
     }
 
     // 1. Kiểm tra quyền TRƯỚC khi ghi. Bỏ bước này là ai cũng tạo được workspace
@@ -276,7 +305,10 @@ export class WorkspacesService {
 
     // 2. Lọc danh sách chỉ định TRƯỚC khi tạo workspace: sai thì hỏng ngay từ
     //    đầu, không để lại workspace nửa vời phải đi dọn.
-    const ids = visibility === 'restricted' ? await this.loc(orgId, uid, memberIds) : [uid];
+    const ids =
+      visibility === 'restricted'
+        ? await this.loc(orgId, uid, memberIds)
+        : [uid];
 
     // 3. Tạo workspace. `created_by` lấy từ token, không lấy từ body.
     const { data: ws, error } = await this.supabase.client
@@ -292,7 +324,9 @@ export class WorkspacesService {
       .single();
 
     if (error) {
-      this.logger.error(`Tạo workspace thất bại (uid=${uid}, org=${orgId}): ${error.message}`);
+      this.logger.error(
+        `Tạo workspace thất bại (uid=${uid}, org=${orgId}): ${error.message}`,
+      );
       throw new InternalServerErrorException('Failed to create workspace');
     }
 
@@ -326,7 +360,8 @@ export class WorkspacesService {
 
     if (error) {
       // id gõ sai định dạng uuid → coi như không tồn tại, đừng để lọt thành 500.
-      if (error.code === '22P02') throw new NotFoundException('Workspace not found.');
+      if (error.code === '22P02')
+        throw new NotFoundException('Workspace not found.');
       this.logger.error(`Đọc workspace thất bại (id=${id}): ${error.message}`);
       throw new InternalServerErrorException('Failed to load workspace');
     }
@@ -343,7 +378,8 @@ export class WorkspacesService {
 
     if ((ws.visibility ?? 'org') === 'restricted') {
       const ids = await this.memberIdsOf(ws.id);
-      if (!ids.includes(uid)) throw new NotFoundException('Workspace not found.');
+      if (!ids.includes(uid))
+        throw new NotFoundException('Workspace not found.');
     }
     return ws;
   }
@@ -354,7 +390,10 @@ export class WorkspacesService {
   }
 
   /** Ai đang ở trong workspace này — dùng cho ô chọn thành viên khi tạo board. */
-  async findMembers(uid: string, id: string): Promise<WorkspaceMemberResponse[]> {
+  async findMembers(
+    uid: string,
+    id: string,
+  ): Promise<WorkspaceMemberResponse[]> {
     const ws = await this.findOwnedOr404(uid, id);
 
     // Workspace mở cho cả tổ chức → "thành viên workspace" chính là mọi thành
@@ -362,15 +401,19 @@ export class WorkspacesService {
     if ((ws.visibility ?? 'org') === 'org') {
       const { data, error } = await this.supabase.client
         .from('organization_members')
-        .select('user_id, joined_at, users(id, email, display_name, avatar_url)')
+        .select(
+          'user_id, joined_at, users(id, email, display_name, avatar_url)',
+        )
         .eq('org_id', ws.org_id);
       if (error) {
-        this.logger.error(`Đọc thành viên tổ chức thất bại (ws=${id}): ${error.message}`);
+        this.logger.error(
+          `Đọc thành viên tổ chức thất bại (ws=${id}): ${error.message}`,
+        );
         throw new InternalServerErrorException('Failed to load member list');
       }
       return (data ?? []).map((r) => ({
         userId: r.user_id as string,
-        role: (r.user_id === ws.created_by ? 'owner' : 'member') as 'owner' | 'member',
+        role: r.user_id === ws.created_by ? 'owner' : 'member',
         joinedAt: (r.joined_at as string) ?? null,
         user: this.toUser(r.users),
       }));
@@ -378,10 +421,14 @@ export class WorkspacesService {
 
     const { data, error } = await this.supabase.client
       .from('workspace_members')
-      .select('user_id, role, joined_at, users(id, email, display_name, avatar_url)')
+      .select(
+        'user_id, role, joined_at, users(id, email, display_name, avatar_url)',
+      )
       .eq('workspace_id', id);
     if (error) {
-      this.logger.error(`Đọc workspace_members thất bại (ws=${id}): ${error.message}`);
+      this.logger.error(
+        `Đọc workspace_members thất bại (ws=${id}): ${error.message}`,
+      );
       throw new InternalServerErrorException('Failed to load member list');
     }
     return (data ?? []).map((r) => ({
@@ -395,7 +442,12 @@ export class WorkspacesService {
   private toUser(row: unknown): WorkspaceMemberResponse['user'] {
     const u = row as JoinedUser | null;
     if (!u) return null;
-    return { id: u.id, email: u.email, displayName: u.display_name, avatarUrl: u.avatar_url };
+    return {
+      id: u.id,
+      email: u.email,
+      displayName: u.display_name,
+      avatarUrl: u.avatar_url,
+    };
   }
 
   /** Đổi tên / mô tả / phạm vi hiển thị / danh sách thành viên. Chỉ ghi trường được gửi lên. */
@@ -412,13 +464,19 @@ export class WorkspacesService {
     const current = await this.findOwnedOr404(uid, id);
     await this.assertCanManage(uid, current.org_id);
 
-    if (changes.visibility !== undefined && !VISIBILITIES.includes(changes.visibility)) {
-      throw new BadRequestException("visibility must be 'org' or 'restricted'.");
+    if (
+      changes.visibility !== undefined &&
+      !VISIBILITIES.includes(changes.visibility)
+    ) {
+      throw new BadRequestException(
+        "visibility must be 'org' or 'restricted'.",
+      );
     }
 
     const patch: Record<string, string> = {};
     if (changes.name !== undefined) patch.name = changes.name.trim();
-    if (changes.description !== undefined) patch.description = changes.description;
+    if (changes.description !== undefined)
+      patch.description = changes.description;
     if (changes.visibility !== undefined) patch.visibility = changes.visibility;
 
     const visibilityMoi = changes.visibility ?? current.visibility ?? 'org';
@@ -428,10 +486,15 @@ export class WorkspacesService {
     let ids = await this.memberIdsOf(id);
     const phaiGhiThanhVien =
       visibilityMoi === 'restricted' &&
-      (changes.memberIds !== undefined || (current.visibility ?? 'org') !== 'restricted');
+      (changes.memberIds !== undefined ||
+        (current.visibility ?? 'org') !== 'restricted');
 
     if (phaiGhiThanhVien) {
-      ids = await this.loc(current.org_id, current.created_by, changes.memberIds ?? ids);
+      ids = await this.loc(
+        current.org_id,
+        current.created_by,
+        changes.memberIds ?? ids,
+      );
     }
 
     // Không gửi trường nào thì khỏi gọi database, trả lại nguyên trạng.
@@ -449,7 +512,9 @@ export class WorkspacesService {
         .single();
 
       if (error) {
-        this.logger.error(`Sửa workspace thất bại (id=${id}): ${error.message}`);
+        this.logger.error(
+          `Sửa workspace thất bại (id=${id}): ${error.message}`,
+        );
         throw new InternalServerErrorException('Failed to update workspace');
       }
       row = data as WorkspaceRow;
@@ -468,12 +533,18 @@ export class WorkspacesService {
    * Board / list / card bên trong tự đi theo nhờ ON DELETE CASCADE khai trong
    * database.sql — không phải tự xoá tay từng bảng.
    */
-  async remove(uid: string, id: string): Promise<{ id: string; deleted: true }> {
+  async remove(
+    uid: string,
+    id: string,
+  ): Promise<{ id: string; deleted: true }> {
     // Ném 404 cho cả hai trường hợp: không tồn tại, và thuộc tổ chức khác.
     const ws = await this.findOwnedOr404(uid, id);
     await this.assertCanManage(uid, ws.org_id);
 
-    const { error } = await this.supabase.client.from('workspaces').delete().eq('id', id);
+    const { error } = await this.supabase.client
+      .from('workspaces')
+      .delete()
+      .eq('id', id);
 
     if (error) {
       this.logger.error(`Xoá workspace thất bại (id=${id}): ${error.message}`);

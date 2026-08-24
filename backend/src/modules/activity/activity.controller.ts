@@ -11,7 +11,10 @@ export class ActivityController {
   constructor(private readonly activity: ActivityService) {}
 
   @Get()
-  findAll(@CurrentUser() user: CurrentUserInfo, @Query('boardId') boardId: string) {
+  findAll(
+    @CurrentUser() user: CurrentUserInfo,
+    @Query('boardId') boardId: string,
+  ) {
     return this.activity.findAll(user.uid, boardId);
   }
 }

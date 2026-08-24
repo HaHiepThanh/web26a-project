@@ -46,7 +46,9 @@ export class RolesGuard implements CanActivate {
 
     const orgId = this.resolveOrgId(req);
     if (!orgId) {
-      throw new ForbiddenException('Could not determine the organization for this request.');
+      throw new ForbiddenException(
+        'Could not determine the organization for this request.',
+      );
     }
 
     const { data, error } = await this.supabase.client
@@ -57,11 +59,15 @@ export class RolesGuard implements CanActivate {
       .maybeSingle();
 
     if (error) {
-      this.logger.error(`Đọc role thất bại (uid=${uid}, org=${orgId}): ${error.message}`);
+      this.logger.error(
+        `Đọc role thất bại (uid=${uid}, org=${orgId}): ${error.message}`,
+      );
       throw new InternalServerErrorException('Failed to check permissions');
     }
     if (!data) {
-      throw new ForbiddenException('You are not a member of this organization.');
+      throw new ForbiddenException(
+        'You are not a member of this organization.',
+      );
     }
 
     const role = data.role as Role;

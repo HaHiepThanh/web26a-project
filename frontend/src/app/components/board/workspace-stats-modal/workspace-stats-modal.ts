@@ -1,8 +1,8 @@
 import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { ApiBoardStats, WorkspaceStatsData } from '../../../models';
 import { ApiService } from '../../../services/api.service';
-import { ActivityService } from '../../../services/activity.service';
-import { BoardService } from '../../../services/board.service';
+import { ActivityStore } from '../../../ngrx/activity/activity.store';
+import { BoardStore } from '../../../ngrx/board/board.store';
 import { describeError } from '../../../services/api-error.util';
 import { WorkspaceStatsPanel } from '../workspace-stats-panel/workspace-stats-panel';
 
@@ -24,8 +24,8 @@ import { WorkspaceStatsPanel } from '../workspace-stats-panel/workspace-stats-pa
 })
 export class WorkspaceStatsModal {
   private readonly api = inject(ApiService);
-  private readonly activityService = inject(ActivityService);
-  private readonly boardService = inject(BoardService);
+  private readonly activityService = inject(ActivityStore);
+  private readonly boardService = inject(BoardStore);
 
   readonly boardId = input.required<string>();
   readonly boardName = input<string | null>(null);

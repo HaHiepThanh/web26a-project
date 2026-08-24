@@ -1,10 +1,10 @@
 import {
   BadRequestException,
-  ForbiddenException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import { AccessService } from '../../common/access/access.service';
 import { SupabaseService } from '../../common/supabase/supabase.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 
@@ -59,49 +59,14 @@ export class LabelsService {
   constructor(
     private readonly supabase: SupabaseService,
     private readonly realtime: RealtimeGateway,
+    private readonly access: AccessService,
   ) {}
-
-  /**
-   * Kiểm tra user có được truy cập board này không, trả về `org_id` của nó.
-   * `labels.org_id` là NOT NULL nhưng client chỉ gửi `boardId`, nên phải đi
-   * qua board để lấy — đồng thời tiện kiểm tra quyền luôn.
-   */
-  private async assertBoardAccess(uid: string, boardId: string): Promise<string> {
-    const { data: board, error: boardError } = await this.supabase.client
-      .from('boards')
-      .select('id, org_id')
-      .eq('id', boardId)
-      .maybeSingle();
-    if (boardError) {
-      // id gõ sai định dạng uuid → coi như không tồn tại, đừng để lọt thành 500.
-      if (laUuidSai(boardError)) throw new NotFoundException('Board not found.');
-      throw new InternalServerErrorException('Failed to load board.');
-    }
-    if (!board) {
-      throw new NotFoundException('Board not found.');
-    }
-
-    const { data: member, error: memberError } = await this.supabase.client
-      .from('organization_members')
-      .select('role')
-      .eq('org_id', board.org_id)
-      .eq('user_id', uid)
-      .maybeSingle();
-    if (memberError) {
-      throw new InternalServerErrorException('Failed to check permissions.');
-    }
-    if (!member) {
-      throw new ForbiddenException('You are not a member of this board\'s organization.');
-    }
-
-    return board.org_id;
-  }
 
   /** Danh sách nhãn của 1 board. Thiếu `boardId` → trả `[]` thay vì lỗi. */
   async findAll(uid: string, boardId: string): Promise<LabelResponse[]> {
     if (!boardId) return [];
 
-    await this.assertBoardAccess(uid, boardId);
+    await this.access.assertBoardAccess(uid, boardId);
 
     const { data, error } = await this.supabase.client
       .from('labels')
@@ -114,7 +79,12 @@ export class LabelsService {
   }
 
   /** Tạo nhãn mới cho board. `color` phải đúng định dạng hex `#rrggbb`. */
-  async create(uid: string, boardId: string, name: string, color: string): Promise<LabelResponse> {
+  async create(
+    uid: string,
+    boardId: string,
+    name: string,
+    color: string,
+  ): Promise<LabelResponse> {
     if (!boardId || !name?.trim()) {
       throw new BadRequestException('Missing boardId or name.');
     }
@@ -122,7 +92,7 @@ export class LabelsService {
       throw new BadRequestException('color must be a hex value like #rrggbb.');
     }
 
-    const orgId = await this.assertBoardAccess(uid, boardId);
+    const { orgId } = await this.access.assertBoardAccess(uid, boardId);
 
     const { data, error } = await this.supabase.client
       .from('labels')
@@ -144,7 +114,11 @@ export class LabelsService {
    * `cards` không có `board_id` trực tiếp, phải đi vòng qua `lists`.
    * Gắn 2 lần cùng 1 cặp card+label không báo lỗi (upsert, ignoreDuplicates).
    */
-  async attach(uid: string, cardId: string, labelId: string): Promise<{ cardId: string; labelId: string }> {
+  async attach(
+    uid: string,
+    cardId: string,
+    labelId: string,
+  ): Promise<{ cardId: string; labelId: string }> {
     const { data: label, error: labelError } = await this.supabase.client
       .from('labels')
       .select('id, board_id, org_id')
@@ -152,23 +126,19 @@ export class LabelsService {
       .maybeSingle();
     if (labelError) {
       // id gõ sai định dạng uuid → coi như không tồn tại, đừng để lọt thành 500.
-      if (laUuidSai(labelError)) throw new NotFoundException('Label not found.');
+      if (laUuidSai(labelError))
+        throw new NotFoundException('Label not found.');
       throw new InternalServerErrorException('Failed to load label.');
     }
     if (!label) {
       throw new NotFoundException('Label not found.');
     }
 
-    const { data: member, error: memberError } = await this.supabase.client
-      .from('organization_members')
-      .select('role')
-      .eq('org_id', label.org_id)
-      .eq('user_id', uid)
-      .maybeSingle();
-    if (memberError) {
-      throw new InternalServerErrorException('Failed to check permissions.');
-    }
-    if (!member) {
+    // Nhãn thuộc về board, nên kiểm quyền theo BOARD để ăn đủ ba tầng. Kiểm mỗi
+    // organization_members là người cùng tổ chức nhưng ngoài board vẫn sửa được.
+    try {
+      await this.access.assertBoardAccess(uid, label.board_id as string);
+    } catch {
       throw new NotFoundException('Label not found.');
     }
 
@@ -192,22 +162,30 @@ export class LabelsService {
       .eq('id', card.list_id)
       .maybeSingle();
     if (listError || !list) {
-      throw new InternalServerErrorException('Failed to load the card\'s list.');
+      throw new InternalServerErrorException("Failed to load the card's list.");
     }
 
     if (list.board_id !== label.board_id) {
-      throw new BadRequestException('Card and label are not on the same board.');
+      throw new BadRequestException(
+        'Card and label are not on the same board.',
+      );
     }
 
     // ignoreDuplicates: gắn lại nhãn đã có thì không ném lỗi, cũng không trả về
     // dòng nào — vì vậy không đọc `data`, cứ coi là thành công.
     const { error } = await this.supabase.client
       .from('card_labels')
-      .upsert({ card_id: cardId, label_id: labelId }, { onConflict: 'card_id,label_id', ignoreDuplicates: true });
+      .upsert(
+        { card_id: cardId, label_id: labelId },
+        { onConflict: 'card_id,label_id', ignoreDuplicates: true },
+      );
     if (error) {
       throw new InternalServerErrorException('Failed to attach label.');
     }
-    this.realtime.emitToBoard(label.board_id as string, 'label.attached', uid, { cardId, labelId });
+    this.realtime.emitToBoard(label.board_id as string, 'label.attached', uid, {
+      cardId,
+      labelId,
+    });
     return { cardId, labelId };
   }
 
@@ -224,23 +202,19 @@ export class LabelsService {
       .maybeSingle();
     if (labelError) {
       // id gõ sai định dạng uuid → coi như không tồn tại, đừng để lọt thành 500.
-      if (laUuidSai(labelError)) throw new NotFoundException('Label not found.');
+      if (laUuidSai(labelError))
+        throw new NotFoundException('Label not found.');
       throw new InternalServerErrorException('Failed to load label.');
     }
     if (!label) {
       throw new NotFoundException('Label not found.');
     }
 
-    const { data: member, error: memberError } = await this.supabase.client
-      .from('organization_members')
-      .select('role')
-      .eq('org_id', label.org_id)
-      .eq('user_id', uid)
-      .maybeSingle();
-    if (memberError) {
-      throw new InternalServerErrorException('Failed to check permissions.');
-    }
-    if (!member) {
+    // Nhãn thuộc về board, nên kiểm quyền theo BOARD để ăn đủ ba tầng. Kiểm mỗi
+    // organization_members là người cùng tổ chức nhưng ngoài board vẫn sửa được.
+    try {
+      await this.access.assertBoardAccess(uid, label.board_id as string);
+    } catch {
       throw new NotFoundException('Label not found.');
     }
 
@@ -256,6 +230,9 @@ export class LabelsService {
     if (!data || data.length === 0) {
       throw new NotFoundException('This label is not attached to the card.');
     }
-    this.realtime.emitToBoard(label.board_id as string, 'label.detached', uid, { cardId, labelId });
+    this.realtime.emitToBoard(label.board_id as string, 'label.detached', uid, {
+      cardId,
+      labelId,
+    });
   }
 }

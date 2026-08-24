@@ -65,19 +65,28 @@ export class BoardPrefsService {
     return (data ?? []).map((r) => r.board_id as string);
   }
 
-  async star(uid: string, boardId: string): Promise<{ boardId: string; starred: true }> {
+  async star(
+    uid: string,
+    boardId: string,
+  ): Promise<{ boardId: string; starred: true }> {
     await this.access.assertBoardAccess(uid, boardId);
 
     // upsert + ignoreDuplicates: bấm sao hai lần (hoặc hai tab cùng bấm) không vỡ
     // vì trùng khoá chính — coi như đã sao rồi, không phải lỗi.
     const { error } = await this.supabase.client
       .from('board_stars')
-      .upsert({ board_id: boardId, user_id: uid }, { onConflict: 'board_id,user_id', ignoreDuplicates: true });
+      .upsert(
+        { board_id: boardId, user_id: uid },
+        { onConflict: 'board_id,user_id', ignoreDuplicates: true },
+      );
     if (error) throw this.loi('Failed to star board', error.message);
     return { boardId, starred: true };
   }
 
-  async unstar(uid: string, boardId: string): Promise<{ boardId: string; starred: false }> {
+  async unstar(
+    uid: string,
+    boardId: string,
+  ): Promise<{ boardId: string; starred: false }> {
     await this.access.assertBoardAccess(uid, boardId);
     const { error } = await this.supabase.client
       .from('board_stars')
@@ -90,7 +99,10 @@ export class BoardPrefsService {
 
   // ------------------------------------------------------------- bộ lọc đã lưu
 
-  async findFilters(uid: string, boardId: string): Promise<SavedFilterResponse[]> {
+  async findFilters(
+    uid: string,
+    boardId: string,
+  ): Promise<SavedFilterResponse[]> {
     if (!boardId) return [];
     await this.access.assertBoardAccess(uid, boardId);
 
@@ -163,14 +175,19 @@ export class BoardPrefsService {
       .eq('id', id)
       .eq('user_id', uid) // ⚠️ chốt: chỉ xoá được bộ lọc CỦA MÌNH
       .select();
-    if (error && error.code !== '22P02') throw this.loi('Failed to delete filter', error.message);
+    if (error && error.code !== '22P02')
+      throw this.loi('Failed to delete filter', error.message);
     // Không khớp dòng nào → hoặc không tồn tại, hoặc của người khác. Cùng trả 404.
-    if (!data || data.length === 0) throw new NotFoundException('Filter not found.');
+    if (!data || data.length === 0)
+      throw new NotFoundException('Filter not found.');
   }
 
   // -------------------------------------------------------- nhóm highlight
 
-  async findGroups(uid: string, boardId: string): Promise<HighlightGroupResponse[]> {
+  async findGroups(
+    uid: string,
+    boardId: string,
+  ): Promise<HighlightGroupResponse[]> {
     if (!boardId) return [];
     await this.access.assertBoardAccess(uid, boardId);
 
@@ -201,7 +218,12 @@ export class BoardPrefsService {
 
     const { data, error } = await this.supabase.client
       .from('board_highlight_groups')
-      .insert({ board_id: input.boardId, user_id: uid, name, card_ids: input.cardIds ?? [] })
+      .insert({
+        board_id: input.boardId,
+        user_id: uid,
+        name,
+        card_ids: input.cardIds ?? [],
+      })
       .select()
       .single();
     if (error) throw this.loi('Failed to save highlight group', error.message);
@@ -222,7 +244,9 @@ export class BoardPrefsService {
       .eq('id', id)
       .eq('user_id', uid)
       .select();
-    if (error && error.code !== '22P02') throw this.loi('Failed to delete highlight group', error.message);
-    if (!data || data.length === 0) throw new NotFoundException('Highlight group not found.');
+    if (error && error.code !== '22P02')
+      throw this.loi('Failed to delete highlight group', error.message);
+    if (!data || data.length === 0)
+      throw new NotFoundException('Highlight group not found.');
   }
 }

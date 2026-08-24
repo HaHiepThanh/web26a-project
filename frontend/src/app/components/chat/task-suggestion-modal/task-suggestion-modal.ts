@@ -1,8 +1,8 @@
 import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ChatTaskSuggestion, List, SuggestedCard, SuggestedPriority, User } from '../../../models';
-import { ListService } from '../../../services/list.service';
-import { BoardService } from '../../../services/board.service';
+import { ListStore } from '../../../ngrx/list/list.store';
+import { BoardStore } from '../../../ngrx/board/board.store';
 
 /** Một dòng trong bảng — thêm cờ `chon` để loại bớt thẻ không muốn tạo. */
 interface DongThe extends SuggestedCard {
@@ -28,8 +28,8 @@ const MUC_UU_TIEN: { id: SuggestedPriority; label: string }[] = [
   templateUrl: './task-suggestion-modal.html',
 })
 export class TaskSuggestionModal {
-  private readonly listService = inject(ListService);
-  private readonly boardService = inject(BoardService);
+  private readonly listService = inject(ListStore);
+  private readonly boardService = inject(BoardStore);
 
   readonly suggestion = input.required<ChatTaskSuggestion>();
 

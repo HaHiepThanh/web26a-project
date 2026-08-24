@@ -13,6 +13,9 @@ import { FirebaseAuthGuard } from '../../common/firebase/firebase-auth.guard';
 import { CurrentUser } from '../../common/firebase/current-user.decorator';
 import type { CurrentUserInfo } from '../../common/firebase/current-user.decorator';
 import { ListsService } from './lists.service';
+import { CreateListDto } from './dto/create-list.dto';
+import { RenameListDto } from './dto/rename-list.dto';
+import { MoveListDto } from './dto/move-list.dto';
 
 @UseGuards(FirebaseAuthGuard)
 @Controller('lists')
@@ -20,12 +23,15 @@ export class ListsController {
   constructor(private readonly lists: ListsService) {}
 
   @Get()
-  findAll(@CurrentUser() user: CurrentUserInfo, @Query('boardId') boardId: string) {
+  findAll(
+    @CurrentUser() user: CurrentUserInfo,
+    @Query('boardId') boardId: string,
+  ) {
     return this.lists.findAll(user.uid, boardId);
   }
 
   @Post()
-  create(@CurrentUser() user: CurrentUserInfo, @Body() body: { boardId: string; name: string }) {
+  create(@CurrentUser() user: CurrentUserInfo, @Body() body: CreateListDto) {
     return this.lists.create(user.uid, body.boardId, body.name);
   }
 
@@ -33,7 +39,7 @@ export class ListsController {
   rename(
     @CurrentUser() user: CurrentUserInfo,
     @Param('id') id: string,
-    @Body() body: { name: string },
+    @Body() body: RenameListDto,
   ) {
     return this.lists.rename(user.uid, id, body.name);
   }
@@ -42,7 +48,7 @@ export class ListsController {
   reorder(
     @CurrentUser() user: CurrentUserInfo,
     @Param('id') id: string,
-    @Body() body: { position: number },
+    @Body() body: MoveListDto,
   ) {
     return this.lists.reorder(user.uid, id, body.position);
   }

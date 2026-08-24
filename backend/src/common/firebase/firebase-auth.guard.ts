@@ -20,10 +20,14 @@ export class FirebaseAuthGuard implements CanActivate {
   constructor(private readonly firebase: FirebaseAdminService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const req = context.switchToHttp().getRequest<Request & { user?: CurrentUserInfo }>();
+    const req = context
+      .switchToHttp()
+      .getRequest<Request & { user?: CurrentUserInfo }>();
     const header = req.headers.authorization;
     if (!header?.startsWith('Bearer ')) {
-      throw new UnauthorizedException('Missing Authorization header: Bearer <idToken>');
+      throw new UnauthorizedException(
+        'Missing Authorization header: Bearer <idToken>',
+      );
     }
 
     const idToken = header.slice('Bearer '.length).trim();

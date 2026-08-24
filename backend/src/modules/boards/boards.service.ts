@@ -5,6 +5,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import { AccessService } from '../../common/access/access.service';
 import { SupabaseService } from '../../common/supabase/supabase.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 
@@ -32,7 +33,12 @@ interface JoinedUser {
 function toUser(row: unknown) {
   const u = row as JoinedUser | null;
   if (!u) return null;
-  return { id: u.id, email: u.email, displayName: u.display_name, avatarUrl: u.avatar_url };
+  return {
+    id: u.id,
+    email: u.email,
+    displayName: u.display_name,
+    avatarUrl: u.avatar_url,
+  };
 }
 
 /** Dòng thô Supabase trả về (tên cột snake_case). */
@@ -98,6 +104,7 @@ export class BoardsService {
   constructor(
     private readonly supabase: SupabaseService,
     private readonly realtime: RealtimeGateway,
+    private readonly access: AccessService,
   ) {}
 
   /**
@@ -107,7 +114,10 @@ export class BoardsService {
    * workspace để lấy org_id — tách ra một chỗ để khỏi chép lại logic tìm +
    * kiểm tra quyền ở từng hàm.
    */
-  private async assertWorkspaceAccess(uid: string, workspaceId: string): Promise<string> {
+  private async assertWorkspaceAccess(
+    uid: string,
+    workspaceId: string,
+  ): Promise<string> {
     const { data: ws, error: wsError } = await this.supabase.client
       .from('workspaces')
       .select('id, org_id, visibility')
@@ -115,7 +125,8 @@ export class BoardsService {
       .maybeSingle();
     if (wsError) {
       // id gõ sai định dạng uuid → coi như không tồn tại, đừng để lọt thành 500.
-      if (laUuidSai(wsError)) throw new NotFoundException('Workspace not found.');
+      if (laUuidSai(wsError))
+        throw new NotFoundException('Workspace not found.');
       throw new InternalServerErrorException('Failed to load workspace.');
     }
     if (!ws) {
@@ -132,13 +143,18 @@ export class BoardsService {
       throw new InternalServerErrorException('Failed to check permissions.');
     }
     if (!member) {
-      throw new ForbiddenException('You are not a member of this workspace\'s organization.');
+      throw new ForbiddenException(
+        "You are not a member of this workspace's organization.",
+      );
     }
 
     // Workspace `restricted` chỉ mở cho người được chỉ định — kể cả khi họ vẫn
     // thuộc tổ chức. Thiếu chốt này thì đặt phạm vi cho workspace là vô nghĩa:
     // ai cũng lách vào qua đường /boards?workspaceId=.
-    if ((ws.visibility as string) === 'restricted' && !(await this.laThanhVienWorkspace(uid, workspaceId))) {
+    if (
+      (ws.visibility as string) === 'restricted' &&
+      !(await this.laThanhVienWorkspace(uid, workspaceId))
+    ) {
       throw new NotFoundException('Workspace not found.');
     }
 
@@ -163,11 +179,16 @@ export class BoardsService {
       .maybeSingle();
     const role = data?.role as string | undefined;
     if (role !== 'owner' && role !== 'admin') {
-      throw new ForbiddenException('Only the organization owner or an admin can manage boards.');
+      throw new ForbiddenException(
+        'Only the organization owner or an admin can manage boards.',
+      );
     }
   }
 
-  private async laThanhVienWorkspace(uid: string, workspaceId: string): Promise<boolean> {
+  private async laThanhVienWorkspace(
+    uid: string,
+    workspaceId: string,
+  ): Promise<boolean> {
     const { data } = await this.supabase.client
       .from('workspace_members')
       .select('user_id')
@@ -209,9 +230,13 @@ export class BoardsService {
 
     // Workspace mở cho cả tổ chức → vùng chọn là thành viên tổ chức.
     // Workspace `restricted` → vùng chọn hẹp lại đúng bằng workspace_members.
-    const bang = (ws.visibility as string) === 'restricted' ? 'workspace_members' : 'organization_members';
+    const bang =
+      (ws.visibility as string) === 'restricted'
+        ? 'workspace_members'
+        : 'organization_members';
     const cot = bang === 'workspace_members' ? 'workspace_id' : 'org_id';
-    const giaTri = bang === 'workspace_members' ? workspaceId : (ws.org_id as string);
+    const giaTri =
+      bang === 'workspace_members' ? workspaceId : (ws.org_id as string);
 
     const { data } = await this.supabase.client
       .from(bang)
@@ -238,7 +263,9 @@ export class BoardsService {
       .from('board_members')
       .insert(ids.map((id) => ({ board_id: boardId, user_id: id })));
     if (error) {
-      throw new InternalServerErrorException('Failed to save board member list');
+      throw new InternalServerErrorException(
+        'Failed to save board member list',
+      );
     }
   }
 
@@ -280,7 +307,11 @@ export class BoardsService {
     // Board 'private' chỉ hiện với người được chỉ định. Lọc ở ĐÂY chứ không ở
     // frontend — gửi xuống rồi mới ẩn thì mở tab Network là đọc được hết.
     return rows
-      .filter((b) => b.visibility !== 'private' || (theoBoard.get(b.id) ?? []).includes(uid))
+      .filter(
+        (b) =>
+          b.visibility !== 'private' ||
+          (theoBoard.get(b.id) ?? []).includes(uid),
+      )
       .map((b) => toBoard(b, theoBoard.get(b.id) ?? []));
   }
 
@@ -291,55 +322,33 @@ export class BoardsService {
    * không để lộ "board này có thật nhưng bạn không có quyền", tránh dò id.
    */
   async findOne(uid: string, id: string): Promise<BoardResponse> {
-    const { data: board, error } = await this.supabase.client
-      .from('boards')
-      .select()
-      .eq('id', id)
-      .maybeSingle();
-    if (error) {
-      // id gõ sai định dạng uuid → coi như không tồn tại, đừng để lọt thành 500.
-      if (laUuidSai(error)) throw new NotFoundException('Board not found.');
+    // Trước đây chỗ này tự chép lại ĐÚNG ba tầng kiểm tra của AccessService —
+    // 5 truy vấn nối tiếp (board → tổ chức → workspace → workspace_members →
+    // board_members). Đo được ~354ms, và `findMembers` gọi lại hàm này nên nó
+    // gánh luôn 7 truy vấn (~683ms).
+    //
+    // Giờ dùng chung `assertBoardAccess`, vốn đã gói cả ba tầng vào MỘT hàm SQL
+    // (migrations/0006_*.sql). Vừa nhanh hơn, vừa hết một bản sao logic quyền —
+    // chính kiểu chép tay này là chỗ đã để lọt 6 lỗ hổng lần trước.
+    await this.access.assertBoardAccess(uid, id);
+
+    // Qua được cửa rồi mới lấy dữ liệu. Hai truy vấn này độc lập nhau nên chạy
+    // SONG SONG — tốn 1 chuyến khứ hồi chứ không phải 2.
+    const [boardRes, ids] = await Promise.all([
+      this.supabase.client.from('boards').select().eq('id', id).maybeSingle(),
+      this.memberIdsOf(id),
+    ]);
+
+    if (boardRes.error) {
       throw new InternalServerErrorException('Failed to load board.');
     }
-    if (!board) {
+    // assertBoardAccess đã xác nhận board tồn tại, nên tới đây mà rỗng là dữ
+    // liệu vừa bị xoá giữa chừng — vẫn trả 404 như cũ.
+    if (!boardRes.data) {
       throw new NotFoundException('Board not found.');
     }
 
-    const { data: member, error: memberError } = await this.supabase.client
-      .from('organization_members')
-      .select('role')
-      // `board` ở đây là DÒNG THÔ từ Supabase (snake_case) — chưa qua toBoard().
-      .eq('org_id', (board as BoardRow).org_id)
-      .eq('user_id', uid)
-      .maybeSingle();
-    if (memberError) {
-      throw new InternalServerErrorException('Failed to check permissions.');
-    }
-    if (!member) {
-      throw new NotFoundException('Board not found.');
-    }
-
-    const row = board as BoardRow;
-
-    // Board nằm trong workspace `restricted` mà mình không thuộc → coi như không có.
-    const { data: ws } = await this.supabase.client
-      .from('workspaces')
-      .select('visibility')
-      .eq('id', row.workspace_id)
-      .maybeSingle();
-    if (
-      (ws?.visibility as string) === 'restricted' &&
-      !(await this.laThanhVienWorkspace(uid, row.workspace_id))
-    ) {
-      throw new NotFoundException('Board not found.');
-    }
-
-    const ids = await this.memberIdsOf(row.id);
-    if (row.visibility === 'private' && !ids.includes(uid)) {
-      throw new NotFoundException('Board not found.');
-    }
-
-    return toBoard(row, ids);
+    return toBoard(boardRes.data as BoardRow, ids);
   }
 
   /**
@@ -360,7 +369,9 @@ export class BoardsService {
       throw new BadRequestException('Missing workspaceId or name.');
     }
     if (!VISIBILITIES.includes(visibility)) {
-      throw new BadRequestException('visibility must be workspace, private, or public.');
+      throw new BadRequestException(
+        'visibility must be workspace, private, or public.',
+      );
     }
 
     const orgId = await this.assertWorkspaceAccess(uid, workspaceId);
@@ -368,7 +379,10 @@ export class BoardsService {
 
     // Lọc danh sách TRƯỚC khi tạo board: sai thì hỏng ngay, không để lại board
     // nửa vời phải đi dọn.
-    const ids = visibility === 'private' ? await this.locTheoWorkspace(workspaceId, uid, memberIds) : [];
+    const ids =
+      visibility === 'private'
+        ? await this.locTheoWorkspace(workspaceId, uid, memberIds)
+        : [];
 
     const { data, error } = await this.supabase.client
       .from('boards')
@@ -400,7 +414,10 @@ export class BoardsService {
   }
 
   /** Ai được chỉ định xem board này (dùng cho ô "Thành viên" trong phần cài đặt board). */
-  async findMembers(uid: string, id: string): Promise<{ userId: string; user: unknown }[]> {
+  async findMembers(
+    uid: string,
+    id: string,
+  ): Promise<{ userId: string; user: unknown }[]> {
     const board = await this.findOne(uid, id);
 
     // Board mở cho cả workspace → "thành viên board" chính là thành viên workspace.
@@ -420,14 +437,20 @@ export class BoardsService {
             .from('organization_members')
             .select('user_id, users(id, email, display_name, avatar_url)')
             .eq('org_id', data?.org_id as string);
-      return (rows ?? []).map((r) => ({ userId: r.user_id as string, user: toUser(r.users) }));
+      return (rows ?? []).map((r) => ({
+        userId: r.user_id as string,
+        user: toUser(r.users),
+      }));
     }
 
     const { data: rows } = await this.supabase.client
       .from('board_members')
       .select('user_id, users(id, email, display_name, avatar_url)')
       .eq('board_id', id);
-    return (rows ?? []).map((r) => ({ userId: r.user_id as string, user: toUser(r.users) }));
+    return (rows ?? []).map((r) => ({
+      userId: r.user_id as string,
+      user: toUser(r.users),
+    }));
   }
 
   /**
@@ -452,8 +475,13 @@ export class BoardsService {
     const current = await this.findOne(uid, id); // ném 404 nếu không tồn tại / khác tổ chức
     await this.assertCanManage(uid, current.orgId);
 
-    if (changes.visibility !== undefined && !VISIBILITIES.includes(changes.visibility)) {
-      throw new BadRequestException('visibility must be workspace, private, or public.');
+    if (
+      changes.visibility !== undefined &&
+      !VISIBILITIES.includes(changes.visibility)
+    ) {
+      throw new BadRequestException(
+        'visibility must be workspace, private, or public.',
+      );
     }
 
     const patch: Record<string, string | null> = {};
@@ -462,7 +490,8 @@ export class BoardsService {
     // Màu nền + ảnh nền: hai cột này đã có sẵn trong bảng `boards` và API vẫn
     // trả ra từ đầu, chỉ là chưa bao giờ ghi được — nên frontend phải giữ tạm ở
     // localStorage, đổi máy là mất nền. Nhận `null` để người dùng gỡ nền về mặc định.
-    if (changes.background !== undefined) patch.background = changes.background || null;
+    if (changes.background !== undefined)
+      patch.background = changes.background || null;
     if (changes.backgroundImagePath !== undefined) {
       patch.background_image_path = changes.backgroundImagePath || null;
     }
@@ -477,7 +506,11 @@ export class BoardsService {
 
     let ids = await this.memberIdsOf(id);
     if (phaiGhiThanhVien) {
-      ids = await this.locTheoWorkspace(current.workspaceId, current.createdBy, changes.memberIds ?? ids);
+      ids = await this.locTheoWorkspace(
+        current.workspaceId,
+        current.createdBy,
+        changes.memberIds ?? ids,
+      );
     }
 
     if (Object.keys(patch).length === 0 && !phaiGhiThanhVien) {
@@ -537,10 +570,15 @@ export class BoardsService {
       throw new InternalServerErrorException('Failed to check permissions.');
     }
     if (!member || (member.role !== 'owner' && member.role !== 'admin')) {
-      throw new ForbiddenException('Only the owner or an admin can delete boards.');
+      throw new ForbiddenException(
+        'Only the owner or an admin can delete boards.',
+      );
     }
 
-    const { error } = await this.supabase.client.from('boards').delete().eq('id', id);
+    const { error } = await this.supabase.client
+      .from('boards')
+      .delete()
+      .eq('id', id);
     if (error) {
       throw new InternalServerErrorException('Failed to delete board.');
     }

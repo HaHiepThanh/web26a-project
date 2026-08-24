@@ -10,6 +10,8 @@ import { IsString, MaxLength, MinLength } from 'class-validator';
 export class RenameOrganizationDto {
   @IsString()
   @MinLength(1, { message: 'Organization name is required.' })
-  @MaxLength(100, { message: 'Organization name must be at most 100 characters.' })
+  @MaxLength(100, {
+    message: 'Organization name must be at most 100 characters.',
+  })
   name: string;
 }

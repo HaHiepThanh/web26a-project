@@ -1,4 +1,10 @@
-import { IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  Matches,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 
 /**
  * Body của PATCH /auth/profile — các trường người dùng tự sửa trong trang Cài đặt.
@@ -18,7 +24,8 @@ export class UpdateProfileDto {
   @MinLength(3, { message: 'Username must be at least 3 characters.' })
   @MaxLength(25, { message: 'Username must be at most 25 characters.' })
   @Matches(/^[a-zA-Z0-9_.]+$/, {
-    message: 'Username can only contain letters, numbers, dots, and underscores.',
+    message:
+      'Username can only contain letters, numbers, dots, and underscores.',
   })
   username?: string;
 

@@ -63,7 +63,9 @@ function userRoom(uid: string): string {
   // Cùng chính sách CORS với REST (xem main.ts).
   cors: { origin: true, credentials: true },
 })
-export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class RealtimeGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   private readonly logger = new Logger(RealtimeGateway.name);
 
   @WebSocketServer()
@@ -83,7 +85,8 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
    * — query string bị ghi vào log của proxy/nginx, mà đây là token đăng nhập.
    */
   async handleConnection(client: Socket): Promise<void> {
-    const token = (client.handshake.auth as { token?: string } | undefined)?.token;
+    const token = (client.handshake.auth as { token?: string } | undefined)
+      ?.token;
     if (!token) {
       client.disconnect(true);
       return;
@@ -113,7 +116,8 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   handleDisconnect(client: Socket): void {
     // Socket.IO tự gỡ socket khỏi mọi phòng TRƯỚC khi gọi hàm này, nên phải đọc
     // danh sách phòng đã lưu riêng chứ không dùng client.rooms nữa.
-    const joined = (client.data as SocketData & { boards?: string[] })?.boards ?? [];
+    const joined =
+      (client.data as SocketData & { boards?: string[] })?.boards ?? [];
     for (const boardId of joined) {
       void this.broadcastPresence(boardId);
     }
@@ -131,7 +135,9 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     if (!uid || !boardId) return { ok: false, error: 'Missing boardId.' };
 
     if (!(await this.isBoardMember(uid, boardId))) {
-      this.logger.warn(`Từ chối join board ${boardId} cho uid ${uid} (không thuộc tổ chức)`);
+      this.logger.warn(
+        `Từ chối join board ${boardId} cho uid ${uid} (không thuộc tổ chức)`,
+      );
       return { ok: false, error: 'Board not found.' };
     }
 
@@ -173,7 +179,12 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
    * Không `await`: đây là việc phụ. Người dùng đã tạo xong cái thẻ rồi, đừng bắt
    * họ chờ thêm chỉ vì việc thông báo cho người khác.
    */
-  emitToBoard<T>(boardId: string, type: BoardEventType, actorId: string, data: T): void {
+  emitToBoard<T>(
+    boardId: string,
+    type: BoardEventType,
+    actorId: string,
+    data: T,
+  ): void {
     if (!boardId || !this.server) return;
     const event: BoardEvent<T> = { type, boardId, actorId, data };
     this.server.to(room(boardId)).emit(WS.EVENT, event);
@@ -185,7 +196,12 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
    * Dùng cho lời mời vào tổ chức: người nhận chưa thuộc tổ chức nên không có
    * board nào để phát vào — phải có phòng riêng theo uid.
    */
-  emitToUser<T>(uid: string, type: UserEventType, actorId: string, data: T): void {
+  emitToUser<T>(
+    uid: string,
+    type: UserEventType,
+    actorId: string,
+    data: T,
+  ): void {
     if (!uid || !this.server) return;
     const event: UserEvent<T> = { type, actorId, data };
     this.server.to(userRoom(uid)).emit(WS.USER_EVENT, event);

@@ -20,7 +20,10 @@ export class CommentsController {
   constructor(private readonly comments: CommentsService) {}
 
   @Get()
-  findAll(@CurrentUser() user: CurrentUserInfo, @Query('cardId') cardId: string) {
+  findAll(
+    @CurrentUser() user: CurrentUserInfo,
+    @Query('cardId') cardId: string,
+  ) {
     return this.comments.findAll(user.uid, cardId);
   }
 

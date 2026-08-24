@@ -2,8 +2,8 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
-  NotFoundException,
 } from '@nestjs/common';
+import { AccessService } from '../../common/access/access.service';
 import { SupabaseService } from '../../common/supabase/supabase.service';
 import { ActivityActionType } from './activity.types';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
@@ -21,10 +21,15 @@ interface JoinedUserRow {
  *    (`userId`, `createdAt`) còn khối `user` lại snake_case (`display_name`) —
  *    frontend phải nhớ chỗ nào viết kiểu nào.
  */
-function toUser(row: unknown): { displayName: string | null; avatarUrl: string | null } | null {
+function toUser(
+  row: unknown,
+): { displayName: string | null; avatarUrl: string | null } | null {
   const u = row as JoinedUserRow | null;
   if (!u) return null;
-  return { displayName: u.display_name ?? null, avatarUrl: u.avatar_url ?? null };
+  return {
+    displayName: u.display_name ?? null,
+    avatarUrl: u.avatar_url ?? null,
+  };
 }
 
 /**
@@ -38,37 +43,13 @@ export class ActivityService {
   constructor(
     private readonly supabase: SupabaseService,
     private readonly realtime: RealtimeGateway,
+    private readonly access: AccessService,
   ) {}
-
-  /**
-   * Người gọi có được đụng vào board này không? Không thì 404.
-   *
-   * ⚠️ Nhật ký ghi lại ai làm gì trong nội bộ công ty — thiếu hàm này thì người
-   *    ngoài đọc được toàn bộ hoạt động của mọi tổ chức khác.
-   */
-  private async assertBoardAccess(uid: string, boardId: string): Promise<void> {
-    const sb = this.supabase.client;
-    const { data: board, error } = await sb
-      .from('boards')
-      .select('id, org_id')
-      .eq('id', boardId)
-      .maybeSingle();
-    // 22P02 = id gõ sai định dạng uuid → coi như không tồn tại.
-    if (error?.code === '22P02' || !board) throw new NotFoundException('Board not found.');
-
-    const { data: member } = await sb
-      .from('organization_members')
-      .select('role')
-      .eq('org_id', board.org_id as string)
-      .eq('user_id', uid)
-      .maybeSingle();
-    if (!member) throw new NotFoundException('Board not found.');
-  }
 
   // Lấy log của board, mới nhất trước.
   async findAll(uid: string, boardId: string): Promise<unknown[]> {
     if (!boardId) return [];
-    await this.assertBoardAccess(uid, boardId);
+    await this.access.assertBoardAccess(uid, boardId);
 
     const { data, error } = await this.supabase.client
       .from('activity_logs')
@@ -111,7 +92,11 @@ export class ActivityService {
   ): Promise<void> {
     const sb = this.supabase.client;
 
-    const { data: board } = await sb.from('boards').select('org_id').eq('id', boardId).maybeSingle();
+    const { data: board } = await sb
+      .from('boards')
+      .select('org_id')
+      .eq('id', boardId)
+      .maybeSingle();
     if (!board) {
       this.logger.warn(`Không ghi được log: không tìm thấy board ${boardId}`);
       return;

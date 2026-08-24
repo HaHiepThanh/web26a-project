@@ -14,7 +14,10 @@ export class StatsController {
    * danh sách thẻ quá hạn, cho modal "Thống kê & Báo cáo".
    */
   @Get('boards/:boardId')
-  boardStats(@CurrentUser() user: CurrentUserInfo, @Param('boardId') boardId: string) {
+  boardStats(
+    @CurrentUser() user: CurrentUserInfo,
+    @Param('boardId') boardId: string,
+  ) {
     return this.stats.boardStats(user.uid, boardId);
   }
 }

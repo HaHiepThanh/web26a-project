@@ -1,13 +1,14 @@
 import { Component, computed, effect, inject, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Board, ChatTaskSuggestion, User } from '../../../models';
-import { BoardService, avatarColorFor, initialsOf } from '../../../services/board.service';
-import { ChatService } from '../../../services/chat.service';
-import { TaskSuggestionService } from '../../../services/task-suggestion.service';
-import { CardService } from '../../../services/card.service';
-import { ListService } from '../../../services/list.service';
+import { BoardStore } from '../../../ngrx/board/board.store';
+import { avatarColorFor, initialsOf } from '../../../utils/avatar.util';
+import { ChatStore } from '../../../ngrx/chat/chat.store';
+import { TaskSuggestionStore } from '../../../ngrx/task-suggestion/task-suggestion.store';
+import { CardStore } from '../../../ngrx/card/card.store';
+import { ListStore } from '../../../ngrx/list/list.store';
 import { RealtimeService } from '../../../services/realtime.service';
-import { OrganizationService } from '../../../services/organization.service';
+import { OrganizationStore } from '../../../ngrx/organization/organization.store';
 import { MessageList } from '../message-list/message-list';
 import { ChatInput } from '../chat-input/chat-input';
 
@@ -26,15 +27,15 @@ import { ChatInput } from '../chat-input/chat-input';
   styleUrl: './dashboard-chat-thread.css',
 })
 export class DashboardChatThread {
-  private readonly boardService = inject(BoardService);
-  private readonly orgService = inject(OrganizationService);
+  private readonly boardService = inject(BoardStore);
+  private readonly orgService = inject(OrganizationStore);
 
   /** Link mở board đầy đủ — phải kèm slug tổ chức vì route là /:orgSlug/board/:id. */
   readonly boardLink = computed(() => ['/', this.orgService.activeOrgSlug(), 'board', this.board().id]);
-  private readonly chat = inject(ChatService);
-  private readonly suggestions = inject(TaskSuggestionService);
-  private readonly cardService = inject(CardService);
-  private readonly listService = inject(ListService);
+  private readonly chat = inject(ChatStore);
+  private readonly suggestions = inject(TaskSuggestionStore);
+  private readonly cardService = inject(CardStore);
+  private readonly listService = inject(ListStore);
   private readonly realtime = inject(RealtimeService);
 
   readonly board = input.required<Board>();

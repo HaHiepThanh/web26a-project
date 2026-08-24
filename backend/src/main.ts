@@ -13,4 +13,10 @@ async function bootstrap() {
 
   await app.listen(process.env.PORT ?? 3000);
 }
-bootstrap();
+// Bắt lỗi tường minh: `bootstrap()` không có .catch thì mọi lỗi khởi động
+// (sai key Supabase, cổng bận, thiếu biến môi trường) chỉ hiện thành
+// UnhandledPromiseRejection khó đọc, và tiến trình thoát với mã 0 như thể ổn.
+bootstrap().catch((err) => {
+  console.error('Không khởi động được backend:', err);
+  process.exit(1);
+});

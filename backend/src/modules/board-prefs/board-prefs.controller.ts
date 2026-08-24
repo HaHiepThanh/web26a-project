@@ -1,9 +1,23 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { FirebaseAuthGuard } from '../../common/firebase/firebase-auth.guard';
 import { CurrentUser } from '../../common/firebase/current-user.decorator';
 import type { CurrentUserInfo } from '../../common/firebase/current-user.decorator';
 import { BoardPrefsService } from './board-prefs.service';
-import { CreateHighlightGroupDto, CreateSavedFilterDto } from './dto/board-prefs.dto';
+import {
+  CreateHighlightGroupDto,
+  CreateSavedFilterDto,
+} from './dto/board-prefs.dto';
 
 /**
  * Tuỳ chọn riêng của từng người trên board: sao, bộ lọc đã lưu, nhóm highlight.
@@ -28,24 +42,36 @@ export class BoardPrefsController {
    */
   @Post('stars/:boardId')
   @HttpCode(HttpStatus.OK)
-  star(@CurrentUser() user: CurrentUserInfo, @Param('boardId') boardId: string) {
+  star(
+    @CurrentUser() user: CurrentUserInfo,
+    @Param('boardId') boardId: string,
+  ) {
     return this.prefs.star(user.uid, boardId);
   }
 
   /** DELETE /stars/:boardId */
   @Delete('stars/:boardId')
-  unstar(@CurrentUser() user: CurrentUserInfo, @Param('boardId') boardId: string) {
+  unstar(
+    @CurrentUser() user: CurrentUserInfo,
+    @Param('boardId') boardId: string,
+  ) {
     return this.prefs.unstar(user.uid, boardId);
   }
 
   /** GET /saved-filters?boardId= */
   @Get('saved-filters')
-  filters(@CurrentUser() user: CurrentUserInfo, @Query('boardId') boardId: string) {
+  filters(
+    @CurrentUser() user: CurrentUserInfo,
+    @Query('boardId') boardId: string,
+  ) {
     return this.prefs.findFilters(user.uid, boardId);
   }
 
   @Post('saved-filters')
-  createFilter(@CurrentUser() user: CurrentUserInfo, @Body() body: CreateSavedFilterDto) {
+  createFilter(
+    @CurrentUser() user: CurrentUserInfo,
+    @Body() body: CreateSavedFilterDto,
+  ) {
     return this.prefs.createFilter(user.uid, body);
   }
 
@@ -56,12 +82,18 @@ export class BoardPrefsController {
 
   /** GET /highlight-groups?boardId= */
   @Get('highlight-groups')
-  groups(@CurrentUser() user: CurrentUserInfo, @Query('boardId') boardId: string) {
+  groups(
+    @CurrentUser() user: CurrentUserInfo,
+    @Query('boardId') boardId: string,
+  ) {
     return this.prefs.findGroups(user.uid, boardId);
   }
 
   @Post('highlight-groups')
-  createGroup(@CurrentUser() user: CurrentUserInfo, @Body() body: CreateHighlightGroupDto) {
+  createGroup(
+    @CurrentUser() user: CurrentUserInfo,
+    @Body() body: CreateHighlightGroupDto,
+  ) {
     return this.prefs.createGroup(user.uid, body);
   }
 
