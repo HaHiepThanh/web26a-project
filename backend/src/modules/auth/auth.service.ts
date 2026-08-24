@@ -110,21 +110,28 @@ export class AuthService {
    * `username`, `phone`, `job_title` — đó là dữ liệu người dùng tự nhập trong
    * trang Cài đặt, đăng nhập lại mà xoá mất là mất dữ liệu.
    */
-  async syncProfile(user: CurrentUserInfo, initial?: InitialProfile): Promise<UserRow> {
+  async syncProfile(
+    user: CurrentUserInfo,
+    initial?: InitialProfile,
+  ): Promise<UserRow> {
     // Bước 1: tạo dòng nếu chưa có. `ignoreDuplicates` = INSERT ... ON CONFLICT
     // DO NOTHING — một câu lệnh nguyên tử, hai request đăng nhập cùng lúc không
     // thể cùng insert rồi vỡ vì trùng khoá chính.
-    const { error: insertError } = await this.supabase.client.from('users').upsert(
-      {
-        id: user.uid,
-        email: user.email ?? '',
-        display_name: user.displayName ?? null,
-        avatar_url: user.avatarUrl ?? null,
-      },
-      { onConflict: 'id', ignoreDuplicates: true },
-    );
+    const { error: insertError } = await this.supabase.client
+      .from('users')
+      .upsert(
+        {
+          id: user.uid,
+          email: user.email ?? '',
+          display_name: user.displayName ?? null,
+          avatar_url: user.avatarUrl ?? null,
+        },
+        { onConflict: 'id', ignoreDuplicates: true },
+      );
     if (insertError) {
-      this.logger.error(`Tạo users thất bại (uid=${user.uid}): ${insertError.message}`);
+      this.logger.error(
+        `Tạo users thất bại (uid=${user.uid}): ${insertError.message}`,
+      );
       throw new InternalServerErrorException('Failed to save user profile');
     }
 
@@ -134,7 +141,9 @@ export class AuthService {
       .eq('id', user.uid)
       .single();
     if (error) {
-      this.logger.error(`Đọc users thất bại (uid=${user.uid}): ${error.message}`);
+      this.logger.error(
+        `Đọc users thất bại (uid=${user.uid}): ${error.message}`,
+      );
       throw new InternalServerErrorException('Failed to load user profile');
     }
 
@@ -150,7 +159,8 @@ export class AuthService {
     const patch: Record<string, string | null> = {};
     const email = user.email ?? '';
     if (email && row.email !== email) patch.email = email;
-    if (!row.display_name && user.displayName) patch.display_name = user.displayName;
+    if (!row.display_name && user.displayName)
+      patch.display_name = user.displayName;
     if (!row.avatar_url && user.avatarUrl) patch.avatar_url = user.avatarUrl;
 
     if (Object.keys(patch).length > 0) {
@@ -161,7 +171,9 @@ export class AuthService {
         .select()
         .single();
       if (updateError) {
-        this.logger.warn(`Đồng bộ hồ sơ thất bại (uid=${user.uid}): ${updateError.message}`);
+        this.logger.warn(
+          `Đồng bộ hồ sơ thất bại (uid=${user.uid}): ${updateError.message}`,
+        );
       } else {
         row = updated as UserRow;
       }
@@ -196,11 +208,15 @@ export class AuthService {
 
       if (!error) return data as UserRow;
       if (error.code !== '23505') {
-        this.logger.warn(`Không cấp được username cho ${row.id}: ${error.message}`);
+        this.logger.warn(
+          `Không cấp được username cho ${row.id}: ${error.message}`,
+        );
         return row; // Không chặn đăng nhập chỉ vì thiếu username.
       }
     }
-    this.logger.warn(`Thử 25 lần vẫn không tìm được username trống cho ${row.id}`);
+    this.logger.warn(
+      `Thử 25 lần vẫn không tìm được username trống cho ${row.id}`,
+    );
     return row;
   }
 
@@ -210,9 +226,13 @@ export class AuthService {
    * CHỈ điền khi ô đó đang trống. Nếu ghi đè vô điều kiện thì mỗi lần đăng nhập
    * lại sẽ đạp lên thông tin họ đã sửa trong trang Cài đặt.
    */
-  private async fillInitialProfile(row: UserRow, initial: InitialProfile): Promise<UserRow> {
+  private async fillInitialProfile(
+    row: UserRow,
+    initial: InitialProfile,
+  ): Promise<UserRow> {
     const patch: Record<string, string> = {};
-    if (!row.username && initial.username?.trim()) patch.username = initial.username.trim();
+    if (!row.username && initial.username?.trim())
+      patch.username = initial.username.trim();
     if (!row.phone && initial.phone?.trim()) patch.phone = initial.phone.trim();
     if (Object.keys(patch).length === 0) return row;
 
@@ -227,9 +247,13 @@ export class AuthService {
       // `users.username` có ràng buộc UNIQUE — người khác lấy mất thì báo rõ,
       // nhưng KHÔNG làm hỏng việc đăng ký: tài khoản đã tạo xong rồi.
       if (error.code === '23505') {
-        throw new ConflictException(`Username "${patch.username}" is already taken.`);
+        throw new ConflictException(
+          `Username "${patch.username}" is already taken.`,
+        );
       }
-      this.logger.error(`Cập nhật hồ sơ ban đầu thất bại (uid=${row.id}): ${error.message}`);
+      this.logger.error(
+        `Cập nhật hồ sơ ban đầu thất bại (uid=${row.id}): ${error.message}`,
+      );
       return row;
     }
     return data as UserRow;
@@ -239,13 +263,20 @@ export class AuthService {
    * Cập nhật hồ sơ người dùng tự sửa trong trang Cài đặt.
    * Chỉ ghi những trường được gửi lên — không đụng tới trường bỏ trống.
    */
-  async updateProfile(user: CurrentUserInfo, dto: UpdateProfileDto): Promise<UserRow> {
+  async updateProfile(
+    user: CurrentUserInfo,
+    dto: UpdateProfileDto,
+  ): Promise<UserRow> {
     const patch: Record<string, string | null> = {};
-    if (dto.displayName !== undefined) patch.display_name = dto.displayName.trim() || null;
-    if (dto.username !== undefined) patch.username = dto.username.trim() || null;
+    if (dto.displayName !== undefined)
+      patch.display_name = dto.displayName.trim() || null;
+    if (dto.username !== undefined)
+      patch.username = dto.username.trim() || null;
     if (dto.phone !== undefined) patch.phone = dto.phone.trim() || null;
-    if (dto.jobTitle !== undefined) patch.job_title = dto.jobTitle.trim() || null;
-    if (dto.avatarUrl !== undefined) patch.avatar_url = dto.avatarUrl.trim() || null;
+    if (dto.jobTitle !== undefined)
+      patch.job_title = dto.jobTitle.trim() || null;
+    if (dto.avatarUrl !== undefined)
+      patch.avatar_url = dto.avatarUrl.trim() || null;
 
     if (Object.keys(patch).length === 0) {
       return this.syncProfile(user);
@@ -260,9 +291,13 @@ export class AuthService {
 
     if (error) {
       if (error.code === '23505') {
-        throw new ConflictException(`Username "${dto.username}" is already taken.`);
+        throw new ConflictException(
+          `Username "${dto.username}" is already taken.`,
+        );
       }
-      this.logger.error(`Cập nhật hồ sơ thất bại (uid=${user.uid}): ${error.message}`);
+      this.logger.error(
+        `Cập nhật hồ sơ thất bại (uid=${user.uid}): ${error.message}`,
+      );
       throw new InternalServerErrorException('Failed to save profile');
     }
     return data as UserRow;
@@ -283,7 +318,9 @@ export class AuthService {
       .eq('user_id', user.uid);
 
     if (error) {
-      this.logger.error(`Đọc organization_members thất bại (uid=${user.uid}): ${error.message}`);
+      this.logger.error(
+        `Đọc organization_members thất bại (uid=${user.uid}): ${error.message}`,
+      );
       throw new InternalServerErrorException('Failed to load organizations');
     }
 

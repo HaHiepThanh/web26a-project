@@ -91,7 +91,9 @@ export class TaskSuggestionsService {
     try {
       if (!this.gemini.enabled) return;
       if (!this.conNhipGoi(msg.boardId)) {
-        this.logger.warn(`Bỏ phân tích: board ${msg.boardId} vượt trần ${TRAN_MOI_PHUT} lượt/phút`);
+        this.logger.warn(
+          `Bỏ phân tích: board ${msg.boardId} vượt trần ${TRAN_MOI_PHUT} lượt/phút`,
+        );
         return;
       }
 
@@ -100,7 +102,13 @@ export class TaskSuggestionsService {
 
       // Bộ lọc rẻ chạy SAU khi có tên thành viên, để "Hoà ơi..." cũng tính là
       // một dấu hiệu dù không có ký tự @.
-      if (!this.gemini.shouldAnalyze(msg.content, members.map((m) => m.displayName))) return;
+      if (
+        !this.gemini.shouldAnalyze(
+          msg.content,
+          members.map((m) => m.displayName),
+        )
+      )
+        return;
 
       const ketQua = await this.gemini.detectTasks({
         content: msg.content,
@@ -135,7 +143,12 @@ export class TaskSuggestionsService {
       }
 
       const goiY = toResponse(data as Record<string, unknown>);
-      this.realtime.emitToBoard(msg.boardId, 'suggestion.created', msg.userId, goiY);
+      this.realtime.emitToBoard(
+        msg.boardId,
+        'suggestion.created',
+        msg.userId,
+        goiY,
+      );
       this.logger.log(`Gợi ý ${ketQua.cards.length} thẻ từ tin nhắn ${msg.id}`);
     } catch (e) {
       this.logger.warn(`Phân tích tin nhắn thất bại: ${(e as Error).message}`);
@@ -145,7 +158,9 @@ export class TaskSuggestionsService {
   /** Còn lượt gọi trong phút này không? Cửa sổ trượt 60 giây, giữ trong bộ nhớ. */
   private conNhipGoi(boardId: string): boolean {
     const now = Date.now();
-    const moc = (this.nhipGoi.get(boardId) ?? []).filter((t) => now - t < 60_000);
+    const moc = (this.nhipGoi.get(boardId) ?? []).filter(
+      (t) => now - t < 60_000,
+    );
     if (moc.length >= TRAN_MOI_PHUT) {
       this.nhipGoi.set(boardId, moc);
       return false;
@@ -156,11 +171,23 @@ export class TaskSuggestionsService {
   }
 
   /** Gom thành viên + cột + vài tin gần nhất + hồ sơ người gửi, chạy song song. */
-  private async thuThapNguCanh(msg: { boardId: string; orgId: string; userId: string; id: string }) {
+  private async thuThapNguCanh(msg: {
+    boardId: string;
+    orgId: string;
+    userId: string;
+    id: string;
+  }) {
     const sb = this.supabase.client;
     const [thanhVienRes, cotRes, tinRes] = await Promise.all([
-      sb.from('organization_members').select('user_id, users(display_name, email)').eq('org_id', msg.orgId),
-      sb.from('lists').select('id, name').eq('board_id', msg.boardId).order('position'),
+      sb
+        .from('organization_members')
+        .select('user_id, users(display_name, email)')
+        .eq('org_id', msg.orgId),
+      sb
+        .from('lists')
+        .select('id, name')
+        .eq('board_id', msg.boardId)
+        .order('position'),
       sb
         .from('messages')
         .select('user_id, content, created_at, users(display_name, email)')
@@ -183,14 +210,19 @@ export class TaskSuggestionsService {
 
     return {
       members,
-      lists: (cotRes.data ?? []).map((r) => ({ id: r.id as string, name: r.name as string })),
+      lists: (cotRes.data ?? []).map((r) => ({
+        id: r.id as string,
+        name: r.name as string,
+      })),
       // Đảo lại thành cũ → mới: model đọc theo trình tự thời gian mới nối được ngữ cảnh.
-      recent: (tinRes.data ?? [])
-        .reverse()
-        .map((r) => ({ displayName: ten(r.users), content: r.content as string })),
+      recent: (tinRes.data ?? []).reverse().map((r) => ({
+        displayName: ten(r.users),
+        content: r.content as string,
+      })),
       sender: {
         id: msg.userId,
-        displayName: members.find((m) => m.id === msg.userId)?.displayName ?? 'Người gửi',
+        displayName:
+          members.find((m) => m.id === msg.userId)?.displayName ?? 'Người gửi',
       },
     };
   }
@@ -198,7 +230,10 @@ export class TaskSuggestionsService {
   // ------------------------------------------------------------- đọc / trả lời
 
   /** Gợi ý còn đang chờ của 1 board — dùng để F5 không mất. */
-  async findPending(uid: string, boardId: string): Promise<TaskSuggestionResponse[]> {
+  async findPending(
+    uid: string,
+    boardId: string,
+  ): Promise<TaskSuggestionResponse[]> {
     if (!boardId) return [];
     await this.access.assertBoardAccess(uid, boardId);
 
@@ -216,13 +251,17 @@ export class TaskSuggestionsService {
     return (data as Record<string, unknown>[]).map(toResponse);
   }
 
-  private async layGoiY(uid: string, id: string): Promise<TaskSuggestionResponse> {
+  private async layGoiY(
+    uid: string,
+    id: string,
+  ): Promise<TaskSuggestionResponse> {
     const { data, error } = await this.supabase.client
       .from('chat_task_suggestions')
       .select('*')
       .eq('id', id)
       .maybeSingle();
-    if (error?.code === '22P02' || !data) throw new NotFoundException('Không tìm thấy gợi ý.');
+    if (error?.code === '22P02' || !data)
+      throw new NotFoundException('Không tìm thấy gợi ý.');
 
     const goiY = toResponse(data as Record<string, unknown>);
     await this.access.assertBoardAccess(uid, goiY.boardId);
@@ -240,7 +279,11 @@ export class TaskSuggestionsService {
    *    thứ hai phải nhận 409 và KHÔNG tạo ra bộ thẻ thứ hai. Tạo thẻ trước rồi
    *    mới đổi trạng thái là để hở đúng khoảng thời gian đó.
    */
-  async accept(uid: string, id: string, cards: SuggestedCard[]): Promise<{ createdCardIds: string[] }> {
+  async accept(
+    uid: string,
+    id: string,
+    cards: SuggestedCard[],
+  ): Promise<{ createdCardIds: string[] }> {
     const goiY = await this.layGoiY(uid, id);
     if (goiY.status !== 'pending') {
       throw new ConflictException('Gợi ý này đã được xử lý rồi.');
@@ -251,7 +294,11 @@ export class TaskSuggestionsService {
 
     const { data: chiem, error: chiemError } = await this.supabase.client
       .from('chat_task_suggestions')
-      .update({ status: 'accepted', resolved_at: new Date().toISOString(), resolved_by: uid })
+      .update({
+        status: 'accepted',
+        resolved_at: new Date().toISOString(),
+        resolved_by: uid,
+      })
       .eq('id', id)
       .eq('status', 'pending') // ⚠️ chốt chống đua: chỉ đổi được nếu vẫn đang chờ
       .select();
@@ -279,10 +326,13 @@ export class TaskSuggestionsService {
         if (c.assigneeId) patch.assigneeId = c.assigneeId;
         if (c.dueDate) patch.dueDate = c.dueDate;
         if (c.priority && c.priority !== 'medium') patch.priority = c.priority;
-        if (Object.keys(patch).length) await this.cards.update(uid, the.id, patch);
+        if (Object.keys(patch).length)
+          await this.cards.update(uid, the.id, patch);
       } catch (e) {
         // Một thẻ hỏng không được kéo theo cả nhóm — những thẻ trước đó đã tạo rồi.
-        this.logger.warn(`Không tạo được thẻ "${c.title}": ${(e as Error).message}`);
+        this.logger.warn(
+          `Không tạo được thẻ "${c.title}": ${(e as Error).message}`,
+        );
       }
     }
 
@@ -294,7 +344,10 @@ export class TaskSuggestionsService {
     return { createdCardIds };
   }
 
-  async dismiss(uid: string, id: string): Promise<{ id: string; status: 'dismissed' }> {
+  async dismiss(
+    uid: string,
+    id: string,
+  ): Promise<{ id: string; status: 'dismissed' }> {
     const goiY = await this.layGoiY(uid, id);
     if (goiY.status !== 'pending') {
       throw new ConflictException('Gợi ý này đã được xử lý rồi.');
@@ -302,7 +355,11 @@ export class TaskSuggestionsService {
 
     const { error } = await this.supabase.client
       .from('chat_task_suggestions')
-      .update({ status: 'dismissed', resolved_at: new Date().toISOString(), resolved_by: uid })
+      .update({
+        status: 'dismissed',
+        resolved_at: new Date().toISOString(),
+        resolved_by: uid,
+      })
       .eq('id', id)
       .eq('status', 'pending');
 
@@ -311,7 +368,10 @@ export class TaskSuggestionsService {
       throw new InternalServerErrorException('Không bỏ qua được gợi ý');
     }
 
-    this.realtime.emitToBoard(goiY.boardId, 'suggestion.resolved', uid, { id, status: 'dismissed' });
+    this.realtime.emitToBoard(goiY.boardId, 'suggestion.resolved', uid, {
+      id,
+      status: 'dismissed',
+    });
     return { id, status: 'dismissed' };
   }
 }

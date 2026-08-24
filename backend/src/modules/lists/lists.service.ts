@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ForbiddenException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -90,7 +89,11 @@ export class ListsService {
    * nhất hiện có rồi +1. Board chưa có list nào thì bắt đầu từ 1 (tránh
    * `null + 1 = NaN` làm insert vỡ).
    */
-  async create(uid: string, boardId: string, name: string): Promise<ListResponse> {
+  async create(
+    uid: string,
+    boardId: string,
+    name: string,
+  ): Promise<ListResponse> {
     if (!boardId || !name?.trim()) {
       throw new BadRequestException('Missing boardId or name.');
     }
@@ -185,7 +188,11 @@ export class ListsService {
    * của 2 list lân cận) rồi gửi thẳng lên — backend chỉ việc UPDATE 1 dòng,
    * không cần đọc/đánh số lại toàn bộ danh sách.
    */
-  async reorder(uid: string, id: string, position: number): Promise<ListResponse> {
+  async reorder(
+    uid: string,
+    id: string,
+    position: number,
+  ): Promise<ListResponse> {
     if (typeof position !== 'number' || Number.isNaN(position)) {
       throw new BadRequestException('position must be a number.');
     }
@@ -210,7 +217,10 @@ export class ListsService {
   async remove(uid: string, id: string): Promise<void> {
     const list = await this.assertListAccess(uid, id);
 
-    const { error } = await this.supabase.client.from('lists').delete().eq('id', id);
+    const { error } = await this.supabase.client
+      .from('lists')
+      .delete()
+      .eq('id', id);
     if (error) {
       throw new InternalServerErrorException('Failed to delete list.');
     }

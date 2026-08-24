@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { SupabaseService } from '../../common/supabase/supabase.service';
 
 /** Kết quả tìm kiếm — chỉ trả những trường cần để hiển thị, không trả phone/job_title. */
@@ -81,7 +85,7 @@ export class UsersService {
         .select('id, email, display_name, username, avatar_url')
         .eq('id', q);
       if (error) throw this.loi(error.message);
-      rows = (data ?? []) as UserRow[];
+      rows = data ?? [];
     }
 
     if (!rows.length && q.includes('@')) {
@@ -91,7 +95,7 @@ export class UsersService {
         .select('id, email, display_name, username, avatar_url')
         .ilike('email', q);
       if (error) throw this.loi(error.message);
-      rows = (data ?? []) as UserRow[];
+      rows = data ?? [];
     }
 
     // Không khớp id/email chính xác → tìm theo tên, nhưng CHỈ trong người cùng
@@ -107,7 +111,7 @@ export class UsersService {
         .or(`display_name.ilike.%${escaped}%,username.ilike.%${escaped}%`)
         .limit(MAX_RESULTS);
       if (error) throw this.loi(error.message);
-      rows = (data ?? []) as UserRow[];
+      rows = data ?? [];
     }
 
     const mateSet = new Set(orgMateIds);

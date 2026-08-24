@@ -1,11 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { FirebaseAuthGuard } from '../../common/firebase/firebase-auth.guard';
 import { CurrentUser } from '../../common/firebase/current-user.decorator';
 import type { CurrentUserInfo } from '../../common/firebase/current-user.decorator';
@@ -18,7 +11,10 @@ export class ChatController {
   constructor(private readonly chat: ChatService) {}
 
   @Get()
-  findAll(@CurrentUser() user: CurrentUserInfo, @Query('boardId') boardId: string) {
+  findAll(
+    @CurrentUser() user: CurrentUserInfo,
+    @Query('boardId') boardId: string,
+  ) {
     return this.chat.findAll(user.uid, boardId);
   }
 

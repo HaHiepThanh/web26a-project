@@ -13,6 +13,8 @@ import { FirebaseAuthGuard } from '../../common/firebase/firebase-auth.guard';
 import { CurrentUser } from '../../common/firebase/current-user.decorator';
 import type { CurrentUserInfo } from '../../common/firebase/current-user.decorator';
 import { BoardsService } from './boards.service';
+import { CreateBoardDto } from './dto/create-board.dto';
+import { UpdateBoardDto } from './dto/update-board.dto';
 
 @UseGuards(FirebaseAuthGuard)
 @Controller('boards')
@@ -20,7 +22,10 @@ export class BoardsController {
   constructor(private readonly boards: BoardsService) {}
 
   @Get()
-  findAll(@CurrentUser() user: CurrentUserInfo, @Query('workspaceId') workspaceId: string) {
+  findAll(
+    @CurrentUser() user: CurrentUserInfo,
+    @Query('workspaceId') workspaceId: string,
+  ) {
     return this.boards.findAll(user.uid, workspaceId);
   }
 
@@ -30,11 +35,7 @@ export class BoardsController {
   }
 
   @Post()
-  create(
-    @CurrentUser() user: CurrentUserInfo,
-    @Body()
-    body: { workspaceId: string; name: string; visibility?: string; memberIds?: string[] },
-  ) {
+  create(@CurrentUser() user: CurrentUserInfo, @Body() body: CreateBoardDto) {
     return this.boards.create(
       user.uid,
       body.workspaceId,
@@ -60,14 +61,7 @@ export class BoardsController {
   update(
     @CurrentUser() user: CurrentUserInfo,
     @Param('id') id: string,
-    @Body()
-    body: {
-      name?: string;
-      visibility?: string;
-      memberIds?: string[];
-      background?: string | null;
-      backgroundImagePath?: string | null;
-    },
+    @Body() body: UpdateBoardDto,
   ) {
     return this.boards.update(user.uid, id, body);
   }

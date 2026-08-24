@@ -1,6 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { DetectTasksInput, DetectTasksResult, SuggestedCard } from './gemini.types';
+import {
+  DetectTasksInput,
+  DetectTasksResult,
+  SuggestedCard,
+} from './gemini.types';
 
 const API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
 
@@ -56,25 +60,101 @@ const RESPONSE_SCHEMA = {
  */
 const TU_KHOA_GIAO_VIEC = [
   // Việt
-  'làm', 'lam', 'fix', 'sửa', 'sua', 'giúp', 'giup', 'xong', 'hoàn thành',
-  'deadline', 'hạn', 'han', 'gấp', 'gap', 'nhớ', 'nho', 'cần', 'can',
-  'phụ trách', 'nhận', 'triển khai', 'viết', 'viet', 'kiểm tra', 'test',
+  'làm',
+  'lam',
+  'fix',
+  'sửa',
+  'sua',
+  'giúp',
+  'giup',
+  'xong',
+  'hoàn thành',
+  'deadline',
+  'hạn',
+  'han',
+  'gấp',
+  'gap',
+  'nhớ',
+  'nho',
+  'cần',
+  'can',
+  'phụ trách',
+  'nhận',
+  'triển khai',
+  'viết',
+  'viet',
+  'kiểm tra',
+  'test',
   // Anh
-  'do ', 'build', 'help', 'finish', 'handle', 'take', 'implement', 'write',
-  'review', 'check', 'ship', 'deploy', 'refactor', 'assign', 'work on',
-  'can you', 'could you', 'please', 'need to', "let's", 'lets ',
+  'do ',
+  'build',
+  'help',
+  'finish',
+  'handle',
+  'take',
+  'implement',
+  'write',
+  'review',
+  'check',
+  'ship',
+  'deploy',
+  'refactor',
+  'assign',
+  'work on',
+  'can you',
+  'could you',
+  'please',
+  'need to',
+  "let's",
+  'lets ',
 ];
 
 const TU_KHOA_THOI_GIAN = [
   // Việt
-  'hôm nay', 'hom nay', 'ngày mai', 'ngay mai', 'mai', 'mốt', 'tuần', 'tuan',
-  'thứ 2', 'thứ 3', 'thứ 4', 'thứ 5', 'thứ 6', 'thứ 7', 'chủ nhật',
-  'thu 2', 'thu 3', 'thu 4', 'thu 5', 'thu 6', 'thu 7', 'chu nhat',
-  'trước', 'truoc', 'cuối tuần', 'cuoi tuan',
+  'hôm nay',
+  'hom nay',
+  'ngày mai',
+  'ngay mai',
+  'mai',
+  'mốt',
+  'tuần',
+  'tuan',
+  'thứ 2',
+  'thứ 3',
+  'thứ 4',
+  'thứ 5',
+  'thứ 6',
+  'thứ 7',
+  'chủ nhật',
+  'thu 2',
+  'thu 3',
+  'thu 4',
+  'thu 5',
+  'thu 6',
+  'thu 7',
+  'chu nhat',
+  'trước',
+  'truoc',
+  'cuối tuần',
+  'cuoi tuan',
   // Anh
-  'today', 'tomorrow', 'tonight', 'this week', 'next week', 'monday', 'tuesday',
-  'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'eod', 'asap',
-  'by ', 'before ', 'deadline',
+  'today',
+  'tomorrow',
+  'tonight',
+  'this week',
+  'next week',
+  'monday',
+  'tuesday',
+  'wednesday',
+  'thursday',
+  'friday',
+  'saturday',
+  'sunday',
+  'eod',
+  'asap',
+  'by ',
+  'before ',
+  'deadline',
 ];
 
 /** Tin ngắn hơn ngần này gần như chắc chắn không phải giao việc ("ok", "ừ", "lol"). */
@@ -147,7 +227,8 @@ export class GeminiService {
     const coDongTu = TU_KHOA_GIAO_VIEC.some((k) => lower.includes(k));
     const coThoiGian = TU_KHOA_THOI_GIAN.some((k) => lower.includes(k));
     const coNhacTen =
-      lower.includes('@') || memberNames.some((n) => n && lower.includes(n.toLowerCase()));
+      lower.includes('@') ||
+      memberNames.some((n) => n && lower.includes(n.toLowerCase()));
 
     // Cần ít nhất HAI dấu hiệu. Chỉ một mình từ "làm" thì "hôm nay làm biếng quá"
     // cũng lọt, mà đó rõ ràng không phải giao việc.
@@ -190,7 +271,9 @@ export class GeminiService {
         },
         body: JSON.stringify({
           systemInstruction: { parts: [{ text: this.systemPrompt() }] },
-          contents: [{ role: 'user', parts: [{ text: this.userPrompt(input) }] }],
+          contents: [
+            { role: 'user', parts: [{ text: this.userPrompt(input) }] },
+          ],
           generationConfig: {
             responseMimeType: 'application/json',
             responseSchema: RESPONSE_SCHEMA,
@@ -203,7 +286,9 @@ export class GeminiService {
       });
 
       if (!res.ok) {
-        throw new Error(`HTTP ${res.status} ${(await res.text()).slice(0, 200)}`);
+        throw new Error(
+          `HTTP ${res.status} ${(await res.text()).slice(0, 200)}`,
+        );
       }
 
       const data = (await res.json()) as {
@@ -260,7 +345,9 @@ export class GeminiService {
     const thanhVien = input.members
       .map((m) => `  - id="${m.id}" tên="${m.displayName}"`)
       .join('\n');
-    const cot = input.lists.map((l) => `  - id="${l.id}" tên="${l.name}"`).join('\n');
+    const cot = input.lists
+      .map((l) => `  - id="${l.id}" tên="${l.name}"`)
+      .join('\n');
     const nganhCanh = input.recent.length
       ? input.recent.map((m) => `  ${m.displayName}: ${m.content}`).join('\n')
       : '  (không có)';
@@ -294,7 +381,11 @@ export class GeminiService {
     const rong: DetectTasksResult = { isTask: false, confidence: 0, cards: [] };
     if (!raw || typeof raw !== 'object') return rong;
 
-    const r = raw as { isTask?: unknown; confidence?: unknown; cards?: unknown };
+    const r = raw as {
+      isTask?: unknown;
+      confidence?: unknown;
+      cards?: unknown;
+    };
     const confidence = typeof r.confidence === 'number' ? r.confidence : 0;
     if (r.isTask !== true || confidence < NGUONG_TU_TIN) return rong;
     if (!Array.isArray(r.cards) || !r.cards.length) return rong;
@@ -315,22 +406,33 @@ export class GeminiService {
       }
 
       // Chỉ nhận uid CÓ THẬT trong board này.
-      if (typeof item.assigneeId === 'string' && idThanhVien.has(item.assigneeId)) {
+      if (
+        typeof item.assigneeId === 'string' &&
+        idThanhVien.has(item.assigneeId)
+      ) {
         card.assigneeId = item.assigneeId;
       }
 
       // Ngày phải đúng định dạng VÀ là ngày có thật (2026-02-31 lọt regex nhưng
       // xuống Postgres là vỡ).
-      if (typeof item.dueDate === 'string' && DINH_DANG_NGAY.test(item.dueDate)) {
+      if (
+        typeof item.dueDate === 'string' &&
+        DINH_DANG_NGAY.test(item.dueDate)
+      ) {
         const d = new Date(`${item.dueDate}T00:00:00Z`);
-        if (!Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === item.dueDate) {
+        if (
+          !Number.isNaN(d.getTime()) &&
+          d.toISOString().slice(0, 10) === item.dueDate
+        ) {
           card.dueDate = item.dueDate;
         }
       }
 
       // Cột lạ thì rơi về cột đầu tiên — thà vào nhầm cột còn hơn mất thẻ.
       card.listId =
-        typeof item.listId === 'string' && idCot.has(item.listId) ? item.listId : cotMacDinh;
+        typeof item.listId === 'string' && idCot.has(item.listId)
+          ? item.listId
+          : cotMacDinh;
 
       card.priority = MUC_UU_TIEN.includes(item.priority as never)
         ? (item.priority as SuggestedCard['priority'])

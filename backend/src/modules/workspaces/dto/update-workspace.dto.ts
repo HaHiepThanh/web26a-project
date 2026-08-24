@@ -1,4 +1,12 @@
-import { ArrayMaxSize, IsArray, IsIn, IsOptional, IsString, IsUUID, MaxLength, MinLength } from 'class-validator';
+import {
+  ArrayMaxSize,
+  IsArray,
+  IsIn,
+  IsOptional,
+  IsString,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 
 /**
  * Body của PATCH /workspaces/:id.
@@ -20,7 +28,9 @@ export class UpdateWorkspaceDto {
   description?: string;
 
   @IsOptional()
-  @IsIn(['org', 'restricted'], { message: "visibility must be 'org' or 'restricted'." })
+  @IsIn(['org', 'restricted'], {
+    message: "visibility must be 'org' or 'restricted'.",
+  })
   visibility?: 'org' | 'restricted';
 
   @IsOptional()

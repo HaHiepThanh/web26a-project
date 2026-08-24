@@ -23,10 +23,15 @@ interface JoinedUserRow {
  *    (`userId`, `createdAt`) còn khối `user` lại snake_case (`display_name`) —
  *    frontend phải nhớ chỗ nào viết kiểu nào.
  */
-function toUser(row: unknown): { displayName: string | null; avatarUrl: string | null } | null {
+function toUser(
+  row: unknown,
+): { displayName: string | null; avatarUrl: string | null } | null {
   const u = row as JoinedUserRow | null;
   if (!u) return null;
-  return { displayName: u.display_name ?? null, avatarUrl: u.avatar_url ?? null };
+  return {
+    displayName: u.display_name ?? null,
+    avatarUrl: u.avatar_url ?? null,
+  };
 }
 
 /** [BONUS #4] Bình luận trong card. */
@@ -47,7 +52,10 @@ export class CommentsService {
    * ⚠️ Backend dùng service_role key nên RLS bị bỏ qua — thiếu hàm này thì bất kỳ
    *    ai đăng nhập cũng đọc được bình luận nội bộ của mọi công ty khác.
    */
-  private async assertCardAccess(uid: string, cardId: string): Promise<{ title: string; boardId?: string }> {
+  private async assertCardAccess(
+    uid: string,
+    cardId: string,
+  ): Promise<{ title: string; boardId?: string }> {
     const sb = this.supabase.client;
     const { data: card, error } = await sb
       .from('cards')
@@ -55,7 +63,8 @@ export class CommentsService {
       .eq('id', cardId)
       .maybeSingle();
     // 22P02 = id gõ sai định dạng uuid → coi như không tồn tại.
-    if (error?.code === '22P02' || !card) throw new NotFoundException('Card not found.');
+    if (error?.code === '22P02' || !card)
+      throw new NotFoundException('Card not found.');
 
     // Bản dùng chung kiểm đủ ba tầng (tổ chức → workspace restricted → board
     // private) và cũng trả 404 cho mọi trường hợp, nên không lộ thẻ có thật hay
@@ -75,7 +84,9 @@ export class CommentsService {
 
     const { data, error } = await sb
       .from('comments')
-      .select('id, user_id, content, created_at, users(display_name, avatar_url)')
+      .select(
+        'id, user_id, content, created_at, users(display_name, avatar_url)',
+      )
       .eq('card_id', cardId)
       .order('created_at', { ascending: true });
 
@@ -95,7 +106,11 @@ export class CommentsService {
     }));
   }
 
-  async create(cardId: string, userUid: string, content: string): Promise<unknown> {
+  async create(
+    cardId: string,
+    userUid: string,
+    content: string,
+  ): Promise<unknown> {
     const card = await this.assertCardAccess(userUid, cardId);
     const sb = this.supabase.client;
 
@@ -121,7 +136,12 @@ export class CommentsService {
     };
 
     if (card.boardId) {
-      this.realtime.emitToBoard(card.boardId, 'comment.created', userUid, created);
+      this.realtime.emitToBoard(
+        card.boardId,
+        'comment.created',
+        userUid,
+        created,
+      );
       await this.activity.record(
         card.boardId,
         userUid,
@@ -156,8 +176,9 @@ export class CommentsService {
       throw new InternalServerErrorException('Failed to delete comment');
     }
 
-    const boardId = (comment.cards as unknown as { lists: { board_id: string } | null } | null)
-      ?.lists?.board_id;
+    const boardId = (
+      comment.cards as unknown as { lists: { board_id: string } | null } | null
+    )?.lists?.board_id;
     if (boardId) {
       this.realtime.emitToBoard(boardId, 'comment.deleted', userUid, {
         id,

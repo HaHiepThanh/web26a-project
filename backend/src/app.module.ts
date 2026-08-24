@@ -24,6 +24,7 @@ import { BoardPrefsModule } from './modules/board-prefs/board-prefs.module';
 import { StatsModule } from './modules/stats/stats.module';
 import { AiModule } from './modules/ai/ai.module';
 import { TaskSuggestionsModule } from './modules/task-suggestions/task-suggestions.module';
+import { InviteLinksModule } from './modules/invite-links/invite-links.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { TaskSuggestionsModule } from './modules/task-suggestions/task-suggestio
     // GeminiService nay đọc key kiểu "thiếu thì tắt tính năng", nên bật lại an toàn.
     AiModule,
     TaskSuggestionsModule,
+    InviteLinksModule,
     // Bonus
     ActivityModule,
     CommentsModule,

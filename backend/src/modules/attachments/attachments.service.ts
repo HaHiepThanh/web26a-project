@@ -72,7 +72,9 @@ export class AttachmentsService {
   ) {}
 
   /** Đổi dòng thô + cấp link ký tạm. Ký hàng loạt trong 1 request, không ký từng cái. */
-  private async toResponse(rows: AttachmentRow[]): Promise<AttachmentResponse[]> {
+  private async toResponse(
+    rows: AttachmentRow[],
+  ): Promise<AttachmentResponse[]> {
     if (!rows.length) return [];
 
     const { data: signed } = await this.supabase.client.storage
@@ -121,11 +123,18 @@ export class AttachmentsService {
   async upload(
     uid: string,
     cardId: string,
-    file: { originalname: string; mimetype: string; size: number; buffer: Buffer },
+    file: {
+      originalname: string;
+      mimetype: string;
+      size: number;
+      buffer: Buffer;
+    },
   ): Promise<AttachmentResponse> {
     if (!file) throw new BadRequestException('No file selected.');
     if (file.size > MAX_BYTES) {
-      throw new BadRequestException(`File must be at most ${MAX_BYTES / 1024 / 1024}MB.`);
+      throw new BadRequestException(
+        `File must be at most ${MAX_BYTES / 1024 / 1024}MB.`,
+      );
     }
 
     const card = await this.access.assertCardAccess(uid, cardId);
@@ -135,13 +144,21 @@ export class AttachmentsService {
     //    đường dẫn là mở đường ghi đè file của thẻ khác. Tên gốc vẫn được giữ,
     //    nhưng nằm ở cột `name` để hiển thị, không phải ở đường dẫn.
     const duoi = file.originalname.includes('.')
-      ? '.' + file.originalname.split('.').pop()!.replace(/[^A-Za-z0-9]/g, '').slice(0, 8)
+      ? '.' +
+        file.originalname
+          .split('.')
+          .pop()!
+          .replace(/[^A-Za-z0-9]/g, '')
+          .slice(0, 8)
       : '';
     const storagePath = `${card.orgId}/${cardId}/${randomUUID()}${duoi}`;
 
     const { error: uploadError } = await this.supabase.client.storage
       .from(BUCKET)
-      .upload(storagePath, file.buffer, { contentType: file.mimetype, upsert: false });
+      .upload(storagePath, file.buffer, {
+        contentType: file.mimetype,
+        upsert: false,
+      });
 
     if (uploadError) {
       this.logger.error(`Tải tệp lên Storage thất bại: ${uploadError.message}`);
@@ -170,24 +187,38 @@ export class AttachmentsService {
     }
 
     const [created] = await this.toResponse([data as AttachmentRow]);
-    this.realtime.emitToBoard(card.boardId, 'attachment.changed', uid, { cardId, attachment: created });
+    this.realtime.emitToBoard(card.boardId, 'attachment.changed', uid, {
+      cardId,
+      attachment: created,
+    });
     return created;
   }
 
-  private async assertAttachment(uid: string, id: string): Promise<{ row: AttachmentRow; boardId: string }> {
+  private async assertAttachment(
+    uid: string,
+    id: string,
+  ): Promise<{ row: AttachmentRow; boardId: string }> {
     const { data, error } = await this.supabase.client
       .from('card_attachments')
       .select('*')
       .eq('id', id)
       .maybeSingle();
-    if (error?.code === '22P02' || !data) throw new NotFoundException('Attachment not found.');
+    if (error?.code === '22P02' || !data)
+      throw new NotFoundException('Attachment not found.');
 
-    const card = await this.access.assertCardAccess(uid, (data as AttachmentRow).card_id);
+    const card = await this.access.assertCardAccess(
+      uid,
+      (data as AttachmentRow).card_id,
+    );
     return { row: data as AttachmentRow, boardId: card.boardId };
   }
 
   /** Đặt/bỏ ảnh bìa. Mỗi thẻ chỉ MỘT ảnh bìa nên phải gỡ cờ của các tệp còn lại. */
-  async setCover(uid: string, id: string, isCover: boolean): Promise<AttachmentResponse> {
+  async setCover(
+    uid: string,
+    id: string,
+    isCover: boolean,
+  ): Promise<AttachmentResponse> {
     const { row, boardId } = await this.assertAttachment(uid, id);
     if (isCover && !row.is_image) {
       throw new BadRequestException('Only images can be set as the cover.');
@@ -195,7 +226,10 @@ export class AttachmentsService {
 
     const sb = this.supabase.client;
     if (isCover) {
-      await sb.from('card_attachments').update({ is_cover: false }).eq('card_id', row.card_id);
+      await sb
+        .from('card_attachments')
+        .update({ is_cover: false })
+        .eq('card_id', row.card_id);
     }
 
     const { data, error } = await sb
@@ -211,14 +245,20 @@ export class AttachmentsService {
     }
 
     const [updated] = await this.toResponse([data as AttachmentRow]);
-    this.realtime.emitToBoard(boardId, 'attachment.changed', uid, { cardId: row.card_id, attachment: updated });
+    this.realtime.emitToBoard(boardId, 'attachment.changed', uid, {
+      cardId: row.card_id,
+      attachment: updated,
+    });
     return updated;
   }
 
   async remove(uid: string, id: string): Promise<void> {
     const { row, boardId } = await this.assertAttachment(uid, id);
 
-    const { error } = await this.supabase.client.from('card_attachments').delete().eq('id', id);
+    const { error } = await this.supabase.client
+      .from('card_attachments')
+      .delete()
+      .eq('id', id);
     if (error) {
       this.logger.error(`Xoá đính kèm thất bại: ${error.message}`);
       throw new InternalServerErrorException('Failed to delete attachment');
@@ -232,9 +272,14 @@ export class AttachmentsService {
     if (storageError) {
       // Không ném lỗi: với người dùng thì đính kèm đã biến mất, đúng ý họ.
       // Chỉ còn một file mồ côi trong Storage — ghi log để dọn sau.
-      this.logger.warn(`Còn file mồ côi trong Storage: ${row.storage_path} — ${storageError.message}`);
+      this.logger.warn(
+        `Còn file mồ côi trong Storage: ${row.storage_path} — ${storageError.message}`,
+      );
     }
 
-    this.realtime.emitToBoard(boardId, 'attachment.deleted', uid, { cardId: row.card_id, id });
+    this.realtime.emitToBoard(boardId, 'attachment.deleted', uid, {
+      cardId: row.card_id,
+      id,
+    });
   }
 }

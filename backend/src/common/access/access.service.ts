@@ -50,13 +50,19 @@ export class AccessService {
       .eq('user_id', uid)
       .maybeSingle();
     if (error && !this.laUuidSai(error)) {
-      this.logger.error(`Kiểm tra quyền thất bại (uid=${uid}, org=${orgId}): ${error.message}`);
+      this.logger.error(
+        `Kiểm tra quyền thất bại (uid=${uid}, org=${orgId}): ${error.message}`,
+      );
       throw new InternalServerErrorException('Failed to check permissions');
     }
     return (data?.role as OrgRole) ?? null;
   }
 
-  async assertOrgMember(uid: string, orgId: string, notFoundMessage = 'Data not found.'): Promise<OrgRole> {
+  async assertOrgMember(
+    uid: string,
+    orgId: string,
+    notFoundMessage = 'Data not found.',
+  ): Promise<OrgRole> {
     const role = await this.roleInOrg(uid, orgId);
     if (!role) throw new NotFoundException(notFoundMessage);
     return role;
@@ -66,7 +72,9 @@ export class AccessService {
   async assertCanManage(uid: string, orgId: string): Promise<OrgRole> {
     const role = await this.assertOrgMember(uid, orgId);
     if (role !== 'owner' && role !== 'admin') {
-      throw new ForbiddenException('Only the organization owner or an admin can do this.');
+      throw new ForbiddenException(
+        'Only the organization owner or an admin can do this.',
+      );
     }
     return role;
   }
@@ -79,7 +87,10 @@ export class AccessService {
    *   2. workspace chứa nó có `restricted` mà mình không được chỉ định không
    *   3. bản thân board có `private` mà mình không được chỉ định không
    */
-  async assertBoardAccess(uid: string, boardId: string): Promise<{ boardId: string; orgId: string; workspaceId: string }> {
+  async assertBoardAccess(
+    uid: string,
+    boardId: string,
+  ): Promise<{ boardId: string; orgId: string; workspaceId: string }> {
     if (!boardId) throw new NotFoundException('Board not found.');
 
     const sb = this.supabase.client;
@@ -88,7 +99,8 @@ export class AccessService {
       .select('id, org_id, workspace_id, visibility')
       .eq('id', boardId)
       .maybeSingle();
-    if (this.laUuidSai(error) || !board) throw new NotFoundException('Board not found.');
+    if (this.laUuidSai(error) || !board)
+      throw new NotFoundException('Board not found.');
 
     await this.assertOrgMember(uid, board.org_id as string, 'Board not found.');
 
@@ -130,7 +142,15 @@ export class AccessService {
    * `cards` không có `board_id` — phải đi vòng qua `lists`. Trả luôn boardId để
    * chỗ gọi dùng cho việc phát sự kiện WebSocket, khỏi tra lại lần nữa.
    */
-  async assertCardAccess(uid: string, cardId: string): Promise<{ cardId: string; boardId: string; orgId: string; title: string }> {
+  async assertCardAccess(
+    uid: string,
+    cardId: string,
+  ): Promise<{
+    cardId: string;
+    boardId: string;
+    orgId: string;
+    title: string;
+  }> {
     if (!cardId) throw new NotFoundException('Card not found.');
 
     const { data: card, error } = await this.supabase.client
@@ -138,9 +158,11 @@ export class AccessService {
       .select('id, org_id, title, lists(board_id)')
       .eq('id', cardId)
       .maybeSingle();
-    if (this.laUuidSai(error) || !card) throw new NotFoundException('Card not found.');
+    if (this.laUuidSai(error) || !card)
+      throw new NotFoundException('Card not found.');
 
-    const boardId = (card.lists as unknown as { board_id: string } | null)?.board_id;
+    const boardId = (card.lists as unknown as { board_id: string } | null)
+      ?.board_id;
     if (!boardId) throw new NotFoundException('Card not found.');
 
     // Đi qua board để ăn luôn cả ba tầng kiểm tra ở trên.

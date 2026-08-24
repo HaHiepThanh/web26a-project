@@ -36,11 +36,16 @@ export class CreateSavedFilterDto {
   @IsOptional()
   @IsArray()
   @ArrayMaxSize(3)
-  @IsIn(['high', 'medium', 'low'], { each: true, message: 'priorities must be high, medium, or low.' })
+  @IsIn(['high', 'medium', 'low'], {
+    each: true,
+    message: 'priorities must be high, medium, or low.',
+  })
   priorities?: string[];
 
   @IsOptional()
-  @IsIn(['overdue', 'today', 'week'], { message: 'dateFilter must be overdue, today, or week.' })
+  @IsIn(['overdue', 'today', 'week'], {
+    message: 'dateFilter must be overdue, today, or week.',
+  })
   dateFilter?: string | null;
 }
 

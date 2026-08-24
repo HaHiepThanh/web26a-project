@@ -1,4 +1,10 @@
-import { IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  Matches,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 
 /**
  * Body (tuỳ chọn) của POST /auth/sync — chỉ dùng lúc ĐĂNG KÝ, để lưu 2 thông tin

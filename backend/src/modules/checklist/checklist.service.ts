@@ -68,7 +68,11 @@ export class ChecklistService {
     return (data as ChecklistRow[]).map(toItem);
   }
 
-  async create(uid: string, cardId: string, content: string): Promise<ChecklistItemResponse> {
+  async create(
+    uid: string,
+    cardId: string,
+    content: string,
+  ): Promise<ChecklistItemResponse> {
     const text = content?.trim();
     if (!text) throw new BadRequestException('Content is required.');
 
@@ -86,7 +90,11 @@ export class ChecklistService {
 
     const { data, error } = await this.supabase.client
       .from('checklist_items')
-      .insert({ card_id: cardId, content: text, position: last ? last.position + 1 : 1 })
+      .insert({
+        card_id: cardId,
+        content: text,
+        position: last ? last.position + 1 : 1,
+      })
       .select()
       .single();
 
@@ -96,20 +104,30 @@ export class ChecklistService {
     }
 
     const created = toItem(data as ChecklistRow);
-    this.realtime.emitToBoard(card.boardId, 'checklist.changed', uid, { cardId, item: created });
+    this.realtime.emitToBoard(card.boardId, 'checklist.changed', uid, {
+      cardId,
+      item: created,
+    });
     return created;
   }
 
   /** Tìm mục + kiểm tra quyền qua thẻ chứa nó. */
-  private async assertItem(uid: string, id: string): Promise<{ row: ChecklistRow; boardId: string }> {
+  private async assertItem(
+    uid: string,
+    id: string,
+  ): Promise<{ row: ChecklistRow; boardId: string }> {
     const { data, error } = await this.supabase.client
       .from('checklist_items')
       .select('*')
       .eq('id', id)
       .maybeSingle();
-    if (error?.code === '22P02' || !data) throw new NotFoundException('Checklist item not found.');
+    if (error?.code === '22P02' || !data)
+      throw new NotFoundException('Checklist item not found.');
 
-    const card = await this.access.assertCardAccess(uid, (data as ChecklistRow).card_id);
+    const card = await this.access.assertCardAccess(
+      uid,
+      (data as ChecklistRow).card_id,
+    );
     return { row: data as ChecklistRow, boardId: card.boardId };
   }
 
@@ -144,18 +162,27 @@ export class ChecklistService {
     }
 
     const updated = toItem(data as ChecklistRow);
-    this.realtime.emitToBoard(boardId, 'checklist.changed', uid, { cardId: updated.cardId, item: updated });
+    this.realtime.emitToBoard(boardId, 'checklist.changed', uid, {
+      cardId: updated.cardId,
+      item: updated,
+    });
     return updated;
   }
 
   async remove(uid: string, id: string): Promise<void> {
     const { row, boardId } = await this.assertItem(uid, id);
 
-    const { error } = await this.supabase.client.from('checklist_items').delete().eq('id', id);
+    const { error } = await this.supabase.client
+      .from('checklist_items')
+      .delete()
+      .eq('id', id);
     if (error) {
       this.logger.error(`Xoá mục checklist thất bại: ${error.message}`);
       throw new InternalServerErrorException('Failed to delete checklist item');
     }
-    this.realtime.emitToBoard(boardId, 'checklist.deleted', uid, { cardId: row.card_id, id });
+    this.realtime.emitToBoard(boardId, 'checklist.deleted', uid, {
+      cardId: row.card_id,
+      id,
+    });
   }
 }

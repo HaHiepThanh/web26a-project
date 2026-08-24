@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { SupabaseService } from '../../common/supabase/supabase.service';
 import { AccessService } from '../../common/access/access.service';
 
@@ -62,14 +66,24 @@ export class StatsService {
 
     // Ba view độc lập nhau → gọi SONG SONG, không nối đuôi.
     const [overviewRes, workloadRes, overdueRes] = await Promise.all([
-      sb.from('board_stats_overview').select('*').eq('board_id', boardId).maybeSingle(),
+      sb
+        .from('board_stats_overview')
+        .select('*')
+        .eq('board_id', boardId)
+        .maybeSingle(),
       sb.from('board_member_workload').select('*').eq('board_id', boardId),
-      sb.from('board_overdue_cards').select('*').eq('board_id', boardId).order('days_overdue', { ascending: false }),
+      sb
+        .from('board_overdue_cards')
+        .select('*')
+        .eq('board_id', boardId)
+        .order('days_overdue', { ascending: false }),
     ]);
 
     const loi = overviewRes.error ?? workloadRes.error ?? overdueRes.error;
     if (loi) {
-      this.logger.error(`Đọc thống kê thất bại (board=${boardId}): ${loi.message}`);
+      this.logger.error(
+        `Đọc thống kê thất bại (board=${boardId}): ${loi.message}`,
+      );
       throw new InternalServerErrorException('Failed to load statistics');
     }
 
@@ -87,7 +101,9 @@ export class StatsService {
             onTimeRatePct: Number(o.on_time_rate_pct ?? 0),
           }
         : null,
-      memberWorkload: ((workloadRes.data ?? []) as Record<string, unknown>[]).map((r) => ({
+      memberWorkload: (
+        (workloadRes.data ?? []) as Record<string, unknown>[]
+      ).map((r) => ({
         userId: r.user_id as string,
         displayName: (r.display_name as string) ?? null,
         assignedCount: Number(r.assigned_count ?? 0),
@@ -96,14 +112,16 @@ export class StatsService {
         overdueCount: Number(r.overdue_count ?? 0),
         lastActiveAt: (r.last_active_at as string) ?? null,
       })),
-      overdueCards: ((overdueRes.data ?? []) as Record<string, unknown>[]).map((r) => ({
-        cardId: r.card_id as string,
-        title: (r.title as string) ?? '',
-        assigneeId: (r.assignee_id as string) ?? null,
-        assigneeName: (r.assignee_name as string) ?? null,
-        dueDate: (r.due_date as string) ?? null,
-        daysOverdue: Number(r.days_overdue ?? 0),
-      })),
+      overdueCards: ((overdueRes.data ?? []) as Record<string, unknown>[]).map(
+        (r) => ({
+          cardId: r.card_id as string,
+          title: (r.title as string) ?? '',
+          assigneeId: (r.assignee_id as string) ?? null,
+          assigneeName: (r.assignee_name as string) ?? null,
+          dueDate: (r.due_date as string) ?? null,
+          daysOverdue: Number(r.days_overdue ?? 0),
+        }),
+      ),
     };
   }
 }

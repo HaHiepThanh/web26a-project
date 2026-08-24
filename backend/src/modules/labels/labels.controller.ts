@@ -12,6 +12,7 @@ import { FirebaseAuthGuard } from '../../common/firebase/firebase-auth.guard';
 import { CurrentUser } from '../../common/firebase/current-user.decorator';
 import type { CurrentUserInfo } from '../../common/firebase/current-user.decorator';
 import { LabelsService } from './labels.service';
+import { CreateLabelDto } from './dto/create-label.dto';
 
 @UseGuards(FirebaseAuthGuard)
 @Controller('labels')
@@ -19,15 +20,15 @@ export class LabelsController {
   constructor(private readonly labels: LabelsService) {}
 
   @Get()
-  findAll(@CurrentUser() user: CurrentUserInfo, @Query('boardId') boardId: string) {
+  findAll(
+    @CurrentUser() user: CurrentUserInfo,
+    @Query('boardId') boardId: string,
+  ) {
     return this.labels.findAll(user.uid, boardId);
   }
 
   @Post()
-  create(
-    @CurrentUser() user: CurrentUserInfo,
-    @Body() body: { boardId: string; name: string; color: string },
-  ) {
+  create(@CurrentUser() user: CurrentUserInfo, @Body() body: CreateLabelDto) {
     return this.labels.create(user.uid, body.boardId, body.name, body.color);
   }
 

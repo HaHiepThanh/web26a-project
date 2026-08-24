@@ -2,7 +2,6 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
-  NotFoundException,
 } from '@nestjs/common';
 import { AccessService } from '../../common/access/access.service';
 import { SupabaseService } from '../../common/supabase/supabase.service';
@@ -22,10 +21,15 @@ interface JoinedUserRow {
  *    (`userId`, `createdAt`) còn khối `user` lại snake_case (`display_name`) —
  *    frontend phải nhớ chỗ nào viết kiểu nào.
  */
-function toUser(row: unknown): { displayName: string | null; avatarUrl: string | null } | null {
+function toUser(
+  row: unknown,
+): { displayName: string | null; avatarUrl: string | null } | null {
   const u = row as JoinedUserRow | null;
   if (!u) return null;
-  return { displayName: u.display_name ?? null, avatarUrl: u.avatar_url ?? null };
+  return {
+    displayName: u.display_name ?? null,
+    avatarUrl: u.avatar_url ?? null,
+  };
 }
 
 /**
@@ -88,7 +92,11 @@ export class ActivityService {
   ): Promise<void> {
     const sb = this.supabase.client;
 
-    const { data: board } = await sb.from('boards').select('org_id').eq('id', boardId).maybeSingle();
+    const { data: board } = await sb
+      .from('boards')
+      .select('org_id')
+      .eq('id', boardId)
+      .maybeSingle();
     if (!board) {
       this.logger.warn(`Không ghi được log: không tìm thấy board ${boardId}`);
       return;

@@ -1,9 +1,22 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { FirebaseAuthGuard } from '../../common/firebase/firebase-auth.guard';
 import { CurrentUser } from '../../common/firebase/current-user.decorator';
 import type { CurrentUserInfo } from '../../common/firebase/current-user.decorator';
 import { ChecklistService } from './checklist.service';
-import { CreateChecklistItemDto, UpdateChecklistItemDto } from './dto/create-checklist-item.dto';
+import {
+  CreateChecklistItemDto,
+  UpdateChecklistItemDto,
+} from './dto/create-checklist-item.dto';
 
 /** Checklist trong thẻ. Thành viên thường VẪN dùng được — đây là "làm việc", không phải "quản lý". */
 @UseGuards(FirebaseAuthGuard)
@@ -13,13 +26,19 @@ export class ChecklistController {
 
   /** GET /checklist?cardId= */
   @Get()
-  findAll(@CurrentUser() user: CurrentUserInfo, @Query('cardId') cardId: string) {
+  findAll(
+    @CurrentUser() user: CurrentUserInfo,
+    @Query('cardId') cardId: string,
+  ) {
     return this.checklist.findAll(user.uid, cardId);
   }
 
   /** POST /checklist */
   @Post()
-  create(@CurrentUser() user: CurrentUserInfo, @Body() body: CreateChecklistItemDto) {
+  create(
+    @CurrentUser() user: CurrentUserInfo,
+    @Body() body: CreateChecklistItemDto,
+  ) {
     return this.checklist.create(user.uid, body.cardId, body.content);
   }
 

@@ -1,4 +1,13 @@
-import { ArrayMaxSize, IsArray, IsIn, IsOptional, IsString, IsUUID, MaxLength, MinLength } from 'class-validator';
+import {
+  ArrayMaxSize,
+  IsArray,
+  IsIn,
+  IsOptional,
+  IsString,
+  IsUUID,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 
 /**
  * Body của POST /workspaces.
@@ -25,7 +34,9 @@ export class CreateWorkspaceDto {
    * 'restricted' — chỉ những người liệt kê trong `memberIds`
    */
   @IsOptional()
-  @IsIn(['org', 'restricted'], { message: "visibility must be 'org' or 'restricted'." })
+  @IsIn(['org', 'restricted'], {
+    message: "visibility must be 'org' or 'restricted'.",
+  })
   visibility?: 'org' | 'restricted';
 
   /** Chỉ có tác dụng khi `visibility === 'restricted'`. Người tạo luôn được thêm sẵn. */

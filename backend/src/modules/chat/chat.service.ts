@@ -2,7 +2,6 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
-  NotFoundException,
 } from '@nestjs/common';
 import { AccessService } from '../../common/access/access.service';
 import { SupabaseService } from '../../common/supabase/supabase.service';
@@ -22,10 +21,15 @@ interface JoinedUserRow {
  *    (`userId`, `createdAt`) còn khối `user` lại snake_case (`display_name`) —
  *    frontend phải nhớ chỗ nào viết kiểu nào.
  */
-function toUser(row: unknown): { displayName: string | null; avatarUrl: string | null } | null {
+function toUser(
+  row: unknown,
+): { displayName: string | null; avatarUrl: string | null } | null {
   const u = row as JoinedUserRow | null;
   if (!u) return null;
-  return { displayName: u.display_name ?? null, avatarUrl: u.avatar_url ?? null };
+  return {
+    displayName: u.display_name ?? null,
+    avatarUrl: u.avatar_url ?? null,
+  };
 }
 
 /** [AI-CHAT] Tin nhắn chat theo board (cần bảng messages). */
@@ -47,7 +51,9 @@ export class ChatService {
 
     const { data, error } = await sb
       .from('messages')
-      .select('id, user_id, content, created_at, users(display_name, avatar_url)')
+      .select(
+        'id, user_id, content, created_at, users(display_name, avatar_url)',
+      )
       .eq('board_id', boardId)
       .order('created_at', { ascending: true });
 
@@ -67,7 +73,11 @@ export class ChatService {
     }));
   }
 
-  async create(boardId: string, userUid: string, content: string): Promise<unknown> {
+  async create(
+    boardId: string,
+    userUid: string,
+    content: string,
+  ): Promise<unknown> {
     const { orgId } = await this.access.assertBoardAccess(userUid, boardId);
     const sb = this.supabase.client;
 
