@@ -23,7 +23,7 @@
         <span class="mt-2 shrink-0 rounded-full bg-success/15 px-2 py-0.5 text-2xs font-bold text-success">Saved</span>
       }
 
-      <button type="button" class="btn btn-circle btn-ghost btn-sm shrink-0" (click)="attemptClose()" aria-label="Close">
+      <button type="button" class="btn btn-circle btn-ghost btn-sm relative shrink-0 before:absolute before:-inset-2 before:content-['']" (click)="attemptClose()" aria-label="Close">
         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </button>
     </div>
@@ -96,7 +96,7 @@
               Description
             </label>
             @if (!editingDesc()) {
-              <button type="button" class="btn btn-ghost btn-xs" (click)="toggleEditDesc()">Edit</button>
+              <button type="button" class="btn btn-ghost btn-xs relative before:absolute before:-inset-2 before:content-['']" (click)="toggleEditDesc()">Edit</button>
             }
           </div>
           @if (editingDesc()) {

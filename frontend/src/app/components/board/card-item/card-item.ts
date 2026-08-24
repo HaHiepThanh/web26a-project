@@ -3,7 +3,10 @@ import { Card, CardPriority, Label, User } from '../../../models';
 import { avatarColorFor, initialsOf } from '../../../utils/avatar.util';
 
 const PRIORITY_LABEL: Record<CardPriority, string> = { high: 'High', medium: 'Medium', low: 'Low' };
-const PRIORITY_TEXT: Record<CardPriority, string> = { high: 'text-[#BE123C]', medium: 'text-[#B45309]', low: 'text-[#334155]' };
+// Đã nâng độ sáng so với bản gốc (#BE123C/#B45309/#334155) — bản cũ chỉ đạt
+// 1.5–3.2:1 tương phản trên nền card tối (oklch .253 .016 252.4 ≈ rgb(29,35,42)),
+// dưới xa mức 4.5:1 của WCAG AA. Ba màu dưới đạt lần lượt ~5.1 / 6.8 / 6.2 : 1.
+const PRIORITY_TEXT: Record<CardPriority, string> = { high: 'text-[#f43f5e]', medium: 'text-[#fb923c]', low: 'text-[#94a3b8]' };
 
 /** Hình cờ dùng chung cho mức ưu tiên (#4, phương án A đã chốt trong demo 04):
  *  high = tô đặc, medium = tô nửa (clip trái), low = chỉ viền. */

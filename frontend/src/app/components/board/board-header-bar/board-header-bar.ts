@@ -8,7 +8,7 @@ import { FLAG_PATH } from '../card-item/card-item';
 
 /** Cùng bảng màu với card-item.ts (PRIORITY_TEXT) — để nút lọc "Mức ưu tiên" khớp
  *  màu với cờ ưu tiên hiển thị trên mặt thẻ, tránh lệch màu giữa 2 nơi. */
-const PRIORITY_TEXT: Record<CardPriority, string> = { high: 'text-[#BE123C]', medium: 'text-[#B45309]', low: 'text-[#334155]' };
+const PRIORITY_TEXT: Record<CardPriority, string> = { high: 'text-[#f43f5e]', medium: 'text-[#fb923c]', low: 'text-[#94a3b8]' };
 const PRIORITY_ACTIVE: Record<CardPriority, string> = {
   high: 'bg-error text-error-content border-error',
   medium: 'bg-warning text-warning-content border-warning',

@@ -7,6 +7,47 @@
   box-shadow: 6px 0 16px -8px rgba(0, 0, 0, 0.25);
 }
 
+/* UI-006: dưới 768px, panel thu gọn không còn là rail 44px chiếm chỗ layout của
+   Board (host width vẫn nằm trong flex row) — chuyển thành nút tròn nổi, tách
+   khỏi luồng layout. !important cần thiết vì width/height gốc đến từ inline
+   style binding ([style.width.px], .h-full) có độ ưu tiên cao hơn class thường.
+   :host(.class) — không phải .class trơn — vì view encapsulation biên dịch
+   ".class" thành ".class[_ngcontent-xxx]", chỉ khớp phần tử CON có gắn thuộc
+   tính đó; chính host lại mang _nghost-xxx nên rule .class thường không bao
+   giờ áp dụng lên host, phải viết tường minh :host(.class). */
+:host(.chat-mobile-fab) {
+  position: fixed !important;
+  right: 16px;
+  bottom: 16px;
+  width: 56px !important;
+  height: 56px !important;
+  border-radius: 9999px;
+  overflow: hidden;
+  box-shadow: var(--shadow-xl);
+  z-index: 40;
+}
+
+:host(.chat-mobile-fab) .chat-dock-shell {
+  border-radius: 9999px;
+  box-shadow: none;
+}
+
+/* Mở rộng trên mobile → overlay toàn màn hình thay vì ép Board co hẹp còn vài
+   chục px (bề rộng min-width vẫn là 260px, quá lớn cho màn hình 375px).
+   top: 56px (không phải inset:0) — header app (`h-14`, z-[100]) cao hơn overlay
+   này (z-50) nên vẽ đè lên phần trên cùng; inset:0 sẽ giấu mất thanh tiêu đề
+   "Team chat" và nút đóng của chính overlay xuống dưới header đó. */
+:host(.chat-mobile-overlay) {
+  position: fixed !important;
+  top: 56px;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100% !important;
+  height: calc(100% - 56px) !important;
+  z-index: 50;
+}
+
 /* Animations kept in CSS (keyframes are not utility-friendly). */
 .pulse {
   animation: bubble-pulse 0.5s ease-in-out 2;

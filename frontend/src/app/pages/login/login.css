@@ -64,8 +64,14 @@
   color: var(--slate-800);
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  padding: 32px 24px;
+  /* flex-start + gap (không phải space-between) — khớp cách register.css đã làm.
+     space-between kéo .form-card ra chính giữa khoảng trống giữa brand và
+     footer; trên mobile (form-panel cao min-height:100vh nhưng nội dung không
+     lấp đầy) khoảng đó rộng hơn nhiều so với chiều cao form, để lại một dải
+     trống ~260px phía trên form trước khi người dùng chạm vào được ô đầu tiên. */
+  justify-content: flex-start;
+  gap: 28px;
+  padding: 32px 24px 40px;
   position: relative;
 }
 
