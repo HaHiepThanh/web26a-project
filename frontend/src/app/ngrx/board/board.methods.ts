@@ -4,11 +4,12 @@ import { EntityState, upsertEntity } from '@ngrx/signals/entities';
 import { describeError } from '../../services/api-error.util';
 import { ApiService } from '../../services/api.service';
 import { ApiBoard, Board, BoardBackground, BoardVisibility } from '../../models';
+import type { ErrorState } from '../shared/error.feature';
 import { BoardOwnState } from './board.state';
 import { toBoard } from './board.mapper';
 import { LocalBoardOverride, persistLocalBoardOverrides } from './board.local-image.util';
 
-type Store = WritableStateSource<EntityState<Board> & BoardOwnState> & {
+type Store = WritableStateSource<EntityState<Board> & BoardOwnState & ErrorState> & {
   entities: Signal<Board[]>;
   boards: Signal<Board[]>;
   workspaceBoardIds: Signal<string[]>;

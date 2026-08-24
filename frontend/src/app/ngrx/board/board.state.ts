@@ -1,7 +1,6 @@
 import { loadLocalBoardOverrides, LocalBoardOverride } from './board.local-image.util';
 
 export interface BoardOwnState {
-  loading: boolean;
   loadError: string | null;
   /** Cảnh báo lưu trữ gần nhất (vỡ quota localStorage) — Workspace đọc để hiện toast. */
   storageWarning: string | null;
@@ -16,7 +15,6 @@ export interface BoardOwnState {
 }
 
 export const initialBoardState: BoardOwnState = {
-  loading: false,
   loadError: null,
   storageWarning: null,
   currentBoardId: null,

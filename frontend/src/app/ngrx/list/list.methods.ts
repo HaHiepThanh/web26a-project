@@ -5,10 +5,11 @@ import { describeError } from '../../services/api-error.util';
 import { ApiService } from '../../services/api.service';
 import { ApiList, List } from '../../models';
 import { midpoint } from '../shared/entity.util';
+import type { ErrorState } from '../shared/error.feature';
 import { ListOwnState } from './list.state';
 import { toList } from './list.mapper';
 
-type Store = WritableStateSource<EntityState<List> & ListOwnState> & {
+type Store = WritableStateSource<EntityState<List> & ListOwnState & ErrorState> & {
   lists: Signal<List[]>;
   loadedBoardId: Signal<string | null>;
   fail: (message: string) => void;
