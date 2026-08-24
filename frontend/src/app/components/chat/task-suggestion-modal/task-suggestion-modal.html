@@ -8,13 +8,13 @@
           <svg class="h-4 w-4 text-[var(--accent-purple)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z" />
           </svg>
-          AI đề xuất tạo {{ rows().length }} thẻ
+          AI suggested {{ rows().length }} card(s)
         </div>
         <p class="mt-0.5 text-2xs text-base-content/55">
-          Sửa lại thoải mái trước khi tạo. Bỏ tick những thẻ bạn không cần.
+          Edit anything before creating. Untick the cards you don't want.
         </p>
       </div>
-      <button type="button" class="btn btn-circle btn-ghost btn-sm shrink-0" (click)="close.emit()" aria-label="Đóng">
+      <button type="button" class="btn btn-circle btn-ghost btn-sm shrink-0" (click)="close.emit()" aria-label="Close">
         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </button>
     </div>
@@ -28,20 +28,20 @@
 
           <div class="mb-2.5 flex items-center gap-2">
             <input type="checkbox" class="checkbox checkbox-primary checkbox-sm shrink-0"
-              [checked]="r.chon" (change)="toggle($index)" [attr.aria-label]="'Tạo thẻ ' + r.title" />
+              [checked]="r.chon" (change)="toggle($index)" [attr.aria-label]="'Create card ' + r.title" />
             <input type="text" maxlength="200"
               class="input input-bordered input-sm min-w-0 flex-1 font-bold"
-              placeholder="Tên thẻ" [ngModel]="r.title"
+              placeholder="Card title" [ngModel]="r.title"
               (ngModelChange)="patch($index, { title: $event })" [name]="'title' + $index" />
           </div>
 
           <div class="grid grid-cols-1 gap-2 sm:grid-cols-4">
             <label class="min-w-0">
-              <span class="mb-1 block text-3xs font-bold uppercase tracking-wide text-base-content/50">Phụ trách</span>
+              <span class="mb-1 block text-3xs font-bold uppercase tracking-wide text-base-content/50">Assignee</span>
               <select class="select select-bordered select-sm w-full"
                 [ngModel]="r.assigneeId ?? ''" (ngModelChange)="patch($index, { assigneeId: $event })"
                 [name]="'assignee' + $index">
-                <option value="">Chưa gán</option>
+                <option value="">Unassigned</option>
                 @for (m of members(); track m.id) {
                   <option [value]="m.id">{{ m.displayName || m.email }}</option>
                 }
@@ -49,14 +49,14 @@
             </label>
 
             <label class="min-w-0">
-              <span class="mb-1 block text-3xs font-bold uppercase tracking-wide text-base-content/50">Hạn chót</span>
+              <span class="mb-1 block text-3xs font-bold uppercase tracking-wide text-base-content/50">Due date</span>
               <input type="date" class="input input-bordered input-sm w-full"
                 [ngModel]="r.dueDate ?? ''" (ngModelChange)="patch($index, { dueDate: $event })"
                 [name]="'due' + $index" />
             </label>
 
             <label class="min-w-0">
-              <span class="mb-1 block text-3xs font-bold uppercase tracking-wide text-base-content/50">Thêm vào cột</span>
+              <span class="mb-1 block text-3xs font-bold uppercase tracking-wide text-base-content/50">Add to list</span>
               <select class="select select-bordered select-sm w-full"
                 [ngModel]="r.listId ?? ''" (ngModelChange)="patch($index, { listId: $event })"
                 [name]="'list' + $index">
@@ -67,7 +67,7 @@
             </label>
 
             <label class="min-w-0">
-              <span class="mb-1 block text-3xs font-bold uppercase tracking-wide text-base-content/50">Ưu tiên</span>
+              <span class="mb-1 block text-3xs font-bold uppercase tracking-wide text-base-content/50">Priority</span>
               <select class="select select-bordered select-sm w-full"
                 [ngModel]="r.priority ?? 'medium'" (ngModelChange)="patch($index, { priority: $event })"
                 [name]="'priority' + $index">
@@ -85,20 +85,20 @@
           }
         </div>
       } @empty {
-        <p class="py-8 text-center text-sm text-base-content/50">Không có thẻ nào để tạo.</p>
+        <p class="py-8 text-center text-sm text-base-content/50">No cards to create.</p>
       }
     </div>
 
     <div class="flex shrink-0 items-center justify-between gap-2 border-t border-base-200 px-5 py-3">
       <span class="text-2xs text-base-content/55">
-        Thẻ sẽ hiện ngay với mọi người đang mở bảng này.
+        Cards appear instantly for everyone viewing this board.
       </span>
       <span class="flex gap-2">
-        <button type="button" class="btn btn-ghost btn-sm" (click)="close.emit()">Huỷ</button>
+        <button type="button" class="btn btn-ghost btn-sm" (click)="close.emit()">Cancel</button>
         <button type="button" class="btn btn-primary btn-sm gap-1.5"
           [disabled]="!canConfirm()" (click)="onConfirm()">
           @if (saving()) { <span class="loading loading-spinner loading-xs"></span> }
-          Tạo {{ selectedCount() }} thẻ
+          Create {{ selectedCount() }} card(s)
         </button>
       </span>
     </div>

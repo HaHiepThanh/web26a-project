@@ -659,7 +659,7 @@ export class Board {
       return;
     }
     // Thẻ mới về qua WebSocket (`card.created`) nên không phải nạp lại danh sách.
-    this.addToast(`Đã tạo ${cards.length} thẻ từ gợi ý của AI.`, 'success');
+    this.addToast(`Created ${cards.length} card(s) from the AI suggestion.`, 'success');
   }
 
   /** Thẻ của 1 list, đã áp sắp xếp hiển thị (#thứ tự lưu thật không đổi trừ khi kéo-thả thủ công). */
