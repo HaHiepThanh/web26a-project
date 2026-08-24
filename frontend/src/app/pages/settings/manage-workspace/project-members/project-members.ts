@@ -1,7 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Role, Toast, ToastType } from '../../../../models';
 import { avatarColorFor, initialsOf } from '../../../../utils/avatar.util';
 import { AuthService } from '../../../../services/auth.service';
@@ -45,12 +44,13 @@ type MembersTab = 'members' | 'invitations';
  */
 @Component({
   selector: 'app-project-members',
-  imports: [DatePipe, FormsModule, RouterLink],
+  imports: [DatePipe, RouterLink],
   templateUrl: './project-members.html',
   styleUrl: './project-members.css',
 })
 export class ProjectMembers {
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
   private readonly orgs = inject(OrganizationStore);
   private readonly boards = inject(BoardStore);
@@ -69,6 +69,7 @@ export class ProjectMembers {
   readonly currentUserId = computed(() => this.auth.currentUser()?.id ?? '');
 
   readonly loading = signal(true);
+  readonly loadError = signal<string | null>(null);
   readonly activeTab = signal<MembersTab>('members');
 
   constructor() {
@@ -85,6 +86,7 @@ export class ProjectMembers {
       return;
     }
     this.loading.set(true);
+    this.loadError.set(null);
 
     // Phải có board TRƯỚC: mọi thứ còn lại cần `orgId`/`workspaceId` của nó.
     // 404 ở đây gộp cả "không tồn tại" lẫn "không thuộc tổ chức của mình" —
@@ -92,6 +94,9 @@ export class ProjectMembers {
     await this.boards.loadBoard(this.boardId);
     const board = this.board();
     if (!board) {
+      // Mất mạng KHÁC HẲN board không tồn tại. Không phân biệt là bảo người
+      // dùng "không có project này" trong khi nó vẫn nằm nguyên trong database.
+      this.loadError.set(this.boards.loadError());
       this.loading.set(false);
       return;
     }
@@ -106,6 +111,9 @@ export class ProjectMembers {
     // lỗi đó thành mảng rỗng, nhưng gọi thừa vẫn là một vòng mạng vô ích.
     if (this.isAdmin()) await this.orgs.loadPendingInvites(board.orgId);
 
+    // Nạp thành viên hỏng thì bảng rỗng — mà bảng rỗng trông y hệt "project này
+    // chưa có ai". Phải nói ra, không thì người dùng tin vào một danh sách sai.
+    this.loadError.set(this.boardMembers.lastError()?.message ?? null);
     this.loading.set(false);
   }
 
@@ -215,13 +223,23 @@ export class ProjectMembers {
     return this.isAdmin() && member.role !== 'owner' && member.userId !== this.currentUserId();
   }
 
-  async onChangeRole(member: ProjectMember, role: Role): Promise<void> {
+  /**
+   * `select` truyền vào để TRẢ LẠI khi API từ chối.
+   *
+   * Ô chọn buộc một chiều (`[value]` + `(change)`), nên sau khi người dùng chọn,
+   * DOM đã mang giá trị mới còn `member.role` thì chưa. Gọi API hỏng (403, mạng
+   * đứt) mà không tự tay đặt lại `el.value` thì Angular KHÔNG vẽ lại — dữ liệu
+   * không đổi thì không có gì để vẽ — và ô chọn nằm lại ở vai trò chưa bao giờ
+   * được lưu. Người dùng nhìn thấy "Admin" trong khi database vẫn là "Member".
+   */
+  async onChangeRole(member: ProjectMember, role: Role, el: HTMLSelectElement): Promise<void> {
     const b = this.board();
     if (!b || role === member.role) return;
     this.busyUserId.set(member.userId);
     const error = await this.orgs.changeRole(b.orgId, member.userId, role);
     this.busyUserId.set(null);
     if (error) {
+      el.value = member.role ?? '';
       this.flash(error, 'error');
       return;
     }
@@ -258,6 +276,13 @@ export class ProjectMembers {
 
     if (error) {
       this.flash(error, 'error');
+      return;
+    }
+
+    // Tự rời board thì từ giây này ta KHÔNG còn quyền xem nó nữa: ở lại là ngồi
+    // trên một trang mà lần tải lại kế tiếp sẽ trả 404. Về thẳng danh sách.
+    if (member.userId === this.currentUserId()) {
+      void this.router.navigateByUrl('/settings/manage-workspace');
       return;
     }
     this.flash(`Removed ${member.name} from this project.`, 'success');

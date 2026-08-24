@@ -9,9 +9,15 @@
 } @else if (!board() || !isMember()) {
   <div class="mx-auto max-w-[1000px] px-10 pb-16 pt-8">
     <a routerLink="/settings/manage-workspace" class="mb-4 inline-block text-[0.8125rem] text-base-content/50 hover:text-base-content">← Project list</a>
-    <div class="rounded-box border border-dashed border-base-300 bg-base-100 px-4 py-12 text-center text-base-content/50">
-      <p>{{ board() ? "You're not a member of this project." : 'Project not found.' }}</p>
-    </div>
+    @if (loadError()) {
+      <div class="alert alert-error">
+        <span>{{ loadError() }}</span>
+      </div>
+    } @else {
+      <div class="rounded-box border border-dashed border-base-300 bg-base-100 px-4 py-12 text-center text-base-content/50">
+        <p>{{ board() ? "You're not a member of this project." : 'Project not found.' }}</p>
+      </div>
+    }
   </div>
 } @else {
   <div class="mx-auto max-w-[1000px] px-10 pb-16 pt-8">
@@ -46,6 +52,12 @@
         <button type="button" class="btn btn-primary btn-sm" (click)="openAddModal()">+ Add member</button>
       }
     </div>
+
+    @if (loadError()) {
+      <div class="alert alert-error mb-4">
+        <span>{{ loadError() }}</span>
+      </div>
+    }
 
     <!-- ======================= TAB: MEMBERS (mọi thành viên xem được) ======================= -->
     @if (activeTab() === 'members') {
@@ -110,13 +122,14 @@
                   <td>
                     @if (canChangeRole(member)) {
                       <select
+                        #roleSelect
                         class="select select-bordered select-sm"
-                        [ngModel]="member.role"
-                        (ngModelChange)="onChangeRole(member, $event)"
+                        [value]="member.role"
+                        (change)="onChangeRole(member, $any($event.target).value, roleSelect)"
                         [disabled]="busyUserId() === member.userId"
                       >
                         @for (role of assignableRoles; track role) {
-                          <option [value]="role">{{ roleLabel(role) }}</option>
+                          <option [value]="role" [selected]="role === member.role">{{ roleLabel(role) }}</option>
                         }
                       </select>
                     } @else {
