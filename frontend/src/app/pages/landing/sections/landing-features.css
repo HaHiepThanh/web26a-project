@@ -1,0 +1,457 @@
+/* ==========================================================================
+   Lưới bento + đèn rọi bám con trỏ
+   ========================================================================== */
+
+.features {
+  background: var(--lp-bg);
+}
+
+.bento {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--lp-4);
+}
+
+/* Máy tính bảng: hai cột, ô lớn và ô rộng chiếm trọn hàng. */
+@media (min-width: 680px) {
+  .bento {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .bento-lg,
+  .bento-wide,
+  .bento-full {
+    grid-column: span 2;
+  }
+}
+
+/* Máy tính: bốn cột, và đây mới là chỗ nhịp điệu lệch nhau hiện rõ.
+     hàng 1   A A B B
+     hàng 2   A A C D
+     hàng 3   E E F G
+     hàng 4   H H H H  */
+@media (min-width: 1000px) {
+  .bento {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    /* Hàng cao bằng nhau để lưới không bị so le lởm chởm; ô lớn chiếm hai hàng
+       nên tự khắc cao gấp đôi. */
+    grid-auto-rows: minmax(196px, auto);
+  }
+
+  .bento-lg {
+    grid-column: span 2;
+    grid-row: span 2;
+  }
+
+  .bento-wide {
+    grid-column: span 2;
+  }
+
+  /* Viết .bento-card.bento-full chứ không phải .bento-full cho đủ độ ưu tiên.
+     Hai class đơn lẻ ngang điểm nhau (0,1,0), mà media query KHÔNG cộng thêm
+     điểm nào — trong khi khối .bento-card nằm phía DƯỚI trong file này, nên
+     `.bento-full { flex-direction: row }` bị `.bento-card { column }` đè mất.
+     Thiếu chỗ này thì bố cục "chữ trái, chip phải" không bao giờ xảy ra: nội
+     dung bị dồn vào giữa một ô rộng 1136px và chữ bị căn giữa. */
+  .bento-card.bento-full {
+    grid-column: span 4;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--lp-6);
+  }
+
+  /* Khối chữ không được giãn hết ô — chip vai trò cần chỗ ở mép phải. */
+  .bento-full .bento-text {
+    max-width: 62ch;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Ô
+   -------------------------------------------------------------------------- */
+
+.bento-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: var(--lp-5);
+  border: 1px solid var(--lp-border);
+  border-radius: var(--radius-lg);
+  background: var(--lp-surface);
+  box-shadow: var(--lp-shadow-sm);
+  overflow: hidden;
+  /* Cắt nội dung theo bo góc để đèn rọi và minh hoạ không tràn ra ngoài. */
+  isolation: isolate;
+  transition:
+    border-color 240ms var(--lp-ease),
+    transform 240ms var(--lp-ease),
+    box-shadow 240ms var(--lp-ease);
+}
+
+.bento-card:hover {
+  border-color: var(--lp-border-strong);
+  transform: translate3d(0, -3px, 0);
+  box-shadow: var(--lp-shadow-md);
+}
+
+/* Đèn rọi: --mx/--my do `appSpotlight` ghi vào, --spot là công tắc mờ/tỏ. Trên
+   thiết bị cảm ứng directive không gắn gì nên --spot không tồn tại — giá trị
+   thay thế 0 trong var() giữ cho lớp này tắt hẳn. */
+.bento-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: var(--spot, 0);
+  transition: opacity 320ms ease;
+  background: radial-gradient(
+    260px circle at var(--mx, 50%) var(--my, 50%),
+    var(--lp-spot),
+    transparent 70%
+  );
+}
+
+.bento-text {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bento-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+}
+
+.bento-icon svg {
+  width: 19px;
+  height: 19px;
+}
+
+/* Mỗi ô một sắc thái khác nhau, nhưng KHÔNG dùng màu làm thứ duy nhất phân biệt
+   — tiêu đề và biểu tượng đã nói rõ ô đó là gì. Màu chỉ để nhìn cho vui mắt. */
+.icon-blue {
+  background: var(--accent-blue-soft);
+  border-color: color-mix(in oklab, var(--accent-blue) 24%, transparent);
+  color: var(--lp-ink-blue);
+}
+.icon-violet {
+  background: var(--accent-purple-soft);
+  border-color: color-mix(in oklab, var(--accent-purple) 24%, transparent);
+  color: var(--lp-ink-purple);
+}
+.icon-green {
+  background: color-mix(in oklab, var(--accent-green) 14%, transparent);
+  border-color: color-mix(in oklab, var(--accent-green) 26%, transparent);
+  color: var(--lp-ink-green);
+}
+.icon-amber {
+  background: color-mix(in oklab, var(--warning) 14%, transparent);
+  border-color: color-mix(in oklab, var(--warning) 28%, transparent);
+  color: var(--lp-ink-amber);
+}
+
+.bento-desc {
+  margin: 0;
+  font-size: var(--lp-text-sm);
+  line-height: 1.6;
+  color: var(--lp-text-2);
+  max-width: 46ch;
+}
+
+/* --------------------------------------------------------------------------
+   Minh hoạ trong ô lớn — kéo thả
+   -------------------------------------------------------------------------- */
+
+.drag-demo {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: auto;
+  padding: 12px;
+  border: 1px solid var(--lp-border);
+  border-radius: var(--radius-md);
+  background: var(--lp-surface-2);
+}
+
+.dd-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dd-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--lp-text-3);
+}
+
+.dd-card {
+  height: 34px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--lp-border);
+  background: var(--lp-surface);
+}
+
+.dd-short {
+  height: 26px;
+}
+
+.dd-slot {
+  height: 40px;
+  border: 1.5px dashed var(--lp-border-strong);
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklab, var(--accent-blue) 6%, transparent);
+}
+
+/* Thẻ đang được cầm: nghiêng và nổi lên trên ô trống. Rê chuột vào ô lớn thì nó
+   hạ xuống đúng chỗ — hoạt ảnh chỉ chạy khi có người quan tâm, chứ không nhấp
+   nháy suốt ngày ở góc màn hình. */
+.dd-drag {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: calc(50% - 17px);
+  height: 40px;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid color-mix(in oklab, var(--accent-blue) 45%, transparent);
+  background: var(--lp-surface);
+  box-shadow: var(--lp-shadow-md);
+  transform: translate3d(14px, -12px, 0) rotate(-4deg);
+  transition: transform 460ms var(--lp-ease);
+}
+
+.bento-lg:hover .dd-drag {
+  transform: translate3d(0, 0, 0) rotate(0deg);
+}
+
+.dd-chip {
+  width: 34px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--accent-blue);
+}
+
+.dd-line {
+  width: 78%;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--lp-border-strong);
+}
+
+.dd-line-2 {
+  width: 52%;
+}
+
+/* --------------------------------------------------------------------------
+   Minh hoạ nhỏ trong các ô còn lại
+   -------------------------------------------------------------------------- */
+
+.live-row {
+  display: flex;
+  align-items: center;
+  margin-top: auto;
+  padding-top: var(--lp-3);
+}
+
+.live-av {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  margin-right: -8px;
+  border-radius: 999px;
+  border: 2px solid var(--lp-surface);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--lp-on-solid);
+}
+
+.av-a {
+  background: var(--lp-solid-blue);
+}
+.av-b {
+  background: var(--lp-solid-purple);
+}
+.av-c {
+  background: var(--lp-solid-green);
+}
+
+/* Con trỏ của người khác — chi tiết nhỏ nhưng nói ngay ra "có người khác đang ở
+   đây cùng bạn", nhanh hơn cả câu mô tả bên trên. */
+.live-cursor {
+  position: relative;
+  margin-left: var(--lp-5);
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--lp-solid-purple);
+  color: var(--lp-on-solid);
+  font-size: 10px;
+  font-weight: 700;
+  animation: cursor-drift 5s ease-in-out infinite;
+}
+
+.live-cursor::before {
+  content: '';
+  position: absolute;
+  left: -9px;
+  top: -6px;
+  border: 5px solid transparent;
+  border-top-color: var(--accent-purple);
+  border-left-color: var(--accent-purple);
+  transform: rotate(-12deg);
+}
+
+@keyframes cursor-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(10px, -6px, 0);
+  }
+}
+
+.tag-row,
+.role-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: var(--lp-3);
+}
+
+.tg,
+.role {
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-size: var(--lp-text-micro);
+  font-weight: 600;
+}
+
+.tg-blue {
+  background: var(--accent-blue-soft);
+  color: var(--lp-ink-blue);
+}
+.tg-violet {
+  background: var(--accent-purple-soft);
+  color: var(--lp-ink-purple);
+}
+.tg-green {
+  background: color-mix(in oklab, var(--accent-green) 16%, transparent);
+  color: var(--lp-ink-green);
+}
+
+.role {
+  border: 1px solid var(--lp-border-strong);
+  color: var(--lp-text-2);
+  white-space: nowrap;
+}
+
+.role-owner {
+  border-color: color-mix(in oklab, var(--accent-purple) 45%, transparent);
+  background: var(--accent-purple-soft);
+  color: var(--lp-ink-purple);
+}
+
+.check-demo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: var(--lp-3);
+}
+
+.cd-bar {
+  flex: 1;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--lp-surface-2);
+  overflow: hidden;
+}
+
+.cd-bar i {
+  display: block;
+  width: 75%;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
+}
+
+.cd-num {
+  font-size: var(--lp-text-micro);
+  font-weight: 700;
+  color: var(--lp-text-3);
+}
+
+.cmt-demo {
+  display: flex;
+  align-items: center;
+  gap: var(--lp-2);
+  margin-top: auto;
+  padding-top: var(--lp-3);
+}
+
+.cmt-av {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: var(--lp-solid-blue);
+  color: var(--lp-on-solid);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.cmt-bubble {
+  padding: 7px 12px;
+  border: 1px solid var(--lp-border);
+  border-radius: 12px;
+  border-bottom-left-radius: 4px;
+  background: var(--lp-surface-2);
+  font-size: var(--lp-text-micro);
+  color: var(--lp-text-2);
+}
+
+.cmt-bubble b {
+  color: var(--lp-ink-blue);
+}
+
+/* --------------------------------------------------------------------------
+   Giảm chuyển động
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .bento-card,
+  .bento-card::before,
+  .dd-drag {
+    transition: none;
+  }
+
+  .live-cursor {
+    animation: none;
+  }
+
+  /* Thẻ đang kéo đứng yên ở tư thế nghiêng: giữ trạng thái "đang cầm", vẫn kể
+     đúng câu chuyện kéo thả mà không có gì nhúc nhích. */
+  .bento-lg:hover .dd-drag {
+    transform: translate3d(14px, -12px, 0) rotate(-4deg);
+  }
+}

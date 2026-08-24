@@ -1,0 +1,231 @@
+<section class="lp-hero lp-grain" aria-labelledby="hero-title">
+  <!-- Nền cực quang: ba vệt sáng đã làm mờ, chồng nhau ở chế độ hoà trộn nên
+       chỗ giao nhau tự pha ra màu thứ tư thay vì hai mảng màu dán cạnh nhau.
+       Chúng trôi bằng `transform` chứ không phải `background-position` — vị trí
+       nền buộc trình duyệt vẽ lại cả lớp mỗi khung hình, còn transform thì
+       trình duyệt chỉ dịch một texture có sẵn trên GPU.
+
+       Lớp bọc ngoài nhận độ lệch theo con trỏ, lớp trong giữ hoạt ảnh trôi —
+       hai transform lồng nhau thì nhân với nhau, chứ đặt chung một phần tử thì
+       cái sau đè mất cái trước. -->
+  <div class="hero-aurora" aria-hidden="true">
+    <div class="hero-aurora-shift">
+      <span class="aurora aurora-a"></span>
+      <span class="aurora aurora-b"></span>
+      <span class="aurora aurora-c"></span>
+    </div>
+    <span class="hero-grid"></span>
+    <span class="hero-fade"></span>
+  </div>
+
+  <div class="lp-shell hero-inner">
+    <div class="hero-copy">
+      <p class="lp-eyebrow" appReveal>
+        <span class="lp-eyebrow-dot" aria-hidden="true"></span>
+        An assistant that reads your chat
+      </p>
+
+      <!-- Phần tử to nhất, sáng nhất, nằm trên cùng: mắt bắt vào đây trước. -->
+      <!-- `&nbsp;` giữa các từ của cụm gradient: `text-wrap: balance` cân đều số
+           chữ mỗi dòng nhưng không biết ranh giới ngữ nghĩa, nên ở màn hẹp nó
+           ngắt thành "Your team's / work, on / one board" — chữ "on" đứng lẻ
+           cuối dòng và cụm màu nhấn bị xé làm đôi giữa hai dòng. Khoá cụm lại
+           thì dòng ngắt luôn rơi đúng chỗ ranh giới ý nghĩa. -->
+      <h1 id="hero-title" class="hero-title" appReveal [revealDelay]="70">
+        Your team's work,
+        <span class="lp-grad">on&nbsp;one&nbsp;board</span>
+      </h1>
+
+      <p class="lp-lead hero-lead" appReveal [revealDelay]="140">
+        A real-time Kanban board for small teams. Dragging is saving — there is no "Save" button.
+        And while your team is chatting, the assistant spots the work and asks you one question
+        before it creates anything.
+      </p>
+
+      <div class="hero-cta" appReveal [revealDelay]="210">
+        <!-- Nút chính DUY NHẤT của khu vực này. Mọi hành động khác phải nhẹ hơn
+             về mặt thị giác, nếu không mắt sẽ không biết bấm gì trước. -->
+        <a class="lp-btn lp-btn-primary lp-btn-lg" routerLink="/register" appMagnetic>
+          Build your first board
+          <svg lucideArrowRight class="lp-btn-arrow" [strokeWidth]="2.2"></svg>
+        </a>
+        <a class="lp-btn lp-btn-secondary lp-btn-lg" href="#assistant">
+          <svg lucideSparkles [strokeWidth]="2.2"></svg>
+          See the assistant work
+        </a>
+      </div>
+
+      <ul class="hero-trust" appReveal [revealDelay]="280">
+        @for (item of trust; track item) {
+          <li>
+            <svg lucideCheck [strokeWidth]="2.2" aria-hidden="true"></svg>
+            {{ item }}
+          </li>
+        }
+      </ul>
+    </div>
+
+    <!-- Mấy tấm thẻ nhỏ trôi quanh tiêu đề. Thuần trang trí nên `aria-hidden`:
+         trình đọc màn hình đọc ra "TN, Design, Due Friday" thì chỉ gây nhiễu.
+         Ẩn hẳn dưới 1180px — trên màn hẹp chúng sẽ đè lên chữ. -->
+    <div class="hero-floaters" aria-hidden="true">
+      <div class="floater floater-avatars">
+        <span class="fav fav-1">TN</span>
+        <span class="fav fav-2">MK</span>
+        <span class="fav fav-3">+4</span>
+      </div>
+
+      <div class="floater floater-label">
+        <span class="dot"></span>
+        Design
+      </div>
+
+      <div class="floater floater-due">
+        <svg lucideZap [strokeWidth]="2.2"></svg>
+        Instant sync
+      </div>
+
+      <div class="floater floater-date">Due Friday</div>
+    </div>
+  </div>
+
+  <!-- ── Bảng trình diễn ────────────────────────────────────────────────────
+       Bảng để NGẮM, không phải để bấm — nên cả khối gắn aria-hidden: nó minh
+       hoạ lại đúng những gì đoạn chữ phía trên đã nói, để trình đọc màn hình
+       đọc thêm một lần nữa chỉ là bắt nghe lặp.
+
+       Hai tấm thẻ tự đi từ trái sang phải theo hai làn, lệch pha nhau và bắt
+       chéo qua nhau ở giữa. Mỗi cột có đúng một cấu trúc — đầu cột, ô làn trên,
+       một thẻ đứng yên, ô làn dưới — nhờ vậy toạ độ hai chỗ đáp giống hệt nhau ở
+       cả ba cột, và cả màn chuyển động rút gọn còn vài phép cộng. -->
+  <div class="lp-shell" appReveal [revealDelay]="180">
+    <!-- .board-floor phải nằm NGOÀI .board-frame: khung có overflow:hidden để
+         bo góc nội dung, nên bóng đổ tràn xuống đáy sẽ bị cắt cụt. -->
+    <div class="board-stage" aria-hidden="true">
+      <span class="board-floor"></span>
+
+      <div class="board-frame">
+        <div class="board-chrome">
+          <span class="tl tl-r"></span>
+          <span class="tl tl-y"></span>
+          <span class="tl tl-g"></span>
+          <span class="board-name">Product launch · Q3</span>
+          <div class="board-people">
+            <span class="bp bp-1">TN</span>
+            <span class="bp bp-2">MK</span>
+            <span class="bp bp-3">HN</span>
+          </div>
+        </div>
+
+        <div class="board-body">
+          <div class="board-cols">
+            <!-- Cột 1 -->
+            <div class="col">
+              <div class="col-head"><span>To do</span><em>4</em></div>
+              <div class="slot"></div>
+              <article class="kan-card">
+                <div class="kan-priority pri-low">
+                  <span class="pri-dot"></span>
+                  Low
+                </div>
+                <div class="kan-labels"><span class="kan-label lb-violet"></span></div>
+                <p>Write up the label API</p>
+                <div class="kan-meta"><span class="m-cmt">2</span></div>
+              </article>
+              <div class="slot"></div>
+            </div>
+
+            <!-- Cột 2 -->
+            <div class="col">
+              <div class="col-head"><span>In progress</span><em>3</em></div>
+              <div class="slot"></div>
+              <article class="kan-card">
+                <div class="kan-priority pri-high">
+                  <span class="pri-dot"></span>
+                  High
+                </div>
+                <div class="kan-labels"><span class="kan-label lb-amber"></span></div>
+                <p>Frame out the landing page</p>
+                <div class="kan-meta">
+                  <span class="m-list">2/5</span>
+                  <span class="mini-avatar">HN</span>
+                </div>
+              </article>
+              <div class="slot"></div>
+            </div>
+
+            <!-- Cột 3 -->
+            <div class="col">
+              <div class="col-head"><span>Done</span><em>5</em></div>
+              <div class="slot"></div>
+              <article class="kan-card">
+                <div class="kan-priority pri-medium">
+                  <span class="pri-dot"></span>
+                  Medium
+                </div>
+                <div class="kan-labels"><span class="kan-label lb-green"></span></div>
+                <p class="is-done">Wire up Google sign-in</p>
+                <div class="kan-meta"><span class="m-list">3/3</span></div>
+              </article>
+              <div class="slot"></div>
+            </div>
+
+            <!-- Vệt loé ở cột vừa nhận thẻ. Nền của trang giới thiệu thường chỉ
+                 là đồ trang trí không liên quan gì tới nội dung; ở đây nó phản
+                 ứng lại đúng thứ đang diễn ra trên bảng. Mỗi lần loé là một
+                 phần tử riêng nên hoạt ảnh luôn chạy lại từ đầu. -->
+            @for (b of blooms(); track b.id) {
+              <span class="col-bloom" [style.--col]="b.col"></span>
+            }
+
+            <!-- Hai thẻ du hành. Định vị tuyệt đối so với chính lưới ba cột
+                 (không phải so với khung bảng) — nhờ vậy "một cột" của nó luôn
+                 bằng đúng một cột thật, kể cả khi bảng cuộn ngang trên mobile.
+
+                 Chỗ đứng do TypeScript bốc ngẫu nhiên vài giây một lần rồi ghi
+                 vào --col / --lane; quãng bay là transition trong CSS. Thẻ nào
+                 sang tới cột cuối thì tiêu đề gạch ngang — đúng cách app thật
+                 suy ra "đã xong" từ vị trí chứ không từ một ô tick. -->
+            @for (spot of spots(); track $index) {
+              <div
+                class="traveller"
+                [class.is-moving]="moving() === $index"
+                [style.--col]="spot.col"
+                [style.--lane]="spot.lane"
+              >
+                <article class="kan-card kan-card-travel">
+                  @if ($index === 0) {
+                    <div class="kan-priority pri-high">
+                      <span class="pri-dot"></span>
+                      High
+                    </div>
+                    <div class="kan-labels">
+                      <span class="kan-label lb-violet"></span>
+                      <span class="kan-label lb-amber"></span>
+                    </div>
+                    <p [class.is-done]="spot.col === 2">Finish the demo slides</p>
+                    <div class="kan-meta">
+                      <span class="m-due">Fri</span>
+                      <span class="mini-avatar">MK</span>
+                    </div>
+                  } @else {
+                    <div class="kan-priority pri-medium">
+                      <span class="pri-dot"></span>
+                      Medium
+                    </div>
+                    <div class="kan-labels"><span class="kan-label lb-blue"></span></div>
+                    <p [class.is-done]="spot.col === 2">Lock in the brand palette</p>
+                    <div class="kan-meta">
+                      <span class="m-cmt">3</span>
+                      <span class="mini-avatar">TN</span>
+                    </div>
+                  }
+                </article>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

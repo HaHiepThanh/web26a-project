@@ -1,0 +1,61 @@
+<section class="lp-section compare" id="why-not-trello" aria-labelledby="compare-title">
+  <div class="lp-shell compare-inner">
+    <div class="compare-copy">
+      <p class="lp-eyebrow" appReveal>
+        <span class="lp-eyebrow-dot" aria-hidden="true"></span>
+        The hard question
+      </p>
+
+      <h2 id="compare-title" class="lp-h2" appReveal [revealDelay]="60">
+        “Why not <span class="lp-grad">just use Trello</span>?”
+      </h2>
+
+      <p class="lp-body" appReveal [revealDelay]="120">
+        Everyone asks, so here is the answer up front. Columns and cards are Trello's idea and we
+        are not pretending otherwise. Trello is a good tool — it is just built for a different size
+        of team than yours.
+      </p>
+
+      <p class="lp-body" appReveal [revealDelay]="180">
+        A tool that serves everyone has to keep every option open, and each option is one more thing
+        on screen, one more decision before you start. Horizon Hub Harmony gives that up on purpose.
+        Fewer moving parts, a board you can read at a glance, and work that finds its way onto it
+        from the conversation you were already having.
+      </p>
+    </div>
+
+    <div class="compare-cards">
+      <!-- Cột "nên chọn bên này". Nổi hơn về mặt thị giác — viền màu, nền đậm
+           hơn, độ nổi cao hơn — vì đây là kết luận chúng tôi muốn người đọc mang
+           đi. Nhưng nó KHÔNG phải cột duy nhất. -->
+      <article class="cmp-card cmp-ours" appReveal>
+        <h3 class="cmp-title">Pick this when…</h3>
+        <ul>
+          @for (item of ours; track item) {
+            <li>
+              <span class="cmp-mark mark-yes" aria-hidden="true">
+                <svg lucideCheck [strokeWidth]="2.2"></svg>
+              </span>
+              {{ item }}
+            </li>
+          }
+        </ul>
+      </article>
+
+      <article class="cmp-card cmp-theirs" appReveal [revealDelay]="90">
+        <h3 class="cmp-title">Stay on Trello when…</h3>
+        <ul>
+          @for (item of theirs; track item) {
+            <li>
+              <span class="cmp-mark mark-no" aria-hidden="true">
+                <svg lucideMinus [strokeWidth]="2.2"></svg>
+              </span>
+              {{ item }}
+            </li>
+          }
+        </ul>
+        <p class="cmp-note">Genuinely. The right tool matters more than whose tool it is.</p>
+      </article>
+    </div>
+  </div>
+</section>

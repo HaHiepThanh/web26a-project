@@ -1,0 +1,32 @@
+<section class="lp-section faq" id="faq" aria-labelledby="faq-title">
+  <div class="lp-shell faq-inner">
+    <div class="faq-head">
+      <p class="lp-eyebrow" appReveal>
+        <span class="lp-eyebrow-dot" aria-hidden="true"></span>
+        Questions
+      </p>
+      <h2 id="faq-title" class="lp-h2" appReveal [revealDelay]="60">
+        The things people <span class="lp-grad">actually ask</span>
+      </h2>
+      <p class="lp-body" appReveal [revealDelay]="120">
+        Including the two answers that are a plain no. A page that only ever says yes is not worth
+        reading.
+      </p>
+    </div>
+
+    <div class="faq-list">
+      @for (item of items; track item.q; let i = $index) {
+        <!-- <details> lo sẵn phần đóng mở, phím bấm và trạng thái cho trình đọc
+             màn hình. Không có `name` chung: mở câu này không đóng câu kia —
+             người ta hay so hai câu trả lời cạnh nhau. -->
+        <details class="faq-item" appReveal [revealDelay]="i * 60">
+          <summary class="faq-q">
+            <span>{{ item.q }}</span>
+            <span class="faq-sign" aria-hidden="true"></span>
+          </summary>
+          <p class="faq-a">{{ item.a }}</p>
+        </details>
+      }
+    </div>
+  </div>
+</section>

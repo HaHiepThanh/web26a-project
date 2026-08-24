@@ -1,13 +1,78 @@
 <!doctype html>
 <html lang="vi" data-theme="light">
-<head>
-  <meta charset="utf-8">
-  <title>Frontend</title>
-  <base href="/">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
-</head>
-<body>
-  <app-root></app-root>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <title>Horizon Hub Harmony — your team’s work, on one board</title>
+    <base href="/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="A real-time Kanban board for small teams: drag and drop, labels, checklists, comments — plus an assistant that reads your chat and suggests the card, which only exists once you confirm it."
+    />
+    <meta name="theme-color" content="#0b0d14" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+
+    <!-- Thẻ xem trước khi dán link vào Zalo / Messenger / Discord / Slack.
+       Không có mấy dòng này thì link chia sẻ chỉ hiện một dòng URL trần —
+       với một trang giới thiệu, được chia sẻ chính là lý do nó tồn tại.
+
+       CHƯA CÓ og:image. Cố ý bỏ trống thay vì trỏ vào một đường dẫn chưa có
+       file: ảnh hỏng còn tệ hơn không ảnh, vì nền tảng sẽ hiện ô vỡ. Khi nào
+       có ảnh 1200×630 thì thêm hai dòng này và đổi twitter:card sang
+       "summary_large_image":
+         <meta property="og:image" content="https://<tên-miền>/og-cover.png">
+         <meta property="og:image:alt" content="Bảng Kanban của Horizon Hub Harmony"> -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Horizon Hub Harmony" />
+    <meta property="og:locale" content="en" />
+    <meta property="og:title" content="Horizon Hub Harmony — your team’s work, on one board" />
+    <meta
+      property="og:description"
+      content="A task board for small teams. Drag a card and it is saved — no Save button, no setup, nothing to install."
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Horizon Hub Harmony — your team’s work, on one board" />
+    <meta
+      name="twitter:description"
+      content="A task board for small teams. Drag a card and it is saved."
+    />
+
+    <!-- Bộ chữ cho trang giới thiệu (landing). Cố ý CHỈ nạp Be Vietnam Pro:
+       `styles.css` đã đặt --font-family bắt đầu bằng 'Inter', nên chỉ cần nạp
+       thêm Inter là mọi trang trong app đổi mặt chữ theo — ngoài phạm vi cần sửa.
+       Be Vietnam Pro không được trang nào khác gọi tên nên chỉ trang landing dùng.
+       Nó cũng là bộ chữ dựng riêng cho dấu tiếng Việt: dấu đặt cân, không chồng
+       lấn ở các tổ hợp dày như "ế", "ữ", "ợ" mà font phương Tây hay xử lý ẩu.
+       display=swap: chữ hiện ngay bằng font dự phòng, không để trang trắng chờ tải. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap"
+    />
+
+    <!-- Đặt theme TRƯỚC khi trình duyệt vẽ khung hình đầu tiên.
+       ThemeService cũng làm đúng việc này, nhưng nó chỉ chạy sau khi gói JS của
+       Angular tải và khởi động xong — trong khoảng đó người chọn nền tối sẽ ăn
+       trọn một nháy trắng loá mắt (FOUC). Đoạn script đồng bộ, không phụ thuộc
+       gì, chạy ngay tại chỗ này nên nháy trắng biến mất.
+       Logic phải khớp với readInitialTheme() trong services/theme.service.ts. -->
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('trello_theme');
+          var dark =
+            saved === 'dark' || (!saved && matchMedia('(prefers-color-scheme: dark)').matches);
+          document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+          document.documentElement.classList.toggle('dark', dark);
+        } catch (e) {
+          /* Trình duyệt chặn localStorage — cứ để nguyên data-theme="light" mặc định. */
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <app-root></app-root>
+  </body>
 </html>

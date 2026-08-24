@@ -1,0 +1,130 @@
+/* ==========================================================================
+   Lời mời cuối trang
+   ========================================================================== */
+
+.cta {
+  position: relative;
+  overflow: hidden;
+  padding-block: clamp(88px, 11vw, 152px);
+  background: var(--lp-bg);
+  isolation: isolate;
+  text-align: center;
+}
+
+.cta-aurora {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.cta-orb {
+  position: absolute;
+  border-radius: 50%;
+  will-change: transform;
+}
+
+.cta-orb-a {
+  width: 70vw;
+  height: 46vw;
+  max-width: 980px;
+  max-height: 620px;
+  left: 50%;
+  top: -30%;
+  margin-left: -35vw;
+  background: radial-gradient(ellipse at 50% 50%, var(--lp-glow-blue) 0%, transparent 65%);
+  animation: cta-drift-a 24s ease-in-out infinite alternate;
+}
+
+.cta-orb-b {
+  width: 56vw;
+  height: 40vw;
+  max-width: 780px;
+  max-height: 540px;
+  right: -8%;
+  bottom: -28%;
+  background: radial-gradient(ellipse at 50% 50%, var(--lp-glow-purple) 0%, transparent 65%);
+  animation: cta-drift-b 30s ease-in-out infinite alternate;
+}
+
+@keyframes cta-drift-a {
+  from {
+    transform: translate3d(-4%, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(6%, 5%, 0) scale(1.12);
+  }
+}
+
+@keyframes cta-drift-b {
+  from {
+    transform: translate3d(0, 0, 0) scale(1.06);
+  }
+  to {
+    transform: translate3d(-8%, -6%, 0) scale(0.94);
+  }
+}
+
+.cta-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--lp-5);
+}
+
+/* Khẩu hiệu thương hiệu. Nhỏ hơn tiêu đề nhiều và giãn chữ rộng ra — trông như
+   một dòng khắc chứ không tranh chỗ với tiêu đề ngay bên dưới. Đây là chỗ duy
+   nhất trên trang chữ được GIÃN ra thay vì siết lại, và đó là chủ ý: chữ giãn
+   đọc chậm hơn, hợp với một câu muốn người ta ngân nga. */
+.cta-slogan {
+  margin: 0;
+  font-size: var(--lp-text-sm);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  background: linear-gradient(100deg, var(--lp-ink-blue), var(--lp-ink-purple) 70%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.cta-title {
+  font-size: clamp(2rem, 1.3rem + 3.2vw, 3.5rem);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+  max-width: 18ch;
+  color: var(--lp-text);
+}
+
+.cta-lead {
+  text-align: center;
+  max-width: 54ch;
+}
+
+.cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--lp-3);
+  margin-top: var(--lp-2);
+}
+
+@media (max-width: 560px) {
+  .cta-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .cta-actions .lp-btn {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cta-orb {
+    animation: none;
+  }
+}
