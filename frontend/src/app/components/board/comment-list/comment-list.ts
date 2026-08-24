@@ -3,7 +3,6 @@ import { User } from '../../../models';
 import { CommentStore } from '../../../ngrx/comment/comment.store';
 import { BoardStore } from '../../../ngrx/board/board.store';
 import { avatarColorFor, initialsOf } from '../../../utils/avatar.util';
-import { BoardService, avatarColorFor, initialsOf } from '../../../services/board.service';
 import { AuthService } from '../../../services/auth.service';
 
 /** [BONUS #4] Bình luận trong card: thêm, xoá bình luận của chính mình. */

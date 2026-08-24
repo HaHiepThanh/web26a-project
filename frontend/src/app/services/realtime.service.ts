@@ -24,7 +24,7 @@ import { ChecklistStore } from '../ngrx/checklist/checklist.store';
 import { CommentStore } from '../ngrx/comment/comment.store';
 import { LabelStore } from '../ngrx/label/label.store';
 import { NotificationService } from './notification.service';
-import { OrganizationService } from './organization.service';
+import { OrganizationStore } from '../ngrx/organization/organization.store';
 
 /**
  * REALTIME THEO BOARD — mở board là thấy thay đổi của người khác ngay, không F5.
@@ -46,14 +46,14 @@ import { OrganizationService } from './organization.service';
 @Injectable({ providedIn: 'root' })
 export class RealtimeService {
   private readonly firebase = inject(FirebaseService);
-  // Miền của Hoàng đã sang store; miền của Hoà (board/list/chat/activity) KHÔNG
-  // còn inject ở đây — store của bạn ấy tự đăng ký handler qua realtime.feature.
+  // Cả ba miền đã sang store. Miền của Hoà (board/list/chat/activity) tự đăng ký
+  // qua `realtime.feature`, nên KHÔNG inject ở đây.
   private readonly cards = inject(CardStore);
   private readonly labels = inject(LabelStore);
   private readonly comments = inject(CommentStore);
   private readonly checklist = inject(ChecklistStore);
   private readonly attachments = inject(AttachmentStore);
-  private readonly organizations = inject(OrganizationService);
+  private readonly organizations = inject(OrganizationStore);
   private readonly notifications = inject(NotificationService);
 
   /** Ai đang mở board hiện tại (kể cả mình) — thanh tiêu đề vẽ dãy avatar. */
@@ -81,6 +81,67 @@ export class RealtimeService {
   /** Đếm số nơi đang cần board này. Chỉ rời phòng khi về 0 — trang Board và khung
    *  chat Dashboard có thể cùng mở một board, nơi này đóng không được kéo nơi kia. */
   private readonly joinCount = new Map<string, number>();
+
+  /**
+   * Sổ đăng ký handler cho các SignalStore (xem `ngrx/shared/realtime.feature.ts`).
+   *
+   * Trong lúc chuyển dần sang NgRx, file này chạy song song hai đường: khối
+   * `switch` phía dưới cho những service CHƯA chuyển, còn sổ này cho store ĐÃ
+   * chuyển. Store nào đăng ký loại sự kiện nào thì phải xoá nhánh tương ứng
+   * trong `switch` ở cùng PR — nếu không cả hai cùng áp một sự kiện.
+   *
+   * Chuyển xong hết cả ba miền thì `switch` biến mất và file này thành bộ điều
+   * phối thuần: nhận từ socket, phát cho người đăng ký, không biết gì về dữ liệu.
+   */
+  private readonly boardHandlers = new Map<string, Set<(data: unknown, event: BoardEvent) => void>>();
+  private readonly userHandlers = new Map<string, Set<(data: unknown, event: UserEvent) => void>>();
+
+  /**
+   * Đăng ký nhận một loại sự kiện board. Trả về hàm huỷ đăng ký.
+   *
+   * Store gọi trong `onInit` và giữ hàm huỷ để gọi lại trong `onDestroy`. Store
+   * `providedIn: 'root'` sống suốt phiên nên thường không cần huỷ, nhưng test
+   * thì cần — không huỷ là handler của test trước còn dính sang test sau.
+   */
+  onBoardEvent<T>(type: string, handler: (data: T, event: BoardEvent) => void): () => void {
+    const set = this.boardHandlers.get(type) ?? new Set();
+    const wrapped = handler as (data: unknown, event: BoardEvent) => void;
+    set.add(wrapped);
+    this.boardHandlers.set(type, set);
+    return () => set.delete(wrapped);
+  }
+
+  /** Như trên, cho sự kiện riêng của người dùng (phòng `user:<uid>`). */
+  onUserEvent<T>(type: string, handler: (data: T, event: UserEvent) => void): () => void {
+    const set = this.userHandlers.get(type) ?? new Set();
+    const wrapped = handler as (data: unknown, event: UserEvent) => void;
+    set.add(wrapped);
+    this.userHandlers.set(type, set);
+    return () => set.delete(wrapped);
+  }
+
+  /**
+   * Phát sự kiện cho những ai đã đăng ký.
+   *
+   * Bọc từng handler trong try/catch: một store ném lỗi thì các store còn lại
+   * vẫn phải nhận được sự kiện, không thì một chỗ hỏng kéo sập cả realtime.
+   */
+  private dispatch<E>(
+    handlers: Map<string, Set<(data: unknown, event: E) => void>>,
+    type: string,
+    data: unknown,
+    event: E,
+  ): void {
+    const set = handlers.get(type);
+    if (!set?.size) return;
+    for (const handler of set) {
+      try {
+        handler(data, event);
+      } catch (e) {
+        console.error(`[realtime] handler cho "${type}" ném lỗi:`, e);
+      }
+    }
+  }
 
   /**
    * Mở kết nối (một lần cho cả ứng dụng).
@@ -178,6 +239,8 @@ export class RealtimeService {
    * người ta đang ngồi ở Dashboard và chưa thuộc tổ chức nào.
    */
   private applyUserEvent(event: UserEvent): void {
+    this.dispatch(this.userHandlers, event.type, event.data, event);
+
     switch (event.type) {
       case 'invite.created': {
         const r = event.data as {
@@ -199,21 +262,14 @@ export class RealtimeService {
           status: 'pending',
           createdAt: r.createdAt,
         };
-        this.organizations.applyRemoteInvite(invite);
+        // Nhét vào chuông là việc của OrganizationStore (đã đăng ký handler
+
+        // "invite.created"). Ở đây chỉ giữ tín hiệu cho Header bật toast.
         this.newInvite.set(invite);
         break;
       }
-
-      case 'invite.responded':
-        // Người ta đã trả lời ở nơi khác → gỡ khỏi chuông và nạp lại danh sách
-        // thành viên (người gửi lời mời cần thấy họ xuất hiện trong tổ chức).
-        this.organizations.removeInviteLocally((event.data as { id: string }).id);
-        void this.organizations.refreshAfterMembershipChange();
-        break;
-
-      case 'member.removed':
-        void this.organizations.refreshAfterMembershipChange();
-        break;
+      // invite.responded và member.removed do OrganizationStore xử lý
+      // (ngrx/organization/organization.realtime.ts).
 
       case 'card.assigned':
         this.notifications.addCardAssigned(event.data as CardAssignedPayload);
@@ -229,10 +285,13 @@ export class RealtimeService {
    * "có id rồi thì ghi đè" nên nhận lại thay đổi của mình cũng không nhân đôi.
    */
   private apply(event: BoardEvent): void {
-    // Phát thô cho mọi store NgRx đang lắng nghe — LUÔN chạy trước switch bên
-    // dưới, kể cả với những loại sự kiện switch không còn case (list.*,
-    // activity.created, chat.message, suggestion.*, board.updated).
+    // Hai đường phát song song, vì ba bạn chọn hai cách cắm store khác nhau:
+    //   • `lastEvent` (signal)  — store của Hoà và Hoàng đọc qua `onBoardEvent()`
+    //                             trong `realtime.feature.ts`
+    //   • sổ đăng ký handler    — store của Huy đăng ký qua `withRealtimeHandlers`
+    // Cả hai đều LUÔN chạy trước `switch` bên dưới.
     this.lastEvent.set(event);
+    this.dispatch(this.boardHandlers, event.type, event.data, event);
 
     switch (event.type) {
       // list.created/updated/deleted: ListStore tự đăng ký (ngrx/list/list.realtime.ts).

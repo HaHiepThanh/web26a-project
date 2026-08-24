@@ -29,7 +29,7 @@ export function chatComputed(store: {
     const me = auth.currentUserId();
     const seen = store.lastSeenAt();
     let total = 0;
-    for (const [boardId, msgs] of byBoard()) {
+    for (const [boardId, msgs] of Object.entries(byBoard())) {
       const mark = seen[boardId] ?? 0;
       total += msgs.filter((m) => m.userId !== me && Date.parse(m.createdAt) > mark).length;
     }

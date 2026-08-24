@@ -5,7 +5,7 @@ import {
   LucideUsers,
 } from '@lucide/angular';
 import { AuthService } from '../../services/auth.service';
-import { OrganizationService } from '../../services/organization.service';
+import { OrganizationStore } from '../../ngrx/organization/organization.store';
 import { OrgInviteRole, OrgMemberView, Role, User } from '../../models';
 import { NAV_ITEMS, SettingsTab } from './settings.models';
 import {
@@ -36,7 +36,7 @@ import { ManageOrganizationTab } from '../../components/settings/manage-organiza
 })
 export class Settings {
   readonly auth = inject(AuthService);
-  readonly orgService = inject(OrganizationService);
+  readonly orgService = inject(OrganizationStore);
 
   readonly currentUser = this.auth.currentUser;
   readonly searchableUsers = computed(() => this.auth.getSearchableUsers());

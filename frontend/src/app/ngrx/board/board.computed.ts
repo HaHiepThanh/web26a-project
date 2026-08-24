@@ -1,6 +1,6 @@
 import { computed, inject, Signal } from '@angular/core';
 import { Board } from '../../models';
-import { OrganizationService } from '../../services/organization.service';
+import { OrganizationStore } from '../organization/organization.store';
 import { BoardOwnState } from './board.state';
 
 /** Hàm generic thuần — xem chú thích trong `ngrx/list/list.computed.ts` về lý
@@ -13,8 +13,8 @@ export function boardComputed(store: {
   localOverrides: Signal<BoardOwnState['localOverrides']>;
 }) {
   // Thành viên dùng cho ô "Người phụ trách", avatar chat... — lấy từ tổ chức
-  // đang mở (`OrganizationService`, phần của Huy). Board không giữ bản sao.
-  const organizations = inject(OrganizationService);
+  // đang mở (`OrganizationStore`, phần của Huy). Board không giữ bản sao.
+  const organizations = inject(OrganizationStore);
 
   const byId = computed(() => {
     const map: Record<string, Board | undefined> = {};

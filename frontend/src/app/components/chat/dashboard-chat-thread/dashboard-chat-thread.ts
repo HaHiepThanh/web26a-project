@@ -7,9 +7,8 @@ import { ChatStore } from '../../../ngrx/chat/chat.store';
 import { TaskSuggestionStore } from '../../../ngrx/task-suggestion/task-suggestion.store';
 import { CardStore } from '../../../ngrx/card/card.store';
 import { ListStore } from '../../../ngrx/list/list.store';
-import { BoardService, avatarColorFor, initialsOf } from '../../../services/board.service';
 import { RealtimeService } from '../../../services/realtime.service';
-import { OrganizationService } from '../../../services/organization.service';
+import { OrganizationStore } from '../../../ngrx/organization/organization.store';
 import { MessageList } from '../message-list/message-list';
 import { ChatInput } from '../chat-input/chat-input';
 
@@ -29,7 +28,7 @@ import { ChatInput } from '../chat-input/chat-input';
 })
 export class DashboardChatThread {
   private readonly boardService = inject(BoardStore);
-  private readonly orgService = inject(OrganizationService);
+  private readonly orgService = inject(OrganizationStore);
 
   /** Link mở board đầy đủ — phải kèm slug tổ chức vì route là /:orgSlug/board/:id. */
   readonly boardLink = computed(() => ['/', this.orgService.activeOrgSlug(), 'board', this.board().id]);

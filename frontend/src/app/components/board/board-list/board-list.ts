@@ -19,7 +19,6 @@ import { AddCard } from '../add-card/add-card';
 export class BoardList {
   private readonly cardService = inject(CardStore);
   private readonly listStore = inject(ListStore);
-  private readonly listService = inject(ListService);
 
   readonly list = input.required<List>();
   readonly boardId = input.required<string>();

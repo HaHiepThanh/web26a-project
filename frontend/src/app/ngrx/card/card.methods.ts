@@ -147,7 +147,10 @@ export function withCardMethods() {
           .filter((c) => c.listId === toListId && c.id !== cardId)
           .sort((a, b) => a.position - b.position);
         const clampedIndex = Math.max(0, Math.min(newIndex, targetSiblings.length));
-        const position = midpoint(targetSiblings[clampedIndex - 1], targetSiblings[clampedIndex]);
+        const position = midpoint(
+          targetSiblings[clampedIndex - 1]?.position,
+          targetSiblings[clampedIndex]?.position,
+        );
 
         patchState(store, upsertEntity({ ...before, listId: toListId, position, priority: newPriority ?? before.priority }));
         patchState(store, { savingCardIds: withId(store.savingCardIds(), cardId) });

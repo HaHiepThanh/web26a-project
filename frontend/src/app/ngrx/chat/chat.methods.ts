@@ -13,7 +13,7 @@ import { persistLastSeen } from './chat.local-seen.util';
 const PREVIEW_KEEP = 30;
 
 type Store = WritableStateSource<EntityState<Message> & ChatOwnState> & {
-  byBoard: Signal<Map<string, Message[]>>;
+  byBoard: Signal<Record<string, Message[]>>;
   currentUserId: Signal<string>;
   lastSeenAt: Signal<Record<string, number>>;
   loadedBoardId: Signal<string | null>;
@@ -64,7 +64,7 @@ export function chatMethods<S extends Store>(store: S, api = inject(ApiService))
 
     /** Nạp tin gần nhất của nhiều board cùng lúc — chạy song song. */
     async loadPreviews(boardIds: string[]): Promise<void> {
-      const missing = boardIds.filter((id) => id && !store.byBoard().has(id));
+      const missing = boardIds.filter((id) => id && !(id in store.byBoard()));
       if (!missing.length) return;
 
       const results = await Promise.all(
@@ -83,7 +83,7 @@ export function chatMethods<S extends Store>(store: S, api = inject(ApiService))
 
     /** Tin cuối + số tin chưa đọc của 1 board, giới hạn `PREVIEW_KEEP` tin gần nhất. */
     getConversationPreview(boardId: string): { lastMessage: Message | null; unreadCount: number } {
-      const all = [...(store.byBoard().get(boardId) ?? [])].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+      const all = [...(store.byBoard()[boardId] ?? [])].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
       const msgs = all.slice(-PREVIEW_KEEP);
       const me = store.currentUserId();
       const mark = store.lastSeenAt()[boardId] ?? 0;
