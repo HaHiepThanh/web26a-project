@@ -1,6 +1,7 @@
 import { Component, DestroyRef, computed, effect, inject, input, output, signal } from '@angular/core';
 import { ChatTaskSuggestion, User } from '../../../models';
 import { ChatStore } from '../../../ngrx/chat/chat.store';
+import { RealtimeService } from '../../../services/realtime.service';
 import { TaskSuggestionStore } from '../../../ngrx/task-suggestion/task-suggestion.store';
 import { BoardStore } from '../../../ngrx/board/board.store';
 import { CardStore } from '../../../ngrx/card/card.store';
@@ -40,6 +41,7 @@ export class ChatPanel {
   private readonly boardService = inject(BoardStore);
   private readonly cardService = inject(CardStore);
   private readonly listService = inject(ListStore);
+  private readonly realtime = inject(RealtimeService);
 
   readonly boardId = input.required<string>();
   readonly taskCreated = output<string>();
@@ -47,6 +49,16 @@ export class ChatPanel {
   readonly collapsedWidth = COLLAPSED_WIDTH;
   readonly minWidth = MIN_WIDTH;
   readonly maxWidth = MAX_WIDTH;
+
+  /**
+   * Realtime còn sống không.
+   *
+   * `RealtimeService` vẫn luôn theo dõi cờ này nhưng TRƯỚC ĐÂY KHÔNG NƠI NÀO
+   * hiển thị nó. Hậu quả: socket chết (backend khởi động lại, mạng chớp) thì
+   * chat và gợi ý AI im lặng ngừng cập nhật, người dùng không có cách nào biết
+   * và tưởng tính năng hỏng — trong khi chỉ cần tải lại trang.
+   */
+  readonly realtimeConnected = this.realtime.connected;
 
   readonly collapsed = signal(this.loadCollapsed());
   readonly width = signal(this.loadWidth());
