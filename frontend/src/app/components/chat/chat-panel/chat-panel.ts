@@ -3,7 +3,7 @@ import { ChatTaskSuggestion, User } from '../../../models';
 import { ChatService } from '../../../services/chat.service';
 import { TaskSuggestionService } from '../../../services/task-suggestion.service';
 import { BoardService } from '../../../services/board.service';
-import { CardService } from '../../../services/card.service';
+import { CardStore } from '../../../ngrx/card/card.store';
 import { ListService } from '../../../services/list.service';
 import { MessageList } from '../message-list/message-list';
 import { ChatInput } from '../chat-input/chat-input';
@@ -36,7 +36,7 @@ export class ChatPanel {
   private readonly chat = inject(ChatService);
   private readonly suggestions = inject(TaskSuggestionService);
   private readonly boardService = inject(BoardService);
-  private readonly cardService = inject(CardService);
+  private readonly cardService = inject(CardStore);
   private readonly listService = inject(ListService);
 
   readonly boardId = input.required<string>();

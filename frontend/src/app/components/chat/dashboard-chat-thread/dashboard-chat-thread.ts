@@ -4,7 +4,7 @@ import { Board, ChatTaskSuggestion, User } from '../../../models';
 import { BoardService, avatarColorFor, initialsOf } from '../../../services/board.service';
 import { ChatService } from '../../../services/chat.service';
 import { TaskSuggestionService } from '../../../services/task-suggestion.service';
-import { CardService } from '../../../services/card.service';
+import { CardStore } from '../../../ngrx/card/card.store';
 import { ListService } from '../../../services/list.service';
 import { RealtimeService } from '../../../services/realtime.service';
 import { OrganizationService } from '../../../services/organization.service';
@@ -33,7 +33,7 @@ export class DashboardChatThread {
   readonly boardLink = computed(() => ['/', this.orgService.activeOrgSlug(), 'board', this.board().id]);
   private readonly chat = inject(ChatService);
   private readonly suggestions = inject(TaskSuggestionService);
-  private readonly cardService = inject(CardService);
+  private readonly cardService = inject(CardStore);
   private readonly listService = inject(ListService);
   private readonly realtime = inject(RealtimeService);
 

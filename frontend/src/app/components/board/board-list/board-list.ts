@@ -1,7 +1,7 @@
 import { Component, inject, input, output } from '@angular/core';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { Card, Label, List, User } from '../../../models';
-import { CardService } from '../../../services/card.service';
+import { CardStore } from '../../../ngrx/card/card.store';
 import { ListService } from '../../../services/list.service';
 import { ListHeader } from '../list-header/list-header';
 import { CardItem } from '../card-item/card-item';
@@ -17,7 +17,7 @@ import { AddCard } from '../add-card/add-card';
   styleUrl: './board-list.css',
 })
 export class BoardList {
-  private readonly cardService = inject(CardService);
+  private readonly cardService = inject(CardStore);
   private readonly listService = inject(ListService);
 
   readonly list = input.required<List>();
