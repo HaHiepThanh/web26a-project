@@ -165,6 +165,23 @@ export class AttachmentsService {
       throw new InternalServerErrorException('Failed to upload file');
     }
 
+    const isImage = file.mimetype.startsWith('image/');
+    // Ảnh ĐẦU TIÊN của thẻ tự động thành bìa — trước đây phải bấm riêng "Set as
+    // cover" mới thấy, còn mặt thẻ ngoài board thì không có gì báo hiệu "thẻ
+    // này có đính kèm" nên gần như không ai biết mà bấm. Chỉ tự set khi thẻ
+    // CHƯA có bìa nào — ảnh thứ hai trở đi vẫn cần bấm tay, không tự ý thay bìa
+    // người dùng đã chọn.
+    let isCover = false;
+    if (isImage) {
+      const { data: existingCover } = await this.supabase.client
+        .from('card_attachments')
+        .select('id')
+        .eq('card_id', cardId)
+        .eq('is_cover', true)
+        .maybeSingle();
+      isCover = !existingCover;
+    }
+
     const { data, error } = await this.supabase.client
       .from('card_attachments')
       .insert({
@@ -173,7 +190,8 @@ export class AttachmentsService {
         mime_type: file.mimetype,
         storage_path: storagePath,
         size_bytes: file.size,
-        is_image: file.mimetype.startsWith('image/'),
+        is_image: isImage,
+        is_cover: isCover,
         uploaded_by: uid,
       })
       .select()

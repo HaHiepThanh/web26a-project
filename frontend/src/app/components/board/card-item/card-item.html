@@ -63,6 +63,12 @@
           {{ commentCount() }}
         </span>
       }
+      @if (attachmentCount() > 0) {
+        <span class="inline-flex items-center gap-1" [title]="attachmentCount() + ' attachment(s)'">
+          <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a5 5 0 01-7.07-7.07l9.19-9.19a3.5 3.5 0 014.95 4.95L9.88 18.56a1.5 1.5 0 01-2.12-2.12l8.49-8.49"/></svg>
+          {{ attachmentCount() }}
+        </span>
+      }
     </div>
   }
 

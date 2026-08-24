@@ -18,6 +18,7 @@ import {
 } from '@lucide/angular';
 import { User } from '../../../models';
 import { initialsOf } from '../../../mocks';
+import { AuthService } from '../../../services/auth.service';
 
 /** Confirms the two password fields match; attached at the FormGroup level. */
 function passwordsMatchValidator(group: AbstractControl): ValidationErrors | null {
@@ -73,6 +74,7 @@ function computePasswordStrength(password: string): PasswordStrength {
 })
 export class ProfileTab {
   private readonly fb = inject(FormBuilder);
+  private readonly authService = inject(AuthService);
 
   readonly currentUser = input<User | null>(null);
 
@@ -82,6 +84,8 @@ export class ProfileTab {
 
   readonly initialsOf = initialsOf;
   readonly avatarPreview = signal<string | null>(null);
+  /** Đang lưu avatar (upload/gỡ) — khoá 2 nút lại, tránh bấm chồng trong lúc chờ. */
+  readonly savingAvatar = signal(false);
   readonly copiedUuid = signal(false);
 
   readonly profileForm: FormGroup = this.fb.group({
@@ -122,32 +126,69 @@ export class ProfileTab {
     });
   }
 
-  onUploadAvatar(event: Event): void {
+  /**
+   * Đổi ảnh đại diện lưu THẲNG qua AuthService, chỉ gửi đúng field `avatarUrl`
+   * — KHÔNG gộp chung với `user` rồi bắn qua `saveProfile` (output đó đi tới
+   * `Settings.onSaveProfile`, ép `username ?? ''`/`phone ?? ''` cho MỌI field
+   * kể cả 2 field không hề đụng tới; user chưa từng điền username/phone thì
+   * request luôn bị 400 dù chỉ đang đổi ảnh — không phải lỗi ở avatar).
+   *
+   * Cũng CHỜ kết quả thật trước khi báo thành công: bản trước báo "Avatar
+   * updated." ngay khi đọc xong file, trước khi biết lưu có ăn hay không —
+   * lưu thất bại thì thông báo "thành công" vẫn hiện, còn preview vẫn giữ ảnh
+   * mới mãi tới khi F5 (2 nơi khác trạng thái: avatar lớn đổi, avatar ở header
+   * không đổi, không có lỗi nào báo ra ngoài).
+   */
+  async onUploadAvatar(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
+    input.value = '';
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result as string;
-      this.avatarPreview.set(dataUrl);
-      const user = this.currentUser();
-      if (user) {
-        this.saveProfile.emit({ ...user, avatarUrl: dataUrl });
-      }
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    }).catch(() => null);
+    if (!dataUrl) {
+      this.flashMessage.emit({ message: "Couldn't read this image, please try another one.", type: 'error' });
+      return;
+    }
+
+    const previous = this.avatarPreview();
+    this.avatarPreview.set(dataUrl); // xem trước ngay, nhưng chỉ là tạm — có thể phải trả lại bên dưới
+    this.savingAvatar.set(true);
+    try {
+      await this.authService.updateProfile({ avatarUrl: dataUrl });
       this.flashMessage.emit({ message: 'Avatar updated.', type: 'success' });
-    };
-    reader.readAsDataURL(file);
-    input.value = '';
+    } catch (err) {
+      this.avatarPreview.set(previous); // lưu hỏng → trả preview về đúng ảnh đang có trên server
+      this.flashMessage.emit({ message: this.describeProfileError(err, 'Failed to update avatar.'), type: 'error' });
+    } finally {
+      this.savingAvatar.set(false);
+    }
   }
 
-  onRemoveAvatar(): void {
+  async onRemoveAvatar(): Promise<void> {
+    const previous = this.avatarPreview();
+    if (!previous) return; // không có ảnh thì không có gì để gỡ
     this.avatarPreview.set(null);
-    const user = this.currentUser();
-    if (user) {
-      this.saveProfile.emit({ ...user, avatarUrl: '' });
+    this.savingAvatar.set(true);
+    try {
+      await this.authService.updateProfile({ avatarUrl: '' });
+      this.flashMessage.emit({ message: 'Avatar removed.', type: 'info' });
+    } catch (err) {
+      this.avatarPreview.set(previous);
+      this.flashMessage.emit({ message: this.describeProfileError(err, 'Failed to remove avatar.'), type: 'error' });
+    } finally {
+      this.savingAvatar.set(false);
     }
-    this.flashMessage.emit({ message: 'Avatar removed.', type: 'info' });
+  }
+
+  private describeProfileError(err: unknown, fallback: string): string {
+    const detail = (err as { error?: { message?: string | string[] } })?.error?.message;
+    return Array.isArray(detail) ? detail[0] : (detail ?? fallback);
   }
 
   copyUuid(): void {
