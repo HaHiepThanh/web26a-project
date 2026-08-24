@@ -8,6 +8,7 @@ import {
   LucideX,
 } from '@lucide/angular';
 import { RevealDirective } from '../../../directives/reveal.directive';
+import { ScrambleInDirective } from '../../../directives/scramble-in.directive';
 
 /**
  * Các chặng của màn diễn. Thứ tự trong union cũng là thứ tự thời gian.
@@ -48,6 +49,7 @@ const BEAT = {
   selector: 'app-landing-ai',
   imports: [
     RevealDirective,
+    ScrambleInDirective,
     LucideArrowRight,
     LucideCheck,
     LucideHash,

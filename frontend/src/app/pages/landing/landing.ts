@@ -85,11 +85,16 @@ export class Landing implements OnDestroy {
   readonly scrolled = signal(false);
   readonly menuOpen = signal(false);
 
+  /** Thứ tự khớp với thứ tự section thật xuất hiện trên trang (landing.html):
+   *  hero, features, ai(assistant), story, compare(why-not-trello),
+   *  steps(how-it-works), stats, faq, cta — nav phải đi đúng thứ tự đó, nếu
+   *  không người dùng bấm "How it works" mà bị cuộn qua trước "Why not Trello"
+   *  thì tưởng mình bấm nhầm. */
   readonly navLinks = [
     { id: 'features', label: 'Features' },
     { id: 'assistant', label: 'Assistant' },
-    { id: 'how-it-works', label: 'How it works' },
     { id: 'why-not-trello', label: 'Why not Trello' },
+    { id: 'how-it-works', label: 'How it works' },
     { id: 'faq', label: 'FAQ' },
   ];
 

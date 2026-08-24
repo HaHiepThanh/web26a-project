@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CountUpDirective } from '../../../directives/count-up.directive';
 import { RevealDirective } from '../../../directives/reveal.directive';
+import { ScrambleInDirective } from '../../../directives/scramble-in.directive';
 
 /**
  * Dải số liệu.
@@ -17,7 +18,7 @@ import { RevealDirective } from '../../../directives/reveal.directive';
  */
 @Component({
   selector: 'app-landing-stats',
-  imports: [RevealDirective, CountUpDirective],
+  imports: [RevealDirective, CountUpDirective, ScrambleInDirective],
   templateUrl: './landing-stats.html',
   styleUrls: ['../_landing-shared.css', './landing-stats.css'],
 })

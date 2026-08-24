@@ -2,7 +2,9 @@ import { Component, ElementRef, OnDestroy, afterNextRender, inject, signal } fro
 import { RouterLink } from '@angular/router';
 import { LucideArrowRight, LucideCheck, LucideSparkles, LucideZap } from '@lucide/angular';
 import { MagneticDirective } from '../../../directives/magnetic.directive';
+import { ParallaxFloatDirective } from '../../../directives/parallax-float.directive';
 import { RevealDirective } from '../../../directives/reveal.directive';
+import { ScrambleInDirective } from '../../../directives/scramble-in.directive';
 
 /** Một chỗ đáp: cột nào (0–2) và làn nào (0 = trên, 1 = dưới). */
 interface Spot {
@@ -21,10 +23,14 @@ const PAUSE_MAX = 4200;
  * màn hình mật độ cao, không đổi được theo theme sáng/tối, và không kể được câu
  * chuyện "việc chảy từ trái sang phải" bằng chuyển động.
  *
- * ⚠️ Đây là bảng để NGẮM, không phải để bấm. Bản trước từng cho kéo thả và thêm
- * thẻ thật; bỏ đi vì một trang giới thiệu cần dẫn mắt người đọc đi tiếp xuống
- * dưới chứ không giữ họ lại nghịch. Đổi lại, cấu trúc tấm thẻ vẫn bám sát thẻ
- * thật (components/board/card-item) nên nhìn vào là biết sản phẩm ra sao.
+ * Hai thẻ du hành KÉO-THẢ được bằng tay (xem onTravellerPointerDown) — bản
+ * trước từng bỏ tương tác này đi vì lo giữ chân người đọc lại nghịch thay vì
+ * cuộn tiếp xuống dưới; giờ đánh đổi ngược lại có chủ đích: "dragging is
+ * saving" là câu mở đầu của trang, để người đọc THỬ được luôn ngay ở đây thì
+ * thuyết phục hơn là chỉ đọc chữ. Ba tấm thẻ còn lại (đứng yên trong mỗi cột)
+ * vẫn chỉ để ngắm — không nằm trong hệ 6 ô nên không kéo được, giữ vai trò
+ * mỏ neo thị giác cho mỗi cột. Cấu trúc tấm thẻ vẫn bám sát thẻ thật
+ * (components/board/card-item) nên nhìn vào là biết sản phẩm ra sao.
  *
  * PHÂN CÔNG GIỮA JS VÀ CSS — phần đáng chú ý nhất ở đây:
  *
@@ -43,6 +49,8 @@ const PAUSE_MAX = 4200;
     RouterLink,
     RevealDirective,
     MagneticDirective,
+    ParallaxFloatDirective,
+    ScrambleInDirective,
     LucideArrowRight,
     LucideCheck,
     LucideSparkles,
@@ -74,12 +82,23 @@ export class LandingHero implements OnDestroy {
    */
   readonly blooms = signal<{ id: number; col: number }[]>([]);
 
+  /** Thẻ đang bị NGƯỜI DÙNG cầm kéo (khác với `moving`, vốn là lúc TỰ bay). */
+  readonly dragging = signal<number | null>(null);
+
   private readonly host = inject(ElementRef<HTMLElement>);
   private bloomId = 0;
   private timer?: ReturnType<typeof setTimeout>;
   private liftTimer?: ReturnType<typeof setTimeout>;
   private observer?: IntersectionObserver;
   private running = false;
+
+  // ---- Kéo-thả bằng tay ----
+  private dragEl: HTMLElement | null = null;
+  private dragStartX = 0;
+  private dragStartY = 0;
+  /** Chụp sẵn 6 ô lúc bắt đầu kéo — đỡ phải querySelectorAll lại mỗi lần di chuột. */
+  private dragSlots: HTMLElement[] = [];
+  private hoveredSlotEl: HTMLElement | null = null;
 
   constructor() {
     afterNextRender(() => {
@@ -145,6 +164,12 @@ export class LandingHero implements OnDestroy {
    * việc đang chảy.
    */
   private moveOne(): void {
+    // Người dùng đang tự cầm một thẻ — không để bộ đếm giờ giành tay giữa
+    // chừng. Về lý thuyết `stop()` lúc bắt đầu kéo đã huỷ hẹn giờ này rồi, cờ
+    // ở đây chỉ là lớp phòng hộ thứ hai cho trường hợp hiếm: IntersectionObserver
+    // bắn `start()` đúng lúc đang kéo (cuộn trang trong khi tay vẫn giữ chuột).
+    if (this.dragging() !== null) return;
+
     const spots = this.spots();
 
     // Ưu tiên nhấc tấm đang nằm bên TRÁI. Không có bước này thì dòng chảy đứng
@@ -201,6 +226,126 @@ export class LandingHero implements OnDestroy {
     setTimeout(() => {
       this.blooms.update((list) => list.filter((b) => b.id !== id));
     }, 1400);
+  }
+
+  /**
+   * Bắt đầu kéo một thẻ du hành bằng tay.
+   *
+   * `setPointerCapture` ghim mọi sự kiện pointer tiếp theo vào đúng phần tử này
+   * cho tới khi thả ra — không cần lo chuột đi lố ra ngoài rìa thẻ giữa chừng
+   * (chuyện thường gặp khi kéo nhanh) làm rớt mất sự kiện move/up.
+   */
+  onTravellerPointerDown(event: PointerEvent, index: number): void {
+    // Chuột phải/giữa không phải để kéo. Cảm ứng/bút không có `button` phân
+    // biệt theo cách đó nên bỏ qua điều kiện này.
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+
+    const el = event.currentTarget as HTMLElement;
+    el.setPointerCapture(event.pointerId);
+
+    this.dragging.set(index);
+    this.dragEl = el;
+    this.dragStartX = event.clientX;
+    this.dragStartY = event.clientY;
+    this.dragSlots = Array.from(
+      (this.host.nativeElement as HTMLElement).querySelectorAll<HTMLElement>('.slot[data-col]'),
+    );
+
+    // Đang cầm tay thì bộ đếm giờ tự dời thẻ phải nhường sân — dùng lại đúng
+    // stop() của vòng tự diễn, nó vốn đã huỷ hẹn giờ mà không đụng tới `spots`.
+    this.stop();
+
+    // Không có bước này thì trình duyệt cố kéo cả trang trên cảm ứng, hoặc bôi
+    // đen chữ trên desktop — cả hai đều không phải điều người dùng muốn khi kéo thẻ.
+    event.preventDefault();
+  }
+
+  onTravellerPointerMove(event: PointerEvent): void {
+    if (this.dragging() === null || !this.dragEl) return;
+
+    const dx = event.clientX - this.dragStartX;
+    const dy = event.clientY - this.dragStartY;
+    this.dragEl.style.setProperty('--drag-x', `${dx}px`);
+    this.dragEl.style.setProperty('--drag-y', `${dy}px`);
+
+    this.updateHoveredSlot(event.clientX, event.clientY);
+  }
+
+  /** Chung cho cả `pointerup` (thả bình thường) lẫn `pointercancel` (hệ điều
+   *  hành cướp mất cử chỉ giữa chừng, ví dụ vuốt xuống mở thanh thông báo). */
+  onTravellerPointerEnd(event: PointerEvent): void {
+    const index = this.dragging();
+    const el = this.dragEl;
+    if (index === null || !el) return;
+
+    // Bỏ transition:none của .is-dragging TRƯỚC khi đổi --col/--lane/--drag-*
+    // bên dưới, để quãng "buông tay rồi trượt vào đúng ô" được easing lo, y hệt
+    // cảm giác của quãng bay tự động.
+    this.dragging.set(null);
+
+    const target = this.hoveredSlotEl
+      ? { col: Number(this.hoveredSlotEl.dataset['col']), lane: Number(this.hoveredSlotEl.dataset['lane']) }
+      : this.spots()[index];
+    this.dropAt(index, target);
+
+    el.style.setProperty('--drag-x', '0px');
+    el.style.setProperty('--drag-y', '0px');
+    if (el.hasPointerCapture(event.pointerId)) el.releasePointerCapture(event.pointerId);
+
+    this.clearHoverHighlight();
+    this.dragEl = null;
+    this.dragSlots = [];
+
+    // Nhả tay xong thì trả lại quyền cho bộ đếm giờ tự diễn — board lại "sống"
+    // như trước khi người dùng chạm vào, chỉ là giờ đứng ở chỗ họ vừa đặt xuống.
+    this.start();
+  }
+
+  /**
+   * Đặt thẻ `index` vào ô `target`.
+   *
+   * Nếu ô đó đang bị thẻ KIA chiếm thì hai thẻ đổi chỗ cho nhau thay vì chồng
+   * lên nhau — giống cảm giác thả một thẻ thật vào chỗ đã có thẻ khác trong
+   * app: thẻ cũ nhường chỗ chứ không biến mất.
+   */
+  private dropAt(index: number, target: Spot): void {
+    const current = this.spots();
+    const otherIndex = index === 0 ? 1 : 0;
+    const other = current[otherIndex];
+
+    const next = [...current];
+    if (other.col === target.col && other.lane === target.lane) {
+      next[otherIndex] = current[index];
+    }
+    next[index] = target;
+    this.spots.set(next);
+
+    this.bloom(target.col);
+  }
+
+  /** Ô đang gần con trỏ nhất trong lúc kéo — so khoảng cách tới TÂM từng ô chứ
+   *  không đòi con trỏ phải nằm lọt hẳn trong ô, để khi thả tay ngay trên tấm
+   *  thẻ đứng yên (đứng giữa hai ô) vẫn chọn được đúng ô gần hơn theo cảm giác. */
+  private updateHoveredSlot(x: number, y: number): void {
+    let nearest: HTMLElement | null = null;
+    let nearestDist = Infinity;
+    for (const slot of this.dragSlots) {
+      const box = slot.getBoundingClientRect();
+      const dist = Math.hypot(x - (box.left + box.width / 2), y - (box.top + box.height / 2));
+      if (dist < nearestDist) {
+        nearestDist = dist;
+        nearest = slot;
+      }
+    }
+    if (nearest === this.hoveredSlotEl) return;
+    this.hoveredSlotEl?.classList.remove('is-drag-over');
+    nearest?.classList.add('is-drag-over');
+    this.hoveredSlotEl = nearest;
+  }
+
+  private clearHoverHighlight(): void {
+    this.hoveredSlotEl?.classList.remove('is-drag-over');
+    this.hoveredSlotEl = null;
   }
 
   ngOnDestroy(): void {

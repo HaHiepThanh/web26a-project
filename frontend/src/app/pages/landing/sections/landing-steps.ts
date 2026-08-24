@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { LucideBuilding2, LucideKanban, LucideSparkles, LucideUserPlus } from '@lucide/angular';
 import { RevealDirective } from '../../../directives/reveal.directive';
+import { ScrambleInDirective } from '../../../directives/scramble-in.directive';
 
 /**
  * "Cách hoạt động" — bốn bước, mỗi bước một hình minh hoạ nhỏ tự dựng khi cuộn
@@ -12,7 +13,14 @@ import { RevealDirective } from '../../../directives/reveal.directive';
  */
 @Component({
   selector: 'app-landing-steps',
-  imports: [RevealDirective, LucideBuilding2, LucideKanban, LucideSparkles, LucideUserPlus],
+  imports: [
+    RevealDirective,
+    ScrambleInDirective,
+    LucideBuilding2,
+    LucideKanban,
+    LucideSparkles,
+    LucideUserPlus,
+  ],
   templateUrl: './landing-steps.html',
   styleUrls: ['../_landing-shared.css', './landing-steps.css'],
 })

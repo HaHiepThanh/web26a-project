@@ -20,12 +20,11 @@
   inset: -20% -10% 0;
   z-index: -1;
   pointer-events: none;
-  /* Lệch theo con trỏ. --px/--py do landing-hero.ts ghi vào (khoảng -0.5…0.5),
-     nhân với 26px nên biên độ tối đa chỉ ±13px — đủ để nền "thở" theo chuột mà
-     không thành trò đu đưa. Transition dài để nó đuổi theo lười biếng, không
-     dính chặt vào con trỏ. */
-  transform: translate3d(calc(var(--px, 0) * 26px), calc(var(--py, 0) * 26px), 0);
-  transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+  /* Lệch theo con trỏ — ParallaxFloatDirective (appParallaxFloat, parallaxStrength
+     "13" nên biên độ tối đa ±13px) ghi --parallax-x/-y và host class
+     `.is-parallax-float` tự lo cả `translate` lẫn `transition` (khai báo dưới
+     .hero-floaters) — đủ để nền "thở" theo chuột mà không thành trò đu đưa,
+     không cần lặp lại ở đây. */
 }
 
 /* Lớp trong giữ hoạt ảnh trôi. Tách khỏi lớp ngoài vì transform lồng nhau thì
@@ -230,6 +229,15 @@
   pointer-events: none;
 }
 
+/* Lớp trôi theo chuột — gắn bởi ParallaxFloatDirective (appParallaxFloat).
+   `translate` tách riêng khỏi `transform` nên cộng dồn êm với animation/transform
+   sẵn có trên .floater (float-y) và .board-frame (nghiêng phối cảnh) thay vì đè
+   mất chúng — cùng lý do đã áp dụng cho .col-bloom ở dưới. */
+.is-parallax-float {
+  translate: var(--parallax-x, 0px) var(--parallax-y, 0px);
+  transition: translate 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 .floater {
   position: absolute;
   display: inline-flex;
@@ -374,6 +382,12 @@
   /* Ngả nhẹ về sau như đang nhìn từ trên xuống — chỉ hơn một độ, đủ để bảng
      "đặt trong không gian" chứ không dán phẳng lên trang. */
   transform: perspective(1800px) rotateX(1.2deg);
+  /* Kéo thẻ du hành là một cử chỉ RÊ CHUỘT — nếu không tắt bôi đen, mỗi lần
+     kéo nhanh qua chữ ở thẻ hay cột khác thì trình duyệt lại tưởng đang chọn
+     văn bản, để lại một vệt xanh xấu xí sau khi buông tay. Cả khối này vốn đã
+     aria-hidden (trang trí thuần tuý) nên không ai cần bôi đen sao chép chữ ở
+     đây cả. */
+  user-select: none;
 }
 
 .board-chrome {
@@ -502,6 +516,17 @@
   border: 1.5px dashed var(--lp-border-strong);
   border-radius: var(--radius-sm);
   background: color-mix(in oklab, var(--accent-blue) 5%, transparent);
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease;
+}
+
+/* Ô gần con trỏ nhất trong lúc đang kéo — xem updateHoveredSlot(). Người kéo
+   cần biết THẢ XUỐNG THÌ RƠI VÀO ĐÂU trước khi buông tay, không phải đoán. */
+.slot.is-drag-over {
+  border-color: var(--accent-blue);
+  border-style: solid;
+  background: color-mix(in oklab, var(--accent-blue) 16%, transparent);
 }
 
 /* --------------------------------------------------------------------------
@@ -724,9 +749,36 @@
     calc(var(--cpad) + var(--chead) + var(--cgap) + var(--lane, 0) * 2 * (var(--ch) + var(--cgap))),
     0
   );
-  /* 900ms phải khớp với hằng số trong landing-hero.ts (chỗ hạ cờ `moving`). */
-  transition: transform 900ms var(--lp-ease);
-  will-change: transform;
+  /* Độ lệch do NGƯỜI DÙNG kéo (--drag-x/-y, ghi bởi onTravellerPointerMove) —
+     tách riêng khỏi `transform` ở trên vì transform đang bận lo vị trí Ô, gộp
+     chung sẽ đè mất nhau; đặt trong translate thì trình duyệt tự cộng dồn cả
+     hai, cùng cách .col-bloom/.is-parallax-float trong file này đã làm. */
+  translate: var(--drag-x, 0px) var(--drag-y, 0px);
+  /* 900ms phải khớp với hằng số trong landing-hero.ts (chỗ hạ cờ `moving`) — áp
+     cho CẢ HAI thuộc tính nên lúc buông tay, quãng "trượt nốt vào đúng ô" của
+     translate và quãng đổi --col/--lane của transform cùng nhịp với nhau. */
+  transition:
+    transform 900ms var(--lp-ease),
+    translate 900ms var(--lp-ease);
+  will-change: transform, translate;
+  cursor: grab;
+  /* Không cho trình duyệt cướp cử chỉ kéo dọc thành cuộn trang trên cảm ứng. */
+  touch-action: none;
+}
+
+/* Đang bị cầm kéo: bỏ hẳn transition để thẻ bám sát con trỏ tuyệt đối, không
+   trễ nhịp theo easing — easing chỉ có ích cho quãng bay TỰ ĐỘNG hoặc quãng
+   "buông tay rồi trượt nốt vào ô", không phải lúc tay còn đang giữ. */
+.traveller.is-dragging {
+  transition: none;
+  z-index: 3;
+  cursor: grabbing;
+}
+
+.traveller.is-dragging .kan-card-travel {
+  transform: scale(1.05) rotate(-2deg);
+  box-shadow: var(--lp-shadow-lg);
+  transition: none;
 }
 
 .kan-card-travel {

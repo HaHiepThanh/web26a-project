@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { LucideCheck, LucideMinus } from '@lucide/angular';
 import { RevealDirective } from '../../../directives/reveal.directive';
+import { ScrambleInDirective } from '../../../directives/scramble-in.directive';
 
 /**
  * Khối trả lời thẳng câu hỏi mà ai cũng nghĩ trong đầu ở đoạn này của trang.
@@ -17,7 +18,7 @@ import { RevealDirective } from '../../../directives/reveal.directive';
  */
 @Component({
   selector: 'app-landing-compare',
-  imports: [RevealDirective, LucideCheck, LucideMinus],
+  imports: [RevealDirective, ScrambleInDirective, LucideCheck, LucideMinus],
   templateUrl: './landing-compare.html',
   styleUrls: ['../_landing-shared.css', './landing-compare.css'],
 })

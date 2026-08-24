@@ -8,7 +8,7 @@
        Lớp bọc ngoài nhận độ lệch theo con trỏ, lớp trong giữ hoạt ảnh trôi —
        hai transform lồng nhau thì nhân với nhau, chứ đặt chung một phần tử thì
        cái sau đè mất cái trước. -->
-  <div class="hero-aurora" aria-hidden="true">
+  <div class="hero-aurora" aria-hidden="true" appParallaxFloat [parallaxStrength]="13">
     <div class="hero-aurora-shift">
       <span class="aurora aurora-a"></span>
       <span class="aurora aurora-b"></span>
@@ -33,7 +33,7 @@
            thì dòng ngắt luôn rơi đúng chỗ ranh giới ý nghĩa. -->
       <h1 id="hero-title" class="hero-title" appReveal [revealDelay]="70">
         Your team's work,
-        <span class="lp-grad">on&nbsp;one&nbsp;board</span>
+        <span class="lp-grad" appScrambleIn>on&nbsp;one&nbsp;board</span>
       </h1>
 
       <p class="lp-lead hero-lead" appReveal [revealDelay]="140">
@@ -68,24 +68,27 @@
     <!-- Mấy tấm thẻ nhỏ trôi quanh tiêu đề. Thuần trang trí nên `aria-hidden`:
          trình đọc màn hình đọc ra "TN, Design, Due Friday" thì chỉ gây nhiễu.
          Ẩn hẳn dưới 1180px — trên màn hẹp chúng sẽ đè lên chữ. -->
+    <!-- Mỗi thẻ một "độ sâu" (parallaxStrength) khác nhau — thẻ nào dịch theo
+         chuột nhiều hơn thì trông như đang ở gần người xem hơn, tạo ảo giác
+         nhiều lớp trôi trong không gian thay vì một khối phẳng dán lên nền. -->
     <div class="hero-floaters" aria-hidden="true">
-      <div class="floater floater-avatars">
+      <div class="floater floater-avatars" appParallaxFloat [parallaxStrength]="10">
         <span class="fav fav-1">TN</span>
         <span class="fav fav-2">MK</span>
         <span class="fav fav-3">+4</span>
       </div>
 
-      <div class="floater floater-label">
+      <div class="floater floater-label" appParallaxFloat [parallaxStrength]="18">
         <span class="dot"></span>
         Design
       </div>
 
-      <div class="floater floater-due">
+      <div class="floater floater-due" appParallaxFloat [parallaxStrength]="24">
         <svg lucideZap [strokeWidth]="2.2"></svg>
         Instant sync
       </div>
 
-      <div class="floater floater-date">Due Friday</div>
+      <div class="floater floater-date" appParallaxFloat [parallaxStrength]="14">Due Friday</div>
     </div>
   </div>
 
@@ -104,7 +107,7 @@
     <div class="board-stage" aria-hidden="true">
       <span class="board-floor"></span>
 
-      <div class="board-frame">
+      <div class="board-frame" appParallaxFloat [parallaxStrength]="6">
         <div class="board-chrome">
           <span class="tl tl-r"></span>
           <span class="tl tl-y"></span>
@@ -122,7 +125,7 @@
             <!-- Cột 1 -->
             <div class="col">
               <div class="col-head"><span>To do</span><em>4</em></div>
-              <div class="slot"></div>
+              <div class="slot" data-col="0" data-lane="0"></div>
               <article class="kan-card">
                 <div class="kan-priority pri-low">
                   <span class="pri-dot"></span>
@@ -132,13 +135,13 @@
                 <p>Write up the label API</p>
                 <div class="kan-meta"><span class="m-cmt">2</span></div>
               </article>
-              <div class="slot"></div>
+              <div class="slot" data-col="0" data-lane="1"></div>
             </div>
 
             <!-- Cột 2 -->
             <div class="col">
               <div class="col-head"><span>In progress</span><em>3</em></div>
-              <div class="slot"></div>
+              <div class="slot" data-col="1" data-lane="0"></div>
               <article class="kan-card">
                 <div class="kan-priority pri-high">
                   <span class="pri-dot"></span>
@@ -151,13 +154,13 @@
                   <span class="mini-avatar">HN</span>
                 </div>
               </article>
-              <div class="slot"></div>
+              <div class="slot" data-col="1" data-lane="1"></div>
             </div>
 
             <!-- Cột 3 -->
             <div class="col">
               <div class="col-head"><span>Done</span><em>5</em></div>
-              <div class="slot"></div>
+              <div class="slot" data-col="2" data-lane="0"></div>
               <article class="kan-card">
                 <div class="kan-priority pri-medium">
                   <span class="pri-dot"></span>
@@ -167,7 +170,7 @@
                 <p class="is-done">Wire up Google sign-in</p>
                 <div class="kan-meta"><span class="m-list">3/3</span></div>
               </article>
-              <div class="slot"></div>
+              <div class="slot" data-col="2" data-lane="1"></div>
             </div>
 
             <!-- Vệt loé ở cột vừa nhận thẻ. Nền của trang giới thiệu thường chỉ
@@ -185,13 +188,24 @@
                  Chỗ đứng do TypeScript bốc ngẫu nhiên vài giây một lần rồi ghi
                  vào --col / --lane; quãng bay là transition trong CSS. Thẻ nào
                  sang tới cột cuối thì tiêu đề gạch ngang — đúng cách app thật
-                 suy ra "đã xong" từ vị trí chứ không từ một ô tick. -->
+                 suy ra "đã xong" từ vị trí chứ không từ một ô tick.
+
+                 Cũng KÉO-THẢ được bằng tay (xem onTravellerPointerDown trong
+                 landing-hero.ts) — người xem không chỉ ngắm mà còn tự dời thẻ
+                 được, đúng cảm giác "dragging is saving" mà trang quảng cáo.
+                 Trong lúc kéo, bộ đếm giờ tự dời thẻ bị tạm dừng để khỏi giằng
+                 tay với người dùng, rồi chạy lại sau khi thả. -->
             @for (spot of spots(); track $index) {
               <div
                 class="traveller"
                 [class.is-moving]="moving() === $index"
+                [class.is-dragging]="dragging() === $index"
                 [style.--col]="spot.col"
                 [style.--lane]="spot.lane"
+                (pointerdown)="onTravellerPointerDown($event, $index)"
+                (pointermove)="onTravellerPointerMove($event)"
+                (pointerup)="onTravellerPointerEnd($event)"
+                (pointercancel)="onTravellerPointerEnd($event)"
               >
                 <article class="kan-card kan-card-travel">
                   @if ($index === 0) {

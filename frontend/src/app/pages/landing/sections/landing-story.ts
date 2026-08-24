@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import { LucideColumns3, LucideMessageSquare, LucideSparkles, LucideTag } from '@lucide/angular';
 import { RevealDirective } from '../../../directives/reveal.directive';
+import { ScrambleInDirective } from '../../../directives/scramble-in.directive';
 
 /**
  * Kể chuyện bằng cuộn: mockup bảng bị ghim (position: sticky) bên trái trong khi
@@ -25,7 +26,14 @@ import { RevealDirective } from '../../../directives/reveal.directive';
  */
 @Component({
   selector: 'app-landing-story',
-  imports: [RevealDirective, LucideColumns3, LucideMessageSquare, LucideSparkles, LucideTag],
+  imports: [
+    RevealDirective,
+    ScrambleInDirective,
+    LucideColumns3,
+    LucideMessageSquare,
+    LucideSparkles,
+    LucideTag,
+  ],
   templateUrl: './landing-story.html',
   styleUrls: ['../_landing-shared.css', './landing-story.css'],
 })

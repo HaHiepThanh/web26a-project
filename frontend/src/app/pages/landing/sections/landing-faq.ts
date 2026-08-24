@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { RevealDirective } from '../../../directives/reveal.directive';
+import { ScrambleInDirective } from '../../../directives/scramble-in.directive';
 
 /**
  * Câu hỏi thường gặp.
@@ -17,7 +18,7 @@ import { RevealDirective } from '../../../directives/reveal.directive';
  */
 @Component({
   selector: 'app-landing-faq',
-  imports: [RevealDirective],
+  imports: [RevealDirective, ScrambleInDirective],
   templateUrl: './landing-faq.html',
   styleUrls: ['../_landing-shared.css', './landing-faq.css'],
 })

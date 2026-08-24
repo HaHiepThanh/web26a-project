@@ -210,6 +210,37 @@
   background: var(--lp-surface-2);
 }
 
+/* Gạch chân quét vào khi rê chuột tới, quét ra khi rê chuột đi — mô phỏng hiệu
+   ứng "underline-comes-in-goes-out" của fancycomponents.dev. `.is-current` có
+   gạch chân RIÊNG luôn hiện sẵn (::after ở dưới) nên bị loại khỏi đây bằng
+   :not(), tránh hai quy tắc cùng nhắm vào một ::after của cùng phần tử.
+
+   Mẹo: chỉ `transform` có transition, còn `transform-origin` đổi TỨC THÌ theo
+   trạng thái hover — không phải giá trị được nội suy mượt. Nhờ vậy quét vào và
+   quét ra đi theo hai hướng khác nhau: lúc chuột tới, origin nhảy sang "left"
+   NGAY rồi scaleX mới chạy từ 0→1 quanh mốc đó nên gạch mọc ra từ bên trái;
+   lúc chuột rời, origin nhảy về "right" rồi scaleX chạy ngược 1→0 quanh mốc
+   mới đó nên gạch co lại về phía bên phải — không phải co ngược lại chỗ vừa
+   mọc ra. */
+.nav-links a:not(.is-current)::after {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 2px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--lp-ink-blue), var(--lp-ink-purple));
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.nav-links a:not(.is-current):hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
 .nav-links a:focus-visible {
   outline: 2px solid var(--accent-blue);
   outline-offset: 2px;

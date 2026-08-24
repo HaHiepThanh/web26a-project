@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { LucideArrowRight } from '@lucide/angular';
 import { MagneticDirective } from '../../../directives/magnetic.directive';
 import { RevealDirective } from '../../../directives/reveal.directive';
+import { ScrambleInDirective } from '../../../directives/scramble-in.directive';
 
 /**
  * Lời mời cuối trang.
@@ -13,7 +14,7 @@ import { RevealDirective } from '../../../directives/reveal.directive';
  */
 @Component({
   selector: 'app-landing-cta',
-  imports: [RouterLink, RevealDirective, MagneticDirective, LucideArrowRight],
+  imports: [RouterLink, RevealDirective, MagneticDirective, ScrambleInDirective, LucideArrowRight],
   templateUrl: './landing-cta.html',
   styleUrls: ['../_landing-shared.css', './landing-cta.css'],
 })

@@ -10,6 +10,7 @@ import {
   LucideUsers,
 } from '@lucide/angular';
 import { RevealDirective } from '../../../directives/reveal.directive';
+import { ScrambleInDirective } from '../../../directives/scramble-in.directive';
 import { SpotlightDirective } from '../../../directives/spotlight.directive';
 
 /**
@@ -26,6 +27,7 @@ import { SpotlightDirective } from '../../../directives/spotlight.directive';
   selector: 'app-landing-features',
   imports: [
     RevealDirective,
+    ScrambleInDirective,
     SpotlightDirective,
     LucideActivity,
     LucideCalendarClock,
