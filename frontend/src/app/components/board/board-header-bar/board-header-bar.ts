@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { LucideArrowLeft, LucideFolderKanban, LucideListFilter, LucidePin, LucideStar, LucideX, LucideChartLine } from '@lucide/angular';
 import { Board, BoardViewer, CardPriority, Label, List, User } from '../../../models';
-import { avatarColorFor, initialsOf } from '../../../services/board.service';
+import { avatarColorFor, initialsOf } from '../../../utils/avatar.util';
 import { FLAG_PATH } from '../card-item/card-item';
 
 /** Cùng bảng màu với card-item.ts (PRIORITY_TEXT) — để nút lọc "Mức ưu tiên" khớp

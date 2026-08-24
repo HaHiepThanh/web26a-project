@@ -17,7 +17,7 @@ import {
   LucideX,
 } from '@lucide/angular';
 import { AppNotification } from '../../models';
-import { relativeTimeFrom } from '../../services/board.service';
+import { relativeTimeFrom } from '../../utils/avatar.util';
 import { AuthService } from '../../services/auth.service';
 import { ThemeService } from '../../services/theme.service';
 import { WorkspaceUiService } from '../../services/workspace-ui.service';

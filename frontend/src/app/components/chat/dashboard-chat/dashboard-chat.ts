@@ -1,7 +1,8 @@
 import { Component, computed, effect, inject, input, output } from '@angular/core';
 import { Board, User } from '../../../models';
-import { BoardService, avatarColorFor, initialsOf, relativeTimeFrom } from '../../../services/board.service';
-import { ChatService } from '../../../services/chat.service';
+import { BoardStore } from '../../../ngrx/board/board.store';
+import { avatarColorFor, initialsOf, relativeTimeFrom } from '../../../utils/avatar.util';
+import { ChatStore } from '../../../ngrx/chat/chat.store';
 
 interface ConversationRow {
   board: Board;
@@ -26,8 +27,8 @@ interface ConversationRow {
   styleUrl: './dashboard-chat.css',
 })
 export class DashboardChat {
-  private readonly boardService = inject(BoardService);
-  private readonly chat = inject(ChatService);
+  private readonly boardService = inject(BoardStore);
+  private readonly chat = inject(ChatStore);
 
   readonly relativeTimeFrom = relativeTimeFrom;
 

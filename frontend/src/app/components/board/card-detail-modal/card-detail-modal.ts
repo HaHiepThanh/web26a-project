@@ -4,8 +4,8 @@ import { DatePipe } from '@angular/common';
 import { Card, CardPriority, User } from '../../../models';
 import { CardService } from '../../../services/card.service';
 import { LabelService } from '../../../services/label.service';
-import { BoardService } from '../../../services/board.service';
-import { ActivityService } from '../../../services/activity.service';
+import { BoardStore } from '../../../ngrx/board/board.store';
+import { ActivityStore } from '../../../ngrx/activity/activity.store';
 import { ChecklistService } from '../../../services/checklist.service';
 import { CommentService } from '../../../services/comment.service';
 import { AttachmentService } from '../../../services/attachment.service';
@@ -47,8 +47,8 @@ const PRIORITY_LABEL: Record<CardPriority, string> = { high: 'High', medium: 'Me
 export class CardDetailModal {
   private readonly cardService = inject(CardService);
   private readonly labelService = inject(LabelService);
-  private readonly boardService = inject(BoardService);
-  private readonly activityService = inject(ActivityService);
+  private readonly boardService = inject(BoardStore);
+  private readonly activityService = inject(ActivityStore);
   private readonly checklistService = inject(ChecklistService);
   private readonly commentService = inject(CommentService);
   private readonly attachmentService = inject(AttachmentService);

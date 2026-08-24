@@ -1,6 +1,6 @@
 import { Component, computed, input } from '@angular/core';
 import { Message, User } from '../../../models';
-import { avatarColorFor, initialsOf } from '../../../services/board.service';
+import { avatarColorFor, initialsOf } from '../../../utils/avatar.util';
 
 function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

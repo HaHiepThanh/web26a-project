@@ -2,7 +2,7 @@ import { Component, computed, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LucideTriangleAlert, LucideX } from '@lucide/angular';
 import { ActivityActionType, ActivityLog, MemberWorkloadStat, WorkspaceStatsData } from '../../../models';
-import { avatarColorFor, initialsOf } from '../../../services/board.service';
+import { avatarColorFor, initialsOf } from '../../../utils/avatar.util';
 import { AuthService } from '../../../services/auth.service';
 
 

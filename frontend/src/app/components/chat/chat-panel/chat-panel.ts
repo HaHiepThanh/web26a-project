@@ -1,10 +1,10 @@
 import { Component, DestroyRef, computed, effect, inject, input, output, signal } from '@angular/core';
 import { ChatTaskSuggestion, User } from '../../../models';
-import { ChatService } from '../../../services/chat.service';
-import { TaskSuggestionService } from '../../../services/task-suggestion.service';
-import { BoardService } from '../../../services/board.service';
+import { ChatStore } from '../../../ngrx/chat/chat.store';
+import { TaskSuggestionStore } from '../../../ngrx/task-suggestion/task-suggestion.store';
+import { BoardStore } from '../../../ngrx/board/board.store';
 import { CardService } from '../../../services/card.service';
-import { ListService } from '../../../services/list.service';
+import { ListStore } from '../../../ngrx/list/list.store';
 import { MessageList } from '../message-list/message-list';
 import { ChatInput } from '../chat-input/chat-input';
 
@@ -33,11 +33,11 @@ const RESIZE_STEP = 16;
   },
 })
 export class ChatPanel {
-  private readonly chat = inject(ChatService);
-  private readonly suggestions = inject(TaskSuggestionService);
-  private readonly boardService = inject(BoardService);
+  private readonly chat = inject(ChatStore);
+  private readonly suggestions = inject(TaskSuggestionStore);
+  private readonly boardService = inject(BoardStore);
   private readonly cardService = inject(CardService);
-  private readonly listService = inject(ListService);
+  private readonly listService = inject(ListStore);
 
   readonly boardId = input.required<string>();
   readonly taskCreated = output<string>();
