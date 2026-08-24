@@ -272,7 +272,7 @@ describe('OrganizationStore — thao tác ghi', () => {
 
     const loi = await store.changeRole('o1', 'u9', 'admin');
 
-    expect(loi).toContain('Không kết nối được máy chủ');
+    expect(loi).toContain("Couldn't reach the server");
   });
 
   it('switchOrg: bỏ qua id không có trong danh sách', async () => {

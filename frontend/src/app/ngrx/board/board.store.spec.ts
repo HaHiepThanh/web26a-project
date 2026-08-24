@@ -3,7 +3,7 @@ import { signal } from '@angular/core';
 import { vi } from 'vitest';
 import { ApiService } from '../../services/api.service';
 import { RealtimeService } from '../../services/realtime.service';
-import { OrganizationService } from '../../services/organization.service';
+import { OrganizationStore } from '../organization/organization.store';
 import { ApiBoard } from '../../models';
 import { BoardStore } from './board.store';
 
@@ -30,7 +30,7 @@ describe('BoardStore', () => {
       providers: [
         { provide: ApiService, useValue: api },
         { provide: RealtimeService, useValue: { lastEvent: () => null } },
-        { provide: OrganizationService, useValue: { membersOf: () => [], activeOrgId: signal(null) } },
+        { provide: OrganizationStore, useValue: { membersOf: () => [], activeOrgId: signal(null) } },
       ],
     });
     try {
