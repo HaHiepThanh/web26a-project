@@ -1,0 +1,77 @@
+# Chạy kiểm tra tự động cho mọi Pull Request và mọi lần đẩy lên main.
+#
+# Vì sao cần: repo này từng có 4 bài test đỏ nằm im rất lâu mà không ai biết
+# (app.spec.ts còn đòi `<h1>Hello, frontend</h1>` của `ng new`, đã bị xoá từ đời
+# nào). Không có gì chạy test thì hỏng cũng không ai hay — tuần trước đã phải có
+# hẳn một commit "sua 2 spec cho khop codebase sau khi merge".
+name: Kiểm tra
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# PR đẩy thêm commit thì huỷ lượt chạy cũ, khỏi xếp hàng chờ vô ích.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: Frontend — test + build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+
+      # environment.ts bị .gitignore chặn (chứa khoá Firebase thật), nên trên CI
+      # nó KHÔNG tồn tại và build sẽ chết ở bước resolve import. Dựng từ file mẫu.
+      #
+      # Dùng khoá giả là đủ: `ng test` không gọi Firebase, còn `ng build` chỉ cần
+      # file tồn tại và đúng kiểu. Đừng nhét khoá thật vào secrets cho việc này —
+      # thêm một chỗ để lộ mà không đổi lại được gì.
+      - name: Dựng environment.ts từ file mẫu
+        run: cp src/environments/environment.example.ts src/environments/environment.ts
+
+      - run: npx ng test --watch=false
+
+      - run: npx ng build --configuration production
+
+  backend:
+    name: Backend — biên dịch
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - run: npm ci
+
+      - run: npx nest build
+
+      # ⚠️ CỐ Ý KHÔNG chạy `npm test` của backend.
+      #
+      # app.controller.spec.ts và test/app.e2e-spec.ts đều dựng cả AppModule, mà
+      # AppModule cần Supabase + Firebase Admin thật. Cả hai đang ĐỎ ngay cả khi
+      # chạy dưới máy có đủ khoá — hỏng từ trước, không phải do thiếu bí mật trên
+      # CI. Bật lên bây giờ là CI đỏ vĩnh viễn và mọi người sẽ quen với việc bỏ
+      # qua màu đỏ, đúng cái thói quen mà file này sinh ra để phá.
+      #
+      # Sửa xong hai bài đó thì thêm bước `- run: npm test` vào đây.
