@@ -7,6 +7,9 @@
         "source": "**",
         "destination": "/index.html"
       }
-    ]
+    ],
+    "frameworksBackend": {
+      "region": "asia-southeast1"
+    }
   }
 }
