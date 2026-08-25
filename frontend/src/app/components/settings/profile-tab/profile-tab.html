@@ -129,17 +129,30 @@
       <!-- Mật khẩu mới -->
       <div class="flex flex-col gap-1.5">
         <label class="text-xs font-bold text-slate-700 dark:text-slate-300" for="newPassword">New password *</label>
-        <input id="newPassword" type="password" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700 text-[12px]" formControlName="newPassword" placeholder="At least 6 characters..." />
+        <input id="newPassword" type="password" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700 text-[12px]" formControlName="newPassword" placeholder="At least 8 characters..." />
         @if (passwordForm.get('newPassword')?.value) {
           <div class="mt-1 flex items-center gap-2">
             <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
-              <div class="h-full rounded-full transition-all duration-300" [style.width.%]="passwordStrength.percent" [style.background]="passwordStrength.colorVar"></div>
+              <div class="h-full rounded-full transition-all duration-300" [style.width.%]="passwordCheck.percent" [style.background]="passwordCheck.colorVar"></div>
             </div>
-            <span class="text-2xs font-black" [style.color]="passwordStrength.colorVar">{{ passwordStrength.label }}</span>
+            <span class="text-2xs font-black" [style.color]="passwordCheck.colorVar">{{ passwordCheck.label }}</span>
           </div>
+
+          <!-- Liệt kê từng điều kiện thay vì một câu "mật khẩu chưa đủ mạnh":
+               người dùng cần biết CÒN THIẾU GÌ mới sửa được, không thì chỉ gõ
+               bừa cho qua. -->
+          <ul class="mt-1 flex flex-col gap-0.5">
+            @for (rule of passwordCheck.rules; track rule.id) {
+              <li class="flex items-start gap-1.5 text-2xs font-semibold"
+                  [class]="rule.ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400'">
+                <span aria-hidden="true">{{ rule.ok ? '✓' : '○' }}</span>
+                <span>{{ rule.label }}</span>
+              </li>
+            }
+          </ul>
         }
-        @if (passwordForm.get('newPassword')?.invalid && passwordForm.get('newPassword')?.touched) {
-          <span class="text-2xs font-bold text-rose-500">New password must be at least 6 characters.</span>
+        @if (passwordForm.get('newPassword')?.hasError('required') && passwordForm.get('newPassword')?.touched) {
+          <span class="text-2xs font-bold text-rose-500">Please enter a new password.</span>
         }
       </div>
 

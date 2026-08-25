@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { checkPassword, type PasswordCheck } from '../../utils/password.util';
 
 
 import { Toast, ToastType } from '../../models';
@@ -58,6 +59,19 @@ export class Register {
   confirmPassword = '';
 
   readonly passwordVisible = signal(false);
+
+  /**
+   * Đánh giá mật khẩu đang gõ.
+   *
+   * Là getter chứ không phải `computed`: form này dùng `[(ngModel)]` trên thuộc
+   * tính thường (`password`, `email`, `fullName`), không phải signal — `computed`
+   * sẽ không có gì để theo dõi và giá trị đứng im.
+   *
+   * Truyền email/tên vào để chặn kiểu lấy chính danh tính mình làm mật khẩu.
+   */
+  get passwordCheck(): PasswordCheck {
+    return checkPassword(this.password, { email: this.email, displayName: this.fullName });
+  }
   readonly confirmVisible = signal(false);
   readonly errors = signal<FieldErrors>({});
   readonly submitting = signal(false);
@@ -81,8 +95,13 @@ export class Register {
     if (!email) errors.email = 'Please enter your email.';
     else if (!EMAIL_RE.test(email)) errors.email = 'Invalid email format.';
 
+    // Chính sách nằm ở `password.util.ts` — dùng chung với ô đổi mật khẩu trong
+    // Settings, để hai chỗ không bao giờ đòi hỏi hai thứ khác nhau. Câu lỗi chỉ
+    // nhắc nhìn xuống danh sách, vì chính danh sách mới nói rõ còn thiếu gì.
     if (!this.password) errors.password = 'Please enter a password.';
-    else if (this.password.length < 6) errors.password = 'Password must be at least 6 characters.';
+    else if (!this.passwordCheck.meetsPolicy) {
+      errors.password = "Your password doesn't meet the requirements below yet.";
+    }
 
     if (!this.confirmPassword) errors.confirmPassword = 'Please confirm your password.';
     else if (this.confirmPassword !== this.password) errors.confirmPassword = 'Passwords do not match.';

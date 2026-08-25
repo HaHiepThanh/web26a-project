@@ -97,6 +97,26 @@
                 }
               </button>
             </label>
+            @if (password) {
+              <div class="mt-1.5 flex items-center gap-2">
+                <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-base-300">
+                  <div class="h-full rounded-full transition-all duration-300" [style.width.%]="passwordCheck.percent" [style.background]="passwordCheck.colorVar"></div>
+                </div>
+                <span class="text-xs font-bold" [style.color]="passwordCheck.colorVar">{{ passwordCheck.label }}</span>
+              </div>
+
+              <!-- Liệt kê từng điều kiện thay vì chỉ báo "mật khẩu chưa đủ mạnh":
+                   người dùng cần biết CÒN THIẾU GÌ mới sửa được. -->
+              <ul class="mt-1.5 flex flex-col gap-0.5">
+                @for (rule of passwordCheck.rules; track rule.id) {
+                  <li class="flex items-start gap-1.5 text-xs"
+                      [class]="rule.ok ? 'font-semibold text-success' : 'text-base-content/55'">
+                    <span aria-hidden="true">{{ rule.ok ? '✓' : '○' }}</span>
+                    <span>{{ rule.label }}</span>
+                  </li>
+                }
+              </ul>
+            }
             @if (errors().password) { <span class="mt-1 text-xs text-error">{{ errors().password }}</span> }
           </div>
 
