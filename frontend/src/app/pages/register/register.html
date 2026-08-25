@@ -8,82 +8,82 @@
     </a>
 
     <div class="form-card">
-      <div class="text-center">
-        <h1 class="text-2xl font-bold tracking-tight">Create your account</h1>
+      <div class="heading-block text-center">
+        <h1 class="text-2xl font-black tracking-tight text-base-content">Create your account</h1>
         <p class="mt-1.5 text-sm text-base-content/60">Sign up to start managing work with your team.</p>
       </div>
 
-      <form class="mt-5 flex flex-col gap-4" (ngSubmit)="onSubmit()">
+      <form class="mt-6 flex flex-col gap-4" (ngSubmit)="onSubmit()">
         <div class="form-control w-full">
-          <label class="label pb-1.5" for="fullName"><span class="label-text text-xs font-semibold">Full name</span></label>
+          <label class="label pb-1.5" for="fullName"><span class="label-text text-xs font-bold text-base-content/80">Full name</span></label>
           <input
             id="fullName"
             type="text"
-            class="input min-h-[44px] w-full"
+            class="input input-bordered min-h-[46px] w-full rounded-2xl border-base-300 bg-base-100 shadow-xs focus:border-primary font-semibold text-xs text-base-content"
             [class.input-error]="errors().fullName"
             placeholder="Jane Doe"
             autocomplete="name"
             [(ngModel)]="fullName"
             name="fullName"
           />
-          @if (errors().fullName) { <span class="mt-1 text-xs text-error">{{ errors().fullName }}</span> }
+          @if (errors().fullName) { <span class="mt-1 text-xs font-semibold text-error">{{ errors().fullName }}</span> }
         </div>
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div class="form-control w-full">
-            <label class="label pb-1.5" for="username"><span class="label-text text-xs font-semibold">Username</span></label>
+            <label class="label pb-1.5" for="username"><span class="label-text text-xs font-bold text-base-content/80">Username</span></label>
             <input
               id="username"
               type="text"
-              class="input min-h-[44px] w-full"
+              class="input input-bordered min-h-[46px] w-full rounded-2xl border-base-300 bg-base-100 shadow-xs focus:border-primary font-semibold text-xs text-base-content"
               [class.input-error]="errors().username"
               placeholder="e.g. janedoe"
               autocomplete="username"
               [(ngModel)]="username"
               name="username"
             />
-            @if (errors().username) { <span class="mt-1 text-xs text-error">{{ errors().username }}</span> }
+            @if (errors().username) { <span class="mt-1 text-xs font-semibold text-error">{{ errors().username }}</span> }
           </div>
 
           <div class="form-control w-full">
-            <label class="label pb-1.5" for="phone"><span class="label-text text-xs font-semibold">Phone number</span></label>
+            <label class="label pb-1.5" for="phone"><span class="label-text text-xs font-bold text-base-content/80">Phone number</span></label>
             <input
               id="phone"
               type="tel"
-              class="input min-h-[44px] w-full"
+              class="input input-bordered min-h-[46px] w-full rounded-2xl border-base-300 bg-base-100 shadow-xs focus:border-primary font-semibold text-xs text-base-content"
               [class.input-error]="errors().phone"
               placeholder="0912345678"
               autocomplete="tel"
               [(ngModel)]="phone"
               name="phone"
             />
-            @if (errors().phone) { <span class="mt-1 text-xs text-error">{{ errors().phone }}</span> }
+            @if (errors().phone) { <span class="mt-1 text-xs font-semibold text-error">{{ errors().phone }}</span> }
           </div>
         </div>
 
         <div class="form-control w-full">
-          <label class="label pb-1.5" for="email"><span class="label-text text-xs font-semibold">Email</span></label>
+          <label class="label pb-1.5" for="email"><span class="label-text text-xs font-bold text-base-content/80">Email</span></label>
           <input
             id="email"
             type="email"
-            class="input min-h-[44px] w-full"
+            class="input input-bordered min-h-[46px] w-full rounded-2xl border-base-300 bg-base-100 shadow-xs focus:border-primary font-semibold text-xs text-base-content"
             [class.input-error]="errors().email"
             placeholder="you@company.com"
             autocomplete="email"
             [(ngModel)]="email"
             name="email"
           />
-          @if (errors().email) { <span class="mt-1 text-xs text-error">{{ errors().email }}</span> }
+          @if (errors().email) { <span class="mt-1 text-xs font-semibold text-error">{{ errors().email }}</span> }
         </div>
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div class="form-control w-full">
-            <label class="label pb-1.5" for="password"><span class="label-text text-xs font-semibold">Password</span></label>
-            <label class="input flex min-h-[44px] w-full items-center gap-2" [class.input-error]="errors().password">
+            <label class="label pb-1.5" for="password"><span class="label-text text-xs font-bold text-base-content/80">Password</span></label>
+            <label class="input input-bordered flex min-h-[46px] w-full items-center gap-2.5 rounded-2xl border-base-300 bg-base-100 shadow-xs focus-within:border-primary" [class.input-error]="errors().password">
               <input
                 [type]="passwordVisible() ? 'text' : 'password'"
                 id="password"
-                class="grow"
+                class="grow font-semibold text-xs text-base-content"
                 placeholder="••••••••"
                 autocomplete="new-password"
                 [(ngModel)]="password"
@@ -91,42 +91,22 @@
               />
               <button type="button" class="relative cursor-pointer opacity-50 before:absolute before:-left-[6px] before:-right-[15px] before:-top-[15px] before:-bottom-[15px] before:content-[''] hover:opacity-80" (click)="passwordVisible.set(!passwordVisible())" [attr.aria-label]="passwordVisible() ? 'Hide password' : 'Show password'">
                 @if (!passwordVisible()) {
-                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <svg class="h-4 w-4 text-base-content" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
                 } @else {
-                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M17.94 17.94A10.94 10.94 0 0112 19c-7 0-11-7-11-7a20.3 20.3 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 7 11 7a20.5 20.5 0 01-2.16 3.19M14.12 14.12a3 3 0 11-4.24-4.24" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 1l22 22" stroke-linecap="round"/></svg>
+                  <svg class="h-4 w-4 text-base-content" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M17.94 17.94A10.94 10.94 0 0112 19c-7 0-11-7-11-7a20.3 20.3 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 7 11 7a20.5 20.5 0 01-2.16 3.19M14.12 14.12a3 3 0 11-4.24-4.24" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 1l22 22" stroke-linecap="round"/></svg>
                 }
               </button>
             </label>
-            @if (password) {
-              <div class="mt-1.5 flex items-center gap-2">
-                <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-base-300">
-                  <div class="h-full rounded-full transition-all duration-300" [style.width.%]="passwordCheck.percent" [style.background]="passwordCheck.colorVar"></div>
-                </div>
-                <span class="text-xs font-bold" [style.color]="passwordCheck.colorVar">{{ passwordCheck.label }}</span>
-              </div>
-
-              <!-- Liệt kê từng điều kiện thay vì chỉ báo "mật khẩu chưa đủ mạnh":
-                   người dùng cần biết CÒN THIẾU GÌ mới sửa được. -->
-              <ul class="mt-1.5 flex flex-col gap-0.5">
-                @for (rule of passwordCheck.rules; track rule.id) {
-                  <li class="flex items-start gap-1.5 text-xs"
-                      [class]="rule.ok ? 'font-semibold text-success' : 'text-base-content/55'">
-                    <span aria-hidden="true">{{ rule.ok ? '✓' : '○' }}</span>
-                    <span>{{ rule.label }}</span>
-                  </li>
-                }
-              </ul>
-            }
-            @if (errors().password) { <span class="mt-1 text-xs text-error">{{ errors().password }}</span> }
+            @if (errors().password) { <span class="mt-1 text-xs font-semibold text-error">{{ errors().password }}</span> }
           </div>
 
           <div class="form-control w-full">
-            <label class="label pb-1.5" for="confirmPassword"><span class="label-text text-xs font-semibold">Confirm password</span></label>
-            <label class="input flex min-h-[44px] w-full items-center gap-2" [class.input-error]="errors().confirmPassword">
+            <label class="label pb-1.5" for="confirmPassword"><span class="label-text text-xs font-bold text-base-content/80">Confirm password</span></label>
+            <label class="input input-bordered flex min-h-[46px] w-full items-center gap-2.5 rounded-2xl border-base-300 bg-base-100 shadow-xs focus-within:border-primary" [class.input-error]="errors().confirmPassword">
               <input
                 [type]="confirmVisible() ? 'text' : 'password'"
                 id="confirmPassword"
-                class="grow"
+                class="grow font-semibold text-xs text-base-content"
                 placeholder="••••••••"
                 autocomplete="new-password"
                 [(ngModel)]="confirmPassword"
@@ -134,17 +114,40 @@
               />
               <button type="button" class="relative cursor-pointer opacity-50 before:absolute before:-left-[6px] before:-right-[15px] before:-top-[15px] before:-bottom-[15px] before:content-[''] hover:opacity-80" (click)="confirmVisible.set(!confirmVisible())" [attr.aria-label]="confirmVisible() ? 'Hide password' : 'Show password'">
                 @if (!confirmVisible()) {
-                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <svg class="h-4 w-4 text-base-content" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
                 } @else {
-                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M17.94 17.94A10.94 10.94 0 0112 19c-7 0-11-7-11-7a20.3 20.3 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 7 11 7a20.5 20.5 0 01-2.16 3.19M14.12 14.12a3 3 0 11-4.24-4.24" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 1l22 22" stroke-linecap="round"/></svg>
+                  <svg class="h-4 w-4 text-base-content" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M17.94 17.94A10.94 10.94 0 0112 19c-7 0-11-7-11-7a20.3 20.3 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 7 11 7a20.5 20.5 0 01-2.16 3.19M14.12 14.12a3 3 0 11-4.24-4.24" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 1l22 22" stroke-linecap="round"/></svg>
                 }
               </button>
             </label>
-            @if (errors().confirmPassword) { <span class="mt-1 text-xs text-error">{{ errors().confirmPassword }}</span> }
+            @if (errors().confirmPassword) { <span class="mt-1 text-xs font-semibold text-error">{{ errors().confirmPassword }}</span> }
           </div>
         </div>
 
-        <button type="submit" class="btn btn-primary btn-block min-h-[44px] mt-1" [disabled]="submitting()">
+        <!-- Thanh kiểm tra mật khẩu dài 100% bằng nút Đăng ký -->
+        @if (password) {
+          <div class="w-full rounded-2xl border border-base-300 bg-base-100/70 p-3.5 space-y-2">
+            <div class="flex items-center gap-2.5">
+              <div class="h-2 flex-1 overflow-hidden rounded-full bg-base-300">
+                <div class="h-full rounded-full transition-all duration-300" [style.width.%]="passwordCheck.percent" [style.background]="passwordCheck.colorVar"></div>
+              </div>
+              <span class="text-xs font-black shrink-0" [style.color]="passwordCheck.colorVar">{{ passwordCheck.label }}</span>
+            </div>
+
+            <!-- Liệt kê từng điều kiện -->
+            <ul class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-0.5">
+              @for (rule of passwordCheck.rules; track rule.id) {
+                <li class="flex items-start gap-1.5 text-xs"
+                    [class]="rule.ok ? 'font-semibold text-success' : 'text-base-content/55'">
+                  <span aria-hidden="true">{{ rule.ok ? '✓' : '○' }}</span>
+                  <span>{{ rule.label }}</span>
+                </li>
+              }
+            </ul>
+          </div>
+        }
+
+        <button type="submit" class="btn btn-primary btn-block min-h-[46px] rounded-2xl font-black text-sm shadow-xs mt-1" [disabled]="submitting()">
           @if (!submitting()) {
             <span>Create account</span>
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
@@ -156,7 +159,7 @@
 
         <p class="text-center text-xs text-base-content/60">
           Already have an account?
-          <a routerLink="/login" class="link link-primary font-semibold">Sign in</a>
+          <a routerLink="/login" class="link link-primary font-bold">Sign in</a>
         </p>
       </form>
 

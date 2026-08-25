@@ -58,12 +58,8 @@
   color: var(--text-primary);
   display: flex;
   flex-direction: column;
-  /* flex-start + gap (không phải space-between) — khớp cách register.css đã làm.
-     space-between kéo .form-card ra chính giữa khoảng trống giữa brand và
-     footer; trên mobile (form-panel cao min-height:100vh nhưng nội dung không
-     lấp đầy) khoảng đó rộng hơn nhiều so với chiều cao form, để lại một dải
-     trống ~260px phía trên form trước khi người dùng chạm vào được ô đầu tiên. */
-  justify-content: flex-start;
+  justify-content: center;
+  align-items: center;
   gap: 28px;
   padding: 32px 24px 40px;
   position: relative;
@@ -94,13 +90,14 @@
 .brand {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   user-select: none;
 }
 .brand-logo {
   width: 32px;
   height: 32px;
-  border-radius: 8px;
+  border-radius: 10px;
   object-fit: cover;
   box-shadow: 0 4px 10px color-mix(in oklab, var(--accent-blue) 25%, transparent);
 }
@@ -151,6 +148,7 @@
   font-size: 12px;
   color: var(--text-muted);
   user-select: none;
+  text-align: center;
 }
 
 /* ---------- Right board panel (decorative showcase) ---------- */

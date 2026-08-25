@@ -11,46 +11,47 @@
 
       <!-- Heading + form -->
       <div>
-          <div class="heading-block">
-            <h2 class="text-2xl font-bold tracking-tight">Welcome back</h2>
+          <div class="heading-block text-center">
+            <h2 class="text-2xl font-black tracking-tight text-base-content">Welcome back</h2>
             <p class="mt-1.5 text-sm text-base-content/60">Sign in to continue to your workspace.</p>
           </div>
 
-          <form class="method-view active mt-5 flex flex-col gap-4" (ngSubmit)="onPasswordSubmit()">
+          <form class="method-view active mt-6 flex flex-col gap-4" (ngSubmit)="onPasswordSubmit()">
             <div class="form-control w-full">
               <label class="label pb-1.5" for="input-username">
-                <span class="label-text text-xs font-semibold">Username or Email</span>
+                <span class="label-text text-xs font-bold text-base-content/80">Username or Email</span>
               </label>
-              <label class="input flex min-h-[44px] w-full items-center gap-2">
-                <svg class="h-4 w-4 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M22 6l-10 7L2 6"/><path d="M2 6h20v12H2z"/></svg>
-                <input type="text" id="input-username" class="grow" placeholder="you@company.com" autocomplete="username" [(ngModel)]="username" name="username" />
+              <label class="input input-bordered flex min-h-[46px] w-full items-center gap-2.5 rounded-2xl border-base-300 bg-base-100 shadow-xs focus-within:border-primary">
+                <svg class="h-4 w-4 opacity-50 shrink-0 text-base-content" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M22 6l-10 7L2 6"/><path d="M2 6h20v12H2z"/></svg>
+                <input type="text" id="input-username" class="grow font-semibold text-xs text-base-content" placeholder="you@company.com" autocomplete="username" [(ngModel)]="username" name="username" />
               </label>
             </div>
 
             <div class="form-control w-full">
-              <label class="label pb-1.5">
-                <span class="label-text text-xs font-semibold">Password</span>
-                <a routerLink="/forgot-password" (click)="onForgotPasswordClick()" class="link link-primary link-hover text-xs font-semibold">Forgot password?</a>
+              <label class="label pb-1.5" for="input-password">
+                <span class="label-text text-xs font-bold text-base-content/80">Password</span>
+                <a routerLink="/forgot-password" (click)="onForgotPasswordClick()" class="link link-primary link-hover text-xs font-bold">Forgot password?</a>
               </label>
-              <label class="input flex min-h-[44px] w-full items-center gap-2">
-                <svg class="h-4 w-4 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
-                <input [type]="passwordVisible() ? 'text' : 'password'" id="input-password" class="grow" placeholder="••••••••" autocomplete="current-password" [(ngModel)]="password" name="password" />
+              <label class="input input-bordered flex min-h-[46px] w-full items-center gap-2.5 rounded-2xl border-base-300 bg-base-100 shadow-xs focus-within:border-primary">
+                <svg class="h-4 w-4 opacity-50 shrink-0 text-base-content" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
+                <input [type]="passwordVisible() ? 'text' : 'password'" id="input-password" class="grow font-semibold text-xs text-base-content" placeholder="••••••••" autocomplete="current-password" [(ngModel)]="password" name="password" />
                 <button type="button" class="relative cursor-pointer opacity-50 before:absolute before:-left-[6px] before:-right-[15px] before:-top-[15px] before:-bottom-[15px] before:content-[''] hover:opacity-80" (click)="togglePasswordVisible()" [attr.aria-label]="passwordVisible() ? 'Hide password' : 'Show password'">
                   @if (!passwordVisible()) {
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <svg class="h-4 w-4 text-base-content" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
                   } @else {
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M17.94 17.94A10.94 10.94 0 0112 19c-7 0-11-7-11-7a20.3 20.3 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 7 11 7a20.5 20.5 0 01-2.16 3.19M14.12 14.12a3 3 0 11-4.24-4.24" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 1l22 22" stroke-linecap="round"/></svg>
+                    <svg class="h-4 w-4 text-base-content" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M17.94 17.94A10.94 10.94 0 0112 19c-7 0-11-7-11-7a20.3 20.3 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 7 11 7a20.5 20.5 0 01-2.16 3.19M14.12 14.12a3 3 0 11-4.24-4.24" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 1l22 22" stroke-linecap="round"/></svg>
                   }
                 </button>
               </label>
             </div>
 
-            <label class="label cursor-pointer justify-start gap-2">
-              <input type="checkbox" class="checkbox checkbox-sm checkbox-primary" [(ngModel)]="remember" name="remember" />
-              <span class="label-text text-xs">Keep me signed in for 30 days</span>
+            <label class="label cursor-pointer justify-start gap-2.5 py-0.5">
+              <input type="checkbox" class="checkbox checkbox-sm checkbox-primary rounded-lg" [(ngModel)]="remember" name="remember" />
+              <span class="label-text text-xs font-medium text-base-content/70">Keep me signed in for 30 days</span>
             </label>
 
-            <button type="submit" class="btn btn-primary btn-block min-h-[44px]" [disabled]="passwordLoading()">
+            <!-- Dash button Secondary -->
+            <button type="submit" class="btn btn-dash btn-secondary btn-block min-h-[46px] rounded-2xl font-black text-sm shadow-xs mt-1" [disabled]="passwordLoading()">
               @if (passwordLoading()) {
                 <span class="loading loading-spinner loading-sm"></span>
                 <span>Signing in…</span>
@@ -61,27 +62,27 @@
             </button>
           </form>
 
-          <div class="divider text-xs">Or</div>
+          <div class="divider text-xs font-semibold text-base-content/40 my-2">Or continue with</div>
 
-          <button type="button" class="btn btn-outline btn-block min-h-[44px]" [disabled]="googleLoading()" (click)="onGoogleLogin()">
+          <!-- Login Google daisyUI -->
+          <button type="button" class="btn btn-outline btn-block min-h-[46px] rounded-2xl font-bold text-sm gap-2.5 border-base-300 bg-base-100 hover:bg-base-200 text-base-content shadow-xs" [disabled]="googleLoading()" (click)="onGoogleLogin()">
             @if (!googleLoading()) {
-              <svg class="h-4 w-4" viewBox="0 0 24 24">
+              <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.85z" fill="#FBBC05"/>
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.85c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
               </svg>
-              <span>Continue with Google</span>
+              <span>Sign in with Google</span>
             } @else {
               <span class="loading loading-spinner loading-sm"></span>
               <span>Connecting to Google...</span>
             }
           </button>
 
-
           <p class="mt-6 text-center text-xs text-base-content/60">
             Don't have an account?
-            <a routerLink="/register" class="link link-primary font-semibold">Sign up for free</a>
+            <a routerLink="/register" class="link link-primary font-bold">Sign up for free</a>
           </p>
       </div>
 

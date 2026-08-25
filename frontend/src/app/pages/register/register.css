@@ -51,8 +51,9 @@
   color: var(--text-primary);
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  gap: 28px;
+  justify-content: center;
+  align-items: center;
+  gap: 24px;
   padding: 32px 24px 40px;
   position: relative;
 }
@@ -82,13 +83,14 @@
 .brand {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   user-select: none;
 }
 .brand-logo {
   width: 32px;
   height: 32px;
-  border-radius: 8px;
+  border-radius: 10px;
   object-fit: cover;
   box-shadow: 0 4px 10px color-mix(in oklab, var(--accent-blue) 25%, transparent);
 }
@@ -115,6 +117,13 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.footer {
+  font-size: 12px;
+  color: var(--text-muted);
+  user-select: none;
+  text-align: center;
 }
 
 /* ---------- Right showcase panel (decorative, adapted từ login.css) ---------- */
