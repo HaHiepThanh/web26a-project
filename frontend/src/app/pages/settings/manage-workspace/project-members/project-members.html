@@ -1,9 +1,23 @@
-@if (!project() || !isMember()) {
+@if (loading()) {
   <div class="mx-auto max-w-[1000px] px-10 pb-16 pt-8">
     <a routerLink="/settings/manage-workspace" class="mb-4 inline-block text-[0.8125rem] text-base-content/50 hover:text-base-content">← Project list</a>
-    <div class="rounded-box border border-dashed border-base-300 bg-base-100 px-4 py-12 text-center text-base-content/50">
-      <p>{{ project() ? "You're not a member of this project." : 'Project not found.' }}</p>
+    <div class="flex items-center justify-center gap-3 rounded-box border border-dashed border-base-300 bg-base-100 px-4 py-12 text-base-content/50">
+      <span class="loading loading-spinner loading-sm"></span>
+      <span>Loading project…</span>
     </div>
+  </div>
+} @else if (!board() || !isMember()) {
+  <div class="mx-auto max-w-[1000px] px-10 pb-16 pt-8">
+    <a routerLink="/settings/manage-workspace" class="mb-4 inline-block text-[0.8125rem] text-base-content/50 hover:text-base-content">← Project list</a>
+    @if (loadError()) {
+      <div class="alert alert-error">
+        <span>{{ loadError() }}</span>
+      </div>
+    } @else {
+      <div class="rounded-box border border-dashed border-base-300 bg-base-100 px-4 py-12 text-center text-base-content/50">
+        <p>{{ board() ? "You're not a member of this project." : 'Project not found.' }}</p>
+      </div>
+    }
   </div>
 } @else {
   <div class="mx-auto max-w-[1000px] px-10 pb-16 pt-8">
@@ -11,10 +25,12 @@
 
     <header class="mb-6 flex items-start justify-between gap-4">
       <div>
-        <h1 class="mb-1 text-[1.4rem] font-bold text-base-content">{{ project()!.name }}</h1>
-        <span class="text-xs uppercase tracking-wide text-base-content/50">{{ project()!.workspaceName }}</span>
+        <h1 class="mb-1 text-[1.4rem] font-bold text-base-content">{{ board()!.name }}</h1>
+        <span class="text-xs uppercase tracking-wide text-base-content/50">{{ workspaceName() }}</span>
       </div>
-      <span class="badge shrink-0" [class]="roleBadge[myRole()!]">Your role: {{ roleLabel(myRole()!) }}</span>
+      <span class="badge shrink-0" [class]="roleBadge(myRole())" title="Your role in this organization">
+        Org role: {{ roleLabel(myRole()) }}
+      </span>
     </header>
 
     <div class="mb-5 flex flex-wrap items-center justify-between gap-4 border-b border-base-300">
@@ -24,27 +40,36 @@
         </button>
         @if (isAdmin()) {
           <button type="button" role="tab" class="tab gap-1.5" [class.tab-active]="activeTab() === 'invitations'" (click)="setTab('invitations')">
-            Pending Invitations
-            @if (project()!.pendingInvitations.length > 0) {
-              <span class="badge badge-ghost badge-sm">{{ project()!.pendingInvitations.length }}</span>
-            }
-          </button>
-          <button type="button" role="tab" class="tab gap-1.5" [class.tab-active]="activeTab() === 'requests'" (click)="setTab('requests')">
-            Join Requests
-            @if (project()!.joinRequests.length > 0) {
-              <span class="badge badge-error badge-sm">{{ project()!.joinRequests.length }}</span>
+            Organization Invitations
+            @if (pendingInvites().length > 0) {
+              <span class="badge badge-ghost badge-sm">{{ pendingInvites().length }}</span>
             }
           </button>
         }
       </div>
 
-      @if (isAdmin()) {
-        <button type="button" class="btn btn-primary btn-sm" (click)="openInviteModal()">+ Invite</button>
+      @if (canEditMembers()) {
+        <button type="button" class="btn btn-primary btn-sm" (click)="openAddModal()">+ Add member</button>
       }
     </div>
 
-    <!-- ======================= TAB: MEMBERS (mọi thành viên) ======================= -->
+    @if (loadError()) {
+      <div class="alert alert-error mb-4">
+        <span>{{ loadError() }}</span>
+      </div>
+    }
+
+    <!-- ======================= TAB: MEMBERS (mọi thành viên xem được) ======================= -->
     @if (activeTab() === 'members') {
+      @if (!isPrivateBoard()) {
+        <div class="alert alert-info mb-4">
+          <span>
+            This board is <b>{{ board()!.visibility }}</b>, so it has no member list of its own — everyone in
+            <b>{{ workspaceName() }}</b> can open it. To change who has access, edit the workspace or the organization.
+          </span>
+        </div>
+      }
+
       <div class="relative mb-4 max-w-[320px]">
         <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-base-content/50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="11" cy="11" r="8"></circle>
@@ -53,106 +78,134 @@
         <input type="text" class="input input-bordered h-9 w-full pl-9" placeholder="Search members..." [value]="searchQuery()" (input)="searchQuery.set($any($event.target).value)" />
       </div>
 
-      <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Member</th>
-              <th>Role</th>
-              <th>Assigned</th>
-              @if (isAdmin()) { <th></th> }
-            </tr>
-          </thead>
-          <tbody>
-            @for (member of filteredMembers(); track trackByUserId($index, member)) {
-              <tr class="align-top">
-                <td>
-                  <div class="flex items-center gap-2.5">
-                    <img [src]="member.avatarUrl" [alt]="member.name" class="h-[34px] w-[34px] shrink-0 rounded-full object-cover" />
-                    <div>
-                      <div class="flex items-center gap-1.5 font-semibold">
-                        {{ member.name }}
-                        @if (member.userId === CURRENT_USER_ID) { <span class="badge badge-primary badge-soft badge-sm">You</span> }
-                      </div>
-                      <div class="text-[0.76rem] text-base-content/50">{{ member.email }}</div>
-                    </div>
-                  </div>
-                </td>
-                <td>
-                  @if (isAdmin()) {
-                    <select
-                      class="select select-bordered select-sm"
-                      [ngModel]="member.role"
-                      (ngModelChange)="onChangeRole(member, $event)"
-                      [disabled]="member.userId === CURRENT_USER_ID && isLastAdmin(member)"
-                    >
-                      @for (role of roleOptions; track role) {
-                        <option [value]="role">{{ roleLabel(role) }}</option>
+      @if (filteredMembers().length === 0) {
+        <div class="rounded-box border border-dashed border-base-300 bg-base-100 px-4 py-7 text-center text-base-content/50">
+          {{ searchQuery() ? 'No members match your search.' : 'This project has no members yet.' }}
+        </div>
+      } @else {
+        <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Member</th>
+                <th>
+                  Organization role
+                  <span class="ml-1 cursor-help text-base-content/40" title="Roles are set per organization, not per project — changing one here changes it on every board.">ⓘ</span>
+                </th>
+                <th>Assigned</th>
+                @if (canEditMembers()) { <th></th> }
+              </tr>
+            </thead>
+            <tbody>
+              @for (member of filteredMembers(); track trackByUserId($index, member)) {
+                <tr class="align-top">
+                  <td>
+                    <div class="flex items-center gap-2.5">
+                      @if (member.avatarUrl) {
+                        <img [src]="member.avatarUrl" [alt]="member.name" class="h-[34px] w-[34px] shrink-0 rounded-full object-cover" />
+                      } @else {
+                        <span
+                          class="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+                          [style.background-color]="avatarColorFor(member.userId)"
+                        >{{ initialsOf(member.name) }}</span>
                       }
-                    </select>
-                  } @else {
-                    <span class="badge badge-sm" [class]="roleBadge[member.role]">{{ roleLabel(member.role) }}</span>
-                  }
-                </td>
-                <td>
-                  @if (member.assignedCards.length === 0) {
-                    <span class="text-sm text-base-content/50">No cards</span>
-                  } @else {
-                    <button type="button" class="inline-flex items-center gap-1 text-sm font-semibold text-primary" (click)="toggleExpandedCards(member.userId)">
-                      {{ member.assignedCards.length }} card{{ member.assignedCards.length > 1 ? 's' : '' }}
-                      <span class="text-[0.7rem] transition-transform" [class.rotate-180]="expandedMemberId() === member.userId">▾</span>
-                    </button>
-                    @if (expandedMemberId() === member.userId) {
-                      <ul class="mt-2 flex flex-col gap-1.5">
-                        @for (card of member.assignedCards; track card.id) {
-                          <li class="flex flex-col gap-0.5 rounded-md bg-base-200 px-2.5 py-1.5">
-                            <span class="text-sm font-semibold">{{ card.title }}</span>
-                            <span class="text-[0.72rem] text-base-content/50">{{ card.listName }}@if (card.dueDate) { · due {{ card.dueDate }} }</span>
-                          </li>
+                      <div>
+                        <div class="flex items-center gap-1.5 font-semibold">
+                          {{ member.name }}
+                          @if (member.userId === currentUserId()) { <span class="badge badge-primary badge-soft badge-sm">You</span> }
+                          @if (member.userId === boardCreatorId()) { <span class="badge badge-ghost badge-sm">Creator</span> }
+                        </div>
+                        <div class="text-[0.76rem] text-base-content/50">{{ member.email }}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    @if (canChangeRole(member)) {
+                      <select
+                        #roleSelect
+                        class="select select-bordered select-sm"
+                        [value]="member.role"
+                        (change)="onChangeRole(member, $any($event.target).value, roleSelect)"
+                        [disabled]="busyUserId() === member.userId"
+                      >
+                        @for (role of assignableRoles; track role) {
+                          <option [value]="role" [selected]="role === member.role">{{ roleLabel(role) }}</option>
                         }
-                      </ul>
-                    }
-                  }
-                </td>
-                @if (isAdmin()) {
-                  <td class="whitespace-nowrap text-right">
-                    @if (member.userId !== CURRENT_USER_ID || !isLastAdmin(member)) {
-                      <button type="button" class="btn btn-ghost btn-sm text-error hover:bg-error/10" (click)="openRemoveConfirm(member)">
-                        {{ member.userId === CURRENT_USER_ID ? 'Leave project' : 'Remove' }}
-                      </button>
+                      </select>
+                    } @else {
+                      <span class="badge badge-sm" [class]="roleBadge(member.role)">{{ roleLabel(member.role) }}</span>
                     }
                   </td>
-                }
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+                  <td>
+                    @if (member.assignedCards.length === 0) {
+                      <span class="text-sm text-base-content/50">No cards</span>
+                    } @else {
+                      <button type="button" class="inline-flex items-center gap-1 text-sm font-semibold text-primary" (click)="toggleExpandedCards(member.userId)">
+                        {{ member.assignedCards.length }} card{{ member.assignedCards.length > 1 ? 's' : '' }}
+                        <span class="text-[0.7rem] transition-transform" [class.rotate-180]="expandedMemberId() === member.userId">▾</span>
+                      </button>
+                      @if (expandedMemberId() === member.userId) {
+                        <ul class="mt-2 flex flex-col gap-1.5">
+                          @for (card of member.assignedCards; track card.id) {
+                            <li class="flex flex-col gap-0.5 rounded-md bg-base-200 px-2.5 py-1.5">
+                              <span class="text-sm font-semibold">{{ card.title }}</span>
+                              <span class="text-[0.72rem] text-base-content/50">{{ card.listName }}@if (card.dueDate) { · due {{ card.dueDate }} }</span>
+                            </li>
+                          }
+                        </ul>
+                      }
+                    }
+                  </td>
+                  @if (canEditMembers()) {
+                    <td class="whitespace-nowrap text-right">
+                      @if (canRemove(member)) {
+                        <button
+                          type="button"
+                          class="btn btn-ghost btn-sm text-error hover:bg-error/10"
+                          [disabled]="savingMembership()"
+                          (click)="openRemoveConfirm(member)"
+                        >
+                          {{ member.userId === currentUserId() ? 'Leave project' : 'Remove' }}
+                        </button>
+                      }
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
     }
 
-    <!-- ======================= TAB: PENDING INVITATIONS (admin only) ======================= -->
+    <!-- ================= TAB: ORGANIZATION INVITATIONS (owner/admin) ================= -->
     @if (activeTab() === 'invitations' && isAdmin()) {
-      @if (project()!.pendingInvitations.length === 0) {
+      <div class="alert alert-info mb-4">
+        <span>
+          Invitations are sent per <b>organization</b>, not per project — accepting one grants access to
+          every board the invitee's role allows. Send new invites from the organization settings.
+        </span>
+      </div>
+
+      @if (pendingInvites().length === 0) {
         <div class="rounded-box border border-dashed border-base-300 bg-base-100 px-4 py-7 text-center text-base-content/50">No pending invitations.</div>
       } @else {
         <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
           <table class="table">
             <thead>
               <tr>
-                <th>Email</th>
-                <th>Intended role</th>
-                <th>Invited by</th>
-                <th>Invited on</th>
+                <th>Invited person</th>
+                <th>Role on accept</th>
+                <th>Sent on</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
-              @for (inv of project()!.pendingInvitations; track trackByInvitationId($index, inv)) {
+              @for (inv of pendingInvites(); track trackByInvitationId($index, inv)) {
                 <tr>
-                  <td>{{ inv.email }}</td>
-                  <td><span class="badge badge-sm" [class]="roleBadge[inv.role]">{{ roleLabel(inv.role) }}</span></td>
-                  <td>{{ inv.invitedBy }}</td>
-                  <td>{{ inv.invitedAt }}</td>
+                  <td>{{ inv.fromUserName }}</td>
+                  <td><span class="badge badge-sm" [class]="roleBadge(inv.role)">{{ roleLabel(inv.role) }}</span></td>
+                  <td>{{ inv.createdAt | date: 'mediumDate' }}</td>
                   <td class="whitespace-nowrap text-right">
                     <button type="button" class="btn btn-ghost btn-sm text-error hover:bg-error/10" (click)="revokeInvitation(inv.id)">Revoke</button>
                   </td>
@@ -163,51 +216,62 @@
         </div>
       }
     }
-
-    <!-- ======================= TAB: JOIN REQUESTS (admin only) ======================= -->
-    @if (activeTab() === 'requests' && isAdmin()) {
-      @if (project()!.joinRequests.length === 0) {
-        <div class="rounded-box border border-dashed border-base-300 bg-base-100 px-4 py-7 text-center text-base-content/50">No pending join requests.</div>
-      } @else {
-        <ul class="flex flex-col gap-2.5">
-          @for (req of project()!.joinRequests; track trackByInvitationId($index, req)) {
-            <li class="flex items-center gap-3 rounded-box border border-base-300 bg-base-100 px-4 py-3.5">
-              <img [src]="req.avatarUrl" [alt]="req.name" class="h-[34px] w-[34px] shrink-0 rounded-full object-cover" />
-              <div class="min-w-0 flex-1">
-                <div class="font-semibold">{{ req.name }}</div>
-                <div class="text-[0.76rem] text-base-content/50">{{ req.email }} · requested on {{ req.requestedAt }}</div>
-              </div>
-              <div class="flex shrink-0 gap-2">
-                <button type="button" class="btn btn-ghost btn-sm" (click)="rejectJoinRequest(req.id)">Decline</button>
-                <button type="button" class="btn btn-primary btn-sm" (click)="approveJoinRequest(req.id)">Approve</button>
-              </div>
-            </li>
-          }
-        </ul>
-      }
-    }
   </div>
 
-  <!-- ============================== MODALS (admin only) ============================== -->
-  @if (showInviteModal()) {
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4" (click)="closeInviteModal()">
-      <div class="w-full max-w-[400px] rounded-box bg-base-100 p-6 shadow-lg" (click)="$event.stopPropagation()">
-        <h3 class="mb-4 text-[1.05rem] font-semibold text-base-content">Invite a member to the project</h3>
-        <div class="mb-4 flex flex-col gap-1.5">
-          <label class="text-sm font-semibold text-base-content/80" for="inviteEmail">Email</label>
-          <input id="inviteEmail" type="email" class="input input-bordered w-full" placeholder="you@company.com" [ngModel]="inviteEmail()" (ngModelChange)="inviteEmail.set($event)" />
+  <!-- ============================== MODALS (owner/admin) ============================== -->
+  @if (showAddModal()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4" (click)="closeAddModal()">
+      <div class="flex max-h-[80vh] w-full max-w-[440px] flex-col rounded-box bg-base-100 p-6 shadow-lg" (click)="$event.stopPropagation()">
+        <h3 class="mb-1 text-[1.05rem] font-semibold text-base-content">Add a member to this project</h3>
+        <p class="mb-4 text-sm text-base-content/60">
+          Only people already in <b>{{ workspaceName() }}</b> can be added — invite them to the organization first if they're not listed.
+        </p>
+
+        <input
+          type="text"
+          class="input input-bordered mb-3 w-full"
+          placeholder="Search people..."
+          [value]="candidateQuery()"
+          (input)="candidateQuery.set($any($event.target).value)"
+        />
+
+        <div class="min-h-0 flex-1 overflow-y-auto">
+          @if (loadingCandidates()) {
+            <div class="flex items-center justify-center gap-2 py-6 text-sm text-base-content/50">
+              <span class="loading loading-spinner loading-xs"></span> Loading people…
+            </div>
+          } @else if (filteredCandidates().length === 0) {
+            <div class="py-6 text-center text-sm text-base-content/50">
+              {{ candidateQuery() ? 'Nobody matches your search.' : 'Everyone in this workspace is already on the project.' }}
+            </div>
+          } @else {
+            <ul class="flex flex-col gap-1.5">
+              @for (candidate of filteredCandidates(); track candidate.userId) {
+                <li class="flex items-center gap-2.5 rounded-md px-2 py-1.5 hover:bg-base-200">
+                  <span
+                    class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[0.7rem] font-bold text-white"
+                    [style.background-color]="avatarColorFor(candidate.userId)"
+                  >{{ initialsOf(candidateName(candidate)) }}</span>
+                  <span class="min-w-0 flex-1">
+                    <span class="block truncate text-sm font-semibold">{{ candidateName(candidate) }}</span>
+                    @if (candidate.user?.email) {
+                      <span class="block truncate text-[0.72rem] text-base-content/50">{{ candidate.user!.email }}</span>
+                    }
+                  </span>
+                  <button
+                    type="button"
+                    class="btn btn-primary btn-xs shrink-0"
+                    [disabled]="savingMembership()"
+                    (click)="addMember(candidate)"
+                  >{{ busyUserId() === candidate.userId ? 'Adding…' : 'Add' }}</button>
+                </li>
+              }
+            </ul>
+          }
         </div>
-        <div class="mb-4 flex flex-col gap-1.5">
-          <label class="text-sm font-semibold text-base-content/80" for="inviteRole">Role</label>
-          <select id="inviteRole" class="select select-bordered w-full" [ngModel]="inviteRole()" (ngModelChange)="inviteRole.set($event)">
-            @for (role of roleOptions; track role) {
-              <option [value]="role">{{ roleLabel(role) }}</option>
-            }
-          </select>
-        </div>
-        <div class="mt-1 flex justify-end gap-2.5">
-          <button type="button" class="btn btn-ghost" (click)="closeInviteModal()">Cancel</button>
-          <button type="button" class="btn btn-primary" (click)="submitInvite()">Send invite</button>
+
+        <div class="mt-4 flex justify-end">
+          <button type="button" class="btn btn-ghost" (click)="closeAddModal()">Done</button>
         </div>
       </div>
     </div>
@@ -216,16 +280,16 @@
   @if (memberToRemove(); as member) {
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4" (click)="closeRemoveConfirm()">
       <div class="w-full max-w-[400px] rounded-box bg-base-100 p-6 shadow-lg" (click)="$event.stopPropagation()">
-        <h3 class="mb-4 text-[1.05rem] font-semibold text-base-content">{{ member.userId === CURRENT_USER_ID ? 'Leave this project?' : 'Remove member?' }}</h3>
+        <h3 class="mb-4 text-[1.05rem] font-semibold text-base-content">{{ member.userId === currentUserId() ? 'Leave this project?' : 'Remove member?' }}</h3>
         <p class="mb-5 text-sm leading-relaxed text-base-content/80">
-          {{ member.userId === CURRENT_USER_ID
-            ? "You'll lose access to this project."
-            : (member.name + ' will be removed from the project and lose access.') }}
+          {{ member.userId === currentUserId()
+            ? "You'll lose access to this board. You stay in the organization."
+            : (member.name + ' will lose access to this board. They stay in the organization.') }}
         </p>
         <div class="mt-1 flex justify-end gap-2.5">
           <button type="button" class="btn btn-ghost" (click)="closeRemoveConfirm()">Cancel</button>
           <button type="button" class="btn btn-error" (click)="confirmRemove()">
-            {{ member.userId === CURRENT_USER_ID ? 'Leave project' : 'Remove member' }}
+            {{ member.userId === currentUserId() ? 'Leave project' : 'Remove member' }}
           </button>
         </div>
       </div>
