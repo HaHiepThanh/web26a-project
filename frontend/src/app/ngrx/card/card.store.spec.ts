@@ -141,6 +141,43 @@ describe('CardStore', () => {
       await store.loadCards('board-1');
     });
 
+    // ---- Xoá trường: `null` phải BAY ĐI, không được im lặng bị bỏ qua --------
+    //
+    // Bản trước dùng `undefined` cho "người dùng vừa xoá trường này", nhưng
+    // `undefined` bị JSON bỏ khỏi body và backend chỉ ghi khi `!== undefined`
+    // — nên lệnh xoá không bao giờ tới nơi. Giao diện vẫn hiện đã xoá, F5 thì
+    // giá trị cũ quay lại.
+    it.each([
+      ['assigneeId', { assigneeId: null }],
+      ['dueDate', { dueDate: null }],
+      ['description', { description: null }],
+    ])('gửi null cho %s để backend xoá cột đó', async (truong, changes) => {
+      api.patch.mockResolvedValue(makeApiCard({ id: 'a', listId: 'l1' }));
+
+      await store.updateCard('a', changes);
+
+      expect(api.patch).toHaveBeenCalledWith('/cards/a', { [truong]: null });
+    });
+
+    it('xoá MỘT MÌNH một trường vẫn gọi API (truoc day patch rong nen bo qua)', async () => {
+      api.patch.mockResolvedValue(makeApiCard({ id: 'a', listId: 'l1' }));
+
+      await store.updateCard('a', { assigneeId: null });
+
+      expect(api.patch).toHaveBeenCalledTimes(1);
+    });
+
+    it('null cua backend doi thanh undefined o local, khong sinh dang rong thu hai', async () => {
+      api.patch.mockResolvedValue(makeApiCard({ id: 'a', listId: 'l1' }));
+
+      await store.updateCard('a', { assigneeId: null, dueDate: null, description: null });
+
+      const the = store.entityMap()['a'];
+      expect(the.assigneeId).toBeUndefined();
+      expect(the.dueDate).toBeUndefined();
+      expect(the.description).toBeUndefined();
+    });
+
     it('đường thành công: sửa đúng thẻ, không đụng thẻ khác', async () => {
       api.patch.mockResolvedValue(makeApiCard({ id: 'a', listId: 'l1', title: 'A sửa' }));
 
