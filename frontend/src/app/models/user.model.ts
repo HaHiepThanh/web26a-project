@@ -7,7 +7,12 @@ export interface User {
   username?: string; // tên đăng nhập
   phone?: string; // số điện thoại
   jobTitle?: string; // chức vụ/tiêu đề công việc
-  password?: string; // mật khẩu tài khoản
+  // KHÔNG có `password` ở đây. Firebase giữ mật khẩu (băm scrypt + salt riêng
+  // từng user), ứng dụng không bao giờ cầm bản rõ. Trường này từng tồn tại từ
+  // thời dữ liệu giả và đã gây một lỗi thật: trang Cài đặt so mật khẩu hiện tại
+  // với nó (tài khoản thật luôn undefined nên phép so bị bỏ qua), rồi ghi mật
+  // khẩu mới vào đây — tức vào localStorage dưới dạng bản rõ — và báo "đổi
+  // thành công" trong khi Firebase không hề đổi.
   avatarUrl?: string; // ảnh đại diện
 }
 

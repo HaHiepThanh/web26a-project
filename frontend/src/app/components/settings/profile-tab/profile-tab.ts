@@ -51,13 +51,17 @@ export class ProfileTab {
   readonly currentUser = input<User | null>(null);
 
   readonly saveProfile = output<User>();
-  readonly changePassword = output<{ currentPassword: string; newPassword: string }>();
+  // Không còn output `changePassword`: việc đổi mật khẩu gọi thẳng AuthService
+  // ngay trong component này (như `updateProfile` ở dưới), vì chỉ ở đây mới biết
+  // kết quả để quyết định có được xoá form hay không.
   readonly flashMessage = output<{ message: string; type?: 'success' | 'error' | 'info' }>();
 
   readonly initialsOf = initialsOf;
   readonly avatarPreview = signal<string | null>(null);
   /** Đang lưu avatar (upload/gỡ) — khoá 2 nút lại, tránh bấm chồng trong lúc chờ. */
   readonly savingAvatar = signal(false);
+  /** Dang goi Firebase doi mat khau — khoa nut, tranh bam chong. */
+  readonly savingPassword = signal(false);
   readonly copiedUuid = signal(false);
 
   readonly profileForm: FormGroup = this.fb.group({
@@ -218,14 +222,52 @@ export class ProfileTab {
     }
   }
 
-  onSubmitPassword(): void {
-    if (this.passwordForm.invalid) {
+  /**
+   * Đổi mật khẩu — GỌI FIREBASE THẬT rồi mới báo kết quả.
+   *
+   * Gọi thẳng `AuthService` như `updateProfile` ở trên, thay vì bắn output cho
+   * trang cha: có kết quả ngay tại chỗ nên mới biết lúc nào được phép xoá form.
+   * Bản trước xoá form ngay khi bấm — nhập sai mật khẩu hiện tại là mất trắng
+   * cả ba ô, phải gõ lại từ đầu.
+   */
+  async onSubmitPassword(): Promise<void> {
+    if (this.passwordForm.invalid || this.savingPassword()) {
       this.passwordForm.markAllAsTouched();
       return;
     }
 
     const { currentPassword, newPassword } = this.passwordForm.getRawValue();
-    this.changePassword.emit({ currentPassword, newPassword });
-    this.passwordForm.reset();
+    this.savingPassword.set(true);
+    try {
+      await this.authService.changePassword(currentPassword, newPassword);
+      this.passwordForm.reset();
+      this.flashMessage.emit({ message: 'Password changed. Use it the next time you sign in.', type: 'success' });
+    } catch (err) {
+      this.flashMessage.emit({ message: this.describePasswordError(err), type: 'error' });
+    } finally {
+      this.savingPassword.set(false);
+    }
+  }
+
+  /** Mã lỗi của Firebase dịch sang câu người dùng hiểu và biết phải làm gì. */
+  private describePasswordError(err: unknown): string {
+    const code = (err as { code?: string })?.code ?? '';
+    switch (code) {
+      // Firebase gộp "sai mật khẩu" và "không có tài khoản" vào cùng một mã để
+      // người ngoài không dò được email nào có thật.
+      case 'auth/wrong-password':
+      case 'auth/invalid-credential':
+        return 'Your current password is incorrect.';
+      case 'auth/weak-password':
+        return 'Firebase rejected this password as too weak.';
+      case 'auth/too-many-requests':
+        return 'Too many attempts. Please wait a few minutes and try again.';
+      case 'auth/requires-recent-login':
+        return 'For your security, please sign out and sign in again, then change your password.';
+      case 'auth/network-request-failed':
+        return "Couldn't reach the server. Please check your connection.";
+      default:
+        return (err as { message?: string })?.message ?? 'Failed to change the password.';
+    }
   }
 }

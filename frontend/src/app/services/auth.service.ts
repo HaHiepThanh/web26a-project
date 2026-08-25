@@ -1,10 +1,13 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import {
+  EmailAuthProvider,
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
+  reauthenticateWithCredential,
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
+  updatePassword,
   updateProfile,
   onAuthStateChanged,
 } from 'firebase/auth';
@@ -225,6 +228,29 @@ export class AuthService {
     if (!this.firebase?.auth) throw new Error('Firebase is not configured.');
     await signInWithEmailAndPassword(this.firebase.auth, email.trim(), password);
     return this.syncFromBackend();
+  }
+
+  /**
+   * Đổi mật khẩu THẬT trên Firebase.
+   *
+   * ⚠️ Trước đây trang Cài đặt không hề gọi tới đây — nó so mật khẩu hiện tại
+   *    với `User.password` (một trường còn sót từ thời dữ liệu giả, tài khoản
+   *    thật luôn `undefined` nên phép so bị bỏ qua sạch), rồi ghi mật khẩu mới
+   *    vào localStorage và báo "thành công". Mật khẩu trên Firebase không đổi
+   *    một chữ: đăng xuất rồi vào lại thì chỉ mật khẩu CŨ mới dùng được.
+   *
+   * `reauthenticateWithCredential` làm hai việc cùng lúc, cả hai đều cần:
+   *   1. Kiểm mật khẩu hiện tại có đúng không — việc mà bản cũ chưa từng làm.
+   *   2. Làm mới phiên đăng nhập. `updatePassword` từ chối với
+   *      `auth/requires-recent-login` nếu người dùng đăng nhập đã lâu.
+   */
+  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    const user = this.firebase?.auth?.currentUser;
+    if (!user?.email) throw new Error('You need to sign in again before changing your password.');
+
+    const credential = EmailAuthProvider.credential(user.email, currentPassword);
+    await reauthenticateWithCredential(user, credential);
+    await updatePassword(user, newPassword);
   }
 
   /**

@@ -56,7 +56,7 @@
     <!-- 1. TAB TRANG CÁ NHÂN -->
     @case ('profile') {
     <app-profile-tab [currentUser]="currentUser()" (saveProfile)="onSaveProfile($event)"
-      (changePassword)="onChangePassword($event)" (flashMessage)="flash($event.message, $event.type ?? 'success')">
+      (flashMessage)="flash($event.message, $event.type ?? 'success')">
     </app-profile-tab>
     }
 
