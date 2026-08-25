@@ -1,15 +1,15 @@
 <section class="mx-auto max-w-[840px] space-y-6">
   <header>
-    <h2 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Profile</h2>
-    <p class="mt-1 text-sm text-slate-500">Update your avatar, account information, and password.</p>
+    <h2 class="text-2xl font-black text-base-content tracking-tight">Profile</h2>
+    <p class="mt-1 text-sm text-base-content/60">Update your avatar, account information, and password.</p>
   </header>
 
   <!-- 1. Ảnh đại diện LỚN & UUID -->
-  <div class="rounded-3xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 shadow-xs">
-    <h3 class="mb-4 text-sm font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Avatar & Identity</h3>
+  <div class="rounded-3xl border-2 border-base-300 bg-base-100 p-6 shadow-xs">
+    <h3 class="mb-4 text-sm font-black uppercase tracking-wider text-base-content/80">Avatar & Identity</h3>
     <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6">
       <!-- Large Avatar -->
-      <div class="relative flex h-24 w-24 sm:h-28 sm:w-28 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white dark:border-slate-800 shadow-md bg-gradient-to-br from-primary to-purple-600 text-3xl font-black text-white">
+      <div class="relative flex h-24 w-24 sm:h-28 sm:w-28 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-base-100 shadow-md bg-gradient-to-br from-primary to-secondary text-3xl font-black text-white">
         @if (avatarPreview()) {
           <img [src]="avatarPreview()" alt="Avatar" class="h-full w-full object-cover" />
         } @else {
@@ -20,27 +20,27 @@
       <!-- Controls & UUID -->
       <div class="flex-1 min-w-0 space-y-3">
         <div class="flex flex-wrap items-center gap-2.5">
-          <label class="btn btn-primary btn-sm rounded-xl font-bold cursor-pointer gap-1.5 shadow-xs" [class.btn-disabled]="savingAvatar()">
+          <label class="btn btn-primary btn-sm font-bold cursor-pointer gap-1.5 shadow-xs" [class.btn-disabled]="savingAvatar()">
             @if (savingAvatar()) { <span class="loading loading-spinner loading-xs"></span> } @else { <svg lucideCamera class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg> }
             <span>Upload photo</span>
             <input type="file" accept="image/*" class="sr-only" [disabled]="savingAvatar()" (change)="onUploadAvatar($event)" />
           </label>
           @if (avatarPreview()) {
-          <button type="button" class="btn btn-ghost btn-sm rounded-xl font-bold text-rose-600 hover:bg-rose-50" [disabled]="savingAvatar()" (click)="onRemoveAvatar()">
+          <button type="button" class="btn btn-ghost btn-sm font-bold text-error hover:bg-error/10" [disabled]="savingAvatar()" (click)="onRemoveAvatar()">
             Remove photo
           </button>
           }
         </div>
-        <p class="text-xs text-slate-400">JPG, PNG, or GIF. Max 5MB.</p>
+        <p class="text-xs text-base-content/50">JPG, PNG, or GIF. Max 5MB.</p>
 
         <!-- UUID Box with 1-click Copy -->
-        <div class="flex items-center gap-2 rounded-2xl border-2 border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-2.5">
-          <span class="flex items-center gap-1 text-xs font-black text-slate-500 shrink-0">
+        <div class="flex items-center gap-2 rounded-2xl border-2 border-base-300 bg-base-200 p-2.5">
+          <span class="flex items-center gap-1 text-xs font-black text-base-content/60 shrink-0">
             <svg lucideKeyRound class="h-3 w-3" [strokeWidth]="2.4"></svg> UUID:</span>
           <code class="font-mono text-xs text-primary font-bold truncate flex-1 select-all">{{ currentUser()?.id || 'No UUID assigned' }}</code>
           <button
             type="button"
-            class="btn btn-xs rounded-xl font-bold gap-1 shrink-0"
+            class="btn btn-xs font-bold gap-1 shrink-0"
             [class.btn-success]="copiedUuid()"
             [class.btn-outline]="!copiedUuid()"
             (click)="copyUuid()">
@@ -57,52 +57,52 @@
 
   <!-- 2. Thông tin cơ bản của User khi đăng ký -->
   <form [formGroup]="profileForm" (ngSubmit)="onSubmitProfile()" class="space-y-6">
-    <div class="rounded-3xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 shadow-xs space-y-5">
-      <h3 class="text-sm font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Account information</h3>
+    <div class="rounded-3xl border-2 border-base-300 bg-base-100 p-6 shadow-xs space-y-5">
+      <h3 class="text-sm font-black uppercase tracking-wider text-base-content/80">Account information</h3>
 
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <!-- Họ và tên -->
         <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-bold text-slate-700 dark:text-slate-300" for="fullName">Full name *</label>
-          <input id="fullName" type="text" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700 text-[12px]" formControlName="fullName" placeholder="e.g. Jane Doe" />
+          <label class="text-xs font-bold text-base-content/80" for="fullName">Full name *</label>
+          <input id="fullName" type="text" class="input input-sm rounded-xl w-full border-base-300 font-semibold text-[12px]" formControlName="fullName" placeholder="e.g. Jane Doe" />
           @if (profileForm.get('fullName')?.invalid && profileForm.get('fullName')?.touched) {
-            <span class="text-2xs font-bold text-rose-500">Please enter your full name (at least 2 characters).</span>
+            <span class="text-2xs font-bold text-error">Please enter your full name (at least 2 characters).</span>
           }
         </div>
 
         <!-- Username -->
         <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-bold text-slate-700 dark:text-slate-300" for="username">Username *</label>
-          <input id="username" type="text" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700 text-[12px]" formControlName="username" placeholder="e.g. janedoe" />
+          <label class="text-xs font-bold text-base-content/80" for="username">Username *</label>
+          <input id="username" type="text" class="input input-sm rounded-xl w-full border-base-300 font-semibold text-[12px]" formControlName="username" placeholder="e.g. janedoe" />
           @if (profileForm.get('username')?.invalid && profileForm.get('username')?.touched) {
-            <span class="text-2xs font-bold text-rose-500">Username must be 3-25 characters, no diacritics.</span>
+            <span class="text-2xs font-bold text-error">Username must be 3-25 characters, no diacritics.</span>
           }
         </div>
 
         <!-- Email -->
         <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-bold text-slate-700 dark:text-slate-300" for="email">Email address</label>
-          <input id="email" type="email" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700 text-[12px]" formControlName="email" />
+          <label class="text-xs font-bold text-base-content/80" for="email">Email address</label>
+          <input id="email" type="email" class="input input-sm rounded-xl w-full border-base-300 font-semibold text-[12px]" formControlName="email" />
         </div>
 
         <!-- Phone -->
         <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-bold text-slate-700 dark:text-slate-300" for="phone">Phone number</label>
-          <input id="phone" type="tel" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700 text-[12px]" formControlName="phone" placeholder="e.g. 0912345678" />
+          <label class="text-xs font-bold text-base-content/80" for="phone">Phone number</label>
+          <input id="phone" type="tel" class="input input-sm rounded-xl w-full border-base-300 font-semibold text-[12px]" formControlName="phone" placeholder="e.g. 0912345678" />
           @if (profileForm.get('phone')?.invalid && profileForm.get('phone')?.touched) {
-            <span class="text-2xs font-bold text-rose-500">Invalid phone number format.</span>
+            <span class="text-2xs font-bold text-error">Invalid phone number format.</span>
           }
         </div>
 
         <!-- Job Title -->
         <div class="flex flex-col gap-1.5 sm:col-span-2">
-          <label class="text-xs font-bold text-slate-700 dark:text-slate-300" for="jobTitle">Job title</label>
-          <input id="jobTitle" type="text" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700 text-[12px]" formControlName="jobTitle" placeholder="e.g. Lead Software Engineer" />
+          <label class="text-xs font-bold text-base-content/80" for="jobTitle">Job title</label>
+          <input id="jobTitle" type="text" class="input input-sm rounded-xl w-full border-base-300 font-semibold text-[12px]" formControlName="jobTitle" placeholder="e.g. Lead Software Engineer" />
         </div>
       </div>
 
       <div class="flex justify-end pt-2">
-        <button type="submit" class="btn btn-primary btn-sm gap-1.5 rounded-xl px-5 font-black text-[12px] shadow-xs">
+        <button type="submit" class="btn btn-primary btn-sm gap-1.5 px-5 font-black text-[12px] shadow-xs">
           <svg lucideSave class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg> Save profile
         </button>
       </div>
@@ -110,50 +110,50 @@
   </form>
 
   <!-- 3. Đổi mật khẩu (Xác thực mật khẩu cũ) -->
-  <div class="rounded-3xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 shadow-xs space-y-4">
+  <div class="rounded-3xl border-2 border-base-300 bg-base-100 p-6 shadow-xs space-y-4">
     <div>
-      <h3 class="text-sm font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Change password</h3>
-      <p class="text-xs text-slate-500 mt-0.5">Verify your current password to set a new one.</p>
+      <h3 class="text-sm font-black uppercase tracking-wider text-base-content/80">Change password</h3>
+      <p class="text-xs text-base-content/60 mt-0.5">Verify your current password to set a new one.</p>
     </div>
 
     <form [formGroup]="passwordForm" (ngSubmit)="onSubmitPassword()" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <!-- Mật khẩu hiện tại (Cũ) -->
       <div class="flex flex-col gap-1.5 sm:col-span-2">
-        <label class="text-xs font-bold text-slate-700 dark:text-slate-300" for="currentPassword">Current password *</label>
-        <input id="currentPassword" type="password" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700 text-[12px]" formControlName="currentPassword" placeholder="Enter your current password..." />
+        <label class="text-xs font-bold text-base-content/80" for="currentPassword">Current password *</label>
+        <input id="currentPassword" type="password" class="input input-sm rounded-xl w-full border-base-300 font-semibold text-[12px]" formControlName="currentPassword" placeholder="Enter your current password..." />
         @if (passwordForm.get('currentPassword')?.invalid && passwordForm.get('currentPassword')?.touched) {
-          <span class="text-2xs font-bold text-rose-500">Please enter your current password to verify.</span>
+          <span class="text-2xs font-bold text-error">Please enter your current password to verify.</span>
         }
       </div>
 
       <!-- Mật khẩu mới -->
       <div class="flex flex-col gap-1.5">
-        <label class="text-xs font-bold text-slate-700 dark:text-slate-300" for="newPassword">New password *</label>
-        <input id="newPassword" type="password" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700 text-[12px]" formControlName="newPassword" placeholder="At least 6 characters..." />
+        <label class="text-xs font-bold text-base-content/80" for="newPassword">New password *</label>
+        <input id="newPassword" type="password" class="input input-sm rounded-xl w-full border-base-300 font-semibold text-[12px]" formControlName="newPassword" placeholder="At least 6 characters..." />
         @if (passwordForm.get('newPassword')?.value) {
           <div class="mt-1 flex items-center gap-2">
-            <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+            <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-base-300">
               <div class="h-full rounded-full transition-all duration-300" [style.width.%]="passwordStrength.percent" [style.background]="passwordStrength.colorVar"></div>
             </div>
             <span class="text-2xs font-black" [style.color]="passwordStrength.colorVar">{{ passwordStrength.label }}</span>
           </div>
         }
         @if (passwordForm.get('newPassword')?.invalid && passwordForm.get('newPassword')?.touched) {
-          <span class="text-2xs font-bold text-rose-500">New password must be at least 6 characters.</span>
+          <span class="text-2xs font-bold text-error">New password must be at least 6 characters.</span>
         }
       </div>
 
       <!-- Xác nhận mật khẩu mới -->
       <div class="flex flex-col gap-1.5">
-        <label class="text-xs font-bold text-slate-700 dark:text-slate-300" for="confirmPassword">Confirm new password *</label>
-        <input id="confirmPassword" type="password" class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700 text-[12px]" formControlName="confirmPassword" placeholder="Re-enter your new password..." />
+        <label class="text-xs font-bold text-base-content/80" for="confirmPassword">Confirm new password *</label>
+        <input id="confirmPassword" type="password" class="input input-sm rounded-xl w-full border-base-300 font-semibold text-[12px]" formControlName="confirmPassword" placeholder="Re-enter your new password..." />
         @if (passwordForm.hasError('passwordMismatch') && passwordForm.get('confirmPassword')?.touched) {
-          <span class="text-2xs font-bold text-rose-500">Passwords do not match.</span>
+          <span class="text-2xs font-bold text-error">Passwords do not match.</span>
         }
       </div>
 
       <div class="sm:col-span-2 flex justify-end pt-1">
-        <button type="submit" class="btn btn-primary btn-sm gap-1.5 rounded-xl px-5 font-black text-[12px] shadow-xs" [disabled]="passwordForm.invalid">
+        <button type="submit" class="btn btn-primary btn-sm gap-1.5 px-5 font-black text-[12px] shadow-xs" [disabled]="passwordForm.invalid">
           <svg lucideLock class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg> Update password
         </button>
       </div>

@@ -1,7 +1,7 @@
 @if (isOpen()) {
 @if (org(); as o) {
-<div class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-[2px]" (click)="close.emit()">
-  <div class="flex max-h-[88vh] w-full max-w-[520px] flex-col overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-2xl"
+<div class="modal modal-open z-[1000] p-4 backdrop-blur-[2px]" (click)="close.emit()">
+  <div class="modal-box flex max-h-[88vh] w-full max-w-[520px] flex-col overflow-hidden border border-base-300 p-0"
     (click)="$event.stopPropagation()">
 
     <!-- Header -->
@@ -30,10 +30,10 @@
       <section class="mb-5">
         <h4 class="mb-2 text-2xs font-black uppercase tracking-wide text-base-content/45">Organization info</h4>
         <div class="flex items-center gap-2">
-          <input type="text" maxlength="50" class="input input-bordered input-sm w-full rounded-xl border-2 font-semibold"
+          <input type="text" maxlength="50" class="input input-sm w-full rounded-xl font-semibold"
             placeholder="Organization name (max 50 characters)..." [ngModel]="nameInput()" (ngModelChange)="nameInput.set($event)"
             (keydown.enter)="onSaveName()" />
-          <button type="button" class="btn btn-primary btn-sm shrink-0 gap-1 rounded-xl" [disabled]="!nameDirty()"
+          <button type="button" class="btn btn-primary btn-sm shrink-0 gap-1" [disabled]="!nameDirty()"
             (click)="onSaveName()">
             <svg lucideCheck class="h-3.5 w-3.5" [strokeWidth]="3"></svg> Save
           </button>
@@ -65,7 +65,7 @@
 
         <div class="relative">
           <svg lucideSearch class="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-base-content/35" [strokeWidth]="2.2"></svg>
-          <input type="text" class="input input-bordered input-sm w-full rounded-xl border-2 pl-9 font-semibold"
+          <input type="text" class="input input-sm w-full rounded-xl pl-9 font-semibold"
             placeholder="Search by name, email, or paste a user ID..." [ngModel]="searchInput()"
             (ngModelChange)="onSearchChange($event)" (keydown.enter)="onInviteRaw()" />
           @if (searching()) {
@@ -79,7 +79,7 @@
         @if (searchInput().trim()) {
         <div class="mt-1.5 overflow-hidden rounded-xl border border-base-300 bg-base-200/40">
           @for (u of searchResults(); track u.id) {
-          <button type="button" class="flex w-full items-center gap-2.5 px-2.5 py-2 text-left transition-colors hover:bg-base-200"
+          <button type="button" class="btn btn-ghost h-auto min-h-0 w-full justify-start gap-2.5 rounded-none px-2.5 py-2 text-left font-normal normal-case"
             (click)="onInvite(u)">
             <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-3xs font-black text-white"
               [style.background-color]="avatarBgFor(u.id)">{{ initialsOf(u.displayName || u.email) }}</span>
@@ -96,7 +96,7 @@
             @if (searching()) {
             <p class="px-2.5 py-2.5 text-2xs font-semibold text-base-content/50">Searching...</p>
             } @else {
-            <button type="button" class="flex w-full items-center gap-2 px-2.5 py-2.5 text-left transition-colors hover:bg-base-200"
+            <button type="button" class="btn btn-ghost h-auto min-h-0 w-full justify-start gap-2 rounded-none px-2.5 py-2.5 text-left font-normal normal-case"
               (click)="onInviteRaw()">
               <svg lucideUserPlus class="h-3.5 w-3.5 shrink-0 text-primary" [strokeWidth]="2.4"></svg>
               <span class="min-w-0 flex-1 text-2xs font-semibold text-base-content/70">
@@ -155,7 +155,7 @@
               [ngModel]="linkMaxUses()" (ngModelChange)="linkMaxUses.set($event)" name="linkMaxUses" />
           </label>
 
-          <button type="button" class="btn btn-primary btn-sm rounded-lg gap-1.5 px-3 text-xs font-bold"
+          <button type="button" class="btn btn-primary btn-sm gap-1.5 px-3 text-xs font-bold"
             [disabled]="linksLoading()" (click)="onCreateLink()">
             @if (linksLoading()) {
             <span class="loading loading-spinner loading-xs"></span>
@@ -172,7 +172,7 @@
           <input #freshInput type="text" readonly [value]="fullLink(fresh.token)"
             class="input input-sm grow rounded-lg font-mono text-2xs"
             (focus)="freshInput.select()" />
-          <button type="button" class="btn btn-primary btn-sm shrink-0 rounded-lg gap-1 px-2.5 text-2xs font-bold"
+          <button type="button" class="btn btn-primary btn-sm shrink-0 gap-1 px-2.5 text-2xs font-bold"
             (click)="onCopy(fresh, freshInput)">
             @if (copiedId() === fresh.id) {
             <svg lucideCheck class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg> Copied
@@ -199,7 +199,7 @@
               {{ usageLabel(link) }}
             </span>
 
-            <button type="button" class="btn btn-ghost btn-xs shrink-0 rounded-lg px-1.5"
+            <button type="button" class="btn btn-ghost btn-xs shrink-0 px-1.5"
               [title]="'Copy this link'" (click)="onCopy(link, rowInput)">
               @if (copiedId() === link.id) {
               <svg lucideCheck class="h-3.5 w-3.5 text-success" [strokeWidth]="2.4"></svg>
@@ -208,7 +208,7 @@
               }
             </button>
 
-            <button type="button" class="btn btn-ghost btn-xs shrink-0 rounded-lg px-1.5 text-error"
+            <button type="button" class="btn btn-ghost btn-xs shrink-0 px-1.5 text-error"
               title="Revoke this link" [disabled]="revokingIds().has(link.id)"
               (click)="onRevokeLink(link.id)">
               @if (revokingIds().has(link.id)) {
@@ -246,7 +246,7 @@
               </span>
             </span>
             @if (isOwner()) {
-            <button type="button" class="btn btn-ghost btn-xs shrink-0 rounded-lg text-2xs font-bold text-error"
+            <button type="button" class="btn btn-ghost btn-xs shrink-0 text-2xs font-bold text-error"
               (click)="cancelInvite.emit(inv.id)">Cancel</button>
             }
           </div>
@@ -277,14 +277,14 @@
             } @else {
               <!-- Chỉ owner đổi được quyền; người khác chỉ thấy nhãn. -->
               @if (isOwner()) {
-              <select class="select select-bordered select-xs shrink-0 rounded-lg text-3xs font-bold"
+              <select class="select select-xs shrink-0 rounded-lg text-3xs font-bold"
                 title="Change this member's role"
                 [value]="mem.role"
                 (change)="onChangeRole(mem.user.id, $any($event.target).value)">
                 <option value="member">Member</option>
                 <option value="admin">Admin</option>
               </select>
-              <button type="button" class="btn btn-ghost btn-xs shrink-0 gap-1 rounded-lg font-bold text-error"
+              <button type="button" class="btn btn-ghost btn-xs shrink-0 gap-1 font-bold text-error"
                 title="Remove from organization" (click)="onRemove(mem.user.id)">
                 <svg lucideTrash2 class="h-3 w-3" [strokeWidth]="2.2"></svg> Remove
               </button>
@@ -311,7 +311,7 @@
 
     <!-- Footer -->
     <div class="flex shrink-0 justify-end border-t border-base-200 px-5 py-3">
-      <button type="button" class="btn btn-ghost btn-sm rounded-xl font-bold" (click)="close.emit()">Close</button>
+      <button type="button" class="btn btn-ghost btn-sm font-bold" (click)="close.emit()">Close</button>
     </div>
   </div>
 </div>

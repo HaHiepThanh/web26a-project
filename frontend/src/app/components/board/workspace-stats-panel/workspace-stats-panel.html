@@ -77,18 +77,18 @@
         <h2 class="text-xs font-bold uppercase tracking-wide text-base-content/60">Activity log</h2>
         <div class="flex flex-wrap items-center gap-2">
           <input
-            class="input input-bordered input-sm w-48"
+            class="input input-sm w-48"
             type="text"
             placeholder="Search by task name, keyword..."
             [ngModel]="logSearch()"
             (ngModelChange)="logSearch.set($event)"
           />
-          <select class="select select-bordered select-sm" [ngModel]="actionFilter()" (ngModelChange)="actionFilter.set($event)">
+          <select class="select select-sm" [ngModel]="actionFilter()" (ngModelChange)="actionFilter.set($event)">
             @for (group of actionGroups; track trackByGroup($index, group)) {
               <option [value]="group">{{ actionGroupLabel[group] }}</option>
             }
           </select>
-          <select class="select select-bordered select-sm" [ngModel]="selectedMemberId()" (ngModelChange)="selectedMemberId.set($event)">
+          <select class="select select-sm" [ngModel]="selectedMemberId()" (ngModelChange)="selectedMemberId.set($event)">
             <option value="all">All members</option>
             @for (m of memberWorkload(); track trackByUserId($index, m)) {
               <option [value]="m.userId">{{ m.name }}</option>

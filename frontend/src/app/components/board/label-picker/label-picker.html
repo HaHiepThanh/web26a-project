@@ -16,7 +16,7 @@
 </div>
 
 @if (!showCreateForm()) {
-  <button type="button" class="flex items-center gap-1 rounded-md px-1 py-1.5 text-2xs font-semibold text-base-content/80 hover:bg-base-200 hover:text-base-content" (click)="openCreateForm()">
+  <button type="button" class="btn btn-ghost btn-xs gap-1 px-1 text-2xs font-semibold" (click)="openCreateForm()">
     <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
     New label
   </button>
@@ -24,7 +24,7 @@
   <div class="rounded-md border border-dashed border-base-300 p-2">
     <input
       type="text"
-      class="input input-bordered input-sm mb-2 w-full"
+      class="input input-sm mb-2 w-full"
       placeholder="Label name..."
       [ngModel]="newName()"
       (ngModelChange)="newName.set($event)"
@@ -32,7 +32,7 @@
     />
     <div class="mb-2 flex flex-wrap gap-1.5">
       @for (c of palette; track c) {
-        <button type="button" class="h-5 w-5 rounded-full border-2 border-transparent" [style.background]="c" [class.border-base-content]="newColor() === c" (click)="newColor.set(c)"></button>
+        <button type="button" class="btn btn-circle btn-xs h-5 min-h-0 w-5 border-2 border-transparent p-0" [style.background]="c" [class.border-base-content]="newColor() === c" (click)="newColor.set(c)"></button>
       }
     </div>
     @if (isDuplicateColor()) {

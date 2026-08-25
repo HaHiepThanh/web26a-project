@@ -1,11 +1,11 @@
 <section class="mx-auto max-w-[920px] space-y-6">
   <header class="flex flex-wrap items-center justify-between gap-3">
     <div>
-      <h2 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Manage Organization</h2>
-      <p class="mt-1 text-sm text-slate-500">Switch organizations, view members, and invite new people by UUID.</p>
+      <h2 class="text-2xl font-black text-base-content tracking-tight">Manage Organization</h2>
+      <p class="mt-1 text-sm text-base-content/60">Switch organizations, view members, and invite new people by UUID.</p>
     </div>
 
-    <button type="button" class="btn btn-primary btn-sm rounded-xl px-4 font-black shadow-xs gap-1.5"
+    <button type="button" class="btn btn-primary btn-sm px-4 font-black shadow-xs gap-1.5"
       (click)="showCreateOrgModal.set(true)">
       <svg lucidePlus class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg>
       <span>New organization</span>
@@ -16,18 +16,12 @@
   @if (organizations().length > 0) {
   <div class="flex items-center gap-2 overflow-x-auto pb-1 max-w-full">
     @for (org of organizations(); track org.id) {
-    <button type="button"
-      class="flex items-center gap-2 rounded-2xl px-3.5 py-2 text-xs font-bold transition-all shrink-0 border-2 max-w-[220px]"
-      [class.bg-primary]="activeOrgId() === org.id" [class.text-white]="activeOrgId() === org.id"
-      [class.border-primary]="activeOrgId() === org.id" [class.bg-white]="activeOrgId() !== org.id"
-      [class.dark:bg-slate-900]="activeOrgId() !== org.id" [class.border-slate-300]="activeOrgId() !== org.id"
-      [class.dark:border-slate-700]="activeOrgId() !== org.id" [class.hover:bg-slate-100]="activeOrgId() !== org.id"
+    <button type="button" class="btn btn-sm max-w-[220px] shrink-0 gap-2 text-xs font-bold"
+      [class.btn-primary]="activeOrgId() === org.id"
+      [class.btn-outline]="activeOrgId() !== org.id"
       (click)="switchOrg.emit(org.id)">
       <span class="font-black truncate min-w-0 flex-1 text-left">{{ org.name }}</span>
-      <span class="badge badge-xs font-bold ml-1 shrink-0" [class.bg-white/20]="activeOrgId() === org.id"
-        [class.text-white]="activeOrgId() === org.id">
-        {{ org.memberIds.length }}
-      </span>
+      <span class="badge badge-xs badge-ghost ml-1 shrink-0 font-bold">{{ org.memberIds.length }}</span>
     </button>
     }
   </div>
@@ -36,14 +30,14 @@
   <!-- Selected Organization Detail & Member Roster -->
   @if (activeOrg(); as curOrg) {
   <div
-    class="rounded-3xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 shadow-xs space-y-5">
+    class="rounded-3xl border-2 border-base-300 bg-base-100 p-6 shadow-xs space-y-5">
     <!-- Organization Overview -->
-    <div class="flex items-start justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800 min-w-0">
+    <div class="flex items-start justify-between gap-4 pb-4 border-b border-base-300 min-w-0">
       <div class="flex items-start gap-3.5 min-w-0 flex-1">
         <div class="min-w-0 flex-1">
-          <h3 class="text-lg font-black text-slate-900 dark:text-white truncate block max-w-full" [title]="curOrg.name">
+          <h3 class="text-lg font-black text-base-content truncate block max-w-full" [title]="curOrg.name">
             {{ curOrg.name }}</h3>
-          <p class="text-xs text-slate-500 mt-0.5 font-mono truncate block max-w-full" [title]="curOrg.id">ID: {{
+          <p class="text-xs text-base-content/60 mt-0.5 font-mono truncate block max-w-full" [title]="curOrg.id">ID: {{
             curOrg.id }}</p>
         </div>
       </div>
@@ -56,32 +50,32 @@
     <!-- Members Table -->
     <div>
       <div class="flex items-center justify-between mb-3 gap-3">
-        <h4 class="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
+        <h4 class="text-xs font-black uppercase tracking-wider text-base-content/70">
           Members ({{ orgMembers().length }})
         </h4>
 
         <button type="button"
-          class="btn btn-primary btn-xs gap-1 rounded-xl px-3 font-black shadow-xs hover:scale-105 transition-all"
+          class="btn btn-primary btn-xs gap-1 px-3 font-black shadow-xs hover:scale-105 transition-all"
           (click)="openInviteOrgMember()">
           <svg lucideUserPlus class="h-3 w-3" [strokeWidth]="2.4"></svg>
           <span>Invite member</span>
         </button>
       </div>
 
-      <div class="overflow-x-auto rounded-2xl border-2 border-slate-200 dark:border-slate-800">
+      <div class="overflow-x-auto rounded-2xl border-2 border-base-300">
         <table class="table w-full text-left">
           <thead>
             <tr
-              class="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 text-xs uppercase font-black">
+              class="bg-base-200 text-base-content/70 text-xs uppercase font-black">
               <th class="py-3 px-4">Member</th>
               <th class="py-3 px-4">UUID</th>
               <th class="py-3 px-4">Role</th>
               <th class="py-3 px-4 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-xs font-medium">
+          <tbody class="divide-y divide-base-300 text-xs font-medium">
             @for (mem of orgMembers(); track mem.user.id) {
-            <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+            <tr class="hover:bg-base-200 transition-colors">
               <!-- Member info -->
               <td class="py-3 px-4">
                 <div class="flex items-center gap-3">
@@ -91,14 +85,14 @@
                     {{ initialsOf(mem.user.displayName || mem.user.email) }}
                   </div>
                   <div class="min-w-0">
-                    <div class="font-black text-slate-900 dark:text-white truncate">{{ mem.user.displayName || mem.user.email }}</div>
-                    <div class="text-2xs text-slate-400 truncate">{{ mem.user.email }}</div>
+                    <div class="font-black text-base-content truncate">{{ mem.user.displayName || mem.user.email }}</div>
+                    <div class="text-2xs text-base-content/50 truncate">{{ mem.user.email }}</div>
                   </div>
                 </div>
               </td>
 
               <!-- UUID -->
-              <td class="py-3 px-4 font-mono text-2xs text-slate-500">
+              <td class="py-3 px-4 font-mono text-2xs text-base-content/60">
                 <span class="select-all" [title]="mem.user.id">{{ mem.user.id.slice(0, 8) }}...{{ mem.user.id.slice(-4) }}</span>
               </td>
 
@@ -108,7 +102,7 @@
                 <span class="badge badge-primary gap-1 font-black text-xs px-2.5 py-1">
                   <svg lucideCrown class="h-3 w-3" [strokeWidth]="2.2"></svg> Owner</span>
                 } @else if (isOwner()) {
-                <select class="select select-bordered select-xs rounded-lg font-bold"
+                <select class="select select-xs rounded-lg font-bold"
                   title="Change this member's role"
                   [value]="mem.role"
                   (change)="onChangeRole(mem.user.id, $any($event.target).value)">
@@ -125,7 +119,7 @@
               <!-- Action -->
               <td class="py-3 px-4 text-right">
                 @if (mem.role !== 'owner' && isOwner()) {
-                <button type="button" class="btn btn-ghost btn-xs text-rose-600 hover:bg-rose-50 rounded-lg font-bold"
+                <button type="button" class="btn btn-ghost btn-xs text-error hover:bg-error/10 font-bold"
                   (click)="onRemoveOrgMember(mem.user.id)">
                   Remove
                 </button>
@@ -140,10 +134,10 @@
   </div>
   } @else {
   <div
-    class="rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-8 text-center shadow-xs space-y-3">
+    class="rounded-3xl border-2 border-dashed border-base-300 bg-base-100 p-8 text-center shadow-xs space-y-3">
     <div class="flex h-14 w-14 mx-auto items-center justify-center rounded-2xl bg-primary/10 text-primary"><svg lucideBuilding2 class="h-7 w-7" [strokeWidth]="2"></svg></div>
-    <h3 class="text-base font-black text-slate-800 dark:text-slate-200">No Organization yet</h3>
-    <p class="text-xs text-slate-500 max-w-md mx-auto">You haven't joined any Organization yet, or none is currently
+    <h3 class="text-base font-black text-base-content">No Organization yet</h3>
+    <p class="text-xs text-base-content/60 max-w-md mx-auto">You haven't joined any Organization yet, or none is currently
       active.</p>
   </div>
   }
@@ -151,13 +145,13 @@
 
 <!-- MODAL: Mời thành viên vào Organization -->
 @if (showInviteOrgModal()) {
-<div class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs"
+<div class="modal modal-open z-[1000] p-4"
   (click)="closeInviteOrgMember()">
   <div
-    class="w-full max-w-[460px] rounded-3xl bg-white dark:bg-slate-900 p-6 shadow-2xl border-2 border-slate-300 dark:border-slate-700"
+    class="modal-box w-full max-w-[460px] border border-base-300"
     (click)="$event.stopPropagation()">
-    <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-      <h3 class="text-base font-black text-slate-900 dark:text-white">Invite a member to {{ activeOrg() ?
+    <div class="flex items-center justify-between pb-3 border-b border-base-300">
+      <h3 class="text-base font-black text-base-content">Invite a member to {{ activeOrg() ?
         activeOrg()!.name : 'Organization' }}</h3>
       <button type="button" class="btn btn-ghost btn-circle btn-xs" (click)="closeInviteOrgMember()">
         <svg lucideX class="h-4 w-4" [strokeWidth]="2.4"></svg>
@@ -167,7 +161,7 @@
     <div class="my-4 space-y-4">
       <!-- Quyền người được mời sẽ nhận khi họ bấm Đồng ý -->
       <div class="space-y-1.5">
-        <label class="text-xs font-bold text-slate-700 dark:text-slate-300">Join the organization as</label>
+        <label class="text-xs font-bold text-base-content/80">Join the organization as</label>
         <div class="join">
           <button type="button" class="btn join-item btn-sm text-xs font-bold"
             [class.btn-active]="inviteRole() === 'member'" (click)="inviteRole.set('member')"
@@ -180,42 +174,42 @@
 
       <!-- Search Input -->
       <div class="space-y-1.5">
-        <label class="text-xs font-bold text-slate-700 dark:text-slate-300">Search by name, email, or user ID</label>
+        <label class="text-xs font-bold text-base-content/80">Search by name, email, or user ID</label>
         <div class="relative">
           <input type="text"
-            class="input input-bordered input-sm rounded-xl w-full border-2 border-slate-300 font-semibold dark:border-slate-700"
+            class="input input-sm rounded-xl w-full border-base-300 font-semibold"
             placeholder="Enter an exact email or paste an ID to find people outside the organization..." [ngModel]="orgInviteQuery()"
             (ngModelChange)="onInviteQueryChange($event)" />
           @if (searching()) {
-            <span class="loading loading-spinner loading-xs absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"></span>
+            <span class="loading loading-spinner loading-xs absolute right-3 top-1/2 -translate-y-1/2 text-base-content/50"></span>
           }
         </div>
       </div>
 
       <!-- Candidate list -->
       <div
-        class="space-y-1.5 max-h-[180px] overflow-y-auto rounded-2xl border-2 border-slate-200 dark:border-slate-800 p-2 bg-slate-50 dark:bg-slate-800/40">
+        class="space-y-1.5 max-h-[180px] overflow-y-auto rounded-2xl border-2 border-base-300 p-2 bg-base-200">
         @if (orgInviteCandidates().length === 0) {
-        <div class="py-4 text-center text-xs text-slate-400">
+        <div class="py-4 text-center text-xs text-base-content/50">
           @if (searching()) { Searching... }
           @else if (orgInviteQuery().trim().length < 3) { Type at least 3 characters to search. }
           @else { No matching users found. }
         </div>
         } @else {
         @for (cand of orgInviteCandidates(); track cand.id) {
-        <button type="button" class="w-full flex items-center justify-between p-2 rounded-xl text-left transition-all"
+        <button type="button" class="btn btn-ghost h-auto min-h-0 w-full justify-between p-2 text-left font-normal normal-case"
           [ngClass]="selectedOrgInviteUser()?.id === cand.id
             ? 'bg-primary/15 border border-primary/40'
-            : 'hover:bg-slate-200/60'" (click)="chooseOrgInviteUser(cand)">
+            : ''" (click)="chooseOrgInviteUser(cand)">
           <div class="flex items-center gap-2.5 min-w-0">
             <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-white text-3xs font-black"
               [style.background-color]="avatarBgFor(cand.id)">
               {{ initialsOf(cand.displayName || cand.email) }}
             </div>
             <div class="min-w-0">
-              <div class="text-xs font-bold truncate text-slate-900 dark:text-white">{{ cand.displayName || 'User'
+              <div class="text-xs font-bold truncate text-base-content">{{ cand.displayName || 'User'
                 }}</div>
-              <div class="text-3xs text-slate-400 truncate">{{ cand.email }}</div>
+              <div class="text-3xs text-base-content/50 truncate">{{ cand.email }}</div>
             </div>
           </div>
           <span class="text-3xs font-mono text-primary shrink-0">{{ cand.id.slice(0, 6) }}...</span>
@@ -226,10 +220,10 @@
     </div>
 
     <!-- Actions -->
-    <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-      <button type="button" class="btn btn-ghost btn-sm rounded-xl font-bold"
+    <div class="flex justify-end gap-2 pt-2 border-t border-base-300">
+      <button type="button" class="btn btn-ghost btn-sm font-bold"
         (click)="closeInviteOrgMember()">Cancel</button>
-      <button type="button" class="btn btn-primary btn-sm gap-1.5 rounded-xl px-4 font-black"
+      <button type="button" class="btn btn-primary btn-sm gap-1.5 px-4 font-black"
         [disabled]="!selectedOrgInviteUser()" (click)="confirmInviteOrgMember()">
         <svg lucidePlus class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg> Send invite
       </button>

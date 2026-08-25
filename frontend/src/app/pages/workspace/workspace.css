@@ -12,115 +12,6 @@
   overflow: hidden;
 }
 
-/* Tips card — decorative purple gradient (light + dark). */
-.tips-card {
-  background: linear-gradient(135deg, #f3e8ff 0%, #e0e7ff 100%);
-  border: 1px solid #d8b4fe;
-  border-radius: var(--radius-md);
-  padding: var(--space-sm) var(--space-md);
-  position: relative;
-  overflow: hidden;
-}
-
-[data-theme='dark'] .tips-card {
-  background: linear-gradient(135deg, #2e1065 0%, #1e1b4b 100%);
-  border-color: #581c87;
-}
-
-.tips-badge {
-  display: inline-block;
-  background-color: #9333ea;
-  color: #ffffff;
-  font-size: 10px;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 12px;
-  letter-spacing: 0.5px;
-  margin-bottom: var(--space-sm);
-}
-
-.tips-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: #4c1d95;
-  margin-bottom: var(--space-xs);
-}
-
-[data-theme='dark'] .tips-title {
-  color: #e9d5ff;
-}
-
-.tips-desc {
-  font-size: 12px;
-  color: #5b21b6;
-  line-height: 1.4;
-}
-
-[data-theme='dark'] .tips-desc {
-  color: #c084fc;
-}
-
-.tips-kbd {
-  background-color: rgba(255, 255, 255, 0.7);
-  color: #4c1d95;
-  padding: 1px 5px;
-  border-radius: 4px;
-  font-weight: 700;
-  font-size: 11px;
-}
-
-[data-theme='dark'] .tips-kbd {
-  background-color: rgba(0, 0, 0, 0.4);
-  color: #f3e8ff;
-}
-
-/* Hero bar — gọn 1 dòng (chào + số liệu + CTA), thay cho banner minh hoạ to
-   chiếm hẳn 1 khối. Vẫn giữ gradient + glow cho có chiều sâu, chỉ nén chiều cao. */
-.hero-banner-slim {
-  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #1e3a8a 100%);
-  border-radius: var(--radius-md);
-  padding: 10px 16px;
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-md);
-  box-shadow: var(--shadow-sm);
-  position: relative;
-  overflow: hidden;
-}
-
-.hero-banner-slim::before {
-  content: '';
-  position: absolute;
-  top: -40px;
-  right: -40px;
-  width: 140px;
-  height: 140px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 70%);
-  pointer-events: none;
-}
-
-.hero-dot-grid {
-  position: absolute;
-  inset: 0;
-  opacity: 0.08;
-  background-image: radial-gradient(#ffffff 1px, transparent 1px);
-  background-size: 18px 18px;
-  pointer-events: none;
-}
-
-.hero-glow {
-  position: absolute;
-  bottom: -50px;
-  left: -20px;
-  width: 130px;
-  height: 130px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(96, 165, 250, 0.32) 0%, rgba(96, 165, 250, 0) 70%);
-  pointer-events: none;
-}
-
 /* Colored glow shadow on hover — matches each board's own gradient color
    instead of a generic gray shadow. Wins over the `hover:shadow-md` Tailwind
    utility since this component stylesheet sits outside Tailwind's cascade
@@ -172,11 +63,11 @@
 
 /* Data-driven template badges ([class]="tpl.badgeClass"). */
 .badge-blue {
-  background-color: #2563eb;
+  background-color: var(--color-info);
 }
 .badge-green {
-  background-color: #059669;
+  background-color: var(--color-success);
 }
 .badge-orange {
-  background-color: #ea580c;
+  background-color: var(--color-warning);
 }

@@ -1,12 +1,12 @@
-<div class="flex min-h-full flex-1 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+<div class="flex min-h-full flex-1 bg-base-200 text-base-content">
   <!-- Toast Notification -->
   @if (toastMessage()) {
   <div class="toast toast-top toast-end z-[9999] pointer-events-none">
     <div
       class="alert text-xs shadow-xl pointer-events-auto flex items-center gap-2.5 py-2.5 px-4 rounded-2xl border text-white font-bold transition-all"
-      [class.bg-emerald-600]="toastType() === 'success'" [class.border-emerald-500]="toastType() === 'success'"
-      [class.bg-rose-600]="toastType() === 'error'" [class.border-rose-500]="toastType() === 'error'"
-      [class.bg-slate-800]="toastType() === 'info'" [class.border-slate-700]="toastType() === 'info'">
+      [class.bg-success]="toastType() === 'success'" [class.border-success]="toastType() === 'success'"
+      [class.bg-error]="toastType() === 'error'" [class.border-error]="toastType() === 'error'"
+      [class.bg-neutral]="toastType() === 'info'" [class.border-base-300]="toastType() === 'info'">
       <span>{{ toastMessage() }}</span>
     </div>
   </div>
@@ -14,40 +14,39 @@
 
   <!-- ============================== LEFT NAVIGATION ============================== -->
   <aside
-    class="w-[280px] shrink-0 overflow-y-auto border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 max-[900px]:w-full max-[900px]:border-b max-[900px]:border-r-0">
+    class="w-[280px] shrink-0 overflow-y-auto border-r border-base-300 bg-base-100 p-5 max-[900px]:w-full max-[900px]:border-b max-[900px]:border-r-0">
     <div class="px-2 pb-6 pt-1">
-      <h1 class="text-xl font-black tracking-tight text-slate-900 dark:text-white">Settings</h1>
-      <p class="mt-1 text-xs text-slate-500">Manage your profile and Workspace members</p>
+      <h1 class="text-xl font-black tracking-tight text-base-content">Settings</h1>
+      <p class="mt-1 text-xs text-base-content/60">Manage your profile and Workspace members</p>
     </div>
 
-    <nav class="flex flex-col gap-1.5 max-[900px]:flex-row max-[900px]:overflow-x-auto">
+    <!-- Tab điều hướng dùng .menu của daisyUI; tab đang mở là .menu-active. -->
+    <ul class="menu w-full gap-1.5 p-0 max-[900px]:menu-horizontal max-[900px]:flex-nowrap max-[900px]:overflow-x-auto">
       @for (item of navItems; track item.id) {
-      <button type="button" class="group flex w-full items-center gap-3 rounded-2xl p-3 text-left transition-all"
-        [class.bg-purple-100/90]="activeTab() === item.id" [class.dark:bg-purple-950/50]="activeTab() === item.id"
-        [class.border-2]="activeTab() === item.id" [class.border-purple-300]="activeTab() === item.id"
-        [class.dark:border-purple-700]="activeTab() === item.id" [class.text-purple-700]="activeTab() === item.id"
-        [class.dark:text-purple-300]="activeTab() === item.id" [class.hover:bg-slate-100]="activeTab() !== item.id"
-        [class.dark:hover:bg-slate-800/60]="activeTab() !== item.id" [class.text-slate-700]="activeTab() !== item.id"
-        [class.dark:text-slate-300]="activeTab() !== item.id" (click)="onTabChange(item.id)">
-        <span
-          class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-lg transition-transform group-hover:scale-110"
-          [class.bg-purple-200]="activeTab() === item.id" [class.dark:bg-purple-900]="activeTab() === item.id"
-          [class.bg-slate-100]="activeTab() !== item.id" [class.dark:bg-slate-800]="activeTab() !== item.id">
-          @if (item.icon === 'user') {
-          <svg lucideUser class="h-4 w-4" [strokeWidth]="2.2"></svg>
-          } @else if (item.icon === 'building') {
-          <svg lucideBuilding2 class="h-4 w-4" [strokeWidth]="2.2"></svg>
-          } @else {
-          <svg lucideUsers class="h-4 w-4" [strokeWidth]="2.2"></svg>
-          }
-        </span>
-        <span class="min-w-0 flex-1">
-          <span class="block truncate text-sm font-black leading-tight">{{ item.label }}</span>
-          <span class="block truncate text-2xs opacity-70 leading-tight mt-0.5">{{ item.description }}</span>
-        </span>
-      </button>
+      <li class="w-full">
+        <button type="button" class="group flex w-full items-center gap-3 text-left"
+          [class.menu-active]="activeTab() === item.id" (click)="onTabChange(item.id)">
+          <span
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-lg transition-transform group-hover:scale-110"
+            [class.bg-secondary]="activeTab() === item.id"
+            [class.text-secondary-content]="activeTab() === item.id"
+            [class.bg-base-200]="activeTab() !== item.id">
+            @if (item.icon === 'user') {
+            <svg lucideUser class="h-4 w-4" [strokeWidth]="2.2"></svg>
+            } @else if (item.icon === 'building') {
+            <svg lucideBuilding2 class="h-4 w-4" [strokeWidth]="2.2"></svg>
+            } @else {
+            <svg lucideUsers class="h-4 w-4" [strokeWidth]="2.2"></svg>
+            }
+          </span>
+          <span class="min-w-0 flex-1">
+            <span class="block truncate text-sm font-black leading-tight">{{ item.label }}</span>
+            <span class="block truncate text-2xs opacity-70 leading-tight mt-0.5">{{ item.description }}</span>
+          </span>
+        </button>
+      </li>
       }
-    </nav>
+    </ul>
   </aside>
 
   <!-- ============================== MAIN CONTENT ============================== -->

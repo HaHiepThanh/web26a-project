@@ -1,8 +1,8 @@
 @if (isOpen()) {
-<div class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-[2px]"
+<div class="modal modal-open z-[1000] p-4 backdrop-blur-[2px]"
   (click)="close.emit()">
   <div
-    class="w-full max-w-[480px] max-h-[90vh] overflow-y-auto rounded-3xl border-2 border-slate-300 dark:border-slate-700 bg-base-100 p-6 shadow-2xl"
+    class="modal-box max-w-[480px] max-h-[90vh] border border-base-300"
     (click)="$event.stopPropagation()">
     <!-- Header -->
     <div class="mb-5 flex items-center justify-between border-b border-base-200 pb-3.5">
@@ -11,8 +11,8 @@
           <svg lucideBuilding2 class="h-5 w-5" [strokeWidth]="2.2"></svg>
         </div>
         <div>
-          <h3 class="text-base font-black text-slate-900 dark:text-white">Create a new Organization</h3>
-          <p class="text-2xs text-slate-500">Group your Workspaces and collaborate with members</p>
+          <h3 class="text-base font-black text-base-content">Create a new Organization</h3>
+          <p class="text-2xs text-base-content/60">Group your Workspaces and collaborate with members</p>
         </div>
       </div>
       <button type="button" class="btn btn-circle btn-ghost btn-sm" (click)="close.emit()" aria-label="Close">
@@ -23,7 +23,7 @@
     <form (ngSubmit)="onSubmit()" class="space-y-4">
       <!-- Organization Name Input -->
       <div>
-        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200" for="org-create-name-input">
+        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-base-content" for="org-create-name-input">
           Organization name <span class="text-error">*</span>
         </label>
         <input
@@ -31,18 +31,17 @@
           type="text"
           id="org-create-name-input"
           maxlength="50"
-          class="input input-bordered border-2 w-full rounded-xl font-bold text-slate-900 dark:text-white bg-white dark:bg-slate-800 shadow-xs text-sm transition-all"
+          class="input w-full rounded-xl font-bold text-base-content bg-base-100 shadow-xs text-sm transition-all"
           [class.border-error]="nameError()"
           [class.focus:border-error]="nameError()"
-          [class.border-slate-300]="!nameError()"
-          [class.dark:border-slate-600]="!nameError()"
+          [class.border-base-300]="!nameError()"
           [class.focus:border-primary]="!nameError()"
           placeholder="e.g. Acme Technologies, Freelance Team... (max 50 characters)"
           [ngModel]="nameInput()"
           (ngModelChange)="onNameChange($event)"
           name="orgName" />
 
-        <div class="mt-1 flex items-center justify-between text-2xs text-slate-400 font-semibold px-1">
+        <div class="mt-1 flex items-center justify-between text-2xs text-base-content/50 font-semibold px-1">
           <span>Max 50 characters</span>
           <span>{{ nameInput().length }}/50</span>
         </div>
@@ -56,23 +55,22 @@
 
       <!-- Organization Slug (đường dẫn riêng) -->
       <div>
-        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200" for="org-create-slug-input">
+        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-base-content" for="org-create-slug-input">
           Custom URL <span class="text-error">*</span>
         </label>
 
-        <div class="flex items-stretch rounded-xl border-2 bg-white dark:bg-slate-800 shadow-xs transition-all overflow-hidden"
+        <div class="flex items-stretch rounded-xl border-2 bg-base-100 shadow-xs transition-all overflow-hidden"
           [class.border-error]="slugError()"
           [class.border-success]="slugOk()"
-          [class.border-slate-300]="!slugError() && !slugOk()"
-          [class.dark:border-slate-600]="!slugError() && !slugOk()">
-          <span class="flex items-center bg-slate-100 dark:bg-slate-700/60 px-2.5 text-2xs font-bold text-slate-500 dark:text-slate-400 select-none">
+          [class.border-base-300]="!slugError() && !slugOk()">
+          <span class="flex items-center bg-base-200 px-2.5 text-2xs font-bold text-base-content/60 select-none">
             /
           </span>
           <input
             type="text"
             id="org-create-slug-input"
             maxlength="40"
-            class="flex-1 min-w-0 bg-transparent px-2.5 py-2 font-mono text-sm font-bold text-slate-900 dark:text-white outline-none"
+            class="flex-1 min-w-0 bg-transparent px-2.5 py-2 font-mono text-sm font-bold text-base-content outline-none"
             placeholder="my-company"
             [ngModel]="slugInput()"
             (ngModelChange)="onSlugChange($event)"
@@ -89,27 +87,27 @@
           <svg lucideTriangleAlert class="h-3.5 w-3.5 shrink-0" [strokeWidth]="2.4"></svg> {{ slugError() }}
         </p>
         } @else if (slugOk()) {
-        <p class="mt-1 text-2xs text-slate-500 dark:text-slate-400">
+        <p class="mt-1 text-2xs text-base-content/60">
           Your board will live at an address like
-          <span class="font-mono font-bold text-slate-700 dark:text-slate-300">/{{ slugInput() }}/board/…</span>
+          <span class="font-mono font-bold text-base-content/80">/{{ slugInput() }}/board/…</span>
         </p>
         } @else {
-        <p class="mt-1 text-2xs text-slate-500 dark:text-slate-400">
+        <p class="mt-1 text-2xs text-base-content/60">
           Lowercase letters, numbers, and hyphens only. <strong>Cannot be changed after creation.</strong>
         </p>
         }
       </div>
 
       <!-- Explanatory note -->
-      <div class="rounded-xl bg-blue-50/80 dark:bg-blue-950/40 p-3 border border-blue-100 dark:border-blue-900/40 text-xs text-blue-800 dark:text-blue-200 flex items-start gap-2">
-        <svg lucideSparkles class="h-4 w-4 shrink-0 text-blue-500 mt-0.5" [strokeWidth]="2.2"></svg>
+      <div class="alert alert-info alert-soft items-start gap-2 p-3 text-xs">
+        <svg lucideSparkles class="h-4 w-4 shrink-0 mt-0.5" [strokeWidth]="2.2"></svg>
         <span>You'll be the <strong>Owner</strong> of this organization and can invite other members to help manage it.</span>
       </div>
 
       <!-- Actions -->
-      <div class="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
-        <button type="button" class="btn btn-ghost rounded-xl font-bold" (click)="close.emit()">Cancel</button>
-        <button type="submit" class="btn btn-primary rounded-xl font-black px-5 shadow-xs">
+      <div class="flex justify-end gap-2 pt-3 border-t border-base-300">
+        <button type="button" class="btn btn-ghost font-bold" (click)="close.emit()">Cancel</button>
+        <button type="submit" class="btn btn-primary font-black px-5 shadow-xs">
           + Create Organization
         </button>
       </div>

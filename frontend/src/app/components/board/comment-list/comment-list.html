@@ -15,7 +15,7 @@
             <span class="text-2xs font-semibold text-base-content/80">{{ userLabel(c.userId) }}</span>
             <span class="text-3xs text-base-content/40">{{ timeLabel(c.createdAt) }}</span>
             @if (c.userId === currentUserId()) {
-              <button type="button" class="ml-auto text-3xs text-base-content/40 opacity-0 transition-opacity hover:text-error group-hover:opacity-100" (click)="deleteComment(c.id)">
+              <button type="button" class="btn btn-link btn-xs ml-auto h-auto min-h-0 p-0 text-3xs text-base-content/40 no-underline opacity-0 transition-opacity hover:text-error group-hover:opacity-100" (click)="deleteComment(c.id)">
                 Delete
               </button>
             }
@@ -32,7 +32,7 @@
 <div class="flex gap-1.5">
   <div class="min-w-0 flex-1">
     <textarea
-      class="textarea textarea-bordered w-full text-xs"
+      class="textarea w-full text-xs"
       [class.textarea-error]="tooLong()"
       rows="2"
       placeholder="Write a comment..."

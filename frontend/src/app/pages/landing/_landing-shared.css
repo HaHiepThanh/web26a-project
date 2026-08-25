@@ -11,13 +11,13 @@
    ========================================================================== */
 
 :host {
-  /* --- Trung tính (theme sáng) --- */
-  --lp-bg: #ffffff;
-  --lp-bg-sunken: #f5f8fc;
-  --lp-surface: #ffffff;
-  --lp-surface-2: #f3f6fb;
-  --lp-border: rgba(15, 23, 42, 0.1);
-  --lp-border-strong: rgba(15, 23, 42, 0.18);
+  /* --- Trung tính: lấy thẳng ba bậc bề mặt của theme daisyUI đang bật --- */
+  --lp-bg: var(--color-base-100);
+  --lp-bg-sunken: var(--color-base-200);
+  --lp-surface: var(--color-base-100);
+  --lp-surface-2: var(--color-base-200);
+  --lp-border: color-mix(in oklab, var(--color-base-content) 12%, transparent);
+  --lp-border-strong: color-mix(in oklab, var(--color-base-content) 22%, transparent);
 
   /* Ba bậc chữ, đều đạt tối thiểu 4.5:1 trên MỌI nền của trang (Practical UI,
      "Avoid light grey and pure black text"). Xám nhạt trông thanh thoát nhưng
@@ -27,9 +27,9 @@
      chân trang và dải số liệu — tức là trượt chuẩn ở đúng những chỗ nó hay được
      dùng nhất. Tối thêm một nấc là qua ngưỡng ở cả ba nền, mà vẫn nhạt hơn bậc
      hai đủ để phân biệt. */
-  --lp-text: #0f172a;
-  --lp-text-2: #475569;
-  --lp-text-3: #5f6d82;
+  --lp-text: var(--text-primary);
+  --lp-text-2: var(--text-secondary);
+  --lp-text-3: var(--text-muted);
 
   /* ---- Hai họ màu nhấn: dùng làm CHỮ và dùng làm NỀN ĐẶC ----
      Đây là chỗ phải cẩn thận nhất của cả trang. Bộ token màu nhấn trong
@@ -45,21 +45,25 @@
      nhìn vẫn là một bảng màu. Tỉ số kèm sau mỗi dòng là kết quả đo thật trên
      nền trang / nền tô nhạt tương ứng.
 
-     ⚠️ Cố ý ghi hex cứng chứ không viết color-mix() dẫn xuất từ --accent-*:
-     giá trị dẫn xuất nghe thì gọn nhưng không ai biết nó rơi vào đâu, mà ở đây
-     sai một nấc là chữ trượt chuẩn. Đổi lại, ĐỔI BẢNG MÀU TRONG `styles.css`
-     THÌ PHẢI ĐO LẠI 8 GIÁ TRỊ NÀY. Cách đo: mở trang, lấy màu chữ và màu nền
-     đã tổng hợp alpha của phần tử, tính tỉ số tương phản WCAG, kéo dần màu về
-     phía đen/trắng tới khi mọi nền đều ≥ 4.5. */
-  --lp-ink-blue: #026a9f; /* 5.92 · 4.61 */
-  --lp-ink-purple: #6d28d9; /* 7.10 · 5.23 — nguyên bản đã đạt */
-  --lp-ink-green: #04694a; /* 6.73 · 4.64 */
-  --lp-ink-amber: #854904; /* 7.11 · 4.66 */
+     Từ khi app chuyển sang dùng theme dựng sẵn của daisyUI (winter/sunset),
+     8 giá trị này không còn ghi hex cứng được nữa — bảng màu gốc nằm trong
+     theme, hex chép tay sẽ lệch ngay khi đổi theme. Thay bằng color-mix() kéo
+     màu của theme về phía đen: theme sáng dùng bậc màu nhạt cho nền (winter có
+     success/warning rất sáng) nên phải kéo sâu, còn primary/secondary vốn đã
+     tối thì kéo nhẹ. Tỉ lệ chọn sao cho mọi màu rơi về quãng sáng ~40–47%, tức
+     là vẫn đạt ≥ 4.5:1 với chữ trắng và với nền trang.
+     ⚠️ ĐỔI SANG THEME SÁNG KHÁC (không phải winter) THÌ PHẢI ĐO LẠI 8 GIÁ TRỊ
+     NÀY: mở trang, lấy màu chữ và màu nền đã tổng hợp alpha, tính tỉ số tương
+     phản WCAG, chỉnh tỉ lệ mix tới khi mọi nền đều ≥ 4.5. */
+  --lp-ink-blue: color-mix(in oklab, var(--color-primary) 82%, black);
+  --lp-ink-purple: color-mix(in oklab, var(--color-secondary) 88%, black);
+  --lp-ink-green: color-mix(in oklab, var(--color-success) 55%, black);
+  --lp-ink-amber: color-mix(in oklab, var(--color-warning) 45%, black);
 
-  --lp-solid-blue: #027cbb; /* chữ trắng: 4.56 */
-  --lp-solid-purple: #6d28d9; /* chữ trắng: 7.10 */
-  --lp-solid-green: #05875f; /* chữ trắng: 4.53 */
-  --lp-solid-amber: #b26205; /* chữ trắng: 4.54 */
+  --lp-solid-blue: color-mix(in oklab, var(--color-primary) 85%, black);
+  --lp-solid-purple: color-mix(in oklab, var(--color-secondary) 92%, black);
+  --lp-solid-green: color-mix(in oklab, var(--color-success) 58%, black);
+  --lp-solid-amber: color-mix(in oklab, var(--color-warning) 48%, black);
   --lp-on-solid: #ffffff;
 
   --lp-glow-blue: color-mix(in oklab, var(--accent-blue) 42%, transparent);
@@ -101,39 +105,32 @@
   color: var(--lp-text);
 }
 
-:host-context([data-theme='dark']) {
-  /* Nền gần đen chứ không đen tuyền, ngả xanh tím một chút cho ăn với hai màu
-     nhấn — đen tuyệt đối cạnh chữ trắng tạo tương phản gắt gây mỏi mắt khi đọc
-     dài, đúng điều Practical UI cảnh báo ở chương Colour. */
-  --lp-bg: #0b0d14;
-  --lp-bg-sunken: #07080e;
-  --lp-surface: #12151f;
-  --lp-surface-2: #181d29;
-  --lp-border: rgba(255, 255, 255, 0.09);
-  --lp-border-strong: rgba(255, 255, 255, 0.18);
+:host-context([data-theme='sunset']) {
+  /* Nền lấy thẳng ba bậc bề mặt của sunset — nền gần đen ngả xanh, không đen
+     tuyền: đen tuyệt đối cạnh chữ sáng tạo tương phản gắt gây mỏi mắt khi đọc
+     dài, đúng điều Practical UI cảnh báo ở chương Colour. Riêng dải "lõm" phải
+     tối hơn nền chính, mà base-300 của sunset lại chỉ chênh 4% — kéo thêm về
+     phía đen cho thấy rõ ranh giới. */
+  --lp-bg: var(--color-base-100);
+  --lp-bg-sunken: color-mix(in oklab, var(--color-base-300) 82%, black);
+  --lp-surface: color-mix(in oklab, var(--color-base-100) 92%, white);
+  --lp-surface-2: var(--color-base-200);
 
-  --lp-text: #ffffff;
-  --lp-text-2: #aab3c7;
-  --lp-text-3: #8791a6;
+  /* Toàn bộ họ màu nhấn ở theme tối đảo ngược so với theme sáng: màu của sunset
+     vốn đã sáng (primary ~75%, success/warning ~86%) nên thừa tương phản để làm
+     CHỮ và không cần kéo tối; ngược lại chúng quá sáng để đặt chữ trắng lên
+     trên, nên chữ trên nền đặc chuyển thành gần-đen (chính là base-100). Đây
+     đúng cách Practical UI xử lý khi màu thương hiệu không đủ tương phản. */
+  --lp-ink-blue: var(--color-primary);
+  --lp-ink-purple: var(--color-secondary);
+  --lp-ink-green: var(--color-success);
+  --lp-ink-amber: var(--color-warning);
 
-  /* Ở nền tối, --accent-blue/--accent-purple đã được `styles.css` đổi sang bản
-     SÁNG (#579dff / #9e75ff). Chúng thừa tương phản để làm chữ, nhưng lại quá
-     sáng để đặt chữ TRẮNG lên trên (chỉ 2,7:1). Nên ở đây đảo ngược hoàn toàn
-     so với theme sáng: nền nút giữ nguyên màu nhấn sáng, còn chữ chuyển thành
-     gần-đen (7,1:1). Đây đúng là cách Practical UI xử lý khi màu thương hiệu
-     không đủ tương phản với nền.
-     Riêng tím và xanh lá phải kéo sáng thêm một chút khi làm CHỮ, vì trên nền
-     tô nhạt (chính nó pha 16%) chúng tụt xuống 4,2 và 3,8. */
-  --lp-ink-blue: #579dff; /* 7.09 · 4.74 */
-  --lp-ink-purple: #a680ff; /* 6.61 · 4.58 */
-  --lp-ink-green: #2da781; /* 6.42 · 4.60 */
-  --lp-ink-amber: #fbbf24; /* 11.63 · 7.11 */
-
-  --lp-solid-blue: #579dff; /* chữ gần-đen: 7.09 */
-  --lp-solid-purple: #9e75ff; /* chữ gần-đen: 5.95 */
-  --lp-solid-green: #059669; /* chữ gần-đen: 5.15 */
-  --lp-solid-amber: #fbbf24; /* chữ gần-đen: 11.63 */
-  --lp-on-solid: #0b0d14;
+  --lp-solid-blue: var(--color-primary);
+  --lp-solid-purple: var(--color-secondary);
+  --lp-solid-green: var(--color-success);
+  --lp-solid-amber: var(--color-warning);
+  --lp-on-solid: var(--color-base-100);
 
   --lp-glow-blue: color-mix(in oklab, var(--accent-blue) 30%, transparent);
   --lp-glow-purple: color-mix(in oklab, var(--accent-purple) 28%, transparent);
