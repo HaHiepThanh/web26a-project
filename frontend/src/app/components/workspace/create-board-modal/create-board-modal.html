@@ -17,7 +17,7 @@
           Board name <span class="text-error">*</span>
         </label>
         <input type="text" id="board-title-input"
-          class="input input-bordered w-full rounded-field font-bold text-base-content bg-base-100 shadow-xs text-sm transition-all"
+          class="input input-bordered w-full rounded-md font-bold text-base-content bg-base-100 shadow-xs text-sm transition-all"
           [class.border-error]="titleError()"
           [class.focus:border-error]="titleError()"
           [class.border-base-300]="!titleError()"
@@ -40,7 +40,7 @@
         <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-base-content"
           for="board-workspace-select">Workspace</label>
         <select id="board-workspace-select"
-          class="select select-bordered border-base-300 focus:border-primary focus:ring-2 focus:ring-primary/20 w-full rounded-field font-bold text-base-content bg-base-100 shadow-xs text-sm"
+          class="select select-bordered border-base-300 focus:border-primary focus:ring-2 focus:ring-primary/20 w-full rounded-md font-bold text-base-content bg-base-100 shadow-xs text-sm"
           [ngModel]="workspaceIdInput()"
           (ngModelChange)="onWorkspaceChange($event)" name="boardWorkspace">
           @for (ws of workspaces(); track ws.id) {
@@ -57,7 +57,7 @@
         <div class="grid grid-cols-2 gap-2.5">
           <!-- Option 1: Tất cả thành viên Workspace -->
           <label
-            class="flex cursor-pointer items-start gap-2.5 rounded-lg border-2 border-base-300 p-3 transition hover:bg-base-200/80 bg-base-100 shadow-xs"
+            class="flex cursor-pointer items-start gap-2.5 rounded-md border-2 border-base-300 p-3 transition hover:bg-base-200/80 bg-base-100 shadow-xs"
             [class.border-primary]="privacyInput() === 'Workspace'"
             [class.bg-primary/5]="privacyInput() === 'Workspace'">
             <input type="radio" name="privacy" value="Workspace" class="radio radio-primary radio-sm mt-0.5"
@@ -71,7 +71,7 @@
 
           <!-- Option 2: Thành viên được chọn -->
           <label
-            class="flex cursor-pointer items-start gap-2.5 rounded-lg border-2 border-base-300 p-3 transition hover:bg-base-200/80 bg-base-100 shadow-xs"
+            class="flex cursor-pointer items-start gap-2.5 rounded-md border-2 border-base-300 p-3 transition hover:bg-base-200/80 bg-base-100 shadow-xs"
             [class.border-primary]="privacyInput() === 'Private'"
             [class.bg-primary/5]="privacyInput() === 'Private'">
             <input type="radio" name="privacy" value="Private" class="radio radio-primary radio-sm mt-0.5"
@@ -86,14 +86,14 @@
 
         <!-- Custom Member Selection List (Shown when 'Private' is active) -->
         @if (privacyInput() === 'Private') {
-        <div class="mt-3 rounded-lg border border-base-300 bg-base-200/50 p-3.5 shadow-xs transition-all">
+        <div class="mt-3 rounded-md border border-base-300 bg-base-200/50 p-3.5 shadow-xs transition-all">
           <div class="mb-2.5 flex items-center justify-between">
             <span class="text-2xs font-black uppercase tracking-wider text-base-content/80">
               Select Workspace members ({{ selectedMemberIds().length }}/{{ currentWorkspaceMembers().length }}):
             </span>
             <div class="flex gap-1.5">
-              <button type="button" class="btn btn-ghost btn-xs rounded text-2xs font-bold text-primary hover:bg-primary/10" (click)="selectAllMembers()">Select all</button>
-              <button type="button" class="btn btn-ghost btn-xs rounded text-2xs font-bold text-base-content/60 hover:bg-base-300" (click)="deselectAllMembers()">Deselect all</button>
+              <button type="button" class="btn btn-ghost btn-xs rounded-md text-2xs font-bold text-primary hover:bg-primary/10" (click)="selectAllMembers()">Select all</button>
+              <button type="button" class="btn btn-ghost btn-xs rounded-md text-2xs font-bold text-base-content/60 hover:bg-base-300" (click)="deselectAllMembers()">Deselect all</button>
             </div>
           </div>
 
@@ -104,7 +104,7 @@
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
             <input type="text"
-              class="input input-sm input-bordered w-full rounded-field border-base-300 bg-base-100 pl-9 text-xs font-medium text-base-content focus:border-primary focus:ring-2 focus:ring-primary/20 shadow-xs"
+              class="input input-sm input-bordered w-full rounded-md border-base-300 bg-base-100 pl-9 text-xs font-medium text-base-content focus:border-primary focus:ring-2 focus:ring-primary/20 shadow-xs"
               placeholder="Search by name, email, or ID..." [ngModel]="memberSearch()"
               (ngModelChange)="memberSearch.set($event)"
               (keydown.enter)="$event.preventDefault()" name="boardMemberSearch" />
@@ -113,7 +113,7 @@
           <div class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
             @for (mem of filteredMembers(); track mem.id) {
             <label
-              class="flex cursor-pointer items-center justify-between gap-2.5 rounded-field border border-base-300 bg-base-100 p-2 transition hover:bg-base-200"
+              class="flex cursor-pointer items-center justify-between gap-2.5 rounded-md border border-base-300 bg-base-100 p-2 transition hover:bg-base-200"
               [class.ring-1]="selectedMemberIds().includes(mem.id)"
               [class.ring-primary]="selectedMemberIds().includes(mem.id)">
               <div class="flex items-center gap-2.5 min-w-0">
@@ -126,7 +126,7 @@
                   <div class="flex items-center gap-1.5">
                     <span class="truncate text-xs font-bold text-base-content">{{ mem.displayName }}</span>
                     @if (mem.role === 'owner') {
-                    <span class="badge badge-warning badge-xs font-bold text-3xs rounded">Owner</span>
+                    <span class="badge badge-warning badge-xs font-bold text-3xs rounded-md">Owner</span>
                     }
                   </div>
                   <span class="truncate text-3xs text-base-content/60 block font-mono">UUID: {{ mem.id.slice(0, 8) }}...</span>
@@ -160,13 +160,13 @@
         <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-base-content">Board background</label>
         <div class="flex flex-wrap items-center gap-2">
           @for (bg of bgClasses; track bg) {
-          <div class="h-8 w-8 cursor-pointer rounded-lg transition hover:scale-110 shadow-xs" [class]="bg"
+          <div class="h-8 w-8 cursor-pointer rounded-md transition hover:scale-110 shadow-xs" [class]="bg"
             [class.ring-2]="!bgImageUrl() && selectedBgClass() === bg" [class.ring-primary]="!bgImageUrl() && selectedBgClass() === bg"
             [class.ring-offset-2]="!bgImageUrl() && selectedBgClass() === bg" (click)="clearBgImage(); selectedBgClass.set(bg)"></div>
           }
 
           @if (bgImageUrl(); as img) {
-          <div class="group relative h-8 w-8 shrink-0 overflow-hidden rounded-lg ring-2 ring-primary ring-offset-2 shadow-xs">
+          <div class="group relative h-8 w-8 shrink-0 overflow-hidden rounded-md ring-2 ring-primary ring-offset-2 shadow-xs">
             <img [src]="img" alt="Custom background" class="h-full w-full object-cover" />
             <button type="button"
               class="btn btn-ghost btn-xs absolute inset-0 h-full min-h-0 w-full rounded-none border-none bg-black/50 p-0 opacity-0 transition group-hover:opacity-100"
@@ -176,7 +176,7 @@
           </div>
           } @else {
           <label
-            class="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-base-300 text-base-content/50 transition hover:border-primary hover:text-primary"
+            class="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md border-2 border-dashed border-base-300 text-base-content/50 transition hover:border-primary hover:text-primary"
             title="Upload a background image">
             <svg lucideImage class="h-4 w-4" [strokeWidth]="2.2"></svg>
             <input type="file" accept="image/*" class="hidden" (change)="onBgImageSelected($event)" />
@@ -195,8 +195,8 @@
 
       <!-- Actions -->
       <div class="flex justify-end gap-2 pt-3 border-t border-base-300">
-        <button type="button" class="btn btn-ghost rounded-field font-bold" (click)="close.emit()">Cancel</button>
-        <button type="submit" class="btn btn-primary rounded-field font-black px-5 shadow-sm">Create board</button>
+        <button type="button" class="btn btn-ghost rounded-md font-bold" (click)="close.emit()">Cancel</button>
+        <button type="submit" class="btn btn-primary rounded-md font-black px-5 shadow-sm">Create board</button>
       </div>
     </form>
   </div>

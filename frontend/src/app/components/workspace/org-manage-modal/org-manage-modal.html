@@ -21,7 +21,7 @@
     <div class="min-h-0 flex-1 overflow-y-auto px-5 py-4">
 
       @if (feedback(); as fb) {
-      <p class="mb-3 rounded-lg px-3 py-2 text-2xs font-semibold"
+      <p class="mb-3 rounded-md px-3 py-2 text-2xs font-semibold"
         [class]="fb.ok ? 'bg-success/10 text-success' : 'bg-error/10 text-error'">{{ fb.text }}</p>
       }
 
@@ -30,10 +30,10 @@
       <section class="mb-5">
         <h4 class="mb-2 text-2xs font-black uppercase tracking-wide text-base-content/45">Organization info</h4>
         <div class="flex items-center gap-2">
-          <input type="text" maxlength="50" class="input input-bordered input-sm w-full rounded-field font-semibold"
+          <input type="text" maxlength="50" class="input input-bordered input-sm w-full rounded-md font-semibold"
             placeholder="Organization name (max 50 characters)..." [ngModel]="nameInput()" (ngModelChange)="nameInput.set($event)"
             (keydown.enter)="onSaveName()" />
-          <button type="button" class="btn btn-primary btn-sm rounded-field shrink-0 gap-1" [disabled]="!nameDirty()"
+          <button type="button" class="btn btn-primary btn-sm rounded-md shrink-0 gap-1" [disabled]="!nameDirty()"
             (click)="onSaveName()">
             <svg lucideCheck class="h-3.5 w-3.5" [strokeWidth]="3"></svg> Save
           </button>
@@ -47,7 +47,7 @@
         <!-- Quyền người được mời sẽ nhận khi họ bấm Đồng ý -->
         <div class="mb-2 flex items-center gap-2">
           <span class="text-3xs font-black uppercase tracking-wide text-base-content/45">Joining as</span>
-          <div class="join rounded-field overflow-hidden">
+          <div class="join rounded-md overflow-hidden">
             <button type="button" class="btn join-item btn-xs text-3xs font-bold"
               [class.btn-active]="inviteRole() === 'member'"
               (click)="inviteRole.set('member')"
@@ -65,7 +65,7 @@
 
         <div class="relative">
           <svg lucideSearch class="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-base-content/35" [strokeWidth]="2.2"></svg>
-          <input type="text" class="input input-bordered input-sm w-full rounded-field pl-9 font-semibold"
+          <input type="text" class="input input-bordered input-sm w-full rounded-md pl-9 font-semibold"
             placeholder="Search by name, email, or paste a user ID..." [ngModel]="searchInput()"
             (ngModelChange)="onSearchChange($event)" (keydown.enter)="onInviteRaw()" />
           @if (searching()) {
@@ -77,7 +77,7 @@
         </p>
 
         @if (searchInput().trim()) {
-        <div class="mt-1.5 overflow-hidden rounded-lg border border-base-300 bg-base-200/40">
+        <div class="mt-1.5 overflow-hidden rounded-md border border-base-300 bg-base-200/40">
           @for (u of searchResults(); track u.id) {
           <button type="button" class="btn btn-ghost h-auto min-h-0 w-full justify-start gap-2.5 rounded-none px-2.5 py-2 text-left font-normal normal-case"
             (click)="onInvite(u)">
@@ -130,7 +130,7 @@
         <div class="mb-2 flex flex-wrap items-center gap-2">
           <label class="flex items-center gap-1.5">
             <span class="text-3xs font-black uppercase tracking-wide text-base-content/45">Expires</span>
-            <select class="select select-sm select-bordered rounded-field text-xs font-semibold"
+            <select class="select select-sm select-bordered rounded-md text-xs font-semibold"
               [ngModel]="linkExpiryDays()" (ngModelChange)="linkExpiryDays.set(+$event)"
               name="linkExpiryDays">
               <option [value]="1">1 day</option>
@@ -141,7 +141,7 @@
 
           <label class="flex items-center gap-1.5">
             <span class="text-3xs font-black uppercase tracking-wide text-base-content/45">Joins as</span>
-            <select class="select select-sm select-bordered rounded-field text-xs font-semibold"
+            <select class="select select-sm select-bordered rounded-md text-xs font-semibold"
               [ngModel]="linkRole()" (ngModelChange)="linkRole.set($event)" name="linkRole">
               <option value="member">Member</option>
               <option value="admin">Admin</option>
@@ -151,11 +151,11 @@
           <label class="flex items-center gap-1.5">
             <span class="text-3xs font-black uppercase tracking-wide text-base-content/45">Max uses</span>
             <input type="number" min="1" max="500" placeholder="No limit"
-              class="input input-sm input-bordered w-24 rounded-field text-xs font-semibold"
+              class="input input-sm input-bordered w-24 rounded-md text-xs font-semibold"
               [ngModel]="linkMaxUses()" (ngModelChange)="linkMaxUses.set($event)" name="linkMaxUses" />
           </label>
 
-          <button type="button" class="btn btn-primary btn-sm rounded-field gap-1.5 px-3 text-xs font-bold"
+          <button type="button" class="btn btn-primary btn-sm rounded-md gap-1.5 px-3 text-xs font-bold"
             [disabled]="linksLoading()" (click)="onCreateLink()">
             @if (linksLoading()) {
             <span class="loading loading-spinner loading-xs"></span>
@@ -168,11 +168,11 @@
 
         <!-- Link vừa tạo: hiện ngay để sao chép, khỏi đi tìm trong danh sách -->
         @if (justCreated(); as fresh) {
-        <div class="mb-2 flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/5 p-1.5">
+        <div class="mb-2 flex items-center gap-1.5 rounded-md border border-primary/30 bg-primary/5 p-1.5">
           <input #freshInput type="text" readonly [value]="fullLink(fresh.token)"
-            class="input input-sm input-bordered grow rounded-field font-mono text-2xs"
+            class="input input-sm input-bordered grow rounded-md font-mono text-2xs"
             (focus)="freshInput.select()" />
-          <button type="button" class="btn btn-primary btn-sm rounded-field shrink-0 gap-1 px-2.5 text-2xs font-bold"
+          <button type="button" class="btn btn-primary btn-sm rounded-md shrink-0 gap-1 px-2.5 text-2xs font-bold"
             (click)="onCopy(fresh, freshInput)">
             @if (copiedId() === fresh.id) {
             <svg lucideCheck class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg> Copied
@@ -188,40 +188,42 @@
           Lọc theo `active` do SERVER tính — không tự so hạn ở client.
         -->
         @if (activeLinks().length) {
-        <div class="flex flex-col gap-1">
+        <div class="flex flex-col gap-1.5">
           @for (link of activeLinks(); track link.id) {
-          <div class="flex items-center gap-2 rounded-lg border border-base-300 px-2.5 py-2">
+          <div class="flex items-center justify-between gap-2 rounded-md border border-base-300 bg-base-100 px-3 py-2">
             <input #rowInput type="text" readonly [value]="fullLink(link.token)"
-              class="input input-xs input-bordered grow rounded font-mono text-3xs" (focus)="rowInput.select()" />
+              class="input input-xs input-bordered grow rounded-md font-mono text-3xs" (focus)="rowInput.select()" />
 
             <span class="shrink-0 whitespace-nowrap text-3xs font-bold text-base-content/70">
               {{ link.role === 'admin' ? 'Admin' : 'Member' }} · {{ expiryLabel(link.expiresAt) }} ·
               {{ usageLabel(link) }}
             </span>
 
-            <button type="button" class="btn btn-ghost btn-xs rounded shrink-0 px-1.5"
-              [title]="'Copy this link'" (click)="onCopy(link, rowInput)">
-              @if (copiedId() === link.id) {
-              <svg lucideCheck class="h-3.5 w-3.5 text-success" [strokeWidth]="2.4"></svg>
-              } @else {
-              <svg lucideCopy class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg>
-              }
-            </button>
+            <div class="flex shrink-0 items-center gap-1">
+              <button type="button" class="btn btn-ghost btn-xs rounded-md px-1.5"
+                [title]="'Copy this link'" (click)="onCopy(link, rowInput)">
+                @if (copiedId() === link.id) {
+                <svg lucideCheck class="h-3.5 w-3.5 text-success" [strokeWidth]="2.4"></svg>
+                } @else {
+                <svg lucideCopy class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg>
+                }
+              </button>
 
-            <button type="button" class="btn btn-ghost btn-xs rounded shrink-0 px-1.5 text-error"
-              title="Revoke this link" [disabled]="revokingIds().has(link.id)"
-              (click)="onRevokeLink(link.id)">
-              @if (revokingIds().has(link.id)) {
-              <span class="loading loading-spinner loading-xs"></span>
-              } @else {
-              <svg lucideTrash2 class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg>
-              }
-            </button>
+              <button type="button" class="btn btn-ghost btn-xs rounded-md px-1.5 text-error hover:bg-error/10"
+                title="Revoke this link" [disabled]="revokingIds().has(link.id)"
+                (click)="onRevokeLink(link.id)">
+                @if (revokingIds().has(link.id)) {
+                <span class="loading loading-spinner loading-xs"></span>
+                } @else {
+                <svg lucideTrash2 class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg>
+                }
+              </button>
+            </div>
           </div>
           }
         </div>
         } @else if (!linksLoading()) {
-        <p class="rounded-lg border border-dashed border-base-300 px-2.5 py-2.5 text-2xs font-semibold text-base-content/70">
+        <p class="rounded-md border border-dashed border-base-300 px-3 py-2.5 text-2xs font-semibold text-base-content/70">
           No active invite links. Create one to let people join without an individual invite.
         </p>
         }
@@ -234,9 +236,9 @@
         <h4 class="mb-2 text-2xs font-black uppercase tracking-wide text-base-content/45">
           Pending ({{ pendingInvites().length }})
         </h4>
-        <div class="flex flex-col gap-1">
+        <div class="flex flex-col gap-1.5">
           @for (inv of pendingInvites(); track inv.id) {
-          <div class="flex items-center gap-2.5 rounded-lg border border-dashed border-base-300 px-2.5 py-2">
+          <div class="flex items-center gap-2.5 rounded-md border border-dashed border-base-300 px-3 py-2">
             <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-3xs font-black text-white opacity-60"
               [style.background-color]="avatarBgFor(inv.toUserId)">?</span>
             <span class="min-w-0 flex-1">
@@ -246,7 +248,7 @@
               </span>
             </span>
             @if (isOwner()) {
-            <button type="button" class="btn btn-ghost btn-xs rounded shrink-0 text-2xs font-bold text-error"
+            <button type="button" class="btn btn-ghost btn-xs rounded-md shrink-0 text-2xs font-bold text-error hover:bg-error/10"
               (click)="cancelInvite.emit(inv.id)">Cancel</button>
             }
           </div>
@@ -262,7 +264,7 @@
         </h4>
         <div class="flex flex-col gap-1.5">
           @for (mem of members(); track mem.user.id) {
-          <div class="flex items-center justify-between gap-3 rounded-lg border border-base-300 bg-base-100 px-3 py-2.5">
+          <div class="flex items-center justify-between gap-3 rounded-md border border-base-300 bg-base-100 px-3 py-2.5">
             <!-- Trái: Avatar + Tên + Email -->
             <div class="flex min-w-0 flex-1 items-center gap-2.5">
               <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-2xs font-black text-white"
@@ -278,25 +280,25 @@
             <!-- Phải: Quyền (select/badge) + Nút Remove -->
             <div class="flex shrink-0 items-center gap-2">
               @if (mem.role === 'owner') {
-              <span class="badge badge-primary badge-sm shrink-0 gap-1 rounded-field font-black">
+              <span class="badge badge-primary badge-sm shrink-0 gap-1 rounded-md font-black">
                 <svg lucideCrown class="h-3 w-3" [strokeWidth]="2.2"></svg> Owner
               </span>
               } @else {
                 <!-- Chỉ owner đổi được quyền; người khác chỉ thấy nhãn. -->
                 @if (isOwner()) {
-                <select class="select select-xs select-bordered w-24 rounded-field text-3xs font-bold"
+                <select class="select select-xs select-bordered w-24 rounded-md text-3xs font-bold"
                   title="Change this member's role"
                   [value]="mem.role"
                   (change)="onChangeRole(mem.user.id, $any($event.target).value)">
                   <option value="member">Member</option>
                   <option value="admin">Admin</option>
                 </select>
-                <button type="button" class="btn btn-ghost btn-xs rounded-field shrink-0 gap-1 font-bold text-error hover:bg-error/10"
+                <button type="button" class="btn btn-ghost btn-xs rounded-md shrink-0 gap-1 font-bold text-error hover:bg-error/10"
                   title="Remove from organization" (click)="onRemove(mem.user.id)">
                   <svg lucideTrash2 class="h-3 w-3" [strokeWidth]="2.2"></svg> Remove
                 </button>
                 } @else {
-                <span class="badge badge-sm shrink-0 font-bold rounded"
+                <span class="badge badge-sm shrink-0 font-bold rounded-md"
                   [class.badge-warning]="mem.role === 'admin'"
                   [class.badge-ghost]="mem.role !== 'admin'">
                   {{ mem.role === 'admin' ? 'Admin' : 'Member' }}
@@ -319,7 +321,7 @@
 
     <!-- Footer -->
     <div class="flex shrink-0 justify-end border-t border-base-200 px-5 py-3">
-      <button type="button" class="btn btn-ghost btn-sm font-bold" (click)="close.emit()">Close</button>
+      <button type="button" class="btn btn-ghost btn-sm rounded-md font-bold" (click)="close.emit()">Close</button>
     </div>
   </div>
 </div>
