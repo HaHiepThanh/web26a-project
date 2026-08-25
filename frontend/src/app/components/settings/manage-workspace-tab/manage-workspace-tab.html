@@ -239,7 +239,7 @@
       <!-- Role Select -->
       <div class="space-y-1.5">
         <label class="text-xs font-bold text-base-content/80">Initial role</label>
-        <select class="select select-sm rounded-xl w-full font-semibold" [ngModel]="memberRoleSelect()"
+        <select class="select select-sm rounded-field w-full font-semibold" [ngModel]="memberRoleSelect()"
           (ngModelChange)="memberRoleSelect.set($event)">
           <option value="member">Member</option>
           <option value="owner">Owner</option>

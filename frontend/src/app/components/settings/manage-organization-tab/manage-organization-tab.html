@@ -177,7 +177,7 @@
         <label class="text-xs font-bold text-base-content/80">Search by name, email, or user ID</label>
         <div class="relative">
           <input type="text"
-            class="input input-sm rounded-xl w-full border-base-300 font-semibold"
+            class="input input-bordered input-sm rounded-field w-full border-base-300 font-semibold"
             placeholder="Enter an exact email or paste an ID to find people outside the organization..." [ngModel]="orgInviteQuery()"
             (ngModelChange)="onInviteQueryChange($event)" />
           @if (searching()) {

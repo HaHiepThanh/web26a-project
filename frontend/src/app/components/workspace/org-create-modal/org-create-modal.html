@@ -7,7 +7,7 @@
     <!-- Header -->
     <div class="mb-5 flex items-center justify-between border-b border-base-200 pb-3.5">
       <div class="flex items-center gap-2.5">
-        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+        <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
           <svg lucideBuilding2 class="h-5 w-5" [strokeWidth]="2.2"></svg>
         </div>
         <div>
@@ -31,7 +31,7 @@
           type="text"
           id="org-create-name-input"
           maxlength="50"
-          class="input w-full rounded-xl font-bold text-base-content bg-base-100 shadow-xs text-sm transition-all"
+          class="input input-bordered w-full rounded-field font-bold text-base-content bg-base-100 shadow-xs text-sm transition-all"
           [class.border-error]="nameError()"
           [class.focus:border-error]="nameError()"
           [class.border-base-300]="!nameError()"
@@ -59,7 +59,7 @@
           Custom URL <span class="text-error">*</span>
         </label>
 
-        <div class="flex items-stretch rounded-xl border-2 bg-base-100 shadow-xs transition-all overflow-hidden"
+        <div class="flex items-stretch rounded-field border bg-base-100 shadow-xs transition-all overflow-hidden"
           [class.border-error]="slugError()"
           [class.border-success]="slugOk()"
           [class.border-base-300]="!slugError() && !slugOk()">
@@ -99,15 +99,15 @@
       </div>
 
       <!-- Explanatory note -->
-      <div class="alert alert-info alert-soft items-start gap-2 p-3 text-xs">
+      <div class="alert alert-info alert-soft items-start gap-2 p-3 rounded-lg text-xs">
         <svg lucideSparkles class="h-4 w-4 shrink-0 mt-0.5" [strokeWidth]="2.2"></svg>
         <span>You'll be the <strong>Owner</strong> of this organization and can invite other members to help manage it.</span>
       </div>
 
       <!-- Actions -->
       <div class="flex justify-end gap-2 pt-3 border-t border-base-300">
-        <button type="button" class="btn btn-ghost font-bold" (click)="close.emit()">Cancel</button>
-        <button type="submit" class="btn btn-primary font-black px-5 shadow-xs">
+        <button type="button" class="btn btn-ghost rounded-field font-bold" (click)="close.emit()">Cancel</button>
+        <button type="submit" class="btn btn-primary rounded-field font-black px-5 shadow-xs">
           + Create Organization
         </button>
       </div>

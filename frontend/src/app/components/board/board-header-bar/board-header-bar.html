@@ -178,14 +178,14 @@
               <div class="mt-2.5 flex gap-1.5">
                 <input
                   type="text"
-                  class="input input-sm flex-1 rounded-xl"
+                  class="input input-bordered input-sm flex-1 rounded-field"
                   placeholder="Name this filter..."
                   [ngModel]="newFilterName()"
                   (ngModelChange)="newFilterNameChange.emit($event)"
                   (keydown.enter)="saveCurrentFilterEvent.emit()"
                 />
-                <button type="button" class="btn btn-primary btn-sm" [disabled]="!newFilterName().trim()" (click)="saveCurrentFilterEvent.emit()">Save</button>
-                <button type="button" class="btn btn-ghost btn-sm" (click)="cancelSaveFilterFormEvent.emit()">Cancel</button>
+                <button type="button" class="btn btn-primary btn-sm rounded-field" [disabled]="!newFilterName().trim()" (click)="saveCurrentFilterEvent.emit()">Save</button>
+                <button type="button" class="btn btn-ghost btn-sm rounded-field" (click)="cancelSaveFilterFormEvent.emit()">Cancel</button>
               </div>
             }
           }

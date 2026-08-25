@@ -52,8 +52,8 @@
 
       <!-- 3 chấm: mở modal quản lý workspace (đổi tên/icon, thành viên, xoá) -->
       <button type="button"
-        class="btn btn-xs btn-circle absolute right-1.5 top-1/2 z-10 -translate-y-1/2 opacity-0 transition-all focus-visible:opacity-100 group-hover:opacity-100"
-        [class]="activeWorkspaceId() === ws.id ? 'text-primary-content hover:bg-black/15 active:bg-black/25' : 'text-base-content/60 hover:bg-base-300 hover:text-base-content'"
+        class="btn btn-ghost btn-xs btn-circle border-none absolute right-1.5 top-1/2 z-10 -translate-y-1/2 opacity-0 transition-all focus-visible:opacity-100 group-hover:opacity-100"
+        [class]="activeWorkspaceId() === ws.id ? 'bg-white/25 text-white hover:bg-white/40 active:bg-white/50' : 'bg-base-200 text-base-content/70 hover:bg-base-300 hover:text-base-content'"
         title="Manage Workspace" [attr.aria-label]="'Manage ' + ws.name" (click)="onManage(ws, $event)">
         <svg lucideEllipsisVertical class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg>
       </button>

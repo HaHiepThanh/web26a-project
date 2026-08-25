@@ -19,7 +19,7 @@
           Workspace name <span class="text-error">*</span>
         </label>
         <input type="text" id="workspace-name-input" maxlength="50"
-          class="input w-full rounded-xl font-bold text-base-content bg-base-100 shadow-xs text-sm transition-all"
+          class="input input-bordered w-full rounded-field font-bold text-base-content bg-base-100 shadow-xs text-sm transition-all"
           [class.border-error]="nameError()"
           [class.focus:border-error]="nameError()"
           [class.border-base-300]="!nameError()"
@@ -48,14 +48,14 @@
         </div>
         <textarea id="workspace-desc-input"
           maxlength="300"
-          class="textarea border-base-300 focus:border-primary focus:ring-2 focus:ring-primary/20 w-full rounded-xl font-medium text-base-content bg-base-100 shadow-xs text-sm leading-relaxed"
+          class="textarea textarea-bordered border-base-300 focus:border-primary focus:ring-2 focus:ring-primary/20 w-full rounded-field font-medium text-base-content bg-base-100 shadow-xs text-sm leading-relaxed"
           rows="3"
           placeholder="Describe the purpose of this workspace..." [ngModel]="descInput()"
           (ngModelChange)="descInput.set($event)" name="workspaceDesc"></textarea>
       </div>
 
       <!-- AI THẤY ĐƯỢC WORKSPACE NÀY -->
-      <div class="my-4 rounded-2xl border-2 border-base-300 bg-base-200 p-4 shadow-xs">
+      <div class="my-4 rounded-lg border border-base-300 bg-base-200/50 p-3.5 shadow-xs">
         <div class="mb-3 flex items-center gap-1.5">
           <span class="text-sm font-bold text-primary">👥</span>
           <span class="text-xs font-black uppercase tracking-wider text-base-content">Who can see this workspace</span>
@@ -63,7 +63,7 @@
 
         <div class="mb-3 grid gap-2 sm:grid-cols-2">
           <button type="button"
-            class="btn h-auto min-h-0 items-start justify-start gap-2.5 p-3 text-left font-normal normal-case"
+            class="btn h-auto min-h-0 items-start justify-start gap-2.5 p-3 rounded-field text-left font-normal normal-case"
             [ngClass]="visibility() === 'org' ? 'btn-primary btn-soft' : 'btn-outline'"
             (click)="setVisibility('org')">
             <span class="mt-0.5 text-base">🏢</span>
@@ -76,7 +76,7 @@
           </button>
 
           <button type="button"
-            class="btn h-auto min-h-0 items-start justify-start gap-2.5 p-3 text-left font-normal normal-case"
+            class="btn h-auto min-h-0 items-start justify-start gap-2.5 p-3 rounded-field text-left font-normal normal-case"
             [ngClass]="visibility() === 'restricted' ? 'btn-primary btn-soft' : 'btn-outline'"
             (click)="setVisibility('restricted')">
             <span class="mt-0.5 text-base">🔒</span>
@@ -94,7 +94,7 @@
             <span class="text-3xs font-black uppercase tracking-wider text-base-content/70">
               Select from organization members
             </span>
-            <span class="badge badge-primary badge-sm font-black">{{ selectedCount() }} selected</span>
+            <span class="badge badge-primary badge-sm font-black rounded">{{ selectedCount() }} selected</span>
           </div>
 
           <div class="relative mb-2">
@@ -104,7 +104,7 @@
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
             <input type="text"
-              class="input input-sm w-full rounded-xl border-base-300 bg-base-100 pl-9 text-xs font-medium text-base-content focus:border-primary focus:ring-2 focus:ring-primary/20 shadow-xs"
+              class="input input-sm input-bordered w-full rounded-field border-base-300 bg-base-100 pl-9 text-xs font-medium text-base-content focus:border-primary focus:ring-2 focus:ring-primary/20 shadow-xs"
               placeholder="Search by name, email, or ID..." [ngModel]="memberSearch()"
               (ngModelChange)="memberSearch.set($event)"
               (keydown.enter)="$event.preventDefault()" name="memberSearch" />
@@ -113,7 +113,7 @@
           <div class="max-h-52 space-y-1.5 overflow-y-auto pr-1">
             @for (m of filteredMembers(); track m.user.id) {
               <button type="button"
-                class="btn h-auto min-h-0 w-full justify-between p-2 text-left font-normal normal-case shadow-2xs"
+                class="btn h-auto min-h-0 w-full justify-between p-2 rounded-field text-left font-normal normal-case shadow-2xs"
                 [ngClass]="isSelected(m.user.id) ? 'btn-primary btn-soft' : 'btn-outline'"
                 [class.opacity-70]="isLocked(m.user.id)"
                 [disabled]="isLocked(m.user.id)"
@@ -129,10 +129,10 @@
                         {{ m.user.displayName || m.user.email.split('@')[0] }}
                       </span>
                       @if (isLocked(m.user.id)) {
-                        <span class="badge badge-warning badge-xs text-3xs font-black">You</span>
+                        <span class="badge badge-warning badge-xs text-3xs font-black rounded">You</span>
                       }
                       @if (m.role !== 'member') {
-                        <span class="badge badge-ghost badge-xs text-3xs font-bold">{{ m.role }}</span>
+                        <span class="badge badge-ghost badge-xs text-3xs font-bold rounded">{{ m.role }}</span>
                       }
                     </span>
                     <span class="block truncate text-3xs text-base-content/60">{{ m.user.email }}</span>
@@ -148,7 +148,7 @@
             }
           </div>
         } @else {
-          <p class="rounded-xl bg-base-100/60 px-3 py-2.5 text-3xs font-semibold leading-relaxed text-base-content/60">
+          <p class="rounded-lg bg-base-100/60 px-3 py-2.5 text-3xs font-semibold leading-relaxed text-base-content/60">
             All {{ orgMembers().length }} members of the organization will see this workspace.
             Boards inside can still have their own visibility.
           </p>
@@ -158,7 +158,7 @@
       <!-- Actions -->
       <div class="flex items-center justify-between pt-3 border-t border-base-300">
         @if (mode() === 'edit') {
-        <button type="button" class="btn btn-error btn-outline btn-sm font-bold"
+        <button type="button" class="btn btn-error btn-outline btn-sm rounded-field font-bold"
           (click)="confirmDelete()">
           {{ deleteConfirmArmed() ? '⚠️ Confirm delete?' : '🗑️ Delete Workspace' }}
         </button>
@@ -167,8 +167,8 @@
         }
 
         <div class="flex gap-2">
-          <button type="button" class="btn btn-ghost btn-sm font-bold" (click)="close.emit()">Cancel</button>
-          <button type="submit" class="btn btn-primary btn-sm font-black px-5 shadow-sm">
+          <button type="button" class="btn btn-ghost btn-sm rounded-field font-bold" (click)="close.emit()">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm rounded-field font-black px-5 shadow-sm">
             {{ mode() === 'create' ? 'Create Workspace' : 'Save changes' }}
           </button>
         </div>

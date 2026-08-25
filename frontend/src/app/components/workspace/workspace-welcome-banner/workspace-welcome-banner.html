@@ -1,4 +1,4 @@
-<div class="relative overflow-hidden rounded-2xl border border-base-300 bg-base-100 p-6 shadow-sm">
+<div class="relative overflow-hidden rounded-lg border border-base-300 bg-base-100 p-6 shadow-sm">
   <div class="absolute -right-12 -top-12 h-44 w-44 rounded-full bg-primary/10 blur-3xl pointer-events-none"></div>
   <div class="absolute -left-12 -bottom-12 h-44 w-44 rounded-full bg-secondary/10 blur-3xl pointer-events-none"></div>
 
@@ -17,25 +17,25 @@
 
     <!-- 3-Step Guide Cards -->
     <div class="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
-      <div class="rounded-xl border border-base-300 bg-base-200 p-3.5 shadow-xs">
+      <div class="rounded-lg border border-base-300 bg-base-200 p-3.5 shadow-xs">
         <div class="flex items-center gap-2 mb-1.5">
-          <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-primary text-white text-xs font-black">1</span>
+          <span class="flex h-6 w-6 items-center justify-center rounded-md bg-primary text-white text-xs font-black">1</span>
           <h4 class="text-xs font-bold text-base-content">Create a Workspace</h4>
         </div>
         <p class="text-2xs text-base-content/60 leading-relaxed">Name it and pick an icon for each project or class.</p>
       </div>
 
-      <div class="rounded-xl border border-base-300 bg-base-200 p-3.5 shadow-xs">
+      <div class="rounded-lg border border-base-300 bg-base-200 p-3.5 shadow-xs">
         <div class="flex items-center gap-2 mb-1.5">
-          <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-secondary text-white text-xs font-black">2</span>
+          <span class="flex h-6 w-6 items-center justify-center rounded-md bg-secondary text-white text-xs font-black">2</span>
           <h4 class="text-xs font-bold text-base-content">Add members</h4>
         </div>
         <p class="text-2xs text-base-content/60 leading-relaxed">Enter a UUID or email to invite collaborators.</p>
       </div>
 
-      <div class="rounded-xl border border-base-300 bg-base-200 p-3.5 shadow-xs">
+      <div class="rounded-lg border border-base-300 bg-base-200 p-3.5 shadow-xs">
         <div class="flex items-center gap-2 mb-1.5">
-          <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-accent text-base-content text-xs font-black">3</span>
+          <span class="flex h-6 w-6 items-center justify-center rounded-md bg-accent text-base-content text-xs font-black">3</span>
           <h4 class="text-xs font-bold text-base-content">Create a Kanban Board</h4>
         </div>
         <p class="text-2xs text-base-content/60 leading-relaxed">Create a board with To Do, In Progress, and Done columns.</p>
@@ -46,13 +46,13 @@
     <div class="mt-6 flex flex-wrap items-center gap-3">
       <button
         type="button"
-        class="btn btn-primary btn-sm gap-1.5 font-black px-5 shadow-sm"
+        class="btn btn-primary btn-sm rounded-field gap-1.5 font-black px-5 shadow-sm"
         (click)="createWorkspace.emit()" [class.hidden]="!canManage()">
         <svg lucideSparkles class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg> Create your first Workspace
       </button>
       <button
         type="button"
-        class="btn btn-outline btn-sm gap-1.5 font-bold px-4"
+        class="btn btn-outline btn-sm rounded-field gap-1.5 font-bold px-4"
         (click)="loadSamples.emit()">
         <svg lucideZap class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg> Load sample data
       </button>
