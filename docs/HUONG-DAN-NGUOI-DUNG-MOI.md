@@ -229,21 +229,44 @@ bottom sheet — **chat panel ở mobile là FAB chứ không phải panel**, to
 
 ---
 
-## 7. Ba câu hỏi còn TREO — phải hỏi chủ dự án trước khi code
+## 7. Ba câu hỏi chặn — ĐÃ ĐƯỢC DUYỆT
 
-1. **Có được đụng backend không?** Cột `onboarding_state` cần 1 migration + sửa
-   `PATCH /auth/profile`. Không được thì lùi về localStorage và chấp nhận hỏi lại
-   khi người dùng đổi máy.
-2. **Seed dữ liệu mẫu ở tầng 2 — API thật hay mock?** Đề xuất API thật.
-   ⚠️ Lưu ý: `loadSampleWorkspaces()` hiện có
-   (`pages/workspace/workspace.ts:444`) vẫn đang ghi **mock vào localStorage** —
-   di sản thời chưa nối backend. **Đừng dùng lại nó.**
-3. **Xác nhận cắt nhánh từ `main`** (xem §1).
+Chủ dự án đã trả lời cả ba ngày **2026-08-26**. Không cần hỏi lại.
+
+1. **Được đụng backend.** Làm migration thêm cột `onboarding_state jsonb` vào
+   bảng `users`, và nới `PATCH /auth/profile`
+   (`backend/src/modules/auth/auth.controller.ts:44`). Không phải lùi về
+   localStorage nữa — xem §5 về lý do chọn `jsonb` thay vì `boolean`.
+2. **Seed dữ liệu mẫu ở tầng 2 bằng API thật**, không mock.
+   ⚠️ `loadSampleWorkspaces()` hiện có (`pages/workspace/workspace.ts:444`) vẫn
+   đang ghi **mock vào localStorage** — di sản thời chưa nối backend.
+   **Đừng dùng lại nó.**
+3. **Cắt nhánh từ `main`** (xem §1). Tên đề xuất:
+   `feat/huong-dan-nguoi-dung-moi`.
+
+### Không có linh vật trong tour
+
+Có lúc tính cho linh vật của web (`frontend/public/HHH-logo-256.png`) đóng vai
+người dẫn tour. **Ý này đã bị bác bỏ ngày 2026-08-26, đừng đề xuất lại.**
+
+Lý do: linh vật chỉ là một PNG tĩnh, và repo không có file nguồn vector — tìm
+khắp chỉ có bitmap, không `.svg`/`.ai`/`.fig`/`.psd`. Đo vùng liên thông trên
+kênh alpha: ảnh gồm 15 mảnh rời — nhân vật là **một khối liền** chiếm 87.3% pixel
+vẽ (bộ xương + vương miện + khủng long dính nhau, không tách chi ra được vì sau
+cánh tay không có dữ liệu thân), 14 mảnh còn lại là các ngôi sao 13–22px. Nên nó
+không chỉ tay hay đổi nét mặt được nếu không có tranh vẽ mới.
+
+Tour làm đúng như §3 và §6 mô tả: spotlight làm mờ nền + popover CDK Overlay,
+không nhân vật.
+
+*(Tính năng "linh vật chào người dùng" ở góc trang workspace là việc riêng,
+không liên quan tour, đang hoãn.)*
 
 ---
 
 ## 8. Chưa làm gì cả
 
-Tính tới lúc viết file này: **chưa sửa/tạo file code nào**, chưa cắt nhánh, chưa
-commit. Toàn bộ nội dung trên là thiết kế trên giấy, đã đối chiếu với code thật
+Tính tới 2026-08-26: **chưa sửa/tạo file code nào**, chưa cắt nhánh tính năng.
+Ba câu hỏi ở §7 đã duyệt nhưng chủ dự án **chưa cho bắt đầu code**.
+Toàn bộ nội dung trên là thiết kế trên giấy, đã đối chiếu với code thật
 (mọi đường dẫn và số dòng trong file này đều đã kiểm tra trên nhánh `main`).
