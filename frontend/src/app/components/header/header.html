@@ -15,7 +15,7 @@
         class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-base-content/35 transition-colors group-focus-within:text-primary"
         [strokeWidth]="2"></svg>
       <input type="text"
-        class="input input-sm h-9 w-full appearance-none rounded-full border-none bg-base-200/70 pl-10 pr-9 text-sm text-base-content shadow-none transition-all placeholder:text-base-content/40 hover:bg-base-200 focus:bg-base-100 focus:shadow-sm focus:ring-2 focus:ring-primary/25 focus:outline-none"
+        class="input input-sm h-9 w-full rounded-full border border-primary/40 bg-base-100 pl-10 pr-9 text-sm text-base-content transition-all placeholder:text-base-content/40 hover:border-primary/60 focus:border-primary focus:ring-2 focus:ring-primary/25 focus:outline-none"
         placeholder="Search boards..." (input)="onSearchInput($event)" />
       <span
         class="kbd kbd-sm pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 border-none bg-base-300/70 text-base-content/50 opacity-0 transition-opacity group-focus-within:opacity-0 group-hover:opacity-100">/</span>
@@ -24,12 +24,9 @@
 
   <div class="flex shrink-0 items-center gap-2">
     <div class="relative">
-      <!-- h-9: btn-sm mặc định cao 32px, còn ô tìm kiếm bên trái ghim h-9 (36px)
-           — không khớp trong cùng một hàng. Nâng nút lên bằng ô tìm kiếm thay vì
-           hạ ô tìm kiếm xuống, để không đụng vùng chạm vừa mở rộng ở UI-005. -->
-      <button class="btn btn-primary btn-sm h-9 gap-1.5 rounded-full px-3.5 shadow-sm" (click)="toggleCreateMenu()">
+      <button class="btn btn-primary btn-sm h-9 gap-1.5 rounded-full px-4 font-bold shadow-sm" (click)="toggleCreateMenu()">
         <svg lucidePlus class="h-4 w-4" [strokeWidth]="2.4"></svg>
-        <span class="max-sm:hidden">Create</span>
+        <span>Create</span>
         <svg lucideChevronDown class="h-3 w-3 opacity-70" [strokeWidth]="2.5"></svg>
       </button>
 

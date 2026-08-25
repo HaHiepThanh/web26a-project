@@ -9,13 +9,9 @@
 
 /* ---------- Design tokens (used by layout + board showcase) ---------- */
 .login-frame {
-  /* Không override --color-primary nữa: 2 trang auth dùng chung màu nhấn với
-     theme daisyUI đang bật (winter/sunset) như mọi màn hình còn lại. */
+  /* 2 trang auth dùng chung màu nhấn và token bo góc với theme daisyUI đang bật (winter/sunset) */
   --primary: var(--accent-blue);
   --primary-dark: var(--accent-blue-hover);
-  /* Nút và ô nhập của trang này bo tròn hơn phần còn lại của app cho hợp không
-     khí trang giới thiệu — giữ lại vì đây là bo góc, không phải màu (audit UI-003). */
-  --radius-field: 16px;
   --slate-50: #f8fafc;
   --slate-100: #f1f5f9;
   --slate-300: #cbd5e1;

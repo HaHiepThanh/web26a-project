@@ -1,35 +1,39 @@
 <div class="p-3.5">
   <!-- Section header -->
-  <div class="mb-2.5 flex items-center justify-between px-0.5">
+  <div class="mb-2 flex items-center justify-between px-0.5">
     <div class="flex items-center gap-1.5">
-      <span class="flex h-5 w-5 items-center justify-center rounded-md bg-primary/10 text-primary">
+      <span class="flex h-5 w-5 items-center justify-center rounded bg-primary/10 text-primary">
         <svg lucideBuilding2 class="h-3 w-3" [strokeWidth]="2.4"></svg>
       </span>
-      <span class="text-2xs font-bold uppercase tracking-wide text-base-content/45">Organization</span>
+      <span class="text-2xs font-bold uppercase tracking-wide text-base-content/50">Organization</span>
     </div>
-    <span class="text-2xs font-bold text-base-content/35">{{ organizations().length }}</span>
+    <span class="text-2xs font-bold text-base-content/40">{{ organizations().length }}</span>
   </div>
 
-  <!-- Danh sách tổ chức dùng .menu của daisyUI; mục đang chọn là .menu-active. -->
-  <ul class="menu menu-sm w-full gap-1 p-0">
+  <!-- Danh sách tổ chức -->
+  <ul class="flex flex-col w-full min-w-0 gap-1 p-0">
     @for (org of organizations(); track org.id) {
-    <li class="group relative">
-      <button type="button" class="flex w-full items-center gap-2.5 pr-9"
-        [class.menu-active]="org.id === activeOrg()?.id" (click)="onSelect(org.id)">
-        <span class="min-w-0 flex-1 text-left">
-          <span class="block truncate text-xs font-bold leading-tight">{{ org.name }}</span>
-          <span class="block truncate text-2xs font-medium leading-tight opacity-60">
+    <li class="group relative min-w-0 w-full">
+      <button type="button"
+        class="flex w-full min-w-0 items-center justify-between gap-2 rounded-md p-2 text-left transition-all duration-150 pr-16"
+        [class]="org.id === activeOrg()?.id ? 'bg-success text-success-content font-bold shadow-xs' : 'text-base-content hover:bg-base-200'"
+        (click)="onSelect(org.id)">
+        <span class="min-w-0 flex-1 overflow-hidden">
+          <span class="block truncate text-xs font-bold leading-tight" [title]="org.name">{{ org.name }}</span>
+          <span class="block truncate text-2xs font-medium leading-tight"
+            [class]="org.id === activeOrg()?.id ? 'text-success-content/80' : 'text-base-content/55'">
             {{ org.memberIds.length }} member(s)
           </span>
         </span>
         @if (org.id === activeOrg()?.id) {
-        <svg lucideCheck class="h-3.5 w-3.5 shrink-0 transition-opacity group-hover:opacity-0" [strokeWidth]="3"></svg>
+        <svg lucideCheck class="h-3.5 w-3.5 shrink-0 absolute right-9 top-1/2 -translate-y-1/2 text-success-content" [strokeWidth]="3"></svg>
         }
       </button>
 
       <!-- 3 chấm: mở modal quản lý (mời/xoá thành viên, đổi tên) -->
       <button type="button"
-        class="btn btn-ghost btn-xs btn-circle absolute right-1.5 top-1/2 z-10 -translate-y-1/2 opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100"
+        class="btn btn-xs btn-circle absolute right-1.5 top-1/2 z-10 -translate-y-1/2 opacity-0 transition-all focus-visible:opacity-100 group-hover:opacity-100"
+        [class]="org.id === activeOrg()?.id ? 'text-success-content hover:bg-black/15 active:bg-black/25' : 'text-base-content/60 hover:bg-base-300 hover:text-base-content'"
         title="Manage organization" [attr.aria-label]="'Manage ' + org.name" (click)="onManage(org.id, $event)">
         <svg lucideEllipsisVertical class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg>
       </button>
@@ -37,7 +41,7 @@
     }
   </ul>
 
-  <!-- Nút Tạo Organization mới: Mở popup modal -->
+  <!-- Nút Tạo Organization mới (màu xanh Primary chuẩn) -->
   <button type="button" class="btn btn-dash btn-primary btn-sm mt-2 w-full gap-1.5 text-2xs font-bold"
     (click)="startCreate()">
     <svg lucidePlus class="h-3 w-3 shrink-0" [strokeWidth]="3"></svg>
