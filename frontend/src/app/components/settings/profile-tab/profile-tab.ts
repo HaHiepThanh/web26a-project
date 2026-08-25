@@ -19,6 +19,7 @@ import {
 import { User } from '../../../models';
 import { initialsOf } from '../../../mocks';
 import { AuthService } from '../../../services/auth.service';
+import { checkPassword, type PasswordCheck } from '../../../utils/password.util';
 
 /** Confirms the two password fields match; attached at the FormGroup level. */
 function passwordsMatchValidator(group: AbstractControl): ValidationErrors | null {
@@ -26,35 +27,6 @@ function passwordsMatchValidator(group: AbstractControl): ValidationErrors | nul
   const confirmPassword = group.get('confirmPassword')?.value;
   if (!newPassword || !confirmPassword) return null;
   return newPassword === confirmPassword ? null : { passwordMismatch: true };
-}
-
-interface PasswordStrength {
-  score: 0 | 1 | 2 | 3 | 4;
-  label: string;
-  percent: number;
-  colorVar: string;
-}
-
-/** Simple heuristic strength meter — length + character-class variety. */
-function computePasswordStrength(password: string): PasswordStrength {
-  if (!password) return { score: 0, label: '', percent: 0, colorVar: '#94a3b8' };
-
-  let score = 0;
-  if (password.length >= 6) score++;
-  if (password.length >= 10) score++;
-  if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score++;
-  if (/\d/.test(password) || /[^A-Za-z0-9]/.test(password)) score++;
-
-  const clamped = Math.min(score, 4) as PasswordStrength['score'];
-  const table: Record<number, { label: string; colorVar: string }> = {
-    0: { label: 'Very weak', colorVar: '#ef4444' },
-    1: { label: 'Weak', colorVar: '#f97316' },
-    2: { label: 'Fair', colorVar: '#eab308' },
-    3: { label: 'Strong', colorVar: '#22c55e' },
-    4: { label: 'Very strong', colorVar: '#10b981' },
-  };
-
-  return { score: clamped, percent: (clamped / 4) * 100, ...table[clamped] };
 }
 
 @Component({
@@ -79,7 +51,9 @@ export class ProfileTab {
   readonly currentUser = input<User | null>(null);
 
   readonly saveProfile = output<User>();
-  readonly changePassword = output<{ currentPassword: string; newPassword: string }>();
+  // Không còn output `changePassword`: việc đổi mật khẩu gọi thẳng AuthService
+  // ngay trong component này (như `updateProfile` ở dưới), vì chỉ ở đây mới biết
+  // kết quả để quyết định có được xoá form hay không.
   readonly flashMessage = output<{ message: string; type?: 'success' | 'error' | 'info' }>();
 
   /**
@@ -97,6 +71,8 @@ export class ProfileTab {
   readonly avatarPreview = signal<string | null>(null);
   /** Đang lưu avatar (upload/gỡ) — khoá 2 nút lại, tránh bấm chồng trong lúc chờ. */
   readonly savingAvatar = signal(false);
+  /** Dang goi Firebase doi mat khau — khoa nut, tranh bam chong. */
+  readonly savingPassword = signal(false);
   readonly copiedUuid = signal(false);
 
   readonly profileForm: FormGroup = this.fb.group({
@@ -110,14 +86,34 @@ export class ProfileTab {
   readonly passwordForm: FormGroup = this.fb.group(
     {
       currentPassword: ['', [Validators.required]],
-      newPassword: ['', [Validators.required, Validators.minLength(6)]],
+      // Chinh sach that nam trong `password.util.ts` — dung chung voi trang dang
+      // ky de hai cho khong bao gio doi hoi hai thu khac nhau.
+      newPassword: ['', [Validators.required, (c: AbstractControl) => this.kiemChinhSach(c)]],
       confirmPassword: ['', [Validators.required]],
     },
     { validators: passwordsMatchValidator },
   );
 
-  get passwordStrength(): PasswordStrength {
-    return computePasswordStrength(this.passwordForm.get('newPassword')?.value ?? '');
+  /** Đánh giá mật khẩu mới — vừa để vẽ thanh, vừa để liệt kê điều kiện còn thiếu. */
+  get passwordCheck(): PasswordCheck {
+    return this.danhGia(this.passwordForm.get('newPassword')?.value ?? '');
+  }
+
+  private danhGia(value: string): PasswordCheck {
+    const u = this.currentUser();
+    return checkPassword(value, {
+      email: u?.email,
+      username: u?.username,
+      displayName: u?.displayName,
+    });
+  }
+
+  /** Trả lời cho form biết mật khẩu đã đạt chính sách chưa. Ô trống thì để
+   *  `Validators.required` báo — không chồng hai thông báo lên nhau. */
+  private kiemChinhSach(control: AbstractControl): ValidationErrors | null {
+    const value = (control.value ?? '') as string;
+    if (!value) return null;
+    return this.danhGia(value).meetsPolicy ? null : { passwordPolicy: true };
   }
 
   constructor() {
@@ -239,14 +235,52 @@ export class ProfileTab {
     }
   }
 
-  onSubmitPassword(): void {
-    if (this.passwordForm.invalid) {
+  /**
+   * Đổi mật khẩu — GỌI FIREBASE THẬT rồi mới báo kết quả.
+   *
+   * Gọi thẳng `AuthService` như `updateProfile` ở trên, thay vì bắn output cho
+   * trang cha: có kết quả ngay tại chỗ nên mới biết lúc nào được phép xoá form.
+   * Bản trước xoá form ngay khi bấm — nhập sai mật khẩu hiện tại là mất trắng
+   * cả ba ô, phải gõ lại từ đầu.
+   */
+  async onSubmitPassword(): Promise<void> {
+    if (this.passwordForm.invalid || this.savingPassword()) {
       this.passwordForm.markAllAsTouched();
       return;
     }
 
     const { currentPassword, newPassword } = this.passwordForm.getRawValue();
-    this.changePassword.emit({ currentPassword, newPassword });
-    this.passwordForm.reset();
+    this.savingPassword.set(true);
+    try {
+      await this.authService.changePassword(currentPassword, newPassword);
+      this.passwordForm.reset();
+      this.flashMessage.emit({ message: 'Password changed. Use it the next time you sign in.', type: 'success' });
+    } catch (err) {
+      this.flashMessage.emit({ message: this.describePasswordError(err), type: 'error' });
+    } finally {
+      this.savingPassword.set(false);
+    }
+  }
+
+  /** Mã lỗi của Firebase dịch sang câu người dùng hiểu và biết phải làm gì. */
+  private describePasswordError(err: unknown): string {
+    const code = (err as { code?: string })?.code ?? '';
+    switch (code) {
+      // Firebase gộp "sai mật khẩu" và "không có tài khoản" vào cùng một mã để
+      // người ngoài không dò được email nào có thật.
+      case 'auth/wrong-password':
+      case 'auth/invalid-credential':
+        return 'Your current password is incorrect.';
+      case 'auth/weak-password':
+        return 'Firebase rejected this password as too weak.';
+      case 'auth/too-many-requests':
+        return 'Too many attempts. Please wait a few minutes and try again.';
+      case 'auth/requires-recent-login':
+        return 'For your security, please sign out and sign in again, then change your password.';
+      case 'auth/network-request-failed':
+        return "Couldn't reach the server. Please check your connection.";
+      default:
+        return (err as { message?: string })?.message ?? 'Failed to change the password.';
+    }
   }
 }

@@ -115,20 +115,6 @@ export class Settings {
   async onProfileChanged(): Promise<void> {
     await this.orgService.reload();
   }
-
-  onChangePassword(event: { currentPassword: string; newPassword: string }): void {
-    const cur = this.currentUser();
-    if (cur?.password && cur.password !== event.currentPassword) {
-      this.flash('Current password is incorrect. Please try again!', 'error');
-      return;
-    }
-
-    if (cur) {
-      this.auth.setUser({ ...cur, password: event.newPassword });
-    }
-    this.flash('Password changed successfully!');
-  }
-
   // ---------------------------------------------------------------------
   // TAB 2: Manage Workspace handlers
   // ---------------------------------------------------------------------

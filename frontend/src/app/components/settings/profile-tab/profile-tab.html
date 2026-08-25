@@ -129,17 +129,30 @@
       <!-- Mật khẩu mới -->
       <div class="flex flex-col gap-1.5">
         <label class="text-xs font-bold text-base-content/80" for="newPassword">New password *</label>
-        <input id="newPassword" type="password" class="input input-sm rounded-xl w-full border-base-300 font-semibold text-[12px]" formControlName="newPassword" placeholder="At least 6 characters..." />
+        <input id="newPassword" type="password" class="input input-sm rounded-xl w-full border-base-300 font-semibold text-[12px]" formControlName="newPassword" placeholder="At least 8 characters..." />
         @if (passwordForm.get('newPassword')?.value) {
           <div class="mt-1 flex items-center gap-2">
             <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-base-300">
-              <div class="h-full rounded-full transition-all duration-300" [style.width.%]="passwordStrength.percent" [style.background]="passwordStrength.colorVar"></div>
+              <div class="h-full rounded-full transition-all duration-300" [style.width.%]="passwordCheck.percent" [style.background]="passwordCheck.colorVar"></div>
             </div>
-            <span class="text-2xs font-black" [style.color]="passwordStrength.colorVar">{{ passwordStrength.label }}</span>
+            <span class="text-2xs font-black" [style.color]="passwordCheck.colorVar">{{ passwordCheck.label }}</span>
           </div>
+
+          <!-- Liệt kê từng điều kiện thay vì một câu "mật khẩu chưa đủ mạnh":
+               người dùng cần biết CÒN THIẾU GÌ mới sửa được, không thì chỉ gõ
+               bừa cho qua. -->
+          <ul class="mt-1 flex flex-col gap-0.5">
+            @for (rule of passwordCheck.rules; track rule.id) {
+              <li class="flex items-start gap-1.5 text-2xs font-semibold"
+                  [class]="rule.ok ? 'text-success' : 'text-base-content/50'">
+                <span aria-hidden="true">{{ rule.ok ? '✓' : '○' }}</span>
+                <span>{{ rule.label }}</span>
+              </li>
+            }
+          </ul>
         }
-        @if (passwordForm.get('newPassword')?.invalid && passwordForm.get('newPassword')?.touched) {
-          <span class="text-2xs font-bold text-error">New password must be at least 6 characters.</span>
+        @if (passwordForm.get('newPassword')?.hasError('required') && passwordForm.get('newPassword')?.touched) {
+          <span class="text-2xs font-bold text-error">Please enter a new password.</span>
         }
       </div>
 
@@ -153,7 +166,7 @@
       </div>
 
       <div class="sm:col-span-2 flex justify-end pt-1">
-        <button type="submit" class="btn btn-primary btn-sm gap-1.5 px-5 font-black text-[12px] shadow-xs" [disabled]="passwordForm.invalid">
+        <button type="submit" class="btn btn-primary btn-sm gap-1.5 px-5 font-black text-[12px] shadow-xs" [disabled]="passwordForm.invalid || savingPassword()">
           <svg lucideLock class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg> Update password
         </button>
       </div>
