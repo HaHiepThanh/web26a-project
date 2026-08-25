@@ -260,42 +260,50 @@
         <h4 class="mb-2 text-2xs font-black uppercase tracking-wide text-base-content/45">
           Members ({{ members().length }})
         </h4>
-        <div class="flex flex-col gap-1">
+        <div class="flex flex-col gap-1.5">
           @for (mem of members(); track mem.user.id) {
-          <div class="flex items-center gap-2.5 rounded-lg border border-base-300 px-2.5 py-2">
-            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-2xs font-black text-white"
-              [style.background-color]="avatarBgFor(mem.user.id)">{{ initialsOf(mem.user.displayName || mem.user.email) }}</span>
-            <span class="min-w-0 flex-1">
-              <span class="block truncate text-xs font-bold text-base-content">{{ mem.user.displayName || mem.user.email }}</span>
-              <span class="block truncate text-3xs text-base-content/50">{{ mem.user.email }}</span>
-            </span>
-
-            @if (mem.role === 'owner') {
-            <span class="badge badge-primary badge-sm shrink-0 gap-1 rounded-field font-black">
-              <svg lucideCrown class="h-3 w-3" [strokeWidth]="2.2"></svg> Owner
-            </span>
-            } @else {
-              <!-- Chỉ owner đổi được quyền; người khác chỉ thấy nhãn. -->
-              @if (isOwner()) {
-              <select class="select select-xs select-bordered shrink-0 rounded text-3xs font-bold"
-                title="Change this member's role"
-                [value]="mem.role"
-                (change)="onChangeRole(mem.user.id, $any($event.target).value)">
-                <option value="member">Member</option>
-                <option value="admin">Admin</option>
-              </select>
-              <button type="button" class="btn btn-ghost btn-xs rounded shrink-0 gap-1 font-bold text-error"
-                title="Remove from organization" (click)="onRemove(mem.user.id)">
-                <svg lucideTrash2 class="h-3 w-3" [strokeWidth]="2.2"></svg> Remove
-              </button>
-              } @else {
-              <span class="badge badge-sm shrink-0 font-bold rounded"
-                [class.badge-warning]="mem.role === 'admin'"
-                [class.badge-ghost]="mem.role !== 'admin'">
-                {{ mem.role === 'admin' ? 'Admin' : 'Member' }}
+          <div class="flex items-center justify-between gap-3 rounded-lg border border-base-300 bg-base-100 px-3 py-2.5">
+            <!-- Trái: Avatar + Tên + Email -->
+            <div class="flex min-w-0 flex-1 items-center gap-2.5">
+              <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-2xs font-black text-white"
+                [style.background-color]="avatarBgFor(mem.user.id)">
+                {{ initialsOf(mem.user.displayName || mem.user.email) }}
               </span>
+              <div class="min-w-0 flex-1">
+                <span class="block truncate text-xs font-bold text-base-content">{{ mem.user.displayName || mem.user.email }}</span>
+                <span class="block truncate text-3xs text-base-content/50">{{ mem.user.email }}</span>
+              </div>
+            </div>
+
+            <!-- Phải: Quyền (select/badge) + Nút Remove -->
+            <div class="flex shrink-0 items-center gap-2">
+              @if (mem.role === 'owner') {
+              <span class="badge badge-primary badge-sm shrink-0 gap-1 rounded-field font-black">
+                <svg lucideCrown class="h-3 w-3" [strokeWidth]="2.2"></svg> Owner
+              </span>
+              } @else {
+                <!-- Chỉ owner đổi được quyền; người khác chỉ thấy nhãn. -->
+                @if (isOwner()) {
+                <select class="select select-xs select-bordered w-24 rounded-field text-3xs font-bold"
+                  title="Change this member's role"
+                  [value]="mem.role"
+                  (change)="onChangeRole(mem.user.id, $any($event.target).value)">
+                  <option value="member">Member</option>
+                  <option value="admin">Admin</option>
+                </select>
+                <button type="button" class="btn btn-ghost btn-xs rounded-field shrink-0 gap-1 font-bold text-error hover:bg-error/10"
+                  title="Remove from organization" (click)="onRemove(mem.user.id)">
+                  <svg lucideTrash2 class="h-3 w-3" [strokeWidth]="2.2"></svg> Remove
+                </button>
+                } @else {
+                <span class="badge badge-sm shrink-0 font-bold rounded"
+                  [class.badge-warning]="mem.role === 'admin'"
+                  [class.badge-ghost]="mem.role !== 'admin'">
+                  {{ mem.role === 'admin' ? 'Admin' : 'Member' }}
+                </span>
+                }
               }
-            }
+            </div>
           </div>
           }
         </div>

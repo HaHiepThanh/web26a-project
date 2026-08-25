@@ -63,12 +63,16 @@
 
         <div class="mb-3 grid gap-2 sm:grid-cols-2">
           <button type="button"
-            class="btn h-auto min-h-0 items-start justify-start gap-2.5 p-3 rounded-field text-left font-normal normal-case"
-            [ngClass]="visibility() === 'org' ? 'btn-primary btn-soft' : 'btn-outline'"
+            class="flex cursor-pointer items-start gap-2.5 rounded-lg border-2 p-3 text-left transition bg-base-100 shadow-xs"
+            [class.border-primary]="visibility() === 'org'"
+            [class.bg-primary/5]="visibility() === 'org'"
+            [class.border-base-300]="visibility() !== 'org'"
+            [class.hover:bg-base-200/70]="visibility() !== 'org'"
+            [class.hover:border-primary/40]="visibility() !== 'org'"
             (click)="setVisibility('org')">
             <span class="mt-0.5 text-base">🏢</span>
             <span class="min-w-0">
-              <span class="block text-xs font-black text-base-content">Whole organization</span>
+              <span class="block text-xs font-black" [class.text-primary]="visibility() === 'org'" [class.text-base-content]="visibility() !== 'org'">Whole organization</span>
               <span class="block text-3xs leading-snug text-base-content/60">
                 Every member of the organization can see and access it
               </span>
@@ -76,12 +80,16 @@
           </button>
 
           <button type="button"
-            class="btn h-auto min-h-0 items-start justify-start gap-2.5 p-3 rounded-field text-left font-normal normal-case"
-            [ngClass]="visibility() === 'restricted' ? 'btn-primary btn-soft' : 'btn-outline'"
+            class="flex cursor-pointer items-start gap-2.5 rounded-lg border-2 p-3 text-left transition bg-base-100 shadow-xs"
+            [class.border-primary]="visibility() === 'restricted'"
+            [class.bg-primary/5]="visibility() === 'restricted'"
+            [class.border-base-300]="visibility() !== 'restricted'"
+            [class.hover:bg-base-200/70]="visibility() !== 'restricted'"
+            [class.hover:border-primary/40]="visibility() !== 'restricted'"
             (click)="setVisibility('restricted')">
             <span class="mt-0.5 text-base">🔒</span>
             <span class="min-w-0">
-              <span class="block text-xs font-black text-base-content">Specific members</span>
+              <span class="block text-xs font-black" [class.text-primary]="visibility() === 'restricted'" [class.text-base-content]="visibility() !== 'restricted'">Specific members</span>
               <span class="block text-3xs leading-snug text-base-content/60">
                 Only the people you select below
               </span>
@@ -113,8 +121,12 @@
           <div class="max-h-52 space-y-1.5 overflow-y-auto pr-1">
             @for (m of filteredMembers(); track m.user.id) {
               <button type="button"
-                class="btn h-auto min-h-0 w-full justify-between p-2 rounded-field text-left font-normal normal-case shadow-2xs"
-                [ngClass]="isSelected(m.user.id) ? 'btn-primary btn-soft' : 'btn-outline'"
+                class="flex w-full cursor-pointer items-center justify-between gap-2.5 rounded-lg border p-2 text-left transition shadow-2xs"
+                [class.border-primary]="isSelected(m.user.id)"
+                [class.bg-primary/5]="isSelected(m.user.id)"
+                [class.border-base-300]="!isSelected(m.user.id)"
+                [class.bg-base-100]="!isSelected(m.user.id)"
+                [class.hover:bg-base-200/70]="!isSelected(m.user.id)"
                 [class.opacity-70]="isLocked(m.user.id)"
                 [disabled]="isLocked(m.user.id)"
                 (click)="toggleMember(m.user.id)">
@@ -125,7 +137,7 @@
                   </span>
                   <span class="min-w-0">
                     <span class="flex items-center gap-1.5">
-                      <span class="truncate text-xs font-bold text-base-content">
+                      <span class="truncate text-xs font-bold" [class.text-primary]="isSelected(m.user.id)" [class.text-base-content]="!isSelected(m.user.id)">
                         {{ m.user.displayName || m.user.email.split('@')[0] }}
                       </span>
                       @if (isLocked(m.user.id)) {

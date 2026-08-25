@@ -1,5 +1,4 @@
 import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
-import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LucideTriangleAlert } from '@lucide/angular';
 import { OrganizationStore } from '../../../ngrx/organization/organization.store';
@@ -24,7 +23,7 @@ import { WorkspaceItem, WorkspaceMember, avatarBgFor, initialsOf } from '../../.
  */
 @Component({
   selector: 'app-workspace-form-modal',
-  imports: [NgClass, FormsModule, LucideTriangleAlert],
+  imports: [FormsModule, LucideTriangleAlert],
   templateUrl: './workspace-form-modal.html',
 })
 export class WorkspaceFormModal {
