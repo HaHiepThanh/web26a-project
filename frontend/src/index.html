@@ -11,7 +11,14 @@
     />
     <meta name="theme-color" content="#0b0d14" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
-    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <!-- Icon trên tab trình duyệt. Dùng logo thương hiệu (HHH-logo.png) thay cho
+       favicon.ico mặc định của Angular. Bản 32px cắt sẵn từ file gốc 1295px:
+       trình duyệt vẽ icon ở 16-32px, đưa file gốc 907kB vào đây là bắt mọi lượt
+       tải trang gánh gần 1MB chỉ để vẽ một ô vuông bé tí.
+       apple-touch-icon dùng khi lưu trang ra màn hình chính trên iPhone/iPad —
+       chỗ đó vẽ tới 180px nên cần bản riêng, không dùng chung bản 32px được. -->
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
 
     <!-- Thẻ xem trước khi dán link vào Zalo / Messenger / Discord / Slack.
        Không có mấy dòng này thì link chia sẻ chỉ hiện một dòng URL trần —
