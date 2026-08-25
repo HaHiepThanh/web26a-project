@@ -1,8 +1,14 @@
 <button
   type="button"
-  class="flex w-full items-center gap-1.5 rounded px-1.5 py-1.5 text-left text-[12px] font-medium text-base-content/50 transition-colors hover:bg-base-300 hover:text-base-content/70"
+  class="flex w-full items-center gap-1.5 rounded px-1.5 py-1.5 text-left text-[12px] font-medium text-base-content/50 transition-colors hover:bg-base-300 hover:text-base-content/70 disabled:cursor-progress disabled:opacity-60 disabled:hover:bg-transparent"
+  [disabled]="creating()"
   (click)="open.emit()"
 >
-  <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-  Add card
+  @if (creating()) {
+    <span class="loading loading-spinner h-3 w-3"></span>
+    Adding card…
+  } @else {
+    <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+    Add card
+  }
 </button>

@@ -45,6 +45,9 @@ export class BoardList {
   /** Row View: 'column' = thẻ xếp dọc (mặc định, Trello-style), 'row' = thẻ xếp ngang trong 1 hàng. */
   readonly orientation = input<'column' | 'row'>('column');
 
+  /** Đang chờ server tạo thẻ cho cột này — chuyển tiếp xuống app-add-card. */
+  readonly creatingCard = input(false);
+
   readonly renameList = output<string>();
   readonly deleteList = output<void>();
   readonly addCard = output<void>();
