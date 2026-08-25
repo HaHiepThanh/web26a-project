@@ -94,7 +94,7 @@
         </h4>
 
         <button type="button"
-          class="btn btn-primary btn-xs rounded-xl px-3 font-black shadow-xs gap-1 hover:scale-105 transition-all"
+          class="btn btn-primary btn-xs px-3 font-black shadow-xs gap-1 hover:scale-105 transition-all"
           (click)="openAddMember()">
           <svg lucidePlus class="h-3 w-3" [strokeWidth]="2.6"></svg>
           <span>Add member</span>
@@ -152,7 +152,7 @@
               <!-- Action -->
               <td class="py-3 px-4 text-right">
                 @if (mem.role !== 'owner') {
-                <button type="button" class="btn btn-ghost btn-xs text-error hover:bg-error/10 rounded-lg font-bold"
+                <button type="button" class="btn btn-ghost btn-xs text-error hover:bg-error/10 font-bold"
                   (click)="onRemoveMember(mem)">
                   Remove
                 </button>
@@ -183,7 +183,7 @@
 
 <!-- MODAL: Thêm thành viên vào Workspace -->
 @if (showAddMemberModal()) {
-<div class="modal modal-open z-[1000] p-4 "
+<div class="modal modal-open z-[1000] p-4"
   (click)="closeAddMember()">
   <div
     class="modal-box w-full max-w-[460px] border border-base-300"
@@ -249,8 +249,8 @@
 
     <!-- Actions -->
     <div class="flex justify-end gap-2 pt-2 border-t border-base-300">
-      <button type="button" class="btn btn-ghost btn-sm rounded-xl font-bold" (click)="closeAddMember()">Cancel</button>
-      <button type="button" class="btn btn-primary btn-sm rounded-xl px-4 font-black" [disabled]="!selectedUserToAdd()"
+      <button type="button" class="btn btn-ghost btn-sm font-bold" (click)="closeAddMember()">Cancel</button>
+      <button type="button" class="btn btn-primary btn-sm px-4 font-black" [disabled]="!selectedUserToAdd()"
         (click)="confirmAddMember()">
         + Add now
       </button>

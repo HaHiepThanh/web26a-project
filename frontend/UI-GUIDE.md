@@ -194,14 +194,27 @@ bên trong — đây là cách daisyUI 5 khuyến nghị:
 
 ---
 
-## 5. Hiện trạng (tính đến commit `1221204`)
+## 5. Hiện trạng
 
 | Hạng mục | Số liệu |
 |---|---|
 | Nút dùng daisyUI | **182/189** (173 `.btn`/`.tab`/`.link`/`.badge` + 9 trong `.menu`) |
 | Modal | **12/12** dùng `.modal` + `.modal-box` |
-| Màu Tailwind thô còn sót | **0** |
+| Màu Tailwind thô còn sót | **0** (quét đủ 22 bảng màu, không chỉ `slate`) |
+| Biến thể `dark:` còn sót | **0** (theme chạy bằng `[data-theme]`) |
 | API daisyUI 4 đã khai tử (`*-bordered`) | **0** |
+| Ô nhập bị ép `border-2` | **0** (daisyUI dùng 1px) |
+| Nút tự đặt bo góc, đè `--radius-field` | **0** |
+
+Lệnh tự kiểm tra lại các con số trên nằm ở [§8](#8-kiểm-tra-trước-khi-mở-pr).
+
+### Hex cứng còn lại trong `.css` — cố ý giữ
+
+| File | Số hex | Lý do |
+|---|---|---|
+| `pages/login/login.css`<br>`pages/register/register.css`<br>`pages/not-found/not-found.css` | 22 / 15 / 25 | Bảng màu **cục bộ** cho hình minh hoạ trang trí (khung kanban giả, hiệu ứng glow). Là tranh vẽ, không phải thành phần giao diện — không cần đổi theo theme. |
+
+Mọi file `.css` khác đã sạch hex (chỉ còn fallback hợp lệ dạng `var(--x, #fff)`).
 
 ### 7 nút cố ý KHÔNG dùng `.btn`
 
@@ -288,8 +301,13 @@ cd frontend && npm start
 - [ ] Thu về ~375px xem có vỡ layout không
 - [ ] Console không có lỗi mới
 
-Đếm nhanh chỗ chưa theo quy ước:
+Đếm nhanh chỗ chưa theo quy ước — chạy từ thư mục `frontend/src`:
 
 ```bash
-grep -rnE "\b(bg|text|border)-(slate|purple|rose|emerald)-[0-9]{2,3}" frontend/src/app --include=*.html --exclude-dir=landing
+PAL="slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose"; H(){ grep -rhoE "$1" --include=*.html app --exclude-dir=landing | wc -l; }; echo "màu thô: $(H "\b(bg|text|border|divide|ring|from|to|via)-($PAL)-[0-9]{2,3}")"; echo "dark: sót: $(H 'dark:')"; echo "*-bordered: $(H '\-bordered\b')"; echo "form border-2: $(H 'class="[^"]*\b(input|select|textarea)\b[^"]*\bborder-2\b')"; echo "btn tự bo góc: $(H 'class="[^"]*\bbtn\b[^"]*\brounded-(sm|md|lg|xl|2xl|3xl)\b')"
 ```
+
+> ⚠️ Nhớ quét **đủ 22 bảng màu** của Tailwind. Lần rà trước chỉ liệt kê
+> `slate|purple|rose|emerald` nên bỏ sót 20 chỗ dùng `blue` và `amber`.
+
+Tất cả phải ra **0**. Nếu khác, xem lại [§4](#4-quy-ước-theo-loại-component).

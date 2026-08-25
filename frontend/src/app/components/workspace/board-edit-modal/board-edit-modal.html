@@ -17,10 +17,9 @@
           Board name <span class="text-error">*</span>
         </label>
         <input type="text" id="board-edit-title-input" maxlength="50"
-          class="input border-2 w-full rounded-xl font-bold text-base-content bg-base-100 dark:bg-base-200 shadow-xs text-sm transition-all"
+          class="input w-full rounded-xl font-bold text-base-content bg-base-100 shadow-xs text-sm transition-all"
           [class.border-error]="titleError()"
           [class.focus:border-error]="titleError()"
-          [class.border-base-300]="!titleError()"
           [class.border-base-300]="!titleError()"
           [class.focus:border-primary]="!titleError()"
           placeholder="e.g. Sprint 12 Planning, MVP Roadmap... (max 50 characters)" [ngModel]="titleInput()"
@@ -57,7 +56,7 @@
           </div>
           } @else {
           <label
-            class="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-base-300 text-base-content/50 transition hover:border-primary hover:text-primary dark:border-base-300"
+            class="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-base-300 text-base-content/50 transition hover:border-primary hover:text-primary"
             title="Upload a background image">
             <svg lucideImage class="h-4 w-4" [strokeWidth]="2.2"></svg>
             <input type="file" accept="image/*" class="hidden" (change)="onBgImageSelected($event)" />
@@ -76,8 +75,8 @@
 
       <!-- Actions -->
       <div class="flex justify-end gap-2 pt-3 border-t border-base-300">
-        <button type="button" class="btn btn-ghost rounded-xl font-bold" (click)="close.emit()">Cancel</button>
-        <button type="submit" class="btn btn-primary rounded-xl font-black px-5 shadow-sm">Save changes</button>
+        <button type="button" class="btn btn-ghost font-bold" (click)="close.emit()">Cancel</button>
+        <button type="submit" class="btn btn-primary font-black px-5 shadow-sm">Save changes</button>
       </div>
     </form>
   </div>

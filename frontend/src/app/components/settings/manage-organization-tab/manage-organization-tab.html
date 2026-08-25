@@ -5,7 +5,7 @@
       <p class="mt-1 text-sm text-base-content/60">Switch organizations, view members, and invite new people by UUID.</p>
     </div>
 
-    <button type="button" class="btn btn-primary btn-sm rounded-xl px-4 font-black shadow-xs gap-1.5"
+    <button type="button" class="btn btn-primary btn-sm px-4 font-black shadow-xs gap-1.5"
       (click)="showCreateOrgModal.set(true)">
       <svg lucidePlus class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg>
       <span>New organization</span>
@@ -55,7 +55,7 @@
         </h4>
 
         <button type="button"
-          class="btn btn-primary btn-xs gap-1 rounded-xl px-3 font-black shadow-xs hover:scale-105 transition-all"
+          class="btn btn-primary btn-xs gap-1 px-3 font-black shadow-xs hover:scale-105 transition-all"
           (click)="openInviteOrgMember()">
           <svg lucideUserPlus class="h-3 w-3" [strokeWidth]="2.4"></svg>
           <span>Invite member</span>
@@ -119,7 +119,7 @@
               <!-- Action -->
               <td class="py-3 px-4 text-right">
                 @if (mem.role !== 'owner' && isOwner()) {
-                <button type="button" class="btn btn-ghost btn-xs text-error hover:bg-error/10 rounded-lg font-bold"
+                <button type="button" class="btn btn-ghost btn-xs text-error hover:bg-error/10 font-bold"
                   (click)="onRemoveOrgMember(mem.user.id)">
                   Remove
                 </button>
@@ -145,7 +145,7 @@
 
 <!-- MODAL: Mời thành viên vào Organization -->
 @if (showInviteOrgModal()) {
-<div class="modal modal-open z-[1000] p-4 "
+<div class="modal modal-open z-[1000] p-4"
   (click)="closeInviteOrgMember()">
   <div
     class="modal-box w-full max-w-[460px] border border-base-300"
@@ -177,7 +177,7 @@
         <label class="text-xs font-bold text-base-content/80">Search by name, email, or user ID</label>
         <div class="relative">
           <input type="text"
-            class="input input-sm rounded-xl w-full border-2 border-base-300 font-semibold dark:border-base-300"
+            class="input input-sm rounded-xl w-full border-base-300 font-semibold"
             placeholder="Enter an exact email or paste an ID to find people outside the organization..." [ngModel]="orgInviteQuery()"
             (ngModelChange)="onInviteQueryChange($event)" />
           @if (searching()) {
@@ -221,9 +221,9 @@
 
     <!-- Actions -->
     <div class="flex justify-end gap-2 pt-2 border-t border-base-300">
-      <button type="button" class="btn btn-ghost btn-sm rounded-xl font-bold"
+      <button type="button" class="btn btn-ghost btn-sm font-bold"
         (click)="closeInviteOrgMember()">Cancel</button>
-      <button type="button" class="btn btn-primary btn-sm gap-1.5 rounded-xl px-4 font-black"
+      <button type="button" class="btn btn-primary btn-sm gap-1.5 px-4 font-black"
         [disabled]="!selectedOrgInviteUser()" (click)="confirmInviteOrgMember()">
         <svg lucidePlus class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg> Send invite
       </button>

@@ -68,7 +68,7 @@
               <div class="mt-0.5 text-sm font-bold leading-tight [text-shadow:0_1px_2px_rgba(0,0,0,0.2)]">{{
                 board.title }}</div>
             </div>
-            <button class="btn btn-ghost btn-circle btn-xs absolute right-2.5 top-2.5 z-10 text-yellow-400 transition hover:scale-110 hover:bg-transparent"
+            <button class="btn btn-ghost btn-circle btn-xs absolute right-2.5 top-2.5 z-10 text-warning transition hover:scale-110 hover:bg-transparent"
               title="Unstar" (click)="$event.stopPropagation(); toggleStar(board.id)">
               <svg lucideStar class="h-4 w-4" [strokeWidth]="2.2" fill="currentColor"></svg>
             </button>
@@ -109,7 +109,7 @@
           }
         </div>
 
-        <button type="button" class="btn btn-primary btn-xs rounded-xl px-3.5 font-black gap-1 shadow-xs"
+        <button type="button" class="btn btn-primary btn-xs px-3.5 font-black gap-1 shadow-xs"
           (click)="openCreateWorkspace()" [class.hidden]="!canManage()">
           <svg lucidePlus class="h-3 w-3 shrink-0" [strokeWidth]="3"></svg>
           <span>New Workspace</span>

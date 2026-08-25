@@ -184,8 +184,8 @@
                   (ngModelChange)="newFilterNameChange.emit($event)"
                   (keydown.enter)="saveCurrentFilterEvent.emit()"
                 />
-                <button type="button" class="btn btn-primary btn-sm rounded-xl" [disabled]="!newFilterName().trim()" (click)="saveCurrentFilterEvent.emit()">Save</button>
-                <button type="button" class="btn btn-ghost btn-sm rounded-xl" (click)="cancelSaveFilterFormEvent.emit()">Cancel</button>
+                <button type="button" class="btn btn-primary btn-sm" [disabled]="!newFilterName().trim()" (click)="saveCurrentFilterEvent.emit()">Save</button>
+                <button type="button" class="btn btn-ghost btn-sm" (click)="cancelSaveFilterFormEvent.emit()">Cancel</button>
               </div>
             }
           }

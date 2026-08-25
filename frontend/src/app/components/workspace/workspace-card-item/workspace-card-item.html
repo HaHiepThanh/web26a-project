@@ -99,8 +99,8 @@
 
         <!-- Star button -->
         <button
-          class="btn btn-ghost btn-circle btn-xs absolute right-2.5 top-2.5 z-10 text-white/70 transition hover:scale-125 hover:bg-transparent hover:text-yellow-400"
-          [class.text-yellow-400]="board.starred" [class.scale-110]="board.starred" title="Star"
+          class="btn btn-ghost btn-circle btn-xs absolute right-2.5 top-2.5 z-10 text-white/70 transition hover:scale-125 hover:bg-transparent hover:text-warning"
+          [class.text-warning]="board.starred" [class.scale-110]="board.starred" title="Star"
           (click)="$event.stopPropagation(); toggleStar.emit(board.id)">
           <svg lucideStar class="h-4 w-4" [strokeWidth]="2.2" [attr.fill]="board.starred ? 'currentColor' : 'none'"></svg>
         </button>

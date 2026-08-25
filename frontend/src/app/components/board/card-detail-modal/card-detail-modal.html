@@ -132,7 +132,7 @@
             <div class="flex flex-col gap-2">
               @for (att of attachments(); track att.id) {
                 <div class="group flex items-center gap-3 rounded-lg border border-base-200 p-2 hover:bg-base-200/50">
-                  <button type="button" class="btn btn-ghost h-12 min-h-0 w-16 shrink-0 overflow-hidden rounded-md p-0" (click)="openAttachment(att.url)" [title]="'Open ' + att.name">
+                  <button type="button" class="btn btn-ghost h-12 min-h-0 w-16 shrink-0 overflow-hidden p-0" (click)="openAttachment(att.url)" [title]="'Open ' + att.name">
                     @if (att.isImage) {
                       <img [src]="att.url" [alt]="att.name" class="h-full w-full object-cover" />
                     } @else {

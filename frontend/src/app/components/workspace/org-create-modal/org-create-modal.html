@@ -31,10 +31,9 @@
           type="text"
           id="org-create-name-input"
           maxlength="50"
-          class="input border-2 w-full rounded-xl font-bold text-base-content bg-base-100 dark:bg-base-200 shadow-xs text-sm transition-all"
+          class="input w-full rounded-xl font-bold text-base-content bg-base-100 shadow-xs text-sm transition-all"
           [class.border-error]="nameError()"
           [class.focus:border-error]="nameError()"
-          [class.border-base-300]="!nameError()"
           [class.border-base-300]="!nameError()"
           [class.focus:border-primary]="!nameError()"
           placeholder="e.g. Acme Technologies, Freelance Team... (max 50 characters)"
@@ -60,10 +59,9 @@
           Custom URL <span class="text-error">*</span>
         </label>
 
-        <div class="flex items-stretch rounded-xl border-2 bg-base-100 dark:bg-base-200 shadow-xs transition-all overflow-hidden"
+        <div class="flex items-stretch rounded-xl border-2 bg-base-100 shadow-xs transition-all overflow-hidden"
           [class.border-error]="slugError()"
           [class.border-success]="slugOk()"
-          [class.border-base-300]="!slugError() && !slugOk()"
           [class.border-base-300]="!slugError() && !slugOk()">
           <span class="flex items-center bg-base-200 px-2.5 text-2xs font-bold text-base-content/60 select-none">
             /
@@ -101,15 +99,15 @@
       </div>
 
       <!-- Explanatory note -->
-      <div class="rounded-xl bg-blue-50/80 dark:bg-blue-950/40 p-3 border border-blue-100 dark:border-blue-900/40 text-xs text-blue-800 dark:text-blue-200 flex items-start gap-2">
-        <svg lucideSparkles class="h-4 w-4 shrink-0 text-blue-500 mt-0.5" [strokeWidth]="2.2"></svg>
+      <div class="alert alert-info alert-soft items-start gap-2 p-3 text-xs">
+        <svg lucideSparkles class="h-4 w-4 shrink-0 mt-0.5" [strokeWidth]="2.2"></svg>
         <span>You'll be the <strong>Owner</strong> of this organization and can invite other members to help manage it.</span>
       </div>
 
       <!-- Actions -->
       <div class="flex justify-end gap-2 pt-3 border-t border-base-300">
-        <button type="button" class="btn btn-ghost rounded-xl font-bold" (click)="close.emit()">Cancel</button>
-        <button type="submit" class="btn btn-primary rounded-xl font-black px-5 shadow-xs">
+        <button type="button" class="btn btn-ghost font-bold" (click)="close.emit()">Cancel</button>
+        <button type="submit" class="btn btn-primary font-black px-5 shadow-xs">
           + Create Organization
         </button>
       </div>
