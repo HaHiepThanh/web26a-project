@@ -264,9 +264,9 @@
         </h4>
         <div class="flex flex-col gap-1.5">
           @for (mem of members(); track mem.user.id) {
-          <div class="flex items-center justify-between gap-3 rounded-md border border-base-300 bg-base-100 px-3 py-2.5">
-            <!-- Trái: Avatar + Tên + Email -->
-            <div class="flex min-w-0 flex-1 items-center gap-2.5">
+          <div class="grid grid-cols-[1fr_auto_auto] items-center gap-3 rounded-md border border-base-300 bg-base-100 px-3 py-2">
+            <!-- Cột 1: Avatar + Tên + Email (Bên trái) -->
+            <div class="flex min-w-0 items-center gap-2.5">
               <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-2xs font-black text-white"
                 [style.background-color]="avatarBgFor(mem.user.id)">
                 {{ initialsOf(mem.user.displayName || mem.user.email) }}
@@ -277,33 +277,38 @@
               </div>
             </div>
 
-            <!-- Phải: Quyền (select/badge) + Nút Remove -->
-            <div class="flex shrink-0 items-center gap-2">
+            <!-- Cột 2: Quyền (Căn giữa hàng dọc, thu gọn kích thước gọn gàng) -->
+            <div class="flex items-center justify-center">
               @if (mem.role === 'owner') {
-              <span class="badge badge-primary badge-sm shrink-0 gap-1 rounded-md font-black">
+              <span class="badge badge-primary badge-sm h-6 min-h-0 gap-1 rounded-md px-2 text-3xs font-black">
                 <svg lucideCrown class="h-3 w-3" [strokeWidth]="2.2"></svg> Owner
               </span>
               } @else {
-                <!-- Chỉ owner đổi được quyền; người khác chỉ thấy nhãn. -->
                 @if (isOwner()) {
-                <select class="select select-xs select-bordered w-24 rounded-md text-3xs font-bold"
+                <select class="select select-xs select-bordered h-7 min-h-0 w-22 rounded-md px-2 py-0 text-3xs font-bold"
                   title="Change this member's role"
                   [value]="mem.role"
                   (change)="onChangeRole(mem.user.id, $any($event.target).value)">
                   <option value="member">Member</option>
                   <option value="admin">Admin</option>
                 </select>
-                <button type="button" class="btn btn-ghost btn-xs rounded-md shrink-0 gap-1 font-bold text-error hover:bg-error/10"
-                  title="Remove from organization" (click)="onRemove(mem.user.id)">
-                  <svg lucideTrash2 class="h-3 w-3" [strokeWidth]="2.2"></svg> Remove
-                </button>
                 } @else {
-                <span class="badge badge-sm shrink-0 font-bold rounded-md"
+                <span class="badge badge-sm h-6 min-h-0 px-2 font-bold rounded-md text-3xs"
                   [class.badge-warning]="mem.role === 'admin'"
                   [class.badge-ghost]="mem.role !== 'admin'">
                   {{ mem.role === 'admin' ? 'Admin' : 'Member' }}
                 </span>
                 }
+              }
+            </div>
+
+            <!-- Cột 3: Nút Remove (Cố định chiều rộng bên phải để tất cả dropdown quyền thẳng hàng nhau) -->
+            <div class="flex w-20 items-center justify-end">
+              @if (mem.role !== 'owner' && isOwner()) {
+              <button type="button" class="btn btn-ghost btn-xs h-7 min-h-0 rounded-md px-1.5 gap-1 font-bold text-error hover:bg-error/10"
+                title="Remove from organization" (click)="onRemove(mem.user.id)">
+                <svg lucideTrash2 class="h-3 w-3" [strokeWidth]="2.2"></svg> Remove
+              </button>
               }
             </div>
           </div>
