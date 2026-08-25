@@ -9,14 +9,33 @@ import { CardExtraState } from './card.state';
 import { withId, withoutId, midpoint } from '../shared/entity.util';
 
 /** 5 trường mà PATCH /cards/:id nhận. Khai tường minh thay vì Record<string, unknown>
- *  để gõ sai tên trường là TypeScript báo ngay, không phải chờ backend trả 400. */
+ *  để gõ sai tên trường là TypeScript báo ngay, không phải chờ backend trả 400.
+ *
+ *  Ba trường xoá được mang thêm `null` — đó là cách DUY NHẤT nói với backend
+ *  "xoá giá trị này đi": `undefined` sẽ bị `JSON.stringify` bỏ khỏi body, còn
+ *  backend chỉ ghi khi `!== undefined`, nên trường vắng mặt nghĩa là "giữ
+ *  nguyên". `null` đi qua được `@IsOptional()` và ghi thẳng NULL xuống cột. */
 interface CardPatch {
   title?: string;
-  description?: string;
+  description?: string | null;
   priority?: CardPriority;
-  dueDate?: string;
-  assigneeId?: string;
+  dueDate?: string | null;
+  assigneeId?: string | null;
 }
+
+/**
+ * Thay đổi gửi vào `updateCard`.
+ *
+ * Khác `Partial<Card>` ở đúng ba trường xoá được: chúng nhận `null` để phân biệt
+ * "không đụng tới" (vắng mặt) với "xoá đi" (`null`) — `Card` không diễn đạt được
+ * điều đó vì các trường ấy khai `?: string`, mà `undefined` lại đang mang nghĩa
+ * "không đụng tới".
+ */
+export type CardChanges = Omit<Partial<Card>, 'description' | 'dueDate' | 'assigneeId'> & {
+  description?: string | null;
+  dueDate?: string | null;
+  assigneeId?: string | null;
+};
 
 /**
  * CRUD card + kéo thả giữa/trong list — GỌI BACKEND THẬT.
@@ -85,13 +104,27 @@ export function withCardMethods() {
         }
       },
 
-      async updateCard(id: string, changes: Partial<Card>): Promise<void> {
+      async updateCard(id: string, changes: CardChanges): Promise<void> {
         const before = store.entityMap()[id];
         if (!before) return;
 
         // Cập nhật giao diện trước cho mượt, hỏng thì trả lại nguyên trạng — chỉ
         // đúng thẻ này, không đụng thẻ khác.
-        patchState(store, upsertEntity({ ...before, ...changes }));
+        //
+        // `null` là ngôn ngữ nói chuyện với BACKEND ("xoá cột này"), không phải
+        // hình dạng dữ liệu trong máy: `Card` dùng `undefined` cho "không có".
+        // Đổi về `undefined` ở đây để mọi chỗ đọc thẻ (`!c.assigneeId`, badge hạn,
+        // bộ lọc "Chưa gán") không phải học thêm một dạng rỗng thứ hai.
+        patchState(
+          store,
+          upsertEntity({
+            ...before,
+            ...changes,
+            ...(changes.description === null ? { description: undefined } : {}),
+            ...(changes.dueDate === null ? { dueDate: undefined } : {}),
+            ...(changes.assigneeId === null ? { assigneeId: undefined } : {}),
+          } as Card),
+        );
 
         // Chỉ 5 trường này backend nhận; gửi thừa sẽ bị ValidationPipe loại bỏ.
         const patch: CardPatch = {};

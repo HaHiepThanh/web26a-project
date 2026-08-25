@@ -82,6 +82,17 @@ export class ProfileTab {
   readonly changePassword = output<{ currentPassword: string; newPassword: string }>();
   readonly flashMessage = output<{ message: string; type?: 'success' | 'error' | 'info' }>();
 
+  /**
+   * Hồ sơ vừa đổi THẬT trên server (ảnh đại diện đặt/gỡ xong).
+   *
+   * Cần báo ra ngoài vì `AuthService.currentUser` chỉ là bản sao của RIÊNG tôi.
+   * Tên và ảnh hiển thị ở danh sách thành viên workspace, ô người phụ trách,
+   * avatar trong board và trong chat đều đọc từ `OrganizationStore.membersByOrg`
+   * — thứ nạp một lần lúc mở app rồi nằm im. Không báo thì góc phải màn hình
+   * đổi ảnh ngay còn mọi chỗ khác vẫn giữ ảnh cũ cho tới lần F5 kế tiếp.
+   */
+  readonly profileChanged = output<void>();
+
   readonly initialsOf = initialsOf;
   readonly avatarPreview = signal<string | null>(null);
   /** Đang lưu avatar (upload/gỡ) — khoá 2 nút lại, tránh bấm chồng trong lúc chờ. */
@@ -162,6 +173,7 @@ export class ProfileTab {
     try {
       await this.authService.updateProfile({ avatarUrl: dataUrl });
       this.flashMessage.emit({ message: 'Avatar updated.', type: 'success' });
+      this.profileChanged.emit();
     } catch (err) {
       this.avatarPreview.set(previous); // lưu hỏng → trả preview về đúng ảnh đang có trên server
       this.flashMessage.emit({ message: this.describeProfileError(err, 'Failed to update avatar.'), type: 'error' });
@@ -178,6 +190,7 @@ export class ProfileTab {
     try {
       await this.authService.updateProfile({ avatarUrl: '' });
       this.flashMessage.emit({ message: 'Avatar removed.', type: 'info' });
+      this.profileChanged.emit();
     } catch (err) {
       this.avatarPreview.set(previous);
       this.flashMessage.emit({ message: this.describeProfileError(err, 'Failed to remove avatar.'), type: 'error' });

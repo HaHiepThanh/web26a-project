@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { Card, CardPriority, User } from '../../../models';
 import { CardStore } from '../../../ngrx/card/card.store';
+import type { CardChanges } from '../../../ngrx/card/card.methods';
 import { LabelStore } from '../../../ngrx/label/label.store';
 import { BoardStore } from '../../../ngrx/board/board.store';
 import { ActivityStore } from '../../../ngrx/activity/activity.store';
@@ -164,7 +165,14 @@ export class CardDetailModal {
   async save(): Promise<void> {
     if (!this.canSave()) return;
     const c = this.card();
-    const changes: Partial<Card> = {};
+    // `null` = XOÁ trường đó trên server. Trước đây chỗ này dùng `undefined`,
+    // mà `undefined` bị JSON.stringify bỏ khỏi body, nên backend — vốn chỉ ghi
+    // khi field `!== undefined` — hiểu thành "giữ nguyên". Hậu quả: bỏ người
+    // phụ trách, xoá mô tả, xoá hạn đều im lặng KHÔNG ăn. Giao diện vẫn hiện
+    // đã xoá (vì bản cập nhật lạc quan ở local có đổi), tới lần F5 giá trị cũ
+    // quay lại. Nếu chỉ đổi đúng một trong ba trường đó thì còn tệ hơn: store
+    // thấy patch rỗng nên không gọi API lần nào.
+    const changes: CardChanges = {};
     const nhatKy: string[] = [];
 
     const title = this.draftTitle().trim();
@@ -173,17 +181,17 @@ export class CardDetailModal {
       nhatKy.push(`renamed card from "${c.title}" to "${title}"`);
     }
     if (this.draftDescription() !== (c.description ?? '')) {
-      changes.description = this.draftDescription() || undefined;
+      changes.description = this.draftDescription() || null;
       nhatKy.push('updated the description');
     }
     if (this.draftAssigneeId() !== (c.assigneeId ?? null)) {
-      changes.assigneeId = this.draftAssigneeId() ?? undefined;
+      changes.assigneeId = this.draftAssigneeId() ?? null;
       nhatKy.push(
         `changed assignee from "${this.memberName(c.assigneeId)}" to "${this.memberName(this.draftAssigneeId() ?? undefined)}"`,
       );
     }
     if (this.draftDueDate() !== (c.dueDate ?? '')) {
-      changes.dueDate = this.draftDueDate() || undefined;
+      changes.dueDate = this.draftDueDate() || null;
       nhatKy.push(`changed due date from "${c.dueDate ?? 'none'}" to "${this.draftDueDate() || 'none'}"`);
     }
     if (this.draftPriority() !== c.priority) {

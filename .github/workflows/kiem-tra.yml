@@ -43,7 +43,7 @@ jobs:
       # Cần CẢ HAI: `ng test` đọc environment.ts, còn `ng build --configuration
       # production` thay thế nó bằng environment.prod.ts (fileReplacements trong
       # angular.json). Thiếu file .prod thì build production chết với
-      # "path in file replacements does not exist" — đây là lý do CI đỏ từ trước.
+      # "path in file replacements does not exist" — không phải lỗi code, chỉ là thiếu đồ nghề.
       - name: Dựng environment.ts + environment.prod.ts từ file mẫu
         run: |
           cp src/environments/environment.example.ts src/environments/environment.ts

@@ -64,14 +64,14 @@
 
       @if (orientation() === 'row') {
         <div class="add-card-row shrink-0">
-          <app-add-card (open)="addCard.emit()" />
+          <app-add-card [creating]="creatingCard()" (open)="addCard.emit()" />
         </div>
       }
     </div>
 
     @if (orientation() === 'column') {
       <div class="shrink-0 px-2 pb-2 pt-1">
-        <app-add-card (open)="addCard.emit()" />
+        <app-add-card [creating]="creatingCard()" (open)="addCard.emit()" />
       </div>
     }
   </div>

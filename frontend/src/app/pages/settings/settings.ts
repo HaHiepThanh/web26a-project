@@ -83,6 +83,7 @@ export class Settings {
         avatarUrl: user.avatarUrl ?? '',
       });
       this.flash('Profile updated successfully!');
+      await this.onProfileChanged();
     } catch (err) {
       const status = (err as { status?: number })?.status;
       if (status === 409) {
@@ -95,6 +96,24 @@ export class Settings {
         'error',
       );
     }
+  }
+
+  /**
+   * Hồ sơ vừa đổi → nạp lại danh sách thành viên tổ chức.
+   *
+   * `AuthService.currentUser` chỉ là bản sao của RIÊNG tôi, nên đổi xong thì mỗi
+   * avatar góc phải header đổi theo. Còn tên và ảnh ở danh sách thành viên
+   * workspace, ô "Người phụ trách", avatar trong board và trong chat đều đọc từ
+   * `OrganizationStore.membersByOrg` — nạp một lần lúc mở app rồi nằm im. Không
+   * nạp lại thì người dùng thấy ảnh mới ở một góc màn hình và ảnh cũ ở mọi chỗ
+   * còn lại, cho tới lần F5 kế tiếp.
+   *
+   * Dùng `reload()` (nạp lại cả tổ chức lẫn thành viên) thay vì sửa tay đúng
+   * một dòng trong cache: đổi hồ sơ là việc hiếm, còn sửa tay thì phải nhớ mọi
+   * chỗ đang giữ bản sao — quên một chỗ là lại lệch y như cũ.
+   */
+  async onProfileChanged(): Promise<void> {
+    await this.orgService.reload();
   }
 
   onChangePassword(event: { currentPassword: string; newPassword: string }): void {
