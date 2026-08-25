@@ -19,7 +19,7 @@
   @if (collapsed()) {
   @if (isMobile()) {
   <button type="button"
-    class="relative flex h-full w-full items-center justify-center bg-[var(--accent-purple)] text-white hover:brightness-95"
+    class="btn btn-secondary relative h-full w-full rounded-none border-none"
     [class.pulse]="pulse()" (click)="toggleCollapsed()" aria-label="Open chat panel">
     <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
@@ -32,7 +32,7 @@
   </button>
   } @else {
   <button type="button"
-    class="relative flex h-full w-full flex-col items-center gap-2.5 bg-[var(--accent-purple-soft)] py-3 text-[var(--accent-purple)] hover:brightness-95"
+    class="btn btn-ghost relative h-full w-full flex-col gap-2.5 rounded-none border-none bg-secondary/15 py-3 text-secondary"
     [class.pulse]="pulse()" (click)="toggleCollapsed()" aria-label="Open chat panel">
     <span
       class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--accent-purple)] text-white shadow-sm">

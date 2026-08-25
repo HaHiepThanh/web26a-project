@@ -21,7 +21,7 @@
               <label class="label pb-1.5" for="input-username">
                 <span class="label-text text-xs font-semibold">Username or Email</span>
               </label>
-              <label class="input input-bordered flex min-h-[44px] w-full items-center gap-2">
+              <label class="input flex min-h-[44px] w-full items-center gap-2">
                 <svg class="h-4 w-4 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M22 6l-10 7L2 6"/><path d="M2 6h20v12H2z"/></svg>
                 <input type="text" id="input-username" class="grow" placeholder="you@company.com" autocomplete="username" [(ngModel)]="username" name="username" />
               </label>
@@ -32,7 +32,7 @@
                 <span class="label-text text-xs font-semibold">Password</span>
                 <a routerLink="/forgot-password" (click)="onForgotPasswordClick()" class="link link-primary link-hover text-xs font-semibold">Forgot password?</a>
               </label>
-              <label class="input input-bordered flex min-h-[44px] w-full items-center gap-2">
+              <label class="input flex min-h-[44px] w-full items-center gap-2">
                 <svg class="h-4 w-4 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
                 <input [type]="passwordVisible() ? 'text' : 'password'" id="input-password" class="grow" placeholder="••••••••" autocomplete="current-password" [(ngModel)]="password" name="password" />
                 <button type="button" class="relative cursor-pointer opacity-50 before:absolute before:-left-[6px] before:-right-[15px] before:-top-[15px] before:-bottom-[15px] before:content-[''] hover:opacity-80" (click)="togglePasswordVisible()" [attr.aria-label]="passwordVisible() ? 'Hide password' : 'Show password'">

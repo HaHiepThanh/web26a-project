@@ -6,10 +6,10 @@
       <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-content shadow-lg">
         <svg lucideSparkles class="h-7 w-7" [strokeWidth]="2.2"></svg>
       </div>
-      <h1 class="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+      <h1 class="text-2xl font-black tracking-tight text-base-content">
         Hi {{ currentUser()?.displayName || currentUser()?.email }}!
       </h1>
-      <p class="mt-1.5 text-sm text-slate-600 dark:text-slate-400">
+      <p class="mt-1.5 text-sm text-base-content/60">
         Create your first Organization to get started. All your Workspaces and Boards will live inside it.
       </p>
     </div>
@@ -17,21 +17,21 @@
     <!-- Lời mời đang chờ — tới ngay qua WebSocket, không cần F5 -->
     @if (invites().length) {
     <div class="mb-4 rounded-3xl border-2 border-primary/40 bg-base-100 p-5 shadow-xl">
-      <h2 class="mb-1 text-sm font-black text-slate-900 dark:text-white">
+      <h2 class="mb-1 text-sm font-black text-base-content">
         You have {{ invites().length }} invitation(s)
       </h2>
-      <p class="mb-3 text-2xs text-slate-500 dark:text-slate-400">
+      <p class="mb-3 text-2xs text-base-content/60">
         Accepting an invite gets you into the app right away — no need to create your own organization.
       </p>
       <div class="flex flex-col gap-2">
         @for (inv of invites(); track inv.id) {
-        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/60">
-          <div class="text-xs font-bold text-slate-900 dark:text-white">
+        <div class="rounded-2xl border border-base-300 bg-base-200 p-3 dark:border-base-300 dark:bg-base-200">
+          <div class="text-xs font-bold text-base-content">
             {{ inv.fromUserName }} invited you to "{{ inv.orgName }}"
           </div>
           <div class="mt-0.5 text-3xs font-bold"
             [class.text-warning]="inv.role === 'admin'"
-            [class.text-slate-500]="inv.role !== 'admin'">
+            [class.opacity-60]="inv.role !== 'admin'">
             Joining as {{ inv.role === 'admin' ? 'Admin' : 'Member' }}
           </div>
           <div class="mt-2.5 flex gap-2">
@@ -50,22 +50,22 @@
     </div>
     }
 
-    <div class="rounded-3xl border-2 border-slate-200 dark:border-slate-700 bg-base-100 p-6 shadow-xl">
+    <div class="rounded-3xl border-2 border-base-300 bg-base-100 p-6 shadow-xl">
       <form (ngSubmit)="onSubmit()">
 
         <!-- Tên tổ chức -->
         <div class="mb-4">
-          <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200"
+          <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-base-content"
             for="onboarding-name">
             Organization name <span class="text-error">*</span>
           </label>
           <input type="text" id="onboarding-name" maxlength="50"
-            class="input input-bordered border-2 w-full rounded-xl font-bold text-slate-900 dark:text-white bg-white dark:bg-slate-800 shadow-xs text-sm"
+            class="input border-2 w-full rounded-xl font-bold text-base-content bg-base-100 dark:bg-base-200 shadow-xs text-sm"
             [class.border-error]="nameError()"
-            [class.border-slate-300]="!nameError()"
-            [class.dark:border-slate-600]="!nameError()"
+            [class.border-base-300]="!nameError()"
+            [class.border-base-300]="!nameError()"
             [ngModel]="nameInput()" (ngModelChange)="onNameChange($event)" name="orgName" />
-          <div class="mt-1 flex items-center justify-between px-1 text-2xs font-semibold text-slate-400">
+          <div class="mt-1 flex items-center justify-between px-1 text-2xs font-semibold text-base-content/50">
             <span>You can change this anytime later</span>
             <span>{{ nameInput().length }}/50</span>
           </div>
@@ -78,21 +78,21 @@
 
         <!-- Đường dẫn riêng -->
         <div class="mb-5">
-          <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200"
+          <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-base-content"
             for="onboarding-slug">
             Your custom URL <span class="text-error">*</span>
           </label>
 
-          <div class="flex items-stretch overflow-hidden rounded-xl border-2 bg-white dark:bg-slate-800 shadow-xs"
+          <div class="flex items-stretch overflow-hidden rounded-xl border-2 bg-base-100 dark:bg-base-200 shadow-xs"
             [class.border-error]="slugError()"
             [class.border-success]="slugOk()"
-            [class.border-slate-300]="!slugError() && !slugOk()"
-            [class.dark:border-slate-600]="!slugError() && !slugOk()">
-            <span class="flex select-none items-center bg-slate-100 dark:bg-slate-700/60 px-2.5 text-2xs font-bold text-slate-500 dark:text-slate-400">
+            [class.border-base-300]="!slugError() && !slugOk()"
+            [class.border-base-300]="!slugError() && !slugOk()">
+            <span class="flex select-none items-center bg-base-200 px-2.5 text-2xs font-bold text-base-content/60">
               /
             </span>
             <input type="text" id="onboarding-slug" [attr.maxlength]="maxSlug"
-              class="min-w-0 flex-1 bg-transparent px-2.5 py-2 font-mono text-sm font-bold text-slate-900 dark:text-white outline-none"
+              class="min-w-0 flex-1 bg-transparent px-2.5 py-2 font-mono text-sm font-bold text-base-content outline-none"
               placeholder="your-name"
               [ngModel]="slugInput()" (ngModelChange)="onSlugChange($event)" name="orgSlug" />
             @if (slugOk()) {
@@ -102,7 +102,7 @@
             }
           </div>
 
-          <div class="mt-1 flex items-center justify-between px-1 text-2xs font-semibold text-slate-400">
+          <div class="mt-1 flex items-center justify-between px-1 text-2xs font-semibold text-base-content/50">
             <span>Lowercase letters, numbers, and hyphens only</span>
             <span>{{ slugInput().length }}/{{ maxSlug }}</span>
           </div>
@@ -112,9 +112,9 @@
             <svg lucideTriangleAlert class="h-3.5 w-3.5 shrink-0" [strokeWidth]="2.4"></svg> {{ slugError() }}
           </p>
           } @else if (slugOk()) {
-          <p class="mt-1 text-2xs text-slate-500 dark:text-slate-400">
+          <p class="mt-1 text-2xs text-base-content/60">
             Your board will live at
-            <span class="font-mono font-bold text-slate-700 dark:text-slate-300">/{{ slugInput() }}/board/…</span>
+            <span class="font-mono font-bold text-base-content/80">/{{ slugInput() }}/board/…</span>
           </p>
           }
 
@@ -135,7 +135,7 @@
     <!-- Thoát ra: tránh kẹt cứng nếu đăng nhập nhầm tài khoản -->
     <div class="mt-4 text-center">
       <button type="button"
-        class="btn btn-ghost btn-sm gap-1.5 rounded-xl text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+        class="btn btn-ghost btn-sm gap-1.5 rounded-xl text-xs font-bold text-base-content/60 hover:text-base-content dark:hover:text-base-content"
         (click)="onLogout()">
         <svg lucideLogOut class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg>
         Sign in with a different account

@@ -6,11 +6,11 @@
    dựng phân cấp thị giác. Đây là luận điểm quan trọng nhất của sản phẩm, nên nó
    được một mảng riêng, tách hẳn khỏi phần còn lại của trang.
 
-   Hệ quả phải xử lý: ở theme sáng, --accent-blue/--accent-purple đang mang giá
-   trị TỐI (#0284c7 / #6d28d9) vì chúng được chọn để đặt trên nền trắng. Đặt lên
-   nền #0b0d14 thì màu tím chỉ còn 2,3:1 — không đọc nổi. Nên trong phạm vi dải
-   này, hai biến được gán lại đúng bộ giá trị mà [data-theme='dark'] của
-   `styles.css` vẫn dùng. Không phải màu mới, chỉ là dùng đúng bản của bảng màu.
+   Hệ quả phải xử lý: ở theme sáng (winter), --accent-blue/--accent-purple đang
+   mang giá trị TỐI vì chúng được chọn để đặt trên nền trắng. Đặt lên nền gần
+   đen thì tụt xuống ~2,3:1 — không đọc nổi. Nên trong phạm vi dải này, hai biến
+   được gán lại đúng bộ giá trị của theme tối (sunset). Không phải màu mới, chỉ
+   là dùng đúng bản của bảng màu.
    ========================================================================== */
 
 .ai-band {
@@ -22,38 +22,45 @@
      cố định khi nhảy tới mốc #tro-ly-ai. */
   scroll-margin-top: 84px;
 
-  /* Bộ token cục bộ — luôn là bản tối, bất kể theme của trang.
-     Phải chép lại đủ CẢ hai họ ink/solid của `_landing-shared.css`: khối
-     :host-context([data-theme='dark']) ở đó chỉ chạy khi cả trang đang tối,
-     còn dải này tối cả lúc trang đang sáng. Thiếu là chữ tím ở thẻ gợi ý rơi
-     xuống 2,3:1 ngay giữa khu vực quan trọng nhất của trang. */
-  --accent-blue: #579dff;
-  --accent-blue-hover: #85b8ff;
-  --accent-blue-soft: rgba(87, 157, 255, 0.15);
-  --accent-purple: #9e75ff;
-  --accent-purple-soft: rgba(158, 117, 255, 0.15);
+  /* Bộ token cục bộ — luôn là bản tối, bất kể theme của trang. Phải chép lại
+     đủ CẢ hai họ ink/solid của `_landing-shared.css`: khối
+     :host-context([data-theme='sunset']) ở đó chỉ chạy khi cả trang đang tối,
+     còn dải này tối cả lúc trang đang sáng. Thiếu là chữ màu nhấn ở thẻ gợi ý
+     rơi xuống ~2,3:1 ngay giữa khu vực quan trọng nhất của trang.
 
-  /* Màu nhấn dùng làm CHỮ trên nền tối (tỉ số: nền dải · nền tô nhạt). */
-  --lp-ink-blue: #579dff; /* 7.09 · 4.74 */
-  --lp-ink-purple: #a680ff; /* 6.61 · 4.58 */
-  --lp-ink-green: #2da781; /* 6.42 · 4.60 */
-  --lp-ink-amber: #fbbf24; /* 11.63 · 7.11 */
+     Giá trị chép nguyên từ theme 'sunset' của daisyUI (node_modules/daisyui/
+     theme/sunset.css) chứ không var(--color-*): var() sẽ trả về màu của theme
+     ĐANG bật, tức là bảng winter sáng trưng khi trang ở theme sáng — đúng thứ
+     dải này phải tránh. Ghim cứng là cách duy nhất giữ dải luôn tối mà vẫn
+     dùng chung bảng màu với theme tối của app.
+     ⚠️ Đổi theme tối sang bộ khác thì phải chép lại khối này. */
+  --accent-blue: oklch(74.703% 0.158 39.947);
+  --accent-blue-hover: oklch(82% 0.13 39.947);
+  --accent-blue-soft: oklch(74.703% 0.158 39.947 / 0.15);
+  --accent-purple: oklch(72.537% 0.177 2.72);
+  --accent-purple-soft: oklch(72.537% 0.177 2.72 / 0.15);
+
+  /* Màu nhấn dùng làm CHỮ trên nền tối — bảng sunset vốn đã sáng nên dùng thẳng. */
+  --lp-ink-blue: oklch(74.703% 0.158 39.947);
+  --lp-ink-purple: oklch(72.537% 0.177 2.72);
+  --lp-ink-green: oklch(85.56% 0.085 144.778);
+  --lp-ink-amber: oklch(85.569% 0.084 74.427);
 
   /* Màu nhấn dùng làm NỀN ĐẶC; chữ trên đó là --lp-on-solid (gần đen). */
-  --lp-solid-blue: #579dff; /* chữ gần-đen: 7.09 */
-  --lp-solid-purple: #9e75ff; /* chữ gần-đen: 5.95 */
-  --lp-solid-green: #059669; /* chữ gần-đen: 5.15 */
-  --lp-solid-amber: #fbbf24; /* chữ gần-đen: 11.63 */
-  --lp-on-solid: #0b0d14;
+  --lp-solid-blue: oklch(74.703% 0.158 39.947);
+  --lp-solid-purple: oklch(72.537% 0.177 2.72);
+  --lp-solid-green: oklch(85.56% 0.085 144.778);
+  --lp-solid-amber: oklch(85.569% 0.084 74.427);
+  --lp-on-solid: oklch(22% 0.019 237.69);
 
-  --lp-bg: #0b0d14;
-  --lp-surface: #12151f;
-  --lp-surface-2: #181d29;
+  --lp-bg: oklch(18% 0.019 237.69);
+  --lp-surface: oklch(22% 0.019 237.69);
+  --lp-surface-2: oklch(26% 0.019 237.69);
   --lp-border: rgba(255, 255, 255, 0.09);
   --lp-border-strong: rgba(255, 255, 255, 0.2);
-  --lp-text: #ffffff;
-  --lp-text-2: #aab3c7;
-  --lp-text-3: #8791a6;
+  --lp-text: oklch(77.383% 0.043 245.096);
+  --lp-text-2: oklch(77.383% 0.043 245.096 / 0.78);
+  --lp-text-3: oklch(77.383% 0.043 245.096 / 0.58);
   --lp-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
   --lp-shadow-md: 0 12px 30px -12px rgba(0, 0, 0, 0.8);
   --lp-shadow-lg: 0 34px 60px -24px rgba(0, 0, 0, 0.9);

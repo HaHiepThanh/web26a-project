@@ -1,10 +1,10 @@
 @if (isOpen()) {
-<div class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-[2px]"
+<div class="modal modal-open z-[1000] p-4 backdrop-blur-[2px]"
   (click)="close.emit()">
-  <div class="w-full max-w-[420px] max-h-[90vh] overflow-y-auto rounded-2xl border-2 border-slate-300 dark:border-slate-600 bg-base-100 p-6 shadow-2xl"
+  <div class="modal-box max-w-[420px] max-h-[90vh] border border-base-300"
     (click)="$event.stopPropagation()">
     <div class="mb-5 flex items-center justify-between">
-      <h3 class="text-lg font-black text-slate-900 dark:text-white">Edit board</h3>
+      <h3 class="text-lg font-black text-base-content">Edit board</h3>
       <button class="btn btn-circle btn-ghost btn-sm" (click)="close.emit()">
         <svg lucideX class="h-4 w-4" [strokeWidth]="2.4"></svg>
       </button>
@@ -13,19 +13,19 @@
     <form (ngSubmit)="onSubmit()">
       <!-- Board Title Input -->
       <div class="mb-4">
-        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200" for="board-edit-title-input">
+        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-base-content" for="board-edit-title-input">
           Board name <span class="text-error">*</span>
         </label>
         <input type="text" id="board-edit-title-input" maxlength="50"
-          class="input input-bordered border-2 w-full rounded-xl font-bold text-slate-900 dark:text-white bg-white dark:bg-slate-800 shadow-xs text-sm transition-all"
+          class="input border-2 w-full rounded-xl font-bold text-base-content bg-base-100 dark:bg-base-200 shadow-xs text-sm transition-all"
           [class.border-error]="titleError()"
           [class.focus:border-error]="titleError()"
-          [class.border-slate-300]="!titleError()"
-          [class.dark:border-slate-600]="!titleError()"
+          [class.border-base-300]="!titleError()"
+          [class.border-base-300]="!titleError()"
           [class.focus:border-primary]="!titleError()"
           placeholder="e.g. Sprint 12 Planning, MVP Roadmap... (max 50 characters)" [ngModel]="titleInput()"
           (ngModelChange)="titleInput.set($event); titleError.set(null)" name="boardEditTitle" />
-        <div class="mt-1 flex items-center justify-between text-2xs text-slate-400 font-semibold px-1">
+        <div class="mt-1 flex items-center justify-between text-2xs text-base-content/50 font-semibold px-1">
           <span>Max 50 characters</span>
           <span>{{ titleInput().length }}/50</span>
         </div>
@@ -38,7 +38,7 @@
 
       <!-- Background: color palette or custom image -->
       <div class="mb-5">
-        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Board background</label>
+        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-base-content">Board background</label>
         <div class="flex flex-wrap items-center gap-2">
           @for (bg of bgClasses; track bg) {
           <div class="h-8 w-8 cursor-pointer rounded-xl transition hover:scale-110 shadow-xs" [class]="bg"
@@ -50,14 +50,14 @@
           <div class="group relative h-8 w-8 shrink-0 overflow-hidden rounded-xl ring-2 ring-primary ring-offset-2 shadow-xs">
             <img [src]="img" alt="Custom background" class="h-full w-full object-cover" />
             <button type="button"
-              class="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition group-hover:opacity-100"
+              class="btn btn-ghost btn-xs absolute inset-0 h-full min-h-0 w-full rounded-none border-none bg-black/50 p-0 opacity-0 transition group-hover:opacity-100"
               title="Remove background image" (click)="clearBgImage()">
               <svg lucideX class="h-3.5 w-3.5 text-white" [strokeWidth]="2.6"></svg>
             </button>
           </div>
           } @else {
           <label
-            class="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-slate-300 text-slate-400 transition hover:border-primary hover:text-primary dark:border-slate-600"
+            class="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-base-300 text-base-content/50 transition hover:border-primary hover:text-primary dark:border-base-300"
             title="Upload a background image">
             <svg lucideImage class="h-4 w-4" [strokeWidth]="2.2"></svg>
             <input type="file" accept="image/*" class="hidden" (change)="onBgImageSelected($event)" />
@@ -70,12 +70,12 @@
         </p>
         }
         @if (bgImageUrl()) {
-        <p class="mt-1.5 text-2xs text-slate-500 dark:text-slate-400">Using a custom image instead of a preset color.</p>
+        <p class="mt-1.5 text-2xs text-base-content/60">Using a custom image instead of a preset color.</p>
         }
       </div>
 
       <!-- Actions -->
-      <div class="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-700">
+      <div class="flex justify-end gap-2 pt-3 border-t border-base-300">
         <button type="button" class="btn btn-ghost rounded-xl font-bold" (click)="close.emit()">Cancel</button>
         <button type="submit" class="btn btn-primary rounded-xl font-black px-5 shadow-sm">Save changes</button>
       </div>

@@ -271,12 +271,12 @@ export class CardDetailModal {
     // h-8 (32px) — khớp chiều cao select-sm/input-sm ở 2 ô cùng hàng (Assignee,
     // Due date); trước đây pill này chỉ cao theo padding chữ (py-1.5 ≈ 26px),
     // thấp hơn rõ rệt so với 2 ô bên cạnh trong cùng lưới 3 cột.
-    const base = 'flex h-8 flex-1 items-center justify-center rounded-md border-[1.5px] px-1 text-center text-[11.5px] font-semibold transition-colors';
-    if (this.draftPriority() !== id) return `${base} border-base-300 bg-base-100 text-base-content/80 hover:bg-base-200`;
+    const base = 'btn btn-sm h-8 min-h-0 flex-1 px-1 text-center text-[11.5px] font-semibold';
+    if (this.draftPriority() !== id) return `${base} btn-outline`;
     const selected: Record<CardPriority, string> = {
-      high: 'border-error bg-error/10 text-error',
-      medium: 'border-warning bg-warning/10 text-warning',
-      low: 'border-base-content/40 bg-base-200 text-base-content/80',
+      high: 'btn-error btn-soft',
+      medium: 'btn-warning btn-soft',
+      low: 'btn-neutral btn-soft',
     };
     return `${base} ${selected[id]}`;
   }

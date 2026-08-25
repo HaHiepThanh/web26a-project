@@ -5,12 +5,12 @@
     @for (t of toasts(); track t.id) {
     <div
       class="alert text-xs shadow-lg pointer-events-auto flex items-center justify-between gap-3 py-2 px-3.5 rounded-xl border border-white/10 text-white font-bold"
-      [class.alert-success]="t.type === 'success'" [class.bg-emerald-600]="t.type === 'success'"
-      [class.alert-error]="t.type === 'error'" [class.bg-rose-600]="t.type === 'error'"
-      [class.alert-info]="t.type === 'info'" [class.bg-slate-800]="t.type === 'info'">
+      [class.alert-success]="t.type === 'success'" [class.bg-success]="t.type === 'success'"
+      [class.alert-error]="t.type === 'error'" [class.bg-error]="t.type === 'error'"
+      [class.alert-info]="t.type === 'info'" [class.bg-neutral]="t.type === 'info'">
       <span>{{ t.message }}</span>
       @if (t.action) {
-      <button class="btn btn-xs btn-outline text-white border-white/50 hover:bg-white/20"
+      <button class="btn btn-xs btn-outline text-white border-white/50 hover:bg-base-100/20"
         (click)="t.action.handler()">{{
         t.action.label }}</button>
       }
@@ -48,7 +48,7 @@
           <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-warning/15 text-warning">
             <svg lucideStar class="h-3.5 w-3.5" [strokeWidth]="2.2" fill="currentColor"></svg>
           </span>
-          <h2 class="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">Starred
+          <h2 class="text-xs font-black uppercase tracking-wider text-base-content">Starred
             boards</h2>
         </div>
         <div class="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2.5">
@@ -68,7 +68,7 @@
               <div class="mt-0.5 text-sm font-bold leading-tight [text-shadow:0_1px_2px_rgba(0,0,0,0.2)]">{{
                 board.title }}</div>
             </div>
-            <button class="absolute right-2.5 top-2.5 z-10 text-yellow-400 transition hover:scale-110"
+            <button class="btn btn-ghost btn-circle btn-xs absolute right-2.5 top-2.5 z-10 text-yellow-400 transition hover:scale-110 hover:bg-transparent"
               title="Unstar" (click)="$event.stopPropagation(); toggleStar(board.id)">
               <svg lucideStar class="h-4 w-4" [strokeWidth]="2.2" fill="currentColor"></svg>
             </button>
@@ -93,7 +93,7 @@
       <!-- Header Controls / Filter Indicator -->
       <div class="flex items-center justify-between gap-2 flex-wrap pb-1">
         <div class="flex items-center gap-2">
-          <h2 class="text-sm font-black uppercase tracking-wide text-slate-800 dark:text-slate-200">
+          <h2 class="text-sm font-black uppercase tracking-wide text-base-content">
             @if (activeWorkspaceId()) {
             Filtered by workspace
             } @else {
@@ -148,9 +148,9 @@
         <div class="flex h-12 w-12 items-center justify-center rounded-full bg-base-200 text-base-content/40">
           <svg lucideSearch class="h-5 w-5" [strokeWidth]="2"></svg>
         </div>
-        <p class="text-sm font-bold text-slate-800 dark:text-slate-200">No boards found matching "{{
+        <p class="text-sm font-bold text-base-content">No boards found matching "{{
           searchQuery() }}"</p>
-        <p class="text-xs text-slate-500">Try a different search term or check your spelling.</p>
+        <p class="text-xs text-base-content/60">Try a different search term or check your spelling.</p>
       </div>
       }
 

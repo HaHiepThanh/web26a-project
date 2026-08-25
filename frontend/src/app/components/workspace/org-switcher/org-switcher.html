@@ -10,40 +10,35 @@
     <span class="text-2xs font-bold text-base-content/35">{{ organizations().length }}</span>
   </div>
 
-  <div class="space-y-1">
+  <!-- Danh sách tổ chức dùng .menu của daisyUI; mục đang chọn là .menu-active. -->
+  <ul class="menu menu-sm w-full gap-1 p-0">
     @for (org of organizations(); track org.id) {
-    <div class="group relative flex w-full items-center rounded-xl transition-all"
-      [class]="org.id === activeOrg()?.id ? 'bg-primary shadow-sm text-primary-content' : 'hover:bg-base-200'">
-      <button type="button" class="flex min-w-0 flex-1 items-center gap-2.5 px-2 py-1.5 text-left"
-        (click)="onSelect(org.id)">
-        <span class="min-w-0 flex-1">
+    <li class="group relative">
+      <button type="button" class="flex w-full items-center gap-2.5 pr-9"
+        [class.menu-active]="org.id === activeOrg()?.id" (click)="onSelect(org.id)">
+        <span class="min-w-0 flex-1 text-left">
           <span class="block truncate text-xs font-bold leading-tight">{{ org.name }}</span>
-          <span class="block truncate text-2xs font-medium leading-tight"
-            [class]="org.id === activeOrg()?.id ? 'text-primary-content/70' : 'text-base-content/45'">
+          <span class="block truncate text-2xs font-medium leading-tight opacity-60">
             {{ org.memberIds.length }} member(s)
           </span>
         </span>
-      </button>
-
-      <div class="flex shrink-0 items-center gap-0.5 pr-1.5">
         @if (org.id === activeOrg()?.id) {
         <svg lucideCheck class="h-3.5 w-3.5 shrink-0 transition-opacity group-hover:opacity-0" [strokeWidth]="3"></svg>
         }
-        <!-- 3 chấm: mở modal quản lý (mời/xoá thành viên, đổi tên) -->
-        <button type="button"
-          class="absolute right-1.5 flex h-6 w-6 items-center justify-center rounded-lg opacity-0 transition-all focus-visible:opacity-100 group-hover:opacity-100"
-          [class]="org.id === activeOrg()?.id ? 'hover:bg-white/20' : 'hover:bg-base-300'"
-          title="Manage organization" [attr.aria-label]="'Manage ' + org.name" (click)="onManage(org.id, $event)">
-          <svg lucideEllipsisVertical class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg>
-        </button>
-      </div>
-    </div>
+      </button>
+
+      <!-- 3 chấm: mở modal quản lý (mời/xoá thành viên, đổi tên) -->
+      <button type="button"
+        class="btn btn-ghost btn-xs btn-circle absolute right-1.5 top-1/2 z-10 -translate-y-1/2 opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100"
+        title="Manage organization" [attr.aria-label]="'Manage ' + org.name" (click)="onManage(org.id, $event)">
+        <svg lucideEllipsisVertical class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg>
+      </button>
+    </li>
     }
-  </div>
+  </ul>
 
   <!-- Nút Tạo Organization mới: Mở popup modal -->
-  <button type="button"
-    class="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-base-300 py-1.5 text-2xs font-bold text-primary transition-all hover:border-primary hover:bg-primary/5 cursor-pointer"
+  <button type="button" class="btn btn-dash btn-primary btn-sm mt-2 w-full gap-1.5 text-2xs font-bold"
     (click)="startCreate()">
     <svg lucidePlus class="h-3 w-3 shrink-0" [strokeWidth]="3"></svg>
     <span>New organization</span>

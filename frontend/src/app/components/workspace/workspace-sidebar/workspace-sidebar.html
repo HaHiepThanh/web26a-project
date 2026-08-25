@@ -9,58 +9,50 @@
     </div>
   </div>
 
-  <div class="space-y-1">
+  <!-- Danh sách điều hướng dùng component .menu của daisyUI: trạng thái đang chọn
+       là .menu-active, hover/focus do chính menu lo — không tự dựng bằng bg-* nữa. -->
+  <ul class="menu menu-sm w-full gap-1 p-0">
     <!-- Option: Tất cả Workspace -->
-    <button type="button"
-      class="flex w-full items-center justify-between rounded-xl px-2 py-1.5 text-left transition-all"
-      [class]="activeWorkspaceId() === null ? 'bg-primary shadow-sm text-primary-content' : 'hover:bg-base-200'"
-      (click)="onSelectWorkspace(null)">
-      <div class="flex min-w-0 items-center gap-2.5">
-        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-base-300/70">
-          <svg lucideFolderKanban class="h-4 w-4" [strokeWidth]="2"></svg>
+    <li>
+      <button type="button" class="flex w-full items-center justify-between gap-2.5"
+        [class.menu-active]="activeWorkspaceId() === null" (click)="onSelectWorkspace(null)">
+        <span class="flex min-w-0 items-center gap-2.5">
+          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-base-300/70">
+            <svg lucideFolderKanban class="h-4 w-4" [strokeWidth]="2"></svg>
+          </span>
+          <span class="truncate text-xs font-bold">All Workspaces</span>
         </span>
-        <span class="truncate text-xs font-bold">All Workspaces</span>
-      </div>
-      <span class="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-2xs font-bold"
-        [class]="activeWorkspaceId() === null ? 'bg-white/20' : 'bg-base-300/70 text-base-content/60'">
-        {{ totalBoardsCount() }}
-      </span>
-    </button>
+        <span class="badge badge-sm badge-ghost font-bold">{{ totalBoardsCount() }}</span>
+      </button>
+    </li>
 
     <!-- Workspace items list -->
     @for (ws of workspaces(); track ws.id) {
-    <div class="group relative flex w-full items-center rounded-xl transition-all"
-      [class]="activeWorkspaceId() === ws.id ? 'bg-primary shadow-sm text-primary-content' : 'hover:bg-base-200'">
-      <button type="button" class="flex min-w-0 flex-1 items-center gap-2.5 px-2 py-1.5 text-left"
-        (click)="onSelectWorkspace(ws.id)">
-        <span class="min-w-0 flex-1">
+    <li class="group relative">
+      <button type="button" class="flex w-full items-center justify-between gap-2.5 pr-9"
+        [class.menu-active]="activeWorkspaceId() === ws.id" (click)="onSelectWorkspace(ws.id)">
+        <span class="min-w-0 flex-1 text-left">
           <span class="block truncate text-xs font-bold leading-tight">{{ ws.name }}</span>
-          <span class="block truncate text-2xs font-medium leading-tight"
-            [class]="activeWorkspaceId() === ws.id ? 'text-primary-content/70' : 'text-base-content/45'">
+          <span class="block truncate text-2xs font-medium leading-tight opacity-60">
             {{ ws.members.length }} member(s)
           </span>
         </span>
-      </button>
-
-      <div class="flex shrink-0 items-center pr-1.5">
-        <span class="flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-2xs font-bold transition-opacity group-hover:opacity-0"
-          [class]="activeWorkspaceId() === ws.id ? 'bg-white/20' : 'bg-base-300/70 text-base-content/60'">
+        <span class="badge badge-sm badge-ghost font-bold transition-opacity group-hover:opacity-0">
           {{ ws.boards.length }}
         </span>
-        <!-- 3 chấm: mở modal quản lý workspace (đổi tên/icon, thành viên, xoá) -->
-        <button type="button"
-          class="absolute right-1.5 flex h-6 w-6 items-center justify-center rounded-lg opacity-0 transition-all focus-visible:opacity-100 group-hover:opacity-100"
-          [class]="activeWorkspaceId() === ws.id ? 'hover:bg-white/20' : 'hover:bg-base-300'"
-          title="Manage Workspace" [attr.aria-label]="'Manage ' + ws.name" (click)="onManage(ws, $event)">
-          <svg lucideEllipsisVertical class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg>
-        </button>
-      </div>
-    </div>
-    }
-  </div>
+      </button>
 
-  <button type="button"
-    class="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-base-300 py-1.5 text-2xs font-bold text-primary transition-all hover:border-primary hover:bg-primary/5"
+      <!-- 3 chấm: mở modal quản lý workspace (đổi tên/icon, thành viên, xoá) -->
+      <button type="button"
+        class="btn btn-ghost btn-xs btn-circle absolute right-1.5 top-1/2 z-10 -translate-y-1/2 opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100"
+        title="Manage Workspace" [attr.aria-label]="'Manage ' + ws.name" (click)="onManage(ws, $event)">
+        <svg lucideEllipsisVertical class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg>
+      </button>
+    </li>
+    }
+  </ul>
+
+  <button type="button" class="btn btn-dash btn-primary btn-sm mt-2 w-full gap-1.5 text-2xs font-bold"
     (click)="createWorkspace.emit()" [class.hidden]="!canManage()">
     <svg lucidePlus class="h-3 w-3 shrink-0" [strokeWidth]="3"></svg>
     <span>New Workspace</span>

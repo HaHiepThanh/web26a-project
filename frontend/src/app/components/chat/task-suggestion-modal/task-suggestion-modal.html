@@ -1,5 +1,5 @@
-<div class="fixed inset-0 z-[1100] flex items-center justify-center bg-black/50 p-4" (click)="close.emit()">
-  <div class="flex max-h-[88vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-base-100 shadow-2xl"
+<div class="modal modal-open z-[1100] p-4 " (click)="close.emit()">
+  <div class="modal-box flex max-h-[88vh] w-full max-w-3xl flex-col overflow-hidden p-0"
     (click)="$event.stopPropagation()">
 
     <div class="flex shrink-0 items-start justify-between border-b border-base-200 px-5 py-3.5">
@@ -30,7 +30,7 @@
             <input type="checkbox" class="checkbox checkbox-primary checkbox-sm shrink-0"
               [checked]="r.chon" (change)="toggle($index)" [attr.aria-label]="'Create card ' + r.title" />
             <input type="text" maxlength="200"
-              class="input input-bordered input-sm min-w-0 flex-1 font-bold"
+              class="input input-sm min-w-0 flex-1 font-bold"
               placeholder="Card title" [ngModel]="r.title"
               (ngModelChange)="patch($index, { title: $event })" [name]="'title' + $index" />
           </div>
@@ -38,7 +38,7 @@
           <div class="grid grid-cols-1 gap-2 sm:grid-cols-4">
             <label class="min-w-0">
               <span class="mb-1 block text-3xs font-bold uppercase tracking-wide text-base-content/50">Assignee</span>
-              <select class="select select-bordered select-sm w-full"
+              <select class="select select-sm w-full"
                 [ngModel]="r.assigneeId ?? ''" (ngModelChange)="patch($index, { assigneeId: $event })"
                 [name]="'assignee' + $index">
                 <option value="">Unassigned</option>
@@ -50,14 +50,14 @@
 
             <label class="min-w-0">
               <span class="mb-1 block text-3xs font-bold uppercase tracking-wide text-base-content/50">Due date</span>
-              <input type="date" class="input input-bordered input-sm w-full"
+              <input type="date" class="input input-sm w-full"
                 [ngModel]="r.dueDate ?? ''" (ngModelChange)="patch($index, { dueDate: $event })"
                 [name]="'due' + $index" />
             </label>
 
             <label class="min-w-0">
               <span class="mb-1 block text-3xs font-bold uppercase tracking-wide text-base-content/50">Add to list</span>
-              <select class="select select-bordered select-sm w-full"
+              <select class="select select-sm w-full"
                 [ngModel]="r.listId ?? ''" (ngModelChange)="patch($index, { listId: $event })"
                 [name]="'list' + $index">
                 @for (l of lists(); track l.id) {
@@ -68,7 +68,7 @@
 
             <label class="min-w-0">
               <span class="mb-1 block text-3xs font-bold uppercase tracking-wide text-base-content/50">Priority</span>
-              <select class="select select-bordered select-sm w-full"
+              <select class="select select-sm w-full"
                 [ngModel]="r.priority ?? 'medium'" (ngModelChange)="patch($index, { priority: $event })"
                 [name]="'priority' + $index">
                 @for (p of priorities; track p.id) {

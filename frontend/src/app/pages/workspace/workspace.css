@@ -22,7 +22,7 @@
   overflow: hidden;
 }
 
-[data-theme='dark'] .tips-card {
+[data-theme='sunset'] .tips-card {
   background: linear-gradient(135deg, #2e1065 0%, #1e1b4b 100%);
   border-color: #581c87;
 }
@@ -46,7 +46,7 @@
   margin-bottom: var(--space-xs);
 }
 
-[data-theme='dark'] .tips-title {
+[data-theme='sunset'] .tips-title {
   color: #e9d5ff;
 }
 
@@ -56,7 +56,7 @@
   line-height: 1.4;
 }
 
-[data-theme='dark'] .tips-desc {
+[data-theme='sunset'] .tips-desc {
   color: #c084fc;
 }
 
@@ -69,7 +69,7 @@
   font-size: 11px;
 }
 
-[data-theme='dark'] .tips-kbd {
+[data-theme='sunset'] .tips-kbd {
   background-color: rgba(0, 0, 0, 0.4);
   color: #f3e8ff;
 }

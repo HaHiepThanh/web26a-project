@@ -1,5 +1,5 @@
-<div class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/45 p-5" (click)="close.emit()">
-  <div class="flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-box bg-base-100 shadow-xl" (click)="$event.stopPropagation()">
+<div class="modal modal-open z-[1000] p-5 " (click)="close.emit()">
+  <div class="modal-box flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden p-0" (click)="$event.stopPropagation()">
     <div class="flex shrink-0 items-center justify-between border-b border-base-300 px-5 py-3.5">
       <div class="flex min-w-0 flex-col">
         <span class="text-base font-bold text-base-content">📊 Stats &amp; Reports</span>

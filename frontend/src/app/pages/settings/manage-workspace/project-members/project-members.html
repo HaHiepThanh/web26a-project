@@ -75,7 +75,7 @@
           <circle cx="11" cy="11" r="8"></circle>
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
-        <input type="text" class="input input-bordered h-9 w-full pl-9" placeholder="Search members..." [value]="searchQuery()" (input)="searchQuery.set($any($event.target).value)" />
+        <input type="text" class="input h-9 w-full pl-9" placeholder="Search members..." [value]="searchQuery()" (input)="searchQuery.set($any($event.target).value)" />
       </div>
 
       @if (filteredMembers().length === 0) {
@@ -123,7 +123,7 @@
                     @if (canChangeRole(member)) {
                       <select
                         #roleSelect
-                        class="select select-bordered select-sm"
+                        class="select select-sm"
                         [value]="member.role"
                         (change)="onChangeRole(member, $any($event.target).value, roleSelect)"
                         [disabled]="busyUserId() === member.userId"
@@ -140,7 +140,7 @@
                     @if (member.assignedCards.length === 0) {
                       <span class="text-sm text-base-content/50">No cards</span>
                     } @else {
-                      <button type="button" class="inline-flex items-center gap-1 text-sm font-semibold text-primary" (click)="toggleExpandedCards(member.userId)">
+                      <button type="button" class="btn btn-link btn-sm h-auto min-h-0 gap-1 p-0 text-sm font-semibold no-underline" (click)="toggleExpandedCards(member.userId)">
                         {{ member.assignedCards.length }} card{{ member.assignedCards.length > 1 ? 's' : '' }}
                         <span class="text-[0.7rem] transition-transform" [class.rotate-180]="expandedMemberId() === member.userId">▾</span>
                       </button>
@@ -220,8 +220,8 @@
 
   <!-- ============================== MODALS (owner/admin) ============================== -->
   @if (showAddModal()) {
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4" (click)="closeAddModal()">
-      <div class="flex max-h-[80vh] w-full max-w-[440px] flex-col rounded-box bg-base-100 p-6 shadow-lg" (click)="$event.stopPropagation()">
+    <div class="modal modal-open z-50 p-4" (click)="closeAddModal()">
+      <div class="modal-box flex max-h-[80vh] w-full max-w-[440px] flex-col" (click)="$event.stopPropagation()">
         <h3 class="mb-1 text-[1.05rem] font-semibold text-base-content">Add a member to this project</h3>
         <p class="mb-4 text-sm text-base-content/60">
           Only people already in <b>{{ workspaceName() }}</b> can be added — invite them to the organization first if they're not listed.
@@ -229,7 +229,7 @@
 
         <input
           type="text"
-          class="input input-bordered mb-3 w-full"
+          class="input mb-3 w-full"
           placeholder="Search people..."
           [value]="candidateQuery()"
           (input)="candidateQuery.set($any($event.target).value)"
@@ -278,8 +278,8 @@
   }
 
   @if (memberToRemove(); as member) {
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4" (click)="closeRemoveConfirm()">
-      <div class="w-full max-w-[400px] rounded-box bg-base-100 p-6 shadow-lg" (click)="$event.stopPropagation()">
+    <div class="modal modal-open z-50 p-4" (click)="closeRemoveConfirm()">
+      <div class="modal-box w-full max-w-[400px]" (click)="$event.stopPropagation()">
         <h3 class="mb-4 text-[1.05rem] font-semibold text-base-content">{{ member.userId === currentUserId() ? 'Leave this project?' : 'Remove member?' }}</h3>
         <p class="mb-5 text-sm leading-relaxed text-base-content/80">
           {{ member.userId === currentUserId()

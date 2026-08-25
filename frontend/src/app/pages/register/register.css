@@ -8,20 +8,12 @@
 
 /* ---------- Design tokens (giống login.css) ---------- */
 .register-frame {
-  --primary: #0d9488;
-  --primary-dark: #0f766e;
-  /* Nhánh CTA của DaisyUI (.btn-primary) đọc 2 biến theme này, không đọc --primary
-     ở trên — override tại đây để riêng 2 trang auth đổi màu, không đụng chạm màu
-     primary (xanh dương) dùng cho phần còn lại của app (Header, modal, v.v.).
-     #0d9488 + chữ trắng chỉ đạt 3.74:1 ở cỡ chữ nút (dưới chuẩn AA 4.5:1) —
-     dùng #0f766e (teal-700, 5.47:1) cho nút thay vì đúng hex gốc, theo quyết
-     định audit UI-004: giữ #0d9488 cho chữ lớn/đậm, đổi đậm hơn cho chữ nhỏ. */
-  --color-primary: #0f766e;
-  --color-primary-content: #ffffff;
-  /* DaisyUI's field radius (inputs + buttons) defaults to 0.25rem (~3.5px
-     rendered) — near-square, and visibly different from the landing page's
-     16px button radius. Match it here so the two pages read as one product
-     (audit UI-003). */
+  /* Không override --color-primary nữa: 2 trang auth dùng chung màu nhấn với
+     theme daisyUI đang bật (winter/sunset) như mọi màn hình còn lại. */
+  --primary: var(--accent-blue);
+  --primary-dark: var(--accent-blue-hover);
+  /* Nút và ô nhập của trang này bo tròn hơn phần còn lại của app cho hợp không
+     khí trang giới thiệu — giữ lại vì đây là bo góc, không phải màu (audit UI-003). */
   --radius-field: 16px;
   --slate-50: #f8fafc;
   --slate-100: #f1f5f9;
@@ -33,12 +25,14 @@
   --slate-800: #1e293b;
   --slate-900: #0f172a;
   --border-sleek: #e2e8f0;
-  --amber: #fbbf24;
-  --emerald: #34d399;
-  --rose: #fb7185;
-  --violet: #a78bfa;
-  --blue: #60a5fa;
-  --cyan: #22d3ee;
+  /* Màu của khung trang trí bên phải — lấy theo bảng màu của theme để không
+     thành một bộ màu thứ hai lạc lõng với phần còn lại. */
+  --amber: var(--warning);
+  --emerald: var(--accent-green);
+  --rose: var(--danger);
+  --violet: var(--accent-purple);
+  --blue: var(--accent-blue);
+  --cyan: var(--color-info);
   --font-mono: 'JetBrains Mono', monospace;
 
   -webkit-font-smoothing: antialiased;
@@ -53,8 +47,8 @@
 .form-panel {
   width: 100%;
   min-height: 100vh;
-  background: #fff;
-  color: var(--slate-800);
+  background: var(--bg-app);
+  color: var(--text-primary);
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -96,13 +90,13 @@
   height: 32px;
   border-radius: 8px;
   object-fit: cover;
-  box-shadow: 0 4px 10px rgba(13, 148, 136, 0.25);
+  box-shadow: 0 4px 10px color-mix(in oklab, var(--accent-blue) 25%, transparent);
 }
 .brand-name {
   font-size: 18px;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: var(--slate-800);
+  color: var(--text-primary);
 }
 
 /* ---------- Form card ---------- */
@@ -154,14 +148,14 @@
   right: -10%;
   width: 55%;
   aspect-ratio: 1;
-  background: rgba(37, 99, 235, 0.2);
+  background: color-mix(in oklab, var(--accent-blue) 20%, transparent);
 }
 .glow-indigo {
   bottom: -15%;
   left: -10%;
   width: 45%;
   aspect-ratio: 1;
-  background: rgba(99, 102, 241, 0.1);
+  background: color-mix(in oklab, var(--accent-purple) 12%, transparent);
 }
 
 .showcase-heading {
@@ -232,7 +226,7 @@
   align-items: center;
   justify-content: center;
   font-size: 15px;
-  background: rgba(37, 99, 235, 0.18);
+  background: color-mix(in oklab, var(--accent-blue) 18%, transparent);
 }
 .perk-title {
   font-size: 13px;
