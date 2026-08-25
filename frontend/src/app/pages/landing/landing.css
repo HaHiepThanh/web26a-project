@@ -310,12 +310,12 @@
   transform: rotate(-90deg) scale(0.4);
 }
 
-:host-context([data-theme='dark']) .ico-sun {
+:host-context([data-theme='sunset']) .ico-sun {
   opacity: 0;
   transform: rotate(90deg) scale(0.4);
 }
 
-:host-context([data-theme='dark']) .ico-moon {
+:host-context([data-theme='sunset']) .ico-moon {
   opacity: 1;
   transform: rotate(0deg) scale(1);
 }

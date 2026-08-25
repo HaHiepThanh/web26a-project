@@ -5,6 +5,16 @@ export type Theme = 'light' | 'dark';
 const STORAGE_KEY = 'trello_theme';
 
 /**
+ * Tên theme daisyUI tương ứng với mỗi chế độ. Giữ 'light'/'dark' làm tên gọi
+ * bên trong app (hàng chục chỗ đang so sánh `theme() === 'dark'`), chỉ đổi
+ * chuỗi thực sự ghi ra [data-theme] — đó mới là thứ daisyUI đọc để chọn bảng màu.
+ */
+const DAISY_THEME: Record<Theme, string> = {
+  light: 'winter',
+  dark: 'sunset',
+};
+
+/**
  * Nguồn sự thật duy nhất cho giao diện sáng/tối.
  *
  * Ghi `data-theme` lên <html> — cùng một cái móc mà `styles.css` dùng để đổi bộ
@@ -29,7 +39,7 @@ export class ThemeService {
     effect(() => {
       const theme = this.theme();
       const root = document.documentElement;
-      root.setAttribute('data-theme', theme);
+      root.setAttribute('data-theme', DAISY_THEME[theme]);
       root.classList.toggle('dark', theme === 'dark');
       try {
         localStorage.setItem(STORAGE_KEY, theme);

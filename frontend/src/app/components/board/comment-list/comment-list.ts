@@ -5,6 +5,19 @@ import { BoardStore } from '../../../ngrx/board/board.store';
 import { avatarColorFor, initialsOf } from '../../../utils/avatar.util';
 import { AuthService } from '../../../services/auth.service';
 
+/**
+ * Trần độ dài một bình luận.
+ *
+ * Phải khớp với `@MaxLength` trong `backend/.../create-comment.dto.ts` — backend
+ * mới là nơi chặn thật (gọi thẳng API thì không đi qua giao diện). Chỗ này chỉ
+ * để người dùng biết trước, thay vì gõ xong mới ăn lỗi 400.
+ */
+const MAX_COMMENT_LENGTH = 300;
+
+/** Còn dưới ngần này ký tự thì hiện bộ đếm — hiện suốt từ ký tự đầu chỉ tổ
+ *  chật ô nhập vốn đã nhỏ, mà lúc đó chẳng ai cần biết. */
+const COUNTER_VISIBLE_FROM = 60;
+
 /** [BONUS #4] Bình luận trong card: thêm, xoá bình luận của chính mình. */
 @Component({
   selector: 'app-comment-list',
@@ -33,6 +46,14 @@ export class CommentList {
 
   readonly comments = computed(() => this.commentService.commentsFor(this.cardId()));
   readonly newCommentText = signal('');
+
+  readonly maxLength = MAX_COMMENT_LENGTH;
+  /** Số ký tự còn lại. Âm nghĩa là đã vượt — chỉ xảy ra khi nội dung được đặt
+   *  bằng đường khác `maxlength` của trình duyệt (dán qua script, tự động hoá). */
+  readonly remaining = computed(() => MAX_COMMENT_LENGTH - this.newCommentText().length);
+  readonly showCounter = computed(() => this.remaining() <= COUNTER_VISIBLE_FROM);
+  readonly tooLong = computed(() => this.remaining() < 0);
+  readonly canSend = computed(() => !!this.newCommentText().trim() && !this.tooLong());
 
   constructor() {
     // Nạp bình luận từ backend mỗi khi mở một thẻ khác. Thiếu chỗ này thì thẻ cũ
@@ -72,7 +93,9 @@ export class CommentList {
 
   addComment(): void {
     const text = this.newCommentText().trim();
-    if (!text) return;
+    // Chặn cả ở đây, không chỉ dựa vào `[disabled]` của nút: phím Enter cũng gọi
+    // thẳng hàm này, mà nút bị vô hiệu hoá không ngăn được phím tắt.
+    if (!text || text.length > MAX_COMMENT_LENGTH) return;
     // Backend tự ghi activity log khi thêm bình luận — không gọi record() ở đây
     // nữa, nếu không nhật ký sẽ có 2 dòng cho cùng một hành động.
     void this.commentService.addComment(this.cardId(), text);

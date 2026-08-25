@@ -10,7 +10,7 @@
     <button
       type="button"
       role="listitem"
-      [class]="'flex w-full items-center gap-2.5 border-b border-base-300/60 py-3 pr-3.5 pl-4 text-left hover:bg-base-200 ' + (selectedBoardId() === null ? 'bg-primary/10' : '')"
+      [class]="'btn btn-ghost h-auto min-h-0 w-full justify-start gap-2.5 rounded-none border-b border-base-300/60 py-3 pr-3.5 pl-4 text-left font-normal normal-case ' + (selectedBoardId() === null ? 'bg-primary/10' : '')"
       (click)="selectOverview()"
     >
       <div class="avatar avatar-placeholder flex-shrink-0">
@@ -24,7 +24,7 @@
         type="button"
         role="listitem"
         [class]="
-          'flex w-full items-start gap-2.5 border-b border-base-300/60 py-3 pr-3.5 pl-4 text-left hover:bg-base-200 ' +
+          'btn btn-ghost h-auto min-h-0 w-full items-start justify-start gap-2.5 rounded-none border-b border-base-300/60 py-3 pr-3.5 pl-4 text-left font-normal normal-case ' +
           (selectedBoardId() === row.board.id ? 'bg-primary/10' : row.unreadCount > 0 ? 'bg-primary/5' : '')
         "
         (click)="selectConversation(row.board)"

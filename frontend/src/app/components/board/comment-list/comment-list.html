@@ -15,7 +15,7 @@
             <span class="text-2xs font-semibold text-base-content/80">{{ userLabel(c.userId) }}</span>
             <span class="text-3xs text-base-content/40">{{ timeLabel(c.createdAt) }}</span>
             @if (c.userId === currentUserId()) {
-              <button type="button" class="ml-auto text-3xs text-base-content/40 opacity-0 transition-opacity hover:text-error group-hover:opacity-100" (click)="deleteComment(c.id)">
+              <button type="button" class="btn btn-link btn-xs ml-auto h-auto min-h-0 p-0 text-3xs text-base-content/40 no-underline opacity-0 transition-opacity hover:text-error group-hover:opacity-100" (click)="deleteComment(c.id)">
                 Delete
               </button>
             }
@@ -30,15 +30,32 @@
 }
 
 <div class="flex gap-1.5">
-  <textarea
-    class="textarea textarea-bordered min-w-0 flex-1 text-xs"
-    rows="2"
-    placeholder="Write a comment..."
-    [value]="newCommentText()"
-    (input)="onInput($event)"
-    (keydown.enter)="$event.preventDefault(); addComment()"
-  ></textarea>
-  <button type="button" class="btn btn-square btn-primary btn-sm self-end" [disabled]="!newCommentText().trim()" (click)="addComment()" aria-label="Send comment">
+  <div class="min-w-0 flex-1">
+    <textarea
+      class="textarea w-full text-xs"
+      [class.textarea-error]="tooLong()"
+      rows="2"
+      placeholder="Write a comment..."
+      [attr.maxlength]="maxLength"
+      [attr.aria-describedby]="showCounter() ? 'comment-counter' : null"
+      [value]="newCommentText()"
+      (input)="onInput($event)"
+      (keydown.enter)="$event.preventDefault(); addComment()"
+    ></textarea>
+    <!-- Chỉ hiện khi sắp chạm trần: ô nhập này nhỏ, đếm suốt từ ký tự đầu chỉ
+         tổ chật chỗ mà lúc đó chẳng ai cần biết. -->
+    @if (showCounter()) {
+      <div
+        id="comment-counter"
+        class="mt-0.5 text-right text-2xs tabular-nums"
+        [class]="tooLong() ? 'text-error font-semibold' : 'text-base-content/50'"
+        aria-live="polite"
+      >
+        {{ remaining() }} characters left
+      </div>
+    }
+  </div>
+  <button type="button" class="btn btn-square btn-primary btn-sm self-start" [disabled]="!canSend()" (click)="addComment()" aria-label="Send comment">
     <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg>
   </button>
 </div>

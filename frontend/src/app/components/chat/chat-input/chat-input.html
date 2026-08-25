@@ -1,12 +1,12 @@
 <div class="relative">
   @if (mentionOpen() && mentionMatches().length) {
-    <div class="absolute bottom-full left-2.5 right-2.5 mb-1 overflow-hidden rounded-md border border-base-300 bg-base-100 shadow-md">
+    <ul class="menu menu-xs absolute bottom-full left-2.5 right-2.5 mb-1 gap-0.5 overflow-hidden rounded-box border border-base-300 bg-base-100 p-1 shadow-md">
       @for (m of mentionMatches(); track m.id) {
-        <button type="button" class="block w-full px-2.5 py-1.5 text-left text-xs font-medium text-base-content hover:bg-primary/10 hover:text-primary" (click)="pickMention(m, msgInput)">
+        <li><button type="button" class="font-medium" (click)="pickMention(m, msgInput)">
           {{ m.displayName ?? m.email }}
-        </button>
+        </button></li>
       }
-    </div>
+    </ul>
   }
 
   <div class="flex items-end gap-2 border-t border-base-300 bg-base-100 px-2.5 py-2">

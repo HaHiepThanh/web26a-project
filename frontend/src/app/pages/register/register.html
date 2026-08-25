@@ -19,7 +19,7 @@
           <input
             id="fullName"
             type="text"
-            class="input input-bordered min-h-[44px] w-full"
+            class="input min-h-[44px] w-full"
             [class.input-error]="errors().fullName"
             placeholder="Jane Doe"
             autocomplete="name"
@@ -35,7 +35,7 @@
             <input
               id="username"
               type="text"
-              class="input input-bordered min-h-[44px] w-full"
+              class="input min-h-[44px] w-full"
               [class.input-error]="errors().username"
               placeholder="e.g. janedoe"
               autocomplete="username"
@@ -50,7 +50,7 @@
             <input
               id="phone"
               type="tel"
-              class="input input-bordered min-h-[44px] w-full"
+              class="input min-h-[44px] w-full"
               [class.input-error]="errors().phone"
               placeholder="0912345678"
               autocomplete="tel"
@@ -66,7 +66,7 @@
           <input
             id="email"
             type="email"
-            class="input input-bordered min-h-[44px] w-full"
+            class="input min-h-[44px] w-full"
             [class.input-error]="errors().email"
             placeholder="you@company.com"
             autocomplete="email"
@@ -79,7 +79,7 @@
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div class="form-control w-full">
             <label class="label pb-1.5" for="password"><span class="label-text text-xs font-semibold">Password</span></label>
-            <label class="input input-bordered flex min-h-[44px] w-full items-center gap-2" [class.input-error]="errors().password">
+            <label class="input flex min-h-[44px] w-full items-center gap-2" [class.input-error]="errors().password">
               <input
                 [type]="passwordVisible() ? 'text' : 'password'"
                 id="password"
@@ -122,7 +122,7 @@
 
           <div class="form-control w-full">
             <label class="label pb-1.5" for="confirmPassword"><span class="label-text text-xs font-semibold">Confirm password</span></label>
-            <label class="input input-bordered flex min-h-[44px] w-full items-center gap-2" [class.input-error]="errors().confirmPassword">
+            <label class="input flex min-h-[44px] w-full items-center gap-2" [class.input-error]="errors().confirmPassword">
               <input
                 [type]="confirmVisible() ? 'text' : 'password'"
                 id="confirmPassword"

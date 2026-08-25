@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { Card, CardPriority, User } from '../../../models';
 import { CardStore } from '../../../ngrx/card/card.store';
+import type { CardChanges } from '../../../ngrx/card/card.methods';
 import { LabelStore } from '../../../ngrx/label/label.store';
 import { BoardStore } from '../../../ngrx/board/board.store';
 import { ActivityStore } from '../../../ngrx/activity/activity.store';
@@ -164,7 +165,14 @@ export class CardDetailModal {
   async save(): Promise<void> {
     if (!this.canSave()) return;
     const c = this.card();
-    const changes: Partial<Card> = {};
+    // `null` = XOÁ trường đó trên server. Trước đây chỗ này dùng `undefined`,
+    // mà `undefined` bị JSON.stringify bỏ khỏi body, nên backend — vốn chỉ ghi
+    // khi field `!== undefined` — hiểu thành "giữ nguyên". Hậu quả: bỏ người
+    // phụ trách, xoá mô tả, xoá hạn đều im lặng KHÔNG ăn. Giao diện vẫn hiện
+    // đã xoá (vì bản cập nhật lạc quan ở local có đổi), tới lần F5 giá trị cũ
+    // quay lại. Nếu chỉ đổi đúng một trong ba trường đó thì còn tệ hơn: store
+    // thấy patch rỗng nên không gọi API lần nào.
+    const changes: CardChanges = {};
     const nhatKy: string[] = [];
 
     const title = this.draftTitle().trim();
@@ -173,17 +181,17 @@ export class CardDetailModal {
       nhatKy.push(`renamed card from "${c.title}" to "${title}"`);
     }
     if (this.draftDescription() !== (c.description ?? '')) {
-      changes.description = this.draftDescription() || undefined;
+      changes.description = this.draftDescription() || null;
       nhatKy.push('updated the description');
     }
     if (this.draftAssigneeId() !== (c.assigneeId ?? null)) {
-      changes.assigneeId = this.draftAssigneeId() ?? undefined;
+      changes.assigneeId = this.draftAssigneeId() ?? null;
       nhatKy.push(
         `changed assignee from "${this.memberName(c.assigneeId)}" to "${this.memberName(this.draftAssigneeId() ?? undefined)}"`,
       );
     }
     if (this.draftDueDate() !== (c.dueDate ?? '')) {
-      changes.dueDate = this.draftDueDate() || undefined;
+      changes.dueDate = this.draftDueDate() || null;
       nhatKy.push(`changed due date from "${c.dueDate ?? 'none'}" to "${this.draftDueDate() || 'none'}"`);
     }
     if (this.draftPriority() !== c.priority) {
@@ -271,12 +279,12 @@ export class CardDetailModal {
     // h-8 (32px) — khớp chiều cao select-sm/input-sm ở 2 ô cùng hàng (Assignee,
     // Due date); trước đây pill này chỉ cao theo padding chữ (py-1.5 ≈ 26px),
     // thấp hơn rõ rệt so với 2 ô bên cạnh trong cùng lưới 3 cột.
-    const base = 'flex h-8 flex-1 items-center justify-center rounded-md border-[1.5px] px-1 text-center text-[11.5px] font-semibold transition-colors';
-    if (this.draftPriority() !== id) return `${base} border-base-300 bg-base-100 text-base-content/80 hover:bg-base-200`;
+    const base = 'btn btn-sm h-8 min-h-0 flex-1 px-1 text-center text-[11.5px] font-semibold';
+    if (this.draftPriority() !== id) return `${base} btn-outline`;
     const selected: Record<CardPriority, string> = {
-      high: 'border-error bg-error/10 text-error',
-      medium: 'border-warning bg-warning/10 text-warning',
-      low: 'border-base-content/40 bg-base-200 text-base-content/80',
+      high: 'btn-error btn-soft',
+      medium: 'btn-warning btn-soft',
+      low: 'btn-neutral btn-soft',
     };
     return `${base} ${selected[id]}`;
   }

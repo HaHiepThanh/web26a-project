@@ -80,15 +80,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(248, 113, 113, 0.12);
-  color: #f87171;
+  background: color-mix(in oklab, var(--color-error) 12%, transparent);
+  color: var(--color-error);
 }
 
 .checking-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #f87171;
+  background: var(--color-error);
   animation: dotBlink 1.2s ease-in-out infinite;
 }
 @keyframes dotBlink {
