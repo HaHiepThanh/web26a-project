@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   LucideBuilding2,
@@ -156,11 +156,26 @@ export class OrgManageModal {
 
         // Chỉ hỏi server khi người này có quyền — thành viên thường gọi vào là
         // ăn 403 vô ích.
-        if (o && this.canManageLinks()) void this.inviteLinks.loadLinks(o.id);
+        //
+        // ⚠️ BẮT BUỘC bọc `untracked`. `loadLinks` ĐỌC `loadedForOrg()` và
+        //    `links()` ngay dòng đầu để bỏ qua lần nạp trùng — đọc trong thân
+        //    effect là effect này ĐĂNG KÝ luôn hai signal đó. Ngay sau đó
+        //    `loadLinks` lại `patchState` chính chúng, nên effect chạy lại →
+        //    gọi lại → patch lại... vòng vô hạn.
+        //
+        //    Hậu quả đo được trên máy thật: hàng nghìn `GET /invite-links` liên
+        //    tiếp cho tới khi trình duyệt trả `net::ERR_INSUFFICIENT_RESOURCES`.
+        //    Mỗi vòng còn chạy lại cả khối trên, tức `searchInput.set('')` —
+        //    người dùng dán id vào ô mời thì bị xoá trắng ngay trước mắt, và
+        //    lời mời không bao giờ gửi đi được vì đã cạn socket.
+        if (o && this.canManageLinks()) {
+          const orgId = o.id;
+          untracked(() => void this.inviteLinks.loadLinks(orgId));
+        }
       } else {
         // Đóng modal thì bỏ token khỏi bộ nhớ. Nó không có lý do gì sống lâu
-        // hơn màn hình đang dùng tới nó.
-        this.inviteLinks.clearLinks();
+        // hơn màn hình đang dùng tới nó. `untracked` vì cùng lý do trên.
+        untracked(() => this.inviteLinks.clearLinks());
       }
     });
   }
