@@ -40,8 +40,14 @@ jobs:
       # Dùng khoá giả là đủ: `ng test` không gọi Firebase, còn `ng build` chỉ cần
       # file tồn tại và đúng kiểu. Đừng nhét khoá thật vào secrets cho việc này —
       # thêm một chỗ để lộ mà không đổi lại được gì.
-      - name: Dựng environment.ts từ file mẫu
-        run: cp src/environments/environment.example.ts src/environments/environment.ts
+      # environment.prod.ts cũng bắt buộc: angular.json cấu hình `fileReplacements`
+      # thay environment.ts bằng nó khi build production, và bước build dưới đây
+      # chạy đúng cấu hình đó. Thiếu file là build đổ ngay với "path in file
+      # replacements does not exist" — không phải lỗi code, chỉ là thiếu đồ nghề.
+      - name: Dựng environment.ts + environment.prod.ts từ file mẫu
+        run: |
+          cp src/environments/environment.example.ts src/environments/environment.ts
+          cp src/environments/environment.prod.example.ts src/environments/environment.prod.ts
 
       - run: npx ng test --watch=false
 
