@@ -26,7 +26,7 @@
     class="flex flex-col lg:flex-row gap-4 lg:gap-5 items-stretch flex-1 min-h-0 h-full max-lg:overflow-y-auto lg:overflow-hidden">
     <!-- Left Sidebar Component (Fixed on desktop / Natural stack on mobile) -->
     <aside class="w-full lg:w-64 max-w-full min-w-0 shrink-0 max-lg:h-auto lg:h-full lg:overflow-y-auto lg:pr-1">
-      <div class="divide-y divide-base-200 overflow-hidden rounded-xl border border-base-300/70 bg-base-100 shadow-sm">
+      <div class="divide-y divide-base-200 overflow-hidden rounded-lg border border-base-300/70 bg-base-100 shadow-sm">
         <app-org-switcher [organizations]="organizations()" [activeOrg]="activeOrg()"
           (switchOrg)="switchOrg($event)" (openCreateOrg)="showOrgCreateModal.set(true)" (manageOrg)="openManageOrg($event)">
         </app-org-switcher>
@@ -43,9 +43,9 @@
     <div class="min-w-0 flex-1 w-full max-lg:h-auto lg:h-full lg:overflow-y-auto lg:pr-2 space-y-4">
       <!-- Starred boards section (Placed inside the right workspace area) -->
       @if (starredBoards().length > 0) {
-      <section class="rounded-2xl border border-base-300 bg-base-100 p-4 shadow-xs">
+      <section class="rounded-lg border border-base-300 bg-base-100 p-4 shadow-xs">
         <div class="mb-3 flex items-center gap-2">
-          <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-warning/15 text-warning">
+          <span class="flex h-6 w-6 items-center justify-center rounded-md bg-warning/15 text-warning">
             <svg lucideStar class="h-3.5 w-3.5" [strokeWidth]="2.2" fill="currentColor"></svg>
           </span>
           <h2 class="text-xs font-black uppercase tracking-wider text-base-content">Starred
@@ -54,7 +54,7 @@
         <div class="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2.5">
           @for (board of starredBoards(); track board.id) {
           <div
-            class="board-tile group relative flex h-[92px] cursor-pointer flex-col justify-between overflow-hidden rounded-xl p-2.5 text-white shadow-xs transition hover:-translate-y-1 hover:brightness-110"
+            class="board-tile group relative flex h-[92px] cursor-pointer flex-col justify-between overflow-hidden rounded-lg p-2.5 text-white shadow-xs transition hover:-translate-y-1 hover:brightness-110"
             [class]="board.bgClass"
             [style.background-image]="bgImageByBoardId()[board.id] ? 'url(' + bgImageByBoardId()[board.id] + ')' : null"
             [style.background-size]="bgImageByBoardId()[board.id] ? 'cover' : null"

@@ -15,7 +15,7 @@
     @for (org of organizations(); track org.id) {
     <li class="group relative min-w-0 w-full">
       <button type="button"
-        class="flex w-full min-w-0 items-center justify-between gap-2 rounded-md p-2 text-left transition-all duration-150 pr-16"
+        class="flex w-full min-w-0 items-center justify-between gap-2 rounded p-2 text-left transition-all duration-150 pr-16"
         [class]="org.id === activeOrg()?.id ? 'bg-success text-success-content font-bold shadow-xs' : 'text-base-content hover:bg-base-200'"
         (click)="onSelect(org.id)">
         <span class="min-w-0 flex-1 overflow-hidden">

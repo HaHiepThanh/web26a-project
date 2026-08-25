@@ -10,21 +10,18 @@
   </a>
 
   <div class="max-w-[480px] flex-1 max-md:hidden">
-    <div class="group relative w-full">
-      <svg lucideSearch
-        class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-base-content/35 transition-colors group-focus-within:text-primary"
-        [strokeWidth]="2"></svg>
-      <input type="text"
-        class="input input-sm h-9 w-full rounded-full border border-primary/40 bg-base-100 pl-10 pr-9 text-sm text-base-content transition-all placeholder:text-base-content/40 hover:border-primary/60 focus:border-primary focus:ring-2 focus:ring-primary/25 focus:outline-none"
+    <label
+      class="input input-sm h-9 w-full rounded-md border border-base-300 bg-base-100 px-3 flex items-center gap-2 shadow-xs transition-all focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
+      <svg lucideSearch class="h-4 w-4 shrink-0 text-base-content/40" [strokeWidth]="2"></svg>
+      <input type="text" class="grow bg-transparent text-sm text-base-content placeholder:text-base-content/40 focus:outline-none"
         placeholder="Search boards..." (input)="onSearchInput($event)" />
-      <span
-        class="kbd kbd-sm pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 border-none bg-base-300/70 text-base-content/50 opacity-0 transition-opacity group-focus-within:opacity-0 group-hover:opacity-100">/</span>
-    </div>
+      <span class="kbd kbd-sm border-none bg-base-200/80 text-base-content/50">/</span>
+    </label>
   </div>
 
   <div class="flex shrink-0 items-center gap-2">
     <div class="relative">
-      <button class="btn btn-primary btn-sm h-9 gap-1.5 rounded-full px-4 font-bold shadow-sm" (click)="toggleCreateMenu()">
+      <button class="btn btn-primary btn-sm h-9 gap-1.5 rounded-md px-3.5 font-bold shadow-sm" (click)="toggleCreateMenu()">
         <svg lucidePlus class="h-4 w-4" [strokeWidth]="2.4"></svg>
         <span>Create</span>
         <svg lucideChevronDown class="h-3 w-3 opacity-70" [strokeWidth]="2.5"></svg>
@@ -33,7 +30,7 @@
       <!-- Create Dropdown Menu -->
       @if (createMenuOpen()) {
       <ul
-        class="menu menu-sm absolute left-0 top-[42px] z-[200] w-[240px] gap-1 rounded-box border border-base-300/70 bg-base-100 p-1.5 shadow-xl">
+        class="menu menu-sm absolute left-0 top-[42px] z-[200] w-[240px] gap-1 rounded-lg border border-base-300/70 bg-base-100 p-1.5 shadow-xl">
         @if (!canManage()) {
         <li class="menu-title whitespace-normal text-2xs leading-snug">
           You're a <b>member</b> of this organization, so you can't create new workspaces or boards.
@@ -41,9 +38,9 @@
         </li>
         } @else {
         <li>
-          <button type="button" class="flex w-full items-center gap-2.5 text-left"
+          <button type="button" class="flex w-full items-center gap-2.5 rounded text-left"
             (click)="requestCreateBoard()">
-            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-primary/10 text-primary">
               <svg lucideKanban class="h-4 w-4" [strokeWidth]="2"></svg>
             </span>
             <span class="min-w-0">
@@ -53,9 +50,9 @@
           </button>
         </li>
         <li>
-          <button type="button" class="flex w-full items-center gap-2.5 text-left"
+          <button type="button" class="flex w-full items-center gap-2.5 rounded text-left"
             (click)="requestCreateWorkspace()">
-            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-secondary/10 text-secondary">
+            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-secondary/10 text-secondary">
               <svg lucideFolderKanban class="h-4 w-4" [strokeWidth]="2"></svg>
             </span>
             <span class="min-w-0">
@@ -72,11 +69,9 @@
     <div class="mx-0.5 h-5 w-px bg-base-300/70 max-sm:hidden"></div>
 
     <!-- Segmented icon toolbar -->
-    <!-- gap-2 (không phải gap-0.5 cũ) — chừa đủ chỗ để mỗi nút nới vùng chạm
-         ra ngoài (before:-inset-1) mà không đè lên vùng chạm của nút bên cạnh. -->
-    <div class="flex items-center gap-2 rounded-full bg-base-200/60 p-1">
+    <div class="flex items-center gap-1 rounded-md border border-base-300/70 bg-base-200/50 p-0.5">
       <div class="relative">
-        <button type="button" class="btn btn-ghost btn-circle btn-sm h-9 w-9 relative hover:bg-base-100 before:absolute before:-inset-1 before:content-['']"
+        <button type="button" class="btn btn-ghost btn-square btn-sm h-8 w-8 rounded relative hover:bg-base-100"
           [title]="bellTitle()" (click)="toggleNotifyMenu()">
           <svg lucideBell class="h-[17px] w-[17px]" [class.invite-pulse]="notifyPulse()" [strokeWidth]="2"></svg>
           @if (bellBadgeCount() > 0) {
@@ -88,7 +83,7 @@
 
         @if (notifyMenuOpen()) {
         <div
-          class="absolute right-0 top-[42px] z-[200] w-[320px] rounded-2xl border border-base-300/70 bg-base-100 p-2 shadow-xl">
+          class="absolute right-0 top-[42px] z-[200] w-[320px] rounded-lg border border-base-300/70 bg-base-100 p-2 shadow-xl">
           <div class="flex items-center justify-between px-1.5 pb-1.5 pt-1">
             <span class="text-2xs font-black uppercase tracking-wider text-base-content/45">Notifications</span>
             @if (unreadNotifications() > 0) {
@@ -98,7 +93,7 @@
           </div>
 
           @if (dueBadgeCount() > 0) {
-          <div class="mb-1 rounded-xl border border-warning/40 bg-warning/10 px-2.5 py-2">
+          <div class="mb-1 rounded border border-warning/40 bg-warning/10 px-2.5 py-2">
             <div class="text-2xs font-bold leading-snug text-base-content">
               {{ dueBadgeCount() }} of your cards are due soon or overdue
             </div>
@@ -111,7 +106,7 @@
           <div class="flex max-h-[320px] flex-col gap-1 overflow-y-auto">
             @for (n of notifications(); track n.id) {
             <button type="button"
-              class="btn btn-ghost h-auto min-h-0 justify-start border px-2.5 py-2 text-left font-normal normal-case"
+              class="btn btn-ghost h-auto min-h-0 justify-start rounded border px-2.5 py-2 text-left font-normal normal-case"
               [class.border-primary]="!n.read"
               [class.bg-primary]="false"
               [class.border-base-300]="n.read"
@@ -135,7 +130,7 @@
 
       <!-- Lời mời tham gia Organization -->
       <div class="relative">
-        <button type="button" class="btn btn-ghost btn-circle btn-sm h-9 w-9 relative hover:bg-base-100 before:absolute before:-inset-1 before:content-['']"
+        <button type="button" class="btn btn-ghost btn-square btn-sm h-8 w-8 rounded relative hover:bg-base-100"
           [title]="pendingInviteCount() > 0 ? pendingInviteCount() + ' pending organization invite(s)' : 'Organization invites'"
           (click)="toggleInviteMenu()">
           <svg lucideUserPlus class="h-[17px] w-[17px]" [class.invite-pulse]="bellPulse()" [strokeWidth]="2"></svg>
@@ -148,7 +143,7 @@
 
         @if (inviteToast(); as t) {
         <button type="button"
-          class="invite-toast btn btn-ghost absolute right-0 top-[42px] z-[210] block h-auto min-h-0 w-[268px] rounded-box border border-primary/40 bg-base-100 p-3 text-left font-normal normal-case shadow-xl"
+          class="invite-toast btn btn-ghost absolute right-0 top-[42px] z-[210] block h-auto min-h-0 w-[268px] rounded-lg border border-primary/40 bg-base-100 p-3 text-left font-normal normal-case shadow-xl"
           (click)="inviteToast.set(null); toggleInviteMenu()">
           <div class="text-2xs font-black uppercase tracking-wider text-primary">New invite</div>
           <div class="mt-1 text-xs font-bold leading-snug text-base-content">
@@ -160,7 +155,7 @@
 
         @if (inviteMenuOpen()) {
         <div
-          class="absolute right-0 top-[42px] z-[200] w-[300px] rounded-2xl border border-base-300/70 bg-base-100 p-2 shadow-xl">
+          class="absolute right-0 top-[42px] z-[200] w-[300px] rounded-lg border border-base-300/70 bg-base-100 p-2 shadow-xl">
           <div class="px-1.5 pb-1.5 pt-1 text-2xs font-black uppercase tracking-wider text-base-content/45">Organization
             invites</div>
           @if (myInvites().length === 0) {
@@ -168,7 +163,7 @@
           } @else {
           <div class="flex flex-col gap-1.5">
             @for (inv of myInvites(); track inv.id) {
-            <div class="rounded-xl border border-base-300/70 bg-base-200/40 p-2.5">
+            <div class="rounded border border-base-300/70 bg-base-200/40 p-2.5">
               <div class="flex items-center gap-2">
                 <div class="min-w-0">
                   <div class="truncate text-xs font-bold text-base-content leading-tight">{{ inv.fromUserName }}</div>
@@ -181,10 +176,10 @@
                 </div>
               </div>
               <div class="mt-2 flex items-center gap-1.5">
-                <button type="button" class="btn btn-success btn-xs flex-1 gap-1 text-white" (click)="acceptInvite(inv.id)">
+                <button type="button" class="btn btn-success btn-xs flex-1 gap-1 rounded text-white" (click)="acceptInvite(inv.id)">
                   <svg lucideCheck class="h-3 w-3" [strokeWidth]="3"></svg>
                   Accept</button>
-                <button type="button" class="btn btn-ghost btn-xs flex-1 gap-1" (click)="declineInvite(inv.id)">
+                <button type="button" class="btn btn-ghost btn-xs flex-1 gap-1 rounded" (click)="declineInvite(inv.id)">
                   <svg lucideX class="h-3 w-3" [strokeWidth]="3"></svg>
                   Decline</button>
               </div>
@@ -196,10 +191,9 @@
         }
       </div>
 
-      <!-- Đổi giao diện sáng/tối. aria-pressed cho trình đọc màn hình biết đây là
-           công tắc hai trạng thái, không phải nút bấm một lần. -->
+      <!-- Đổi giao diện sáng/tối -->
       <button type="button"
-        class="btn btn-ghost btn-circle btn-sm h-9 w-9 relative hover:bg-base-100 before:absolute before:-inset-1 before:content-['']"
+        class="btn btn-ghost btn-square btn-sm h-8 w-8 rounded relative hover:bg-base-100"
         [attr.aria-pressed]="theme() === 'dark'"
         [attr.aria-label]="theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
         [title]="theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
@@ -211,20 +205,20 @@
         }
       </button>
 
-      <a class="btn btn-ghost btn-circle btn-sm h-9 w-9 relative hover:bg-base-100 before:absolute before:-inset-1 before:content-['']" routerLink="/settings" title="Settings">
+      <a class="btn btn-ghost btn-square btn-sm h-8 w-8 rounded relative hover:bg-base-100" routerLink="/settings" title="Settings">
         <svg lucideSettings class="h-[17px] w-[17px]" [strokeWidth]="2"></svg>
       </a>
     </div>
 
     <div
-      class="ml-0.5 flex cursor-pointer items-center gap-1.5 rounded-full bg-base-200/60 py-[3px] pl-1 pr-2.5 transition-all hover:bg-base-200"
+      class="ml-0.5 flex cursor-pointer items-center gap-1.5 rounded-md border border-base-300/70 bg-base-200/50 py-1 pl-1 pr-2.5 transition-all hover:bg-base-200"
       (click)="toggleUserMenu()">
       @if (!avatarBroken() && currentUser()?.avatarUrl; as photo) {
       <img [src]="photo" alt="Avatar" referrerpolicy="no-referrer"
-        class="h-7 w-7 shrink-0 rounded-full object-cover shadow-sm" (error)="onAvatarError()" />
+        class="h-7 w-7 shrink-0 rounded object-cover shadow-sm" (error)="onAvatarError()" />
       } @else {
       <div
-        class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-2xs font-bold text-primary-content shadow-sm">
+        class="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-primary text-2xs font-bold text-primary-content shadow-sm">
         {{ initials() }}</div>
       }
       <div class="flex max-w-[160px] flex-col leading-tight max-md:hidden">
@@ -240,7 +234,7 @@
   </div>
 
   <div
-    class="absolute right-4 top-[54px] z-[200] mt-1 w-[290px] rounded-2xl border border-base-300/70 bg-base-100 p-2.5 shadow-xl"
+    class="absolute right-4 top-[54px] z-[200] mt-1 w-[290px] rounded-lg border border-base-300/70 bg-base-100 p-2.5 shadow-xl"
     [class.hidden]="!menuOpen()">
     <div class="flex items-center gap-2.5 px-1.5 py-1">
       @if (!avatarBroken() && currentUser()?.avatarUrl; as photo) {
@@ -265,7 +259,7 @@
           <svg lucideKeyRound class="h-3 w-3" [strokeWidth]="2.4"></svg>
           YOUR UUID
         </span>
-        <button type="button" class="btn btn-xs gap-1 rounded px-1.5 text-2xs font-bold transition-all"
+        <button type="button" class="btn btn-xs gap-1 rounded-md px-1.5 text-2xs font-bold transition-all"
           [class.btn-success]="copiedUuid()" [class.btn-primary]="!copiedUuid()" [class.btn-outline]="!copiedUuid()"
           (click)="$event.stopPropagation(); copyUuid()" title="Copy UUID">
           @if (copiedUuid()) {
