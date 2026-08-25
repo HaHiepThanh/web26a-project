@@ -755,21 +755,40 @@ export class Board {
   // tiêu đề sẽ tự bôi đen sẵn để gõ đè tên ngay, không cần điền tên trước. ----
   readonly justCreatedCardId = signal<string | null>(null);
 
-  /** Chặn double/triple-click bắn nhiều request tạo thẻ cùng lúc cho CÙNG một
-   *  list — "Add card" tạo thật ngay lập tức (không phải form nháp), nên spam
-   *  click trước đây tạo ra từng đó thẻ "New card" trùng lặp. */
-  private readonly creatingCardForListId = new Set<string>();
+  /**
+   * List nào đang chờ server tạo thẻ.
+   *
+   * Vừa chặn double/triple-click bắn nhiều request cho CÙNG một list ("Add card"
+   * tạo thật ngay, không phải form nháp, nên spam click từng tạo ra bấy nhiêu thẻ
+   * "New card" trùng lặp), vừa cho giao diện biết mà báo lại.
+   *
+   * ⚠️ Phải là signal, không được là `Set` thường như trước. Tạo thẻ mất khoảng
+   *    2 giây (đo được 2,26s: một vòng tới Supabase), mà suốt quãng đó nút không
+   *    đổi gì và cú bấm lặp thì bị chính hàm này nuốt im lặng. Người dùng bấm,
+   *    màn hình đứng im, bấm lại vẫn đứng im — không có cách nào biết hệ thống
+   *    đã nhận lệnh hay chưa, nên hiểu là nút hỏng. Cờ này chảy xuống
+   *    `app-add-card` để nút tự đổi thành "Adding card…".
+   */
+  private readonly creatingCardForListId = signal<ReadonlySet<string>>(new Set());
+
+  isCreatingCard(listId: string): boolean {
+    return this.creatingCardForListId().has(listId);
+  }
 
   async createCard(listId: string): Promise<void> {
-    if (this.creatingCardForListId.has(listId)) return;
-    this.creatingCardForListId.add(listId);
+    if (this.creatingCardForListId().has(listId)) return;
+    this.creatingCardForListId.update((s) => new Set(s).add(listId));
     try {
       const card = await this.cardService.createCard(listId, { title: 'New card', priority: 'medium' });
       if (!card) return;
       this.justCreatedCardId.set(card.id);
       this.openCardDetail(card);
     } finally {
-      this.creatingCardForListId.delete(listId);
+      this.creatingCardForListId.update((s) => {
+        const next = new Set(s);
+        next.delete(listId);
+        return next;
+      });
     }
   }
 

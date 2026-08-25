@@ -64,8 +64,13 @@
       @if (!isPrivateBoard()) {
         <div class="alert alert-info mb-4">
           <span>
+            <b>Why there's no "Add member" button here.</b>
             This board is <b>{{ board()!.visibility }}</b>, so it has no member list of its own — everyone in
-            <b>{{ workspaceName() }}</b> can open it. To change who has access, edit the workspace or the organization.
+            <b>{{ workspaceName() }}</b> can already open it, and there is nothing per-board to add or remove.
+            <br />
+            To restrict it to specific people, open the board and set its visibility to <b>Private</b> —
+            this page then lets you pick exactly who gets in. To add someone who isn't in the organization at all,
+            invite them from <b>Settings → Manage Organization</b> first.
           </span>
         </div>
       }
