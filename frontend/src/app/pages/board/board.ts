@@ -652,10 +652,17 @@ export class Board {
   /**
    * Board/List/gợi ý AI (Hoà) tự nạp qua `RouteContextStore` — xem constructor.
    * Label/Card (Hoàng) chưa chuyển sang store nên vẫn nạp tay ở đây.
+   *
+   * Label và Card là 2 request ĐỘC LẬP (không cái nào cần dữ liệu của cái kia) —
+   * chạy song song bằng Promise.all thay vì await nối tiếp. Trên localhost
+   * chênh lệch không đáng kể, nhưng qua Railway → Supabase mỗi round-trip tốn
+   * hàng chục ms thật, nối tiếp 2 cái là cộng dồn latency vô ích.
    */
   private async bootstrap(): Promise<void> {
-    await this.labelService.loadLabels(this.boardId);
-    await this.cardService.loadCards(this.boardId);
+    await Promise.all([
+      this.labelService.loadLabels(this.boardId),
+      this.cardService.loadCards(this.boardId),
+    ]);
     void this.attachmentService.loadAttachmentsForBoard(this.boardId);
   }
 
