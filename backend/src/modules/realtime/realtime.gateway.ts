@@ -94,21 +94,23 @@ export class RealtimeGateway
 
     try {
       const decoded = await this.firebase.verifyIdToken(token);
-      const data: SocketData = {
-        uid: decoded.uid,
-        profile: {
-          id: decoded.uid,
-          displayName: decoded.name ?? decoded.email ?? null,
-          avatarUrl: decoded.picture ?? null,
-        },
-      };
+      const profile = await this.loadProfile(
+        decoded.uid,
+        decoded.name ?? decoded.email ?? null,
+        decoded.picture ?? null,
+      );
+      const data: SocketData = { uid: decoded.uid, profile };
       client.data = data;
       // Vào phòng riêng NGAY, không chờ client xin: uid đã xác thực xong nên
       // không có gì để kiểm tra thêm, và người ta cần nhận lời mời ngay cả khi
       // chưa mở board nào.
       await client.join(userRoom(decoded.uid));
-    } catch {
+    } catch (err) {
       // Token hết hạn/bị sửa → cắt. Client sẽ tự kết nối lại với token mới.
+      // Log lại để phân biệt "token thật sự hỏng" với lỗi khác (DB, mạng...)
+      // bị nuốt mất tăm — trước đây bắt lỗi xong không ghi gì cả nên khi có sự
+      // cố khác token, không có manh mối gì để tìm ra.
+      this.logger.warn(`WS handleConnection thất bại: ${(err as Error)?.message ?? err}`);
       client.disconnect(true);
     }
   }
@@ -208,6 +210,61 @@ export class RealtimeGateway
   }
 
   // ------------------------------------------------------------------ nội bộ
+
+  /**
+   * Hồ sơ hiển thị trong khung "đang xem board" — ưu tiên bảng `users` (avatar/tên
+   * THẬT do chính app quản lý qua `PATCH /auth/profile`), chỉ rơi về claim trong
+   * Firebase ID token khi dòng chưa kịp có trong DB.
+   *
+   * ⚠️ TRƯỚC ĐÂY dùng thẳng `decoded.name`/`decoded.picture` — hai trường này chỉ
+   * phản ánh hồ sơ của NHÀ CUNG CẤP đăng nhập (vd ảnh Google) tại lúc Firebase cấp
+   * token, không phải avatar tuỳ chỉnh người dùng tải lên trong Cài đặt. Kết quả:
+   * Header/Team Chat/Comments (đọc từ bảng `users`) hiện đúng avatar mới, còn
+   * khung "đang xem board" này vẫn hiện avatar cũ/sai hoặc rơi về initials dù
+   * người dùng đã có avatar tuỳ chỉnh.
+   */
+  private async loadProfile(
+    uid: string,
+    fallbackName: string | null,
+    fallbackAvatar: string | null,
+  ): Promise<BoardViewer> {
+    const { data, error } = await this.supabase.client
+      .from('users')
+      .select('display_name, avatar_url')
+      .eq('id', uid)
+      .maybeSingle();
+    if (error || !data) {
+      return { id: uid, displayName: fallbackName, avatarUrl: fallbackAvatar };
+    }
+    return {
+      id: uid,
+      displayName: data.display_name ?? fallbackName,
+      avatarUrl: data.avatar_url ?? fallbackAvatar,
+    };
+  }
+
+  /**
+   * Vừa đổi avatar/tên ở Cài đặt (`AuthService.updateProfile`) → cập nhật NGAY hồ
+   * sơ đã cache trên mọi socket của người này + phát lại presence cho mọi board
+   * họ đang mở. Không có bước này thì phải đóng/mở lại board (reconnect socket)
+   * mới thấy avatar mới ở khung "đang xem board" — trái với yêu cầu "không cần
+   * reload nếu kiến trúc cho phép reactive update".
+   */
+  async refreshPresenceProfile(
+    uid: string,
+    profile: { displayName: string | null; avatarUrl: string | null },
+  ): Promise<void> {
+    if (!this.server) return;
+    const sockets = await this.server.fetchSockets();
+    const boardIds = new Set<string>();
+    for (const s of sockets) {
+      const data = s.data as SocketData & { boards?: string[] };
+      if (data?.uid !== uid) continue;
+      data.profile = { id: uid, ...profile };
+      for (const b of data.boards ?? []) boardIds.add(b);
+    }
+    for (const boardId of boardIds) await this.broadcastPresence(boardId);
+  }
 
   /** Ai đang mở board này (mỗi người tính 1 lần dù mở nhiều tab). */
   private async broadcastPresence(boardId: string): Promise<void> {

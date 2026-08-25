@@ -7,6 +7,7 @@ import {
 import { SupabaseService } from '../../common/supabase/supabase.service';
 import { CurrentUserInfo } from '../../common/firebase/current-user.decorator';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 /**
  * Ép chuỗi về đúng định dạng username mà frontend đang validate:
@@ -97,7 +98,10 @@ export interface MeResponse {
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
 
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(
+    private readonly supabase: SupabaseService,
+    private readonly realtime: RealtimeGateway,
+  ) {}
 
   /**
    * Ghi hồ sơ Firebase vào bảng `users`.
@@ -300,7 +304,15 @@ export class AuthService {
       );
       throw new InternalServerErrorException('Failed to save profile');
     }
-    return data as UserRow;
+    const row = data as UserRow;
+    // Đổi avatar/tên xong thì khung "đang xem board" (WebSocket) phải cập nhật
+    // NGAY, không bắt người dùng đóng/mở lại board — xem chú thích ở
+    // `RealtimeGateway.refreshPresenceProfile`.
+    void this.realtime.refreshPresenceProfile(user.uid, {
+      displayName: row.display_name,
+      avatarUrl: row.avatar_url,
+    });
+    return row;
   }
 
   /**

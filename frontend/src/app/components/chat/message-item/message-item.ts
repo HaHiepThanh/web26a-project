@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, signal } from '@angular/core';
 import { Message, User } from '../../../models';
 import { avatarColorFor, initialsOf } from '../../../utils/avatar.util';
 
@@ -24,14 +24,30 @@ export class MessageItem {
   readonly isOwn = input(false);
   readonly memberNames = input<string[]>([]);
 
-  readonly senderLabel = computed(() => {
-    if (this.isOwn()) return 'You';
+  /**
+   * Tên thật của người gửi — LUÔN lấy từ `sender` (chưa từng là chuỗi 'You').
+   *
+   * `senderLabel` bên dưới thay 'You' vào cho tin của chính mình, chỉ để hiển thị
+   * nhãn phân biệt "đây là mình". Initials/avatar phải tính từ tên thật này, nếu
+   * không thì tin nhắn của current user sẽ luôn ra chữ "Y" (initials của "You")
+   * thay vì initials thật của họ (vd "Ngô Đức Hòa" → phải là "NH", không phải "Y").
+   */
+  readonly senderName = computed(() => {
     const s = this.sender();
     return s?.displayName ?? s?.email ?? 'Anonymous';
   });
 
-  readonly initials = computed(() => initialsOf(this.senderLabel()));
+  readonly senderLabel = computed(() => (this.isOwn() ? 'You' : this.senderName()));
+
+  readonly avatarUrl = computed(() => this.sender()?.avatarUrl ?? null);
+  readonly initials = computed(() => initialsOf(this.senderName()));
   readonly avatarColor = computed(() => avatarColorFor(this.sender()?.id ?? this.message().userId));
+
+  /** Ảnh avatar tải lỗi (link hỏng, bị gỡ...) thì rơi về initials — như Header. */
+  readonly avatarBroken = signal(false);
+  onAvatarError(): void {
+    this.avatarBroken.set(true);
+  }
 
   readonly bubbleClass = computed(() =>
     this.isOwn()

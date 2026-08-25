@@ -1,8 +1,9 @@
-import { Component, computed, input, output, signal } from '@angular/core';
+import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LucideBuilding2, LucideCrown, LucideGlobe, LucidePlus, LucideX } from '@lucide/angular';
 import { User } from '../../../models';
 import { Organization, WorkspaceMember, WorkspaceWithOrg, avatarBgFor, initialsOf } from '../../../mocks';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-manage-workspace-tab',
@@ -11,6 +12,8 @@ import { Organization, WorkspaceMember, WorkspaceWithOrg, avatarBgFor, initialsO
   host: { class: 'block' },
 })
 export class ManageWorkspaceTab {
+  private readonly auth = inject(AuthService);
+
   readonly organizations = input<Organization[]>([]);
   readonly selectedOrgFilter = input<string | null>(null); // null = Tất cả Organization
   readonly workspaces = input<WorkspaceWithOrg[]>([]);
@@ -26,6 +29,22 @@ export class ManageWorkspaceTab {
 
   readonly initialsOf = initialsOf;
   readonly avatarBgFor = avatarBgFor;
+
+  /**
+   * `WorkspaceMember` bị đóng băng lúc thêm vào workspace (lưu localStorage, xem
+   * `mocks/workspace.mock.ts`) nên KHÔNG tự cập nhật khi chính người này đổi
+   * avatar/tên ở Cài đặt sau đó. Ghi đè bằng `AuthService.currentUser()` — cùng
+   * cách làm với `OrganizationStore.membersOf()` — khi dòng đang vẽ là chính mình.
+   */
+  memberDisplayName(mem: WorkspaceMember): string {
+    const me = this.auth.currentUser();
+    return me && me.id === mem.id ? me.displayName || me.email : mem.displayName || mem.email;
+  }
+
+  memberAvatarUrl(mem: WorkspaceMember): string | undefined {
+    const me = this.auth.currentUser();
+    return me && me.id === mem.id ? me.avatarUrl : mem.avatarUrl;
+  }
 
   readonly selectedWorkspace = computed(() => {
     const id = this.selectedWorkspaceId();

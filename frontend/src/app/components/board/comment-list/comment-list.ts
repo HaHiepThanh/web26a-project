@@ -79,6 +79,10 @@ export class CommentList {
     return initialsOf(this.userLabel(userId));
   }
 
+  userAvatarUrl(userId: string): string | null {
+    return this.membersById()[userId]?.avatarUrl ?? null;
+  }
+
   userColor(userId: string): string {
     return avatarColorFor(userId);
   }

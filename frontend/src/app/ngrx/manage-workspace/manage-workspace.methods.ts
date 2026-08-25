@@ -1,6 +1,7 @@
 import { inject, Signal } from '@angular/core';
 import { patchState, WritableStateSource } from '@ngrx/signals';
 import { ApiService } from '../../services/api.service';
+import { AuthService } from '../../services/auth.service';
 import { describeError } from '../../services/api-error.util';
 import type { ApiBoardMember } from '../../models';
 import type { ErrorState } from '../shared/error.feature';
@@ -20,7 +21,11 @@ type Store = WritableStateSource<ManageWorkspaceState & ErrorState> & {
 
 /** Hàm generic thuần — xem chú thích trong `ngrx/list/list.methods.ts` về lý do
  *  không tự bọc `signalStoreFeature` riêng cho từng file. */
-export function manageWorkspaceMethods<S extends Store>(store: S, api = inject(ApiService)) {
+export function manageWorkspaceMethods<S extends Store>(
+  store: S,
+  api = inject(ApiService),
+  auth = inject(AuthService),
+) {
   /**
    * Board đang có một lệnh ghi thành viên bay dở.
    *
@@ -44,9 +49,19 @@ export function manageWorkspaceMethods<S extends Store>(store: S, api = inject(A
   }
 
   return {
-    /** Thành viên của 1 board. Rỗng khi chưa nạp — dùng `hasLoaded` để phân biệt. */
+    /**
+     * Thành viên của 1 board. Rỗng khi chưa nạp — dùng `hasLoaded` để phân biệt.
+     *
+     * Ghi đè dòng của chính mình bằng `AuthService.currentUser()` — cùng lý do và
+     * cách làm với `OrganizationStore.membersOf()`: `membersByBoard` là bản chụp
+     * từ `GET /boards/:id/members` lúc mở trang, không tự cập nhật khi chính
+     * người này đổi avatar/tên ở Cài đặt trong cùng phiên.
+     */
     membersOf(boardId: string): BoardMemberView[] {
-      return store.membersByBoard()[boardId] ?? [];
+      const list = store.membersByBoard()[boardId] ?? [];
+      const me = auth.currentUser();
+      if (!me) return list;
+      return list.map((m) => (m.userId === me.id ? { ...m, user: me } : m));
     },
 
     hasLoaded(boardId: string): boolean {

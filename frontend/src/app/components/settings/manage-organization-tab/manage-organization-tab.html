@@ -79,11 +79,15 @@
               <!-- Member info -->
               <td class="py-3 px-4">
                 <div class="flex items-center gap-3">
-                  <div
-                    class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white text-2xs font-black shadow-xs"
-                    [style.background-color]="avatarBgFor(mem.user.id)">
-                    {{ initialsOf(mem.user.displayName || mem.user.email) }}
-                  </div>
+                  @if (mem.user.avatarUrl; as photo) {
+                    <img [src]="photo" alt="Avatar" referrerpolicy="no-referrer" class="h-8 w-8 shrink-0 rounded-full object-cover shadow-xs" />
+                  } @else {
+                    <div
+                      class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white text-2xs font-black shadow-xs"
+                      [style.background-color]="avatarBgFor(mem.user.id)">
+                      {{ initialsOf(mem.user.displayName || mem.user.email) }}
+                    </div>
+                  }
                   <div class="min-w-0">
                     <div class="font-black text-base-content truncate">{{ mem.user.displayName || mem.user.email }}</div>
                     <div class="text-2xs text-base-content/50 truncate">{{ mem.user.email }}</div>

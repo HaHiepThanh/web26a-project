@@ -165,8 +165,21 @@ export function withOrganizationMethods() {
 
           /* ------------------------- đọc ------------------------- */
 
+          /**
+           * Danh sách thành viên của 1 tổ chức, ĐÃ GHI ĐÈ dòng của chính mình bằng
+           * `AuthService.currentUser()` — nguồn DUY NHẤT giữ avatar/tên mới nhất.
+           *
+           * `membersByOrg` là bản chụp lấy từ `GET /organizations/:id/members` lúc tải
+           * trang/đổi tổ chức; nó KHÔNG tự cập nhật khi chính người này đổi avatar/tên ở
+           * trang Cài đặt trong cùng phiên. Mọi UI hiển thị danh sách thành viên (thanh
+           * avatar trên board, bình luận, chat, quản lý tổ chức/workspace...) đều đọc qua
+           * `membersOf()`, nên ghi đè đúng một chỗ này là đủ — không cần sửa lại từng nơi.
+           */
           membersOf(orgId: string | null): OrgMemberView[] {
-            return orgId ? (store.membersByOrg()[orgId] ?? []) : [];
+            const list = orgId ? (store.membersByOrg()[orgId] ?? []) : [];
+            const me = auth.currentUser();
+            if (!me) return list;
+            return list.map((m) => (m.user.id === me.id ? { ...m, user: me } : m));
           },
 
           pendingInvitesFor(orgId: string): OrgInvite[] {
