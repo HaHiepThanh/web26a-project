@@ -69,14 +69,14 @@
     <div class="mx-0.5 h-5 w-px bg-base-300/70 max-sm:hidden"></div>
 
     <!-- Segmented icon toolbar -->
-    <div class="flex items-center gap-1 rounded-md border border-base-300/70 bg-base-200/50 p-0.5">
+    <div class="flex h-9 items-center gap-1 rounded-md border border-base-300/70 bg-base-200/50 px-1">
       <div class="relative">
-        <button type="button" class="btn btn-ghost btn-square btn-sm h-8 w-8 rounded relative hover:bg-base-100"
+        <button type="button" class="btn btn-ghost btn-square btn-xs h-7 w-7 rounded relative hover:bg-base-100 hover:shadow-xs"
           [title]="bellTitle()" (click)="toggleNotifyMenu()">
-          <svg lucideBell class="h-[17px] w-[17px]" [class.invite-pulse]="notifyPulse()" [strokeWidth]="2"></svg>
+          <svg lucideBell class="h-4 w-4" [class.invite-pulse]="notifyPulse()" [strokeWidth]="2"></svg>
           @if (bellBadgeCount() > 0) {
           <span
-            class="badge badge-error absolute right-0 top-0 h-4 min-w-4 rounded-full border-2 border-base-100 px-1.5 text-3xs font-bold text-white">{{
+            class="badge badge-error absolute -right-1 -top-1 h-3.5 min-w-3.5 rounded-full border border-base-100 px-1 text-3xs font-bold text-white">{{
             bellBadgeCount() }}</span>
           }
         </button>
@@ -130,13 +130,13 @@
 
       <!-- Lời mời tham gia Organization -->
       <div class="relative">
-        <button type="button" class="btn btn-ghost btn-square btn-sm h-8 w-8 rounded relative hover:bg-base-100"
+        <button type="button" class="btn btn-ghost btn-square btn-xs h-7 w-7 rounded relative hover:bg-base-100 hover:shadow-xs"
           [title]="pendingInviteCount() > 0 ? pendingInviteCount() + ' pending organization invite(s)' : 'Organization invites'"
           (click)="toggleInviteMenu()">
-          <svg lucideUserPlus class="h-[17px] w-[17px]" [class.invite-pulse]="bellPulse()" [strokeWidth]="2"></svg>
+          <svg lucideUserPlus class="h-4 w-4" [class.invite-pulse]="bellPulse()" [strokeWidth]="2"></svg>
           @if (pendingInviteCount() > 0) {
           <span
-            class="badge badge-error absolute right-0 top-0 h-4 min-w-4 rounded-full border-2 border-base-100 px-1.5 text-3xs font-bold text-white">{{
+            class="badge badge-error absolute -right-1 -top-1 h-3.5 min-w-3.5 rounded-full border border-base-100 px-1 text-3xs font-bold text-white">{{
             pendingInviteCount() }}</span>
           }
         </button>
@@ -193,32 +193,32 @@
 
       <!-- Đổi giao diện sáng/tối -->
       <button type="button"
-        class="btn btn-ghost btn-square btn-sm h-8 w-8 rounded relative hover:bg-base-100"
+        class="btn btn-ghost btn-square btn-xs h-7 w-7 rounded relative hover:bg-base-100 hover:shadow-xs"
         [attr.aria-pressed]="theme() === 'dark'"
         [attr.aria-label]="theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
         [title]="theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
         (click)="toggleTheme()">
         @if (theme() === 'dark') {
-        <svg lucideSun class="h-[17px] w-[17px]" [strokeWidth]="2"></svg>
+        <svg lucideSun class="h-4 w-4" [strokeWidth]="2"></svg>
         } @else {
-        <svg lucideMoon class="h-[17px] w-[17px]" [strokeWidth]="2"></svg>
+        <svg lucideMoon class="h-4 w-4" [strokeWidth]="2"></svg>
         }
       </button>
 
-      <a class="btn btn-ghost btn-square btn-sm h-8 w-8 rounded relative hover:bg-base-100" routerLink="/settings" title="Settings">
-        <svg lucideSettings class="h-[17px] w-[17px]" [strokeWidth]="2"></svg>
+      <a class="btn btn-ghost btn-square btn-xs h-7 w-7 rounded relative hover:bg-base-100 hover:shadow-xs" routerLink="/settings" title="Settings">
+        <svg lucideSettings class="h-4 w-4" [strokeWidth]="2"></svg>
       </a>
     </div>
 
     <div
-      class="ml-0.5 flex cursor-pointer items-center gap-1.5 rounded-md border border-base-300/70 bg-base-200/50 py-1 pl-1 pr-2.5 transition-all hover:bg-base-200"
+      class="ml-0.5 flex h-9 cursor-pointer items-center gap-2 rounded-md border border-base-300/70 bg-base-200/50 px-2 transition-all hover:bg-base-200"
       (click)="toggleUserMenu()">
       @if (!avatarBroken() && currentUser()?.avatarUrl; as photo) {
       <img [src]="photo" alt="Avatar" referrerpolicy="no-referrer"
-        class="h-7 w-7 shrink-0 rounded object-cover shadow-sm" (error)="onAvatarError()" />
+        class="h-6 w-6 shrink-0 rounded object-cover shadow-sm" (error)="onAvatarError()" />
       } @else {
       <div
-        class="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-primary text-2xs font-bold text-primary-content shadow-sm">
+        class="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-primary text-2xs font-bold text-primary-content shadow-sm">
         {{ initials() }}</div>
       }
       <div class="flex max-w-[160px] flex-col leading-tight max-md:hidden">

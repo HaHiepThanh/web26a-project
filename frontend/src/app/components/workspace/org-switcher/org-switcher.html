@@ -15,25 +15,25 @@
     @for (org of organizations(); track org.id) {
     <li class="group relative min-w-0 w-full">
       <button type="button"
-        class="flex w-full min-w-0 items-center justify-between gap-2 rounded p-2 text-left transition-all duration-150 pr-16"
-        [class]="org.id === activeOrg()?.id ? 'bg-success text-success-content font-bold shadow-xs' : 'text-base-content hover:bg-base-200'"
+        class="flex w-full min-w-0 items-center justify-between gap-2 rounded-field p-2 text-left transition-all duration-150 pr-16"
+        [class]="org.id === activeOrg()?.id ? 'bg-primary text-primary-content font-bold shadow-xs' : 'text-base-content hover:bg-base-200'"
         (click)="onSelect(org.id)">
         <span class="min-w-0 flex-1 overflow-hidden">
           <span class="block truncate text-xs font-bold leading-tight" [title]="org.name">{{ org.name }}</span>
           <span class="block truncate text-2xs font-medium leading-tight"
-            [class]="org.id === activeOrg()?.id ? 'text-success-content/80' : 'text-base-content/55'">
+            [class]="org.id === activeOrg()?.id ? 'text-primary-content/80' : 'text-base-content/55'">
             {{ org.memberIds.length }} member(s)
           </span>
         </span>
         @if (org.id === activeOrg()?.id) {
-        <svg lucideCheck class="h-3.5 w-3.5 shrink-0 absolute right-9 top-1/2 -translate-y-1/2 text-success-content" [strokeWidth]="3"></svg>
+        <svg lucideCheck class="h-3.5 w-3.5 shrink-0 absolute right-9 top-1/2 -translate-y-1/2 text-primary-content" [strokeWidth]="3"></svg>
         }
       </button>
 
       <!-- 3 chấm: mở modal quản lý (mời/xoá thành viên, đổi tên) -->
       <button type="button"
         class="btn btn-xs btn-circle absolute right-1.5 top-1/2 z-10 -translate-y-1/2 opacity-0 transition-all focus-visible:opacity-100 group-hover:opacity-100"
-        [class]="org.id === activeOrg()?.id ? 'text-success-content hover:bg-black/15 active:bg-black/25' : 'text-base-content/60 hover:bg-base-300 hover:text-base-content'"
+        [class]="org.id === activeOrg()?.id ? 'text-primary-content hover:bg-black/15 active:bg-black/25' : 'text-base-content/60 hover:bg-base-300 hover:text-base-content'"
         title="Manage organization" [attr.aria-label]="'Manage ' + org.name" (click)="onManage(org.id, $event)">
         <svg lucideEllipsisVertical class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg>
       </button>

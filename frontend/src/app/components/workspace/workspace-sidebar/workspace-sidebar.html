@@ -13,18 +13,18 @@
     <!-- Option: Tất cả Workspace -->
     <li class="min-w-0 w-full">
       <button type="button"
-        class="flex w-full min-w-0 items-center justify-between gap-2.5 rounded p-2 text-left transition-all duration-150"
-        [class]="activeWorkspaceId() === null ? 'bg-success text-success-content font-bold shadow-xs' : 'text-base-content hover:bg-base-200'"
+        class="flex w-full min-w-0 items-center justify-between gap-2.5 rounded-field p-2 text-left transition-all duration-150"
+        [class]="activeWorkspaceId() === null ? 'bg-primary text-primary-content font-bold shadow-xs' : 'text-base-content hover:bg-base-200'"
         (click)="onSelectWorkspace(null)">
         <span class="flex min-w-0 items-center gap-2.5 overflow-hidden">
-          <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded"
-            [class]="activeWorkspaceId() === null ? 'bg-success-content/20 text-success-content' : 'bg-base-200 text-base-content/70'">
+          <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-field"
+            [class]="activeWorkspaceId() === null ? 'bg-primary-content/20 text-primary-content' : 'bg-base-200 text-base-content/70'">
             <svg lucideFolderKanban class="h-3.5 w-3.5" [strokeWidth]="2"></svg>
           </span>
           <span class="truncate text-xs font-bold">All Workspaces</span>
         </span>
         <span class="badge badge-sm font-bold shrink-0"
-          [class]="activeWorkspaceId() === null ? 'bg-success-content/20 text-success-content border-none' : 'badge-ghost text-base-content/70'">
+          [class]="activeWorkspaceId() === null ? 'bg-primary-content/20 text-primary-content border-none' : 'badge-ghost text-base-content/70'">
           {{ totalBoardsCount() }}
         </span>
       </button>
@@ -34,18 +34,18 @@
     @for (ws of workspaces(); track ws.id) {
     <li class="group relative min-w-0 w-full">
       <button type="button"
-        class="flex w-full min-w-0 items-center justify-between gap-2 rounded p-2 text-left transition-all duration-150 pr-16"
-        [class]="activeWorkspaceId() === ws.id ? 'bg-success text-success-content font-bold shadow-xs' : 'text-base-content hover:bg-base-200'"
+        class="flex w-full min-w-0 items-center justify-between gap-2 rounded-field p-2 text-left transition-all duration-150 pr-16"
+        [class]="activeWorkspaceId() === ws.id ? 'bg-primary text-primary-content font-bold shadow-xs' : 'text-base-content hover:bg-base-200'"
         (click)="onSelectWorkspace(ws.id)">
         <span class="min-w-0 flex-1 overflow-hidden">
           <span class="block truncate text-xs font-bold leading-tight" [title]="ws.name">{{ ws.name }}</span>
           <span class="block truncate text-2xs font-medium leading-tight"
-            [class]="activeWorkspaceId() === ws.id ? 'text-success-content/80' : 'text-base-content/55'">
+            [class]="activeWorkspaceId() === ws.id ? 'text-primary-content/80' : 'text-base-content/55'">
             {{ ws.members.length }} member(s)
           </span>
         </span>
         <span class="badge badge-sm font-bold shrink-0 absolute right-9 top-1/2 -translate-y-1/2"
-          [class]="activeWorkspaceId() === ws.id ? 'bg-success-content/20 text-success-content border-none' : 'badge-ghost text-base-content/70'">
+          [class]="activeWorkspaceId() === ws.id ? 'bg-primary-content/20 text-primary-content border-none' : 'badge-ghost text-base-content/70'">
           {{ ws.boards.length }}
         </span>
       </button>
@@ -53,7 +53,7 @@
       <!-- 3 chấm: mở modal quản lý workspace (đổi tên/icon, thành viên, xoá) -->
       <button type="button"
         class="btn btn-xs btn-circle absolute right-1.5 top-1/2 z-10 -translate-y-1/2 opacity-0 transition-all focus-visible:opacity-100 group-hover:opacity-100"
-        [class]="activeWorkspaceId() === ws.id ? 'text-success-content hover:bg-black/15 active:bg-black/25' : 'text-base-content/60 hover:bg-base-300 hover:text-base-content'"
+        [class]="activeWorkspaceId() === ws.id ? 'text-primary-content hover:bg-black/15 active:bg-black/25' : 'text-base-content/60 hover:bg-base-300 hover:text-base-content'"
         title="Manage Workspace" [attr.aria-label]="'Manage ' + ws.name" (click)="onManage(ws, $event)">
         <svg lucideEllipsisVertical class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg>
       </button>
