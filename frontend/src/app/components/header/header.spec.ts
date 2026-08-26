@@ -29,4 +29,32 @@ describe('Header', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('gọi actions.onSearchInput khi người dùng gõ vào ô tìm kiếm', () => {
+    const searchSpy = vi.spyOn(component.actions, 'onSearchInput');
+    const input = fixture.nativeElement.querySelector('input[placeholder="Search boards..."]');
+    if (input) {
+      input.value = 'Dev Board';
+      input.dispatchEvent(new Event('input'));
+      expect(searchSpy).toHaveBeenCalledWith('Dev Board');
+    }
+  });
+
+  it('xóa ô tìm kiếm khi bấm nút clear', () => {
+    component.actions.searchQuery.set('Test');
+    fixture.detectChanges();
+
+    const searchSpy = vi.spyOn(component.actions, 'onSearchInput');
+    component.clearSearch();
+    expect(searchSpy).toHaveBeenCalledWith('');
+  });
+
+  it('gọi actions.navigateToWorkspace khi bấm vào logo', () => {
+    const navSpy = vi.spyOn(component.actions, 'navigateToWorkspace').mockImplementation(() => Promise.resolve());
+    const event = new MouseEvent('click');
+    const preventSpy = vi.spyOn(event, 'preventDefault');
+    component.onLogoClick(event);
+    expect(preventSpy).toHaveBeenCalled();
+    expect(navSpy).toHaveBeenCalled();
+  });
 });

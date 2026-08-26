@@ -48,7 +48,7 @@ export const orgRedirectGuard: CanActivateFn = async () => {
   // Firebase kịp khôi phục phiên nên chưa có token.
   if (orgService.lastError()) await orgService.reload();
 
-  const slug = orgService.activeOrgSlug();
+  const slug = orgService.activeOrgSlug() || orgService.organizations()[0]?.slug;
   if (slug) return router.createUrlTree(['/', slug, 'workspace']);
 
   // Vẫn hỏng → đưa vào app để thấy banner lỗi, ĐỪNG đá sang /onboarding: người

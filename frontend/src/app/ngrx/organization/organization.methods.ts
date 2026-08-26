@@ -175,7 +175,8 @@ export function withOrganizationMethods() {
 
           /** Tra tổ chức theo slug trên URL. Null = không thuộc tổ chức đó, tức 404. */
           orgBySlug(slug: string): Organization | null {
-            return store.entities().find((o) => o.slug === slug) ?? null;
+            const clean = (slug || '').trim().toLowerCase();
+            return store.entities().find((o) => (o.slug || '').toLowerCase() === clean) ?? null;
           },
 
           switchOrg(orgId: string): void {

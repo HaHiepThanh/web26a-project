@@ -2,7 +2,6 @@ import { Component, DestroyRef, ElementRef, HostListener, computed, effect, inje
 import { Router, RouterLink } from '@angular/router';
 import {
   LucideBell,
-  LucideCheck,
   LucideChevronDown,
   LucideCopy,
   LucideFolderKanban,
@@ -16,23 +15,28 @@ import {
   LucideSun,
   LucideUser,
   LucideUserPlus,
+  LucideCheck,
   LucideX,
 } from '@lucide/angular';
-import { AppNotification } from '../../models';
-import { relativeTimeFrom } from '../../utils/avatar.util';
+import { AppNotification, BoardSearchResult } from '../../models';
 import { AuthService } from '../../services/auth.service';
-import { ThemeService } from '../../services/theme.service';
-import { WorkspaceUiService } from '../../services/workspace-ui.service';
-import { CardStore } from '../../ngrx/card/card.store';
-import { NotificationService } from '../../services/notification.service';
-import { OrganizationStore } from '../../ngrx/organization/organization.store';
+import { HeaderActionsService } from '../../services/header-actions.service';
 import { RealtimeService } from '../../services/realtime.service';
 import { UserAvatar } from '../shared/user-avatar/user-avatar';
+import { InvitesPanel } from '../shared/invites-panel/invites-panel';
+import { NotificationsPanel } from '../shared/notifications-panel/notifications-panel';
 
 /** Dải nhắc "có lời mời mới" tự tắt sau ngần này. */
 const INVITE_TOAST_MS = 6000;
 
-/** Top navbar shared by every page inside app-layout (ported from trello-workspace prototype). */
+/**
+ * Thanh trên cùng, dùng chung cho mọi trang bên trong app-layout.
+ *
+ * Từ `lg` trở xuống, header chỉ còn logo và ô người dùng; ô tìm kiếm, nút tạo
+ * nhanh, chuông, lời mời, đổi giao diện và cài đặt chuyển hết xuống
+ * `app-mobile-action-bar` ở đáy màn hình. Phần hành vi dùng chung của hai thanh
+ * nằm trong `HeaderActionsService` để không phải viết hai lần.
+ */
 @Component({
   selector: 'app-header',
   imports: [
@@ -54,60 +58,51 @@ const INVITE_TOAST_MS = 6000;
     LucideUserPlus,
     LucideX,
     UserAvatar,
+    NotificationsPanel,
+    InvitesPanel,
   ],
   templateUrl: './header.html',
   styleUrl: './header.css',
 })
 export class Header {
   private readonly auth = inject(AuthService);
-  private readonly themeService = inject(ThemeService);
-  private readonly workspaceUi = inject(WorkspaceUiService);
   private readonly router = inject(Router);
   private readonly host = inject(ElementRef<HTMLElement>);
-  private readonly cardService = inject(CardStore);
-  private readonly orgService = inject(OrganizationStore);
   private readonly realtime = inject(RealtimeService);
-  private readonly notificationService = inject(NotificationService);
+
+  /** Công khai cho template: hai bảng dùng chung đọc dữ liệu thẳng từ đây. */
+  readonly actions = inject(HeaderActionsService);
 
   readonly currentUser = this.auth.currentUser;
-  readonly theme = this.themeService.theme;
+
+  /* ---- Lối tắt cho template, trỏ thẳng vào service ---- */
+  readonly theme = this.actions.theme;
+  readonly canManage = this.actions.canManage;
+  readonly bellTitle = this.actions.bellTitle;
+  readonly bellBadgeCount = this.actions.bellBadgeCount;
+  readonly pendingInviteCount = this.actions.pendingInviteCount;
+  readonly activeOrgSlug = this.actions.activeOrgSlug;
+
+  readonly workspaceLink = computed(() => {
+    const slug = this.activeOrgSlug() || this.actions.organizations()[0]?.slug;
+    return slug ? ['/', slug, 'workspace'] : ['/workspace'];
+  });
+
+  /* ---- Trạng thái đóng/mở: của riêng thanh này ---- */
   readonly menuOpen = signal(false);
   readonly createMenuOpen = signal(false);
   readonly inviteMenuOpen = signal(false);
   readonly notifyMenuOpen = signal(false);
 
-
-  readonly myInvites = this.orgService.myInvites;
-  readonly pendingInviteCount = this.orgService.pendingInviteCount;
-
   /** Lời mời vừa tới qua WebSocket — hiện dải nhắc ngay dưới chuông vài giây. */
   readonly inviteToast = signal<{ orgName: string; fromUserName: string } | null>(null);
   /** Chuông rung một nhịp khi có lời mời mới, để người dùng để ý. */
   readonly bellPulse = signal(false);
+  readonly notifyPulse = signal(false);
   private inviteToastTimer: ReturnType<typeof setTimeout> | null = null;
 
-  // ---- Chuông 🔔 thông báo cá nhân (được giao thẻ, nhắc hạn) ----
-  readonly notifications = this.notificationService.items;
-  readonly unreadNotifications = this.notificationService.unreadCount;
-  readonly notifyPulse = signal(false);
-  readonly relativeTimeFrom = relativeTimeFrom;
-
-  /** Badge gộp: thông báo chưa đọc + số thẻ sắp/đã quá hạn. */
-  readonly bellBadgeCount = computed(() => this.unreadNotifications() + this.dueBadgeCount());
-
-  readonly bellTitle = computed(() => {
-    const n = this.unreadNotifications();
-    const due = this.dueBadgeCount();
-    if (!n && !due) return 'Notifications';
-    const phan: string[] = [];
-    if (n) phan.push(`${n} unread notification(s)`);
-    if (due) phan.push(`${due} card(s) due soon/overdue`);
-    return phan.join(' · ');
-  });
-
-  /** Thành viên thường không tạo được workspace/board — ẩn mục trong menu "+ Tạo".
-   *  Backend mới là nơi chặn thật (assertCanManage), đây chỉ cho gọn mắt. */
-  readonly canManage = this.orgService.isAdminOrOwner;
+  /** Lỗi khi trả lời lời mời (vd lời mời đã bị huỷ) — hiện ngay trong bảng. */
+  readonly inviteError = signal<string | null>(null);
 
   constructor() {
     // Kết nối realtime mở ở App (gốc), không phải ở đây — xem app.ts.
@@ -133,18 +128,7 @@ export class Header {
     });
   }
 
-  /** Nhắc hạn Mức 1 (#10): đếm thẻ của "tôi" quá hạn/sắp đến hạn ở board vừa mở gần
-   *  nhất (CardStore là singleton `providedIn: 'root'`, còn dữ liệu ngay cả khi rời board qua trang khác). */
-  readonly dueBadgeCount = computed(() => {
-    const c = this.cardService.myDueCounts();
-    return c.overdue + c.dueSoon;
-  });
-
-  /** Tên đưa cho `app-user-avatar` để lấy chữ cái đầu khi chưa có ảnh.
-   *  Việc tải ảnh/rơi về chữ cái đầu do chính component đó lo — trước đây Header
-   *  tự làm bằng một cờ `avatarBroken` bật-một-lần-là-thôi, nên chỉ cần ảnh lỗi
-   *  đúng một lần (link Google bị giới hạn tần suất) là avatar tắt hẳn tới khi
-   *  tải lại trang, kể cả sau khi người dùng vừa đổi ảnh mới. */
+  /** Tên đưa cho `app-user-avatar` để lấy chữ cái đầu khi chưa có ảnh. */
   readonly avatarName = computed(() => {
     const user = this.currentUser();
     return user?.displayName ?? user?.email ?? '?';
@@ -157,6 +141,7 @@ export class Header {
       this.createMenuOpen.set(false);
       this.inviteMenuOpen.set(false);
       this.notifyMenuOpen.set(false);
+      this.actions.closeSearchDropdown();
     }
   }
 
@@ -164,6 +149,7 @@ export class Header {
     this.menuOpen.set(false);
     this.createMenuOpen.set(false);
     this.notifyMenuOpen.set(false);
+    this.actions.closeSearchDropdown();
     this.inviteMenuOpen.update((v) => !v);
   }
 
@@ -171,66 +157,74 @@ export class Header {
     this.menuOpen.set(false);
     this.createMenuOpen.set(false);
     this.inviteMenuOpen.set(false);
+    this.actions.closeSearchDropdown();
     this.notifyMenuOpen.update((v) => !v);
-  }
-
-  markAllNotificationsRead(): void {
-    this.notificationService.markAllRead();
-  }
-
-  /** Bấm 1 thông báo → đánh dấu đã đọc rồi đi thẳng tới board chứa thẻ đó. */
-  openNotification(n: AppNotification): void {
-    this.notificationService.markRead(n.id);
-    this.notifyMenuOpen.set(false);
-    if (!n.boardId) return;
-    // Route là /:orgSlug/board/:id — slug đi kèm trong payload nên không phải
-    // đoán tổ chức nào (người dùng có thể đang mở tổ chức khác).
-    const slug = n.orgSlug || this.orgService.activeOrgSlug();
-    void this.router.navigate(['/', slug, 'board', n.boardId]);
-  }
-
-  /** Lỗi khi trả lời lời mời (vd lời mời đã bị huỷ) — hiện ngay trong chuông. */
-  readonly inviteError = signal<string | null>(null);
-
-  async acceptInvite(inviteId: string): Promise<void> {
-    this.inviteError.set(await this.orgService.respondInvite(inviteId, true));
-  }
-
-  async declineInvite(inviteId: string): Promise<void> {
-    this.inviteError.set(await this.orgService.respondInvite(inviteId, false));
-  }
-
-  toggleTheme(): void {
-    this.themeService.toggle();
   }
 
   toggleUserMenu(): void {
     this.createMenuOpen.set(false);
+    this.actions.closeSearchDropdown();
     this.menuOpen.update((v) => !v);
   }
 
   toggleCreateMenu(): void {
     this.menuOpen.set(false);
+    this.actions.closeSearchDropdown();
     this.createMenuOpen.update((v) => !v);
   }
 
+  markAllNotificationsRead(): void {
+    this.actions.markAllNotificationsRead();
+  }
+
+  openNotification(n: AppNotification): void {
+    this.notifyMenuOpen.set(false);
+    this.actions.openNotification(n);
+  }
+
+  async acceptInvite(inviteId: string): Promise<void> {
+    this.inviteError.set(await this.actions.acceptInvite(inviteId));
+  }
+
+  async declineInvite(inviteId: string): Promise<void> {
+    this.inviteError.set(await this.actions.declineInvite(inviteId));
+  }
+
+  toggleTheme(): void {
+    this.actions.toggleTheme();
+  }
+
   onSearchInput(event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
-    this.workspaceUi.setSearchQuery(value);
+    this.actions.onSearchInput((event.target as HTMLInputElement).value);
+  }
+
+  onSearchFocus(): void {
+    this.actions.onSearchFocus();
+  }
+
+  selectBoard(board: BoardSearchResult): void {
+    this.actions.openBoard(board);
+  }
+
+  clearSearch(inputEl?: HTMLInputElement): void {
+    if (inputEl) inputEl.value = '';
+    this.actions.onSearchInput('');
   }
 
   requestCreateBoard(): void {
     this.createMenuOpen.set(false);
-    this.workspaceUi.requestCreateBoard();
-    void this.router.navigateByUrl('/workspace');
+    this.actions.requestCreateBoard();
   }
 
   requestCreateWorkspace(): void {
     this.createMenuOpen.set(false);
-    this.workspaceUi.requestCreateWorkspace();
-    void this.router.navigateByUrl('/workspace');
+    this.actions.requestCreateWorkspace();
   }
 
+  onLogoClick(event: MouseEvent): void {
+    event.preventDefault();
+    void this.actions.navigateToWorkspace();
+  }
 
   readonly copiedUuid = signal(false);
 
@@ -250,4 +244,3 @@ export class Header {
     this.router.navigateByUrl('/login');
   }
 }
-

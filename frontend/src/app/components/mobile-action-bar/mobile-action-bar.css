@@ -1,0 +1,18 @@
+:host {
+  display: contents;
+}
+
+/* Bản trước có `.speed-dial-item` với `--i` để 4 nút rời bung ra so le nhau.
+   Giờ 4 chức năng nằm gọn trong MỘT thẻ card, nên chỉ còn đúng một thứ chuyển
+   động là chính cái thẻ đó — làm bằng utility của Tailwind ngay trên template
+   (`origin-bottom-right`, `scale-95` → `scale-100`).
+
+   Người dùng đã tắt hiệu ứng chuyển động trong hệ điều hành thì tôn trọng lựa
+   chọn đó: thẻ vẫn hiện/ẩn đầy đủ, chỉ bỏ phần phóng to thu nhỏ. Tailwind không
+   tự làm việc này, mà bản CSS cũ có nên bỏ đi sẽ là một bước lùi lặng lẽ. */
+@media (prefers-reduced-motion: reduce) {
+  .the-menu {
+    transition-duration: 1ms;
+    transform: none;
+  }
+}
