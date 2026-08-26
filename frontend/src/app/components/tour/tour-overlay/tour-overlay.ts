@@ -192,6 +192,16 @@ export class TourOverlay {
     // và ngược lại.
     if (vw <= 560) {
       const w = Math.min(POPOVER_W, vw - 24);
+      // Bước `placement: 'bottom'` → ghim LÊN TRÊN ở điện thoại.
+      //
+      // Nghe ngược, nhưng đúng: `bottom` nghĩa là "tránh xa thứ sắp bung ra".
+      // Trên màn rộng thứ đó đổ xuống góc trên-phải nên popover nằm đáy; dưới
+      // 768px chính bảng lọc lại đổi thành tấm dán ĐÁY, nên chỗ trống bây giờ là
+      // ở trên. Bám theo vị trí neo như các bước khác thì popover rơi xuống đáy
+      // và đè lên đúng cái bảng nó vừa bảo mở.
+      if (this.step()?.placement === 'bottom') {
+        return { top: 12, left: Math.max(12, (vw - w) / 2) };
+      }
       const neoONuaDuoi = h.top + h.height / 2 > vh / 2;
       return {
         top: neoONuaDuoi ? 12 : Math.max(12, vh - ph - 12),
