@@ -178,7 +178,8 @@
 
           @if (hasActiveFilter()) {
             @if (!showSaveFilterForm()) {
-              <button type="button" class="btn btn-dash btn-xs btn-block mt-2.5 gap-1 text-2xs font-bold hover:btn-primary" (click)="openSaveFilterFormEvent.emit()">
+              <!-- data-tour: neo coach mark gợi ý lưu bộ lọc. -->
+              <button type="button" data-tour="save-filter" class="btn btn-dash btn-xs btn-block mt-2.5 gap-1 text-2xs font-bold hover:btn-primary" (click)="openSaveFilterFormEvent.emit()">
                 <svg lucideStar class="h-3 w-3" [strokeWidth]="2.4"></svg> Save as quick filter</button>
             } @else {
               <div class="mt-2.5 flex gap-1.5">

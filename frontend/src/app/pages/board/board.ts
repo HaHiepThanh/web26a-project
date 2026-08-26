@@ -713,6 +713,17 @@ export class Board {
         viewers: this.viewers().length,
         overflowsWidth: this.showMinimap(),
         layout: this.layoutMode(),
+        cardModalOpen: this.selectedCardId() !== null,
+        freshCardOpen: this.justCreatedCardId() !== null,
+        // Đếm số NHÓM tiêu chí đang bật, không phải số giá trị: chọn ba người
+        // phụ trách vẫn chỉ là MỘT tiêu chí. Ba nhóm trở lên mới là "đã bỏ công
+        // dựng một bộ lọc" — đó là lúc "lưu lại" trả được công đó.
+        filterCriteria:
+          (this.filterAssigneeIds().length ? 1 : 0) +
+          (this.filterLabelIds().length ? 1 : 0) +
+          (this.filterPriorities().length ? 1 : 0) +
+          (this.filterDate() ? 1 : 0),
+        members: this.members().length,
       };
       untracked(() => this.tour.maybeShowCoachMark(ctx));
     });

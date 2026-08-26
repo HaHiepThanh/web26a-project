@@ -491,7 +491,10 @@ describe('TourStore', () => {
   // ------------------------------------------------------------ tầng 3
 
   /** Hoàn cảnh làm thoả điều kiện của `filter-hint`. */
-  const boardDongThe = { cards: 20, lists: 3, viewers: 1, overflowsWidth: false, layout: 'column' as const };
+  const boardDongThe = {
+    cards: 20, lists: 3, viewers: 1, overflowsWidth: false, layout: 'column' as const,
+    cardModalOpen: false, freshCardOpen: false, filterCriteria: 0, members: 2,
+  };
 
   it('coach mark chỉ ghé vào khi vấn đề đã xuất hiện', () => {
     const store = make();
@@ -504,16 +507,16 @@ describe('TourStore', () => {
     expect(store.coachMark()?.id).toBe('filter-hint');
   });
 
-  it('luật 1 — mỗi phiên tối đa MỘT, không bao giờ hai cái cùng lúc', () => {
+  it('luật 1 — giãn cách: vừa hiện một cái thì cái sau phải chờ', () => {
     const store = make();
     store.hydrate({ ...emptyOnboardingState(), status: 'done' });
-    store.maybeShowCoachMark({ cards: 20, lists: 5, viewers: 3, overflowsWidth: true, layout: 'column' });
+    store.maybeShowCoachMark({ ...boardDongThe, lists: 5, viewers: 3, overflowsWidth: true });
     expect(store.coachMark()?.id).toBe('filter-hint');
     store.confirmCoachMarkShown();   // bong bóng hiện thật → mới tiêu suất
-    store.dismissCoachMark();
+    store.acknowledgeCoachMark();
 
     // Ba điều kiện còn lại vẫn đang thoả, nhưng phiên này đã nói một câu rồi.
-    store.maybeShowCoachMark({ cards: 20, lists: 5, viewers: 3, overflowsWidth: true, layout: 'column' });
+    store.maybeShowCoachMark({ ...boardDongThe, lists: 5, viewers: 3, overflowsWidth: true });
     expect(store.coachMark()).toBeNull();
   });
 
@@ -557,7 +560,7 @@ describe('TourStore', () => {
     const store = make();
     store.hydrate({ ...emptyOnboardingState(), status: 'done' });
     store.maybeShowCoachMark(boardDongThe);
-    store.dismissCoachMark();
+    store.acknowledgeCoachMark();
     expect(store.onboarding().seenCoachMarks).toContain('filter-hint');
 
     // Phiên mới (store mới) nhưng hồ sơ đã ghi nhớ.
@@ -572,10 +575,10 @@ describe('TourStore', () => {
     store.hydrate({ ...emptyOnboardingState(), status: 'done', seenCoachMarks: ['filter-hint'] });
 
     // Bốn cột nhưng vừa màn hình → chưa có vấn đề gì để giải.
-    store.maybeShowCoachMark({ cards: 5, lists: 4, viewers: 1, overflowsWidth: false, layout: 'column' });
+    store.maybeShowCoachMark({ ...boardDongThe, cards: 5, lists: 4, overflowsWidth: false });
     expect(store.coachMark()).toBeNull();
 
-    store.maybeShowCoachMark({ cards: 5, lists: 4, viewers: 1, overflowsWidth: true, layout: 'column' });
+    store.maybeShowCoachMark({ ...boardDongThe, cards: 5, lists: 4, overflowsWidth: true });
     expect(store.coachMark()?.id).toBe('layout-hint');
   });
 
@@ -583,8 +586,79 @@ describe('TourStore', () => {
     const store = make();
     store.hydrate({ ...emptyOnboardingState(), status: 'done', seenCoachMarks: ['filter-hint','minimap-hint'] });
 
-    store.maybeShowCoachMark({ cards: 5, lists: 4, viewers: 1, overflowsWidth: true, layout: 'row' });
+    store.maybeShowCoachMark({ ...boardDongThe, cards: 5, lists: 4, overflowsWidth: true, layout: 'row' as const });
 
     expect(store.coachMark()).toBeNull();
+  });
+
+  it('bấm RA NGOÀI không xoá vĩnh viễn — cú bấm vô tình không được ăn mất chỉ dẫn', () => {
+    const store = make();
+    store.hydrate({ ...emptyOnboardingState(), status: 'done' });
+    store.maybeShowCoachMark(boardDongThe);
+    expect(store.coachMark()?.id).toBe('filter-hint');
+
+    store.snoozeCoachMark();
+
+    // Đếm là đã lướt qua, nhưng CHƯA xong — lần sau vẫn được hiện lại.
+    expect(store.onboarding().coachViews['filter-hint']).toBe(1);
+    expect(store.onboarding().seenCoachMarks).toEqual([]);
+  });
+
+  it('lướt qua đủ ba lần mà vẫn không đọc thì thôi hẳn', () => {
+    const store = make();
+    store.hydrate({ ...emptyOnboardingState(), status: 'done', coachViews: { 'filter-hint': 2 } });
+    store.maybeShowCoachMark(boardDongThe);
+
+    store.snoozeCoachMark();
+
+    expect(store.onboarding().coachViews['filter-hint']).toBe(3);
+    expect(store.onboarding().seenCoachMarks).toContain('filter-hint');
+  });
+
+  it('bấm × là đọc thật — một lần là xong', () => {
+    const store = make();
+    store.hydrate({ ...emptyOnboardingState(), status: 'done' });
+    store.maybeShowCoachMark(boardDongThe);
+
+    store.acknowledgeCoachMark();
+
+    expect(store.onboarding().seenCoachMarks).toContain('filter-hint');
+    expect(store.onboarding().coachViews['filter-hint']).toBeUndefined();
+  });
+
+  it('"Show hints again" xoá sạch lịch sử để xem lại từ đầu', () => {
+    const store = make();
+    store.hydrate({ ...emptyOnboardingState(), status: 'done',
+      seenCoachMarks: ['filter-hint'], coachViews: { 'layout-hint': 2 } });
+
+    store.resetCoachMarks();
+
+    expect(store.onboarding().seenCoachMarks).toEqual([]);
+    expect(store.onboarding().coachViews).toEqual({});
+    store.maybeShowCoachMark(boardDongThe);
+    expect(store.coachMark()?.id).toBe('filter-hint');
+  });
+
+  it('mẩu cảnh báo mất thẻ được ưu tiên hơn mọi mẩu khác', () => {
+    const store = make();
+    store.hydrate({ ...emptyOnboardingState(), status: 'done' });
+
+    // Board đông thẻ (filter-hint thoả) NHƯNG đang mở một thẻ vừa tạo.
+    store.maybeShowCoachMark({ ...boardDongThe, cardModalOpen: true, freshCardOpen: true });
+
+    expect(store.coachMark()?.id).toBe('name-card-hint');
+  });
+
+  it('mẩu mời thành viên chỉ bật khi modal thẻ đang mở — neo nằm trong đó', () => {
+    const store = make();
+    store.hydrate({ ...emptyOnboardingState(), status: 'done',
+      seenCoachMarks: ['name-card-hint','filter-hint','saved-filter-hint','layout-hint','minimap-hint','viewers-hint'] });
+
+    // Chỉ có một mình, nhưng modal đóng → không bật, vì ô giao việc không hiện.
+    store.maybeShowCoachMark({ ...boardDongThe, members: 1, cardModalOpen: false });
+    expect(store.coachMark()).toBeNull();
+
+    store.maybeShowCoachMark({ ...boardDongThe, members: 1, cardModalOpen: true });
+    expect(store.coachMark()?.id).toBe('invite-member-hint');
   });
 });

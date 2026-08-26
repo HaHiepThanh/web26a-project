@@ -15,7 +15,8 @@
     <!-- ===== Header: tiêu đề + presence + đóng ===== -->
     <div class="flex shrink-0 items-start gap-2 border-b border-base-200 px-5 pb-3 pt-4">
       <svg class="mt-2 h-5 w-5 shrink-0 text-base-content/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
-      <input #titleInput class="min-w-0 flex-1 rounded-md bg-transparent px-1.5 py-1 text-lg font-bold text-base-content outline-none hover:bg-base-200 focus:bg-base-200" [value]="draftTitle()" spellcheck="false" (input)="draftTitle.set($any($event.target).value)" />
+      <!-- data-tour: neo coach mark cảnh báo thẻ chưa đặt tên sẽ bị xoá. -->
+      <input #titleInput data-tour="card-title" class="min-w-0 flex-1 rounded-md bg-transparent px-1.5 py-1 text-lg font-bold text-base-content outline-none hover:bg-base-200 focus:bg-base-200" [value]="draftTitle()" spellcheck="false" (input)="draftTitle.set($any($event.target).value)" />
 
       @if (dirty()) {
         <span class="mt-2 shrink-0 rounded-full bg-warning/15 px-2 py-0.5 text-2xs font-bold text-warning">Unsaved</span>
@@ -50,7 +51,8 @@
               <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.4"/><path d="M4.5 20c1.6-3.6 4.6-5.4 7.5-5.4s5.9 1.8 7.5 5.4"/></svg>
               Assignee
             </label>
-            <select id="detail-assignee-select" class="select select-sm w-full" [ngModel]="draftAssigneeId()" (ngModelChange)="draftAssigneeId.set($event)">
+            <!-- data-tour: neo coach mark gợi ý mời thành viên. -->
+            <select id="detail-assignee-select" data-tour="assignee" class="select select-sm w-full" [ngModel]="draftAssigneeId()" (ngModelChange)="draftAssigneeId.set($event)">
               <option [ngValue]="null">Unassigned</option>
               @for (m of members(); track m.id) {
                 <option [ngValue]="m.id">{{ m.displayName ?? m.email }}</option>

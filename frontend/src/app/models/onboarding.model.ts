@@ -51,8 +51,22 @@ export interface OnboardingState {
   currentStep: TourStepId | null;
   /** Các bước đã xong. Dùng để vẽ thanh "Getting started — 2/4". */
   completed: TourStepId[];
-  /** Coach mark đã hiện — mỗi cái chỉ được hiện đúng MỘT lần (tầng 3). */
+  /**
+   * Coach mark đã XONG — không bao giờ hiện lại nữa.
+   *
+   * Vào đây theo hai đường: người dùng bấm × (đọc thật rồi), hoặc đã lướt qua
+   * đủ 3 lần mà vẫn không đọc.
+   */
   seenCoachMarks: string[];
+  /**
+   * Số lần đã LƯỚT QUA từng mẩu — bấm ra ngoài chứ không bấm ×.
+   *
+   * ⚠️ Không có cái này thì một cú bấm vô tình xoá sạch mẩu chỉ dẫn vĩnh viễn.
+   *    Coach mark cố ý KHÔNG chặn chuột, nên người đang với tay bấm một cái thẻ
+   *    sẽ vô tình "đóng" bong bóng vừa hiện ra 0,4 giây trước — chưa đọc chữ
+   *    nào. Đếm riêng để lần sau còn hiện lại, tối đa 3 lần rồi mới thôi.
+   */
+  coachViews: Record<string, number>;
   /**
    * Số phiên đã chào. Dùng cho luật giảm dần tiếng nói của linh vật
    * (docs/LINH-VAT-CHAO-NGUOI-DUNG.md §3) — để chung ở đây thay vì đẻ cột mới.
@@ -84,6 +98,7 @@ export function emptyOnboardingState(): OnboardingState {
     currentStep: null,
     completed: [],
     seenCoachMarks: [],
+    coachViews: {},
     greetCount: 0,
     seeded: null,
     updatedAt: new Date().toISOString(),
@@ -121,6 +136,14 @@ export function parseOnboardingState(raw: unknown): OnboardingState {
       ) as TourStepId[])
     : base.completed;
 
+  const rawViews = o.coachViews;
+  const coachViews: Record<string, number> = {};
+  if (rawViews && typeof rawViews === 'object') {
+    for (const [k, v] of Object.entries(rawViews as Record<string, unknown>)) {
+      if (typeof v === 'number' && Number.isFinite(v) && v > 0) coachViews[k] = Math.floor(v);
+    }
+  }
+
   const seenCoachMarks = Array.isArray(o.seenCoachMarks)
     ? o.seenCoachMarks.filter((s): s is string => typeof s === 'string')
     : base.seenCoachMarks;
@@ -145,6 +168,7 @@ export function parseOnboardingState(raw: unknown): OnboardingState {
     currentStep: status === 'running' ? (currentStep ?? TOUR_STEP_IDS[0]) : null,
     completed,
     seenCoachMarks,
+    coachViews,
     greetCount,
     seeded,
     updatedAt:

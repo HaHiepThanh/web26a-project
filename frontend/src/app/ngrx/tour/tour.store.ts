@@ -21,6 +21,11 @@ import {
 import { COACH_MARKS, CoachContext, CoachMark } from './coach-marks';
 import { TourSeedService } from './tour.seed';
 
+/** Giãn cách tối thiểu giữa hai coach mark. */
+const COACH_COOLDOWN_MS = 5 * 60 * 1000;
+/** Lướt qua đủ chừng này lần mà vẫn không bấm ×  thì thôi hẳn. */
+const COACH_MAX_VIEWS = 3;
+
 /**
  * Bộ máy tour hướng dẫn người dùng mới — tầng 1.
  *
@@ -94,12 +99,17 @@ export interface TourState {
   /** Mẩu chỉ dẫn đang hiện, hoặc null. Tối đa MỘT, xem `maybeShowCoachMark`. */
   coachMark: CoachMark | null;
   /**
-   * Phiên này đã hiện một coach mark chưa.
+   * Thời điểm hiện coach mark gần nhất (ms). 0 = chưa hiện lần nào.
    *
-   * Luật 1: mỗi phiên tối đa MỘT. Không có nó thì người dùng mở board đông thẻ
-   * là ăn liền bốn bong bóng nối đuôi — đúng kiểu phần mềm mà ai cũng tắt.
+   * Luật 1: không bao giờ hai cái cùng lúc, và giãn cách tối thiểu
+   * `COACH_COOLDOWN_MS`. Không có nó thì mở một board đông thẻ là ăn liền mấy
+   * bong bóng nối đuôi — đúng kiểu phần mềm mà ai cũng tắt.
+   *
+   * Dùng giãn cách theo THỜI GIAN chứ không phải "một lần mỗi phiên": với bảy
+   * mẩu, một-lần-mỗi-phiên bắt người dùng phải mở board bảy lần mới biết hết,
+   * mà người dùng tích cực thì cả tuần mới mở đủ.
    */
-  coachShownThisSession: boolean;
+  lastCoachAt: number;
   /**
    * Mẩu đã thử hiện trong phiên này mà neo không xuất hiện được.
    *
@@ -134,7 +144,7 @@ const initialState: TourState = {
   flags: EMPTY_FLAGS,
   flagsAtStepStart: {},
   coachMark: null,
-  coachShownThisSession: false,
+  lastCoachAt: 0,
   coachFailedThisSession: [],
   seedOfferOpen: false,
   cleanupOfferOpen: false,
@@ -731,19 +741,37 @@ export const TourStore = signalStore(
        * Và mỗi mẩu chỉ hiện đúng MỘT LẦN trong đời — `seenCoachMarks` lưu ở DB.
        */
       maybeShowCoachMark(ctx: CoachContext): void {
-        if (store.coachMark() || store.coachShownThisSession()) return;
+        // Mẩu đang hiện mà điều kiện của nó KHÔNG CÒN ĐÚNG thì gỡ xuống ngay.
+        //
+        // Hoàn cảnh đã đổi, và nó đang chỉ vào thứ không còn liên quan — thường
+        // là không còn nhìn thấy nữa. Ví dụ thật: `layout-hint` đang trỏ vào cụm
+        // Column/Row View, người dùng mở modal chi tiết thẻ, cụm nút đó khuất
+        // sau modal. Giữ nguyên thì bong bóng trỏ vào chỗ trống, mà tệ hơn là nó
+        // CHẶN mất `name-card-hint` — mẩu cảnh báo mất dữ liệu, đúng thứ đang
+        // cần lúc đó. Luật "không hai cái cùng lúc" hoá ra bảo vệ nhầm người.
+        //
+        // Không tính là đã lướt qua, và cho chọn lại ngay: hoàn cảnh mới là hoàn
+        // cảnh mới, không phải phần thưởng đã tiêu.
+        const dangHien = store.coachMark();
+        if (dangHien && !dangHien.when(ctx)) {
+          patchState(store, { coachMark: null, lastCoachAt: 0 });
+        } else if (dangHien) {
+          return;
+        }
+
+        if (Date.now() - store.lastCoachAt() < COACH_COOLDOWN_MS) return;
         if (store.running() || store.invitationOpen()) return;
         if (store.seedOfferOpen() || store.cleanupOfferOpen()) return;
 
         const s = store.onboarding();
         if (s.status === 'not-started') return;
 
-        const daXem = new Set([...s.seenCoachMarks, ...store.coachFailedThisSession()]);
-        const chon = COACH_MARKS.find((m) => !daXem.has(m.id) && m.when(ctx));
+        const xong = new Set([...s.seenCoachMarks, ...store.coachFailedThisSession()]);
+        const chon = COACH_MARKS.find((m) => !xong.has(m.id) && m.when(ctx));
         if (!chon) return;
 
-        // Chỉ CHỌN, chưa tiêu suất của phiên. Suất chỉ mất khi bong bóng thật sự
-        // hiện lên — xem `confirmCoachMarkShown`.
+        // Chỉ CHỌN, chưa tính là đã hiện. Đồng hồ giãn cách chỉ chạy khi bong
+        // bóng thật sự lên hình — xem `confirmCoachMarkShown`.
         patchState(store, { coachMark: chon });
       },
 
@@ -756,8 +784,8 @@ export const TourStore = signalStore(
        *    lặng theo, và không ai biết vì sao.
        */
       confirmCoachMarkShown(): void {
-        if (store.coachShownThisSession()) return;
-        patchState(store, { coachShownThisSession: true });
+        if (store.lastCoachAt() !== 0 && Date.now() - store.lastCoachAt() < 1000) return;
+        patchState(store, { lastCoachAt: Date.now() });
       },
 
       /**
@@ -782,13 +810,49 @@ export const TourStore = signalStore(
        * (luật 2 của đặc tả), nên bấm ra ngoài là hành vi bình thường và phải
        * được coi là "đã đọc" — bắt họ tìm đúng cái nút mới cho tắt là phiền.
        */
-      dismissCoachMark(): void {
+      /**
+       * Bấm × — người dùng ĐỌC THẬT rồi. Một lần là đủ, thôi hẳn.
+       */
+      acknowledgeCoachMark(): void {
         const m = store.coachMark();
         if (!m) return;
         patchState(store, { coachMark: null });
-        const daXem = store.onboarding().seenCoachMarks;
-        if (daXem.includes(m.id)) return;
-        persist({ seenCoachMarks: [...daXem, m.id] });
+        const xong = store.onboarding().seenCoachMarks;
+        if (xong.includes(m.id)) return;
+        persist({ seenCoachMarks: [...xong, m.id] });
+      },
+
+      /**
+       * Bấm RA NGOÀI — "không phải lúc này", chưa chắc đã đọc.
+       *
+       * ⚠️ Đây là chỗ dễ ăn gian người dùng nhất. Coach mark cố ý không chặn
+       *    chuột, nên người đang với tay bấm một cái thẻ sẽ vô tình đóng bong
+       *    bóng vừa hiện ra 0,4 giây trước — chưa kịp đọc chữ nào. Tính đó là
+       *    "đã xem" rồi xoá vĩnh viễn là lấy mất của họ một mẩu chỉ dẫn mà họ
+       *    không hề biết mình từng có.
+       *
+       *    Nên đếm riêng: lần sau còn hiện lại. Nhưng lướt qua tới lần thứ ba
+       *    mà vẫn không buồn bấm × thì rõ ràng họ không quan tâm — thôi hẳn.
+       */
+      snoozeCoachMark(): void {
+        const m = store.coachMark();
+        if (!m) return;
+        patchState(store, { coachMark: null });
+
+        const s = store.onboarding();
+        const soLan = (s.coachViews[m.id] ?? 0) + 1;
+        const views = { ...s.coachViews, [m.id]: soLan };
+        persist(
+          soLan >= COACH_MAX_VIEWS
+            ? { coachViews: views, seenCoachMarks: [...s.seenCoachMarks, m.id] }
+            : { coachViews: views },
+        );
+      },
+
+      /** Xoá sạch lịch sử coach mark — mục "Reset hints" trong Cài đặt. */
+      resetCoachMarks(): void {
+        patchState(store, { coachMark: null, lastCoachAt: 0, coachFailedThisSession: [] });
+        persist({ seenCoachMarks: [], coachViews: {} });
       },
 
       /**

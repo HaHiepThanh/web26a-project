@@ -57,6 +57,17 @@ export class Settings {
     void this.router.navigate(['/', this.orgService.activeOrgSlug(), 'workspace']);
   }
 
+  /**
+   * Xoá lịch sử coach mark để chúng được hiện lại.
+   *
+   * KHÔNG điều hướng đi đâu cả — coach mark chỉ xuất hiện trên trang Board và tự
+   * bật khi gặp đúng hoàn cảnh, không phải thứ chạy được theo yêu cầu như tour.
+   * Kéo người dùng sang trang khác rồi để họ ngồi đợi là hứa hão.
+   */
+  onResetHints(): void {
+    this.tour.resetCoachMarks();
+  }
+
   readonly currentUser = this.auth.currentUser;
   readonly searchableUsers = computed(() => this.auth.getSearchableUsers());
 

@@ -88,7 +88,8 @@ export class CoachMark {
       if (!this.mark()) return;
       const el = this.bubble()?.nativeElement;
       if (el && e.target instanceof Node && el.contains(e.target)) return;
-      this.tour.dismissCoachMark();
+      // Bấm ra ngoài = "không phải lúc này", KHÔNG phải "đã đọc".
+      this.tour.snoozeCoachMark();
     };
     document.addEventListener('pointerdown', onDown, true);
 
@@ -153,7 +154,8 @@ export class CoachMark {
     };
   }
 
+  /** Bấm × — đọc thật rồi, thôi hẳn. */
   onGotIt(): void {
-    this.tour.dismissCoachMark();
+    this.tour.acknowledgeCoachMark();
   }
 }

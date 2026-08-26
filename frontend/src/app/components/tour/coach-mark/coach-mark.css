@@ -3,8 +3,12 @@
 .coach-layer {
   position: fixed;
   inset: 0;
-  /* Dưới lớp phủ tour (9000) và dưới toast, nhưng trên nội dung trang. */
-  z-index: 850;
+  /* TRÊN modal của app (z-1000), dưới lớp phủ tour (9000).
+     Phải trên modal vì hai mẩu chỉ dẫn neo vào phần tử NẰM TRONG modal chi tiết
+     thẻ: ô tiêu đề và ô chọn người phụ trách. Để dưới là chọn xong không hiện
+     được gì. Vẫn dưới lớp phủ tour, nhưng tour đang chạy thì coach mark im lặng
+     nên hai thứ không bao giờ gặp nhau. */
+  z-index: 1100;
   /* ⚠️ Bắt buộc — xem ghi chú trong template. Lớp này phủ kín màn hình; nhận
      chuột là nó nuốt mọi cú bấm của người đang làm việc dở. */
   pointer-events: none;
