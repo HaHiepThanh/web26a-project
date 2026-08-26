@@ -73,6 +73,13 @@ export interface TourStep {
   optional?: boolean;
   /** Thời gian chờ neo trước khi bỏ qua. Mặc định 3 giây. */
   waitMs?: number;
+  /**
+   * Popover đứng ở đâu so với neo. Mặc định `below`.
+   *
+   * `bottom` ghim popover xuống đáy màn hình, dành cho nút mà bấm vào là bung
+   * ra một bảng lớn — đứng cạnh nút kiểu gì cũng che mất chính cái bảng đó.
+   */
+  placement?: 'below' | 'bottom';
 }
 
 export const TOUR_STEPS: readonly TourStep[] = [
@@ -124,6 +131,9 @@ export const TOUR_STEPS: readonly TourStep[] = [
     page: 'board',
     tier: 2,
     advance: { on: 'flag', key: 'filterOpen' },
+    // Bảng lọc bung ra dưới nút, rộng 320px và CĂN PHẢI nên nó thò sang trái xa
+    // hơn cả cái nút — đứng dưới hay đứng cạnh nút đều che mất nó. Ra hẳn đáy.
+    placement: 'bottom',
     title: 'Find work in a busy board',
     body: 'Open Filter and pick High priority. Watch the badge — it counts how many of the cards survived the filter, so you can see it working.',
   },

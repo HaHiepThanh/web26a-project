@@ -902,7 +902,22 @@ export class Board {
    *     nhìn, không biết mình còn phải làm gì.
    */
   onCardSaved(): void {
+    const laTheVuaTao = this.justCreatedCardId() !== null;
     this.justCreatedCardId.set(null);
+
+    // Trong lúc tour đang dạy bước "tạo thẻ": lưu xong thì ĐÓNG luôn modal.
+    //
+    // Tour bảo "đặt tên rồi lưu", người dùng làm xong và... không có gì xảy ra.
+    // Modal vẫn nằm đó che kín board, bước tiếp theo thì đợi nó đóng. Họ ngồi
+    // nhìn, không biết mình còn thiếu thao tác nào. Đóng hộ đúng một lần này là
+    // trả lại đúng nhịp "làm xong → đi tiếp" của cả tầng 1.
+    //
+    // Chỉ đóng khi CẢ HAI đúng: thẻ vừa tạo trong tour, và tour đang ở đúng bước
+    // đó. Ngoài tour thì không đụng — người ta lưu rồi còn sửa tiếp là chuyện
+    // bình thường, tự ý đóng là cướp quyền của họ.
+    if (laTheVuaTao && this.tour.currentStep()?.id === 'add-card') {
+      this.closeCardDetail();
+    }
   }
 
   onCardDetailDeleted(): void {

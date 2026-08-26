@@ -173,8 +173,24 @@ export class TourOverlay {
     }
     const vh = window.innerHeight;
     const vw = window.innerWidth;
-    const below = h.top + h.height + GAP;
     const ph = this.popoverH();
+
+    // Ghim xuống ĐÁY MÀN HÌNH, căn giữa ngang.
+    //
+    // Dành cho nút mà bấm vào là bung ra một bảng lớn. Bảng lọc chẳng hạn: rộng
+    // 320px, căn phải, nên nó thò sang trái xa hơn cả cái nút — đặt popover
+    // dưới nút hay bên trái nút đều che mất nó (đo thật: chồng nhau ở cả hai
+    // cách). Vùng bảng chiếm là góc trên-phải, nên đáy màn hình là chỗ chắc
+    // chắn trống, ở mọi bề rộng. Viền sáng vẫn chỉ đúng cái nút.
+    if (this.step()?.placement === 'bottom') {
+      const w = Math.min(POPOVER_W, vw - 24);
+      return {
+        top: Math.max(12, vh - ph - 16),
+        left: Math.max(12, (vw - w) / 2),
+      };
+    }
+
+    const below = h.top + h.height + GAP;
     const flipUp = below + ph > vh - 12;
     const top = flipUp ? Math.max(12, h.top - GAP - ph) : below;
     // Căn giữa theo neo rồi kẹp vào trong màn hình — neo sát mép phải mà không
