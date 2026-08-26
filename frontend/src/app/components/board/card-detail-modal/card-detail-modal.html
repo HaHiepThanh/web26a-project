@@ -16,7 +16,17 @@
     <div class="flex shrink-0 items-start gap-2 border-b border-base-200 px-5 pb-3 pt-4">
       <svg class="mt-2 h-5 w-5 shrink-0 text-base-content/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
       <!-- data-tour: neo coach mark cảnh báo thẻ chưa đặt tên sẽ bị xoá. -->
-      <input #titleInput data-tour="card-title" class="min-w-0 flex-1 rounded-md bg-transparent px-1.5 py-1 text-lg font-bold text-base-content outline-none hover:bg-base-200 focus:bg-base-200" [value]="draftTitle()" spellcheck="false" (input)="draftTitle.set($any($event.target).value)" />
+      <!-- Enter trong ô tiêu đề = Save changes.
+
+           Ô này là dòng đơn, và tour vừa dạy đúng nếp "gõ tên rồi Enter" ở bước
+           thêm danh sách. Vào tới đây gõ tên thẻ rồi Enter mà không có gì xảy ra
+           thì người dùng tưởng đã lưu — trong khi bản nháp vẫn treo, và nút Save
+           thật thì nằm dưới đáy một hộp cao 717px (đo ở 390×844), phải cuộn mới
+           thấy. Trên điện thoại đó là cả một quãng đường.
+
+           Chỉ gắn cho tiêu đề. Ô mô tả là textarea nhiều dòng, ở đó Enter phải
+           xuống dòng như bình thường. -->
+      <input #titleInput data-tour="card-title" class="min-w-0 flex-1 rounded-md bg-transparent px-1.5 py-1 text-lg font-bold text-base-content outline-none hover:bg-base-200 focus:bg-base-200" [value]="draftTitle()" spellcheck="false" (input)="draftTitle.set($any($event.target).value)" (keydown.enter)="save()" />
 
       @if (dirty()) {
         <span class="mt-2 shrink-0 rounded-full bg-warning/15 px-2 py-0.5 text-2xs font-bold text-warning">Unsaved</span>
