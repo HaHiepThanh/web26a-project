@@ -1,27 +1,68 @@
-<div class="max-w-[95%] self-start rounded-box border border-[var(--accent-purple)] bg-[var(--accent-purple-soft)] px-2.5 py-2">
-  <div class="mb-1.5 flex items-center gap-1 text-3xs font-bold uppercase tracking-wide text-[var(--accent-purple)]">
-    <svg class="h-[11px] w-[11px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-      <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z" />
-    </svg>
-    AI suggested {{ count() }} card(s)
-  </div>
+<!-- `aura aura-dual`: vòng sáng xoay quanh ô gợi ý (daisyUI 5.7).
+     Dùng ở ĐÚNG một chỗ này trong toàn app là có chủ đích — nó phải là thứ bắt
+     mắt nhất trong khung chat, vì đây là lúc trợ lý chen vào cuộc trò chuyện và
+     xin một quyết định. Đặt aura ở nhiều nơi là không chỗ nào còn nổi bật.
 
-  <div class="mb-2 flex flex-col gap-1">
-    @for (l of lines(); track $index) {
-      <div class="rounded-md bg-base-100/70 px-2 py-1.5">
-        <div class="text-xs font-semibold leading-snug text-base-content">{{ l.title }}</div>
-        <div class="text-3xs text-base-content/70">
-          {{ l.assignee ?? 'Unassigned' }}
-          @if (l.dueDate) { · Due: {{ l.dueDate }} }
-        </div>
+     `text-secondary` KHÔNG phải để tô chữ: `.aura` vẽ gradient bằng
+     `currentColor`, nên màu chữ của thẻ bọc chính là màu vòng sáng.
+     `.aura:has(>.card)` tự khớp bo góc với `.card` bên trong — nên con trực tiếp
+     phải mang class `card`, đừng đổi thành div trơn. -->
+<div class="aura aura-dual aura-sm w-full max-w-[95%] self-start text-secondary" style="--tw-duration: 9s">
+  <div class="card w-full border border-secondary/25 bg-base-100 shadow-sm">
+    <div class="card-body gap-0 p-2.5">
+      <!-- Đầu ô: nói RÕ đây là đề xuất, chưa phải việc đã tạo -->
+      <div class="flex items-center gap-1.5">
+        <span class="grid h-5 w-5 shrink-0 place-items-center rounded-md bg-secondary/15 text-secondary">
+          <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z" />
+          </svg>
+        </span>
+        <span class="text-3xs font-black uppercase tracking-wider text-secondary">Assistant</span>
+        <span class="badge badge-secondary badge-soft badge-xs font-bold">{{ count() }}</span>
+        <span class="ml-auto text-3xs font-medium text-base-content/45">chưa tạo</span>
       </div>
-    }
-  </div>
 
-  <div class="flex gap-1.5">
-    <button type="button"
-      class="btn btn-xs border-none bg-[var(--accent-purple)] text-white hover:brightness-110"
-      (click)="open.emit()">Review &amp; create</button>
-    <button type="button" class="btn btn-ghost btn-xs" (click)="dismiss.emit()">Dismiss</button>
+      <p class="mt-1.5 text-3xs leading-snug text-base-content/60">
+        Nhặt được {{ count() === 1 ? 'một việc' : count() + ' việc' }} từ tin nhắn trên.
+      </p>
+
+      <!-- Danh sách thẻ đề xuất -->
+      <ul class="mt-2 flex flex-col gap-1">
+        @for (l of lines(); track $index) {
+          <li class="rounded-md border border-base-300/70 bg-base-200/45 px-2 py-1.5">
+            <p class="text-xs font-semibold leading-snug text-base-content">{{ l.title }}</p>
+            <div class="mt-1 flex flex-wrap items-center gap-1">
+              <span class="badge badge-ghost badge-xs gap-1 font-medium"
+                [class.opacity-55]="!l.assignee">
+                <svg class="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" />
+                </svg>
+                {{ l.assignee ?? 'Chưa gán' }}
+              </span>
+              @if (l.dueDate) {
+                <span class="badge badge-warning badge-soft badge-xs gap-1 font-medium">
+                  <svg class="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z" />
+                  </svg>
+                  {{ l.dueDate }}
+                </span>
+              }
+            </div>
+          </li>
+        }
+      </ul>
+
+      <div class="mt-2.5 flex items-center gap-1.5">
+        <button type="button" class="btn btn-secondary btn-xs flex-1 gap-1 font-bold" (click)="open.emit()">
+          <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+            <path d="M20 6L9 17l-5-5" />
+          </svg>
+          Xem &amp; tạo
+        </button>
+        <button type="button" class="btn btn-ghost btn-xs font-medium text-base-content/55" (click)="dismiss.emit()">
+          Bỏ qua
+        </button>
+      </div>
+    </div>
   </div>
 </div>

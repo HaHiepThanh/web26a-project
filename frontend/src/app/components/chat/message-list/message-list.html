@@ -1,4 +1,6 @@
-<div class="flex h-full flex-col gap-2.5 overflow-y-auto px-3 py-2.5" #scrollArea>
+<!-- gap nhỏ vì `.chat` của daisyUI đã tự có `padding-block: .25rem` ở mỗi tin;
+     giữ gap-2.5 như bản bong bóng cũ là cộng dồn thành khoảng hở quá thưa. -->
+<div class="flex h-full flex-col gap-1 overflow-y-auto px-3 py-2.5" #scrollArea>
   @for (m of messages(); track trackByMessageId($index, m)) {
     <app-message-item [message]="m" [sender]="usersById()[m.userId] ?? null" [isOwn]="m.userId === currentUserId()" [memberNames]="memberNames()" />
 

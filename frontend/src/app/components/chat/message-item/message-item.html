@@ -1,16 +1,23 @@
-<div class="flex min-w-0 max-w-[88%] gap-[7px]" [class.flex-row-reverse]="isOwn()" [class.ml-auto]="isOwn()" [class.self-end]="isOwn()">
-  <app-user-avatar [userId]="message().userId" [name]="avatarName()" [avatarUrl]="avatarUrl()" [size]="22" />
-  <div class="flex min-w-0 flex-col gap-0.5" [class.items-end]="isOwn()">
-    <span class="text-2xs font-semibold text-base-content/80">{{ senderLabel() }}</span>
-    <div [class]="bubbleClass()">
-      @for (part of contentParts(); track $index) {
-        @if (part.isMention) {
-          <span class="font-semibold text-primary">{{ part.text }}</span>
-        } @else {
-          <span>{{ part.text }}</span>
-        }
-      }
-    </div>
-    <span class="text-3xs text-base-content/50">{{ timeLabel() }}</span>
+<!-- Mẫu "Chat with image, header and footer" của daisyUI.
+     `.chat` là một grid; `chat-start`/`chat-end` tự lo cột nào chứa avatar, căn
+     trái hay phải, và quay đuôi bong bóng về đúng phía — nên ở đây KHÔNG cần
+     flex-row-reverse / ml-auto / self-end tự dựng như bản cũ nữa. -->
+<div class="chat" [class.chat-start]="!isOwn()" [class.chat-end]="isOwn()">
+  <div class="chat-image">
+    <app-user-avatar [userId]="message().userId" [name]="avatarName()" [avatarUrl]="avatarUrl()" [size]="28" />
   </div>
+
+  <div class="chat-header pb-0.5 font-semibold text-base-content/75">{{ senderLabel() }}</div>
+
+  <div [class]="bubbleClass()">
+    @for (part of contentParts(); track $index) {
+      @if (part.isMention) {
+        <span [class]="mentionClass()">{{ part.text }}</span>
+      } @else {
+        <span>{{ part.text }}</span>
+      }
+    }
+  </div>
+
+  <time class="chat-footer pt-0.5 text-base-content/50" [attr.datetime]="message().createdAt">{{ timeLabel() }}</time>
 </div>

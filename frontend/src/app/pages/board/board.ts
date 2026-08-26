@@ -808,12 +808,40 @@ export class Board {
   cardsFor(listId: string): Card[] {
     const cards = this.cardsByList()[listId] ?? [];
     const mode = this.sortMode();
-    if (mode === 'manual') return cards;
-    const sorted = [...cards];
-    if (mode === 'priority') sorted.sort((a, b) => PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority]);
-    else if (mode === 'due') sorted.sort((a, b) => (a.dueDate ? Date.parse(a.dueDate) : Infinity) - (b.dueDate ? Date.parse(b.dueDate) : Infinity));
-    else if (mode === 'new') sorted.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
-    return sorted;
+    let sorted = cards;
+    if (mode !== 'manual') {
+      sorted = [...cards];
+      if (mode === 'priority') sorted.sort((a, b) => PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority]);
+      else if (mode === 'due') sorted.sort((a, b) => (a.dueDate ? Date.parse(a.dueDate) : Infinity) - (b.dueDate ? Date.parse(b.dueDate) : Infinity));
+      else if (mode === 'new') sorted.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+    }
+    return this.dayTheKhopLenDau(sorted);
+  }
+
+  /**
+   * Đang lọc thì đẩy thẻ KHỚP lên đầu list.
+   *
+   * Trước đây lọc chỉ làm mờ thẻ không khớp (`dimmedCardIds`). Với list dài thì
+   * thẻ khớp có thể nằm tận cuối, người dùng bật bộ lọc xong vẫn phải cuộn đi
+   * tìm — nhìn ra như bộ lọc không chạy. Đưa lên đầu là câu trả lời nhìn thấy
+   * ngay: "đây, đúng những thẻ bạn hỏi".
+   *
+   * Phân hoạch ỔN ĐỊNH (giữ nguyên thứ tự tương đối trong từng nhóm), nên trong
+   * nhóm khớp các thẻ vẫn theo đúng thứ tự sắp xếp/kéo-thả sẵn có — chỉ có ranh
+   * giới giữa hai nhóm là mới.
+   *
+   * ⚠️ Đây CHỈ là thứ tự hiển thị, KHÔNG ghi gì xuống server. Vì thế lúc lọc
+   *    phải khoá kéo-thả sắp xếp lại (xem `sortingEnabled` ở board.html): chỉ số
+   *    thả rơi vào mảng đã đảo này không còn ứng với vị trí thật trong list.
+   */
+  private dayTheKhopLenDau(cards: Card[]): Card[] {
+    if (!this.isFilteringActive()) return cards;
+    const khop = this.highlightedCardIds();
+    if (!khop.size) return cards;
+    const truoc: Card[] = [];
+    const sau: Card[] = [];
+    for (const c of cards) (khop.has(c.id) ? truoc : sau).push(c);
+    return [...truoc, ...sau];
   }
 
   trackByListId(_: number, list: List): string {

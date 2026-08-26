@@ -29,6 +29,7 @@
     />
 
     <div
+      appFlipReorder
       class="list-cards flex min-h-[40px] flex-1 gap-2 px-2"
       [class.flex-col]="orientation() === 'column'"
       [class.overflow-y-auto]="orientation() === 'column'"
@@ -45,7 +46,7 @@
       (cdkDropListDropped)="onCardDrop($event)"
     >
       @for (card of cards(); track trackByCardId($index, card)) {
-        <div class="card-drag-wrap cursor-grab active:cursor-grabbing" [class.row-card]="orientation() === 'row'" cdkDrag [cdkDragData]="card" (click)="onCardClick($event, card)">
+        <div class="card-drag-wrap cursor-grab active:cursor-grabbing" [attr.data-flip-id]="card.id" [class.row-card]="orientation() === 'row'" cdkDrag [cdkDragData]="card" (click)="onCardClick($event, card)">
           <div class="drag-placeholder" *cdkDragPlaceholder></div>
           <app-card-item
             [card]="card"

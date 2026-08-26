@@ -6,13 +6,14 @@ import { ListStore } from '../../../ngrx/list/list.store';
 import { ListHeader } from '../list-header/list-header';
 import { CardItem } from '../card-item/card-item';
 import { AddCard } from '../add-card/add-card';
+import { FlipReorder } from '../../../directives/flip-reorder.directive';
 
 /** Một cột (list) trên board: header dính + vùng thẻ tự cuộn dọc riêng (#1) +
  *  cdkDropList để kéo-thả card optimistic (#3). Tất cả board-list nằm trong 1
  *  cdkDropListGroup ở board.ts nên card kéo được cả trong-list lẫn giữa các list. */
 @Component({
   selector: 'app-board-list',
-  imports: [DragDropModule, ListHeader, CardItem, AddCard],
+  imports: [DragDropModule, ListHeader, CardItem, AddCard, FlipReorder],
   templateUrl: './board-list.html',
   styleUrl: './board-list.css',
 })

@@ -42,10 +42,26 @@ export class MessageItem {
    *  viên) chỉ là nguồn ưu tiên, thiếu thì rơi về bản đính kèm tin nhắn. */
   readonly avatarUrl = computed(() => this.sender()?.avatarUrl ?? this.message().user?.avatarUrl);
 
-  readonly bubbleClass = computed(() =>
-    this.isOwn()
-      ? 'w-fit max-w-full min-w-0 break-words rounded-xl rounded-tr-[3px] bg-primary/10 px-2.5 py-1.5 text-xs leading-relaxed text-base-content'
-      : 'w-fit max-w-full min-w-0 break-words rounded-xl rounded-tl-[3px] bg-base-200 px-2.5 py-1.5 text-xs leading-relaxed text-base-content',
+  /**
+   * Bong bóng theo daisyUI (`chat-bubble`), đè lại vài kích thước cho vừa khung
+   * chat hẹp ~300px: daisyUI mặc định `min-height: 2rem` + `padding-inline: 1rem`
+   * là quá rộng rãi ở đây, tin một dòng sẽ cao gần gấp đôi nội dung thật.
+   */
+  readonly bubbleClass = computed(() => {
+    const chung = 'chat-bubble min-h-0 min-w-0 break-words px-3 py-1.5 text-xs leading-relaxed';
+    return this.isOwn() ? `${chung} chat-bubble-primary` : chung;
+  });
+
+  /**
+   * Cách tô @nhắc tên, PHỤ THUỘC nền bong bóng.
+   *
+   * Tin của mình dùng `chat-bubble-primary` — nền primary đặc. Tô chữ
+   * `text-primary` lên đó là chữ primary trên nền primary: gần như tàng hình.
+   * Nên ở bong bóng đó dùng gạch chân + in đậm, giữ nguyên màu chữ tương phản
+   * mà daisyUI đã chọn sẵn (`--color-primary-content`).
+   */
+  readonly mentionClass = computed(() =>
+    this.isOwn() ? 'font-bold underline underline-offset-2' : 'font-semibold text-primary',
   );
 
   readonly timeLabel = computed(() => {
