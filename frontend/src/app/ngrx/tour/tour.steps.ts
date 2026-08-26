@@ -111,7 +111,10 @@ export const TOUR_STEPS: readonly TourStep[] = [
     tier: 1,
     advance: { on: 'count', key: 'cards' },
     title: 'And your first card',
-    body: 'A card is one piece of work. Drag it between columns to move it along — there is no Save button, dragging is saving.',
+    // Nói rõ phải ĐẶT TÊN rồi lưu. Modal chi tiết thẻ xoá luôn thẻ vừa tạo nếu
+    // đóng đi mà chưa sửa gì (`isAbandonedFreshCard`), nên bảo họ "tạo thẻ" rồi
+    // để họ đóng ngang là họ mất đúng cái vừa làm mà không hiểu vì sao.
+    body: 'A card is one piece of work. Name it and save — a card closed without a name is thrown away. After that, dragging it between columns is all the saving it needs.',
   },
 
   // ------------------------------------------------------------- Tầng 2

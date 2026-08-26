@@ -646,6 +646,24 @@ export class Board {
         0,
       );
       const lists = this.lists().length;
+
+      // ⚠️ Đang mở modal chi tiết thẻ thì CHƯA chốt số.
+      //
+      // "Add card" tạo thẻ thật ngay rồi mở modal. Nhưng `attemptClose()` của
+      // modal có `isAbandonedFreshCard()`: thẻ vừa tạo mà đóng đi không sửa gì
+      // thì bị XOÁ — hành vi cố ý, để không đọng lại rác "New card".
+      //
+      // Đếm ngay lúc thẻ vừa sinh ra thì tour chốt bước 4 cho một cái thẻ vài
+      // giây sau biến mất, rồi hứa với người dùng "thẻ đó là của bạn, nó ở lại"
+      // trong khi họ kết thúc tour chỉ còn thẻ mẫu. Chờ modal đóng rồi mới đếm
+      // thì con số phản ánh thứ THẬT SỰ còn lại.
+      // Chặn bằng CẢ HAI cờ. `selectedCardId` có lúc bị xoá tạm trong quá trình
+      // lưu, và chỉ cần một khung hình như thế là số thẻ lọt ra ngoài rồi tour
+      // chốt bước 4 cho một cái thẻ vài giây sau bị `isAbandonedFreshCard` xoá.
+      // `justCreatedCardId` chỉ được dọn ở `closeCardDetail()`, nên nó phủ kín
+      // trọn quãng từ lúc tạo tới lúc người dùng thật sự đóng modal.
+      if (this.selectedCardId() !== null || this.justCreatedCardId() !== null) return;
+
       untracked(() => this.tour.observe({ lists, cards }));
     });
 

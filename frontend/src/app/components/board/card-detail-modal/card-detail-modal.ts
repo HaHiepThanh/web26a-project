@@ -164,6 +164,10 @@ export class CardDetailModal {
 
   async save(): Promise<void> {
     if (!this.canSave()) return;
+    // Đã lưu một lần thì thẻ này KHÔNG còn là "thẻ tạo nhầm" nữa — xem
+    // `isAbandonedFreshCard`. Phải ghi trước khi lưu xong, vì lưu xong là
+    // `dirty()` trở lại false và điều kiện xoá lại đúng.
+    this.savedOnce.set(true);
     const c = this.card();
     // `null` = XOÁ trường đó trên server. Trước đây chỗ này dùng `undefined`,
     // mà `undefined` bị JSON.stringify bỏ khỏi body, nên backend — vốn chỉ ghi
@@ -235,9 +239,22 @@ export class CardDetailModal {
    * người dùng đã kịp đính 1 tệp thật rồi mới đóng, đó là dữ liệu thật của họ
    * — xoá nhầm còn tệ hơn để lại một thẻ "New card" thừa.
    */
+  /**
+   * Đã bấm Lưu ít nhất một lần trong lần mở modal này.
+   *
+   * ⚠️ Không có cờ này thì LƯU XONG RỒI ĐÓNG là MẤT THẺ. Chuỗi sự việc:
+   *    người dùng bấm "Add card" → đặt tên → bấm "Save changes" → `dirty()` trở
+   *    lại false vì bản nháp đã khớp thẻ đã lưu → `autoFocusTitle` thì vẫn còn
+   *    true (chỉ được dọn ở `closeCardDetail()`, chạy SAU) → đóng modal là
+   *    `isAbandonedFreshCard` đúng và thẻ bị xoá, mang theo cái tên vừa lưu.
+   *    Im lặng, không hỏi, không hoàn tác được.
+   */
+  private readonly savedOnce = signal(false);
+
   private readonly isAbandonedFreshCard = computed(
     () =>
       this.autoFocusTitle() &&
+      !this.savedOnce() &&
       !this.dirty() &&
       this.attachments().length === 0 &&
       this.selectedLabelIds().length === 0 &&

@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { LucideArrowLeft, LucideArrowRight, LucideX } from '@lucide/angular';
+import { OrganizationStore } from '../../../ngrx/organization/organization.store';
 import { TourStore } from '../../../ngrx/tour/tour.store';
 import { TOUR_STEPS, TourStep } from '../../../ngrx/tour/tour.steps';
 
@@ -55,6 +56,7 @@ interface Rect {
 export class TourOverlay {
   private readonly tour = inject(TourStore);
   private readonly router = inject(Router);
+  private readonly orgs = inject(OrganizationStore);
   private readonly popover = viewChild<ElementRef<HTMLElement>>('popover');
 
   readonly step = this.tour.currentStep;
@@ -106,6 +108,22 @@ export class TourOverlay {
       ? 'Open a board to keep going — this step happens there.'
       : 'Head back to your workspace to keep going.';
   });
+
+  /**
+   * Có đưa thẳng người dùng tới nơi được không.
+   *
+   * Chỉ với bước thuộc trang workspace: ta biết chính xác đường dẫn. Bước thuộc
+   * trang board thì không — không biết họ muốn mở board nào, và đoán bừa rồi
+   * kéo người ta vào một board lạ còn tệ hơn để họ tự chọn.
+   */
+  readonly canJumpToWorkspace = computed(
+    () => this.waitingFor() !== null && this.step()?.page === 'workspace',
+  );
+
+  onJumpToWorkspace(): void {
+    const slug = this.orgs.activeOrgSlug();
+    void this.router.navigate(slug ? ['/', slug, 'workspace'] : ['/workspace']);
+  }
 
   /** Vùng sáng = khung phần tử nới ra HALO mỗi phía. */
   readonly hole = computed<Rect | null>(() => {

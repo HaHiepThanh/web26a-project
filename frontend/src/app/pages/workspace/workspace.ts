@@ -633,6 +633,20 @@ export class Workspace {
     const warning = this.boardService.storageWarning();
     if (warning) this.addToast(warning, 'error');
     this.showCreateBoardModal.set(false);
+
+    // ⚠️ Báo cho tour NGAY TẠI ĐÂY, đồng bộ, trước khi điều hướng.
+    //
+    // `effect()` ở constructor cũng báo số này, nhưng effect chạy bất đồng bộ.
+    // Dòng dưới điều hướng sang trang board và huỷ component này — nếu điều
+    // hướng kịp trước, effect không bao giờ chạy và số board mới KHÔNG được báo.
+    // Tour đứng mãi ở bước "tạo board" trong khi người dùng đã đứng trong chính
+    // cái board vừa tạo. Đây là cạnh tranh thời điểm nên nó chỉ hỏng lúc máy
+    // nhanh hoặc mạng nhanh — kiểu lỗi tệ nhất để tìm.
+    this.tour.observe({
+      workspaces: this.workspaces().length,
+      boards: this.totalBoardsCount(),
+    });
+
     void this.router.navigate(['/', this.orgService.activeOrgSlug(), 'board', board.id]);
   }
 
