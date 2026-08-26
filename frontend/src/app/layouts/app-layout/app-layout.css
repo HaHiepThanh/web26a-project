@@ -34,8 +34,13 @@
        đang ẩn, nên trang luôn dài dôi ra một đoạn và tạo cú giật cuối trang. */
     min-height: 100dvh;
     overflow: visible;
-    /* Chừa chỗ cho thanh nổi ở đáy. Giờ trang cuộn tới tận cùng nên nếu không
-       chừa, thanh sẽ nằm đè lên footer và phần cuối nội dung. */
+  }
+
+  /* Chừa chỗ cho thanh nổi ở đáy — CHỈ ở trang thật sự có thanh (Workspace).
+     Giờ trang cuộn tới tận cùng nên nếu không chừa, thanh sẽ đè lên footer và
+     phần cuối nội dung; ngược lại chừa ở trang không có thanh thì thừa ra một
+     khoảng trống vô cớ. */
+  :host(:not(.trang-board).co-thanh-mobile) {
     padding-bottom: 5.5rem;
   }
 

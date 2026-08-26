@@ -10,12 +10,18 @@
   <app-footer class="shrink-0" />
 }
 
-<!-- Thanh thao tác nổi ở đáy, chỉ hiện từ `lg` trở xuống. Đặt cuối cùng để nằm
-     trên mọi thứ khác trong luồng xếp chồng; bản thân nó `fixed` nên không chiếm
-     chỗ trong bố cục.
+<!-- Thanh thao tác nổi ở đáy. Hai điều kiện, tách bạch:
+       - `hienThanhMobile()` — CHỈ ở trang Workspace (xem chú thích trong .ts).
+       - `lg:hidden` bên trong component — chỉ từ `lg` trở xuống.
+
+     Dùng `@if` chứ không phải ẩn bằng class: ở trang khác thì thanh không nên
+     tồn tại chút nào. Ẩn bằng CSS thì các `effect`/subscribe bên trong vẫn chạy,
+     và lớp phủ của nó vẫn có thể xuất hiện nếu trạng thái còn sót lại.
 
      Mốc `lg:hidden` nằm BÊN TRONG component chứ không đặt ở thẻ này: component
      có `:host { display: contents }`, mà luật đó không nằm trong @layer nào nên
      nó thắng utility `lg:hidden` của Tailwind — đặt ở đây thì thanh vẫn hiện
      trên máy tính. -->
-<app-mobile-action-bar />
+@if (hienThanhMobile()) {
+  <app-mobile-action-bar />
+}
