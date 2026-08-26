@@ -30,9 +30,14 @@
         }
       </button>
 
-      <!-- 3 chấm: mở modal quản lý (mời/xoá thành viên, đổi tên) -->
+      <!-- 3 chấm: mở modal quản lý (mời/xoá thành viên, đổi tên)
+           Hiện SUỐT, không ẩn theo hover nữa. Bản cũ chỉ hiện qua `group-hover`
+           nên trên điện thoại — nơi không có rê chuột — nút vô hình vĩnh viễn dù
+           vẫn bấm trúng được; còn trên máy tính thì người dùng phải rà chuột mới
+           biết là có nút. Chỗ của nó đã được `pr-16` ở hàng bên cạnh chừa riêng,
+           nên hiện thường trực cũng không đè lên dấu tích. -->
       <button type="button"
-        class="btn btn-ghost btn-xs btn-circle border-none absolute right-1.5 top-1/2 z-10 -translate-y-1/2 opacity-0 transition-all focus-visible:opacity-100 group-hover:opacity-100"
+        class="btn btn-ghost btn-xs btn-circle border-none absolute right-1.5 top-1/2 z-10 -translate-y-1/2 transition-all"
         [class]="org.id === activeOrg()?.id ? 'bg-white/25 text-white hover:bg-white/40 active:bg-white/50' : 'bg-base-200 text-base-content/70 hover:bg-base-300 hover:text-base-content'"
         title="Manage organization" [attr.aria-label]="'Manage ' + org.name" (click)="onManage(org.id, $event)">
         <svg lucideEllipsisVertical class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg>
