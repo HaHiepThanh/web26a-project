@@ -1,4 +1,5 @@
 import {
+  IsObject,
   IsOptional,
   IsString,
   Matches,
@@ -57,4 +58,19 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsString()
   avatarUrl?: string;
+
+  /**
+   * Trạng thái tour hướng dẫn — ghi thẳng vào cột `users.onboarding_state jsonb`.
+   *
+   * Không validate từng field bên trong: hình dạng còn thay đổi khi thêm tầng 2
+   * và coach mark, dựng một DTO lồng nhau ở đây là mỗi lần đổi phải sửa hai nơi
+   * rồi quên một nơi. Frontend đã chuẩn hoá bằng `parseOnboardingState()` khi
+   * ĐỌC, nên rác lọt xuống DB cũng không làm vỡ giao diện.
+   *
+   * `@IsObject` vẫn cần: chặn chuỗi/số/mảng lọt vào cột jsonb, vì Postgres nhận
+   * hết những thứ đó là JSON hợp lệ và ta sẽ chỉ phát hiện lúc đọc ra.
+   */
+  @IsOptional()
+  @IsObject()
+  onboardingState?: Record<string, unknown>;
 }

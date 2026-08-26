@@ -1,5 +1,7 @@
 // Người dùng (tương ứng bảng auth.users của Supabase + hồ sơ hiển thị).
 // Lưu ý: DB dùng snake_case, ở frontend ta dùng camelCase khi map dữ liệu.
+import type { OnboardingState } from './onboarding.model';
+
 export interface User {
   id: string; // uuid
   email: string;
@@ -14,6 +16,14 @@ export interface User {
   // khẩu mới vào đây — tức vào localStorage dưới dạng bản rõ — và báo "đổi
   // thành công" trong khi Firebase không hề đổi.
   avatarUrl?: string; // ảnh đại diện
+  /**
+   * Trạng thái tour hướng dẫn — nguồn sự thật là cột `users.onboarding_state`.
+   *
+   * Có mặt ở đây vì `User` là thứ được cache xuống localStorage giữa các lần tải
+   * trang; thiếu nó thì mỗi lần F5 tour lại tưởng người dùng chưa từng chạy và
+   * chào lại, cho tới khi `/auth/me` trả về. Xem models/onboarding.model.ts.
+   */
+  onboardingState?: OnboardingState;
 }
 
 /** Tạo UUID v4 chuẩn */

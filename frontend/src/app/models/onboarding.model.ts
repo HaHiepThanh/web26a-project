@@ -1,0 +1,124 @@
+/**
+ * Hợp đồng dữ liệu cho tour hướng dẫn người dùng mới.
+ *
+ * Lưu ở cột `users.onboarding_state jsonb` (migration 0007). Đây là nguồn sự
+ * thật DUY NHẤT cho câu hỏi "người này đã được hướng dẫn chưa" — không nhân bản
+ * sang localStorage, vì hai nguồn thì kiểu gì cũng lệch.
+ *
+ * Đặc tả đầy đủ: docs/HUONG-DAN-NGUOI-DUNG-MOI.md
+ */
+
+/**
+ * Bốn bước của tầng 1. Tour KHÔNG mô tả cách làm — nó bắt người dùng làm thật,
+ * và chỉ sang bước sau khi dữ liệu thật đã về (nghe store, không nghe click).
+ *
+ * Thứ tự trong mảng chính là thứ tự chạy; đừng đảo mà không sửa `TOUR_STEPS`.
+ */
+export const TOUR_STEP_IDS = [
+  'create-workspace',
+  'create-board',
+  'add-list',
+  'add-card',
+] as const;
+
+export type TourStepId = (typeof TOUR_STEP_IDS)[number];
+
+/**
+ * `not-started` — chưa từng chạy, và chưa từ chối. Đủ điều kiện hiện hộp mời.
+ * `running`     — đang dở. `currentStep` cho biết dở ở đâu để hỏi "Resume?".
+ * `done`        — đã đi hết tầng 1.
+ * `skipped`     — người dùng chọn "I'll explore myself".
+ *
+ * ⚠️ `skipped` KHÔNG phải là "không bao giờ hiện lại". Thanh checklist ở góc vẫn
+ *    còn, và mục "Restart tutorial" trong Cài đặt vẫn chạy lại được. Chữ "Không"
+ *    mà xoá sạch đường quay lại là lỗi thiết kế phổ biến nhất của onboarding.
+ */
+export type TourStatus = 'not-started' | 'running' | 'done' | 'skipped';
+
+export interface OnboardingState {
+  status: TourStatus;
+  /** Bước đang dở khi `status === 'running'`; null ở mọi trạng thái khác. */
+  currentStep: TourStepId | null;
+  /** Các bước đã xong. Dùng để vẽ thanh "Getting started — 2/4". */
+  completed: TourStepId[];
+  /** Coach mark đã hiện — mỗi cái chỉ được hiện đúng MỘT lần (tầng 3). */
+  seenCoachMarks: string[];
+  /**
+   * Số phiên đã chào. Dùng cho luật giảm dần tiếng nói của linh vật
+   * (docs/LINH-VAT-CHAO-NGUOI-DUNG.md §3) — để chung ở đây thay vì đẻ cột mới.
+   */
+  greetCount: number;
+  /** ISO string. Chỉ để soi lỗi, không có logic nào đọc nó. */
+  updatedAt: string;
+}
+
+/**
+ * Trạng thái của một người chưa từng chạy tour.
+ *
+ * Dùng khi backend trả `onboardingState` là `null` — tức tài khoản tạo trước
+ * migration 0007, hoặc vừa đăng ký xong. Hàm chứ không phải hằng: trả về hằng
+ * dùng chung thì mọi nơi share một tham chiếu, sửa nhầm một chỗ là hỏng cả app.
+ */
+export function emptyOnboardingState(): OnboardingState {
+  return {
+    status: 'not-started',
+    currentStep: null,
+    completed: [],
+    seenCoachMarks: [],
+    greetCount: 0,
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+/**
+ * Chuẩn hoá dữ liệu đọc từ backend về đúng hình dạng `OnboardingState`.
+ *
+ * Cột là `jsonb` nên database KHÔNG kiểm hình dạng giúp — bản ghi cũ có thể
+ * thiếu field mới thêm, hoặc chứa rác nếu ai đó sửa tay trong Supabase. Không
+ * lọc ở đây thì `state.completed.length` sẽ nổ `undefined is not an object`
+ * ngay lần render đầu.
+ */
+export function parseOnboardingState(raw: unknown): OnboardingState {
+  const base = emptyOnboardingState();
+  if (raw === null || typeof raw !== 'object') return base;
+
+  const o = raw as Partial<Record<keyof OnboardingState, unknown>>;
+  const validIds = new Set<string>(TOUR_STEP_IDS);
+  const statuses: TourStatus[] = ['not-started', 'running', 'done', 'skipped'];
+
+  const status = statuses.includes(o.status as TourStatus)
+    ? (o.status as TourStatus)
+    : base.status;
+
+  const currentStep =
+    typeof o.currentStep === 'string' && validIds.has(o.currentStep)
+      ? (o.currentStep as TourStepId)
+      : null;
+
+  const completed = Array.isArray(o.completed)
+    ? (o.completed.filter(
+        (s): s is TourStepId => typeof s === 'string' && validIds.has(s),
+      ) as TourStepId[])
+    : base.completed;
+
+  const seenCoachMarks = Array.isArray(o.seenCoachMarks)
+    ? o.seenCoachMarks.filter((s): s is string => typeof s === 'string')
+    : base.seenCoachMarks;
+
+  const greetCount =
+    typeof o.greetCount === 'number' && Number.isFinite(o.greetCount) && o.greetCount >= 0
+      ? Math.floor(o.greetCount)
+      : base.greetCount;
+
+  return {
+    status,
+    // `running` mà không biết dở ở đâu là trạng thái không đi tiếp được: quay về
+    // bước đầu tiên còn hơn để tour treo ở màn hình mờ không có popover nào.
+    currentStep: status === 'running' ? (currentStep ?? TOUR_STEP_IDS[0]) : null,
+    completed,
+    seenCoachMarks,
+    greetCount,
+    updatedAt:
+      typeof o.updatedAt === 'string' ? o.updatedAt : base.updatedAt,
+  };
+}
