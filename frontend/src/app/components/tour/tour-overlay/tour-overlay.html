@@ -26,7 +26,7 @@
      [style.top.px]="p.top" [style.left.px]="p.left">
 
   <div class="tour-popover-head">
-    <span class="tour-progress">Step {{ stepNumber() }} of {{ totalSteps }}</span>
+    <span class="tour-progress">Step {{ stepNumber() }} of {{ totalSteps() }}</span>
     <button type="button" class="btn btn-ghost btn-xs btn-circle" (click)="onQuit()"
             aria-label="End the tour">
       <svg lucideX class="h-3.5 w-3.5" [strokeWidth]="2.6"></svg>

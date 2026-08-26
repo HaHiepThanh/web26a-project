@@ -7,7 +7,18 @@ import {
   emptyOnboardingState,
 } from '../../models';
 import { AuthService } from '../../services/auth.service';
-import { EMPTY_COUNTS, TOUR_STEPS, TourCounts, TourStep, stepIndexOf } from './tour.steps';
+import { RouteContextStore } from '../route-context/route-context.store';
+import {
+  EMPTY_COUNTS,
+  EMPTY_FLAGS,
+  FIRST_TIER_2_INDEX,
+  TOUR_STEPS,
+  TourCounts,
+  TourFlags,
+  TourStep,
+  stepIndexOf,
+} from './tour.steps';
+import { TourSeedService } from './tour.seed';
 
 /**
  * Bộ máy tour hướng dẫn người dùng mới — tầng 1.
@@ -45,6 +56,16 @@ export interface TourState {
   baseline: TourCounts;
   /** Số lượng mới nhất các trang báo về. */
   counts: TourCounts;
+  /** Trạng thái bật/tắt mới nhất các trang báo về (tầng 2). */
+  flags: TourFlags;
+
+  // ---- Tầng 2 ----
+  /** Hộp hỏi "gieo 8 thẻ mẫu nhé?" đang mở. */
+  seedOfferOpen: boolean;
+  /** Hộp hỏi "xoá thẻ mẫu đi nhé?" đang mở. */
+  cleanupOfferOpen: boolean;
+  /** Đang gọi API gieo/dọn — khoá nút để không bấm hai lần. */
+  seedBusy: boolean;
 }
 
 const initialState: TourState = {
@@ -56,6 +77,10 @@ const initialState: TourState = {
   checklistCollapsed: false,
   baseline: EMPTY_COUNTS,
   counts: EMPTY_COUNTS,
+  flags: EMPTY_FLAGS,
+  seedOfferOpen: false,
+  cleanupOfferOpen: false,
+  seedBusy: false,
 };
 
 export const TourStore = signalStore(
@@ -70,7 +95,16 @@ export const TourStore = signalStore(
 
     completedCount: computed(() => store.onboarding().completed.length),
 
-    totalSteps: computed(() => TOUR_STEPS.length),
+    /**
+     * Tổng số bước THEO CHẾ ĐỘ đang chạy.
+     *
+     * "Just the basics" dừng sau bước 4, nên hiện "Step 2 of 7" cho họ là hứa
+     * một hành trình dài gấp đôi thứ họ vừa chọn — rồi tour tắt ở bước 4 làm
+     * người ta tưởng nó hỏng.
+     */
+    totalSteps: computed(() =>
+      store.mode() === 'basics' ? FIRST_TIER_2_INDEX : TOUR_STEPS.length,
+    ),
 
     /**
      * Thanh "Getting started — 2/4" có được hiện không.
@@ -85,7 +119,12 @@ export const TourStore = signalStore(
     }),
   })),
 
-  withMethods((store, auth = inject(AuthService)) => {
+  withMethods((
+    store,
+    auth = inject(AuthService),
+    seeder = inject(TourSeedService),
+    route = inject(RouteContextStore),
+  ) => {
     /** Ghi trạng thái mới xuống DB + đồng bộ vào store. Không chờ round-trip. */
     const persist = (patch: Partial<OnboardingState>): OnboardingState => {
       const next: OnboardingState = {
@@ -98,9 +137,85 @@ export const TourStore = signalStore(
       return next;
     };
 
-    /** Điều kiện sang bước sau: số lượng đã tăng so với lúc bắt đầu tour. */
+    /**
+     * Điều kiện sang bước sau.
+     *
+     * Tầng 1 so SỐ LƯỢNG với mốc chốt lúc bắt đầu — "tăng thêm", không phải
+     * "lớn hơn 0". Tầng 2 chỉ cần một CỜ bật lên, vì nó không tạo dữ liệu mới.
+     */
     const isStepSatisfied = (step: TourStep): boolean =>
-      store.counts()[step.countKey] > store.baseline()[step.countKey];
+      step.advance.on === 'count'
+        ? store.counts()[step.advance.key] > store.baseline()[step.advance.key]
+        : store.flags()[step.advance.key];
+
+    /**
+     * Bước hiện tại vừa thoả điều kiện thì ghi nhận và đi tiếp.
+     *
+     * Ba lối rẽ ở cuối tầng 1, và đây là chỗ dễ sai nhất:
+     *
+     *   - chế độ `basics` → dừng hẳn, đúng như đã hứa trong hộp mời.
+     *   - chế độ `full`   → KHÔNG nhảy thẳng sang bước 5. Bước 5 dạy bộ lọc, mà
+     *     board lúc này có đúng một thẻ do người dùng vừa tạo; lọc 1/1 thẻ thì
+     *     chẳng dạy được gì. Phải hỏi gieo dữ liệu mẫu trước.
+     *   - hết bước       → xong tour, và hỏi dọn thẻ mẫu nếu có gieo.
+     */
+    const advanceOnce = (): boolean => {
+      if (!store.running()) return false;
+      const step = TOUR_STEPS[store.stepIndex()];
+      if (!step || !isStepSatisfied(step)) return false;
+
+      const done = store.onboarding().completed;
+      const completed = done.includes(step.id) ? done : [...done, step.id];
+      const nextIndex = store.stepIndex() + 1;
+      const het = nextIndex >= TOUR_STEPS.length;
+      const hetTang1 = step.tier === 1 && nextIndex === FIRST_TIER_2_INDEX;
+
+      if (het) {
+        patchState(store, { running: false });
+        persist({ status: 'done', currentStep: null, completed });
+        const seeded = store.onboarding().seeded;
+        if (seeded && seeded.cardIds.length) {
+          patchState(store, { cleanupOfferOpen: true });
+        }
+        return false;
+      }
+
+      if (hetTang1 && store.mode() === 'basics') {
+        patchState(store, { running: false });
+        persist({ status: 'done', currentStep: null, completed });
+        return false;
+      }
+
+      if (hetTang1) {
+        // Tạm dừng tour (ẩn lớp phủ) trong lúc hộp hỏi đang mở, rồi mới sang
+        // bước 5 nếu người dùng đồng ý gieo.
+        patchState(store, { running: false, seedOfferOpen: true });
+        persist({ status: 'running', currentStep: TOUR_STEPS[nextIndex].id, completed });
+        return false;
+      }
+
+      patchState(store, { stepIndex: nextIndex });
+      persist({ status: 'running', currentStep: TOUR_STEPS[nextIndex].id, completed });
+      return true;
+    };
+
+    /**
+     * Đi tiếp cho tới khi không đi được nữa — KHÔNG phải chỉ một bước.
+     *
+     * Vì điều kiện của bước kế tiếp có thể ĐÃ thoả từ trước. Ví dụ thật: trạng
+     * thái thu gọn của khung chat được nhớ trong localStorage
+     * (`trello_chat_panel_collapsed`), nên người đang để chat mở sẵn thì tới
+     * bước "open-chat" cờ `chatOpen` vốn đã bật. Không có gì "thay đổi" để đánh
+     * thức, và tour đứng ở bước đó vĩnh viễn trong khi việc cần làm đã xong rồi.
+     *
+     * Chặn số vòng để một lỗi logic trong `isStepSatisfied` không thành vòng lặp
+     * vô hạn khoá cứng trang — đúng loại sự cố đã xảy ra một lần với `observe()`.
+     */
+    const tryAdvance = (): void => {
+      for (let i = 0; i < TOUR_STEPS.length; i++) {
+        if (!advanceOnce()) return;
+      }
+    };
 
     return {
       /**
@@ -225,41 +340,144 @@ export const TourStore = signalStore(
         if (same) return;
 
         patchState(store, { counts: merged });
+        tryAdvance();
+      },
 
-        if (!store.running()) return;
-        const step = TOUR_STEPS[store.stepIndex()];
-        if (!step) return;
-        if (merged[step.countKey] <= store.baseline()[step.countKey]) return;
+      /**
+       * Trang báo về trạng thái bật/tắt của Filter, Chat, AI (tầng 2).
+       *
+       * Tách khỏi `observe()` vì bản chất khác: `observe` so số lượng với mốc
+       * đầu tour, còn ở đây chỉ cần cờ bật lên là xong. Cùng một chốt chặn
+       * "không đổi thì không ghi" — lý do y hệt, xem `observe()`.
+       */
+      observeFlags(flags: Partial<TourFlags>): void {
+        const prev = store.flags();
+        const merged = { ...prev, ...flags };
+        if (
+          prev.filterOpen === merged.filterOpen &&
+          prev.chatOpen === merged.chatOpen &&
+          prev.aiOpen === merged.aiOpen
+        ) {
+          return;
+        }
+        patchState(store, { flags: merged });
+        tryAdvance();
+      },
 
-        // Bước vừa xong → ghi nhận rồi đi tiếp.
-        const done = store.onboarding().completed;
-        const completed = done.includes(step.id) ? done : [...done, step.id];
-        const nextIndex = store.stepIndex() + 1;
-        const last = nextIndex >= TOUR_STEPS.length;
-        // `basics` dừng sau khi có thẻ đầu tiên — cũng chính là bước cuối của
-        // tầng 1, nên hiện tại hai chế độ kết thúc cùng chỗ. Tách sẵn để khi
-        // thêm tầng 2 thì `full` đi tiếp mà `basics` thì không.
-        const stop = last || (store.mode() === 'basics' && step.id === 'add-card');
+      // ------------------------------------------------------ tầng 2: gieo/dọn
 
+      /**
+       * "Có, thêm 8 thẻ mẫu" — gieo qua API thật rồi vào bước 5.
+       *
+       * Cờ `seedBusy` khoá nút trong lúc chạy: gieo là 3 cột + 8 thẻ + 3 tin
+       * nhắn, mất vài giây, và bấm hai lần là board có 16 thẻ mẫu.
+       */
+      async acceptSeed(): Promise<void> {
+        if (store.seedBusy()) return;
+        const boardId = route.activeBoardId();
+        if (!boardId) {
+          // Không biết đang ở board nào thì không gieo bừa. Bỏ qua tầng 2 còn
+          // hơn tạo dữ liệu vào nhầm chỗ.
+          patchState(store, { seedOfferOpen: false });
+          persist({ status: 'done', currentStep: null });
+          return;
+        }
+
+        patchState(store, { seedBusy: true });
+        let result;
+        try {
+          result = await seeder.seed(boardId);
+        } catch {
+          result = null;
+        }
         patchState(store, {
-          stepIndex: last ? store.stepIndex() : nextIndex,
-          running: !stop,
+          seedBusy: false,
+          seedOfferOpen: false,
+          running: true,
+          stepIndex: FIRST_TIER_2_INDEX,
+          // Mốc mới cho tầng 2: số thẻ vừa tăng vọt vì chính ta gieo vào, giữ
+          // mốc cũ thì mọi điều kiện đếm còn lại thoả ngay lập tức.
+          baseline: store.counts(),
         });
         persist({
-          status: stop ? 'done' : 'running',
-          currentStep: stop ? null : TOUR_STEPS[nextIndex].id,
-          completed,
+          status: 'running',
+          currentStep: TOUR_STEPS[FIRST_TIER_2_INDEX].id,
+          seeded: result ?? null,
         });
+      },
+
+      /** "Không, cảm ơn" — kết thúc tour ở cuối tầng 1. */
+      declineSeed(): void {
+        patchState(store, { seedOfferOpen: false, running: false });
+        // Dạy Filter/Chat/AI trên board một thẻ là nói vào khoảng không, nên từ
+        // chối gieo cũng là từ chối tầng 2. Không cố dẫn tiếp cho đủ bước.
+        persist({ status: 'done', currentStep: null });
+      },
+
+      /** "Có, xoá thẻ mẫu đi" — dọn đúng những gì mình đã tạo. */
+      async acceptCleanup(): Promise<void> {
+        if (store.seedBusy()) return;
+        const seeded = store.onboarding().seeded;
+        patchState(store, { seedBusy: true });
+        if (seeded) {
+          try {
+            await seeder.cleanup(seeded);
+          } catch {
+            /* dọn dở còn hơn không dọn; người dùng xoá tay được */
+          }
+        }
+        patchState(store, { seedBusy: false, cleanupOfferOpen: false });
+        persist({ seeded: null });
+      },
+
+      /**
+       * "Giữ lại" — không dọn.
+       *
+       * Vẫn xoá `seeded` khỏi hồ sơ: người dùng đã quyết định giữ, nên từ giờ
+       * mấy thẻ đó là của họ. Còn lưu id thì lần chạy tour sau sẽ hỏi dọn lại
+       * những thẻ họ đã cố ý giữ.
+       */
+      declineCleanup(): void {
+        patchState(store, { cleanupOfferOpen: false });
+        persist({ seeded: null });
       },
 
       /** Nút "Skip this step" — bỏ qua mà không đánh dấu đã xong. */
       skipStep(): void {
+        const step = TOUR_STEPS[store.stepIndex()];
         const nextIndex = store.stepIndex() + 1;
         if (nextIndex >= TOUR_STEPS.length) {
           patchState(store, { running: false });
-          persist({ status: 'skipped', currentStep: null });
+          // Bước cuối là bước TUỲ CHỌN thì bỏ qua nó vẫn là đi hết tour.
+          // Đánh dấu "skipped" ở đây nghĩa là mọi môi trường chưa bật Gemini sẽ
+          // ghi nhận thất bại cho người dùng đã làm đủ sáu bước — và bỏ luôn
+          // phần hỏi dọn thẻ mẫu, để lại 8 thẻ rác trên board của họ.
+          persist({
+            status: step?.optional ? 'done' : 'skipped',
+            currentStep: null,
+          });
+          const seeded = store.onboarding().seeded;
+          if (step?.optional && seeded && seeded.cardIds.length) {
+            patchState(store, { cleanupOfferOpen: true });
+          }
           return;
         }
+
+        // Bỏ qua bước cuối tầng 1 vẫn phải dừng ở ranh giới như khi làm xong nó.
+        // Không có nhánh này thì bấm Skip ở bước 4 là rơi thẳng vào bước 5 với
+        // một board trống — tức đi dạy bộ lọc trên đúng thứ mà cả tầng 2 sinh ra
+        // để tránh, và cuối tour lại hỏi "xoá thẻ mẫu?" trong khi chưa gieo gì.
+        if (step?.tier === 1 && nextIndex === FIRST_TIER_2_INDEX) {
+          if (store.mode() === 'basics') {
+            patchState(store, { running: false });
+            persist({ status: 'skipped', currentStep: null });
+            return;
+          }
+          patchState(store, { running: false, seedOfferOpen: true });
+          persist({ status: 'running', currentStep: TOUR_STEPS[nextIndex].id });
+          return;
+        }
+
         patchState(store, { stepIndex: nextIndex, baseline: store.counts() });
         persist({ status: 'running', currentStep: TOUR_STEPS[nextIndex].id });
       },

@@ -649,6 +649,15 @@ export class Board {
       untracked(() => this.tour.observe({ lists, cards }));
     });
 
+    // Cờ cho tầng 2: bảng lọc và hộp gợi ý AI đã được mở chưa. Tầng 2 không tạo
+    // ra dữ liệu mới nên không đếm được — thứ đo được là người dùng đã thật sự
+    // mở cái đó ra. `untracked()` vì lý do y hệt effect ngay trên.
+    effect(() => {
+      const filterOpen = this.showFilterPanel();
+      const aiOpen = this.openedSuggestion() !== null;
+      untracked(() => this.tour.observeFlags({ filterOpen, aiOpen }));
+    });
+
     void this.loadSavedFilters();
     void this.loadSavedHighlightGroups();
     this.loadCollapsedLists();

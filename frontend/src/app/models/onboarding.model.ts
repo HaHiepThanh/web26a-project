@@ -15,11 +15,21 @@
  * Thứ tự trong mảng chính là thứ tự chạy; đừng đảo mà không sửa `TOUR_STEPS`.
  */
 export const TOUR_STEP_IDS = [
+  // --- Tầng 1: làm thật, không xem phim ---
   'create-workspace',
   'create-board',
   'add-list',
   'add-card',
+  // --- Tầng 2: có dữ liệu rồi mới dạy ---
+  // Ba tính năng này VÔ NGHĨA trên board một thẻ: lọc 1/1 thẻ thì không ai hiểu
+  // nó để làm gì. Nên tầng 2 gieo dữ liệu mẫu trước, rồi mới trỏ vào chúng.
+  'use-filter',
+  'open-chat',
+  'try-ai',
 ] as const;
+
+/** Bốn bước đầu là tầng 1 — chế độ "Just the basics" dừng ở đây. */
+export const TIER_1_STEP_COUNT = 4;
 
 export type TourStepId = (typeof TOUR_STEP_IDS)[number];
 
@@ -48,6 +58,15 @@ export interface OnboardingState {
    * (docs/LINH-VAT-CHAO-NGUOI-DUNG.md §3) — để chung ở đây thay vì đẻ cột mới.
    */
   greetCount: number;
+  /**
+   * Id của các cột và thẻ do tầng 2 gieo vào, để cuối tour còn dọn đúng những
+   * thứ mình tạo ra.
+   *
+   * Phải lưu id chứ không phải một cờ "đã gieo": dọn theo kiểu "xoá hết thẻ
+   * trong board" sẽ cuốn theo cả cái thẻ người dùng tự tay tạo ở bước 4, và cả
+   * thẻ của đồng đội nếu board có nhiều người.
+   */
+  seeded: { listIds: string[]; cardIds: string[] } | null;
   /** ISO string. Chỉ để soi lỗi, không có logic nào đọc nó. */
   updatedAt: string;
 }
@@ -66,6 +85,7 @@ export function emptyOnboardingState(): OnboardingState {
     completed: [],
     seenCoachMarks: [],
     greetCount: 0,
+    seeded: null,
     updatedAt: new Date().toISOString(),
   };
 }
@@ -110,6 +130,14 @@ export function parseOnboardingState(raw: unknown): OnboardingState {
       ? Math.floor(o.greetCount)
       : base.greetCount;
 
+  const strArr = (v: unknown): string[] =>
+    Array.isArray(v) ? v.filter((s): s is string => typeof s === 'string') : [];
+  const rawSeeded = o.seeded as { listIds?: unknown; cardIds?: unknown } | null | undefined;
+  const seeded =
+    rawSeeded && typeof rawSeeded === 'object'
+      ? { listIds: strArr(rawSeeded.listIds), cardIds: strArr(rawSeeded.cardIds) }
+      : null;
+
   return {
     status,
     // `running` mà không biết dở ở đâu là trạng thái không đi tiếp được: quay về
@@ -118,6 +146,7 @@ export function parseOnboardingState(raw: unknown): OnboardingState {
     completed,
     seenCoachMarks,
     greetCount,
+    seeded,
     updatedAt:
       typeof o.updatedAt === 'string' ? o.updatedAt : base.updatedAt,
   };

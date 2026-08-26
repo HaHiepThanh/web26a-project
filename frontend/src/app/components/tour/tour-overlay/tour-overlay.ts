@@ -59,7 +59,8 @@ export class TourOverlay {
 
   readonly step = this.tour.currentStep;
   readonly stepNumber = computed(() => this.tour.stepIndex() + 1);
-  readonly totalSteps = TOUR_STEPS.length;
+  /** Lấy từ store vì con số này đổi theo chế độ: "basics" là 4, đầy đủ là 7. */
+  readonly totalSteps = this.tour.totalSteps;
   readonly canGoBack = computed(() => this.tour.stepIndex() > 0);
 
   /** Khung của phần tử đang được soi, toạ độ theo viewport (khớp position:fixed). */
@@ -125,7 +126,7 @@ export class TourOverlay {
       this.cleanupAnchor?.();
       this.cleanupAnchor = null;
       this.anchorRect.set(null);
-      if (step) this.trackAnchor(step.anchor, step.page);
+      if (step) this.trackAnchor(step.anchor, step.page, step.waitMs ?? ANCHOR_TIMEOUT_MS);
     });
 
     // Đo popover sau khi nó có nội dung — cần chiều cao thật mới lật đúng.
@@ -169,7 +170,7 @@ export class TourOverlay {
    * qua bước đó và đi tiếp — tour tự tin rằng DOM đã sẵn sàng là tour sẽ treo
    * trên máy mạng chậm, và màn hình mờ không có popover nào là bế tắc hoàn toàn.
    */
-  private trackAnchor(name: string, page: TourStep['page']): void {
+  private trackAnchor(name: string, page: TourStep['page'], waitMs: number): void {
     const selector = `[data-tour="${name}"]`;
     let raf = 0;
     let observer: MutationObserver | null = null;
@@ -254,7 +255,7 @@ export class TourOverlay {
           return;
         }
         this.tour.skipStep();
-      }, ANCHOR_TIMEOUT_MS);
+      }, waitMs);
     };
 
     const existing = document.querySelector<HTMLElement>(selector);

@@ -6,6 +6,7 @@ import { Footer } from '../../components/footer/footer';
 import { TourChecklist } from '../../components/tour/tour-checklist/tour-checklist';
 import { TourInvitation } from '../../components/tour/tour-invitation/tour-invitation';
 import { TourOverlay } from '../../components/tour/tour-overlay/tour-overlay';
+import { TourPrompt } from '../../components/tour/tour-prompt/tour-prompt';
 import { TourStore } from '../../ngrx/tour/tour.store';
 import { AuthService } from '../../services/auth.service';
 import { emptyOnboardingState } from '../../models';
@@ -16,7 +17,7 @@ import { emptyOnboardingState } from '../../models';
  */
 @Component({
   selector: 'app-app-layout',
-  imports: [RouterOutlet, Header, Footer, TourOverlay, TourInvitation, TourChecklist],
+  imports: [RouterOutlet, Header, Footer, TourOverlay, TourInvitation, TourChecklist, TourPrompt],
   templateUrl: './app-layout.html',
   styleUrl: './app-layout.css',
 })

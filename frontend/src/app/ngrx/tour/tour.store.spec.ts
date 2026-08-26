@@ -2,15 +2,27 @@ import { TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
 import { AuthService } from '../../services/auth.service';
 import { emptyOnboardingState } from '../../models';
+import { RouteContextStore } from '../route-context/route-context.store';
+import { TourSeedService } from './tour.seed';
 import { TourStore } from './tour.store';
 
 describe('TourStore', () => {
   let auth: { saveOnboardingState: ReturnType<typeof vi.fn> };
+  let seeder: { seed: ReturnType<typeof vi.fn>; cleanup: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     auth = { saveOnboardingState: vi.fn().mockResolvedValue(undefined) };
+    seeder = {
+      seed: vi.fn().mockResolvedValue({ listIds: ['l1'], cardIds: ['c1', 'c2'] }),
+      cleanup: vi.fn().mockResolvedValue(undefined),
+    };
     TestBed.configureTestingModule({
-      providers: [{ provide: AuthService, useValue: auth }],
+      providers: [
+        { provide: AuthService, useValue: auth },
+        { provide: TourSeedService, useValue: seeder },
+        // Tour tầng 2 gieo vào board đang mở; store chỉ cần biết id.
+        { provide: RouteContextStore, useValue: { activeBoardId: () => 'board-1' } },
+      ],
     });
   });
 
@@ -98,20 +110,176 @@ describe('TourStore', () => {
     expect(store.currentStep()?.id).toBe('create-board');
   });
 
-  it('đi hết 4 bước thì tour đóng lại và đánh dấu done', () => {
-    const store = make();
+  /** Chạy hết tầng 1 ở chế độ đã cho. */
+  const chayHetTang1 = (store: ReturnType<typeof make>, mode: 'full' | 'basics') => {
     store.hydrate(emptyOnboardingState());
-    store.start('full');
-
+    store.start(mode);
     store.observe({ workspaces: 1 });
     store.observe({ boards: 1 });
     store.observe({ lists: 1 });
     store.observe({ cards: 1 });
+  };
+
+  it('"Just the basics" dừng hẳn sau bước 4', () => {
+    const store = make();
+    chayHetTang1(store, 'basics');
 
     expect(store.running()).toBe(false);
     expect(store.onboarding().status).toBe('done');
     expect(store.completedCount()).toBe(4);
+    expect(store.seedOfferOpen()).toBe(false);
     expect(store.checklistVisible()).toBe(false);
+  });
+
+  it('"Just the basics" đếm tổng số bước là 4, không phải 7', () => {
+    const store = make();
+    store.hydrate(emptyOnboardingState());
+    store.start('basics');
+    expect(store.totalSteps()).toBe(4);
+
+    store.start('full');
+    expect(store.totalSteps()).toBe(7);
+  });
+
+  it('chế độ đầy đủ: hết bước 4 thì HỎI gieo dữ liệu, không nhảy thẳng sang bước 5', () => {
+    const store = make();
+    chayHetTang1(store, 'full');
+
+    // Dạy bộ lọc trên board một thẻ là vô nghĩa — phải có dữ liệu trước.
+    expect(store.seedOfferOpen()).toBe(true);
+    expect(store.running()).toBe(false);
+    expect(store.completedCount()).toBe(4);
+  });
+
+  it('đồng ý gieo: gọi API thật, sang bước 5, và nhớ id để dọn sau', async () => {
+    const store = make();
+    chayHetTang1(store, 'full');
+
+    await store.acceptSeed();
+
+    expect(seeder.seed).toHaveBeenCalledWith('board-1');
+    expect(store.running()).toBe(true);
+    expect(store.currentStep()?.id).toBe('use-filter');
+    expect(store.onboarding().seeded).toEqual({ listIds: ['l1'], cardIds: ['c1', 'c2'] });
+  });
+
+  it('bấm Skip ở bước cuối tầng 1 cũng dừng lại hỏi gieo, không rơi thẳng vào tầng 2', () => {
+    const store = make();
+    store.hydrate(emptyOnboardingState());
+    store.start('full');
+    store.skipStep();
+    store.skipStep();
+    store.skipStep();
+    expect(store.currentStep()?.id).toBe('add-card');
+
+    store.skipStep();
+
+    expect(store.seedOfferOpen()).toBe(true);
+    expect(store.running()).toBe(false);
+  });
+
+  it('từ chối gieo: kết thúc tour, KHÔNG cố dẫn tiếp tầng 2 trên board trống', () => {
+    const store = make();
+    chayHetTang1(store, 'full');
+
+    store.declineSeed();
+
+    expect(store.seedOfferOpen()).toBe(false);
+    expect(store.running()).toBe(false);
+    expect(store.onboarding().status).toBe('done');
+  });
+
+  it('tầng 2 chuyển bước theo CỜ chứ không theo số lượng', async () => {
+    const store = make();
+    chayHetTang1(store, 'full');
+    await store.acceptSeed();
+
+    store.observeFlags({ filterOpen: true });
+    expect(store.currentStep()?.id).toBe('open-chat');
+
+    store.observeFlags({ chatOpen: true });
+    expect(store.currentStep()?.id).toBe('try-ai');
+  });
+
+  it('điều kiện bước sau ĐÃ thoả sẵn thì đi luôn, không đứng chờ một thay đổi không bao giờ tới', async () => {
+    const store = make();
+    chayHetTang1(store, 'full');
+    await store.acceptSeed();
+    expect(store.currentStep()?.id).toBe('use-filter');
+
+    // Người dùng đang để khung chat mở sẵn từ phiên trước (localStorage nhớ
+    // `trello_chat_panel_collapsed`), nên `chatOpen` đã bật trước khi tới bước
+    // "open-chat". Mở bộ lọc phải đẩy tour qua CẢ HAI bước.
+    store.observeFlags({ filterOpen: true, chatOpen: true });
+
+    expect(store.currentStep()?.id).toBe('try-ai');
+  });
+
+  it('xong bước cuối thì hỏi dọn thẻ mẫu', async () => {
+    const store = make();
+    chayHetTang1(store, 'full');
+    await store.acceptSeed();
+    store.observeFlags({ filterOpen: true });
+    store.observeFlags({ chatOpen: true });
+    store.observeFlags({ aiOpen: true });
+
+    expect(store.running()).toBe(false);
+    expect(store.onboarding().status).toBe('done');
+    expect(store.completedCount()).toBe(7);
+    expect(store.cleanupOfferOpen()).toBe(true);
+  });
+
+  it('bước AI không hiện được thì tour vẫn tính là XONG, và vẫn hỏi dọn thẻ mẫu', async () => {
+    const store = make();
+    chayHetTang1(store, 'full');
+    await store.acceptSeed();
+    store.observeFlags({ filterOpen: true, chatOpen: true });
+    expect(store.currentStep()?.id).toBe('try-ai');
+
+    // Gemini không được cấu hình (thiếu GEMINI_API_KEY) → chip gợi ý không bao
+    // giờ xuất hiện → lớp phủ hết giờ chờ neo và gọi skipStep().
+    store.skipStep();
+
+    expect(store.onboarding().status).toBe('done');
+    expect(store.running()).toBe(false);
+    // Và quan trọng nhất: vẫn phải hỏi dọn, kẻo 8 thẻ mẫu nằm lại board mãi.
+    expect(store.cleanupOfferOpen()).toBe(true);
+  });
+
+  it('bỏ qua một bước BẮT BUỘC ở cuối thì vẫn là skipped', () => {
+    const store = make();
+    store.hydrate(emptyOnboardingState());
+    store.start('basics');
+    store.skipStep();
+    store.skipStep();
+    store.skipStep();
+    store.skipStep();
+
+    expect(store.onboarding().status).toBe('skipped');
+  });
+
+  it('dọn thẻ mẫu chỉ xoá đúng những gì mình gieo', async () => {
+    const store = make();
+    chayHetTang1(store, 'full');
+    await store.acceptSeed();
+    store.observeFlags({ filterOpen: true, chatOpen: true, aiOpen: true });
+
+    await store.acceptCleanup();
+
+    expect(seeder.cleanup).toHaveBeenCalledWith({ listIds: ['l1'], cardIds: ['c1', 'c2'] });
+    expect(store.onboarding().seeded).toBeNull();
+  });
+
+  it('giữ lại thẻ mẫu thì quên id đi — lần tour sau không đòi xoá thứ họ đã cố ý giữ', async () => {
+    const store = make();
+    chayHetTang1(store, 'full');
+    await store.acceptSeed();
+    store.observeFlags({ filterOpen: true, chatOpen: true, aiOpen: true });
+
+    store.declineCleanup();
+
+    expect(seeder.cleanup).not.toHaveBeenCalled();
+    expect(store.onboarding().seeded).toBeNull();
   });
 
   it('bỏ dở rồi quay lại thì chạy tiếp từ bước dở, không bắt làm lại từ đầu', () => {
