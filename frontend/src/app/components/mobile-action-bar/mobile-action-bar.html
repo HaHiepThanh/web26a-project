@@ -5,8 +5,13 @@
 }
 
 <!-- Khung đáy: `pointer-events-none` để khoảng trống giữa hai cụm không nuốt cú
-     chạm vào nội dung bên dưới; từng cụm tự bật lại `pointer-events-auto`. -->
-<div class="pointer-events-none fixed bottom-4 left-4 right-4 z-50 flex items-end justify-between gap-3 lg:hidden">
+     chạm vào nội dung bên dưới; từng cụm tự bật lại `pointer-events-auto`.
+
+     Khe giữa hai cụm về 0 khi ô tìm kiếm đang mở: `gap-3` là thứ duy nhất còn
+     chặn ô chạm tới nút menu, mà chỉ nới bề rộng thôi thì vô ích — flex sẽ bóp ô
+     lại đúng bằng ngần ấy. Lúc ô thu, khe trở lại 12px cho hai cụm tách bạch. -->
+<div class="pointer-events-none fixed bottom-4 left-4 right-4 z-50 flex items-end justify-between lg:hidden"
+  [class]="searchOpen() ? 'gap-0' : 'gap-3'">
 
   <!-- ============================ CỤM TRÁI ============================ -->
   <div class="pointer-events-auto flex min-w-0 items-center gap-2">
@@ -57,10 +62,20 @@
     </div>
 
     <!-- Ô tìm kiếm thu/mở. Chuyển động nằm ở `width`: lúc thu đúng bằng một nút
-         tròn, lúc mở giãn ra hết chỗ trống còn lại của cụm trái. -->
+         tròn, lúc mở giãn ra CHẠM nút menu bên phải.
+         `100vw - 8.5rem` là đúng phần chỗ trống còn lại, cộng dồn từ những thứ
+         choán chỗ hai bên: 2rem lề khung (left-4 + right-4) + 3rem nút menu +
+         3rem nút "+" + 0.5rem khe giữa "+" và ô = 8.5rem. Khe giữa hai cụm không
+         còn trong phép tính vì lúc mở nó đã về 0 (xem khung ngoài).
+         Tính bằng `calc` thay vì áng chừng một con số `vw` cố định: mọi bề rộng
+         máy đều tự chạm sát như nhau, không phải chỉnh tay từng khổ.
+         KHÔNG đặt trần bề rộng. Bản trước có `min(..., 460px)` để ô khỏi dài lê
+         thê trên máy tính bảng, nhưng đó là thứ tự thêm chứ không ai yêu cầu, và
+         nó phá đúng điều được yêu cầu: máy rộng hơn ~596px thì trần cắt sớm, ô
+         dừng lại giữa chừng và hở một khoảng lớn tới nút menu. -->
     <div
       class="flex h-12 items-center overflow-hidden rounded-full border border-base-300/70 bg-base-100 shadow-lg transition-[width,background-color] duration-300 ease-out"
-      [class]="searchOpen() ? 'w-[min(60vw,260px)] pl-1 pr-1' : 'w-12'">
+      [class]="searchOpen() ? 'w-[calc(100vw-8.5rem)] pl-1 pr-1' : 'w-12'">
       <button type="button"
         class="btn btn-ghost btn-circle h-10 w-10 shrink-0 border-none"
         [class.text-primary]="hasQuery() && !searchOpen()"
@@ -96,10 +111,19 @@
   <!-- ============================ CỤM PHẢI ============================ -->
   <div class="pointer-events-auto relative flex shrink-0 flex-col items-end gap-2">
 
-    <!-- Bảng Thông báo / Lời mời, bật lên phía trên nút -->
+    <!-- Cột nổi phía trên nút: bảng thông báo/lời mời và 4 nút speed dial.
+         ĐẶT TUYỆT ĐỐI, và đây là điểm mấu chốt chứ không phải chuyện thẩm mỹ:
+         4 nút kia lúc đóng dùng `invisible`, mà `visibility: hidden` VẪN CHIẾM
+         CHỖ. Để chúng trong dòng thì cụm phải luôn rộng bằng nhãn dài nhất
+         ("Profile settings") — đo được 149px thay vì 48px — và ô tìm kiếm bị bóp
+         còn 153px, hở 101px tới nút menu dù công thức bề rộng đã đúng. Tách ra
+         khỏi dòng thì cụm phải trở lại đúng 48px của nút bấm. -->
+    <div class="absolute bottom-full right-0 mb-2 flex flex-col items-end gap-2">
+
+    <!-- Bảng Thông báo / Lời mời -->
     @if (panel() === 'notifications' || panel() === 'invites') {
       <div
-        class="absolute bottom-full right-0 mb-2 w-[min(88vw,320px)] rounded-lg border border-base-300/70 bg-base-100 p-2 shadow-xl">
+        class="w-[min(88vw,320px)] rounded-lg border border-base-300/70 bg-base-100 p-2 shadow-xl">
         @if (panel() === 'notifications') {
           <app-notifications-panel
             [notifications]="actions.notifications()"
@@ -191,6 +215,7 @@
         </a>
       </div>
     </div>
+    </div><!-- hết cột nổi -->
 
     <!-- Nút mở/đóng speed dial -->
     <button type="button"
