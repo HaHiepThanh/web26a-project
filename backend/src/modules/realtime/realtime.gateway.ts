@@ -126,12 +126,28 @@ export class RealtimeGateway
       // Vào phòng của MỌI tổ chức mình thuộc về. Truy vấn thêm một lần lúc kết
       // nối là đủ — rẻ hơn nhiều so với việc mỗi lần đổi hồ sơ lại phải đi tìm
       // xem ai cần được báo.
-      const { data: toChuc } = await this.supabase.client
-        .from('organization_members')
-        .select('org_id')
-        .eq('user_id', decoded.uid);
-      for (const t of toChuc ?? []) {
-        await client.join(orgRoom((t as { org_id: string }).org_id));
+      //
+      // ⚠️ CÓ try/catch RIÊNG, tuyệt đối không để lọt ra khối catch bên ngoài.
+      //    Khối đó ngắt hẳn socket (`disconnect`) vì nó viết cho lỗi TOKEN —
+      //    token hỏng thì cắt là đúng. Nhưng nếu một cú truy vấn Supabase chậm
+      //    hay lỗi cũng rơi vào đó thì MỌI người mất realtime toàn bộ: chat,
+      //    thẻ, danh sách ai đang xem — chỉ vì một truy vấn phụ.
+      //
+      //    Hỏng ở đây thì hậu quả đúng bằng: không nhận được thông báo đổi
+      //    avatar của người cùng tổ chức cho tới lần kết nối sau. Đổi một
+      //    phiền toái nhỏ lấy việc không bao giờ đánh sập cả tầng realtime.
+      try {
+        const { data: toChuc } = await this.supabase.client
+          .from('organization_members')
+          .select('org_id')
+          .eq('user_id', decoded.uid);
+        for (const t of toChuc ?? []) {
+          await client.join(orgRoom((t as { org_id: string }).org_id));
+        }
+      } catch (e) {
+        this.logger.warn(
+          `Không vào được phòng tổ chức (uid=${decoded.uid}): ${(e as Error).message}`,
+        );
       }
     } catch {
       // Token hết hạn/bị sửa → cắt. Client sẽ tự kết nối lại với token mới.
