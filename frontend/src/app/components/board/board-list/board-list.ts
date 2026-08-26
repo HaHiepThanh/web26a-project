@@ -52,6 +52,7 @@ export class BoardList {
   readonly deleteList = output<void>();
   readonly addCard = output<void>();
   readonly cardClick = output<{ card: Card; shiftKey: boolean }>();
+  readonly toggleComplete = output<Card>();
   readonly toggleCollapse = output<void>();
 
   onCardClick(event: MouseEvent, card: Card): void {

@@ -21,20 +21,22 @@ interface CardPatch {
   priority?: CardPriority;
   dueDate?: string | null;
   assigneeId?: string | null;
+  completedAt?: string | null;
 }
 
 /**
  * Thay đổi gửi vào `updateCard`.
  *
- * Khác `Partial<Card>` ở đúng ba trường xoá được: chúng nhận `null` để phân biệt
+ * Khác `Partial<Card>` ở đúng bốn trường xoá được: chúng nhận `null` để phân biệt
  * "không đụng tới" (vắng mặt) với "xoá đi" (`null`) — `Card` không diễn đạt được
  * điều đó vì các trường ấy khai `?: string`, mà `undefined` lại đang mang nghĩa
  * "không đụng tới".
  */
-export type CardChanges = Omit<Partial<Card>, 'description' | 'dueDate' | 'assigneeId'> & {
+export type CardChanges = Omit<Partial<Card>, 'description' | 'dueDate' | 'assigneeId' | 'completedAt'> & {
   description?: string | null;
   dueDate?: string | null;
   assigneeId?: string | null;
+  completedAt?: string | null;
 };
 
 /**
@@ -123,16 +125,18 @@ export function withCardMethods() {
             ...(changes.description === null ? { description: undefined } : {}),
             ...(changes.dueDate === null ? { dueDate: undefined } : {}),
             ...(changes.assigneeId === null ? { assigneeId: undefined } : {}),
+            ...(changes.completedAt === null ? { completedAt: undefined } : {}),
           } as Card),
         );
 
-        // Chỉ 5 trường này backend nhận; gửi thừa sẽ bị ValidationPipe loại bỏ.
+        // Chỉ các trường này backend nhận; gửi thừa sẽ bị ValidationPipe loại bỏ.
         const patch: CardPatch = {};
         if (changes.title !== undefined) patch.title = changes.title;
         if (changes.description !== undefined) patch.description = changes.description;
         if (changes.priority !== undefined) patch.priority = changes.priority;
         if (changes.dueDate !== undefined) patch.dueDate = changes.dueDate;
         if (changes.assigneeId !== undefined) patch.assigneeId = changes.assigneeId;
+        if (changes.completedAt !== undefined) patch.completedAt = changes.completedAt;
         if (Object.keys(patch).length === 0) return;
 
         try {

@@ -35,8 +35,23 @@
       <div class="flex flex-col gap-5 p-5 md:h-full md:min-h-0 md:overflow-y-auto">
 
         <!-- Hàng nút hành động nhanh -->
-        <div class="flex flex-wrap gap-2">
-          <label class="btn btn-sm gap-1.5">
+        <div class="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            class="btn btn-sm gap-1.5 font-bold transition-all shadow-xs"
+            [class.btn-success]="isCompleted()"
+            [class.btn-outline]="!isCompleted()"
+            (click)="toggleCompleted()">
+            @if (isCompleted()) {
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+              Completed
+            } @else {
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>
+              Mark Complete
+            }
+          </button>
+
+          <label class="btn btn-sm btn-outline gap-1.5">
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a5 5 0 01-7.07-7.07l9.19-9.19a3.5 3.5 0 014.95 4.95L9.88 18.56a1.5 1.5 0 01-2.12-2.12l8.49-8.49"/></svg>
             Attach
             <input type="file" multiple class="hidden" (change)="onFilesSelected($event)" />

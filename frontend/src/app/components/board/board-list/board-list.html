@@ -58,6 +58,7 @@
             [commentCount]="commentCountByCardId()[card.id] ?? 0"
             [coverUrl]="coverUrlByCardId()[card.id] ?? null"
             [attachmentCount]="attachmentCountByCardId()[card.id] ?? 0"
+            (toggleComplete)="toggleComplete.emit($event)"
           />
         </div>
       }

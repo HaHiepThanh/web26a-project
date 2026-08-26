@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { Card, CardPriority, Label, User } from '../../../models';
 import { UserAvatar } from '../../shared/user-avatar/user-avatar';
 
@@ -24,6 +24,7 @@ let clipSeq = 0;
 })
 export class CardItem {
   readonly card = input.required<Card>();
+  readonly toggleComplete = output<Card>();
   readonly labels = input<Label[]>([]);
   readonly assignee = input<User | null>(null);
   /** URL ảnh bìa (base64) — hiển thị ngay trên mặt thẻ nếu có, lấy từ AttachmentService. */

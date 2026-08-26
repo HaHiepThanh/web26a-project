@@ -848,6 +848,16 @@ export class Board {
     }
   }
 
+  async onToggleCardComplete(card: Card): Promise<void> {
+    const isDone = !!card.completedAt;
+    const completedAt = isDone ? null : new Date().toISOString();
+    await this.cardService.updateCard(card.id, { completedAt });
+    this.addToast(
+      isDone ? `Reopened task "${card.title}".` : `Completed task "${card.title}".`,
+      'success',
+    );
+  }
+
   private toggleCardSelection(cardId: string): void {
     this.selectedCardIds.update((set) => {
       const next = new Set(set);

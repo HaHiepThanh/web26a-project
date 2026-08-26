@@ -320,6 +320,8 @@ export class CardsService {
     if (changes.dueDate !== undefined) patch.due_date = changes.dueDate;
     if (changes.assigneeId !== undefined)
       patch.assignee_id = changes.assigneeId;
+    if (changes.completedAt !== undefined)
+      patch.completed_at = changes.completedAt;
 
     if (Object.keys(patch).length === 0) {
       throw new BadRequestException('Nothing to update.');
@@ -339,6 +341,37 @@ export class CardsService {
     const updated = toCard(data as CardRow);
     const boardId = await this.boardIdOfList(updated.listId);
     this.realtime.emitToBoard(boardId, 'card.updated', uid, updated);
+
+    // Ghi lịch sử hoạt động vào activity_logs
+    if (changes.completedAt !== undefined) {
+      await this.activity.record(
+        boardId,
+        uid,
+        'card_updated',
+        changes.completedAt
+          ? `Completed task "${updated.title}"`
+          : `Reopened task "${updated.title}"`,
+        updated.id,
+      );
+    } else if (changes.assigneeId !== undefined && changes.assigneeId !== truocKhiSua) {
+      await this.activity.record(
+        boardId,
+        uid,
+        'card_assigned',
+        changes.assigneeId
+          ? `Assigned task "${updated.title}"`
+          : `Unassigned task "${updated.title}"`,
+        updated.id,
+      );
+    } else if (changes.title || changes.priority || changes.dueDate !== undefined) {
+      await this.activity.record(
+        boardId,
+        uid,
+        'card_updated',
+        `Updated task "${updated.title}"`,
+        updated.id,
+      );
+    }
 
     // Vừa GIAO việc cho người khác → báo riêng cho đúng người đó.
     // Chỉ báo khi assignee THỰC SỰ đổi, và không tự báo cho chính mình.

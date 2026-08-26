@@ -37,9 +37,14 @@
 
     <!-- Khối 2: cảnh báo thành viên vắng mặt -->
     @if (inactiveMembers().length > 0) {
-      <div role="alert" class="alert alert-warning alert-soft text-sm">
-        <svg lucideTriangleAlert class="h-4 w-4" [strokeWidth]="2"></svg>
-        <span>{{ inactiveMembers().length }} member(s) inactive for 3+ days: {{ inactiveMembersLabel() }}</span>
+      <div role="alert" class="flex items-center gap-3 rounded-xl border border-warning/40 bg-warning/15 px-4 py-3 text-sm text-base-content shadow-xs dark:bg-warning/20">
+        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-warning text-warning-content shadow-xs">
+          <svg lucideTriangleAlert class="h-4.5 w-4.5" [strokeWidth]="2.5"></svg>
+        </div>
+        <div class="min-w-0 flex-1">
+          <span class="font-bold text-base-content">{{ inactiveMembers().length }} member(s) inactive for 3+ days: </span>
+          <span class="font-medium text-base-content/85">{{ inactiveMembersLabel() }}</span>
+        </div>
       </div>
     }
 
@@ -68,38 +73,43 @@
     </section>
 
     <!-- Khối 3: bộ lọc + nhật ký hoạt động -->
-    <section class="space-y-2">
-      <div class="flex flex-wrap items-center justify-between gap-2">
-        <h2 class="text-xs font-bold uppercase tracking-wide text-base-content/60">Activity log</h2>
+    <section class="space-y-3">
+      <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex items-center gap-2">
+          <h2 class="text-xs font-bold uppercase tracking-wide text-base-content/60">Activity log</h2>
+          <span class="badge badge-sm badge-ghost font-bold">{{ filteredActivityLogs().length }}</span>
+        </div>
         <div class="flex flex-wrap items-center gap-2">
           <input
-            class="input input-sm w-48"
+            class="input input-sm w-full sm:w-44 lg:w-48"
             type="text"
-            placeholder="Search by task name, keyword..."
+            placeholder="Search keyword..."
             [ngModel]="logSearch()"
             (ngModelChange)="logSearch.set($event)"
           />
-          <select class="select select-sm" [ngModel]="actionFilter()" (ngModelChange)="actionFilter.set($event)">
+          <select class="select select-sm w-36 shrink-0" [ngModel]="actionFilter()" (ngModelChange)="actionFilter.set($event)">
             @for (group of actionGroups; track trackByGroup($index, group)) {
               <option [value]="group">{{ actionGroupLabel[group] }}</option>
             }
           </select>
-          <select class="select select-sm" [ngModel]="selectedMemberId()" (ngModelChange)="selectedMemberId.set($event)">
+          <select class="select select-sm w-36 shrink-0" [ngModel]="selectedMemberId()" (ngModelChange)="selectedMemberId.set($event)">
             <option value="all">All members</option>
             @for (m of memberWorkload(); track trackByUserId($index, m)) {
               <option [value]="m.userId">{{ m.name }}</option>
             }
           </select>
-          <div class="join">
-            <button class="btn btn-sm join-item" [class.btn-active]="logScope() === 'mine'" (click)="logScope.set('mine')">Mine</button>
-            <button class="btn btn-sm join-item" [class.btn-active]="logScope() === 'team'" (click)="logScope.set('team')">Whole team</button>
+          <div class="join shrink-0">
+            <button type="button" class="btn btn-sm join-item" [class.btn-active]="logScope() === 'mine'" (click)="logScope.set('mine')">Mine</button>
+            <button type="button" class="btn btn-sm join-item" [class.btn-active]="logScope() === 'team'" (click)="logScope.set('team')">Whole team</button>
           </div>
         </div>
       </div>
 
-      <div class="divide-y divide-base-300 overflow-hidden rounded-box border border-base-300 bg-base-100">
+      <div class="divide-y divide-base-300 overflow-y-auto rounded-box border border-base-300 bg-base-100 min-h-[140px] max-h-[360px]">
         @if (filteredActivityLogs().length === 0) {
-          <p class="p-4 text-sm text-base-content/50">No activity matches the current filters.</p>
+          <div class="flex h-[140px] items-center justify-center p-4 text-sm text-base-content/50">
+            No activity matches the current filters.
+          </div>
         }
         @for (log of filteredActivityLogs(); track trackByLogId($index, log)) {
           <div class="flex items-start gap-3 p-3">

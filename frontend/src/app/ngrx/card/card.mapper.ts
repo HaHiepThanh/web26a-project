@@ -11,6 +11,7 @@ export function toCard(r: ApiCard): Card {
     priority: r.priority,
     assigneeId: r.assigneeId ?? undefined,
     dueDate: r.dueDate ?? undefined,
+    completedAt: r.completedAt ?? undefined,
     position: r.position,
     createdBy: r.createdBy,
     createdAt: r.createdAt,

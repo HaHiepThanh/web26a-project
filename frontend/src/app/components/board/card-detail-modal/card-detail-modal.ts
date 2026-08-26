@@ -250,6 +250,14 @@ export class CardDetailModal {
     );
   });
 
+  readonly isCompleted = computed(() => !!this.card().completedAt);
+
+  async toggleCompleted(): Promise<void> {
+    const c = this.card();
+    const completedAt = c.completedAt ? null : new Date().toISOString();
+    await this.cardService.updateCard(c.id, { completedAt });
+  }
+
   /** Tiêu đề trống thì không cho lưu — thẻ không tên là không tìm lại được. */
   readonly canSave = computed(() => this.dirty() && !!this.draftTitle().trim() && !this.saving());
 

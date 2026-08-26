@@ -29,4 +29,7 @@ export class UpdateCardDto {
   @IsOptional()
   @IsString()
   assigneeId?: string;
+
+  @IsOptional()
+  completedAt?: string | null;
 }

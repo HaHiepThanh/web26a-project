@@ -140,6 +140,7 @@
                   [creatingCard]="isCreatingCard(list.id)"
                   (addCard)="createCard(list.id)"
                   (cardClick)="onCardActivate($event.card, $event.shiftKey)"
+                  (toggleComplete)="onToggleCardComplete($event)"
                   (toggleCollapse)="toggleListCollapse(list.id)"
                 />
               </div>
@@ -190,6 +191,7 @@
                   [creatingCard]="isCreatingCard(list.id)"
                   (addCard)="createCard(list.id)"
                   (cardClick)="onCardActivate($event.card, $event.shiftKey)"
+                  (toggleComplete)="onToggleCardComplete($event)"
                   (toggleCollapse)="toggleListCollapse(list.id)"
                 />
               </div>
@@ -243,6 +245,7 @@
                             [commentCount]="commentCountByCardId()[card.id] ?? 0"
                             [coverUrl]="coverUrlByCardId()[card.id] ?? null"
                             [attachmentCount]="attachmentCountByCardId()[card.id] ?? 0"
+                            (toggleComplete)="onToggleCardComplete($event)"
                           />
                         </div>
                       }
