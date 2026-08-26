@@ -1,4 +1,4 @@
-import { Component, DestroyRef, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
+import { Component, DestroyRef, ElementRef, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
@@ -25,6 +25,7 @@ import { AttachmentStore } from '../../ngrx/attachment/attachment.store';
 import { RealtimeService } from '../../services/realtime.service';
 import { BoardPrefsStore } from '../../ngrx/board-prefs/board-prefs.store';
 import { TaskSuggestionStore } from '../../ngrx/task-suggestion/task-suggestion.store';
+import { TourStore } from '../../ngrx/tour/tour.store';
 import { TaskSuggestionModal } from '../../components/chat/task-suggestion-modal/task-suggestion-modal';
 import { BoardList } from '../../components/board/board-list/board-list';
 import { AddList } from '../../components/board/add-list/add-list';
@@ -133,6 +134,7 @@ export class Board {
   private readonly realtime = inject(RealtimeService);
   private readonly boardPrefs = inject(BoardPrefsStore);
   private readonly taskSuggestions = inject(TaskSuggestionStore);
+  private readonly tour = inject(TourStore);
   private readonly router = inject(Router);
 
   readonly boardId = this.route.snapshot.paramMap.get('id') ?? 'demo-board';
@@ -616,6 +618,10 @@ export class Board {
     // còn đang mở board này.
     const routeContext = inject(RouteContextStore);
     routeContext.setActiveBoard(this.boardId);
+
+    // Quên số cột/thẻ của board trước — chúng là số của riêng một board, mang
+    // sang board khác là mốc của tour sai hẳn. Xem `resetBoardCounts()`.
+    this.tour.resetBoardCounts();
     inject(DestroyRef).onDestroy(() => routeContext.setActiveBoard(null));
 
     void this.bootstrap();
@@ -633,6 +639,119 @@ export class Board {
         void this.router.navigate(['/workspace']);
       }
     });
+    // Báo số cột/thẻ về tour hướng dẫn (bước 3 và 4). Đếm dữ liệu thật thay vì
+    // nghe cú bấm — thêm cột mà API trả lỗi thì tour phải đứng nguyên.
+    //
+    // ⚠️ `untracked()` bắt buộc — xem ghi chú cùng chỗ ở pages/workspace/workspace.ts.
+    //    `observe()` đọc rồi ghi `counts`, gọi trần trong effect là vòng lặp vô hạn.
+    effect(() => {
+      // ⚠️ CHỜ DỮ LIỆU CỦA CHÍNH BOARD NÀY nạp xong rồi mới đếm.
+      //
+      //  `ListStore`/`CardStore` dùng chung cho mọi board, và ngay sau khi điều
+      //  hướng chúng vẫn giữ dữ liệu board TRƯỚC. Báo sớm là hỏng theo cả hai
+      //  chiều, cùng một gốc:
+      //    - đếm thẳng    → chộp số của board cũ (3 cột) làm mốc, board mới
+      //      trống thì bước "tạo cột đầu tiên" không bao giờ xong.
+      //    - lọc theo id  → lúc chưa nạp thì lọc ra 0, mốc thành 0, và mấy cột
+      //      vốn đã có của board này lại bị tính thành thành tích của người dùng.
+      //  Cả hai biến mất khi chỉ đếm lúc `loadedBoardId` đã đúng và hết `loading`.
+      if (this.listService.loadedBoardId() !== this.boardId || this.listService.loading()) {
+        return;
+      }
+      const cuaBoardNay = this.lists().filter((l) => l.boardId === this.boardId);
+      const idCot = new Set(cuaBoardNay.map((l) => l.id));
+      const theoCot = this.cardsByList();
+      const cards = [...idCot].reduce((sum, id) => sum + (theoCot[id]?.length ?? 0), 0);
+      const lists = cuaBoardNay.length;
+
+      // ⚠️ Đang mở modal chi tiết thẻ thì CHƯA chốt số.
+      //
+      // "Add card" tạo thẻ thật ngay rồi mở modal. Nhưng `attemptClose()` của
+      // modal có `isAbandonedFreshCard()`: thẻ vừa tạo mà đóng đi không sửa gì
+      // thì bị XOÁ — hành vi cố ý, để không đọng lại rác "New card".
+      //
+      // Đếm ngay lúc thẻ vừa sinh ra thì tour chốt bước 4 cho một cái thẻ vài
+      // giây sau biến mất, rồi hứa với người dùng "thẻ đó là của bạn, nó ở lại"
+      // trong khi họ kết thúc tour chỉ còn thẻ mẫu. Chờ modal đóng rồi mới đếm
+      // thì con số phản ánh thứ THẬT SỰ còn lại.
+      // Chặn trong lúc thẻ vừa tạo còn là BẢN NHÁP CHƯA LƯU.
+      //
+      // `justCreatedCardId` được dọn ở hai chỗ: lưu xong (`onCardSaved`) và
+      // đóng modal (`closeCardDetail`). Đúng hai thời điểm cần:
+      //   - lưu xong  → thẻ là thật, đếm ngay, tour sang bước sau lập tức.
+      //   - đóng ngang→ `isAbandonedFreshCard` đã xoá thẻ, đếm lúc này ra đúng
+      //     con số còn lại nên tour KHÔNG ghi công cho một thẻ không tồn tại.
+      if (this.justCreatedCardId() !== null) return;
+
+      untracked(() => this.tour.observe({ lists, cards }));
+    });
+
+    // Cờ cho tầng 2: bảng lọc và hộp gợi ý AI đã được mở chưa. Tầng 2 không tạo
+    // ra dữ liệu mới nên không đếm được — thứ đo được là người dùng đã thật sự
+    // mở cái đó ra. `untracked()` vì lý do y hệt effect ngay trên.
+    effect(() => {
+      const filterOpen = this.showFilterPanel();
+      const aiOpen = this.openedSuggestion() !== null;
+      untracked(() => this.tour.observeFlags({ filterOpen, aiOpen }));
+    });
+
+    // Rời bước "use-filter" thì ĐÓNG bảng lọc lại.
+    //
+    // Dưới 768px bảng lọc không phải popover nhỏ dưới nút mà là tấm dán đáy cao
+    // 327px — nửa dưới màn hình điện thoại. Để nó mở khi sang bước 6 thì nó phủ
+    // lên nút chat, mà trên mobile nút đó là FAB nằm ở góc dưới. Phép kiểm
+    // `elementFromPoint` của tour thấy neo bị che nên không vẽ viền, và popover
+    // đứng báo "Waiting for it to show up on this page..." vĩnh viễn: bước 6 kẹt
+    // cứng, lối ra duy nhất là bấm Next. Desktop không dính vì ở đó bảng lọc nằm
+    // gọn góc trên-phải, cách nút chat rất xa.
+    //
+    // Chỉ đóng khi chuyển sang MỘT BƯỚC KHÁC, không đóng khi tour kết thúc
+    // (`id` về null). Người dùng bấm X giữa lúc đang xem bộ lọc thì bảng phải ở
+    // nguyên đó — họ đóng tour chứ có đóng bảng đâu.
+    let buocTruoc: string | null = null;
+    effect(() => {
+      const id = this.tour.currentStep()?.id ?? null;
+      untracked(() => {
+        if (buocTruoc === 'use-filter' && id !== null && id !== buocTruoc) {
+          this.showFilterPanel.set(false);
+        }
+        buocTruoc = id;
+      });
+    });
+
+    // Tầng 3: báo hoàn cảnh để coach mark tự quyết có đáng ghé vào không.
+    //
+    // Chỉ báo khi dữ liệu của CHÍNH board này đã nạp xong — cùng lý do với effect
+    // đếm ở trên: `ListStore`/`CardStore` còn giữ dữ liệu board trước, và một
+    // gợi ý dựa trên số liệu của board khác là gợi ý sai chỗ.
+    effect(() => {
+      if (this.listService.loadedBoardId() !== this.boardId || this.listService.loading()) {
+        return;
+      }
+      const cuaBoardNay = this.lists().filter((l) => l.boardId === this.boardId);
+      const idCot = new Set(cuaBoardNay.map((l) => l.id));
+      const theoCot = this.cardsByList();
+      const ctx = {
+        cards: [...idCot].reduce((s, id) => s + (theoCot[id]?.length ?? 0), 0),
+        lists: cuaBoardNay.length,
+        viewers: this.viewers().length,
+        overflowsWidth: this.showMinimap(),
+        layout: this.layoutMode(),
+        cardModalOpen: this.selectedCardId() !== null,
+        freshCardOpen: this.justCreatedCardId() !== null,
+        // Đếm số NHÓM tiêu chí đang bật, không phải số giá trị: chọn ba người
+        // phụ trách vẫn chỉ là MỘT tiêu chí. Ba nhóm trở lên mới là "đã bỏ công
+        // dựng một bộ lọc" — đó là lúc "lưu lại" trả được công đó.
+        filterCriteria:
+          (this.filterAssigneeIds().length ? 1 : 0) +
+          (this.filterLabelIds().length ? 1 : 0) +
+          (this.filterPriorities().length ? 1 : 0) +
+          (this.filterDate() ? 1 : 0),
+        members: this.members().length,
+      };
+      untracked(() => this.tour.maybeShowCoachMark(ctx));
+    });
+
     void this.loadSavedFilters();
     void this.loadSavedHighlightGroups();
     this.loadCollapsedLists();
@@ -827,6 +946,35 @@ export class Board {
   closeCardDetail(): void {
     this.selectedCardId.set(null);
     this.justCreatedCardId.set(null);
+  }
+
+  /**
+   * Thẻ vừa tạo đã được lưu — thôi coi nó là bản nháp.
+   *
+   * Hai hệ quả, và cả hai đều cần:
+   *   - `isAbandonedFreshCard` trong modal thôi đúng, nên đóng modal không xoá
+   *     mất cái thẻ vừa lưu.
+   *   - Tour thôi chặn đếm, nên bấm "Save changes" là sang bước sau NGAY. Trước
+   *     đây phải đóng modal mới thấy bước tiếp theo — người dùng lưu xong ngồi
+   *     nhìn, không biết mình còn phải làm gì.
+   */
+  onCardSaved(): void {
+    const laTheVuaTao = this.justCreatedCardId() !== null;
+    this.justCreatedCardId.set(null);
+
+    // Trong lúc tour đang dạy bước "tạo thẻ": lưu xong thì ĐÓNG luôn modal.
+    //
+    // Tour bảo "đặt tên rồi lưu", người dùng làm xong và... không có gì xảy ra.
+    // Modal vẫn nằm đó che kín board, bước tiếp theo thì đợi nó đóng. Họ ngồi
+    // nhìn, không biết mình còn thiếu thao tác nào. Đóng hộ đúng một lần này là
+    // trả lại đúng nhịp "làm xong → đi tiếp" của cả tầng 1.
+    //
+    // Chỉ đóng khi CẢ HAI đúng: thẻ vừa tạo trong tour, và tour đang ở đúng bước
+    // đó. Ngoài tour thì không đụng — người ta lưu rồi còn sửa tiếp là chuyện
+    // bình thường, tự ý đóng là cướp quyền của họ.
+    if (laTheVuaTao && this.tour.currentStep()?.id === 'add-card') {
+      this.closeCardDetail();
+    }
   }
 
   onCardDetailDeleted(): void {

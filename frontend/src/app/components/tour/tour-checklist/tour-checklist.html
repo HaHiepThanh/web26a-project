@@ -1,0 +1,43 @@
+@if (visible()) {
+<div class="tour-checklist" role="complementary" aria-label="Getting started checklist">
+
+  <button type="button" class="tour-cl-head" (click)="onToggle()"
+          [attr.aria-expanded]="!collapsed()">
+    <span class="tour-cl-title">Getting started</span>
+    <span class="tour-cl-count">{{ doneCount() }}/{{ total() }}</span>
+    <svg lucideChevronDown class="tour-cl-caret h-3.5 w-3.5"
+         [class.is-collapsed]="collapsed()" [strokeWidth]="2.4"></svg>
+  </button>
+
+  <!-- Thanh tiến độ. `scaleX` chứ không `width`: đổi width buộc trình duyệt tính
+       lại bố cục mỗi khung hình, transform thì không. -->
+  <div class="tour-cl-track" role="progressbar" [attr.aria-valuenow]="doneCount()"
+       aria-valuemin="0" [attr.aria-valuemax]="total()">
+    <span class="tour-cl-fill" [style.transform]="'scaleX(' + percent() / 100 + ')'"></span>
+  </div>
+
+  @if (!collapsed()) {
+  <ul class="tour-cl-list">
+    @for (s of steps(); track s.id) {
+    <li class="tour-cl-item" [class.is-done]="s.done">
+      <span class="tour-cl-box">
+        @if (s.done) {
+        <svg lucideCheck class="h-2.5 w-2.5" [strokeWidth]="3.2"></svg>
+        }
+      </span>
+      <span class="tour-cl-label">{{ s.title }}</span>
+    </li>
+    }
+  </ul>
+
+  <div class="tour-cl-actions">
+    <button type="button" class="btn btn-primary btn-xs gap-1 font-black" (click)="onResume()">
+      <svg lucidePlay class="h-3 w-3" [strokeWidth]="2.6"></svg> Guide me
+    </button>
+    <button type="button" class="btn btn-ghost btn-xs gap-1 font-bold" (click)="onDismiss()">
+      <svg lucideX class="h-3 w-3" [strokeWidth]="2.6"></svg> Dismiss
+    </button>
+  </div>
+  }
+</div>
+}

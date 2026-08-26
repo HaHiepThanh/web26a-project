@@ -59,6 +59,31 @@
       </li>
       }
     </ul>
+
+    <!-- Đường quay lại tour hướng dẫn. Người dùng từ chối ở phút đầu vì đang vội
+         phải tìm lại được — không có chỗ này thì "Không" là vĩnh viễn. -->
+    <div class="mt-4 rounded-2xl border border-base-300 bg-base-100 p-3.5">
+      <div class="flex items-center gap-2.5">
+        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <svg lucideGraduationCap class="h-4 w-4" [strokeWidth]="2.2"></svg>
+        </span>
+        <div class="min-w-0">
+          <p class="text-xs font-black leading-tight text-base-content">New here?</p>
+          <p class="mt-0.5 text-2xs leading-tight text-base-content/60">Walk through the basics again.</p>
+        </div>
+      </div>
+      <button type="button" class="btn btn-outline btn-xs mt-3 w-full font-bold"
+        (click)="onRestartTour()">
+        Restart tutorial
+      </button>
+      <!-- Coach mark cũng phải có đường quay lại, đúng như tour. Chúng hiện đúng
+           một lần rồi thôi, mà "một lần" ấy có thể trôi qua lúc người dùng đang
+           bận nhìn chỗ khác. -->
+      <button type="button" class="btn btn-ghost btn-xs mt-1.5 w-full font-bold"
+        (click)="onResetHints()">
+        Show hints again
+      </button>
+    </div>
   </aside>
 
   <!-- ============================== MAIN CONTENT ============================== -->

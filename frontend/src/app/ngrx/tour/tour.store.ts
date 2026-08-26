@@ -1,0 +1,880 @@
+import { computed, inject } from '@angular/core';
+import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
+import {
+  OnboardingState,
+  TOUR_STEP_IDS,
+  TourStepId,
+  emptyOnboardingState,
+} from '../../models';
+import { AuthService } from '../../services/auth.service';
+import { RouteContextStore } from '../route-context/route-context.store';
+import {
+  EMPTY_COUNTS,
+  EMPTY_FLAGS,
+  FIRST_TIER_2_INDEX,
+  TOUR_STEPS,
+  TourCounts,
+  TourFlags,
+  TourStep,
+  stepIndexOf,
+} from './tour.steps';
+import { COACH_MARKS, CoachContext, CoachMark } from './coach-marks';
+import { TourSeedService } from './tour.seed';
+
+/** Giãn cách tối thiểu giữa hai coach mark. */
+const COACH_COOLDOWN_MS = 5 * 60 * 1000;
+/** Lướt qua đủ chừng này lần mà vẫn không bấm ×  thì thôi hẳn. */
+const COACH_MAX_VIEWS = 3;
+
+/**
+ * Bộ máy tour hướng dẫn người dùng mới — tầng 1.
+ *
+ * Vì sao là store cấp gốc chứ không phải state trong component:
+ * tour đi xuyên route (`/:slug/workspace` → `/board/:id`) và qua nhiều modal.
+ * State nằm trong component thì mỗi lần điều hướng là mất sạch, tour chết giữa
+ * chừng. Store `providedIn: 'root'` sống suốt vòng đời app.
+ *
+ * Đặc tả: docs/HUONG-DAN-NGUOI-DUNG-MOI.md
+ */
+
+/** Người dùng chọn gì ở hộp mời. `basics` dừng sau khi có thẻ đầu tiên. */
+export type TourMode = 'full' | 'basics';
+
+export interface TourState {
+  /** Bản sao trạng thái đã lưu ở DB. Nguồn ghi là AuthService. */
+  onboarding: OnboardingState;
+  /** Tour đang chạy trong tab này. */
+  running: boolean;
+  stepIndex: number;
+  mode: TourMode;
+  /** Hộp thoại "Bạn có cần hướng dẫn không?" đang mở. */
+  invitationOpen: boolean;
+  /** Thanh checklist ở góc bị thu gọn. */
+  checklistCollapsed: boolean;
+  /**
+   * Số lượng tại thời điểm bấm Bắt đầu.
+   *
+   * ⚠️ Không có cái này thì "Restart tutorial" trên tài khoản đã có 5 workspace
+   *    sẽ thấy điều kiện `workspaces >= 1` đúng ngay lập tức và chạy vèo hết 4
+   *    bước trong một khung hình. Điều kiện thật là "tăng THÊM so với lúc bắt
+   *    đầu", không phải "lớn hơn 0".
+   */
+  baseline: TourCounts;
+  /**
+   * `baseline` của từng loại số có đáng tin không.
+   *
+   * Chốt mốc khi chưa biết số thật là chốt bằng 0, và rồi mọi thứ vốn đã tồn tại
+   * đều bị tính thành "người dùng vừa làm được". Hai đường dẫn tới tình huống đó:
+   *
+   *   - Bắt đầu tour ở trang KHÔNG báo số nào (nút "Restart tutorial" nằm trong
+   *     Cài đặt, mà vào Cài đặt là tải lại app).
+   *   - Đi từ trang workspace sang trang board. Trang workspace chỉ báo
+   *     `workspaces` và `boards`; `lists`/`cards` mãi tới khi mở board mới có.
+   *     Board đã sẵn 3 cột 8 thẻ là bước 3 lẫn bước 4 thoả trong một khung hình.
+   *
+   * Đường thứ hai chính là lý do phải theo TỪNG LOẠI SỐ chứ không một cờ chung.
+   * Lần báo đầu tiên của mỗi loại chỉ dùng để dựng mốc, không tính là tiến độ.
+   */
+  baselineFresh: Partial<Record<keyof TourCounts, boolean>>;
+  /** Loại số nào đã từng được trang nào đó báo về, kể từ khi app tải. */
+  countsSeen: Partial<Record<keyof TourCounts, boolean>>;
+  /** Số lượng mới nhất các trang báo về. */
+  counts: TourCounts;
+  /** Trạng thái bật/tắt mới nhất các trang báo về (tầng 2). */
+  flags: TourFlags;
+  /**
+   * Cờ đã BẬT SẴN từ trước khi bước hiện tại bắt đầu.
+   *
+   * Khung chat nhớ trạng thái mở/thu gọn trong localStorage, nên người đang để
+   * chat mở sẵn thì tới bước "open-chat" cờ `chatOpen` vốn đã true. Coi thế là
+   * xong thì tour lặng lẽ nhảy qua — người dùng KHÔNG BAO GIỜ được dạy về chat,
+   * chỉ thấy màn hình tự nhảy sang bước 7.
+   *
+   * Bật sẵn thì bước vẫn phải hiện ra và được đọc; người dùng bấm "Got it" để
+   * xác nhận. Việc đã làm rồi thì không bắt làm lại, nhưng phải được kể.
+   */
+  flagsAtStepStart: Partial<TourFlags>;
+
+  // ---- Tầng 3: coach mark ----
+  /** Mẩu chỉ dẫn đang hiện, hoặc null. Tối đa MỘT, xem `maybeShowCoachMark`. */
+  coachMark: CoachMark | null;
+  /**
+   * Thời điểm hiện coach mark gần nhất (ms). 0 = chưa hiện lần nào.
+   *
+   * Luật 1: không bao giờ hai cái cùng lúc, và giãn cách tối thiểu
+   * `COACH_COOLDOWN_MS`. Không có nó thì mở một board đông thẻ là ăn liền mấy
+   * bong bóng nối đuôi — đúng kiểu phần mềm mà ai cũng tắt.
+   *
+   * Dùng giãn cách theo THỜI GIAN chứ không phải "một lần mỗi phiên": với bảy
+   * mẩu, một-lần-mỗi-phiên bắt người dùng phải mở board bảy lần mới biết hết,
+   * mà người dùng tích cực thì cả tuần mới mở đủ.
+   */
+  lastCoachAt: number;
+  /**
+   * Mẩu đã thử hiện trong phiên này mà neo không xuất hiện được.
+   *
+   * Ví dụ thật: minimap bị CSS ẩn (`display:none`) ở màn hẹp, nhưng phần tử vẫn
+   * nằm trong DOM nên store không biết. Không nhớ lại thì cứ chọn nó, chờ 2 giây,
+   * bỏ, rồi lần báo sau lại chọn đúng nó — quay vòng và ba mẩu còn lại không bao
+   * giờ tới lượt. KHÔNG ghi vào `seenCoachMarks`: người dùng chưa từng thấy nó,
+   * phiên sau ở màn rộng vẫn phải được xem.
+   */
+  coachFailedThisSession: string[];
+
+  // ---- Tầng 2 ----
+  /** Hộp hỏi "gieo 8 thẻ mẫu nhé?" đang mở. */
+  seedOfferOpen: boolean;
+  /** Hộp hỏi "xoá thẻ mẫu đi nhé?" đang mở. */
+  cleanupOfferOpen: boolean;
+  /** Đang gọi API gieo/dọn — khoá nút để không bấm hai lần. */
+  seedBusy: boolean;
+}
+
+const initialState: TourState = {
+  onboarding: emptyOnboardingState(),
+  running: false,
+  stepIndex: 0,
+  mode: 'full',
+  invitationOpen: false,
+  checklistCollapsed: false,
+  baseline: EMPTY_COUNTS,
+  baselineFresh: {},
+  countsSeen: {},
+  counts: EMPTY_COUNTS,
+  flags: EMPTY_FLAGS,
+  flagsAtStepStart: {},
+  coachMark: null,
+  lastCoachAt: 0,
+  coachFailedThisSession: [],
+  seedOfferOpen: false,
+  cleanupOfferOpen: false,
+  seedBusy: false,
+};
+
+export const TourStore = signalStore(
+  { providedIn: 'root' },
+  withState(initialState),
+
+  withComputed((store) => ({
+    /** Bước đang chạy, hoặc null khi tour không chạy / đã đi hết. */
+    currentStep: computed<TourStep | null>(() =>
+      store.running() ? (TOUR_STEPS[store.stepIndex()] ?? null) : null,
+    ),
+
+    completedCount: computed(() => store.onboarding().completed.length),
+
+    /**
+     * Tổng số bước THEO CHẾ ĐỘ đang chạy.
+     *
+     * "Just the basics" dừng sau bước 4, nên hiện "Step 2 of 7" cho họ là hứa
+     * một hành trình dài gấp đôi thứ họ vừa chọn — rồi tour tắt ở bước 4 làm
+     * người ta tưởng nó hỏng.
+     */
+    totalSteps: computed(() =>
+      store.mode() === 'basics' ? FIRST_TIER_2_INDEX : TOUR_STEPS.length,
+    ),
+
+    /**
+     * Thanh "Getting started — 2/4" có được hiện không.
+     *
+     * Hiện cả khi người dùng đã bấm "I'll explore myself": chữ "Không" mà xoá
+     * sạch đường quay lại là lỗi thiết kế phổ biến nhất của onboarding. Chỉ ẩn
+     * khi đã đi hết, hoặc khi tour đang chạy (lúc đó popover lo rồi).
+     */
+    checklistVisible: computed(() => {
+      const s = store.onboarding();
+      return !store.running() && s.status !== 'done' && s.status !== 'not-started';
+    }),
+
+    /**
+     * Bước này người dùng đã "làm" từ trước, chỉ còn chờ họ đọc và xác nhận.
+     *
+     * Xảy ra với bước dạy khung chat khi panel vốn đã mở sẵn (localStorage nhớ
+     * trạng thái đó). Không có nút xác nhận thì hoặc tour lặng lẽ bỏ bước —
+     * người dùng không bao giờ biết có khung chat — hoặc nó chờ một hành động
+     * không bao giờ xảy ra, vì việc đó đã xong rồi.
+     */
+    needsAck: computed(() => {
+      if (!store.running()) return false;
+      const step = TOUR_STEPS[store.stepIndex()];
+      return step?.advance.on === 'flag';
+    }),
+  })),
+
+  withMethods((
+    store,
+    auth = inject(AuthService),
+    seeder = inject(TourSeedService),
+    route = inject(RouteContextStore),
+  ) => {
+    /** Ghi trạng thái mới xuống DB + đồng bộ vào store. Không chờ round-trip. */
+    const persist = (patch: Partial<OnboardingState>): OnboardingState => {
+      const next: OnboardingState = {
+        ...store.onboarding(),
+        ...patch,
+        updatedAt: new Date().toISOString(),
+      };
+      patchState(store, { onboarding: next });
+      void auth.saveOnboardingState(next);
+      return next;
+    };
+
+    /**
+     * Điều kiện sang bước sau.
+     *
+     * Tầng 1 so SỐ LƯỢNG với mốc chốt lúc bắt đầu — "tăng thêm", không phải
+     * "lớn hơn 0". Tầng 2 chỉ cần một CỜ bật lên, vì nó không tạo dữ liệu mới.
+     */
+    const isStepSatisfied = (step: TourStep): boolean => {
+      if (step.advance.on === 'count') {
+        return store.counts()[step.advance.key] > store.baseline()[step.advance.key];
+      }
+      // ⚠️ Bước tầng 2 KHÔNG bao giờ tự đi tiếp — chỉ đi khi người dùng bấm Next.
+      //
+      // Tầng 1 là LÀM: tạo được cái workspace là xong việc, tự sang bước sau là
+      // đúng. Tầng 2 là DẠY: mở bảng lọc mới chỉ là mở ra, bài học nằm ở chỗ
+      // chọn "High" rồi nhìn badge nhảy 3/8. Tự nhảy ngay lúc bảng vừa bung ra
+      // là cướp mất đúng khoảnh khắc sắp dạy được — người dùng chưa kịp thử gì
+      // thì bước sau đã đè lên.
+      //
+      // Cờ vẫn được các trang báo về (dùng cho `needsAck` và để sau này còn
+      // biết họ đã đụng tới chưa), nhưng nó không còn quyền chuyển bước.
+      return false;
+    };
+
+    /**
+     * Bước hiện tại vừa thoả điều kiện thì ghi nhận và đi tiếp.
+     *
+     * Ba lối rẽ ở cuối tầng 1, và đây là chỗ dễ sai nhất:
+     *
+     *   - chế độ `basics` → dừng hẳn, đúng như đã hứa trong hộp mời.
+     *   - chế độ `full`   → KHÔNG nhảy thẳng sang bước 5. Bước 5 dạy bộ lọc, mà
+     *     board lúc này có đúng một thẻ do người dùng vừa tạo; lọc 1/1 thẻ thì
+     *     chẳng dạy được gì. Phải hỏi gieo dữ liệu mẫu trước.
+     *   - hết bước       → xong tour, và hỏi dọn thẻ mẫu nếu có gieo.
+     */
+    const advanceOnce = (): boolean => {
+      if (!store.running()) return false;
+      const step = TOUR_STEPS[store.stepIndex()];
+      if (!step || !isStepSatisfied(step)) return false;
+
+      const done = store.onboarding().completed;
+      const completed = done.includes(step.id) ? done : [...done, step.id];
+      const nextIndex = store.stepIndex() + 1;
+      const het = nextIndex >= TOUR_STEPS.length;
+      const hetTang1 = step.tier === 1 && nextIndex === FIRST_TIER_2_INDEX;
+
+      if (het) {
+        patchState(store, { running: false });
+        persist({ status: 'done', currentStep: null, completed });
+        const seeded = store.onboarding().seeded;
+        if (seeded && seeded.cardIds.length) {
+          patchState(store, { cleanupOfferOpen: true });
+        }
+        return false;
+      }
+
+      if (hetTang1 && store.mode() === 'basics') {
+        patchState(store, { running: false });
+        persist({ status: 'done', currentStep: null, completed });
+        return false;
+      }
+
+      if (hetTang1) {
+        // Tạm dừng tour (ẩn lớp phủ) trong lúc hộp hỏi đang mở, rồi mới sang
+        // bước 5 nếu người dùng đồng ý gieo.
+        patchState(store, { running: false, seedOfferOpen: true });
+        persist({ status: 'running', currentStep: TOUR_STEPS[nextIndex].id, completed });
+        return false;
+      }
+
+      patchState(store, { stepIndex: nextIndex, flagsAtStepStart: { ...store.flags() } });
+      persist({ status: 'running', currentStep: TOUR_STEPS[nextIndex].id, completed });
+      return true;
+    };
+
+    /**
+     * Đi tiếp cho tới khi không đi được nữa — KHÔNG phải chỉ một bước.
+     *
+     * Vì điều kiện của bước kế tiếp có thể ĐÃ thoả từ trước. Ví dụ thật: trạng
+     * thái thu gọn của khung chat được nhớ trong localStorage
+     * (`trello_chat_panel_collapsed`), nên người đang để chat mở sẵn thì tới
+     * bước "open-chat" cờ `chatOpen` vốn đã bật. Không có gì "thay đổi" để đánh
+     * thức, và tour đứng ở bước đó vĩnh viễn trong khi việc cần làm đã xong rồi.
+     *
+     * Chặn số vòng để một lỗi logic trong `isStepSatisfied` không thành vòng lặp
+     * vô hạn khoá cứng trang — đúng loại sự cố đã xảy ra một lần với `observe()`.
+     */
+    const tryAdvance = (): void => {
+      for (let i = 0; i < TOUR_STEPS.length; i++) {
+        if (!advanceOnce()) return;
+      }
+    };
+
+    return {
+      /**
+       * Nạp trạng thái đã lưu vào store. Gọi khi `currentUser()` đổi.
+       *
+       * Không tự bật tour lại ở đây dù `status === 'running'` — người dùng có thể
+       * đã đóng tab giữa chừng từ hôm qua; bật lên không hỏi là cưỡng ép. Việc
+       * hỏi "Resume?" do hộp mời lo.
+       */
+      hydrate(state: OnboardingState): void {
+        // ⚠️ Đang chạy tour thì KHÔNG cho một trạng thái rỗng ghi đè.
+        //
+        // `hydrate` chạy mỗi lần `currentUser()` đổi, kể cả khi Firebase làm mới
+        // token và app gọi lại `/auth/me`. Nếu lúc đó backend trả về rỗng — cột
+        // `onboarding_state` chưa được tạo, hoặc lần ghi trước thất bại — thì
+        // người dùng đang ở bước 3 bị đá về `not-started` giữa chừng: popover
+        // biến mất, checklist về 0/4, công sức mất sạch.
+        //
+        // Máy đang chạy tour biết rõ hơn server trong tình huống này. Server chỉ
+        // được quyền ghi đè khi nó thật sự mang thông tin.
+        if (store.running() && state.status === 'not-started') return;
+        patchState(store, { onboarding: state });
+      },
+
+      /**
+       * Quyết định có mở hộp mời hay không, gọi khi vào trang workspace.
+       *
+       * Chỉ mời người `not-started` (chưa từng chạy, chưa từ chối) hoặc
+       * `running` (đang dở → hỏi có muốn tiếp không). Người đã `done` hoặc
+       * `skipped` thì im lặng — họ đã trả lời rồi, hỏi lại là phiền.
+       */
+      maybeInvite(): void {
+        if (store.running() || store.invitationOpen()) return;
+        const s = store.onboarding().status;
+        if (s === 'not-started' || s === 'running') {
+          patchState(store, { invitationOpen: true });
+        }
+      },
+
+      closeInvitation(): void {
+        patchState(store, { invitationOpen: false });
+      },
+
+      /** "I'll explore myself" — đóng lại, nhưng KHÔNG mất đường quay lại. */
+      declineInvitation(): void {
+        patchState(store, { invitationOpen: false });
+        persist({ status: 'skipped', currentStep: null });
+      },
+
+      /**
+       * Bắt đầu (hoặc chạy lại) tour.
+       *
+       * `counts` hiện tại được chốt làm mốc — xem ghi chú ở `TourState.baseline`.
+       */
+      start(mode: TourMode = 'full'): void {
+        const done = store.onboarding().completed;
+        // Chạy tiếp từ bước dở dang đầu tiên, không phải luôn từ bước 1: người
+        // bỏ dở ở bước 3 mà bị bắt tạo lại workspace từ đầu sẽ bỏ luôn.
+        const firstUnfinished = TOUR_STEPS.findIndex((s) => !done.includes(s.id));
+        const target = firstUnfinished === -1 ? 0 : firstUnfinished;
+
+        // Chạy tiếp vào giữa tầng 2 mà chưa từng gieo dữ liệu — hỏi gieo trước.
+        //
+        // Xảy ra khi người dùng tải lại trang đúng lúc hộp "thêm 8 thẻ mẫu?"
+        // đang mở: hộp đó chỉ nằm trong bộ nhớ nên mất theo, còn `currentStep`
+        // đã kịp ghi là bước 5. Không có nhánh này thì họ quay lại và bị dạy bộ
+        // lọc trên một board đúng một thẻ — thứ mà cả tầng 2 sinh ra để tránh.
+        if (mode === 'full' && target >= FIRST_TIER_2_INDEX && !store.onboarding().seeded) {
+          patchState(store, { running: false, invitationOpen: false, mode, seedOfferOpen: true });
+          persist({ status: 'running', currentStep: TOUR_STEPS[FIRST_TIER_2_INDEX].id });
+          return;
+        }
+
+        patchState(store, {
+          running: true,
+          invitationOpen: false,
+          mode,
+          stepIndex: target,
+          flagsAtStepStart: { ...store.flags() },
+          baseline: store.counts(),
+          baselineFresh: { ...store.countsSeen() },
+        });
+        persist({ status: 'running', currentStep: TOUR_STEPS[target].id });
+      },
+
+      /** Chạy lại từ đầu — mục "Restart tutorial" trong Cài đặt. */
+      restart(): void {
+        patchState(store, {
+          running: true,
+          invitationOpen: false,
+          mode: 'full',
+          stepIndex: 0,
+          baseline: store.counts(),
+          baselineFresh: { ...store.countsSeen() },
+          flagsAtStepStart: { ...store.flags() },
+        });
+        persist({ status: 'running', currentStep: TOUR_STEPS[0].id, completed: [] });
+      },
+
+      /** Thoát giữa chừng (Esc, nút Skip). Giữ nguyên các bước đã xong. */
+      stop(): void {
+        patchState(store, { running: false });
+        persist({ status: 'skipped', currentStep: null });
+      },
+
+      /** Đi hết 4 bước. */
+      finish(): void {
+        patchState(store, { running: false });
+        persist({
+          status: 'done',
+          currentStep: null,
+          completed: [...TOUR_STEP_IDS],
+        });
+      },
+
+      /**
+       * Các trang báo số lượng hiện có về đây.
+       *
+       * Nhận `Partial` vì mỗi trang chỉ biết phần của mình: trang workspace biết
+       * số workspace và board, trang board biết số list và card. Trang không
+       * biết thì đừng gửi — gửi 0 sẽ ghi đè số thật của trang kia.
+       */
+      observe(counts: Partial<TourCounts>): void {
+        const prev = store.counts();
+        const merged = { ...prev, ...counts };
+
+        // Không có gì đổi thì KHÔNG ghi. `patchState` với object mới luôn được
+        // coi là giá trị mới (signal so sánh tham chiếu), nên ghi vô tội vạ sẽ
+        // đánh thức mọi effect đang đọc `counts` — và nếu chỗ gọi quên
+        // `untracked()` thì thành vòng lặp vô hạn khoá cứng trang. Chốt chặn ở
+        // đây để lỗi đó không thể tái diễn từ một chỗ gọi khác.
+        // Những loại số VỪA ĐƯỢC BÁO trong lượt này.
+        const keys = Object.keys(counts) as (keyof TourCounts)[];
+
+        // "Loại số này đã được báo" là thông tin RIÊNG, không phụ thuộc giá trị
+        // có đổi hay không — một trang báo đúng bằng giá trị cũ vẫn chứng minh
+        // rằng ta đã biết số thật. Ghi trước chốt chặn "không đổi thì bỏ qua".
+        const seen = { ...store.countsSeen() };
+        let seenChanged = false;
+        for (const k of keys) {
+          if (!seen[k]) {
+            seen[k] = true;
+            seenChanged = true;
+          }
+        }
+
+        // Loại số nào mốc chưa đáng tin thì lượt báo này chỉ dùng để DỰNG MỐC.
+        const fresh = { ...store.baselineFresh() };
+        const baseline = { ...store.baseline() };
+        let freshChanged = false;
+        for (const k of keys) {
+          if (!fresh[k]) {
+            fresh[k] = true;
+            baseline[k] = merged[k];
+            freshChanged = true;
+          }
+        }
+
+        if (seenChanged || freshChanged) {
+          patchState(store, {
+            countsSeen: seen,
+            ...(freshChanged ? { baselineFresh: fresh, baseline } : {}),
+          });
+        }
+
+        const same =
+          prev.workspaces === merged.workspaces &&
+          prev.boards === merged.boards &&
+          prev.lists === merged.lists &&
+          prev.cards === merged.cards;
+        if (same) return;
+
+        patchState(store, { counts: merged });
+        // Vừa dựng mốc xong thì không có gì để tính là tiến độ trong chính lượt
+        // đó — mốc bằng đúng giá trị hiện tại nên `isStepSatisfied` tự trả false.
+        tryAdvance();
+      },
+
+      /**
+       * Quên số cột/thẻ của board trước. Trang Board gọi khi mở một board.
+       *
+       * ⚠️ `lists` và `cards` là số của MỘT board cụ thể, không phải của cả tài
+       *    khoản như `workspaces`/`boards`. Không quên đi thì mốc mang từ board
+       *    cũ sang: mở một board có 3 cột rồi bắt đầu tour → mốc `lists` chốt
+       *    bằng 3 → sang board mới trống, thêm một cột được 1, mà 1 không lớn
+       *    hơn 3 → bước "tạo cột đầu tiên" KHÔNG BAO GIỜ xong, tour cứ bắt thêm
+       *    cột mãi. Phải thêm đủ 4 cột mới thoát.
+       */
+      resetBoardCounts(): void {
+        const counts = { ...store.counts(), lists: 0, cards: 0 };
+        const fresh = { ...store.baselineFresh() };
+        const seen = { ...store.countsSeen() };
+        delete fresh.lists;
+        delete fresh.cards;
+        delete seen.lists;
+        delete seen.cards;
+        patchState(store, {
+          counts,
+          baseline: { ...store.baseline(), lists: 0, cards: 0 },
+          baselineFresh: fresh,
+          countsSeen: seen,
+        });
+      },
+
+      /**
+       * Trang báo về trạng thái bật/tắt của Filter, Chat, AI (tầng 2).
+       *
+       * Tách khỏi `observe()` vì bản chất khác: `observe` so số lượng với mốc
+       * đầu tour, còn ở đây chỉ cần cờ bật lên là xong. Cùng một chốt chặn
+       * "không đổi thì không ghi" — lý do y hệt, xem `observe()`.
+       */
+      observeFlags(flags: Partial<TourFlags>): void {
+        const prev = store.flags();
+        const merged = { ...prev, ...flags };
+        if (
+          prev.filterOpen === merged.filterOpen &&
+          prev.chatOpen === merged.chatOpen &&
+          prev.aiOpen === merged.aiOpen
+        ) {
+          return;
+        }
+        patchState(store, { flags: merged });
+        tryAdvance();
+      },
+
+      // ------------------------------------------------------ tầng 2: gieo/dọn
+
+      /**
+       * "Có, thêm 8 thẻ mẫu" — gieo qua API thật rồi vào bước 5.
+       *
+       * Cờ `seedBusy` khoá nút trong lúc chạy: gieo là 3 cột + 8 thẻ + 3 tin
+       * nhắn, mất vài giây, và bấm hai lần là board có 16 thẻ mẫu.
+       */
+      async acceptSeed(): Promise<void> {
+        if (store.seedBusy()) return;
+        const boardId = route.activeBoardId();
+        if (!boardId) {
+          // Không biết đang ở board nào thì không gieo bừa. Bỏ qua tầng 2 còn
+          // hơn tạo dữ liệu vào nhầm chỗ.
+          patchState(store, { seedOfferOpen: false });
+          persist({ status: 'done', currentStep: null });
+          return;
+        }
+
+        patchState(store, { seedBusy: true });
+        let result;
+        try {
+          result = await seeder.seed(boardId);
+        } catch {
+          result = null;
+        }
+        patchState(store, {
+          seedBusy: false,
+          seedOfferOpen: false,
+          running: true,
+          stepIndex: FIRST_TIER_2_INDEX,
+          flagsAtStepStart: { ...store.flags() },
+          // Mốc mới cho tầng 2: số thẻ vừa tăng vọt vì chính ta gieo vào, giữ
+          // mốc cũ thì mọi điều kiện đếm còn lại thoả ngay lập tức.
+          baseline: store.counts(),
+        });
+        persist({
+          status: 'running',
+          currentStep: TOUR_STEPS[FIRST_TIER_2_INDEX].id,
+          seeded: result ?? null,
+        });
+      },
+
+      /** "Không, cảm ơn" — kết thúc tour ở cuối tầng 1. */
+      declineSeed(): void {
+        patchState(store, { seedOfferOpen: false, running: false });
+        // Dạy Filter/Chat/AI trên board một thẻ là nói vào khoảng không, nên từ
+        // chối gieo cũng là từ chối tầng 2. Không cố dẫn tiếp cho đủ bước.
+        persist({ status: 'done', currentStep: null });
+      },
+
+      /** "Có, xoá thẻ mẫu đi" — dọn đúng những gì mình đã tạo. */
+      async acceptCleanup(): Promise<void> {
+        if (store.seedBusy()) return;
+        const seeded = store.onboarding().seeded;
+        patchState(store, { seedBusy: true });
+        if (seeded) {
+          try {
+            await seeder.cleanup(seeded);
+          } catch {
+            /* dọn dở còn hơn không dọn; người dùng xoá tay được */
+          }
+        }
+        patchState(store, { seedBusy: false, cleanupOfferOpen: false });
+        persist({ seeded: null });
+      },
+
+      /**
+       * "Giữ lại" — không dọn.
+       *
+       * Vẫn xoá `seeded` khỏi hồ sơ: người dùng đã quyết định giữ, nên từ giờ
+       * mấy thẻ đó là của họ. Còn lưu id thì lần chạy tour sau sẽ hỏi dọn lại
+       * những thẻ họ đã cố ý giữ.
+       */
+      declineCleanup(): void {
+        patchState(store, { cleanupOfferOpen: false });
+        persist({ seeded: null });
+      },
+
+      /**
+       * Nút "Next" của tầng 2 — người dùng đọc xong, tự quyết khi nào đi tiếp.
+       *
+       * Khác `skipStep()`: bước này ĐƯỢC ghi là đã xong. Họ đã đọc, và với
+       * những việc như mở bảng lọc hay khung chat thì đọc hiểu là đủ — không có
+       * "sản phẩm" nào để kiểm như ở tầng 1.
+       */
+      acknowledgeStep(): void {
+        const step = TOUR_STEPS[store.stepIndex()];
+        if (!step || step.advance.on !== 'flag') return;
+
+        // Đánh dấu xong rồi đi tiếp. Không gọi `tryAdvance()` vì điều kiện của
+        // bước tầng 2 luôn trả false — nó cố tình không tự đi. Nhưng vẫn phải
+        // dùng chung một đường kết thúc, nếu không thì bỏ mất phần hỏi dọn thẻ
+        // mẫu ở bước cuối.
+        const done = store.onboarding().completed;
+        const completed = done.includes(step.id) ? done : [...done, step.id];
+        const nextIndex = store.stepIndex() + 1;
+
+        if (nextIndex >= TOUR_STEPS.length) {
+          patchState(store, { running: false });
+          persist({ status: 'done', currentStep: null, completed });
+          const seeded = store.onboarding().seeded;
+          if (seeded && seeded.cardIds.length) {
+            patchState(store, { cleanupOfferOpen: true });
+          }
+          return;
+        }
+
+        patchState(store, { stepIndex: nextIndex, flagsAtStepStart: { ...store.flags() } });
+        persist({ status: 'running', currentStep: TOUR_STEPS[nextIndex].id, completed });
+      },
+
+      /** Nút "Skip this step" — bỏ qua mà không đánh dấu đã xong. */
+      skipStep(): void {
+        const step = TOUR_STEPS[store.stepIndex()];
+        const nextIndex = store.stepIndex() + 1;
+        if (nextIndex >= TOUR_STEPS.length) {
+          patchState(store, { running: false });
+          // Bước cuối là bước TUỲ CHỌN thì bỏ qua nó vẫn là đi hết tour.
+          // Đánh dấu "skipped" ở đây nghĩa là mọi môi trường chưa bật Gemini sẽ
+          // ghi nhận thất bại cho người dùng đã làm đủ sáu bước — và bỏ luôn
+          // phần hỏi dọn thẻ mẫu, để lại 8 thẻ rác trên board của họ.
+          persist({
+            status: step?.optional ? 'done' : 'skipped',
+            currentStep: null,
+          });
+          const seeded = store.onboarding().seeded;
+          if (step?.optional && seeded && seeded.cardIds.length) {
+            patchState(store, { cleanupOfferOpen: true });
+          }
+          return;
+        }
+
+        // Bỏ qua bước cuối tầng 1 vẫn phải dừng ở ranh giới như khi làm xong nó.
+        // Không có nhánh này thì bấm Skip ở bước 4 là rơi thẳng vào bước 5 với
+        // một board trống — tức đi dạy bộ lọc trên đúng thứ mà cả tầng 2 sinh ra
+        // để tránh, và cuối tour lại hỏi "xoá thẻ mẫu?" trong khi chưa gieo gì.
+        if (step?.tier === 1 && nextIndex === FIRST_TIER_2_INDEX) {
+          // ⚠️ CHƯA TỰ TẠO THẺ THÌ KHÔNG GIEO.
+          //
+          // Cả tầng 1 tồn tại để người dùng tự tay làm ra thứ đầu tiên của mình.
+          // Bấm Skip ở bước tạo thẻ rồi lại đổ 8 thẻ mẫu vào là lấy mất đúng cái
+          // khoảnh khắc đó: board đầy thẻ của người khác, còn họ thì chưa hề tạo
+          // gì. Thà kết thúc tour ở đây, thanh checklist vẫn còn để quay lại.
+          const daTuTaoThe = store.onboarding().completed.includes('add-card');
+          if (store.mode() === 'basics' || !daTuTaoThe) {
+            patchState(store, { running: false });
+            persist({ status: 'skipped', currentStep: null });
+            return;
+          }
+          patchState(store, { running: false, seedOfferOpen: true });
+          persist({ status: 'running', currentStep: TOUR_STEPS[nextIndex].id });
+          return;
+        }
+
+        patchState(store, { stepIndex: nextIndex, baseline: store.counts(), flagsAtStepStart: { ...store.flags() } });
+        persist({ status: 'running', currentStep: TOUR_STEPS[nextIndex].id });
+      },
+
+      back(): void {
+        const prev = store.stepIndex() - 1;
+        if (prev < 0) return;
+        patchState(store, { stepIndex: prev, baseline: store.counts(), flagsAtStepStart: { ...store.flags() } });
+        persist({ status: 'running', currentStep: TOUR_STEPS[prev].id });
+      },
+
+      /** Đánh dấu một bước đã xong từ bên ngoài (dùng cho thanh checklist). */
+      markDone(id: TourStepId): void {
+        const done = store.onboarding().completed;
+        if (done.includes(id)) return;
+        persist({ completed: [...done, id] });
+      },
+
+      isDone(id: TourStepId): boolean {
+        return store.onboarding().completed.includes(id);
+      },
+
+      toggleChecklist(): void {
+        patchState(store, { checklistCollapsed: !store.checklistCollapsed() });
+      },
+
+      /** Đặt thẳng trạng thái thu gọn — dùng cho mặc định theo bề rộng màn hình. */
+      setChecklistCollapsed(value: boolean): void {
+        if (store.checklistCollapsed() === value) return;
+        patchState(store, { checklistCollapsed: value });
+      },
+
+      // ------------------------------------------------------ tầng 3: coach mark
+
+      /**
+       * Trang Board báo hoàn cảnh về; nếu có mẩu chỉ dẫn nào đáng bật thì bật.
+       *
+       * BA LUẬT CHỐNG PHIỀN, cả ba đều nằm ở đây vì bỏ sót một cái là coach mark
+       * biến thành thứ người ta tắt đi:
+       *
+       *  1. Không bao giờ hai cái cùng lúc, và mỗi phiên tối đa MỘT. Mở một board
+       *     đông thẻ có thể thoả cả bốn điều kiện — bắn hết là mưa bong bóng.
+       *  2. Im lặng khi tour đang chạy hoặc có hộp thoại tour đang mở. Hai giọng
+       *     nói cùng chỉ đạo một người là tệ hơn không có giọng nào.
+       *  3. Im lặng với người MỚI TINH. Ai chưa từng chạy tour thì đang còn ngợp;
+       *     coach mark sinh ra cho người đã quen việc và vừa chạm phải một vấn
+       *     đề cụ thể, không phải để chào đón.
+       *
+       * Và mỗi mẩu chỉ hiện đúng MỘT LẦN trong đời — `seenCoachMarks` lưu ở DB.
+       */
+      maybeShowCoachMark(ctx: CoachContext): void {
+        // Mẩu đang hiện mà điều kiện của nó KHÔNG CÒN ĐÚNG thì gỡ xuống ngay.
+        //
+        // Hoàn cảnh đã đổi, và nó đang chỉ vào thứ không còn liên quan — thường
+        // là không còn nhìn thấy nữa. Ví dụ thật: `layout-hint` đang trỏ vào cụm
+        // Column/Row View, người dùng mở modal chi tiết thẻ, cụm nút đó khuất
+        // sau modal. Giữ nguyên thì bong bóng trỏ vào chỗ trống, mà tệ hơn là nó
+        // CHẶN mất `name-card-hint` — mẩu cảnh báo mất dữ liệu, đúng thứ đang
+        // cần lúc đó. Luật "không hai cái cùng lúc" hoá ra bảo vệ nhầm người.
+        //
+        // Không tính là đã lướt qua, và cho chọn lại ngay: hoàn cảnh mới là hoàn
+        // cảnh mới, không phải phần thưởng đã tiêu.
+        const dangHien = store.coachMark();
+        if (dangHien && !dangHien.when(ctx)) {
+          patchState(store, { coachMark: null, lastCoachAt: 0 });
+        } else if (dangHien) {
+          return;
+        }
+
+        if (Date.now() - store.lastCoachAt() < COACH_COOLDOWN_MS) return;
+        if (store.running() || store.invitationOpen()) return;
+        if (store.seedOfferOpen() || store.cleanupOfferOpen()) return;
+
+        const s = store.onboarding();
+        if (s.status === 'not-started') return;
+
+        const xong = new Set([...s.seenCoachMarks, ...store.coachFailedThisSession()]);
+        const chon = COACH_MARKS.find((m) => !xong.has(m.id) && m.when(ctx));
+        if (!chon) return;
+
+        // Chỉ CHỌN, chưa tính là đã hiện. Đồng hồ giãn cách chỉ chạy khi bong
+        // bóng thật sự lên hình — xem `confirmCoachMarkShown`.
+        patchState(store, { coachMark: chon });
+      },
+
+      /**
+       * Bong bóng đã hiện thật — giờ mới tính là phiên này đã nói một câu.
+       *
+       * ⚠️ Tách khỏi `maybeShowCoachMark` vì neo có thể không dùng được: minimap
+       *    từng bị neo nhầm vào host của component, đo ra 0×0. Chọn xong là tiêu
+       *    suất duy nhất của phiên, rồi chẳng hiện gì cả — ba mẩu còn lại im
+       *    lặng theo, và không ai biết vì sao.
+       */
+      confirmCoachMarkShown(): void {
+        if (store.lastCoachAt() !== 0 && Date.now() - store.lastCoachAt() < 1000) return;
+        patchState(store, { lastCoachAt: Date.now() });
+      },
+
+      /**
+       * Bỏ mẩu đang chọn mà KHÔNG ghi nhớ — neo không xuất hiện được.
+       *
+       * Khác `dismissCoachMark`: người dùng chưa từng nhìn thấy nó, nên không
+       * được đánh dấu "đã xem". Lần sau vào lại vẫn còn cơ hội.
+       */
+      dropCoachMark(): void {
+        const m = store.coachMark();
+        if (!m) return;
+        patchState(store, {
+          coachMark: null,
+          coachFailedThisSession: [...store.coachFailedThisSession(), m.id],
+        });
+      },
+
+      /**
+       * Đóng mẩu chỉ dẫn — và ghi nhớ là đã hiện, vĩnh viễn.
+       *
+       * Gọi cho cả nút "Got it" lẫn bấm ra ngoài. Coach mark KHÔNG chặn chuột
+       * (luật 2 của đặc tả), nên bấm ra ngoài là hành vi bình thường và phải
+       * được coi là "đã đọc" — bắt họ tìm đúng cái nút mới cho tắt là phiền.
+       */
+      /**
+       * Bấm × — người dùng ĐỌC THẬT rồi. Một lần là đủ, thôi hẳn.
+       */
+      acknowledgeCoachMark(): void {
+        const m = store.coachMark();
+        if (!m) return;
+        patchState(store, { coachMark: null });
+        const xong = store.onboarding().seenCoachMarks;
+        if (xong.includes(m.id)) return;
+        persist({ seenCoachMarks: [...xong, m.id] });
+      },
+
+      /**
+       * Bấm RA NGOÀI — "không phải lúc này", chưa chắc đã đọc.
+       *
+       * ⚠️ Đây là chỗ dễ ăn gian người dùng nhất. Coach mark cố ý không chặn
+       *    chuột, nên người đang với tay bấm một cái thẻ sẽ vô tình đóng bong
+       *    bóng vừa hiện ra 0,4 giây trước — chưa kịp đọc chữ nào. Tính đó là
+       *    "đã xem" rồi xoá vĩnh viễn là lấy mất của họ một mẩu chỉ dẫn mà họ
+       *    không hề biết mình từng có.
+       *
+       *    Nên đếm riêng: lần sau còn hiện lại. Nhưng lướt qua tới lần thứ ba
+       *    mà vẫn không buồn bấm × thì rõ ràng họ không quan tâm — thôi hẳn.
+       */
+      snoozeCoachMark(): void {
+        const m = store.coachMark();
+        if (!m) return;
+        patchState(store, { coachMark: null });
+
+        const s = store.onboarding();
+        const soLan = (s.coachViews[m.id] ?? 0) + 1;
+        const views = { ...s.coachViews, [m.id]: soLan };
+        persist(
+          soLan >= COACH_MAX_VIEWS
+            ? { coachViews: views, seenCoachMarks: [...s.seenCoachMarks, m.id] }
+            : { coachViews: views },
+        );
+      },
+
+      /** Xoá sạch lịch sử coach mark — mục "Reset hints" trong Cài đặt. */
+      resetCoachMarks(): void {
+        patchState(store, { coachMark: null, lastCoachAt: 0, coachFailedThisSession: [] });
+        persist({ seenCoachMarks: [], coachViews: {} });
+      },
+
+      /**
+       * Ẩn hẳn thanh checklist — người dùng dứt khoát không muốn nữa.
+       *
+       * Tách khỏi `finish()`: `finish()` đánh dấu CẢ BỐN bước là đã xong, dùng
+       * cho người thật sự đi hết. Gọi nó khi người ta chỉ bấm "Dismiss" là ghi
+       * vào hồ sơ một lời nói dối — checklist hiện 4/4 trong khi họ chưa tạo nổi
+       * cái workspace nào, và mọi thống kê onboarding sau này đều sai.
+       */
+      dismissChecklist(): void {
+        persist({ status: 'done', currentStep: null });
+      },
+
+      /** Dùng trong test và khi cần biết vị trí một bước. */
+      indexOf: stepIndexOf,
+
+      /** Điều kiện của bước hiện tại đã thoả chưa — cho test đọc. */
+      currentSatisfied(): boolean {
+        const step = TOUR_STEPS[store.stepIndex()];
+        return step ? isStepSatisfied(step) : false;
+      },
+    };
+  }),
+);

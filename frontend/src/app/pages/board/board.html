@@ -262,7 +262,7 @@
 
   <!-- Modal: Chi tiết thẻ (appRequirement #4) -->
   @if (selectedCard(); as card) {
-    <app-card-detail-modal [card]="card" [boardId]="boardId" [autoFocusTitle]="card.id === justCreatedCardId()" (close)="closeCardDetail()" (deleted)="onCardDetailDeleted()" />
+    <app-card-detail-modal [card]="card" [boardId]="boardId" [autoFocusTitle]="card.id === justCreatedCardId()" (close)="closeCardDetail()" (saved)="onCardSaved()" (deleted)="onCardDetailDeleted()" />
   }
 
   <!-- Modal: xem lại gợi ý của AI rồi mới tạo thẻ -->

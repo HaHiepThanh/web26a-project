@@ -55,8 +55,12 @@
           <svg lucidePencil class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg>
           <span>Edit</span>
         </button>
+        <!-- data-tour: neo bước 2 của tour. Chỉ đặt ở nút này, KHÔNG đặt ở nút
+             "Add board" thứ hai phía dưới trong cùng file — hai neo trùng tên
+             thì querySelector lấy cái đầu trong DOM và tour soi nhầm chỗ. -->
         <button
           type="button"
+          data-tour="create-board"
           class="btn btn-primary btn-xs sm:btn-sm gap-1.5 rounded-md px-3 sm:px-3.5 text-xs font-black shadow-xs"
           (click)="createBoard.emit(workspace().id)" [class.hidden]="!canManage()">
           <svg lucidePlus class="h-3.5 w-3.5 shrink-0" [strokeWidth]="3"></svg>

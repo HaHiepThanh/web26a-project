@@ -1,0 +1,82 @@
+@if (isOpen()) {
+<div class="modal modal-open z-[1000] p-4 backdrop-blur-[2px]" (click)="onDismiss()">
+  <div class="modal-box max-w-[520px] border border-base-300" (click)="$event.stopPropagation()">
+
+    <div class="mb-4 flex items-start justify-between gap-3 border-b border-base-200 pb-3.5">
+      <div class="flex items-center gap-2.5">
+        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <svg lucideRocket class="h-5 w-5" [strokeWidth]="2.2"></svg>
+        </div>
+        <div>
+          <h3 class="text-base font-black text-base-content">
+            @if (isResuming()) {
+              Pick up where you left off?
+            } @else if (firstName()) {
+              Welcome, {{ firstName() }}. Want a quick tour?
+            } @else {
+              Want a quick tour?
+            }
+          </h3>
+          <p class="text-2xs text-base-content/60">
+            @if (isResuming()) {
+              You finished {{ doneCount() }} of {{ totalSteps() }} steps last time.
+            } @else {
+              About 90 seconds. You will end up with a real board, not a demo.
+            }
+          </p>
+        </div>
+      </div>
+      <button type="button" class="btn btn-circle btn-ghost btn-sm" (click)="onDismiss()"
+              aria-label="Close">
+        <svg lucideX class="h-4 w-4" [strokeWidth]="2.4"></svg>
+      </button>
+    </div>
+
+    <div class="flex flex-col gap-2.5">
+      <button type="button"
+              class="flex items-start gap-3 rounded-xl border border-primary/40 bg-primary/5 p-3.5 text-left transition hover:border-primary hover:bg-primary/10"
+              (click)="onFull()">
+        <span class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary text-white">
+          <svg lucideRocket class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg>
+        </span>
+        <span>
+          <span class="block text-sm font-black text-base-content">
+            @if (isResuming()) { Continue the tour } @else { Show me around }
+          </span>
+          <span class="block text-2xs leading-relaxed text-base-content/60">
+            Build a workspace, a board, a column and a card — for real, as we go.
+          </span>
+        </span>
+      </button>
+
+      <button type="button"
+              class="flex items-start gap-3 rounded-xl border border-base-300 bg-base-100 p-3.5 text-left transition hover:border-base-content/30 hover:bg-base-200"
+              (click)="onBasics()">
+        <span class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-secondary/15 text-secondary">
+          <svg lucideZap class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg>
+        </span>
+        <span>
+          <span class="block text-sm font-black text-base-content">Just the basics</span>
+          <span class="block text-2xs leading-relaxed text-base-content/60">
+            Stop as soon as your first card exists. No extras.
+          </span>
+        </span>
+      </button>
+
+      <button type="button"
+              class="flex items-start gap-3 rounded-xl border border-base-300 bg-base-100 p-3.5 text-left transition hover:border-base-content/30 hover:bg-base-200"
+              (click)="onDecline()">
+        <span class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-base-300 text-base-content/70">
+          <svg lucideCompass class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg>
+        </span>
+        <span>
+          <span class="block text-sm font-black text-base-content">I'll explore myself</span>
+          <span class="block text-2xs leading-relaxed text-base-content/60">
+            The checklist stays in the corner, and Settings can restart this any time.
+          </span>
+        </span>
+      </button>
+    </div>
+  </div>
+</div>
+}

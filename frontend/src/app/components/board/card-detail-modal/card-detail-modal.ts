@@ -94,6 +94,11 @@ export class CardDetailModal {
 
   readonly close = output<void>();
   readonly deleted = output<void>();
+  /**
+   * Đã lưu xong một lần. Thẻ từ đây là dữ liệu thật, không còn là "thẻ vừa tạo
+   * chưa đụng tới" nữa — trang Board dựa vào đây để thôi coi nó là bản nháp.
+   */
+  readonly saved = output<void>();
 
   private readonly titleInputRef = viewChild<ElementRef<HTMLInputElement>>('titleInput');
 
@@ -263,6 +268,10 @@ export class CardDetailModal {
 
   async save(): Promise<void> {
     if (!this.canSave()) return;
+    // Đã lưu một lần thì thẻ này KHÔNG còn là "thẻ tạo nhầm" nữa — xem
+    // `isAbandonedFreshCard`. Phải ghi trước khi lưu xong, vì lưu xong là
+    // `dirty()` trở lại false và điều kiện xoá lại đúng.
+    this.savedOnce.set(true);
     const c = this.card();
     // `null` = XOÁ trường đó trên server. Trước đây chỗ này dùng `undefined`,
     // mà `undefined` bị JSON.stringify bỏ khỏi body, nên backend — vốn chỉ ghi
@@ -310,10 +319,10 @@ export class CardDetailModal {
     } finally {
       this.saving.set(false);
     }
-    this.savedOnce.set(true);
 
     for (const d of nhatKy) this.log(d);
     this.flashSaved();
+    this.saved.emit();
   }
 
   /** Bỏ mọi thay đổi, quay lại đúng dữ liệu đang có trên server. */
@@ -345,8 +354,8 @@ export class CardDetailModal {
   private readonly isAbandonedFreshCard = computed(
     () =>
       this.autoFocusTitle() &&
-      !this.dirty() &&
       !this.savedOnce() &&
+      !this.dirty() &&
       this.attachments().length === 0 &&
       this.selectedLabelIds().length === 0 &&
       this.checklistService.itemsFor(this.card().id).length === 0 &&

@@ -1,0 +1,96 @@
+@if (visible()) {
+@let s = step()!;
+@let p = popoverPos();
+
+<!-- Lớp mờ chỉ vẽ khi ĐÃ tìm thấy neo. Chưa thấy thì làm mờ cả màn hình mà không
+     soi sáng gì là chặn đường người dùng đi tới chỗ cần tới. -->
+@if (hole(); as h) {
+<div class="tour-scrim" aria-hidden="true">
+  @if (dimmed()) {
+  <!-- Bốn mảng mờ bao quanh vùng sáng. Chúng CÓ nhận chuột (chặn bấm nhầm ra
+       ngoài), còn khoảng trống ở giữa thì không có gì nằm trên nên cái nút thật
+       bấm được bình thường.
+
+       Tầng 2 tắt hẳn phần này: nó bảo người dùng mở bảng lọc / khung chat ra
+       xem, mà những thứ đó bung ra NGOÀI vùng sáng nên lớp mờ phủ luôn lên
+       chính chúng — vừa bấm Filter là bảng hiện ra trong bóng tối. -->
+  <div class="tour-dim" [style.top.px]="0" [style.left.px]="0"
+       [style.right.px]="0" [style.height.px]="h.top"></div>
+  <div class="tour-dim" [style.top.px]="h.top + h.height" [style.left.px]="0"
+       [style.right.px]="0" [style.bottom.px]="0"></div>
+  <div class="tour-dim" [style.top.px]="h.top" [style.left.px]="0"
+       [style.width.px]="h.left" [style.height.px]="h.height"></div>
+  <div class="tour-dim" [style.top.px]="h.top" [style.left.px]="h.left + h.width"
+       [style.right.px]="0" [style.height.px]="h.height"></div>
+  }
+
+  <!-- Viền sáng quanh phần tử. pointer-events:none để không cướp cú bấm. -->
+  <div class="tour-ring" [style.top.px]="h.top" [style.left.px]="h.left"
+       [style.width.px]="h.width" [style.height.px]="h.height"></div>
+</div>
+}
+
+<div #popover class="tour-popover" role="dialog" aria-modal="false"
+     [class.is-floating]="!hasAnchor()"
+     [attr.aria-labelledby]="'tour-step-title'"
+     [style.top.px]="p.top" [style.left.px]="p.left">
+
+  <div class="tour-popover-head">
+    <span class="tour-progress">Step {{ stepNumber() }} of {{ totalSteps() }}</span>
+    <button type="button" class="btn btn-ghost btn-xs btn-circle" (click)="onQuit()"
+            aria-label="End the tour">
+      <svg lucideX class="h-3.5 w-3.5" [strokeWidth]="2.6"></svg>
+    </button>
+  </div>
+
+  <h2 id="tour-step-title" class="tour-title">{{ s.title }}</h2>
+  <p class="tour-body">{{ s.body }}</p>
+
+  <div class="tour-actions">
+    <button type="button" class="btn btn-ghost btn-xs gap-1 font-bold"
+            [disabled]="!canGoBack()" (click)="onBack()">
+      <svg lucideArrowLeft class="h-3 w-3" [strokeWidth]="2.4"></svg> Back
+    </button>
+    @if (needsAck()) {
+    <!-- Bước tầng 2: người dùng tự quyết khi nào đi tiếp. Tự nhảy ngay lúc họ
+         vừa mở bảng lọc là cướp mất đúng khoảnh khắc bài học sắp diễn ra. -->
+    <button type="button" class="btn btn-primary btn-xs gap-1 font-black px-4" (click)="onAck()">
+      {{ isLastStep() ? 'Finish' : 'Next' }}
+      <svg lucideArrowRight class="h-3 w-3" [strokeWidth]="2.4"></svg>
+    </button>
+    } @else {
+    <button type="button" class="btn btn-ghost btn-xs gap-1 font-bold" (click)="onSkip()">
+      Skip <svg lucideArrowRight class="h-3 w-3" [strokeWidth]="2.4"></svg>
+    </button>
+    }
+  </div>
+
+  @if (waitingFor(); as loi) {
+  <!-- Chưa tìm thấy neo: nói rõ phải đi đâu, thay vì để người dùng nhìn màn hình
+       trống và tưởng tour hỏng.
+
+       KHÔNG dùng spinner ở đây. Spinner nghĩa là "đang tải, chờ chút" — nó hứa
+       một thứ sẽ tự xong. Còn đây là đang chờ NGƯỜI DÙNG đi sang trang khác,
+       không tự xong bao giờ, nên vòng xoay chỉ khiến họ ngồi đợi vô ích. -->
+  <p class="tour-hint tour-hint-wait">
+    <svg lucideArrowRight class="h-3.5 w-3.5 shrink-0" [strokeWidth]="2.4"></svg>
+    {{ loi }}
+  </p>
+  @if (canJumpToWorkspace()) {
+  <button type="button" class="btn btn-primary btn-xs mt-2.5 w-full font-black"
+          (click)="onJumpToWorkspace()">
+    Take me there
+  </button>
+  }
+  } @else if (!needsAck()) {
+  <!-- Không có nút "Next": bước chỉ sang khi người dùng LÀM THẬT. Nói rõ ra để
+       họ không ngồi tìm nút.
+
+       ⚠️ Phải loại bước tầng 2 ra. Bước đó CÓ nút Next và cố tình không tự đi
+          tiếp, nên câu "the tour moves on by itself" nói ngược lại chính cái nút
+          nằm ngay bên trên: người dùng mở bảng lọc, chọn High, rồi ngồi chờ một
+          thứ không bao giờ tới. -->
+  <p class="tour-hint">Do it on the highlighted control — the tour moves on by itself.</p>
+  }
+</div>
+}

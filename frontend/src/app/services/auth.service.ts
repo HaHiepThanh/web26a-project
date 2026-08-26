@@ -16,8 +16,10 @@ import { ApiService } from './api.service';
 import {
   MOCK_SEARCHABLE_USERS,
   MeResponse,
+  OnboardingState,
   User,
   generateUuid,
+  parseOnboardingState,
 } from '../models';
 /** Phản hồi của GET /auth/me ở backend (xem backend/src/modules/auth/auth.service.ts). */
 const STORAGE_KEY_USER = 'trello_user';
@@ -265,7 +267,82 @@ export class AuthService {
     avatarUrl?: string;
   }): Promise<void> {
     const row = await this.api.patch<MeResponse['user']>('/auth/profile', changes);
-    this.setUser({
+    this.setUser(this.toUser(row));
+  }
+
+  /**
+   * Ghi trạng thái tour hướng dẫn xuống DB, và cập nhật `currentUser()` ngay.
+   *
+   * Tách khỏi `updateProfile()` dù cùng gọi một endpoint, vì hai thứ khác bản
+   * chất: `updateProfile` là người dùng chủ động sửa hồ sơ ở trang Cài đặt và
+   * cần biết lỗi; còn cái này chạy ngầm sau mỗi bước tour.
+   *
+   * ⚠️ Cập nhật signal TRƯỚC rồi mới gọi API (optimistic). Tour chuyển bước theo
+   *    signal này — chờ round-trip mới cho đi tiếp thì mỗi bước khựng vài trăm
+   *    ms trên mạng chậm, và tour đứng hình hẳn nếu request rớt. Ghi hỏng thì
+   *    hậu quả nhẹ nhất có thể: lần đăng nhập sau bị hỏi lại một lần.
+   */
+  async saveOnboardingState(state: OnboardingState): Promise<void> {
+    const cur = this.currentUser();
+    if (!cur) return;
+    this.setUser({ ...cur, onboardingState: state });
+
+    // Hỏng một lần thì THÔI HẲN trong phiên này.
+    //
+    // Nguyên nhân hỏng thường trực nhất là cột `users.onboarding_state` chưa
+    // được tạo (migration 0007 chưa chạy) — và lỗi đó thì gọi lại bao nhiêu lần
+    // cũng hỏng. Không có cái cờ này thì mỗi bước tour lại bắn thêm một request
+    // chắc chắn trả 500: bảng Network đỏ rực, backend nhận một tràng lệnh vô
+    // nghĩa, và trên mạng chậm là mỗi bước thêm một vòng chờ vô ích.
+    if (AuthService.onboardingSaveDisabled) return;
+
+    // Xếp hàng MỘT LƯỢT MỘT, và chỉ giữ trạng thái mới nhất.
+    //
+    // Chỗ gọi bắn kiểu `void` nên nhiều lượt chạy song song. Đo thật: bỏ qua bốn
+    // bước liên tiếp là bốn request cùng bay đi, cầu dao bên dưới chỉ sập khi
+    // phản hồi ĐẦU TIÊN về — nên vẫn có bốn lỗi 500 thay vì một. Gộp lại thì
+    // vừa hết tràng lỗi đó, vừa bớt hẳn lưu lượng lúc bình thường: các bước đổi
+    // dồn dập chỉ tốn một request mang trạng thái cuối cùng.
+    this.pendingOnboarding = state;
+    if (this.savingOnboarding) return;
+
+    this.savingOnboarding = true;
+    try {
+      while (this.pendingOnboarding) {
+        const gui = this.pendingOnboarding;
+        this.pendingOnboarding = null;
+        await this.api.patch<MeResponse['user']>('/auth/profile', {
+          onboardingState: gui,
+        });
+      }
+    } catch {
+      AuthService.onboardingSaveDisabled = true;
+      this.pendingOnboarding = null;
+      // Không toast: giữa lúc đang hướng dẫn thì một hộp lỗi còn phiền hơn cái
+      // lỗi. Ghi một dòng cảnh báo DUY NHẤT để người phát triển biết đường sửa.
+      console.warn(
+        '[onboarding] Không lưu được tiến độ tour xuống máy chủ — tạm dùng ' +
+          'localStorage cho phiên này. Thường là do chưa chạy migration ' +
+          'backend/migrations/0007_trang_thai_huong_dan.sql.',
+      );
+    } finally {
+      this.savingOnboarding = false;
+    }
+  }
+
+  /** Trạng thái mới nhất còn chờ gửi; lượt đang chạy sẽ nuốt luôn nó. */
+  private pendingOnboarding: OnboardingState | null = null;
+  private savingOnboarding = false;
+
+  /**
+   * Tĩnh, không phải theo từng instance: `AuthService` là singleton cấp gốc, mà
+   * để tĩnh thì cờ này còn sống qua cả những lần tạo lại service trong test.
+   */
+  private static onboardingSaveDisabled = false;
+
+  /** Một chỗ duy nhất dựng `User` từ hồ sơ backend trả về. */
+  private toUser(row: MeResponse['user']): User {
+    return {
       id: row.id,
       email: row.email,
       displayName: row.displayName ?? undefined,
@@ -273,7 +350,30 @@ export class AuthService {
       username: row.username ?? undefined,
       phone: row.phone ?? undefined,
       jobTitle: row.jobTitle ?? undefined,
-    });
+      onboardingState: this.mergeOnboardingState(row.onboardingState),
+    };
+  }
+
+  /**
+   * Server KHÔNG CÓ Ý KIẾN thì giữ bản đang có, đừng coi là lệnh xoá.
+   *
+   * `/auth/me` được gọi lại mỗi lần tải trang và mỗi lần Firebase làm mới token.
+   * Nếu nó trả về `null` cho `onboardingState` — cột `onboarding_state` chưa được
+   * tạo (migration 0007 chưa chạy), hoặc lần ghi trước thất bại — thì lấy bản
+   * rỗng đó ghi đè lên bản đã lưu ở localStorage là xoá sạch tiến độ: người dùng
+   * đi tới bước 3, F5 một cái là app hỏi lại "Want a quick tour?" như chưa từng
+   * gặp họ.
+   *
+   * `null` nghĩa là "không có thông tin", không phải "hãy đặt lại". Chỉ khi server
+   * gửi về một object thật thì nó mới được quyền quyết định — lúc đó nó là nguồn
+   * sự thật và ghi đè là đúng, kể cả khi ghi đè bằng trạng thái sớm hơn.
+   */
+  private mergeOnboardingState(raw: unknown): OnboardingState {
+    if (raw === null || raw === undefined) {
+      const cached = this.currentUser()?.onboardingState;
+      if (cached) return cached;
+    }
+    return parseOnboardingState(raw);
   }
 
   /**
@@ -301,15 +401,7 @@ export class AuthService {
   /** Gọi backend để upsert hồ sơ vào DB + biết đã có tổ chức chưa. */
   private async syncFromBackend(): Promise<{ needsOnboarding: boolean }> {
     const me = await this.api.get<MeResponse>('/auth/me');
-    this.setUser({
-      id: me.user.id,
-      email: me.user.email,
-      displayName: me.user.displayName ?? undefined,
-      avatarUrl: me.user.avatarUrl ?? undefined,
-      username: me.user.username ?? undefined,
-      phone: me.user.phone ?? undefined,
-      jobTitle: me.user.jobTitle ?? undefined,
-    });
+    this.setUser(this.toUser(me.user));
     return { needsOnboarding: me.needsOnboarding };
   }
 

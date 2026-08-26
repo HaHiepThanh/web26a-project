@@ -28,3 +28,5 @@ export * from './api.model';
 export * from './realtime.model';
 // --- Thông báo ở chuông Header ---
 export * from './notification.model';
+// --- Tour hướng dẫn người dùng mới ---
+export * from './onboarding.model';

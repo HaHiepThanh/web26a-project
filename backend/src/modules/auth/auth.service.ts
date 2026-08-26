@@ -41,6 +41,8 @@ export interface UserRow {
   phone: string | null;
   job_title: string | null;
   avatar_url: string | null;
+  /** Tour hướng dẫn. NULL = tài khoản có trước migration 0007, hoặc chưa chạy. */
+  onboarding_state: unknown | null;
   created_at: string;
   updated_at: string;
 }
@@ -68,6 +70,7 @@ export interface UserProfile {
   phone: string | null;
   jobTitle: string | null;
   avatarUrl: string | null;
+  onboardingState: unknown | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -81,6 +84,7 @@ export function toUserProfile(row: UserRow): UserProfile {
     phone: row.phone,
     jobTitle: row.job_title,
     avatarUrl: row.avatar_url,
+    onboardingState: row.onboarding_state ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -268,7 +272,11 @@ export class AuthService {
     user: CurrentUserInfo,
     dto: UpdateProfileDto,
   ): Promise<UserRow> {
-    const patch: Record<string, string | null> = {};
+    // `unknown` chứ không `string | null`: onboardingState là một object jsonb,
+    // không phải chuỗi. Supabase client tự tuần tự hoá sang jsonb giúp.
+    const patch: Record<string, unknown> = {};
+    if (dto.onboardingState !== undefined)
+      patch.onboarding_state = dto.onboardingState;
     if (dto.displayName !== undefined)
       patch.display_name = dto.displayName.trim() || null;
     if (dto.username !== undefined)

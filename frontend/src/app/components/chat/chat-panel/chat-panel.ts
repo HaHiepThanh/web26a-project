@@ -1,4 +1,4 @@
-import { Component, DestroyRef, computed, effect, inject, input, output, signal } from '@angular/core';
+import { Component, DestroyRef, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { ChatTaskSuggestion, User } from '../../../models';
 import { ChatStore } from '../../../ngrx/chat/chat.store';
 import { RealtimeService } from '../../../services/realtime.service';
@@ -6,6 +6,7 @@ import { TaskSuggestionStore } from '../../../ngrx/task-suggestion/task-suggesti
 import { BoardStore } from '../../../ngrx/board/board.store';
 import { CardStore } from '../../../ngrx/card/card.store';
 import { ListStore } from '../../../ngrx/list/list.store';
+import { TourStore } from '../../../ngrx/tour/tour.store';
 import { MessageList } from '../message-list/message-list';
 import { ChatInput } from '../chat-input/chat-input';
 
@@ -33,6 +34,10 @@ const RESIZE_STEP = 16;
     '[style.width.px]': 'panelWidth()',
     '[class.chat-mobile-fab]': 'isMobile() && collapsed()',
     '[class.chat-mobile-overlay]': 'isMobile() && !collapsed()',
+    // Neo bước "open-chat" của tour. Trên host vì host tồn tại ở cả hai trạng
+    // thái — rail thu gọn 44px và panel đã mở — còn cái nút bên trong thì đổi
+    // theo mobile/desktop và biến mất khi panel mở ra.
+    'data-tour': 'chat',
   },
 })
 export class ChatPanel {
@@ -42,6 +47,7 @@ export class ChatPanel {
   private readonly cardService = inject(CardStore);
   private readonly listService = inject(ListStore);
   private readonly realtime = inject(RealtimeService);
+  private readonly tour = inject(TourStore);
 
   readonly boardId = input.required<string>();
   readonly taskCreated = output<string>();
@@ -99,6 +105,15 @@ export class ChatPanel {
   constructor() {
     const onResize = () => this.viewportWidth.set(window.innerWidth);
     window.addEventListener('resize', onResize);
+
+    // Báo cho tour biết panel đang mở hay thu gọn (bước "open-chat").
+    // Trạng thái này là của riêng component — board.ts không cầm nó — nên chính
+    // component phải báo. `untracked()` vì `observeFlags` đọc rồi ghi state của
+    // TourStore; gọi trần trong effect là vòng lặp vô hạn.
+    effect(() => {
+      const open = !this.collapsed();
+      untracked(() => this.tour.observeFlags({ chatOpen: open }));
+    });
 
     // Rời board (ChatPanel bị huỷ) → trả tab title về sạch, không để badge "(n)" dính lại.
     inject(DestroyRef).onDestroy(() => {

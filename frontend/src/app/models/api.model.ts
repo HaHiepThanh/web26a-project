@@ -32,6 +32,11 @@ export interface MeResponse {
     phone: string | null;
     jobTitle: string | null;
     avatarUrl: string | null;
+    /**
+     * Cột jsonb, backend trả nguyên si không kiểm hình dạng. Để `unknown` cho
+     * đúng sự thật — chạy qua `parseOnboardingState()` rồi mới được dùng.
+     */
+    onboardingState: unknown | null;
   };
   organizations: { id: string; name: string; slug: string; role: Role }[];
   /** true khi user chưa thuộc tổ chức nào → điều hướng sang /onboarding. */
