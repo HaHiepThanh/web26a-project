@@ -108,7 +108,16 @@ app-board-list {
 }
 
 .row-list-wrap {
-  flex: 0 0 260px;
+  /* Cao theo NỘI DUNG, không ghim cứng.
+     Trước đây là `flex: 0 0 260px` — mọi hàng cao đúng 260px bất kể thẻ bên
+     trong cao bao nhiêu. Thẻ có ảnh bìa vượt quá con số đó nên bị cắt ngang
+     thân, và `.list-cards` phải mọc thêm thanh cuộn DỌC để với tới phần khuất.
+     Cuộn dọc bên trong một hàng NGANG là nghịch lý: người dùng không có dấu
+     hiệu nào báo còn nội dung phía dưới, nhìn ra chỉ thấy thẻ bị cụt.
+     `auto` + `align-items: flex-start` ở .list-cards = hàng cao đúng bằng thẻ
+     cao nhất, thẻ thấp hơn không bị kéo giãn. Việc cuộn dọc đã có `.row-body`
+     lo ở cấp trang — đúng chỗ của nó. */
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   width: 100%;
