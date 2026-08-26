@@ -7,11 +7,11 @@
 <!-- Khung đáy: `pointer-events-none` để khoảng trống giữa hai cụm không nuốt cú
      chạm vào nội dung bên dưới; từng cụm tự bật lại `pointer-events-auto`.
 
-     Khe giữa hai cụm về 0 khi ô tìm kiếm đang mở: `gap-3` là thứ duy nhất còn
-     chặn ô chạm tới nút menu, mà chỉ nới bề rộng thôi thì vô ích — flex sẽ bóp ô
-     lại đúng bằng ngần ấy. Lúc ô thu, khe trở lại 12px cho hai cụm tách bạch. -->
+     Khe giữa hai cụm khi ô tìm kiếm đang mở là `gap-2` (8px) — ĐÚNG BẰNG khe
+     giữa nút "+" và ô ở cụm trái, để ô nằm cân giữa hai bên thay vì dính sát một
+     bên. Lúc ô thu, khe trở lại 12px cho hai cụm tách bạch hẳn. -->
 <div class="pointer-events-none fixed bottom-4 left-4 right-4 z-50 flex items-end justify-between lg:hidden"
-  [class]="searchOpen() ? 'gap-0' : 'gap-3'">
+  [class]="searchOpen() ? 'gap-2' : 'gap-3'">
 
   <!-- ============================ CỤM TRÁI ============================ -->
   <div class="pointer-events-auto flex min-w-0 items-center gap-2">
@@ -62,20 +62,22 @@
     </div>
 
     <!-- Ô tìm kiếm thu/mở. Chuyển động nằm ở `width`: lúc thu đúng bằng một nút
-         tròn, lúc mở giãn ra CHẠM nút menu bên phải.
-         `100vw - 8.5rem` là đúng phần chỗ trống còn lại, cộng dồn từ những thứ
-         choán chỗ hai bên: 2rem lề khung (left-4 + right-4) + 3rem nút menu +
-         3rem nút "+" + 0.5rem khe giữa "+" và ô = 8.5rem. Khe giữa hai cụm không
-         còn trong phép tính vì lúc mở nó đã về 0 (xem khung ngoài).
+         tròn, lúc mở giãn ra tới gần nút menu, chừa lại đúng một khe bằng khe bên
+         trái để ô nằm cân giữa hai nút.
+         `100vw - 9rem` là đúng phần chỗ trống còn lại, cộng dồn từ những thứ
+         choán chỗ hai bên: 2rem lề khung (left-4 + right-4) + 3rem nút "+" +
+         0.5rem khe trái + 0.5rem khe phải + 3rem nút menu = 9rem.
+         Phải sửa CÙNG LÚC với khe ở khung ngoài: chỉ đổi một trong hai thì flex
+         bù trừ lại và kết quả không nhúc nhích.
          Tính bằng `calc` thay vì áng chừng một con số `vw` cố định: mọi bề rộng
-         máy đều tự chạm sát như nhau, không phải chỉnh tay từng khổ.
+         máy đều ra đúng khoảng hở như nhau, không phải chỉnh tay từng khổ.
          KHÔNG đặt trần bề rộng. Bản trước có `min(..., 460px)` để ô khỏi dài lê
          thê trên máy tính bảng, nhưng đó là thứ tự thêm chứ không ai yêu cầu, và
          nó phá đúng điều được yêu cầu: máy rộng hơn ~596px thì trần cắt sớm, ô
          dừng lại giữa chừng và hở một khoảng lớn tới nút menu. -->
     <div
       class="flex h-12 items-center overflow-hidden rounded-full border border-base-300/70 bg-base-100 shadow-lg transition-[width,background-color] duration-300 ease-out"
-      [class]="searchOpen() ? 'w-[calc(100vw-8.5rem)] pl-1 pr-1' : 'w-12'">
+      [class]="searchOpen() ? 'w-[calc(100vw-9rem)] pl-1 pr-1' : 'w-12'">
       <button type="button"
         class="btn btn-ghost btn-circle h-10 w-10 shrink-0 border-none"
         [class.text-primary]="hasQuery() && !searchOpen()"
