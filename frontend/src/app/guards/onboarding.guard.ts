@@ -1,6 +1,7 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { FirebaseService } from '../services/firebase.service';
 import { OrganizationStore } from '../ngrx/organization/organization.store';
 
 /**
@@ -15,10 +16,15 @@ import { OrganizationStore } from '../ngrx/organization/organization.store';
  */
 export const onboardingGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
+  const firebase = inject(FirebaseService);
   const orgService = inject(OrganizationStore);
   const router = inject(Router);
 
-  if (!auth.currentUser()) return router.createUrlTree(['/login']);
+  await firebase?.waitForAuthReady?.();
+
+  if (!auth.currentUser() && !firebase?.auth?.currentUser) {
+    return router.createUrlTree(['/login']);
+  }
 
   await orgService.ensureLoaded();
   // Thử lại một lần nếu lần đầu hỏng (thường do token chưa sẵn sàng).
@@ -39,10 +45,15 @@ export const onboardingGuard: CanActivateFn = async () => {
  */
 export const onboardingDoneGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
+  const firebase = inject(FirebaseService);
   const orgService = inject(OrganizationStore);
   const router = inject(Router);
 
-  if (!auth.currentUser()) return router.createUrlTree(['/login']);
+  await firebase?.waitForAuthReady?.();
+
+  if (!auth.currentUser() && !firebase?.auth?.currentUser) {
+    return router.createUrlTree(['/login']);
+  }
 
   await orgService.ensureLoaded();
   if (orgService.lastError()) await orgService.reload();

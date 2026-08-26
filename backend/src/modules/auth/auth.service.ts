@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   InternalServerErrorException,
@@ -343,5 +344,68 @@ export class AuthService {
       organizations,
       needsOnboarding: organizations.length === 0,
     };
+  }
+
+  /**
+   * Tải ảnh đại diện lên Supabase Storage (bucket `avatars`) và cập nhật `users.avatar_url`.
+   */
+  async uploadAvatar(
+    user: CurrentUserInfo,
+    file: Express.Multer.File,
+  ): Promise<{ avatarUrl: string }> {
+    if (!file) {
+      throw new BadRequestException('No image file uploaded.');
+    }
+    const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!ALLOWED_MIME.includes(file.mimetype)) {
+      throw new BadRequestException(
+        'Only JPG, PNG, WEBP, or GIF images are allowed.',
+      );
+    }
+
+    const extMap: Record<string, string> = {
+      'image/jpeg': '.jpg',
+      'image/png': '.png',
+      'image/webp': '.webp',
+      'image/gif': '.gif',
+    };
+    const ext = extMap[file.mimetype] || '.jpg';
+    const storagePath = `${user.uid}/${Date.now()}${ext}`;
+
+    const { error: uploadError } = await this.supabase.client.storage
+      .from('avatars')
+      .upload(storagePath, file.buffer, {
+        contentType: file.mimetype,
+        upsert: true,
+      });
+
+    if (uploadError) {
+      this.logger.error(
+        `Upload avatar lên Storage thất bại (uid=${user.uid}): ${uploadError.message}`,
+      );
+      throw new InternalServerErrorException('Failed to upload avatar image.');
+    }
+
+    const { data: publicData } = this.supabase.client.storage
+      .from('avatars')
+      .getPublicUrl(storagePath);
+
+    const publicUrl = publicData.publicUrl;
+
+    const { error: updateError } = await this.supabase.client
+      .from('users')
+      .update({ avatar_url: publicUrl, updated_at: new Date().toISOString() })
+      .eq('id', user.uid);
+
+    if (updateError) {
+      this.logger.error(
+        `Cập nhật avatar_url thất bại (uid=${user.uid}): ${updateError.message}`,
+      );
+      throw new InternalServerErrorException(
+        'Failed to update avatar in database.',
+      );
+    }
+
+    return { avatarUrl: publicUrl };
   }
 }

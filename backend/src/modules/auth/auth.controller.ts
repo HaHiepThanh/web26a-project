@@ -6,8 +6,11 @@ import {
   HttpStatus,
   Patch,
   Post,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { FirebaseAuthGuard } from '../../common/firebase/firebase-auth.guard';
 import { CurrentUser } from '../../common/firebase/current-user.decorator';
 import type { CurrentUserInfo } from '../../common/firebase/current-user.decorator';
@@ -16,6 +19,8 @@ import { toUserProfile } from './auth.service';
 import type { MeResponse, UserProfile } from './auth.service';
 import { SyncProfileDto } from './dto/sync-profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+
+const MAX_AVATAR_BYTES = 2 * 1024 * 1024; // 2MB
 
 /**
  * Mọi route ở đây đều yêu cầu 'Authorization: Bearer <Firebase ID token>'.
@@ -47,6 +52,20 @@ export class AuthController {
     @Body() body: UpdateProfileDto,
   ): Promise<UserProfile> {
     return toUserProfile(await this.auth.updateProfile(user, body));
+  }
+
+  /**
+   * POST /auth/avatar — Tải ảnh đại diện lên Supabase Storage và lưu URL vào database.
+   */
+  @Post('avatar')
+  @UseInterceptors(
+    FileInterceptor('file', { limits: { fileSize: MAX_AVATAR_BYTES } }),
+  )
+  async uploadAvatar(
+    @CurrentUser() user: CurrentUserInfo,
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<{ avatarUrl: string }> {
+    return this.auth.uploadAvatar(user, file);
   }
 
   /** GET /auth/me — hồ sơ + danh sách tổ chức + cờ needsOnboarding. */

@@ -276,6 +276,28 @@ export class AuthService {
     });
   }
 
+  /**
+   * Tải ảnh đại diện lên Supabase Storage qua backend và đồng bộ Firebase + state.
+   */
+  async uploadAvatar(file: File): Promise<string> {
+    const form = new FormData();
+    form.append('file', file);
+    const res = await this.api.upload<{ avatarUrl: string }>('/auth/avatar', form);
+
+    const cur = this.currentUser();
+    if (cur) {
+      this.setUser({ ...cur, avatarUrl: res.avatarUrl });
+    }
+
+    if (this.firebase?.auth?.currentUser) {
+      try {
+        await updateProfile(this.firebase.auth.currentUser, { photoURL: res.avatarUrl });
+      } catch {}
+    }
+
+    return res.avatarUrl;
+  }
+
   /** Gọi backend để upsert hồ sơ vào DB + biết đã có tổ chức chưa. */
   private async syncFromBackend(): Promise<{ needsOnboarding: boolean }> {
     const me = await this.api.get<MeResponse>('/auth/me');

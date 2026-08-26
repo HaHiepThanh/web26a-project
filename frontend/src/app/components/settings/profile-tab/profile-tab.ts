@@ -152,28 +152,26 @@ export class ProfileTab {
     input.value = '';
     if (!file) return;
 
-    const dataUrl = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = () => reject(reader.error);
-      reader.readAsDataURL(file);
-    }).catch(() => null);
-    if (!dataUrl) {
-      this.flashMessage.emit({ message: "Couldn't read this image, please try another one.", type: 'error' });
+    if (file.size > 2 * 1024 * 1024) {
+      this.flashMessage.emit({ message: 'Avatar image must be smaller than 2MB.', type: 'error' });
       return;
     }
 
     const previous = this.avatarPreview();
-    this.avatarPreview.set(dataUrl); // xem trước ngay, nhưng chỉ là tạm — có thể phải trả lại bên dưới
+    const previewUrl = URL.createObjectURL(file);
+    this.avatarPreview.set(previewUrl);
     this.savingAvatar.set(true);
+
     try {
-      await this.authService.updateProfile({ avatarUrl: dataUrl });
+      const avatarUrl = await this.authService.uploadAvatar(file);
+      this.avatarPreview.set(avatarUrl);
       this.flashMessage.emit({ message: 'Avatar updated.', type: 'success' });
       this.profileChanged.emit();
     } catch (err) {
-      this.avatarPreview.set(previous); // lưu hỏng → trả preview về đúng ảnh đang có trên server
+      this.avatarPreview.set(previous);
       this.flashMessage.emit({ message: this.describeProfileError(err, 'Failed to update avatar.'), type: 'error' });
     } finally {
+      URL.revokeObjectURL(previewUrl);
       this.savingAvatar.set(false);
     }
   }
