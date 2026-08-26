@@ -101,6 +101,22 @@
   color: color-mix(in oklab, currentColor 50%, transparent);
 }
 
+/* Đang chờ tìm thấy neo — dòng này chỉ đường nên phải đọc được, không mờ như
+   dòng gợi ý thường. */
+.tour-hint-wait {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--color-primary, #4f46e5);
+  font-weight: 700;
+}
+
+/* Popover trôi giữa màn hình (chưa có neo): thêm bóng đổ mạnh hơn để nó không
+   trông như đang dính vào một phần tử nào đó. */
+.tour-popover.is-floating {
+  box-shadow: 0 24px 60px oklch(0% 0 0 / 0.32);
+}
+
 @keyframes tour-fade {
   from { opacity: 0; }
   to   { opacity: 1; }

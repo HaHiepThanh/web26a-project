@@ -1,12 +1,14 @@
 @if (visible()) {
-@let h = hole()!;
 @let s = step()!;
 @let p = popoverPos();
 
-<!-- Bốn mảng mờ bao quanh vùng sáng. Chúng CÓ nhận chuột (chặn bấm nhầm ra
-     ngoài), còn khoảng trống ở giữa thì không có gì nằm trên nên cái nút thật
-     bấm được bình thường. -->
+<!-- Lớp mờ chỉ vẽ khi ĐÃ tìm thấy neo. Chưa thấy thì làm mờ cả màn hình mà không
+     soi sáng gì là chặn đường người dùng đi tới chỗ cần tới. -->
+@if (hole(); as h) {
 <div class="tour-scrim" aria-hidden="true">
+  <!-- Bốn mảng mờ bao quanh vùng sáng. Chúng CÓ nhận chuột (chặn bấm nhầm ra
+       ngoài), còn khoảng trống ở giữa thì không có gì nằm trên nên cái nút thật
+       bấm được bình thường. -->
   <div class="tour-dim" [style.top.px]="0" [style.left.px]="0"
        [style.right.px]="0" [style.height.px]="h.top"></div>
   <div class="tour-dim" [style.top.px]="h.top + h.height" [style.left.px]="0"
@@ -20,8 +22,10 @@
   <div class="tour-ring" [style.top.px]="h.top" [style.left.px]="h.left"
        [style.width.px]="h.width" [style.height.px]="h.height"></div>
 </div>
+}
 
 <div #popover class="tour-popover" role="dialog" aria-modal="false"
+     [class.is-floating]="!hasAnchor()"
      [attr.aria-labelledby]="'tour-step-title'"
      [style.top.px]="p.top" [style.left.px]="p.left">
 
@@ -46,8 +50,17 @@
     </button>
   </div>
 
+  @if (waitingFor(); as loi) {
+  <!-- Chưa tìm thấy neo: nói rõ phải đi đâu, thay vì để người dùng nhìn màn hình
+       trống và tưởng tour hỏng. -->
+  <p class="tour-hint tour-hint-wait">
+    <span class="loading loading-spinner h-3 w-3"></span>
+    {{ loi }}
+  </p>
+  } @else {
   <!-- Không có nút "Next": bước chỉ sang khi người dùng LÀM THẬT. Nói rõ ra để
        họ không ngồi tìm nút. -->
   <p class="tour-hint">Do it on the highlighted control — the tour moves on by itself.</p>
+  }
 </div>
 }

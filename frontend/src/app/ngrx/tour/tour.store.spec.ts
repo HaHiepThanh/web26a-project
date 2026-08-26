@@ -187,6 +187,28 @@ describe('TourStore', () => {
     expect(store.onboarding().seeded).toEqual({ listIds: ['l1'], cardIds: ['c1', 'c2'] });
   });
 
+  it('mở một board đã có sẵn cột và thẻ KHÔNG được tính là làm xong bước 3 và 4', () => {
+    const store = make();
+    store.hydrate(emptyOnboardingState());
+    // Trang workspace chỉ báo hai loại số của nó. `lists`/`cards` chưa ai báo.
+    store.observe({ workspaces: 2, boards: 3 });
+    store.start('full');
+    store.observe({ workspaces: 3 });
+    store.observe({ boards: 4 });
+    expect(store.currentStep()?.id).toBe('add-list');
+
+    // Mở một board CŨ, sẵn 3 cột 8 thẻ. Đây là lần đầu hai loại số này được báo
+    // — dựng mốc, không phải thành tích của người dùng.
+    store.observe({ lists: 3, cards: 8 });
+
+    expect(store.currentStep()?.id).toBe('add-list');
+    expect(store.seedOfferOpen()).toBe(false);
+
+    // Thêm cột thật thì mới đi tiếp.
+    store.observe({ lists: 4 });
+    expect(store.currentStep()?.id).toBe('add-card');
+  });
+
   it('bấm Skip ở bước cuối tầng 1 cũng dừng lại hỏi gieo, không rơi thẳng vào tầng 2', () => {
     const store = make();
     store.hydrate(emptyOnboardingState());

@@ -84,9 +84,28 @@ export class TourOverlay {
    * sáng thêm gì nữa. Modal đóng lại thì lớp phủ tự hiện lại trên cái nút cũ;
    * còn nếu họ tạo xong thật thì dữ liệu về và tour đã sang bước sau rồi.
    */
-  readonly visible = computed(
-    () => this.step() !== null && this.anchorRect() !== null && !this.modalOpen(),
-  );
+  readonly visible = computed(() => this.step() !== null && !this.modalOpen());
+
+  /**
+   * Đã tìm thấy neo chưa. Chưa thấy thì KHÔNG ẩn cả tour đi.
+   *
+   * Bấm F5 rồi "Continue the tour" khi bước đang dở thuộc trang khác — ví dụ
+   * đang ở trang workspace mà bước dở là "add-list" của trang board — thì trước
+   * đây tour chạy ngầm mà **màn hình trống trơn**: không lớp phủ, không popover,
+   * không một chữ nào. Người dùng bấm "chạy tiếp" rồi ngồi nhìn, tưởng hỏng.
+   *
+   * Giờ vẫn hiện popover ở giữa màn hình và nói rõ phải đi đâu.
+   */
+  readonly hasAnchor = computed(() => this.anchorRect() !== null);
+
+  /** Bước hiện tại thuộc trang nào, để chỉ đường khi chưa thấy neo. */
+  readonly waitingFor = computed(() => {
+    const s = this.step();
+    if (!s || this.hasAnchor()) return null;
+    return s.page === 'board'
+      ? 'Open a board to keep going — this step happens there.'
+      : 'Head back to your workspace to keep going.';
+  });
 
   /** Vùng sáng = khung phần tử nới ra HALO mỗi phía. */
   readonly hole = computed<Rect | null>(() => {
@@ -103,7 +122,15 @@ export class TourOverlay {
   /** Vị trí popover: ưu tiên bên dưới, không đủ chỗ thì lật lên trên. */
   readonly popoverPos = computed(() => {
     const h = this.hole();
-    if (!h) return { top: 0, left: 0 };
+    // Chưa có neo → đặt giữa màn hình. Đây là lúc popover đang chỉ đường, nó
+    // không thuộc về phần tử nào cả.
+    if (!h) {
+      const w = Math.min(POPOVER_W, window.innerWidth - 24);
+      return {
+        top: Math.max(12, window.innerHeight / 2 - this.popoverH() / 2),
+        left: Math.max(12, (window.innerWidth - w) / 2),
+      };
+    }
     const vh = window.innerHeight;
     const vw = window.innerWidth;
     const below = h.top + h.height + GAP;
@@ -192,15 +219,55 @@ export class TourOverlay {
       return r.width > 0 || r.height > 0;
     };
 
-    const measure = () => {
-      if (!isUsable(el)) return;
-      const r = el.getBoundingClientRect();
-      this.anchorRect.set({ top: r.top, left: r.left, width: r.width, height: r.height });
+    /**
+     * Bám khung neo bằng một vòng lặp theo khung hình, thay vì nghe `scroll` và
+     * `resize`.
+     *
+     * Nghe sự kiện rời rạc bỏ sót mọi thứ KHÔNG phát ra sự kiện: sidebar dài
+     * thêm một dòng, một toast chen vào đẩy layout, ảnh tải xong, thanh cuộn
+     * xuất hiện làm hẹp vùng nội dung, animation của chính app. Khung neo dịch
+     * đi mà không ai đo lại — viền sáng lệch khỏi cái nút.
+     *
+     * Và quan trọng hơn: bản cũ khi phần tử KHÔNG dùng được thì `return` mà
+     * GIỮ NGUYÊN khung cũ. Chuyển sang trang khác là neo biến mất, nhưng viền
+     * vẫn vẽ ở toạ độ của trang trước — một khung sáng rỗng chỉ vào chỗ không có
+     * gì. Giờ mất neo là xoá khung, lớp phủ tự ẩn cho tới khi tìm lại được.
+     *
+     * Một `getBoundingClientRect()` mỗi khung hình cho đúng một phần tử là chi
+     * phí không đáng kể, và đổi lại là đúng trong mọi trường hợp.
+     */
+    let lastRect: Rect | null = null;
+    const doiKhung = (a: Rect | null, b: Rect | null): boolean =>
+      !a || !b || a.top !== b.top || a.left !== b.left || a.width !== b.width || a.height !== b.height;
+
+    const docKhung = () => {
+      // Phần tử có thể đã bị thay mới (Angular render lại nhánh khác) — tìm lại.
+      if (!el || !el.isConnected) el = document.querySelector<HTMLElement>(selector);
+
+      if (!isUsable(el)) {
+        if (lastRect !== null) {
+          lastRect = null;
+          this.anchorRect.set(null);
+        }
+        // Neo mất giữa chừng: bấm giờ lại để không treo vô hạn.
+        armTimeout();
+      } else {
+        const r = el.getBoundingClientRect();
+        const next: Rect = { top: r.top, left: r.left, width: r.width, height: r.height };
+        if (doiKhung(lastRect, next)) {
+          lastRect = next;
+          this.anchorRect.set(next);
+        }
+        if (timer) {
+          clearTimeout(timer);
+          timer = null;
+        }
+      }
     };
 
-    const onScrollOrResize = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(measure);
+    const tick = () => {
+      docKhung();
+      raf = requestAnimationFrame(tick);
     };
 
     const attach = (found: HTMLElement) => {
@@ -210,13 +277,10 @@ export class TourOverlay {
       if (timer) clearTimeout(timer);
       timer = null;
       found.scrollIntoView({ block: 'center', behavior: 'smooth' });
-      measure();
-      // Cuộn mượt mất vài trăm ms; đo lại vài nhịp để lỗ sáng đuổi kịp.
-      requestAnimationFrame(measure);
-      setTimeout(measure, 180);
-      setTimeout(measure, 420);
-      window.addEventListener('scroll', onScrollOrResize, true);
-      window.addEventListener('resize', onScrollOrResize);
+      // Đo ngay tại đây, không đợi khung hình kế tiếp. Neo thường xuất hiện MUỘN
+      // (danh sách workspace còn đang tải) và tới qua MutationObserver; để vòng
+      // lặp lo thì có một quãng popover đã hiện mà chưa soi sáng gì.
+      docKhung();
     };
 
     /**
@@ -278,12 +342,22 @@ export class TourOverlay {
       armTimeout();
     }
 
+    // Đo NGAY một lần, đừng đợi khung hình đầu tiên.
+    //
+    // `requestAnimationFrame` không chạy khi tab ở nền hoặc trình duyệt chưa
+    // dựng khung. Đợi nó mới vẽ viền thì lúc đổi bước có một quãng popover đã
+    // hiện mà vùng sáng thì chưa — người dùng đọc chỉ dẫn xong không biết nhìn
+    // vào đâu. Đo đồng bộ ở đây khiến viền có mặt cùng lúc với popover.
+    docKhung();
+
+    // Rồi vòng lặp lo phần còn lại: bám theo khi bố cục xê dịch, phát hiện neo
+    // mất, và tìm lại neo mới. Không cần thêm listener nào.
+    raf = requestAnimationFrame(tick);
+
     this.cleanupAnchor = () => {
       cancelAnimationFrame(raf);
       observer?.disconnect();
       if (timer) clearTimeout(timer);
-      window.removeEventListener('scroll', onScrollOrResize, true);
-      window.removeEventListener('resize', onScrollOrResize);
     };
   }
 
