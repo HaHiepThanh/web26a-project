@@ -2,10 +2,10 @@
   <div class="modal-box my-auto flex h-[85vh] max-h-[85vh] w-full max-w-[880px] flex-col overflow-hidden p-0" (click)="$event.stopPropagation()">
 
     <!-- ===== Ảnh bìa ===== -->
-    @if (cover(); as cov) {
+    @if (coverRow(); as cov) {
       <div class="relative h-40 w-full shrink-0 bg-base-200">
         <img [src]="cov.url" [alt]="cov.name" class="h-full w-full object-cover" />
-        <button type="button" class="btn btn-sm absolute bottom-3 right-3 gap-1.5 bg-base-100/90 text-base-content shadow hover:bg-base-100" (click)="toggleCover(cov.id)">
+        <button type="button" class="btn btn-sm absolute bottom-3 right-3 gap-1.5 bg-base-100/90 text-base-content shadow hover:bg-base-100" (click)="toggleCover(cov)">
           <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
           Remove cover
         </button>
@@ -126,11 +126,15 @@
             </label>
           </div>
 
-          @if (attachments().length === 0) {
+          @if (attachmentError(); as loi) {
+            <p class="mb-2 rounded-md border border-warning/40 bg-warning/10 px-2.5 py-1.5 text-xs text-base-content">{{ loi }}</p>
+          }
+
+          @if (attachmentRows().length === 0) {
             <p class="text-xs text-base-content/40">No files yet — click "Attach" to add an image or document.</p>
           } @else {
             <div class="flex flex-col gap-2">
-              @for (att of attachments(); track att.id) {
+              @for (att of attachmentRows(); track att.key) {
                 <div class="group flex items-center gap-3 rounded-lg border border-base-200 p-2 hover:bg-base-200/50">
                   <button type="button" class="btn btn-ghost h-12 min-h-0 w-16 shrink-0 overflow-hidden p-0" (click)="openAttachment(att.url)" [title]="'Open ' + att.name">
                     @if (att.isImage) {
@@ -146,18 +150,21 @@
                       @if (att.isCover) {
                         <span class="badge badge-primary badge-xs gap-0.5">Cover</span>
                       }
+                      @if (att.isPending) {
+                        <span class="badge badge-warning badge-soft badge-xs gap-0.5">Not saved yet</span>
+                      }
                     </div>
                   </div>
                   <div class="flex shrink-0 items-center gap-0.5">
                     @if (att.isImage) {
-                      <button type="button" class="btn btn-ghost btn-xs btn-square" [class.text-primary]="att.isCover" (click)="toggleCover(att.id)" [title]="att.isCover ? 'Unset as cover' : 'Set as cover'">
+                      <button type="button" class="btn btn-ghost btn-xs btn-square" [class.text-primary]="att.isCover" (click)="toggleCover(att)" [title]="att.isCover ? 'Unset as cover' : 'Set as cover'">
                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
                       </button>
                     }
                     <button type="button" class="btn btn-ghost btn-xs btn-square" (click)="openAttachment(att.url)" title="Open in new tab">
                       <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
                     </button>
-                    <button type="button" class="btn btn-ghost btn-xs btn-square text-base-content/50 hover:text-error" (click)="removeAttachment(att.id, att.name)" title="Remove attachment">
+                    <button type="button" class="btn btn-ghost btn-xs btn-square text-base-content/50 hover:text-error" (click)="removeAttachment(att)" title="Remove attachment">
                       <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>
                     </button>
                   </div>
@@ -238,13 +245,13 @@
 
       <div class="flex items-center gap-2">
         <span class="min-w-0 flex-1 text-2xs text-base-content/50">
-          @if (dirty()) { Changes are only saved when you click "Save changes". }
-          @else { Labels, checklist, comments, and attachments are saved immediately. }
+          @if (dirty()) { Changes — including attached files — are only saved when you click "Save changes". }
+          @else { Labels, checklist and comments are saved immediately. }
         </span>
         @if (dirty()) {
           <button type="button" class="btn btn-ghost btn-sm" (click)="discard()">Discard changes</button>
         }
-        <button type="button" class="btn btn-primary btn-sm gap-1.5" [disabled]="!canSave()" (click)="save()">
+        <button type="button" class="btn btn-primary btn-sm gap-1.5" [disabled]="!canSave()" (click)="saveAndClose()">
           @if (saving()) { <span class="loading loading-spinner loading-xs"></span> }
           Save changes
         </button>
