@@ -428,8 +428,9 @@ export class TourOverlay {
     }
   }
 
-  /** Bước này đã hoàn thành sẵn — người dùng chỉ cần đọc rồi xác nhận. */
+  /** Bước tầng 2 — đọc xong tự bấm đi tiếp, tour không tự nhảy. */
   readonly needsAck = this.tour.needsAck;
+  readonly isLastStep = computed(() => this.tour.stepIndex() >= TOUR_STEPS.length - 1);
 
   onAck(): void {
     this.tour.acknowledgeStep();

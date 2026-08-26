@@ -162,8 +162,7 @@ export const TourStore = signalStore(
     needsAck: computed(() => {
       if (!store.running()) return false;
       const step = TOUR_STEPS[store.stepIndex()];
-      if (!step || step.advance.on !== 'flag') return false;
-      return store.flagsAtStepStart()[step.advance.key] === true;
+      return step?.advance.on === 'flag';
     }),
   })),
 
@@ -195,10 +194,17 @@ export const TourStore = signalStore(
       if (step.advance.on === 'count') {
         return store.counts()[step.advance.key] > store.baseline()[step.advance.key];
       }
-      // Cờ bật SẴN từ trước khi vào bước thì không tính — người dùng chưa làm
-      // gì cả, và bỏ qua ở đây là họ không bao giờ đọc được bước này. Lúc đó
-      // popover hiện kèm nút "Got it" (xem `needsAck`).
-      return store.flags()[step.advance.key] && !store.flagsAtStepStart()[step.advance.key];
+      // ⚠️ Bước tầng 2 KHÔNG bao giờ tự đi tiếp — chỉ đi khi người dùng bấm Next.
+      //
+      // Tầng 1 là LÀM: tạo được cái workspace là xong việc, tự sang bước sau là
+      // đúng. Tầng 2 là DẠY: mở bảng lọc mới chỉ là mở ra, bài học nằm ở chỗ
+      // chọn "High" rồi nhìn badge nhảy 3/8. Tự nhảy ngay lúc bảng vừa bung ra
+      // là cướp mất đúng khoảnh khắc sắp dạy được — người dùng chưa kịp thử gì
+      // thì bước sau đã đè lên.
+      //
+      // Cờ vẫn được các trang báo về (dùng cho `needsAck` và để sau này còn
+      // biết họ đã đụng tới chưa), nhưng nó không còn quyền chuyển bước.
+      return false;
     };
 
     /**
@@ -574,23 +580,36 @@ export const TourStore = signalStore(
       },
 
       /**
-       * Nút "Got it" — người dùng đã đọc xong một bước vốn đã hoàn thành sẵn.
+       * Nút "Next" của tầng 2 — người dùng đọc xong, tự quyết khi nào đi tiếp.
        *
-       * Khác `skipStep()`: bước này ĐƯỢC ghi là đã xong, vì việc đó thật sự đã
-       * làm rồi (khung chat đang mở). Chỉ là họ làm trước khi tour kịp kể.
+       * Khác `skipStep()`: bước này ĐƯỢC ghi là đã xong. Họ đã đọc, và với
+       * những việc như mở bảng lọc hay khung chat thì đọc hiểu là đủ — không có
+       * "sản phẩm" nào để kiểm như ở tầng 1.
        */
       acknowledgeStep(): void {
         const step = TOUR_STEPS[store.stepIndex()];
-        if (!step) return;
-        // Gỡ cờ "đã bật sẵn" để điều kiện của bước thoả, rồi để đúng một đường
-        // chuyển bước duy nhất lo phần còn lại — không nhân bản logic kết thúc
-        // tour và hỏi dọn thẻ mẫu ra thêm một chỗ nữa.
-        if (step.advance.on === 'flag') {
-          const next = { ...store.flagsAtStepStart() };
-          delete next[step.advance.key];
-          patchState(store, { flagsAtStepStart: next });
+        if (!step || step.advance.on !== 'flag') return;
+
+        // Đánh dấu xong rồi đi tiếp. Không gọi `tryAdvance()` vì điều kiện của
+        // bước tầng 2 luôn trả false — nó cố tình không tự đi. Nhưng vẫn phải
+        // dùng chung một đường kết thúc, nếu không thì bỏ mất phần hỏi dọn thẻ
+        // mẫu ở bước cuối.
+        const done = store.onboarding().completed;
+        const completed = done.includes(step.id) ? done : [...done, step.id];
+        const nextIndex = store.stepIndex() + 1;
+
+        if (nextIndex >= TOUR_STEPS.length) {
+          patchState(store, { running: false });
+          persist({ status: 'done', currentStep: null, completed });
+          const seeded = store.onboarding().seeded;
+          if (seeded && seeded.cardIds.length) {
+            patchState(store, { cleanupOfferOpen: true });
+          }
+          return;
         }
-        tryAdvance();
+
+        patchState(store, { stepIndex: nextIndex, flagsAtStepStart: { ...store.flags() } });
+        persist({ status: 'running', currentStep: TOUR_STEPS[nextIndex].id, completed });
       },
 
       /** Nút "Skip this step" — bỏ qua mà không đánh dấu đã xong. */

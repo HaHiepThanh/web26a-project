@@ -674,12 +674,14 @@ export class Board {
       // giây sau biến mất, rồi hứa với người dùng "thẻ đó là của bạn, nó ở lại"
       // trong khi họ kết thúc tour chỉ còn thẻ mẫu. Chờ modal đóng rồi mới đếm
       // thì con số phản ánh thứ THẬT SỰ còn lại.
-      // Chặn bằng CẢ HAI cờ. `selectedCardId` có lúc bị xoá tạm trong quá trình
-      // lưu, và chỉ cần một khung hình như thế là số thẻ lọt ra ngoài rồi tour
-      // chốt bước 4 cho một cái thẻ vài giây sau bị `isAbandonedFreshCard` xoá.
-      // `justCreatedCardId` chỉ được dọn ở `closeCardDetail()`, nên nó phủ kín
-      // trọn quãng từ lúc tạo tới lúc người dùng thật sự đóng modal.
-      if (this.selectedCardId() !== null || this.justCreatedCardId() !== null) return;
+      // Chặn trong lúc thẻ vừa tạo còn là BẢN NHÁP CHƯA LƯU.
+      //
+      // `justCreatedCardId` được dọn ở hai chỗ: lưu xong (`onCardSaved`) và
+      // đóng modal (`closeCardDetail`). Đúng hai thời điểm cần:
+      //   - lưu xong  → thẻ là thật, đếm ngay, tour sang bước sau lập tức.
+      //   - đóng ngang→ `isAbandonedFreshCard` đã xoá thẻ, đếm lúc này ra đúng
+      //     con số còn lại nên tour KHÔNG ghi công cho một thẻ không tồn tại.
+      if (this.justCreatedCardId() !== null) return;
 
       untracked(() => this.tour.observe({ lists, cards }));
     });
@@ -886,6 +888,20 @@ export class Board {
 
   closeCardDetail(): void {
     this.selectedCardId.set(null);
+    this.justCreatedCardId.set(null);
+  }
+
+  /**
+   * Thẻ vừa tạo đã được lưu — thôi coi nó là bản nháp.
+   *
+   * Hai hệ quả, và cả hai đều cần:
+   *   - `isAbandonedFreshCard` trong modal thôi đúng, nên đóng modal không xoá
+   *     mất cái thẻ vừa lưu.
+   *   - Tour thôi chặn đếm, nên bấm "Save changes" là sang bước sau NGAY. Trước
+   *     đây phải đóng modal mới thấy bước tiếp theo — người dùng lưu xong ngồi
+   *     nhìn, không biết mình còn phải làm gì.
+   */
+  onCardSaved(): void {
     this.justCreatedCardId.set(null);
   }
 

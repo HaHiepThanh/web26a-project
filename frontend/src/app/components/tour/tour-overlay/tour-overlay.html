@@ -46,11 +46,11 @@
       <svg lucideArrowLeft class="h-3 w-3" [strokeWidth]="2.4"></svg> Back
     </button>
     @if (needsAck()) {
-    <!-- Việc của bước này người dùng đã làm từ trước (ví dụ khung chat vốn đang
-         mở). Không bắt làm lại, nhưng phải cho họ đọc rồi tự xác nhận — bỏ qua
-         lặng lẽ là họ không bao giờ biết tính năng này tồn tại. -->
+    <!-- Bước tầng 2: người dùng tự quyết khi nào đi tiếp. Tự nhảy ngay lúc họ
+         vừa mở bảng lọc là cướp mất đúng khoảnh khắc bài học sắp diễn ra. -->
     <button type="button" class="btn btn-primary btn-xs gap-1 font-black px-4" (click)="onAck()">
-      Got it <svg lucideArrowRight class="h-3 w-3" [strokeWidth]="2.4"></svg>
+      {{ isLastStep() ? 'Finish' : 'Next' }}
+      <svg lucideArrowRight class="h-3 w-3" [strokeWidth]="2.4"></svg>
     </button>
     } @else {
     <button type="button" class="btn btn-ghost btn-xs gap-1 font-bold" (click)="onSkip()">

@@ -62,6 +62,11 @@ export class CardDetailModal {
 
   readonly close = output<void>();
   readonly deleted = output<void>();
+  /**
+   * Đã lưu xong một lần. Thẻ từ đây là dữ liệu thật, không còn là "thẻ vừa tạo
+   * chưa đụng tới" nữa — trang Board dựa vào đây để thôi coi nó là bản nháp.
+   */
+  readonly saved = output<void>();
 
   private readonly titleInputRef = viewChild<ElementRef<HTMLInputElement>>('titleInput');
 
@@ -212,6 +217,7 @@ export class CardDetailModal {
 
     for (const d of nhatKy) this.log(d);
     this.flashSaved();
+    this.saved.emit();
   }
 
   /** Bỏ mọi thay đổi, quay lại đúng dữ liệu đang có trên server. */

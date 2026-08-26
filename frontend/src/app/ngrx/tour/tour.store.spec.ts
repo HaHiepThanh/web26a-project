@@ -291,59 +291,59 @@ describe('TourStore', () => {
     expect(store.onboarding().status).toBe('done');
   });
 
-  it('tầng 2 chuyển bước theo CỜ chứ không theo số lượng', async () => {
-    const store = make();
-    chayHetTang1(store, 'full');
-    await store.acceptSeed();
-
-    store.observeFlags({ filterOpen: true });
-    expect(store.currentStep()?.id).toBe('open-chat');
-
-    store.observeFlags({ chatOpen: true });
-    expect(store.currentStep()?.id).toBe('try-ai');
-  });
-
-  it('khung chat vốn đã mở thì bước đó vẫn phải được KỂ, không lặng lẽ bỏ qua', async () => {
+  it('tầng 2 KHÔNG tự nhảy khi người dùng vừa mở bảng lọc ra', async () => {
     const store = make();
     chayHetTang1(store, 'full');
     await store.acceptSeed();
     expect(store.currentStep()?.id).toBe('use-filter');
 
-    // Người dùng để khung chat mở sẵn từ phiên trước (localStorage nhớ
-    // `trello_chat_panel_collapsed`), nên `chatOpen` đã bật trước khi tới bước
-    // "open-chat".
-    store.observeFlags({ filterOpen: true, chatOpen: true });
+    // Mở bảng lọc mới chỉ là mở ra. Bài học nằm ở chỗ chọn "High" rồi nhìn badge
+    // nhảy 3/8 — nhảy bước ngay lúc này là cướp mất đúng khoảnh khắc đó.
+    store.observeFlags({ filterOpen: true });
 
-    // Phải DỪNG ở bước chat chứ không nhảy sang bước 7. Nhảy qua là người dùng
-    // không bao giờ biết app có khung chat — họ chỉ thấy màn hình tự đổi.
-    expect(store.currentStep()?.id).toBe('open-chat');
+    expect(store.currentStep()?.id).toBe('use-filter');
     expect(store.needsAck()).toBe(true);
-
-    // Không bắt làm lại việc đã làm — đọc xong bấm "Got it" là đi tiếp.
-    store.acknowledgeStep();
-    expect(store.currentStep()?.id).toBe('try-ai');
   });
 
-  it('cờ bật lên TRONG lúc đang ở bước đó thì tự sang bước sau, không cần bấm gì', async () => {
+  it('tầng 2 đi tiếp khi người dùng tự bấm Next', async () => {
     const store = make();
     chayHetTang1(store, 'full');
     await store.acceptSeed();
 
-    store.observeFlags({ filterOpen: true });
+    store.acknowledgeStep();
     expect(store.currentStep()?.id).toBe('open-chat');
-    expect(store.needsAck()).toBe(false);
 
-    store.observeFlags({ chatOpen: true });
+    store.acknowledgeStep();
     expect(store.currentStep()?.id).toBe('try-ai');
   });
+
+  it('mọi bước tầng 2 đều chờ người dùng bấm Next, kể cả khi việc đó đã làm rồi', async () => {
+    const store = make();
+    chayHetTang1(store, 'full');
+    await store.acceptSeed();
+
+    // Khung chat vốn đã mở sẵn từ phiên trước (localStorage nhớ trạng thái đó).
+    // Trước đây tour coi là xong và lặng lẽ bỏ qua — người dùng không bao giờ
+    // biết app có khung chat, chỉ thấy màn hình tự nhảy.
+    store.observeFlags({ filterOpen: true, chatOpen: true });
+    expect(store.currentStep()?.id).toBe('use-filter');
+
+    store.acknowledgeStep();
+    expect(store.currentStep()?.id).toBe('open-chat');
+    expect(store.needsAck()).toBe(true);
+
+    store.acknowledgeStep();
+    expect(store.currentStep()?.id).toBe('try-ai');
+  });
+
 
   it('xong bước cuối thì hỏi dọn thẻ mẫu', async () => {
     const store = make();
     chayHetTang1(store, 'full');
     await store.acceptSeed();
-    store.observeFlags({ filterOpen: true });
-    store.observeFlags({ chatOpen: true });
-    store.observeFlags({ aiOpen: true });
+    store.acknowledgeStep();
+    store.acknowledgeStep();
+    store.acknowledgeStep();
 
     expect(store.running()).toBe(false);
     expect(store.onboarding().status).toBe('done');
@@ -355,8 +355,8 @@ describe('TourStore', () => {
     const store = make();
     chayHetTang1(store, 'full');
     await store.acceptSeed();
-    store.observeFlags({ filterOpen: true });
-    store.observeFlags({ chatOpen: true });
+    store.acknowledgeStep();
+    store.acknowledgeStep();
     expect(store.currentStep()?.id).toBe('try-ai');
 
     // Gemini không được cấu hình (thiếu GEMINI_API_KEY) → chip gợi ý không bao
@@ -386,7 +386,9 @@ describe('TourStore', () => {
     const store = make();
     chayHetTang1(store, 'full');
     await store.acceptSeed();
-    store.observeFlags({ filterOpen: true, chatOpen: true, aiOpen: true });
+    store.acknowledgeStep();
+    store.acknowledgeStep();
+    store.acknowledgeStep();
 
     await store.acceptCleanup();
 
@@ -398,7 +400,9 @@ describe('TourStore', () => {
     const store = make();
     chayHetTang1(store, 'full');
     await store.acceptSeed();
-    store.observeFlags({ filterOpen: true, chatOpen: true, aiOpen: true });
+    store.acknowledgeStep();
+    store.acknowledgeStep();
+    store.acknowledgeStep();
 
     store.declineCleanup();
 
