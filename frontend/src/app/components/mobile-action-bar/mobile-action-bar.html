@@ -111,111 +111,101 @@
   <!-- ============================ CỤM PHẢI ============================ -->
   <div class="pointer-events-auto relative flex shrink-0 flex-col items-end gap-2">
 
-    <!-- Cột nổi phía trên nút: bảng thông báo/lời mời và 4 nút speed dial.
+    <!-- Thẻ menu bật lên trên nút bấm.
          ĐẶT TUYỆT ĐỐI, và đây là điểm mấu chốt chứ không phải chuyện thẩm mỹ:
-         4 nút kia lúc đóng dùng `invisible`, mà `visibility: hidden` VẪN CHIẾM
-         CHỖ. Để chúng trong dòng thì cụm phải luôn rộng bằng nhãn dài nhất
-         ("Profile settings") — đo được 149px thay vì 48px — và ô tìm kiếm bị bóp
-         còn 153px, hở 101px tới nút menu dù công thức bề rộng đã đúng. Tách ra
-         khỏi dòng thì cụm phải trở lại đúng 48px của nút bấm. -->
-    <div class="absolute bottom-full right-0 mb-2 flex flex-col items-end gap-2">
+         bản trước để 4 nút nằm trong dòng và chỉ ẩn bằng `invisible`, mà
+         `visibility: hidden` VẪN CHIẾM CHỖ — cụm phải khi đó rộng bằng nhãn dài
+         nhất ("Profile settings"), đo được 149px thay vì 48px, và ô tìm kiếm bị
+         bóp còn 153px. Nằm ngoài dòng thì cụm phải luôn đúng 48px của nút bấm.
 
-    <!-- Bảng Thông báo / Lời mời -->
-    @if (panel() === 'notifications' || panel() === 'invites') {
-      <div
-        class="w-[min(88vw,320px)] rounded-lg border border-base-300/70 bg-base-100 p-2 shadow-xl">
-        @if (panel() === 'notifications') {
-          <app-notifications-panel
-            [notifications]="actions.notifications()"
-            [unreadCount]="actions.unreadNotifications()"
-            [dueCount]="actions.dueBadgeCount()"
-            (markAllRead)="markAllRead()"
-            (openNotification)="onOpenNotification($event)" />
-        } @else {
-          <app-invites-panel
-            [invites]="actions.myInvites()"
-            [error]="inviteError()"
-            (accept)="onAccept($event)"
-            (decline)="onDecline($event)" />
-        }
-      </div>
-    }
+         Luôn ở trong DOM để có chuyển động vào/ra; lúc đóng thì
+         `pointer-events-none` nên không ăn cú chạm nào. -->
+    <div
+      class="the-menu absolute bottom-16 right-0 origin-bottom-right transition-all duration-200 ease-out"
+      [class]="dialOpen() ? 'scale-100 opacity-100' : 'pointer-events-none scale-95 opacity-0'">
 
-    <!-- 4 nút chức năng. Luôn nằm trong DOM để có chuyển động vào/ra; lúc đóng
-         thì `pointer-events-none` + `invisible` nên không ăn cú chạm nào. -->
-    <div class="flex flex-col items-end gap-2" [class.invisible]="!dialOpen()">
-      <!-- 1. Thông báo -->
-      <div class="speed-dial-item flex items-center gap-2"
-        [class.is-open]="dialOpen()" [style.--i]="0">
-        <span class="rounded bg-base-100/95 px-2 py-1 text-2xs font-bold text-base-content shadow-md">Notifications</span>
-        <button type="button"
-          class="btn btn-circle h-11 w-11 border-none bg-base-100 text-base-content shadow-lg hover:bg-base-200"
-          [class.btn-active]="panel() === 'notifications'"
-          [attr.aria-label]="actions.bellTitle()" [title]="actions.bellTitle()"
-          (click)="openPanel('notifications')">
-          <svg lucideBell class="h-5 w-5" [strokeWidth]="2"></svg>
-          @if (actions.bellBadgeCount() > 0) {
-            <span
-              class="badge badge-error absolute -right-0.5 -top-0.5 h-4 min-w-4 rounded-full border border-base-100 px-1 text-3xs font-bold text-white">{{
-              actions.bellBadgeCount() }}</span>
-          }
-        </button>
-      </div>
-
-      <!-- 2. Lời mời tổ chức -->
-      <div class="speed-dial-item flex items-center gap-2"
-        [class.is-open]="dialOpen()" [style.--i]="1">
-        <span class="rounded bg-base-100/95 px-2 py-1 text-2xs font-bold text-base-content shadow-md">Invites</span>
-        <button type="button"
-          class="btn btn-circle h-11 w-11 border-none bg-base-100 text-base-content shadow-lg hover:bg-base-200"
-          [class.btn-active]="panel() === 'invites'"
-          [title]="actions.pendingInviteCount() > 0 ? actions.pendingInviteCount() + ' pending organization invite(s)' : 'Organization invites'"
-          aria-label="Organization invites"
-          (click)="openPanel('invites')">
-          <svg lucideUserPlus class="h-5 w-5" [strokeWidth]="2"></svg>
-          @if (actions.pendingInviteCount() > 0) {
-            <span
-              class="badge badge-error absolute -right-0.5 -top-0.5 h-4 min-w-4 rounded-full border border-base-100 px-1 text-3xs font-bold text-white">{{
-              actions.pendingInviteCount() }}</span>
-          }
-        </button>
-      </div>
-
-      <!-- 3. Đổi giao diện sáng/tối -->
-      <div class="speed-dial-item flex items-center gap-2"
-        [class.is-open]="dialOpen()" [style.--i]="2">
-        <span class="rounded bg-base-100/95 px-2 py-1 text-2xs font-bold text-base-content shadow-md">
-          {{ actions.theme() === 'dark' ? 'Light theme' : 'Dark theme' }}
-        </span>
-        <button type="button"
-          class="btn btn-circle h-11 w-11 border-none bg-base-100 text-base-content shadow-lg hover:bg-base-200"
-          [attr.aria-pressed]="actions.theme() === 'dark'"
-          [attr.aria-label]="actions.theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
-          (click)="toggleTheme()">
-          @if (actions.theme() === 'dark') {
-            <svg lucideSun class="h-5 w-5" [strokeWidth]="2"></svg>
+      @if (panel() === 'notifications' || panel() === 'invites') {
+        <!-- Bảng chi tiết THAY CHỖ danh sách menu, không chồng lên nó: màn hình
+             điện thoại không đủ cao cho cả hai, mà xếp chồng thì bảng bị đẩy lên
+             quá tầm với của ngón tay. Bấm lại đúng mục đó là quay về menu. -->
+        <div
+          class="w-[min(88vw,320px)] rounded-2xl border border-slate-200 bg-white p-2 shadow-xl shadow-slate-200/50 dark:border-slate-700/60 dark:bg-slate-900/95 dark:shadow-2xl dark:shadow-black/50 dark:backdrop-blur-md">
+          @if (panel() === 'notifications') {
+            <app-notifications-panel
+              [notifications]="actions.notifications()"
+              [unreadCount]="actions.unreadNotifications()"
+              [dueCount]="actions.dueBadgeCount()"
+              (markAllRead)="markAllRead()"
+              (openNotification)="onOpenNotification($event)" />
           } @else {
-            <svg lucideMoon class="h-5 w-5" [strokeWidth]="2"></svg>
+            <app-invites-panel
+              [invites]="actions.myInvites()"
+              [error]="inviteError()"
+              (accept)="onAccept($event)"
+              (decline)="onDecline($event)" />
           }
-        </button>
-      </div>
+        </div>
+      } @else {
+        <!-- Danh sách 4 chức năng: icon trái, nhãn phải, gói gọn trong một thẻ. -->
+        <div
+          class="w-[min(72vw,244px)] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-200/50 dark:border-slate-700/60 dark:bg-slate-900/95 dark:shadow-2xl dark:shadow-black/50 dark:backdrop-blur-md">
 
-      <!-- 4. Hồ sơ & cài đặt -->
-      <div class="speed-dial-item flex items-center gap-2"
-        [class.is-open]="dialOpen()" [style.--i]="3">
-        <span class="rounded bg-base-100/95 px-2 py-1 text-2xs font-bold text-base-content shadow-md">Profile settings</span>
-        <!-- Chỉ điều hướng, KHÔNG kèm `closeAll()`. Việc đóng speed dial là của
-             nút menu (bấm lại là đóng); gắn thêm vào đây thì một cú bấm mang hai
-             ý nghĩa, và cái đóng che mất cái đi. Rời khỏi trang thì thanh tự dọn
-             qua `NavigationEnd` bên dưới. -->
-        <a routerLink="/settings"
-          class="btn btn-circle h-11 w-11 border-none bg-base-100 text-base-content shadow-lg hover:bg-base-200"
-          aria-label="Profile settings" title="Profile settings">
-          <svg lucideUser class="h-5 w-5" [strokeWidth]="2"></svg>
-        </a>
-      </div>
+          <!-- 1. Thông báo -->
+          <button type="button"
+            class="flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-100/80 dark:text-slate-100 dark:hover:bg-slate-800/80"
+            [attr.aria-label]="actions.bellTitle()" [title]="actions.bellTitle()"
+            (click)="openPanel('notifications')">
+            <svg lucideBell class="h-5 w-5 shrink-0" [strokeWidth]="2"></svg>
+            <span class="min-w-0 flex-1 truncate">Notifications</span>
+            @if (actions.bellBadgeCount() > 0) {
+              <span class="badge badge-error h-5 min-w-5 shrink-0 rounded-full px-1.5 text-3xs font-bold text-white">{{
+                actions.bellBadgeCount() }}</span>
+            }
+          </button>
+
+          <!-- 2. Lời mời tổ chức -->
+          <button type="button"
+            class="flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-100/80 dark:text-slate-100 dark:hover:bg-slate-800/80"
+            [title]="actions.pendingInviteCount() > 0 ? actions.pendingInviteCount() + ' pending organization invite(s)' : 'Organization invites'"
+            aria-label="Organization invites"
+            (click)="openPanel('invites')">
+            <svg lucideUserPlus class="h-5 w-5 shrink-0" [strokeWidth]="2"></svg>
+            <span class="min-w-0 flex-1 truncate">Invites</span>
+            @if (actions.pendingInviteCount() > 0) {
+              <span class="badge badge-error h-5 min-w-5 shrink-0 rounded-full px-1.5 text-3xs font-bold text-white">{{
+                actions.pendingInviteCount() }}</span>
+            }
+          </button>
+
+          <!-- 3. Đổi giao diện sáng/tối -->
+          <button type="button"
+            class="flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-100/80 dark:text-slate-100 dark:hover:bg-slate-800/80"
+            [attr.aria-pressed]="actions.theme() === 'dark'"
+            [attr.aria-label]="actions.theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
+            (click)="toggleTheme()">
+            @if (actions.theme() === 'dark') {
+              <svg lucideSun class="h-5 w-5 shrink-0" [strokeWidth]="2"></svg>
+              <span class="min-w-0 flex-1 truncate">Light theme</span>
+            } @else {
+              <svg lucideMoon class="h-5 w-5 shrink-0" [strokeWidth]="2"></svg>
+              <span class="min-w-0 flex-1 truncate">Dark theme</span>
+            }
+          </button>
+
+          <!-- 4. Hồ sơ & cài đặt.
+               Chỉ điều hướng, KHÔNG kèm `closeAll()`: đóng menu là việc của nút
+               bấm (bấm lại là đóng); gắn thêm vào đây thì một cú bấm mang hai ý
+               nghĩa, và cái đóng che mất cái đi. Rời khỏi trang thì thanh tự dọn
+               qua `NavigationEnd` trong component. -->
+          <a routerLink="/settings"
+            class="flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-100/80 dark:text-slate-100 dark:hover:bg-slate-800/80"
+            aria-label="Profile settings" title="Profile settings">
+            <svg lucideUser class="h-5 w-5 shrink-0" [strokeWidth]="2"></svg>
+            <span class="min-w-0 flex-1 truncate">Profile settings</span>
+          </a>
+        </div>
+      }
     </div>
-    </div><!-- hết cột nổi -->
 
     <!-- Nút mở/đóng speed dial -->
     <button type="button"
