@@ -484,7 +484,20 @@ export class CardDetailModal {
         previewUrl: URL.createObjectURL(file),
       }));
 
-    if (them.length) this.pendingFiles.update((list) => [...list, ...them]);
+    if (them.length) {
+      this.pendingFiles.update((list) => [...list, ...them]);
+
+      // Khi thẻ chưa có ảnh bìa (cả server lẫn bản nháp) và có tệp ảnh mới được gắn vào:
+      // Tự động tích hợp ảnh đầu tiên làm ảnh bìa cho thẻ ngay trong bản nháp.
+      // Nếu thêm các hình khác sau đó, người dùng có thể tự điều chỉnh chọn hình khác theo ý muốn.
+      if (!this.draftCoverKey()) {
+        const firstImage = them.find((p) => p.isImage);
+        if (firstImage) {
+          this.coverTouched.set(true);
+          this.coverChoice.set(`new:${firstImage.localId}`);
+        }
+      }
+    }
   }
 
   /**
