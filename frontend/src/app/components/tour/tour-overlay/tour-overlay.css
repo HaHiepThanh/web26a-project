@@ -28,13 +28,27 @@
   pointer-events: auto;
 }
 
+/* Viền sáng SÁNG–TỐI chồng nhau, cố ý KHÔNG dùng màu chủ đề.
+ *
+ * Bản trước tô bằng `--color-primary`. Nhưng board cho người dùng tự chọn nền,
+ * và nền xanh gặp viền xanh thì viền biến mất — đúng lúc nó là thứ duy nhất chỉ
+ * cho họ biết nhìn vào đâu. Nền còn có thể là ẢNH, nên không có màu nào an toàn.
+ *
+ * Cách duy nhất chắc chắn là không chọn màu nào cả mà xếp sáng cạnh tối: nền tối
+ * thì vòng trắng nổi, nền sáng thì vòng đen nổi, nền ảnh lộn xộn thì luôn có ít
+ * nhất một vòng tương phản. Đây cũng là cách viền focus của hệ điều hành và các
+ * công cụ chụp màn hình vẫn làm.
+ *
+ * Vòng trắng đặt trong cùng để ôm sát phần tử; nếu chính phần tử cũng trắng thì
+ * vòng đen ngay bên ngoài vẫn vạch ra ranh giới. */
 .tour-ring {
   position: fixed;
   pointer-events: none;
   border-radius: 12px;
   box-shadow:
-    0 0 0 2px var(--color-primary, #4f46e5),
-    0 0 0 6px oklch(from var(--color-primary, #4f46e5) l c h / 0.25);
+    0 0 0 3px oklch(100% 0 0 / 0.95),
+    0 0 0 6px oklch(0% 0 0 / 0.7),
+    0 0 0 10px oklch(100% 0 0 / 0.25);
   animation: tour-fade 200ms ease-out both;
 }
 
