@@ -1,0 +1,53 @@
+@if (visible()) {
+@let h = hole()!;
+@let s = step()!;
+@let p = popoverPos();
+
+<!-- Bốn mảng mờ bao quanh vùng sáng. Chúng CÓ nhận chuột (chặn bấm nhầm ra
+     ngoài), còn khoảng trống ở giữa thì không có gì nằm trên nên cái nút thật
+     bấm được bình thường. -->
+<div class="tour-scrim" aria-hidden="true">
+  <div class="tour-dim" [style.top.px]="0" [style.left.px]="0"
+       [style.right.px]="0" [style.height.px]="h.top"></div>
+  <div class="tour-dim" [style.top.px]="h.top + h.height" [style.left.px]="0"
+       [style.right.px]="0" [style.bottom.px]="0"></div>
+  <div class="tour-dim" [style.top.px]="h.top" [style.left.px]="0"
+       [style.width.px]="h.left" [style.height.px]="h.height"></div>
+  <div class="tour-dim" [style.top.px]="h.top" [style.left.px]="h.left + h.width"
+       [style.right.px]="0" [style.height.px]="h.height"></div>
+
+  <!-- Viền sáng quanh phần tử. pointer-events:none để không cướp cú bấm. -->
+  <div class="tour-ring" [style.top.px]="h.top" [style.left.px]="h.left"
+       [style.width.px]="h.width" [style.height.px]="h.height"></div>
+</div>
+
+<div #popover class="tour-popover" role="dialog" aria-modal="false"
+     [attr.aria-labelledby]="'tour-step-title'"
+     [style.top.px]="p.top" [style.left.px]="p.left">
+
+  <div class="tour-popover-head">
+    <span class="tour-progress">Step {{ stepNumber() }} of {{ totalSteps }}</span>
+    <button type="button" class="btn btn-ghost btn-xs btn-circle" (click)="onQuit()"
+            aria-label="End the tour">
+      <svg lucideX class="h-3.5 w-3.5" [strokeWidth]="2.6"></svg>
+    </button>
+  </div>
+
+  <h2 id="tour-step-title" class="tour-title">{{ s.title }}</h2>
+  <p class="tour-body">{{ s.body }}</p>
+
+  <div class="tour-actions">
+    <button type="button" class="btn btn-ghost btn-xs gap-1 font-bold"
+            [disabled]="!canGoBack()" (click)="onBack()">
+      <svg lucideArrowLeft class="h-3 w-3" [strokeWidth]="2.4"></svg> Back
+    </button>
+    <button type="button" class="btn btn-ghost btn-xs gap-1 font-bold" (click)="onSkip()">
+      Skip <svg lucideArrowRight class="h-3 w-3" [strokeWidth]="2.4"></svg>
+    </button>
+  </div>
+
+  <!-- Không có nút "Next": bước chỉ sang khi người dùng LÀM THẬT. Nói rõ ra để
+       họ không ngồi tìm nút. -->
+  <p class="tour-hint">Do it on the highlighted control — the tour moves on by itself.</p>
+</div>
+}

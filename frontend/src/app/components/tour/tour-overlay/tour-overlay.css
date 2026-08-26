@@ -1,0 +1,133 @@
+/* Lớp phủ tour. Chỉ animate `opacity` và `transform` — hai thuộc tính trình duyệt
+   xử lý trên GPU, không buộc tính lại bố cục. */
+
+:host {
+  /* Dưới toast (z-[9999]) để thông báo lỗi vẫn đọc được khi tour đang chạy,
+     nhưng trên mọi thứ khác của trang. */
+  --tour-z: 9000;
+}
+
+.tour-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: var(--tour-z);
+  /* ⚠️ BẮT BUỘC. Thẻ bọc này phủ kín màn hình, nên nếu nó nhận chuột thì nó nằm
+     đè lên chính cái lỗ sáng và nuốt cú bấm — người dùng thấy nút được soi sáng
+     mà bấm mãi không ăn, tour đứng ở bước 1 vĩnh viễn. Chuột phải đi xuyên qua
+     thẻ bọc; chỉ bốn mảng mờ bên dưới mới chặn, xem .tour-dim. */
+  pointer-events: none;
+}
+
+.tour-dim {
+  position: fixed;
+  background: oklch(0% 0 0 / 0.55);
+  animation: tour-fade 200ms ease-out both;
+  /* Bật lại riêng cho bốn mảng mờ: bấm ra ngoài vùng sáng thì bị chặn, đúng ý
+     đồ "chỉ được thao tác vào chỗ đang dạy". Còn khoảng trống giữa bốn mảng —
+     tức cái lỗ — không có phần tử nào, nên cú bấm rơi thẳng vào nút thật. */
+  pointer-events: auto;
+}
+
+.tour-ring {
+  position: fixed;
+  pointer-events: none;
+  border-radius: 12px;
+  box-shadow:
+    0 0 0 2px var(--color-primary, #4f46e5),
+    0 0 0 6px oklch(from var(--color-primary, #4f46e5) l c h / 0.25);
+  animation: tour-fade 200ms ease-out both;
+}
+
+.tour-popover {
+  position: fixed;
+  z-index: calc(var(--tour-z) + 1);
+  width: 320px;
+  max-width: calc(100vw - 24px);
+  padding: 14px 16px 12px;
+  border-radius: 16px;
+  border: 1px solid var(--color-base-300, #d4d4d8);
+  background: var(--color-base-100, #fff);
+  color: var(--color-base-content, #18181b);
+  box-shadow: 0 18px 40px oklch(0% 0 0 / 0.22);
+  /* 320ms nằm ngoài thang --transition-fast/normal của styles.css: hai mốc đó
+     (150/250ms) là cho tương tác nhỏ như hover. Popover trồi lên cần chậm hơn
+     một nhịp để mắt kịp bám theo khi nó nhảy sang vị trí mới. */
+  animation: tour-pop 320ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.tour-popover-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.tour-progress {
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-primary, #4f46e5);
+}
+
+.tour-title {
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.tour-body {
+  margin-top: 6px;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: color-mix(in oklab, currentColor 65%, transparent);
+}
+
+.tour-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.tour-hint {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-base-200, #e4e4e7);
+  font-size: 0.6875rem;
+  line-height: 1.45;
+  color: color-mix(in oklab, currentColor 50%, transparent);
+}
+
+@keyframes tour-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes tour-pop {
+  from { opacity: 0; transform: translateY(8px) scale(0.96); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Mobile: popover thành tấm dán đáy màn hình. Ở 375px thì một hộp 320px thả nổi
+   cạnh cái nút sẽ che mất chính cái nút đó. */
+@media (max-width: 560px) {
+  .tour-popover {
+    top: auto !important;
+    left: 12px !important;
+    right: 12px;
+    bottom: 12px;
+    width: auto;
+    max-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-dim,
+  .tour-ring,
+  .tour-popover {
+    animation: none;
+  }
+}
