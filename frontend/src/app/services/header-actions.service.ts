@@ -50,6 +50,12 @@ export class HeaderActionsService {
 
   private searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
+  constructor() {
+    this.router.events.subscribe(() => {
+      this.searchDropdownOpen.set(false);
+    });
+  }
+
   /** Thành viên thường không tạo được workspace/board — ẩn mục trong menu tạo
    *  nhanh cho gọn mắt. Backend (assertCanManage) mới là nơi chặn thật. */
   readonly canManage = this.orgService.isAdminOrOwner;
@@ -169,7 +175,11 @@ export class HeaderActionsService {
     this.searchQuery.set('');
     this.workspaceUi.setSearchQuery('');
     const slug = board.orgSlug || this.orgService.activeOrgSlug();
-    void this.router.navigate(['/', slug, 'board', board.id]);
+    if (slug) {
+      void this.router.navigate(['/', slug, 'board', board.id]);
+    } else {
+      void this.router.navigate(['/board', board.id]);
+    }
   }
 
   closeSearchDropdown(): void {

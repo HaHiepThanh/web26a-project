@@ -39,7 +39,7 @@
     </label>
 
     <!-- Search Results Dropdown -->
-    @if (actions.searchDropdownOpen() && (actions.searchQuery().trim() || actions.searchResults().length > 0 || actions.searchLoading())) {
+    @if (actions.searchDropdownOpen()) {
       <div
         class="absolute left-0 right-0 top-[42px] z-[250] max-h-[360px] overflow-y-auto rounded-lg border border-base-300/80 bg-base-100 p-2 shadow-xl backdrop-blur-md">
         @if (actions.searchLoading()) {
@@ -49,7 +49,11 @@
           </div>
         } @else if (actions.searchResults().length === 0) {
           <div class="py-4 text-center text-xs text-base-content/50">
-            No boards found for "{{ actions.searchQuery() }}"
+            @if (actions.searchQuery().trim()) {
+              No boards found for "{{ actions.searchQuery() }}"
+            } @else {
+              No boards found in this organization
+            }
           </div>
         } @else {
           <div class="mb-1 flex items-center justify-between px-2 pt-1 text-3xs font-extrabold uppercase tracking-wider text-base-content/45">
@@ -61,6 +65,7 @@
               <button
                 type="button"
                 class="btn btn-ghost h-auto min-h-0 justify-start rounded-md border border-transparent px-2.5 py-2 text-left font-normal normal-case transition-colors hover:border-base-300 hover:bg-base-200/60"
+                (mousedown)="$event.preventDefault()"
                 (click)="selectBoard(b)">
                 <div class="flex w-full items-center gap-2.5">
                   <span
