@@ -70,13 +70,17 @@ export class CommentList {
     return comment.user?.displayName ?? comment.user?.email ?? this.userLabel(comment.userId);
   }
 
+  userAvatar(comment: { userId: string; user?: User }): string | undefined {
+    return comment.user?.avatarUrl ?? this.membersById()[comment.userId]?.avatarUrl ?? undefined;
+  }
+
   userLabel(userId: string): string {
     const u = this.membersById()[userId];
     return u?.displayName ?? u?.email ?? 'Someone';
   }
 
-  userInitials(userId: string): string {
-    return initialsOf(this.userLabel(userId));
+  userInitials(comment: { userId: string; user?: User }): string {
+    return initialsOf(this.displayNameOf(comment));
   }
 
   userColor(userId: string): string {

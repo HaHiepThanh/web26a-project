@@ -125,6 +125,12 @@ export class CommentsService {
       throw new InternalServerErrorException('Failed to save comment');
     }
 
+    const { data: userRow } = await sb
+      .from('users')
+      .select('display_name, avatar_url')
+      .eq('id', userUid)
+      .maybeSingle();
+
     // Đổi sang camelCase cho khớp phần còn lại của API.
     const row = data as Record<string, unknown>;
     const created = {
@@ -133,6 +139,7 @@ export class CommentsService {
       userId: row.user_id,
       content: row.content,
       createdAt: row.created_at,
+      user: toUser(userRow),
     };
 
     if (card.boardId) {
