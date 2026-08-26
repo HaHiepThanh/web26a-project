@@ -3,8 +3,8 @@ import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { LucideArrowLeft, LucideFolderKanban, LucideListFilter, LucidePin, LucideStar, LucideX, LucideChartLine } from '@lucide/angular';
 import { Board, BoardViewer, CardPriority, Label, List, User } from '../../../models';
-import { avatarColorFor, initialsOf } from '../../../utils/avatar.util';
 import { FLAG_PATH } from '../card-item/card-item';
+import { UserAvatar } from '../../shared/user-avatar/user-avatar';
 
 /** Cùng bảng màu với card-item.ts (PRIORITY_TEXT) — để nút lọc "Mức ưu tiên" khớp
  *  màu với cờ ưu tiên hiển thị trên mặt thẻ, tránh lệch màu giữa 2 nơi. */
@@ -17,7 +17,7 @@ const PRIORITY_ACTIVE: Record<CardPriority, string> = {
 
 @Component({
   selector: 'app-board-header-bar',
-  imports: [RouterLink, FormsModule, LucideArrowLeft, LucideFolderKanban, LucideListFilter, LucidePin, LucideStar, LucideX, LucideChartLine],
+  imports: [RouterLink, FormsModule, LucideArrowLeft, LucideFolderKanban, LucideListFilter, LucidePin, LucideStar, LucideX, LucideChartLine, UserAvatar],
   templateUrl: './board-header-bar.html',
 })
 export class BoardHeaderBar {
@@ -27,8 +27,6 @@ export class BoardHeaderBar {
   /** false = mất kết nối realtime → nội dung trên màn hình có thể đã cũ. */
   readonly realtimeConnected = input<boolean>(true);
 
-  readonly avatarColorFor = avatarColorFor;
-  readonly initialsOf = initialsOf;
 
   /** Chỉ vẽ tối đa 4 avatar, còn lại gộp thành "+N" cho khỏi tràn thanh tiêu đề. */
   readonly VIEWERS_SHOWN = 4;

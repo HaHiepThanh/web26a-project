@@ -23,16 +23,7 @@
     @if (viewers().length) {
       <div class="flex items-center -space-x-2" [attr.aria-label]="viewers().length + ' people viewing this board'">
         @for (v of viewers().slice(0, VIEWERS_SHOWN); track v.id) {
-          <span
-            class="flex h-7 w-7 items-center justify-center rounded-full border-2 border-base-100 text-2xs font-bold text-white"
-            [style.background]="avatarColorFor(v.id)"
-            [title]="viewerLabel(v) + ' is viewing'">
-            @if (v.avatarUrl) {
-              <img [src]="v.avatarUrl" [alt]="viewerLabel(v)" class="h-full w-full rounded-full object-cover" />
-            } @else {
-              {{ initialsOf(viewerLabel(v)) }}
-            }
-          </span>
+          <app-user-avatar [userId]="v.id" [name]="viewerLabel(v)" [avatarUrl]="v.avatarUrl" [size]="28" extraClass="border-2 border-base-100" />
         }
         @if (viewers().length > VIEWERS_SHOWN) {
           <span class="flex h-7 w-7 items-center justify-center rounded-full border-2 border-base-100 bg-base-300 text-2xs font-bold text-base-content">

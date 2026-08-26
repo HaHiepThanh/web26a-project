@@ -4,6 +4,7 @@ import { LucideTriangleAlert } from '@lucide/angular';
 import { OrganizationStore } from '../../../ngrx/organization/organization.store';
 import { User, WorkspaceVisibility } from '../../../models';
 import { WorkspaceItem, WorkspaceMember, avatarBgFor, initialsOf } from '../../../mocks';
+import { UserAvatar } from '../../shared/user-avatar/user-avatar';
 
 /**
  * Modal tạo / sửa Không gian làm việc.
@@ -23,7 +24,7 @@ import { WorkspaceItem, WorkspaceMember, avatarBgFor, initialsOf } from '../../.
  */
 @Component({
   selector: 'app-workspace-form-modal',
-  imports: [FormsModule, LucideTriangleAlert],
+  imports: [FormsModule, LucideTriangleAlert, UserAvatar],
   templateUrl: './workspace-form-modal.html',
 })
 export class WorkspaceFormModal {

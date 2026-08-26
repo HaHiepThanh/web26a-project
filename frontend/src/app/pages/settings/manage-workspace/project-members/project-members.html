@@ -106,14 +106,7 @@
                 <tr class="align-top">
                   <td>
                     <div class="flex items-center gap-2.5">
-                      @if (member.avatarUrl) {
-                        <img [src]="member.avatarUrl" [alt]="member.name" class="h-[34px] w-[34px] shrink-0 rounded-full object-cover" />
-                      } @else {
-                        <span
-                          class="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
-                          [style.background-color]="avatarColorFor(member.userId)"
-                        >{{ initialsOf(member.name) }}</span>
-                      }
+                      <app-user-avatar [userId]="member.userId" [name]="member.name" [avatarUrl]="member.avatarUrl" [size]="34" />
                       <div>
                         <div class="flex items-center gap-1.5 font-semibold">
                           {{ member.name }}
@@ -253,10 +246,7 @@
             <ul class="flex flex-col gap-1.5">
               @for (candidate of filteredCandidates(); track candidate.userId) {
                 <li class="flex items-center gap-2.5 rounded-md px-2 py-1.5 hover:bg-base-200">
-                  <span
-                    class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[0.7rem] font-bold text-white"
-                    [style.background-color]="avatarColorFor(candidate.userId)"
-                  >{{ initialsOf(candidateName(candidate)) }}</span>
+                  <app-user-avatar [userId]="candidate.userId" [name]="candidateName(candidate)" [avatarUrl]="candidate.user?.avatarUrl" [size]="32" />
                   <span class="min-w-0 flex-1">
                     <span class="block truncate text-sm font-semibold">{{ candidateName(candidate) }}</span>
                     @if (candidate.user?.email) {

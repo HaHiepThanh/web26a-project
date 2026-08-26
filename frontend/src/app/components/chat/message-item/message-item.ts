@@ -1,6 +1,6 @@
 import { Component, computed, input } from '@angular/core';
 import { Message, User } from '../../../models';
-import { avatarColorFor, initialsOf } from '../../../utils/avatar.util';
+import { UserAvatar } from '../../shared/user-avatar/user-avatar';
 
 function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -14,7 +14,7 @@ interface ContentPart {
 /** 1 tin nhắn: căn phải/trái theo "mình" hay "người khác" + avatar, @nhắc tên tô màu (#8). */
 @Component({
   selector: 'app-message-item',
-  imports: [],
+  imports: [UserAvatar],
   templateUrl: './message-item.html',
   styleUrl: './message-item.css',
 })
@@ -30,8 +30,17 @@ export class MessageItem {
     return s?.displayName ?? s?.email ?? 'Anonymous';
   });
 
-  readonly initials = computed(() => initialsOf(this.senderLabel()));
-  readonly avatarColor = computed(() => avatarColorFor(this.sender()?.id ?? this.message().userId));
+  /** Tên dùng cho avatar — luôn là tên thật, kể cả tin của mình. `senderLabel()`
+   *  hiện "You" ở nhãn phía trên bong bóng, nhưng lấy chữ cái đầu từ đó thì
+   *  avatar của chính mình thành chữ "Y" thay vì tên mình. */
+  readonly avatarName = computed(() => {
+    const s = this.sender() ?? this.message().user;
+    return s?.displayName ?? s?.email ?? this.senderLabel();
+  });
+
+  /** Backend trả kèm `user` trong từng tin nhắn; `sender` (tra từ danh sách thành
+   *  viên) chỉ là nguồn ưu tiên, thiếu thì rơi về bản đính kèm tin nhắn. */
+  readonly avatarUrl = computed(() => this.sender()?.avatarUrl ?? this.message().user?.avatarUrl);
 
   readonly bubbleClass = computed(() =>
     this.isOwn()

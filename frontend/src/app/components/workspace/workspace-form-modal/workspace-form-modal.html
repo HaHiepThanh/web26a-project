@@ -131,10 +131,7 @@
                 [disabled]="isLocked(m.user.id)"
                 (click)="toggleMember(m.user.id)">
                 <span class="flex min-w-0 items-center gap-2.5">
-                  <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-3xs font-bold text-white shadow-xs"
-                    [style.background-color]="avatarBgFor(m.user.id)">
-                    {{ initialsOf(m.user.displayName || m.user.email) }}
-                  </span>
+                  <app-user-avatar [userId]="m.user.id" [name]="m.user.displayName || m.user.email" [avatarUrl]="m.user.avatarUrl" [size]="28" />
                   <span class="min-w-0">
                     <span class="flex items-center gap-1.5">
                       <span class="truncate text-xs font-bold" [class.text-primary]="isSelected(m.user.id)" [class.text-base-content]="!isSelected(m.user.id)">
