@@ -2,6 +2,7 @@ import { Component, effect, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { OfflineOverlay } from './components/offline-overlay/offline-overlay';
 import { AuthService } from './services/auth.service';
+import { OverdueWatcherService } from './services/overdue-watcher.service';
 import { RealtimeService } from './services/realtime.service';
 import { ThemeService } from './services/theme.service';
 
@@ -23,6 +24,10 @@ export class App {
 
   private readonly auth = inject(AuthService);
   private readonly realtime = inject(RealtimeService);
+
+  // Cùng lý do với ThemeService ở trên: chỉ inject để CTOR chạy từ GỐC ứng dụng.
+  // Service tự bật/tắt theo trạng thái đăng nhập bằng effect() bên trong nó.
+  private readonly overdueWatcher = inject(OverdueWatcherService);
 
   constructor() {
     // Mở kết nối realtime ở GỐC ứng dụng, không phải trong Header.

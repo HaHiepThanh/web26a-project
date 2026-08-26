@@ -93,6 +93,42 @@ export class NotificationService {
     });
   }
 
+  /**
+   * Một thẻ được giao cho tôi đã quá hạn.
+   *
+   * `id` cố ý KHÔNG kèm thời điểm (khác `addCardAssigned`): mỗi lần mở app lại
+   * hỏi `GET /cards/my-due` và thẻ vẫn quá hạn thì vẫn trả về, nên id có
+   * `Date.now()` sẽ đẻ ra một thông báo mới mỗi lần mở — chuông ngập cùng một
+   * thẻ. Khoá theo thẻ + hạn thì một thẻ chỉ nhắc ĐÚNG MỘT lần; dời hạn sang
+   * ngày khác rồi lại trễ mới tính là lần nhắc mới.
+   */
+  addCardOverdue(p: {
+    cardId: string;
+    title: string;
+    dueDate: string;
+    daysOverdue: number;
+    boardId: string;
+    boardName: string;
+    workspaceName: string;
+    orgSlug: string;
+  }): void {
+    const soNgay = `${p.daysOverdue} day${p.daysOverdue > 1 ? 's' : ''} overdue`;
+    const noiChon = p.workspaceName
+      ? `board "${p.boardName}" · workspace "${p.workspaceName}"`
+      : `board "${p.boardName}"`;
+
+    this.add({
+      id: `overdue-${p.cardId}-${p.dueDate}`,
+      type: 'card.overdue',
+      text: `"${p.title}" is ${soNgay} — ${noiChon}`,
+      orgSlug: p.orgSlug,
+      boardId: p.boardId,
+      cardId: p.cardId,
+      createdAt: new Date().toISOString(),
+      read: false,
+    });
+  }
+
   markRead(id: string): void {
     this.items.update((all) => {
       const next = all.map((n) => (n.id === id ? { ...n, read: true } : n));

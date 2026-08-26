@@ -30,6 +30,12 @@ export class CardsController {
     return this.cards.findAll(user.uid, boardId);
   }
 
+  /** Phải khai TRƯỚC mọi route `:id` để 'my-due' không bị nuốt thành một id. */
+  @Get('my-due')
+  findMyOverdue(@CurrentUser() user: CurrentUserInfo) {
+    return this.cards.findMyOverdue(user.uid);
+  }
+
   @Post()
   create(@CurrentUser() user: CurrentUserInfo, @Body() body: CreateCardDto) {
     return this.cards.create(body.listId, body.title, user.uid);
