@@ -23,6 +23,7 @@ import {
 } from '../../../models';
 import { InviteLinkStore } from '../../../ngrx/invite-link/invite-link.store';
 import { Organization, OrgInvite, avatarBgFor, initialsOf } from '../../../mocks';
+import { UserAvatar } from '../../shared/user-avatar/user-avatar';
 
 /** Modal quản lý 1 Organization: đổi tên, mời thành viên qua UUID/email/tên,
  *  xem & huỷ lời mời đang chờ, xoá thành viên. Tách khỏi sidebar vì danh sách
@@ -41,6 +42,7 @@ import { Organization, OrgInvite, avatarBgFor, initialsOf } from '../../../mocks
     LucideTrash2,
     LucideUserPlus,
     LucideX,
+    UserAvatar,
   ],
   templateUrl: './org-manage-modal.html',
 })

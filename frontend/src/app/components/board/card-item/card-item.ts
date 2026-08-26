@@ -1,6 +1,6 @@
 import { Component, computed, input } from '@angular/core';
 import { Card, CardPriority, Label, User } from '../../../models';
-import { avatarColorFor, initialsOf } from '../../../utils/avatar.util';
+import { UserAvatar } from '../../shared/user-avatar/user-avatar';
 
 const PRIORITY_LABEL: Record<CardPriority, string> = { high: 'High', medium: 'Medium', low: 'Low' };
 // Đã nâng độ sáng so với bản gốc (#BE123C/#B45309/#334155) — bản cũ chỉ đạt
@@ -18,7 +18,7 @@ let clipSeq = 0;
  *  tiêu đề, hạn chót, avatar phụ trách. Thuần hiển thị — cdkDrag/cdkDropList gắn ở BoardList (cha). */
 @Component({
   selector: 'app-card-item',
-  imports: [],
+  imports: [UserAvatar],
   templateUrl: './card-item.html',
   styleUrl: './card-item.css',
 })
@@ -62,16 +62,6 @@ export class CardItem {
     const today = this.today();
     if (!due || !today) return false;
     return due < today;
-  });
-
-  readonly assigneeInitials = computed(() => {
-    const a = this.assignee();
-    return a ? initialsOf(a.displayName ?? a.email) : '';
-  });
-
-  readonly assigneeColor = computed(() => {
-    const a = this.assignee();
-    return a ? avatarColorFor(a.id) : 'transparent';
   });
 
   /** Có ít nhất 1 dấu hiệu meta (mô tả/checklist/bình luận) để hiện hàng icon — tránh

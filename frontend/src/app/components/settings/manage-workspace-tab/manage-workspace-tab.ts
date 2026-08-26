@@ -2,11 +2,12 @@ import { Component, computed, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LucideBuilding2, LucideCrown, LucideGlobe, LucidePlus, LucideX } from '@lucide/angular';
 import { User } from '../../../models';
-import { Organization, WorkspaceMember, WorkspaceWithOrg, avatarBgFor, initialsOf } from '../../../mocks';
+import { Organization, WorkspaceMember, WorkspaceWithOrg } from '../../../mocks';
+import { UserAvatar } from '../../shared/user-avatar/user-avatar';
 
 @Component({
   selector: 'app-manage-workspace-tab',
-  imports: [FormsModule, LucideBuilding2, LucideCrown, LucidePlus, LucideX],
+  imports: [FormsModule, LucideBuilding2, LucideCrown, LucidePlus, LucideX, UserAvatar],
   templateUrl: './manage-workspace-tab.html',
   host: { class: 'block' },
 })
@@ -24,8 +25,6 @@ export class ManageWorkspaceTab {
   readonly removeMember = output<{ workspaceId: string; orgId?: string; member: WorkspaceMember }>();
   readonly flashMessage = output<{ message: string; type?: 'success' | 'error' | 'info' }>();
 
-  readonly initialsOf = initialsOf;
-  readonly avatarBgFor = avatarBgFor;
 
   readonly selectedWorkspace = computed(() => {
     const id = this.selectedWorkspaceId();

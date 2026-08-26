@@ -2,14 +2,15 @@ import { Component, computed, effect, input, output, signal } from '@angular/cor
 import { FormsModule } from '@angular/forms';
 import { LucideBuilding2, LucideImage, LucideLock, LucideTriangleAlert, LucideX } from '@lucide/angular';
 import { BOARD_BACKGROUNDS, BoardBackground } from '../../../models';
-import { Privacy, WorkspaceItem, avatarBgFor, initialsOf } from '../../../mocks';
+import { Privacy, WorkspaceItem } from '../../../mocks';
 import { compressImage } from '../../../utils/image.util';
+import { UserAvatar } from '../../shared/user-avatar/user-avatar';
 
 const MAX_BG_IMAGE_BYTES = 10 * 1024 * 1024; // Ảnh gốc tối đa 10MB (sẽ được nén lại bên dưới).
 
 @Component({
   selector: 'app-create-board-modal',
-  imports: [FormsModule, LucideBuilding2, LucideImage, LucideLock, LucideTriangleAlert, LucideX],
+  imports: [FormsModule, LucideBuilding2, LucideImage, LucideLock, LucideTriangleAlert, LucideX, UserAvatar],
   templateUrl: './create-board-modal.html',
 })
 export class CreateBoardModal {
@@ -37,9 +38,6 @@ export class CreateBoardModal {
   readonly bgClasses = BOARD_BACKGROUNDS;
   readonly bgImageUrl = signal<string | null>(null);
   readonly bgImageError = signal<string | null>(null);
-
-  readonly initialsOf = initialsOf;
-  readonly avatarBgFor = avatarBgFor;
 
   /**
    * VÙNG CHỌN thành viên cho board — lấy từ workspace đang chọn, KHÔNG phải từ

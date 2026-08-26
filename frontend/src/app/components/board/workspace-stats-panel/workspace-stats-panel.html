@@ -54,11 +54,7 @@
       <div class="space-y-2">
         @for (m of sortedWorkload(); track trackByUserId($index, m)) {
           <div class="flex items-center gap-3">
-            <span
-              class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-2xs font-bold text-white"
-              [style.background]="avatarColor(m.userId)"
-              [title]="m.name"
-            >{{ avatarInitials(m.userId) }}</span>
+            <app-user-avatar [userId]="m.userId" [name]="m.name" [avatarUrl]="m.avatarUrl" [size]="28" />
             <span class="w-36 shrink-0 truncate text-sm">{{ m.name }}</span>
             <div class="flex h-2 flex-1 overflow-hidden rounded-full bg-base-200">
               <div class="h-full bg-success" [style.width.%]="m.donePct"></div>
@@ -107,11 +103,7 @@
         }
         @for (log of filteredActivityLogs(); track trackByLogId($index, log)) {
           <div class="flex items-start gap-3 p-3">
-            <span
-              class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-3xs font-bold text-white"
-              [style.background]="avatarColor(log.userId)"
-              [title]="memberName(log.userId)"
-            >{{ avatarInitials(log.userId) }}</span>
+            <app-user-avatar [userId]="log.userId" [name]="memberName(log.userId)" [avatarUrl]="memberAvatarUrl(log.userId)" [size]="28" />
             <span class="text-sm leading-7">{{ actionIcon(log.actionType) }}</span>
             <div class="flex flex-col gap-0.5">
               <p class="text-sm text-base-content">{{ log.actionText }}</p>

@@ -213,14 +213,7 @@
     <div
       class="ml-0.5 flex h-9 cursor-pointer items-center gap-2 rounded-md border border-base-300/70 bg-base-200/50 px-2 transition-all hover:bg-base-200"
       (click)="toggleUserMenu()">
-      @if (!avatarBroken() && currentUser()?.avatarUrl; as photo) {
-      <img [src]="photo" alt="Avatar" referrerpolicy="no-referrer"
-        class="h-6 w-6 shrink-0 rounded object-cover shadow-sm" (error)="onAvatarError()" />
-      } @else {
-      <div
-        class="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-primary text-2xs font-bold text-primary-content shadow-sm">
-        {{ initials() }}</div>
-      }
+      <app-user-avatar [userId]="currentUser()?.id ?? ''" [name]="avatarName()" [size]="24" [square]="true" />
       <div class="flex max-w-[160px] flex-col leading-tight max-md:hidden">
         <span class="truncate text-xs font-bold text-base-content">{{
           currentUser()?.displayName ?? 'User' }}</span>
@@ -237,14 +230,7 @@
     class="absolute right-4 top-[54px] z-[200] mt-1 w-[290px] rounded-lg border border-base-300/70 bg-base-100 p-2.5 shadow-xl"
     [class.hidden]="!menuOpen()">
     <div class="flex items-center gap-2.5 px-1.5 py-1">
-      @if (!avatarBroken() && currentUser()?.avatarUrl; as photo) {
-      <img [src]="photo" alt="Avatar" referrerpolicy="no-referrer"
-        class="h-9 w-9 shrink-0 rounded-full object-cover shadow-sm" (error)="onAvatarError()" />
-      } @else {
-      <div
-        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-extrabold text-primary-content shadow-sm">
-        {{ initials() }}</div>
-      }
+      <app-user-avatar [userId]="currentUser()?.id ?? ''" [name]="avatarName()" [size]="36" />
       <div class="min-w-0 flex-1">
         <div class="truncate text-sm font-bold text-base-content">{{ currentUser()?.displayName ?? 'User' }}
         </div>

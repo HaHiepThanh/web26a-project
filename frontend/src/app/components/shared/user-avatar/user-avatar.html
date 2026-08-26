@@ -1,0 +1,21 @@
+@if (showImage()) {
+  <img
+    [src]="resolvedUrl()"
+    [alt]="label()"
+    [title]="label()"
+    referrerpolicy="no-referrer"
+    [style.width.px]="size()"
+    [style.height.px]="size()"
+    [class]="'shrink-0 object-cover shadow-sm ' + (square() ? 'rounded' : 'rounded-full') + ' ' + extraClass()"
+    (error)="onError()" />
+} @else {
+  <span
+    [style.width.px]="size()"
+    [style.height.px]="size()"
+    [style.fontSize.px]="fontSize()"
+    [style.background]="color()"
+    [title]="label()"
+    [class]="'flex shrink-0 items-center justify-center font-bold leading-none text-white shadow-sm ' + (square() ? 'rounded' : 'rounded-full') + ' ' + extraClass()"
+    >{{ initials() }}</span
+  >
+}

@@ -6,6 +6,7 @@ import { ManageWorkspaceStore } from '../../../../ngrx/manage-workspace/manage-w
 import { OrganizationStore } from '../../../../ngrx/organization/organization.store';
 import { WorkspaceService } from '../../../../services/workspace.service';
 import { ProjectSummary, roleBadge, roleLabel } from '../manage-workspace.models';
+import { UserAvatar } from '../../../../components/shared/user-avatar/user-avatar';
 
 /**
  * Màn 1 — các project (board) mà tài khoản đang đăng nhập tham gia.
@@ -18,7 +19,7 @@ import { ProjectSummary, roleBadge, roleLabel } from '../manage-workspace.models
  */
 @Component({
   selector: 'app-project-list',
-  imports: [RouterLink],
+  imports: [RouterLink, UserAvatar],
   templateUrl: './project-list.html',
   styleUrl: './project-list.css',
 })

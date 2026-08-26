@@ -2,8 +2,8 @@ import { Component, computed, effect, inject, input, signal } from '@angular/cor
 import { User } from '../../../models';
 import { CommentStore } from '../../../ngrx/comment/comment.store';
 import { BoardStore } from '../../../ngrx/board/board.store';
-import { avatarColorFor, initialsOf } from '../../../utils/avatar.util';
 import { AuthService } from '../../../services/auth.service';
+import { UserAvatar } from '../../shared/user-avatar/user-avatar';
 
 /**
  * Trần độ dài một bình luận.
@@ -21,7 +21,7 @@ const COUNTER_VISIBLE_FROM = 60;
 /** [BONUS #4] Bình luận trong card: thêm, xoá bình luận của chính mình. */
 @Component({
   selector: 'app-comment-list',
-  imports: [],
+  imports: [UserAvatar],
   templateUrl: './comment-list.html',
   styleUrl: './comment-list.css',
 })
@@ -75,12 +75,9 @@ export class CommentList {
     return u?.displayName ?? u?.email ?? 'Someone';
   }
 
-  userInitials(userId: string): string {
-    return initialsOf(this.userLabel(userId));
-  }
-
-  userColor(userId: string): string {
-    return avatarColorFor(userId);
+  /** Ảnh backend trả kèm bình luận; thiếu thì dò trong roster thành viên. */
+  avatarUrlOf(comment: { userId: string; user?: User }): string | undefined {
+    return comment.user?.avatarUrl ?? this.membersById()[comment.userId]?.avatarUrl;
   }
 
   timeLabel(iso: string): string {

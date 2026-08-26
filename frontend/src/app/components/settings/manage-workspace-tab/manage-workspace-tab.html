@@ -118,11 +118,7 @@
               <!-- Member info -->
               <td class="py-3 px-4">
                 <div class="flex items-center gap-3">
-                  <div
-                    class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white text-2xs font-black shadow-xs"
-                    [style.background-color]="avatarBgFor(mem.id)">
-                    {{ initialsOf(mem.displayName || mem.email) }}
-                  </div>
+                  <app-user-avatar [userId]="mem.id" [name]="mem.displayName || mem.email" [avatarUrl]="mem.avatarUrl" [size]="32" />
                   <div class="min-w-0">
                     <div class="font-black text-base-content truncate">{{ mem.displayName }}</div>
                     <div class="text-2xs text-base-content/50 truncate">{{ mem.email }}</div>
@@ -220,10 +216,7 @@
           [class.border-primary/40]="selectedUserToAdd()?.id === cand.id"
           [class.hover:bg-base-200]="selectedUserToAdd()?.id !== cand.id" (click)="chooseUserToAdd(cand)">
           <div class="flex items-center gap-2.5 min-w-0">
-            <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-white text-3xs font-black"
-              [style.background-color]="avatarBgFor(cand.id)">
-              {{ initialsOf(cand.displayName || cand.email) }}
-            </div>
+            <app-user-avatar [userId]="cand.id" [name]="cand.displayName || cand.email" [avatarUrl]="cand.avatarUrl" [size]="28" />
             <div class="min-w-0">
               <div class="text-xs font-bold truncate text-base-content">{{ cand.displayName || 'User'
                 }}</div>

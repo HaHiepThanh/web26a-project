@@ -27,6 +27,7 @@ import { CardStore } from '../../ngrx/card/card.store';
 import { NotificationService } from '../../services/notification.service';
 import { OrganizationStore } from '../../ngrx/organization/organization.store';
 import { RealtimeService } from '../../services/realtime.service';
+import { UserAvatar } from '../shared/user-avatar/user-avatar';
 
 /** Dải nhắc "có lời mời mới" tự tắt sau ngần này. */
 const INVITE_TOAST_MS = 6000;
@@ -52,6 +53,7 @@ const INVITE_TOAST_MS = 6000;
     LucideUser,
     LucideUserPlus,
     LucideX,
+    UserAvatar,
   ],
   templateUrl: './header.html',
   styleUrl: './header.css',
@@ -138,21 +140,14 @@ export class Header {
     return c.overdue + c.dueSoon;
   });
 
-  /** Ảnh Google thỉnh thoảng tải lỗi (bị giới hạn tần suất, hoặc user gỡ ảnh).
-   *  Khi đó rơi về chữ cái đầu — vẫn hơn là hiện icon ảnh vỡ. */
-  readonly avatarBroken = signal(false);
-
-  onAvatarError(): void {
-    this.avatarBroken.set(true);
-  }
-
-  readonly initials = computed(() => {
+  /** Tên đưa cho `app-user-avatar` để lấy chữ cái đầu khi chưa có ảnh.
+   *  Việc tải ảnh/rơi về chữ cái đầu do chính component đó lo — trước đây Header
+   *  tự làm bằng một cờ `avatarBroken` bật-một-lần-là-thôi, nên chỉ cần ảnh lỗi
+   *  đúng một lần (link Google bị giới hạn tần suất) là avatar tắt hẳn tới khi
+   *  tải lại trang, kể cả sau khi người dùng vừa đổi ảnh mới. */
+  readonly avatarName = computed(() => {
     const user = this.currentUser();
-    const name = user?.displayName ?? user?.email ?? '?';
-    const parts = name.trim().split(/\s+/);
-    const first = parts[0]?.[0] ?? '?';
-    const last = parts.length > 1 ? parts[parts.length - 1][0] : '';
-    return (first + last).toUpperCase();
+    return user?.displayName ?? user?.email ?? '?';
   });
 
   @HostListener('document:click', ['$event'])

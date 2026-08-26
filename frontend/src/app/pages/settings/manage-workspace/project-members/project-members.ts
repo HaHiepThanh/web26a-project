@@ -18,6 +18,7 @@ import {
   roleBadge,
   roleLabel,
 } from '../manage-workspace.models';
+import { UserAvatar } from '../../../../components/shared/user-avatar/user-avatar';
 
 type MembersTab = 'members' | 'invitations';
 
@@ -44,7 +45,7 @@ type MembersTab = 'members' | 'invitations';
  */
 @Component({
   selector: 'app-project-members',
-  imports: [DatePipe, RouterLink],
+  imports: [DatePipe, RouterLink, UserAvatar],
   templateUrl: './project-members.html',
   styleUrl: './project-members.css',
 })

@@ -82,7 +82,7 @@
       <span></span>
     }
     @if (assignee(); as user) {
-      <span class="flex h-[24px] w-[24px] shrink-0 items-center justify-center rounded-full text-2xs font-bold text-white shadow-xs" [style.background]="assigneeColor()" [title]="user.displayName ?? user.email">{{ assigneeInitials() }}</span>
+      <app-user-avatar [userId]="user.id" [name]="user.displayName ?? user.email" [avatarUrl]="user.avatarUrl" [size]="24" />
     }
   </div>
 </div>

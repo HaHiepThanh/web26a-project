@@ -2,8 +2,8 @@ import { Component, computed, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LucideTriangleAlert, LucideX } from '@lucide/angular';
 import { ActivityActionType, ActivityLog, MemberWorkloadStat, WorkspaceStatsData } from '../../../models';
-import { avatarColorFor, initialsOf } from '../../../utils/avatar.util';
 import { AuthService } from '../../../services/auth.service';
+import { UserAvatar } from '../../shared/user-avatar/user-avatar';
 
 
 type LogScope = 'mine' | 'team';
@@ -51,7 +51,7 @@ let instanceSeq = 0;
  */
 @Component({
   selector: 'app-workspace-stats-panel',
-  imports: [FormsModule, LucideTriangleAlert, LucideX],
+  imports: [FormsModule, LucideTriangleAlert, LucideX, UserAvatar],
   templateUrl: './workspace-stats-panel.html',
 })
 export class WorkspaceStatsPanel {
@@ -119,12 +119,10 @@ export class WorkspaceStatsPanel {
     return this.memberWorkload().find((m) => m.userId === userId)?.name ?? userId;
   }
 
-  avatarInitials(userId: string): string {
-    return initialsOf(this.memberName(userId));
-  }
-
-  avatarColor(userId: string): string {
-    return avatarColorFor(userId);
+  /** Ảnh của người ghi nhật ký — tra trong cùng bảng khối lượng công việc đã có,
+   *  khỏi gọi thêm API chỉ để lấy một link ảnh. */
+  memberAvatarUrl(userId: string): string | undefined {
+    return this.memberWorkload().find((m) => m.userId === userId)?.avatarUrl || undefined;
   }
 
   actionIcon(actionType: ActivityActionType): string {

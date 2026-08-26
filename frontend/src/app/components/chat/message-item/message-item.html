@@ -1,5 +1,5 @@
 <div class="flex min-w-0 max-w-[88%] gap-[7px]" [class.flex-row-reverse]="isOwn()" [class.ml-auto]="isOwn()" [class.self-end]="isOwn()">
-  <span class="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full text-3xs font-bold text-white" [style.background]="avatarColor()">{{ initials() }}</span>
+  <app-user-avatar [userId]="message().userId" [name]="avatarName()" [avatarUrl]="avatarUrl()" [size]="22" />
   <div class="flex min-w-0 flex-col gap-0.5" [class.items-end]="isOwn()">
     <span class="text-2xs font-semibold text-base-content/80">{{ senderLabel() }}</span>
     <div [class]="bubbleClass()">
