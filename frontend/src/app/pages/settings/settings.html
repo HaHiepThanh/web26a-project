@@ -1,4 +1,9 @@
-<div class="flex min-h-full flex-1 bg-base-200 text-base-content">
+<!-- `max-[900px]:flex-col` KHÔNG phải trang trí: dưới 900px `<aside>` đổi sang
+     `w-full`, mà nó lại `shrink-0` — để hàng ngang thì thanh điều hướng chiếm
+     trọn bề rộng màn hình và đẩy hẳn `<main>` ra ngoài, rồi bị `overflow-hidden`
+     của khung cha cắt mất, tức mất trắng phần nội dung. Xếp dọc mới đúng ý ban
+     đầu (đã thấy qua `border-b` thay cho `border-r` ở dưới). -->
+<div class="flex min-h-full flex-1 bg-base-200 text-base-content max-[900px]:flex-col">
   <!-- Toast Notification -->
   @if (toastMessage()) {
   <div class="toast toast-top toast-end z-[9999] pointer-events-none">
@@ -23,7 +28,11 @@
     <!-- Tab điều hướng dùng .menu của daisyUI; tab đang mở là .menu-active. -->
     <ul class="menu w-full gap-1.5 p-0 max-[900px]:menu-horizontal max-[900px]:flex-nowrap max-[900px]:overflow-x-auto">
       @for (item of navItems; track item.id) {
-      <li class="w-full">
+      <!-- Ở khổ dọc `w-full` là đúng, nhưng khi thanh này nằm ngang thì `w-full`
+           nghĩa là MỖI tab rộng bằng cả thanh — ba tab thành 300% bề rộng, người
+           dùng phải kéo ngang mới thấy tab kế tiếp. Nằm ngang thì để tab tự co
+           theo nội dung. -->
+      <li class="w-full max-[900px]:w-auto">
         <button type="button" class="group flex w-full items-center gap-3 text-left"
           [class.menu-active]="activeTab() === item.id" (click)="onTabChange(item.id)">
           <span
@@ -41,7 +50,10 @@
           </span>
           <span class="min-w-0 flex-1">
             <span class="block truncate text-sm font-black leading-tight">{{ item.label }}</span>
-            <span class="block truncate text-2xs opacity-70 leading-tight mt-0.5">{{ item.description }}</span>
+            <!-- Câu mô tả dài gấp mấy lần nhãn; để nguyên khi thanh nằm ngang thì
+                 ba tab không đời nào lọt màn hình điện thoại. Nhãn đủ để nhận ra
+                 tab, mô tả chỉ là phần thêm nên ẩn ở khổ hẹp. -->
+            <span class="block truncate text-2xs opacity-70 leading-tight mt-0.5 max-[900px]:hidden">{{ item.description }}</span>
           </span>
         </button>
       </li>
