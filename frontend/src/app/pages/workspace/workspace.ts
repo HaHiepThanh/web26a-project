@@ -104,7 +104,24 @@ export class Workspace {
    */
   readonly canManage = this.orgService.isAdminOrOwner;
 
-  readonly workspaces = signal<WorkspaceItem[]>([]);
+  private readonly workspacesRaw = signal<WorkspaceItem[]>([]);
+  /** `workspacesRaw` được nạp lại (API + roster tổ chức) chỉ khi đổi user/tổ chức
+   *  (xem effect trong constructor) — nếu current user đổi displayName/avatar mà
+   *  không đổi id/org thì danh sách members bên trong đã "đông cứng", không tự
+   *  cập nhật. Ghi đè dòng của chính mình bằng AuthService.currentUser() (reactive)
+   *  ở đây, giống cách organization.methods.ts#membersOf() đã làm, để avatar/tên
+   *  trên trang Workspace luôn khớp ngay cả khi chưa F5. */
+  readonly workspaces = computed(() => {
+    const me = this.auth.currentUser();
+    const list = this.workspacesRaw();
+    if (!me) return list;
+    return list.map((w) => ({
+      ...w,
+      members: w.members.map((m) =>
+        m.id === me.id ? { ...m, displayName: me.displayName || me.email.split('@')[0], email: me.email, avatarUrl: me.avatarUrl } : m,
+      ),
+    }));
+  });
   /** Đã nạp xong danh sách workspace lần đầu chưa — nút "+ Tạo" ở Header phải
    *  chờ mốc này, nếu không nó không biết tổ chức đã có workspace nào hay chưa. */
   readonly workspacesReady = signal(false);
@@ -240,7 +257,7 @@ export class Workspace {
   private async loadWorkspaces(userId: string | undefined, orgId: string | null): Promise<void> {
     this.activeWorkspaceId.set(null);
     if (!userId || !orgId) {
-      this.workspaces.set([]);
+      this.workspacesRaw.set([]);
       // Vẫn coi là "nạp xong": không có tổ chức thì cũng không có gì để chờ nữa,
       // và nút "+ Tạo" phải phản hồi được thay vì im lặng.
       this.workspacesReady.set(true);
@@ -255,7 +272,7 @@ export class Workspace {
     const loadError = this.workspaceService.loadError();
     if (loadError) {
       this.addToast(loadError, 'error');
-      this.workspaces.set([]);
+      this.workspacesRaw.set([]);
       this.workspacesReady.set(true);
       return;
     }
@@ -276,7 +293,7 @@ export class Workspace {
     const orgRoster = this.orgService.membersOf(orgId);
     const byId = new Map(orgRoster.map((m) => [m.user.id, m.user]));
 
-    this.workspaces.set(
+    this.workspacesRaw.set(
       serverWorkspaces.map((w, i) => {
         const local = localItems.find((c) => c.id === w.id);
 
@@ -443,7 +460,7 @@ export class Workspace {
 
   loadSampleWorkspaces(): void {
     const samples = initialMockWorkspaces();
-    this.workspaces.set(samples);
+    this.workspacesRaw.set(samples);
     this.persist(samples);
     this.activeWorkspaceId.set(null);
     this.addToast('Reloaded all sample Workspaces successfully!', 'success');
@@ -467,7 +484,7 @@ export class Workspace {
   /** Chép `starredBoardIds` xuống cờ `starred` của từng thẻ board đang hiển thị. */
   private dongBoSao(): void {
     const sao = this.boardPrefs.starredBoardIds();
-    this.workspaces.update((list) =>
+    this.workspacesRaw.update((list) =>
       list.map((ws) => ({
         ...ws,
         boards: ws.boards.map((b) => ({ ...b, starred: sao.has(b.id) })),
@@ -486,7 +503,7 @@ export class Workspace {
       return;
     }
 
-    this.workspaces.update((list) => {
+    this.workspacesRaw.update((list) => {
       const updated = list.map((ws) =>
         ws.id === workspaceId ? { ...ws, boards: ws.boards.filter((b) => b.id !== board.id) } : ws,
       );
@@ -522,7 +539,7 @@ export class Workspace {
       return;
     }
 
-    this.workspaces.update((list) => {
+    this.workspacesRaw.update((list) => {
       const updated = list.map((ws) =>
         ws.id === target.workspaceId
           ? { ...ws, boards: ws.boards.map((b) => (b.id === boardId ? { ...b, title, bgClass: background } : b)) }
@@ -595,7 +612,7 @@ export class Workspace {
       bgClass: background,
     };
 
-    this.workspaces.update((list) => {
+    this.workspacesRaw.update((list) => {
       const updated = list.map((ws) => (ws.id === workspaceId ? { ...ws, boards: [...ws.boards, newBoard] } : ws));
       this.persist(updated);
       return updated;
@@ -656,7 +673,7 @@ export class Workspace {
         description: description || 'A brand-new Workspace just got created.',
         boards: [],
       };
-      this.workspaces.update((list) => {
+      this.workspacesRaw.update((list) => {
         const updated = [...list, newWs];
         this.persist(updated);
         return updated;
@@ -678,7 +695,7 @@ export class Workspace {
         this.addToast(error, 'error');
         return;
       }
-      this.workspaces.update((list) => {
+      this.workspacesRaw.update((list) => {
         const updated = list.map((ws) =>
           ws.id === editingWs.id
             ? { ...ws, name, description, visibility, memberIds, members, membersCount: members.length }
@@ -703,7 +720,7 @@ export class Workspace {
       return;
     }
 
-    this.workspaces.update((list) => {
+    this.workspacesRaw.update((list) => {
       const updated = list.filter((w) => w.id !== wsId);
       this.persist(updated);
       return updated;

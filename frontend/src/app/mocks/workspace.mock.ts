@@ -1,4 +1,5 @@
 import { BoardBackground } from '../models/board.model';
+import { avatarColorFor } from '../utils/avatar.util';
 
 import {
   BoardItem,
@@ -41,13 +42,10 @@ export function initialsOf(name: string): string {
   return (first + last).toUpperCase();
 }
 
-const AVATAR_COLORS = ['#0284c7', '#7c3aed', '#059669', '#ea580c', '#dc2626', '#0d9488', '#4f46e5'];
-
-export function avatarBgFor(id: string): string {
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
-  return AVATAR_COLORS[hash % AVATAR_COLORS.length];
-}
+// Bảng màu riêng của module này (7 màu) khác với utils/avatar.util.ts (6 màu) khiến
+// cùng một user ra hai màu avatar khác nhau tuỳ nơi hiển thị (card board vs. card
+// workspace) — dùng chung `avatarColorFor` để avatar đồng bộ màu xuyên suốt ứng dụng.
+export const avatarBgFor = avatarColorFor;
 
 export const STORAGE_KEY_WORKSPACES = 'trello_workspaces_data';
 

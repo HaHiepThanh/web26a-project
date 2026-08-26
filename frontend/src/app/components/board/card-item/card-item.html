@@ -82,7 +82,11 @@
       <span></span>
     }
     @if (assignee(); as user) {
-      <span class="flex h-[24px] w-[24px] shrink-0 items-center justify-center rounded-full text-2xs font-bold text-white shadow-xs" [style.background]="assigneeColor()" [title]="user.displayName ?? user.email">{{ assigneeInitials() }}</span>
+      @if (user.avatarUrl) {
+        <img [src]="user.avatarUrl" [alt]="user.displayName ?? user.email" referrerpolicy="no-referrer" [title]="user.displayName ?? user.email" class="h-[24px] w-[24px] shrink-0 rounded-full object-cover shadow-xs" />
+      } @else {
+        <span class="flex h-[24px] w-[24px] shrink-0 items-center justify-center rounded-full text-2xs font-bold text-white shadow-xs" [style.background]="assigneeColor()" [title]="user.displayName ?? user.email">{{ assigneeInitials() }}</span>
+      }
     }
   </div>
 </div>

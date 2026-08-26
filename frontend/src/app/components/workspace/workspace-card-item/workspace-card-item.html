@@ -25,12 +25,18 @@
           <div class="mt-2.5 flex items-center gap-2 text-xs text-base-content/50">
             <div class="flex items-center -space-x-1.5 overflow-hidden">
               @for (mem of workspace().members.slice(0, 5); track mem.id) {
+              @if (mem.avatarUrl) {
+              <img [src]="mem.avatarUrl" [alt]="mem.displayName" referrerpolicy="no-referrer"
+                class="h-5 w-5 rounded-full border-2 border-base-100 object-cover shadow-xs"
+                [title]="mem.displayName + ' (UUID: ' + mem.id + ')'" />
+              } @else {
               <div
                 class="inline-flex h-5 w-5 items-center justify-center rounded-full border-2 border-base-100 text-3xs font-black text-white shadow-xs"
                 [style.background-color]="avatarBgFor(mem.id)"
                 [title]="mem.displayName + ' (UUID: ' + mem.id + ')'">
                 {{ initialsOf(mem.displayName || mem.email) }}
               </div>
+              }
               }
               @if (workspace().members.length > 5) {
               <div
