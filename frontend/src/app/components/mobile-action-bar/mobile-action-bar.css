@@ -1,0 +1,42 @@
+:host {
+  display: contents;
+}
+
+/**
+ * Từng nút trong speed dial trượt lên và hiện dần, lệch nhau một nhịp nhỏ theo
+ * thứ tự `--i` để mắt bắt được là chúng bung ra chứ không phải nhảy ra cùng lúc.
+ *
+ * Dùng `transform` + `opacity` chứ không dùng `height`/`top`: hai thuộc tính này
+ * trình duyệt xử lý thẳng trên GPU, không bắt tính lại bố cục từng khung hình —
+ * nên không giật ngay cả trên máy yếu.
+ */
+.speed-dial-item {
+  opacity: 0;
+  transform: translateY(8px) scale(0.92);
+  transform-origin: right center;
+  transition:
+    opacity 180ms ease-out,
+    transform 180ms ease-out;
+  /* Lúc đóng thì không nhận cú chạm, kể cả trong lúc đang mờ dần đi. */
+  pointer-events: none;
+}
+
+.speed-dial-item.is-open {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+  /* Nút gần ngón tay nhất hiện trước: danh sách xếp từ trên xuống nên nút cuối
+     (`--i` lớn nhất) nằm sát nút bấm, vì thế độ trễ tính ngược lại. */
+  transition-delay: calc((3 - var(--i, 0)) * 40ms);
+}
+
+/* Người dùng đã tắt hiệu ứng chuyển động trong hệ điều hành thì tôn trọng lựa
+   chọn đó: vẫn hiện/ẩn đầy đủ, chỉ bỏ phần trượt. */
+@media (prefers-reduced-motion: reduce) {
+  .speed-dial-item,
+  .speed-dial-item.is-open {
+    transition-duration: 1ms;
+    transition-delay: 0ms;
+    transform: none;
+  }
+}

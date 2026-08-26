@@ -1,0 +1,214 @@
+<!-- Lớp phủ bắt cú bấm ra ngoài để đóng bảng. Chỉ tồn tại khi CÓ bảng đang mở —
+     lúc bình thường không có gì nằm chắn trước nội dung. -->
+@if (backdropVisible()) {
+  <div class="fixed inset-0 z-40 lg:hidden" (click)="closeAll()" aria-hidden="true"></div>
+}
+
+<!-- Khung đáy: `pointer-events-none` để khoảng trống giữa hai cụm không nuốt cú
+     chạm vào nội dung bên dưới; từng cụm tự bật lại `pointer-events-auto`. -->
+<div class="pointer-events-none fixed bottom-4 left-4 right-4 z-50 flex items-end justify-between gap-3 lg:hidden">
+
+  <!-- ============================ CỤM TRÁI ============================ -->
+  <div class="pointer-events-auto flex min-w-0 items-center gap-2">
+
+    <!-- Tạo nhanh -->
+    <div class="relative shrink-0">
+      @if (panel() === 'create') {
+        <ul
+          class="menu menu-sm absolute bottom-full left-0 z-10 mb-2 w-[240px] gap-1 rounded-lg border border-base-300/70 bg-base-100 p-1.5 shadow-xl">
+          @if (!actions.canManage()) {
+            <li class="menu-title whitespace-normal text-2xs leading-snug">
+              You're a <b>member</b> of this organization, so you can't create new workspaces or boards.
+              Ask the organization owner or an admin to create one for you.
+            </li>
+          } @else {
+            <li>
+              <button type="button" class="flex w-full items-center gap-2.5 rounded text-left" (click)="createBoard()">
+                <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-primary/10 text-primary">
+                  <svg lucideKanban class="h-4 w-4" [strokeWidth]="2"></svg>
+                </span>
+                <span class="min-w-0">
+                  <span class="block text-xs font-bold leading-tight text-base-content">New board</span>
+                  <span class="block text-2xs leading-tight text-base-content/50">Kanban project board</span>
+                </span>
+              </button>
+            </li>
+            <li>
+              <button type="button" class="flex w-full items-center gap-2.5 rounded text-left" (click)="createWorkspace()">
+                <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-secondary/10 text-secondary">
+                  <svg lucideFolderKanban class="h-4 w-4" [strokeWidth]="2"></svg>
+                </span>
+                <span class="min-w-0">
+                  <span class="block text-xs font-bold leading-tight text-base-content">New Workspace</span>
+                  <span class="block text-2xs leading-tight text-base-content/50">Choose who can see this workspace</span>
+                </span>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+
+      <button type="button"
+        class="btn btn-primary btn-circle h-12 w-12 shadow-lg transition-transform active:scale-95"
+        [class.rotate-45]="panel() === 'create'"
+        aria-label="Create" title="Create" (click)="toggleCreate()">
+        <svg lucidePlus class="h-5 w-5" [strokeWidth]="2.4"></svg>
+      </button>
+    </div>
+
+    <!-- Ô tìm kiếm thu/mở. Chuyển động nằm ở `width`: lúc thu đúng bằng một nút
+         tròn, lúc mở giãn ra hết chỗ trống còn lại của cụm trái. -->
+    <div
+      class="flex h-12 items-center overflow-hidden rounded-full border border-base-300/70 bg-base-100 shadow-lg transition-[width,background-color] duration-300 ease-out"
+      [class]="searchOpen() ? 'w-[min(60vw,260px)] pl-1 pr-1' : 'w-12'">
+      <button type="button"
+        class="btn btn-ghost btn-circle h-10 w-10 shrink-0 border-none"
+        [class.text-primary]="hasQuery() && !searchOpen()"
+        aria-label="Search boards" title="Search boards"
+        (click)="searchOpen() ? closeSearch() : openSearch()">
+        <svg lucideSearch class="h-5 w-5" [strokeWidth]="2"></svg>
+        @if (hasQuery() && !searchOpen()) {
+          <!-- Ô đã thu nên không thấy chữ đang lọc; chấm này để người dùng biết
+               danh sách đang bị lọc chứ không phải rỗng. -->
+          <span class="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary ring-2 ring-base-100"></span>
+        }
+      </button>
+
+      <input #searchInput type="text" placeholder="Search boards..."
+        class="min-w-0 flex-1 bg-transparent text-sm text-base-content placeholder:text-base-content/40 focus:outline-none"
+        [class]="searchOpen() ? 'opacity-100' : 'pointer-events-none opacity-0'"
+        [attr.tabindex]="searchOpen() ? null : -1"
+        [attr.aria-hidden]="searchOpen() ? null : 'true'"
+        [value]="workspaceUiQuery()"
+        (input)="onSearchInput($event)"
+        (blur)="closeSearch()" />
+
+      @if (searchOpen()) {
+        <button type="button" class="btn btn-ghost btn-circle h-9 w-9 shrink-0 border-none"
+          aria-label="Clear search" title="Clear search"
+          (mousedown)="$event.preventDefault()" (click)="clearSearch()">
+          <svg lucideX class="h-4 w-4" [strokeWidth]="2.4"></svg>
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- ============================ CỤM PHẢI ============================ -->
+  <div class="pointer-events-auto relative flex shrink-0 flex-col items-end gap-2">
+
+    <!-- Bảng Thông báo / Lời mời, bật lên phía trên nút -->
+    @if (panel() === 'notifications' || panel() === 'invites') {
+      <div
+        class="absolute bottom-full right-0 mb-2 w-[min(88vw,320px)] rounded-lg border border-base-300/70 bg-base-100 p-2 shadow-xl">
+        @if (panel() === 'notifications') {
+          <app-notifications-panel
+            [notifications]="actions.notifications()"
+            [unreadCount]="actions.unreadNotifications()"
+            [dueCount]="actions.dueBadgeCount()"
+            (markAllRead)="markAllRead()"
+            (openNotification)="onOpenNotification($event)" />
+        } @else {
+          <app-invites-panel
+            [invites]="actions.myInvites()"
+            [error]="inviteError()"
+            (accept)="onAccept($event)"
+            (decline)="onDecline($event)" />
+        }
+      </div>
+    }
+
+    <!-- 4 nút chức năng. Luôn nằm trong DOM để có chuyển động vào/ra; lúc đóng
+         thì `pointer-events-none` + `invisible` nên không ăn cú chạm nào. -->
+    <div class="flex flex-col items-end gap-2" [class.invisible]="!dialOpen()">
+      <!-- 1. Thông báo -->
+      <div class="speed-dial-item flex items-center gap-2"
+        [class.is-open]="dialOpen()" [style.--i]="0">
+        <span class="rounded bg-base-100/95 px-2 py-1 text-2xs font-bold text-base-content shadow-md">Notifications</span>
+        <button type="button"
+          class="btn btn-circle h-11 w-11 border-none bg-base-100 text-base-content shadow-lg hover:bg-base-200"
+          [class.btn-active]="panel() === 'notifications'"
+          [attr.aria-label]="actions.bellTitle()" [title]="actions.bellTitle()"
+          (click)="openPanel('notifications')">
+          <svg lucideBell class="h-5 w-5" [strokeWidth]="2"></svg>
+          @if (actions.bellBadgeCount() > 0) {
+            <span
+              class="badge badge-error absolute -right-0.5 -top-0.5 h-4 min-w-4 rounded-full border border-base-100 px-1 text-3xs font-bold text-white">{{
+              actions.bellBadgeCount() }}</span>
+          }
+        </button>
+      </div>
+
+      <!-- 2. Lời mời tổ chức -->
+      <div class="speed-dial-item flex items-center gap-2"
+        [class.is-open]="dialOpen()" [style.--i]="1">
+        <span class="rounded bg-base-100/95 px-2 py-1 text-2xs font-bold text-base-content shadow-md">Invites</span>
+        <button type="button"
+          class="btn btn-circle h-11 w-11 border-none bg-base-100 text-base-content shadow-lg hover:bg-base-200"
+          [class.btn-active]="panel() === 'invites'"
+          [title]="actions.pendingInviteCount() > 0 ? actions.pendingInviteCount() + ' pending organization invite(s)' : 'Organization invites'"
+          aria-label="Organization invites"
+          (click)="openPanel('invites')">
+          <svg lucideUserPlus class="h-5 w-5" [strokeWidth]="2"></svg>
+          @if (actions.pendingInviteCount() > 0) {
+            <span
+              class="badge badge-error absolute -right-0.5 -top-0.5 h-4 min-w-4 rounded-full border border-base-100 px-1 text-3xs font-bold text-white">{{
+              actions.pendingInviteCount() }}</span>
+          }
+        </button>
+      </div>
+
+      <!-- 3. Đổi giao diện sáng/tối -->
+      <div class="speed-dial-item flex items-center gap-2"
+        [class.is-open]="dialOpen()" [style.--i]="2">
+        <span class="rounded bg-base-100/95 px-2 py-1 text-2xs font-bold text-base-content shadow-md">
+          {{ actions.theme() === 'dark' ? 'Light theme' : 'Dark theme' }}
+        </span>
+        <button type="button"
+          class="btn btn-circle h-11 w-11 border-none bg-base-100 text-base-content shadow-lg hover:bg-base-200"
+          [attr.aria-pressed]="actions.theme() === 'dark'"
+          [attr.aria-label]="actions.theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
+          (click)="toggleTheme()">
+          @if (actions.theme() === 'dark') {
+            <svg lucideSun class="h-5 w-5" [strokeWidth]="2"></svg>
+          } @else {
+            <svg lucideMoon class="h-5 w-5" [strokeWidth]="2"></svg>
+          }
+        </button>
+      </div>
+
+      <!-- 4. Hồ sơ & cài đặt -->
+      <div class="speed-dial-item flex items-center gap-2"
+        [class.is-open]="dialOpen()" [style.--i]="3">
+        <span class="rounded bg-base-100/95 px-2 py-1 text-2xs font-bold text-base-content shadow-md">Profile settings</span>
+        <!-- Chỉ điều hướng, KHÔNG kèm `closeAll()`. Việc đóng speed dial là của
+             nút menu (bấm lại là đóng); gắn thêm vào đây thì một cú bấm mang hai
+             ý nghĩa, và cái đóng che mất cái đi. Rời khỏi trang thì thanh tự dọn
+             qua `NavigationEnd` bên dưới. -->
+        <a routerLink="/settings"
+          class="btn btn-circle h-11 w-11 border-none bg-base-100 text-base-content shadow-lg hover:bg-base-200"
+          aria-label="Profile settings" title="Profile settings">
+          <svg lucideUser class="h-5 w-5" [strokeWidth]="2"></svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- Nút mở/đóng speed dial -->
+    <button type="button"
+      class="btn btn-circle h-12 w-12 border-none bg-neutral text-neutral-content shadow-lg transition-transform active:scale-95"
+      [class.rotate-90]="dialOpen()"
+      [attr.aria-expanded]="dialOpen()"
+      aria-label="More actions" title="More actions"
+      (click)="toggleDial()">
+      @if (dialOpen()) {
+        <svg lucideX class="h-5 w-5" [strokeWidth]="2.4"></svg>
+      } @else {
+        <svg lucideMenu class="h-5 w-5" [strokeWidth]="2.4"></svg>
+      }
+      <!-- Chấm đỏ gộp: có thông báo mới HOẶC có lời mời. Nút này là thứ duy nhất
+           nhìn thấy lúc chưa mở, nên phải tự nó nói được là "có việc cần xem". -->
+      @if (actions.hasAlerts() && !dialOpen()) {
+        <span class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-error ring-2 ring-base-100"></span>
+      }
+    </button>
+  </div>
+</div>

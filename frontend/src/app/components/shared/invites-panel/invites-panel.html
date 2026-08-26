@@ -1,0 +1,41 @@
+<div class="px-1.5 pb-1.5 pt-1 text-2xs font-black uppercase tracking-wider text-base-content/45">
+  Organization invites
+</div>
+
+@if (error(); as err) {
+  <div class="mb-1 rounded border border-error/40 bg-error/10 px-2.5 py-2 text-2xs font-bold text-error">
+    {{ err }}
+  </div>
+}
+
+@if (invites().length === 0) {
+  <div class="px-1.5 py-4 text-center text-xs text-base-content/50">No invites yet.</div>
+} @else {
+  <div class="flex max-h-[320px] flex-col gap-1.5 overflow-y-auto">
+    @for (inv of invites(); track inv.id) {
+      <div class="rounded border border-base-300/70 bg-base-200/40 p-2.5">
+        <div class="min-w-0">
+          <div class="truncate text-xs font-bold leading-tight text-base-content">{{ inv.fromUserName }}</div>
+          <div class="truncate text-2xs leading-tight text-base-content/55">invited you to "{{ inv.orgName }}"</div>
+          <div class="mt-0.5 text-3xs font-bold leading-tight"
+            [class.text-warning]="inv.role === 'admin'"
+            [class.text-base-content]="inv.role !== 'admin'">
+            Joining as {{ inv.role === 'admin' ? 'Admin' : 'Member' }}
+          </div>
+        </div>
+        <div class="mt-2 flex items-center gap-1.5">
+          <button type="button" class="btn btn-success btn-xs flex-1 gap-1 rounded text-white"
+            (click)="accept.emit(inv.id)">
+            <svg lucideCheck class="h-3 w-3" [strokeWidth]="3"></svg>
+            Accept
+          </button>
+          <button type="button" class="btn btn-ghost btn-xs flex-1 gap-1 rounded"
+            (click)="decline.emit(inv.id)">
+            <svg lucideX class="h-3 w-3" [strokeWidth]="3"></svg>
+            Decline
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+}

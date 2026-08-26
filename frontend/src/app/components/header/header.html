@@ -9,7 +9,11 @@
     </div>
   </a>
 
-  <div class="max-w-[480px] flex-1 max-md:hidden">
+  <!-- Từ `lg` trở xuống, ô tìm kiếm và toàn bộ cụm nút bên phải chuyển xuống
+       thanh nổi ở đáy màn hình (`app-mobile-action-bar`). Header khổ hẹp chỉ còn
+       logo và ô người dùng — trước đây nhồi hết vào một hàng thì nội dung rộng
+       538px trong khung 375px, và thứ bị đẩy khỏi màn hình luôn là mấy nút cuối. -->
+  <div class="hidden max-w-[480px] flex-1 lg:block">
     <label
       class="input input-sm h-9 w-full rounded-md border border-base-300 bg-base-100 px-3 flex items-center gap-2 shadow-xs transition-all focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
       <svg lucideSearch class="h-4 w-4 shrink-0 text-base-content/40" [strokeWidth]="2"></svg>
@@ -20,7 +24,8 @@
   </div>
 
   <div class="flex shrink-0 items-center gap-2">
-    <div class="relative">
+    <!-- Nút tạo nhanh: khổ hẹp đã có nút "+" ở thanh dưới nên ẩn đi cho khỏi trùng. -->
+    <div class="relative hidden lg:block">
       <button class="btn btn-primary btn-sm h-9 gap-1.5 rounded-md px-3.5 font-bold shadow-sm" (click)="toggleCreateMenu()">
         <svg lucidePlus class="h-4 w-4" [strokeWidth]="2.4"></svg>
         <span>Create</span>
@@ -66,10 +71,12 @@
       }
     </div>
 
-    <div class="mx-0.5 h-5 w-px bg-base-300/70 max-sm:hidden"></div>
+    <div class="mx-0.5 hidden h-5 w-px bg-base-300/70 lg:block"></div>
 
     <!-- Segmented icon toolbar -->
-    <div class="flex h-9 items-center gap-1 rounded-md border border-base-300/70 bg-base-200/50 px-1">
+    <!-- Chuông, lời mời, đổi giao diện, cài đặt: khổ hẹp đều nằm trong speed dial
+         ở thanh dưới, nên cả dải này chỉ hiện từ `lg` trở lên. -->
+    <div class="hidden h-9 items-center gap-1 rounded-md border border-base-300/70 bg-base-200/50 px-1 lg:flex">
       <div class="relative">
         <button type="button" class="btn btn-ghost btn-square btn-xs h-7 w-7 rounded relative hover:bg-base-100 hover:shadow-xs"
           [title]="bellTitle()" (click)="toggleNotifyMenu()">
@@ -84,48 +91,16 @@
         @if (notifyMenuOpen()) {
         <div
           class="absolute right-0 top-[42px] z-[200] w-[320px] rounded-lg border border-base-300/70 bg-base-100 p-2 shadow-xl">
-          <div class="flex items-center justify-between px-1.5 pb-1.5 pt-1">
-            <span class="text-2xs font-black uppercase tracking-wider text-base-content/45">Notifications</span>
-            @if (unreadNotifications() > 0) {
-            <button type="button" class="btn btn-link btn-xs h-auto min-h-0 p-0 text-3xs font-bold"
-              (click)="markAllNotificationsRead()">Mark all read</button>
-            }
-          </div>
-
-          @if (dueBadgeCount() > 0) {
-          <div class="mb-1 rounded border border-warning/40 bg-warning/10 px-2.5 py-2">
-            <div class="text-2xs font-bold leading-snug text-base-content">
-              {{ dueBadgeCount() }} of your cards are due soon or overdue
-            </div>
-          </div>
-          }
-
-          @if (notifications().length === 0) {
-          <div class="px-1.5 py-4 text-center text-xs text-base-content/50">No notifications yet.</div>
-          } @else {
-          <div class="flex max-h-[320px] flex-col gap-1 overflow-y-auto">
-            @for (n of notifications(); track n.id) {
-            <button type="button"
-              class="btn btn-ghost h-auto min-h-0 justify-start rounded border px-2.5 py-2 text-left font-normal normal-case"
-              [class.border-primary]="!n.read"
-              [class.bg-primary]="false"
-              [class.border-base-300]="n.read"
-              (click)="openNotification(n)">
-              <div class="flex items-start gap-2">
-                @if (!n.read) {
-                <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary"></span>
-                }
-                <span class="min-w-0">
-                  <span class="block text-2xs font-semibold leading-snug text-base-content">{{ n.text }}</span>
-                  <span class="mt-0.5 block text-3xs text-base-content/45">{{ relativeTimeFrom(n.createdAt) }} · click to open board</span>
-                </span>
-              </div>
-            </button>
-            }
-          </div>
-          }
+          <app-notifications-panel
+            [notifications]="actions.notifications()"
+            [unreadCount]="actions.unreadNotifications()"
+            [dueCount]="actions.dueBadgeCount()"
+            (markAllRead)="markAllNotificationsRead()"
+            (openNotification)="openNotification($event)" />
         </div>
         }
+
+
       </div>
 
       <!-- Lời mời tham gia Organization -->
@@ -156,37 +131,11 @@
         @if (inviteMenuOpen()) {
         <div
           class="absolute right-0 top-[42px] z-[200] w-[300px] rounded-lg border border-base-300/70 bg-base-100 p-2 shadow-xl">
-          <div class="px-1.5 pb-1.5 pt-1 text-2xs font-black uppercase tracking-wider text-base-content/45">Organization
-            invites</div>
-          @if (myInvites().length === 0) {
-          <div class="px-1.5 py-4 text-center text-xs text-base-content/50">No invites yet.</div>
-          } @else {
-          <div class="flex flex-col gap-1.5">
-            @for (inv of myInvites(); track inv.id) {
-            <div class="rounded border border-base-300/70 bg-base-200/40 p-2.5">
-              <div class="flex items-center gap-2">
-                <div class="min-w-0">
-                  <div class="truncate text-xs font-bold text-base-content leading-tight">{{ inv.fromUserName }}</div>
-                  <div class="truncate text-2xs text-base-content/55 leading-tight">invited you to "{{ inv.orgName }}"</div>
-                  <div class="mt-0.5 text-3xs font-bold leading-tight"
-                    [class.text-warning]="inv.role === 'admin'"
-                    [class.text-base-content]="inv.role !== 'admin'">
-                    Joining as {{ inv.role === 'admin' ? 'Admin' : 'Member' }}
-                  </div>
-                </div>
-              </div>
-              <div class="mt-2 flex items-center gap-1.5">
-                <button type="button" class="btn btn-success btn-xs flex-1 gap-1 rounded text-white" (click)="acceptInvite(inv.id)">
-                  <svg lucideCheck class="h-3 w-3" [strokeWidth]="3"></svg>
-                  Accept</button>
-                <button type="button" class="btn btn-ghost btn-xs flex-1 gap-1 rounded" (click)="declineInvite(inv.id)">
-                  <svg lucideX class="h-3 w-3" [strokeWidth]="3"></svg>
-                  Decline</button>
-              </div>
-            </div>
-            }
-          </div>
-          }
+          <app-invites-panel
+            [invites]="actions.myInvites()"
+            [error]="inviteError()"
+            (accept)="acceptInvite($event)"
+            (decline)="declineInvite($event)" />
         </div>
         }
       </div>

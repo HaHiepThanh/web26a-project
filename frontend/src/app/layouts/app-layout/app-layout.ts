@@ -3,6 +3,7 @@ import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
 import { Header } from '../../components/header/header';
 import { Footer } from '../../components/footer/footer';
+import { MobileActionBar } from '../../components/mobile-action-bar/mobile-action-bar';
 
 /**
  * Layout cho phần đã đăng nhập: có Header (+ sidebar) và Footer bao quanh nội dung.
@@ -10,7 +11,7 @@ import { Footer } from '../../components/footer/footer';
  */
 @Component({
   selector: 'app-app-layout',
-  imports: [RouterOutlet, Header, Footer],
+  imports: [RouterOutlet, Header, Footer, MobileActionBar],
   templateUrl: './app-layout.html',
   styleUrl: './app-layout.css',
 })
