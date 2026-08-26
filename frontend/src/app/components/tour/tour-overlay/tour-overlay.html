@@ -6,9 +6,14 @@
      soi sáng gì là chặn đường người dùng đi tới chỗ cần tới. -->
 @if (hole(); as h) {
 <div class="tour-scrim" aria-hidden="true">
+  @if (dimmed()) {
   <!-- Bốn mảng mờ bao quanh vùng sáng. Chúng CÓ nhận chuột (chặn bấm nhầm ra
        ngoài), còn khoảng trống ở giữa thì không có gì nằm trên nên cái nút thật
-       bấm được bình thường. -->
+       bấm được bình thường.
+
+       Tầng 2 tắt hẳn phần này: nó bảo người dùng mở bảng lọc / khung chat ra
+       xem, mà những thứ đó bung ra NGOÀI vùng sáng nên lớp mờ phủ luôn lên
+       chính chúng — vừa bấm Filter là bảng hiện ra trong bóng tối. -->
   <div class="tour-dim" [style.top.px]="0" [style.left.px]="0"
        [style.right.px]="0" [style.height.px]="h.top"></div>
   <div class="tour-dim" [style.top.px]="h.top + h.height" [style.left.px]="0"
@@ -17,6 +22,7 @@
        [style.width.px]="h.left" [style.height.px]="h.height"></div>
   <div class="tour-dim" [style.top.px]="h.top" [style.left.px]="h.left + h.width"
        [style.right.px]="0" [style.height.px]="h.height"></div>
+  }
 
   <!-- Viền sáng quanh phần tử. pointer-events:none để không cướp cú bấm. -->
   <div class="tour-ring" [style.top.px]="h.top" [style.left.px]="h.left"

@@ -147,6 +147,15 @@ export class TourOverlay {
     void this.router.navigate(slug ? ['/', slug, 'workspace'] : ['/workspace']);
   }
 
+  /**
+   * Bước này có làm mờ phần còn lại không.
+   *
+   * Tắt ở tầng 2 — xem `TourStep.dim`. Viền sáng quanh neo vẫn giữ, chỉ bỏ bốn
+   * mảng tối, nên người dùng vẫn biết nhìn vào đâu mà không bị che mất thứ họ
+   * vừa mở ra.
+   */
+  readonly dimmed = computed(() => this.step()?.dim !== false);
+
   /** Vùng sáng = khung phần tử nới ra HALO mỗi phía. */
   readonly hole = computed<Rect | null>(() => {
     const r = this.anchorRect();
@@ -184,9 +193,18 @@ export class TourOverlay {
     // chắn trống, ở mọi bề rộng. Viền sáng vẫn chỉ đúng cái nút.
     if (this.step()?.placement === 'bottom') {
       const w = Math.min(POPOVER_W, vw - 24);
+      // Nép về phía ĐỐI DIỆN với neo, không phải giữa màn hình.
+      //
+      // Thứ bung ra luôn nằm cùng phía với cái nút mở nó: bảng lọc căn phải nên
+      // đổ xuống nửa phải, khung chat thì chiếm hẳn cột trái. Đứng giữa là dính
+      // cả hai. Sang phía bên kia thì tách rời theo CHIỀU NGANG, không phụ thuộc
+      // vào việc cái bảng đó cao tới đâu.
+      // Lề 12px chứ không 16: ở màn ~670px, hai hộp 320px cạnh nhau chỉ vừa
+      // đúng khít. Lề 16 làm hụt 2px và thành ra vẫn chồng — đo được.
+      const neoBenPhai = h.left + h.width / 2 > vw / 2;
       return {
-        top: Math.max(12, vh - ph - 16),
-        left: Math.max(12, (vw - w) / 2),
+        top: Math.max(12, vh - ph - 12),
+        left: neoBenPhai ? 12 : Math.max(12, vw - w - 12),
       };
     }
 

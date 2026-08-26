@@ -80,6 +80,16 @@ export interface TourStep {
    * ra một bảng lớn — đứng cạnh nút kiểu gì cũng che mất chính cái bảng đó.
    */
   placement?: 'below' | 'bottom';
+  /**
+   * Có làm mờ phần còn lại của màn hình không. Mặc định CÓ.
+   *
+   * Tắt cho các bước tầng 2. Tầng 1 chỉ vào đúng một nút và cần người dùng
+   * không đi lạc — làm mờ là đúng. Tầng 2 bảo họ MỞ RA MÀ XEM: bảng lọc, khung
+   * chat, bảng gợi ý AI đều bung ra bên ngoài vùng sáng quanh cái nút, nên lớp
+   * mờ phủ luôn lên chính thứ vừa bảo họ mở. Vừa bấm Filter là bảng hiện ra
+   * trong bóng tối — đúng cái mâu thuẫn đã phải sửa một lần với modal.
+   */
+  dim?: boolean;
 }
 
 export const TOUR_STEPS: readonly TourStep[] = [
@@ -134,6 +144,7 @@ export const TOUR_STEPS: readonly TourStep[] = [
     // Bảng lọc bung ra dưới nút, rộng 320px và CĂN PHẢI nên nó thò sang trái xa
     // hơn cả cái nút — đứng dưới hay đứng cạnh nút đều che mất nó. Ra hẳn đáy.
     placement: 'bottom',
+    dim: false,
     title: 'Find work in a busy board',
     body: 'Open Filter and pick High priority. Watch the badge — it counts how many of the cards survived the filter, so you can see it working.',
   },
@@ -143,6 +154,10 @@ export const TOUR_STEPS: readonly TourStep[] = [
     page: 'board',
     tier: 2,
     advance: { on: 'flag', key: 'chatOpen' },
+    // Khung chat là một cột cao chạy hết chiều dọc bên trái; popover đứng cạnh
+    // nó là che mất phần lớn nội dung chat.
+    placement: 'bottom',
+    dim: false,
     title: 'Talk next to the work',
     body: 'The chat lives beside the board, not in another app. Drag its edge to resize, collapse it when you need room. Everyone sees messages as they arrive.',
   },
@@ -163,6 +178,10 @@ export const TOUR_STEPS: readonly TourStep[] = [
     // Không có hai thứ đó thì trên mọi môi trường chưa cấu hình AI, người dùng
     // làm xong sáu bước vẫn nhận về một tour "thất bại" — và 8 thẻ mẫu nằm lại
     // board vì tour chết trước khi kịp hỏi dọn.
+    // Chip gợi ý nằm trong khung chat bên trái; popover đứng cạnh nó là đè lên
+    // chính đoạn hội thoại mà assistant vừa đọc để nghĩ ra gợi ý.
+    placement: 'bottom',
+    dim: false,
     optional: true,
     waitMs: 12000,
     title: 'The assistant reads the chat',
