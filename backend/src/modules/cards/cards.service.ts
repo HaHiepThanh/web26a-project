@@ -70,6 +70,18 @@ function toCard(row: CardRow): CardResponse {
   };
 }
 
+/** Một thẻ quá hạn của tôi, kèm đủ chỗ để bấm thẳng tới nơi nó nằm. */
+export interface OverdueCardResponse {
+  cardId: string;
+  title: string;
+  dueDate: string;
+  daysOverdue: number;
+  boardId: string;
+  boardName: string;
+  workspaceName: string;
+  orgSlug: string;
+}
+
 /** CRUD card + kéo thả giữa/trong list (#4). */
 @Injectable()
 export class CardsService {
@@ -145,6 +157,89 @@ export class CardsService {
       throw new InternalServerErrorException('Failed to load cards');
     }
     return (data as CardRow[]).map(toCard);
+  }
+
+  /**
+   * Thẻ ĐANG QUÁ HẠN được giao cho tôi, gom từ MỌI board của MỌI tổ chức tôi ở.
+   *
+   * Vì sao phải có endpoint riêng thay vì để frontend tự lọc: frontend chỉ nạp
+   * thẻ của board đang mở, nên nó chỉ biết thẻ quá hạn của đúng board đó — mà
+   * board đó thì người dùng đang nhìn thấy rồi, báo thêm cũng bằng thừa. Cái
+   * đáng báo là thẻ ở board họ KHÔNG mở.
+   *
+   * Trả kèm tên board / tên workspace / slug tổ chức để dòng thông báo nói rõ
+   * thẻ nằm ở đâu và bấm vào đi thẳng được tới `/:orgSlug/board/:boardId`.
+   */
+  async findMyOverdue(uid: string): Promise<OverdueCardResponse[]> {
+    const sb = this.supabase.client;
+
+    // Chỉ lấy trong các tổ chức tôi còn là thành viên: bị mời ra khỏi tổ chức
+    // rồi thì thẻ cũ không được phép hiện lên nữa, dù assignee_id vẫn là tôi.
+    const { data: memberships, error: memberError } = await sb
+      .from('organization_members')
+      .select('org_id')
+      .eq('user_id', uid);
+    if (memberError) {
+      this.logger.error(`Đọc tổ chức của user thất bại: ${memberError.message}`);
+      throw new InternalServerErrorException('Failed to load organizations');
+    }
+    const orgIds = (memberships ?? []).map((m) => m.org_id as string);
+    if (!orgIds.length) return [];
+
+    // `due_date` là kiểu `date` nên so với hôm nay theo NGÀY, không theo giờ:
+    // thẻ hạn hôm nay CHƯA phải quá hạn, chỉ từ hôm qua trở về trước mới tính.
+    const homNay = new Date().toISOString().slice(0, 10);
+
+    const { data, error } = await sb
+      .from('cards')
+      .select(
+        'id, title, due_date, lists(board_id, boards(id, name, workspaces(name), organizations(slug)))',
+      )
+      .eq('assignee_id', uid)
+      .in('org_id', orgIds)
+      .is('completed_at', null) // đã xong thì trễ cũng không cần nhắc nữa
+      .lt('due_date', homNay)
+      .order('due_date', { ascending: true });
+
+    if (error) {
+      this.logger.error(`Đọc thẻ quá hạn thất bại: ${error.message}`);
+      throw new InternalServerErrorException('Failed to load overdue cards');
+    }
+
+    type Row = {
+      id: string;
+      title: string;
+      due_date: string;
+      lists: {
+        board_id: string;
+        boards: {
+          id: string;
+          name: string;
+          workspaces: { name: string } | null;
+          organizations: { slug: string } | null;
+        } | null;
+      } | null;
+    };
+
+    const mocHomNay = Date.parse(homNay);
+    return (data as unknown as Row[])
+      .filter((r) => !!r.lists?.boards) // board đã xoá thì không có chỗ để bấm tới
+      .map((r) => {
+        const board = r.lists!.boards!;
+        return {
+          cardId: r.id,
+          title: r.title,
+          dueDate: r.due_date,
+          daysOverdue: Math.max(
+            1,
+            Math.round((mocHomNay - Date.parse(r.due_date)) / 86_400_000),
+          ),
+          boardId: board.id,
+          boardName: board.name,
+          workspaceName: board.workspaces?.name ?? '',
+          orgSlug: board.organizations?.slug ?? '',
+        };
+      });
   }
 
   async create(

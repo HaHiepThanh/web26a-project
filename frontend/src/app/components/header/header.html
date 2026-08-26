@@ -116,7 +116,12 @@
                 <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary"></span>
                 }
                 <span class="min-w-0">
-                  <span class="block text-2xs font-semibold leading-snug text-base-content">{{ n.text }}</span>
+                  <span class="block text-2xs font-semibold leading-snug text-base-content">
+                    @if (n.type === 'card.overdue') {
+                    <span class="mr-1 font-bold text-error">Overdue ·</span>
+                    }
+                    {{ n.text }}
+                  </span>
                   <span class="mt-0.5 block text-3xs text-base-content/45">{{ relativeTimeFrom(n.createdAt) }} · click to open board</span>
                 </span>
               </div>
