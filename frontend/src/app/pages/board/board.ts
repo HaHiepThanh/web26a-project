@@ -695,6 +695,30 @@ export class Board {
       untracked(() => this.tour.observeFlags({ filterOpen, aiOpen }));
     });
 
+    // Rời bước "use-filter" thì ĐÓNG bảng lọc lại.
+    //
+    // Dưới 768px bảng lọc không phải popover nhỏ dưới nút mà là tấm dán đáy cao
+    // 327px — nửa dưới màn hình điện thoại. Để nó mở khi sang bước 6 thì nó phủ
+    // lên nút chat, mà trên mobile nút đó là FAB nằm ở góc dưới. Phép kiểm
+    // `elementFromPoint` của tour thấy neo bị che nên không vẽ viền, và popover
+    // đứng báo "Waiting for it to show up on this page..." vĩnh viễn: bước 6 kẹt
+    // cứng, lối ra duy nhất là bấm Next. Desktop không dính vì ở đó bảng lọc nằm
+    // gọn góc trên-phải, cách nút chat rất xa.
+    //
+    // Chỉ đóng khi chuyển sang MỘT BƯỚC KHÁC, không đóng khi tour kết thúc
+    // (`id` về null). Người dùng bấm X giữa lúc đang xem bộ lọc thì bảng phải ở
+    // nguyên đó — họ đóng tour chứ có đóng bảng đâu.
+    let buocTruoc: string | null = null;
+    effect(() => {
+      const id = this.tour.currentStep()?.id ?? null;
+      untracked(() => {
+        if (buocTruoc === 'use-filter' && id !== null && id !== buocTruoc) {
+          this.showFilterPanel.set(false);
+        }
+        buocTruoc = id;
+      });
+    });
+
     // Tầng 3: báo hoàn cảnh để coach mark tự quyết có đáng ghé vào không.
     //
     // Chỉ báo khi dữ liệu của CHÍNH board này đã nạp xong — cùng lý do với effect
