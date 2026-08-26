@@ -38,7 +38,9 @@ export type UserEventType =
   | 'invite.responded'
   | 'member.removed'
   /** Được giao phụ trách một thẻ — chuông 🔔 ở Header sáng lên. */
-  | 'card.assigned';
+  | 'card.assigned'
+  /** Ai đó trong tổ chức vừa đổi avatar hoặc tên hiển thị. */
+  | 'user.updated';
 
 /** Payload của `card.assigned` — mang sẵn đủ thứ để vẽ dòng thông báo và điều hướng. */
 export interface CardAssignedPayload {

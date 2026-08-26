@@ -41,11 +41,30 @@ export function boardComputed(store: {
       const id = store.currentBoardId();
       return id ? (byId()[id] ?? null) : null;
     }),
-    /** Ảnh nền theo boardId — Workspace vẽ tile mà không phải lưu thêm bản base64. */
+    /**
+     * Ảnh nền theo boardId — Workspace vẽ tile mà không phải giữ thêm bản sao.
+     *
+     * ⚠️ Đọc TỪ ENTITY TRƯỚC, localStorage chỉ là đường lui.
+     *
+     *    Trước đây hàm này chỉ nhìn `localOverrides`, tức bản base64 nằm trong
+     *    máy người đặt ảnh. Hệ quả kép:
+     *      • người khác mở Workspace không thấy ảnh nào (ảnh đâu có trên máy họ);
+     *      • và sau khi ảnh chuyển lên Storage — lúc đó `localOverrides` được
+     *        dọn đi vì đã thừa — thì chính người đặt cũng mất ảnh ở Workspace,
+     *        trong khi trang Board vẫn hiện đúng vì nó đọc thẳng từ entity.
+     *
+     *    Hai trang đọc hai nguồn khác nhau chính là gốc của sự lệch đó. Giờ cả
+     *    hai cùng lấy từ entity — nguồn mà server trả xuống.
+     */
     backgroundImageByBoardId: computed(() => {
       const result: Record<string, string | undefined> = {};
+      // Đường lui: board đặt nền TRƯỚC khi có endpoint upload, ảnh vẫn còn ở máy.
       for (const [id, local] of Object.entries(store.localOverrides())) {
         if (local.backgroundImageUrl) result[id] = local.backgroundImageUrl;
+      }
+      // Bản trên server thắng.
+      for (const b of store.entities()) {
+        if (b.backgroundImageUrl) result[b.id] = b.backgroundImageUrl;
       }
       return result;
     }),

@@ -42,6 +42,16 @@ function toUser(row: unknown) {
   };
 }
 
+/** Bucket ảnh nền board — RIÊNG TƯ, giống `card-attachments`, khác `avatars`.
+ *  Board có thể để `private`; ảnh nền của nó không nên ai cầm link cũng xem được. */
+const BUCKET_NEN = 'board-backgrounds';
+/** Ảnh nền phủ kín màn hình nên cho rộng tay hơn avatar, vẫn chặn để không ai
+ *  đẩy file 50MB làm mọi lần mở board phải tải lại từng đó. */
+const MAX_NEN_BYTES = 5 * 1024 * 1024;
+/** Link ký sống 1 giờ — đủ lâu cho một phiên làm việc, hết hạn thì lần tải board
+ *  kế tiếp tự cấp link mới. */
+const NEN_URL_TTL = 3600;
+
 /** Dòng thô Supabase trả về (tên cột snake_case). */
 interface BoardRow {
   id: string;
@@ -64,6 +74,13 @@ export interface BoardResponse {
   visibility: string;
   background: string | null;
   backgroundImagePath: string | null;
+  /**
+   * Link ký tạm để TẢI ảnh nền. `backgroundImagePath` chỉ là đường dẫn trong
+   * Storage, tự nó không mở được vì bucket riêng tư — frontend cần đúng trường
+   * này. `null` khi board không đặt ảnh nền, hoặc khi ký link thất bại (lúc đó
+   * board vẫn hiện bình thường với màu nền, chỉ mất ảnh).
+   */
+  backgroundImageUrl: string | null;
   /**
    * Người được chỉ định xem board. CHỈ có ý nghĩa khi `visibility === 'private'`;
    * với 'workspace'/'public' thì rỗng vì lúc đó cả workspace đều thấy.
@@ -101,6 +118,7 @@ function toBoard(row: BoardRow, memberIds: string[] = []): BoardResponse {
     visibility: row.visibility,
     background: row.background,
     backgroundImagePath: row.background_image_path,
+    backgroundImageUrl: null,
     createdBy: row.created_by,
     createdAt: row.created_at,
   };
@@ -287,6 +305,44 @@ export class BoardsService {
    * Danh sách board trong 1 workspace.
    * Thiếu `workspaceId` → trả `[]` thay vì lỗi (đúng theo HOA.md).
    */
+  /**
+   * Điền `backgroundImageUrl` cho những board có đặt ảnh nền.
+   *
+   * Ký HÀNG LOẠT trong một lần gọi (`createSignedUrls`), không ký từng cái:
+   * danh sách board của một workspace có thể vài chục cái, ký lẻ là bấy nhiêu
+   * vòng mạng tới Storage nối đuôi nhau — đúng kiểu chậm mà `attachments`
+   * đã tránh sẵn, làm lại y hệt ở đây.
+   *
+   * Ký hỏng thì KHÔNG ném lỗi: mất ảnh nền còn hơn mất cả board. Trả `null` và
+   * board hiện bằng màu nền.
+   */
+  private async kyAnhNen(boards: BoardResponse[]): Promise<BoardResponse[]> {
+    const duongDan = boards
+      .map((b) => b.backgroundImagePath)
+      .filter((p): p is string => !!p);
+    if (!duongDan.length) return boards;
+
+    const { data: signed, error } = await this.supabase.client.storage
+      .from(BUCKET_NEN)
+      .createSignedUrls(duongDan, NEN_URL_TTL);
+
+    if (error) {
+      this.logger.warn(`Ký link ảnh nền thất bại: ${error.message}`);
+      return boards;
+    }
+
+    const theoDuongDan = new Map<string, string>();
+    for (const s of signed ?? []) {
+      if (s.path && s.signedUrl) theoDuongDan.set(s.path, s.signedUrl);
+    }
+    for (const b of boards) {
+      if (b.backgroundImagePath) {
+        b.backgroundImageUrl = theoDuongDan.get(b.backgroundImagePath) ?? null;
+      }
+    }
+    return boards;
+  }
+
   async findAll(uid: string, workspaceId: string): Promise<BoardResponse[]> {
     if (!workspaceId) return [];
 
@@ -320,13 +376,14 @@ export class BoardsService {
 
     // Board 'private' chỉ hiện với người được chỉ định. Lọc ở ĐÂY chứ không ở
     // frontend — gửi xuống rồi mới ẩn thì mở tab Network là đọc được hết.
-    return rows
+    const ds = rows
       .filter(
         (b) =>
           b.visibility !== 'private' ||
           (theoBoard.get(b.id) ?? []).includes(uid),
       )
       .map((b) => toBoard(b, theoBoard.get(b.id) ?? []));
+    return this.kyAnhNen(ds);
   }
 
   /**
@@ -465,7 +522,7 @@ export class BoardsService {
       throw new NotFoundException('Board not found.');
     }
 
-    return toBoard(boardRes.data as BoardRow, ids);
+    return (await this.kyAnhNen([toBoard(boardRes.data as BoardRow, ids)]))[0];
   }
 
   /**
@@ -527,7 +584,7 @@ export class BoardsService {
         throw e;
       }
     }
-    return toBoard(row, ids);
+    return (await this.kyAnhNen([toBoard(row, ids)]))[0];
   }
 
   /** Ai được chỉ định xem board này (dùng cho ô "Thành viên" trong phần cài đặt board). */
@@ -661,7 +718,7 @@ export class BoardsService {
 
     if (phaiGhiThanhVien) await this.ghiThanhVien(id, ids);
 
-    const updated = toBoard(row, ids);
+    const updated = (await this.kyAnhNen([toBoard(row, ids)]))[0];
     this.realtime.emitToBoard(id, 'board.updated', uid, updated);
     return updated;
   }
@@ -670,6 +727,85 @@ export class BoardsService {
    * Xoá board. `ON DELETE CASCADE` trong database.sql tự xoá list/card/label
    * bên trong, không cần tự tay xoá từng bảng.
    */
+  /**
+   * Tải ảnh nền cho board và ghi đường dẫn xuống `boards.background_image_path`.
+   *
+   * Vì sao cần endpoint riêng thay vì nhét base64 vào `PATCH /boards/:id`:
+   * trước đây ảnh nền chỉ nằm ở `localStorage` của người đặt, nên người khác mở
+   * cùng board KHÔNG thấy gì — đúng lỗi người dùng báo. Ảnh phải nằm ở nơi mọi
+   * thành viên đều với tới được, tức Storage, và đường dẫn phải nằm ở database.
+   *
+   * Chỉ owner/admin đổi được (giống đổi tên board): nền là thứ cả nhóm nhìn
+   * thấy, không phải tuỳ chọn cá nhân.
+   */
+  async uploadBackground(
+    uid: string,
+    boardId: string,
+    file: Express.Multer.File,
+  ): Promise<BoardResponse> {
+    if (!file) throw new BadRequestException('No file uploaded.');
+    if (file.size > MAX_NEN_BYTES) {
+      throw new BadRequestException(
+        `Background image must be at most ${MAX_NEN_BYTES / 1024 / 1024}MB.`,
+      );
+    }
+    const loaiChoPhep: Record<string, string> = {
+      'image/jpeg': '.jpg',
+      'image/png': '.png',
+      'image/webp': '.webp',
+    };
+    const duoi = loaiChoPhep[file.mimetype];
+    if (!duoi) {
+      throw new BadRequestException('Only JPG, PNG or WEBP images are allowed.');
+    }
+
+    const board = await this.access.assertBoardAccess(uid, boardId);
+    await this.assertCanManage(uid, board.orgId);
+
+    // Tên có mốc thời gian nên mỗi lần đổi là một file mới — không dựa vào
+    // `upsert` để tránh trình duyệt vẫn hiện ảnh cũ trong bộ nhớ đệm.
+    const duongDan = `${boardId}/${Date.now()}${duoi}`;
+    const { error: loiTai } = await this.supabase.client.storage
+      .from(BUCKET_NEN)
+      .upload(duongDan, file.buffer, { contentType: file.mimetype });
+
+    if (loiTai) {
+      this.logger.error(`Tải ảnh nền thất bại (board=${boardId}): ${loiTai.message}`);
+      throw new InternalServerErrorException('Failed to upload the background image.');
+    }
+
+    // Dọn ảnh cũ SAU khi ảnh mới đã lên — hỏng giữa chừng thì board vẫn còn nền.
+    const { data: cu } = await this.supabase.client
+      .from('boards')
+      .select('background_image_path')
+      .eq('id', boardId)
+      .maybeSingle();
+
+    const { data: row, error } = await this.supabase.client
+      .from('boards')
+      .update({ background_image_path: duongDan })
+      .eq('id', boardId)
+      .select()
+      .single();
+
+    if (error) {
+      this.logger.error(`Ghi đường dẫn ảnh nền thất bại: ${error.message}`);
+      throw new InternalServerErrorException('Failed to save the background image.');
+    }
+
+    const duongDanCu = (cu as { background_image_path: string | null } | null)
+      ?.background_image_path;
+    if (duongDanCu && duongDanCu !== duongDan) {
+      await this.supabase.client.storage.from(BUCKET_NEN).remove([duongDanCu]);
+    }
+
+    const ids = await this.memberIdsOf(boardId);
+    const updated = (await this.kyAnhNen([toBoard(row as BoardRow, ids)]))[0];
+    // Người khác đang mở board này thấy nền mới ngay, không phải F5.
+    this.realtime.emitToBoard(boardId, 'board.updated', uid, updated);
+    return updated;
+  }
+
   async remove(uid: string, id: string): Promise<void> {
     // Ném 404 nếu board không tồn tại hoặc user không thuộc tổ chức của nó.
     const board = await this.findOne(uid, id);

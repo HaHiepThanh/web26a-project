@@ -12,11 +12,19 @@ interface InviteCreatedPayload {
   createdAt: string;
 }
 
+/** Hình dạng `data` của `user.updated` — chỉ gồm phần hiển thị vừa đổi. */
+interface UserUpdatedPayload {
+  id: string;
+  displayName: string | null;
+  avatarUrl: string | null;
+}
+
 /** Những gì `OrganizationStore` cần từ luồng WebSocket. */
 interface OrgRealtimeTarget {
   applyRemoteInvite(invite: OrgInvite): void;
   removeInviteLocally(inviteId: string): void;
   refreshAfterMembershipChange(): Promise<void>;
+  applyRemoteProfile(p: UserUpdatedPayload): void;
 }
 
 /**
@@ -57,6 +65,17 @@ export function withOrganizationRealtime() {
 
       'member.removed': () => {
         void store.refreshAfterMembershipChange();
+      },
+
+      /**
+       * Ai đó trong tổ chức vừa đổi avatar / tên hiển thị.
+       *
+       * Sửa TẠI CHỖ đúng một người, không `refreshAfterMembershipChange()`:
+       * nạp lại cả danh sách tổ chức chỉ vì một tấm ảnh là quá đắt, và nếu
+       * nhiều người cùng đổi thì thành một tràng request nối đuôi nhau.
+       */
+      'user.updated': (data: never) => {
+        store.applyRemoteProfile(data as unknown as UserUpdatedPayload);
       },
     },
   }));

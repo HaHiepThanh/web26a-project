@@ -5,6 +5,7 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 import { SupabaseService } from '../../common/supabase/supabase.service';
 import { CurrentUserInfo } from '../../common/firebase/current-user.decorator';
 import { UpdateProfileDto } from './dto/update-profile.dto';
@@ -102,7 +103,10 @@ export interface MeResponse {
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
 
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(
+    private readonly supabase: SupabaseService,
+    private readonly realtime: RealtimeGateway,
+  ) {}
 
   /**
    * Ghi hồ sơ Firebase vào bảng `users`.
@@ -268,6 +272,43 @@ export class AuthService {
    * Cập nhật hồ sơ người dùng tự sửa trong trang Cài đặt.
    * Chỉ ghi những trường được gửi lên — không đụng tới trường bỏ trống.
    */
+  /**
+   * Báo cho mọi tổ chức mà người này thuộc về: hồ sơ vừa đổi.
+   *
+   * Không có bước này thì B đổi avatar xong, A vẫn thấy ảnh cũ cho tới lần F5
+   * kế tiếp — vì avatar của người khác đọc từ `OrganizationStore.membersByOrg`,
+   * thứ chỉ nạp một lần lúc mở app rồi nằm im.
+   *
+   * Nuốt mọi lỗi: hồ sơ ĐÃ lưu xong rồi, báo hỏng thì cùng lắm người khác thấy
+   * chậm một nhịp — không đáng để ném lỗi ngược về người vừa lưu thành công.
+   */
+  private async baoDoiHoSo(uid: string, row: UserRow): Promise<void> {
+    try {
+      const { data } = await this.supabase.client
+        .from('organization_members')
+        .select('org_id')
+        .eq('user_id', uid);
+
+      const payload = {
+        id: row.id,
+        displayName: row.display_name,
+        avatarUrl: row.avatar_url,
+      };
+      for (const t of data ?? []) {
+        this.realtime.emitToOrg(
+          (t as { org_id: string }).org_id,
+          'user.updated',
+          uid,
+          payload,
+        );
+      }
+    } catch (e) {
+      this.logger.warn(
+        `Không báo được thay đổi hồ sơ qua realtime (uid=${uid}): ${(e as Error).message}`,
+      );
+    }
+  }
+
   async updateProfile(
     user: CurrentUserInfo,
     dto: UpdateProfileDto,
@@ -309,7 +350,9 @@ export class AuthService {
       );
       throw new InternalServerErrorException('Failed to save profile');
     }
-    return data as UserRow;
+    const row = data as UserRow;
+    await this.baoDoiHoSo(user.uid, row);
+    return row;
   }
 
   /**
@@ -400,10 +443,14 @@ export class AuthService {
 
     const publicUrl = publicData.publicUrl;
 
-    const { error: updateError } = await this.supabase.client
+    // `.select().single()` để lấy lại dòng đã ghi — cần `display_name` cho gói
+    // tin realtime, mà hàm này chỉ nhận vào mỗi file ảnh.
+    const { data: row, error: updateError } = await this.supabase.client
       .from('users')
       .update({ avatar_url: publicUrl, updated_at: new Date().toISOString() })
-      .eq('id', user.uid);
+      .eq('id', user.uid)
+      .select()
+      .single();
 
     if (updateError) {
       this.logger.error(
@@ -413,6 +460,10 @@ export class AuthService {
         'Failed to update avatar in database.',
       );
     }
+
+    // ĐƯỜNG CHÍNH của việc đổi avatar đi qua đây, KHÔNG qua `updateProfile` —
+    // thiếu dòng này là người khác vẫn thấy ảnh cũ tới lần F5 kế tiếp.
+    await this.baoDoiHoSo(user.uid, row as UserRow);
 
     return { avatarUrl: publicUrl };
   }

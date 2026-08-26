@@ -7,8 +7,11 @@ import {
   Patch,
   Post,
   Query,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { FirebaseAuthGuard } from '../../common/firebase/firebase-auth.guard';
 import { CurrentUser } from '../../common/firebase/current-user.decorator';
 import type { CurrentUserInfo } from '../../common/firebase/current-user.decorator';
@@ -91,6 +94,24 @@ export class BoardsController {
    *    Muốn biết board thuộc tổ chức nào thì bắt buộc phải đọc database — việc
    *    đó thuộc về service, nên kiểm tra vai trò nằm trong `boards.remove()`.
    */
+  /**
+   * POST /boards/:id/background — tải ảnh nền cho board.
+   *
+   * Giới hạn dung lượng khai ở interceptor để Multer chặn NGAY khi nhận, không
+   * đọc trọn file vào RAM rồi mới báo quá cỡ.
+   */
+  @Post(':id/background')
+  @UseInterceptors(
+    FileInterceptor('file', { limits: { fileSize: 5 * 1024 * 1024 } }),
+  )
+  uploadBackground(
+    @CurrentUser() user: CurrentUserInfo,
+    @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.boards.uploadBackground(user.uid, id, file);
+  }
+
   @Delete(':id')
   remove(@CurrentUser() user: CurrentUserInfo, @Param('id') id: string) {
     return this.boards.remove(user.uid, id);

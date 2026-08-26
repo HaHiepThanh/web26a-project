@@ -86,6 +86,24 @@ export function boardMethods<S extends Store>(store: S, api = inject(ApiService)
       }
     },
 
+    /**
+     * Đẩy ảnh nền lên Storage để MỌI thành viên đều thấy.
+     *
+     * Modal đưa xuống một data URL (đã nén sẵn), đổi lại thành file rồi gửi
+     * multipart. Trả về link ký của server, hoặc `null` khi hỏng.
+     *
+     * Dùng CHUNG cho cả tạo mới lẫn sửa — thiếu một trong hai là lỗi cũ còn
+     * nguyên ở đường đó: trước đây ảnh chỉ nằm ở localStorage của người đặt nên
+     * người khác mở cùng board thì trắng trơn.
+     */
+    async taiAnhNen(boardId: string, dataUrl: string): Promise<string | null> {
+      const blob = await (await fetch(dataUrl)).blob();
+      const form = new FormData();
+      form.append('file', blob, 'background.png');
+      const row = await api.upload<ApiBoard>(`/boards/${boardId}/background`, form);
+      return row.backgroundImageUrl ?? null;
+    },
+
     async createBoard(
       workspaceId: string,
       name: string,
@@ -115,11 +133,26 @@ export function boardMethods<S extends Store>(store: S, api = inject(ApiService)
         return null;
       }
 
-      // Màu/ảnh nền backend chưa lưu được → giữ ở trình duyệt, khoá theo id THẬT.
-      const local: LocalBoardOverride = { background: options?.background, backgroundImageUrl: options?.backgroundImageUrl };
+      // ẢNH nền lên Storage ngay khi tạo. Hỏng thì board vẫn còn (đã tạo xong ở
+      // trên) — chỉ báo lỗi nền, không huỷ cả board vì một tấm ảnh.
+      let urlAnhNen: string | undefined;
+      if (options?.backgroundImageUrl?.startsWith('data:')) {
+        try {
+          urlAnhNen = (await this.taiAnhNen(row.id, options.backgroundImageUrl)) ?? undefined;
+        } catch {
+          patchState(store, { loadError: 'Board created, but the background image failed to upload.' });
+        }
+      }
+
+      // MÀU nền vẫn giữ bản local làm đường lui. ẢNH thì không: đã có trên
+      // server rồi thì bản local chỉ là rác chiếm quota localStorage.
+      const local: LocalBoardOverride = {
+        background: options?.background,
+        backgroundImageUrl: urlAnhNen ? undefined : options?.backgroundImageUrl,
+      };
       const nextOverrides = { ...store.localOverrides(), [row.id]: local };
       patchState(store, { localOverrides: nextOverrides });
-      const board = toBoard(row, local);
+      const board = toBoard({ ...row, backgroundImageUrl: urlAnhNen ?? row.backgroundImageUrl }, local);
       patchState(store, upsertEntity(board), { workspaceBoardIds: [...store.workspaceBoardIds(), row.id] });
       persistOrDropImage(row.id);
       return board;
@@ -140,6 +173,57 @@ export function boardMethods<S extends Store>(store: S, api = inject(ApiService)
           await api.patch<ApiBoard>(`/boards/${id}`, patch);
         } catch (e) {
           return describeError(e, 'Failed to update board.');
+        }
+      }
+
+      // ẢNH nền: đẩy lên Storage qua endpoint riêng để MỌI thành viên đều thấy.
+      //
+      // Trước đây ảnh chỉ được nhét vào localStorage nên chỉ người đặt nhìn
+      // thấy — người khác mở cùng board thì trắng trơn. Modal đưa xuống một
+      // data URL (đã nén), đổi lại thành file rồi gửi multipart.
+      if (changes.backgroundImageUrl?.startsWith('data:')) {
+        try {
+          const urlMoi = await this.taiAnhNen(id, changes.backgroundImageUrl);
+          const row = { backgroundImageUrl: urlMoi };
+          const existingBoard = store.entities().find((b) => b.id === id);
+          if (existingBoard) {
+            // Dựng rồi mới gán, không spread thẳng `?? undefined`: `Board` khai
+            // trường này là optional, còn spread một giá trị `undefined` tường
+            // minh lại biến nó thành bắt buộc-mà-rỗng — TypeScript từ chối.
+            const moi: Board = { ...existingBoard };
+            if (row.backgroundImageUrl) moi.backgroundImageUrl = row.backgroundImageUrl;
+            else delete moi.backgroundImageUrl;
+            patchState(store, upsertEntity(moi));
+          }
+          // Đã có bản trên server thì bản localStorage chỉ còn là rác chiếm quota.
+          const { [id]: _bo, ...conLai } = store.localOverrides();
+          patchState(store, { localOverrides: conLai });
+          return null;
+        } catch (e) {
+          return describeError(e, 'Failed to upload the background image.');
+        }
+      }
+
+      // GỠ ảnh nền. Phải xoá cả trên SERVER, không chỉ ở máy mình.
+      //
+      // `'backgroundImageUrl' in changes` chứ không `=== undefined`: hai thứ đó
+      // khác nhau — "không đụng tới trường này" và "vừa bấm gỡ ảnh" đều cho ra
+      // `undefined`, chỉ có sự hiện diện của khoá mới phân biệt được. Đoán sai
+      // thì mỗi lần đổi tên board là ảnh nền tự bay mất.
+      //
+      // Không xoá trên server thì `backgroundImageByBoardId` — nay ưu tiên bản
+      // server — vẫn dựng lại đúng tấm ảnh vừa gỡ.
+      if ('backgroundImageUrl' in changes && !changes.backgroundImageUrl) {
+        const existingBoard = store.entities().find((b) => b.id === id);
+        if (existingBoard?.backgroundImageUrl) {
+          try {
+            await api.patch<ApiBoard>(`/boards/${id}`, { backgroundImagePath: null });
+            const moi: Board = { ...existingBoard };
+            delete moi.backgroundImageUrl;
+            patchState(store, upsertEntity(moi));
+          } catch (e) {
+            return describeError(e, 'Failed to remove the background image.');
+          }
         }
       }
 

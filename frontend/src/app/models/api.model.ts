@@ -148,6 +148,8 @@ export interface ApiBoard {
   visibility: BoardVisibility;
   background: BoardBackground | null;
   backgroundImagePath: string | null;
+  /** Link ký tạm để tải ảnh nền (bucket riêng tư). `null` khi board không có ảnh. */
+  backgroundImageUrl: string | null;
   createdBy: string;
   createdAt: string;
 }

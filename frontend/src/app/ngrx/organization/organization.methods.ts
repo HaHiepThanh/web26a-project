@@ -326,6 +326,45 @@ export function withOrganizationMethods() {
           },
 
           /**
+           * Ai đó vừa đổi avatar / tên hiển thị — vá đúng người trong mọi tổ chức.
+           *
+           * `membersByOrg` là NGUỒN mà danh sách thành viên workspace, ô người
+           * phụ trách, avatar trong board và trong chat đều đọc. Nó nạp một lần
+           * lúc mở app rồi nằm im, nên không vá ở đây thì người khác vẫn thấy
+           * ảnh cũ cho tới lần F5 kế tiếp — đúng lỗi đã báo.
+           *
+           * Chỉ ghi lại khi THỰC SỰ có thay đổi: `patchState` vô điều kiện là
+           * mọi computed bám vào `membersByOrg` chạy lại, cho một sự kiện không
+           * đổi gì.
+           */
+          applyRemoteProfile(p: {
+            id: string;
+            displayName: string | null;
+            avatarUrl: string | null;
+          }): void {
+            const hienTai = store.membersByOrg();
+            let coDoi = false;
+            const moi: Record<string, OrgMemberView[]> = {};
+
+            for (const [orgId, ds] of Object.entries(hienTai)) {
+              moi[orgId] = ds.map((m) => {
+                if (m.user.id !== p.id) return m;
+                coDoi = true;
+                return {
+                  ...m,
+                  user: {
+                    ...m.user,
+                    displayName: p.displayName ?? undefined,
+                    avatarUrl: p.avatarUrl ?? undefined,
+                  },
+                };
+              });
+            }
+
+            if (coDoi) patchState(store, { membersByOrg: moi });
+          },
+
+          /**
            * Một tổ chức vừa đổi ở nơi khác — upsert chứ KHÔNG add.
            *
            * Sự kiện WebSocket thường tới TRƯỚC khi phản hồi HTTP về (xem mục 3

@@ -40,6 +40,21 @@ function userRoom(uid: string): string {
 }
 
 /**
+ * Phòng theo TỔ CHỨC.
+ *
+ * Cần cho những thay đổi mà cả tổ chức phải thấy nhưng không gắn với board nào
+ * — đổi avatar / đổi tên hiển thị là ví dụ đầu tiên. Trước đây chỉ có phòng
+ * board và phòng cá nhân, nên B đổi avatar thì A đang đứng ở màn hình Workspace
+ * không có đường nào biết, phải F5 mới thấy.
+ *
+ * Không phát cho TẤT CẢ socket đang kết nối: làm vậy là gửi tên và ảnh của
+ * người này sang cả những người ở tổ chức khác, chẳng liên quan gì.
+ */
+function orgRoom(orgId: string): string {
+  return `org:${orgId}`;
+}
+
+/**
  * WEBSOCKET THEO BOARD — mở board là thấy thay đổi của người khác ngay, không F5.
  *
  * ── Vì sao là Socket.IO ở backend chứ không phải Supabase Realtime ở frontend?
@@ -107,6 +122,17 @@ export class RealtimeGateway
       // không có gì để kiểm tra thêm, và người ta cần nhận lời mời ngay cả khi
       // chưa mở board nào.
       await client.join(userRoom(decoded.uid));
+
+      // Vào phòng của MỌI tổ chức mình thuộc về. Truy vấn thêm một lần lúc kết
+      // nối là đủ — rẻ hơn nhiều so với việc mỗi lần đổi hồ sơ lại phải đi tìm
+      // xem ai cần được báo.
+      const { data: toChuc } = await this.supabase.client
+        .from('organization_members')
+        .select('org_id')
+        .eq('user_id', decoded.uid);
+      for (const t of toChuc ?? []) {
+        await client.join(orgRoom((t as { org_id: string }).org_id));
+      }
     } catch {
       // Token hết hạn/bị sửa → cắt. Client sẽ tự kết nối lại với token mới.
       client.disconnect(true);
@@ -196,6 +222,25 @@ export class RealtimeGateway
    * Dùng cho lời mời vào tổ chức: người nhận chưa thuộc tổ chức nên không có
    * board nào để phát vào — phải có phòng riêng theo uid.
    */
+  /**
+   * Phát cho mọi người trong một tổ chức. Dùng cho thay đổi cấp tổ chức không
+   * gắn với board — hiện là `user.updated` khi ai đó đổi avatar/tên.
+   */
+  emitToOrg<T>(
+    orgId: string,
+    type: UserEventType,
+    actorId: string,
+    data: T,
+  ): void {
+    if (!orgId || !this.server) return;
+    // ⚠️ Phải ĐÚNG hình dạng `UserEvent` như `emitToUser` — frontend đọc
+    // `event.type` / `event.actorId` / `event.data`. Đặt tên khác (kiểu
+    // `actorUid`/`payload`) thì sự kiện vẫn tới nơi nhưng frontend đọc ra
+    // `undefined`, im lặng không báo lỗi gì.
+    const event: UserEvent<T> = { type, actorId, data };
+    this.server.to(orgRoom(orgId)).emit(WS.USER_EVENT, event);
+  }
+
   emitToUser<T>(
     uid: string,
     type: UserEventType,
