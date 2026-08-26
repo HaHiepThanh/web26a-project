@@ -14,7 +14,7 @@
 
   <!-- ============================== LEFT NAVIGATION ============================== -->
   <aside
-    class="w-[280px] shrink-0 overflow-y-auto border-r border-base-300 bg-base-100 p-5 max-[900px]:w-full max-[900px]:border-b max-[900px]:border-r-0">
+    class="w-[280px] shrink-0 overflow-y-auto border-r border-base-300 bg-base-100 p-5 max-[900px]:w-full max-[900px]:border-b max-[900px]:border-r-0 max-lg:overflow-visible">
     <div class="px-2 pb-6 pt-1">
       <h1 class="text-xl font-black tracking-tight text-base-content">Settings</h1>
       <p class="mt-1 text-xs text-base-content/60">Manage your profile and Workspace members</p>
@@ -50,7 +50,9 @@
   </aside>
 
   <!-- ============================== MAIN CONTENT ============================== -->
-  <main class="flex-1 overflow-y-auto p-8 max-[900px]:p-4">
+  <!-- `max-lg:overflow-visible`: khổ hẹp để trang cuộn, không dựng tầng cuộn riêng
+       ở đây nữa (xem chú thích trong `app-layout.css`). -->
+  <main class="flex-1 overflow-y-auto p-8 max-[900px]:p-4 max-lg:overflow-visible">
     @switch (activeTab()) {
     <!-- 1. TAB TRANG CÁ NHÂN -->
     @case ('profile') {

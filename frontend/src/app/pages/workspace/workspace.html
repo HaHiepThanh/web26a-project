@@ -1,5 +1,9 @@
+<!-- `max-lg:h-auto` + `max-lg:overflow-visible`: ở khổ hẹp trang tự cuộn (xem
+     `app-layout.css`), nên khung này phải cao theo nội dung. Để `h-full` +
+     `overflow-hidden` như máy tính thì nó lại thành một tầng cắt nữa, và cú vuốt
+     khựng ở mép của nó. -->
 <div
-  class="workspace-page mt-4 mx-auto max-w-[1440px] sm:px-3 py-2 w-full h-full min-h-0 flex flex-col overflow-hidden">
+  class="workspace-page mt-4 mx-auto max-w-[1440px] sm:px-3 py-2 w-full h-full min-h-0 flex flex-col overflow-hidden max-lg:h-auto max-lg:overflow-visible">
   <!-- Toast container -->
   <div class="toast toast-top toast-end z-[9999] pointer-events-none">
     @for (t of toasts(); track t.id) {
@@ -22,8 +26,10 @@
     }
   </div>
 
+  <!-- Bỏ `max-lg:overflow-y-auto`: đây chính là tầng cuộn nằm sâu nhất khiến
+       header/footer không bao giờ trôi theo. Khổ hẹp giờ để trang cuộn. -->
   <main
-    class="flex flex-col lg:flex-row gap-4 lg:gap-5 items-stretch flex-1 min-h-0 h-full max-lg:overflow-y-auto lg:overflow-hidden">
+    class="flex flex-col lg:flex-row gap-4 lg:gap-5 items-stretch flex-1 min-h-0 h-full max-lg:h-auto lg:overflow-hidden">
     <!-- Left Sidebar Component (Fixed on desktop / Natural stack on mobile) -->
     <aside class="w-full lg:w-64 max-w-full min-w-0 shrink-0 max-lg:h-auto lg:h-full lg:overflow-y-auto lg:pr-1">
       <div class="divide-y divide-base-200 overflow-hidden rounded-lg border border-base-300/70 bg-base-100 shadow-sm">

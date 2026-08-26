@@ -1,5 +1,9 @@
+<!-- `max-lg:static`: từ `lg` trở xuống chính trang là thứ cuộn, nên `sticky` sẽ
+     ghim header lại giữa màn hình mỗi lần vuốt — đúng cảm giác "khựng" mà người
+     dùng gặp. Ở khổ hẹp cho nó trôi đi tự nhiên cùng nội dung; lên máy tính thì
+     khung lại cao đúng màn hình và `sticky` vô hại như trước. -->
 <header
-  class="sticky top-0 z-[100] flex h-14 items-center justify-between gap-4 border-b border-base-300/70 bg-base-100 px-4 shadow-sm">
+  class="sticky top-0 z-[100] flex h-14 items-center justify-between gap-4 border-b border-base-300/70 bg-base-100 px-4 shadow-sm max-lg:static">
   <a routerLink="/workspace"
     class="flex shrink-0 items-center gap-2 rounded-lg px-1.5 py-1 font-bold text-base-content transition-colors hover:bg-base-200">
     <img src="/HHH-logo-256.png" alt="Horizon Hub Harmony Logo" class="h-7 w-7 shrink-0 rounded-md object-cover shadow-sm" />

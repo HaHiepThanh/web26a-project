@@ -1,6 +1,47 @@
+/* Máy tính: khung ứng dụng cao đúng màn hình, header/footer đứng yên, phần giữa
+   tự cuộn. Giữ nguyên như cũ. */
 :host {
   display: flex;
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
+}
+
+/**
+ * Điện thoại/máy tính bảng: để CHÍNH TRANG cuộn.
+ *
+ * Trước đây khổ hẹp dùng chung khung khoá của máy tính, nên có tới bốn tầng
+ * lồng nhau mà tầng cuộn thật nằm sâu nhất:
+ *
+ *   :host      height:100vh; overflow:hidden
+ *     main     overflow:hidden
+ *       trang  h-full; overflow:hidden
+ *         main max-lg:overflow-y-auto        <- chỉ tầng này cuộn
+ *
+ * Hậu quả: header và footer nằm NGOÀI tầng cuộn nên không bao giờ trôi theo,
+ * còn cú vuốt thì khựng lại ở mỗi mép của tầng bên trong (scroll chaining).
+ * Thêm nữa `100vh` khoá cứng khiến thanh địa chỉ của trình duyệt di động không
+ * thu lại được, mất thêm một dải màn hình.
+ *
+ * Trang Board là ngoại lệ: các cột kanban tự cuộn bên trong nên vẫn cần khung
+ * cao đúng màn hình. `hideFooter()` đã đúng bằng "đang ở trang Board" nên dùng
+ * luôn làm dấu, không cần thêm trạng thái mới.
+ */
+@media (width < 64rem) {
+  :host(:not(.trang-board)) {
+    height: auto;
+    /* `dvh` chứ không phải `vh`: `vh` trên di động tính theo lúc thanh địa chỉ
+       đang ẩn, nên trang luôn dài dôi ra một đoạn và tạo cú giật cuối trang. */
+    min-height: 100dvh;
+    overflow: visible;
+    /* Chừa chỗ cho thanh nổi ở đáy. Giờ trang cuộn tới tận cùng nên nếu không
+       chừa, thanh sẽ nằm đè lên footer và phần cuối nội dung. */
+    padding-bottom: 5.5rem;
+  }
+
+  /* Bỏ nốt tầng cắt ở giữa, nếu không thì dù :host mở, phần thân vẫn bị kẹp. */
+  :host(:not(.trang-board)) main {
+    overflow: visible;
+    min-height: 0;
+  }
 }
