@@ -100,11 +100,11 @@
             }
           </div>
           @if (editingDesc()) {
-            <textarea id="detail-desc" class="textarea resize-none w-full text-sm leading-relaxed" rows="4" placeholder="Add a more detailed description..." [value]="draftDescription()" (input)="draftDescription.set($any($event.target).value)"></textarea>
+            <textarea id="detail-desc" class="textarea resize-none w-full text-xs min-h-[58px] max-h-[120px] leading-relaxed py-2 px-3" rows="2" placeholder="Add a more detailed description..." [value]="draftDescription()" (input)="draftDescription.set($any($event.target).value)"></textarea>
           } @else if (draftDescription()) {
-            <div class="cursor-text whitespace-pre-wrap break-words rounded-lg bg-base-200/60 px-3 py-2.5 text-sm text-base-content" (click)="toggleEditDesc()">{{ draftDescription() }}</div>
+            <div class="cursor-text whitespace-pre-wrap break-words rounded-lg bg-base-200/60 px-3 py-2 text-xs text-base-content leading-relaxed" (click)="toggleEditDesc()">{{ draftDescription() }}</div>
           } @else {
-            <button type="button" class="btn btn-ghost h-auto min-h-0 w-full justify-start bg-base-200/60 px-3 py-2.5 text-left text-sm font-normal normal-case text-base-content/50" (click)="toggleEditDesc()">Add a more detailed description...</button>
+            <button type="button" class="btn btn-ghost h-auto min-h-[34px] w-full justify-start rounded-lg bg-base-200/60 px-3 py-2 text-left text-xs font-normal normal-case text-base-content/50" (click)="toggleEditDesc()">Add a more detailed description...</button>
           }
         </div>
 
