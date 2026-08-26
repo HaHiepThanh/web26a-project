@@ -6,7 +6,7 @@
 </label>
 
 @if (comments().length > 0) {
-  <div class="mb-2.5 flex max-h-[220px] flex-col gap-2.5 overflow-y-auto">
+  <div class="mb-2.5 flex max-h-[160px] flex-col gap-2.5 overflow-y-auto pr-1">
     @for (c of comments(); track c.id) {
       <div class="group flex gap-2">
         <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-3xs font-bold text-white" [style.background]="userColor(c.userId)">{{ userInitials(c.userId) }}</span>
@@ -32,9 +32,9 @@
 <div class="flex gap-1.5">
   <div class="min-w-0 flex-1">
     <textarea
-      class="textarea resize-none w-full text-xs"
+      class="textarea resize-none w-full text-xs min-h-[64px] max-h-[64px] leading-relaxed overflow-y-auto py-2"
       [class.textarea-error]="tooLong()"
-      rows="2"
+      rows="3"
       placeholder="Write a comment..."
       [attr.maxlength]="maxLength"
       [attr.aria-describedby]="showCounter() ? 'comment-counter' : null"
