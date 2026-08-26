@@ -6,13 +6,13 @@
 </label>
 
 @if (comments().length > 0) {
-  <div class="mb-2.5 flex max-h-[220px] flex-col gap-2.5 overflow-y-auto">
+  <div class="mb-2.5 flex max-h-[160px] flex-col gap-2.5 overflow-y-auto pr-1">
     @for (c of comments(); track c.id) {
       <div class="group flex gap-2">
-        <app-user-avatar [userId]="c.userId" [name]="displayNameOf(c)" [avatarUrl]="avatarUrlOf(c)" [size]="24" extraClass="mt-0.5" />
+        <app-user-avatar [userId]="c.userId" [name]="displayNameOf(c)" [avatarUrl]="avatarUrlOf(c)" [size]="24" extraClass="mt-0.5 shrink-0" />
         <div class="min-w-0 flex-1">
           <div class="flex items-baseline gap-1.5">
-            <span class="text-2xs font-semibold text-base-content/80">{{ userLabel(c.userId) }}</span>
+            <span class="text-2xs font-semibold text-base-content/80">{{ displayNameOf(c) }}</span>
             <span class="text-3xs text-base-content/40">{{ timeLabel(c.createdAt) }}</span>
             @if (c.userId === currentUserId()) {
               <button type="button" class="btn btn-link btn-xs ml-auto h-auto min-h-0 p-0 text-3xs text-base-content/40 no-underline opacity-0 transition-opacity hover:text-error group-hover:opacity-100" (click)="deleteComment(c.id)">
@@ -32,9 +32,9 @@
 <div class="flex gap-1.5">
   <div class="min-w-0 flex-1">
     <textarea
-      class="textarea w-full text-xs"
+      class="textarea resize-none w-full text-xs min-h-[64px] max-h-[64px] leading-relaxed overflow-y-auto py-2"
       [class.textarea-error]="tooLong()"
-      rows="2"
+      rows="3"
       placeholder="Write a comment..."
       [attr.maxlength]="maxLength"
       [attr.aria-describedby]="showCounter() ? 'comment-counter' : null"
@@ -55,7 +55,15 @@
       </div>
     }
   </div>
-  <button type="button" class="btn btn-square btn-primary btn-sm self-start" [disabled]="!canSend()" (click)="addComment()" aria-label="Send comment">
-    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg>
+  <button
+    type="button"
+    class="btn btn-primary btn-sm h-auto min-h-[64px] px-3 self-stretch"
+    [disabled]="!canSend()"
+    (click)="addComment()"
+    aria-label="Send comment"
+  >
+    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+    </svg>
   </button>
 </div>

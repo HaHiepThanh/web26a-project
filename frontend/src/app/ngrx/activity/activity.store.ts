@@ -46,15 +46,17 @@ export const ActivityStore = signalStore(
       /** Ghi log DEMO tại chỗ (chưa có endpoint ghi log cho hành động này ở backend)
        *  — id luôn mới nên upsert ở đây tương đương thêm mới, không đụng bẫy #addEntity. */
       record(boardId: string, cardId: string, actionText: string, actionType: ActivityActionType = 'card_updated'): void {
+        const currentUser = typeof auth.currentUser === 'function' ? auth.currentUser() : null;
         const entry: ActivityLog = {
           id: mockId('log'),
           orgId: 'org-demo',
           boardId,
           cardId,
-          userId: auth.currentUserId(),
+          userId: typeof auth.currentUserId === 'function' ? auth.currentUserId() : 'u-demo',
           actionType,
           actionText,
           createdAt: new Date().toISOString(),
+          user: currentUser ? { displayName: currentUser.displayName ?? null, avatarUrl: currentUser.avatarUrl ?? null } : null,
         };
         patchState(store, upsertEntity(entry));
       },

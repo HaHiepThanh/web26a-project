@@ -95,23 +95,61 @@ describe('CardDetailModal — đính kèm chờ lưu', () => {
     expect(component.attachmentError()).toContain('to-qua.png');
   });
 
-  it('chọn ảnh bìa là thay đổi chưa lưu, xem trước được ngay', () => {
-    chonTep(component, pngFile('bia.png'));
+  it('gắn tệp hình đầu tiên thì tự động tích hợp làm ảnh bìa ngay lập tức', () => {
+    chonTep(component, pngFile('bia1.png'));
     const row = component.attachmentRows()[0];
 
-    component.toggleCover(row);
-
+    // Tự động là bìa mà không cần bấm toggleCover
+    expect(row.isCover).toBe(true);
     expect(component.coverRow()?.key).toBe(row.key);
     expect(component.dirty()).toBe(true);
+  });
+
+  it('gắn thêm hình khác thì giữ nguyên ảnh bìa đầu tiên, người dùng có thể tự điều chỉnh', () => {
+    chonTep(component, pngFile('hinh1.png'));
+    chonTep(component, pngFile('hinh2.png'));
+
+    const rows = component.attachmentRows();
+    expect(rows.length).toBe(2);
+    // Hình 1 vẫn là bìa
+    expect(rows[0].isCover).toBe(true);
+    expect(rows[1].isCover).toBe(false);
+    expect(component.coverRow()?.key).toBe(rows[0].key);
+
+    // Người dùng chủ động đổi sang hình 2
+    component.toggleCover(rows[1]);
+    expect(component.attachmentRows()[0].isCover).toBe(false);
+    expect(component.attachmentRows()[1].isCover).toBe(true);
+    expect(component.coverRow()?.key).toBe(rows[1].key);
+  });
+
+  it('gắn tệp không phải hình (PDF) thì không tự đặt làm ảnh bìa', () => {
+    const pdf = new File([new Uint8Array(10)], 'tai-lieu.pdf', { type: 'application/pdf' });
+    chonTep(component, pdf);
+
+    expect(component.attachmentRows().length).toBe(1);
+    expect(component.attachmentRows()[0].isCover).toBe(false);
+    expect(component.coverRow()).toBeNull();
   });
 
   it('bỏ tệp đang là bìa thì bìa cũng bỏ theo, không trỏ vào tệp đã mất', () => {
     chonTep(component, pngFile('bia.png'));
     const row = component.attachmentRows()[0];
-    component.toggleCover(row);
+    expect(component.coverRow()?.key).toBe(row.key);
 
     component.removeAttachment(row);
 
     expect(component.coverRow()).toBeNull();
+  });
+
+  it('bấm "Delete card" thì hiện dải cảnh báo xác nhận xoá', () => {
+    expect(component.confirmDelete()).toBe(false);
+    component.requestDelete();
+    expect(component.confirmDelete()).toBe(true);
+
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.textContent).toContain('Delete card "Thẻ thử"? This cannot be undone.');
+    expect(el.textContent).toContain('Yes, delete');
   });
 });

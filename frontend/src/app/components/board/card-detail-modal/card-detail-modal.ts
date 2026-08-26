@@ -1,7 +1,7 @@
 import { Component, DestroyRef, ElementRef, HostListener, computed, effect, inject, input, output, signal, untracked, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
-import { Card, CardPriority, User } from '../../../models';
+import { Card, CardPriority, User, ActivityLog } from '../../../models';
 import { CardStore } from '../../../ngrx/card/card.store';
 import type { CardChanges } from '../../../ngrx/card/card.methods';
 import { LabelStore } from '../../../ngrx/label/label.store';
@@ -13,6 +13,8 @@ import { AttachmentStore } from '../../../ngrx/attachment/attachment.store';
 import { LabelPicker } from '../label-picker/label-picker';
 import { Checklist } from '../checklist/checklist';
 import { CommentList } from '../comment-list/comment-list';
+import { UserAvatar } from '../../shared/user-avatar/user-avatar';
+import { avatarColorFor, initialsOf } from '../../../utils/avatar.util';
 
 const PRIORITIES: { id: CardPriority; label: string }[] = [
   { id: 'high', label: 'High' },
@@ -71,7 +73,7 @@ export interface AttachmentRow {
  */
 @Component({
   selector: 'app-card-detail-modal',
-  imports: [FormsModule, DatePipe, LabelPicker, Checklist, CommentList],
+  imports: [FormsModule, DatePipe, LabelPicker, Checklist, CommentList, UserAvatar],
   templateUrl: './card-detail-modal.html',
   styleUrl: './card-detail-modal.css',
 })
@@ -147,6 +149,24 @@ export class CardDetailModal {
     if (!id) return 'unassigned';
     const m = this.membersById()[id];
     return m?.displayName ?? m?.email ?? id;
+  }
+
+  logUserName(log: ActivityLog): string {
+    if (log.user?.displayName) return log.user.displayName;
+    const m = this.membersById()[log.userId];
+    return m?.displayName ?? m?.email ?? 'Someone';
+  }
+
+  logUserAvatar(log: ActivityLog): string | undefined {
+    return log.user?.avatarUrl ?? this.membersById()[log.userId]?.avatarUrl ?? undefined;
+  }
+
+  logUserInitials(log: ActivityLog): string {
+    return initialsOf(this.logUserName(log));
+  }
+
+  logUserColor(log: ActivityLog): string {
+    return avatarColorFor(log.userId);
   }
 
   /** Thẻ vừa tạo (đang ở lần mở đầu tiên, tự động bung ra) — sửa gì trong lần mở
@@ -484,7 +504,20 @@ export class CardDetailModal {
         previewUrl: URL.createObjectURL(file),
       }));
 
-    if (them.length) this.pendingFiles.update((list) => [...list, ...them]);
+    if (them.length) {
+      this.pendingFiles.update((list) => [...list, ...them]);
+
+      // Khi thẻ chưa có ảnh bìa (cả server lẫn bản nháp) và có tệp ảnh mới được gắn vào:
+      // Tự động tích hợp ảnh đầu tiên làm ảnh bìa cho thẻ ngay trong bản nháp.
+      // Nếu thêm các hình khác sau đó, người dùng có thể tự điều chỉnh chọn hình khác theo ý muốn.
+      if (!this.draftCoverKey()) {
+        const firstImage = them.find((p) => p.isImage);
+        if (firstImage) {
+          this.coverTouched.set(true);
+          this.coverChoice.set(`new:${firstImage.localId}`);
+        }
+      }
+    }
   }
 
   /**

@@ -123,6 +123,12 @@ export class ActivityService {
       return;
     }
 
+    const { data: userRow } = await sb
+      .from('users')
+      .select('display_name, avatar_url')
+      .eq('id', userUid)
+      .maybeSingle();
+
     const r = data as Record<string, unknown>;
     this.realtime.emitToBoard(boardId, 'activity.created', userUid, {
       id: r.id,
@@ -134,7 +140,7 @@ export class ActivityService {
       targetId: r.target_id,
       actionText: r.action_text,
       createdAt: r.created_at,
-      user: null,
+      user: toUser(userRow),
     });
   }
 }

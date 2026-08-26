@@ -125,6 +125,12 @@ export class CommentsService {
       throw new InternalServerErrorException('Failed to save comment');
     }
 
+    const { data: userRow } = await sb
+      .from('users')
+      .select('display_name, avatar_url')
+      .eq('id', userUid)
+      .maybeSingle();
+
     // Đổi sang camelCase cho khớp phần còn lại của API.
     const row = data as Record<string, unknown>;
     const created = {
@@ -133,6 +139,7 @@ export class CommentsService {
       userId: row.user_id,
       content: row.content,
       createdAt: row.created_at,
+      user: toUser(userRow),
     };
 
     if (card.boardId) {
@@ -159,7 +166,7 @@ export class CommentsService {
 
     const { data: comment } = await sb
       .from('comments')
-      .select('id, user_id, card_id, cards(lists(board_id))')
+      .select('id, user_id, card_id, cards(title, lists(board_id))')
       .eq('id', id)
       .maybeSingle();
 
@@ -176,14 +183,23 @@ export class CommentsService {
       throw new InternalServerErrorException('Failed to delete comment');
     }
 
-    const boardId = (
-      comment.cards as unknown as { lists: { board_id: string } | null } | null
-    )?.lists?.board_id;
+    const cardData = comment.cards as unknown as {
+      title: string;
+      lists: { board_id: string } | null;
+    } | null;
+    const boardId = cardData?.lists?.board_id;
     if (boardId) {
       this.realtime.emitToBoard(boardId, 'comment.deleted', userUid, {
         id,
         cardId: comment.card_id as string,
       });
+      await this.activity.record(
+        boardId,
+        userUid,
+        'card_updated',
+        `Deleted a comment on card "${cardData?.title ?? ''}"`,
+        comment.card_id as string,
+      );
     }
   }
 }
