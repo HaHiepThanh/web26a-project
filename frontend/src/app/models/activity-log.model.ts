@@ -20,4 +20,5 @@ export interface ActivityLog {
   targetId?: string; // FK cards.id (hoặc list/comment...), nullable
   actionText: string; // vd: "Nam đã chuyển card 'Fix bug' sang Doing"
   createdAt: string; // ISO timestamptz
+  user?: { displayName: string | null; avatarUrl: string | null } | null;
 }

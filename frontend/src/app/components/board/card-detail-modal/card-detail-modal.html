@@ -204,23 +204,35 @@
         <app-comment-list [cardId]="card().id" [boardId]="boardId()" />
 
         <!-- Lịch sử thay đổi -->
-        <div class="border-t border-base-300 pt-3">
-          <button type="button" class="btn btn-ghost h-auto min-h-0 w-full justify-between px-0 font-normal normal-case" (click)="toggleHistory()">
+        <div class="border-t border-base-300 pt-2.5">
+          <button
+            type="button"
+            class="btn btn-ghost btn-xs h-auto min-h-[32px] w-full justify-between px-2.5 py-1.5 rounded-md font-normal normal-case hover:bg-base-300/60 transition-colors"
+            (click)="toggleHistory()">
             <span class="text-2xs font-bold uppercase tracking-wide text-base-content/60">Change history ({{ activityLogs().length }})</span>
-            <svg class="h-3.5 w-3.5 text-base-content/50 transition-transform" [class.rotate-90]="historyOpen()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+            <svg class="h-3.5 w-3.5 text-base-content/50 transition-transform duration-200" [class.rotate-90]="historyOpen()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
           </button>
 
           @if (historyOpen()) {
-            <div class="mt-2.5 flex flex-col gap-2.5">
+            <div class="mt-2.5 flex flex-col gap-3">
               @if (activityLogs().length === 0) {
-                <div class="text-2xs text-base-content/50">No changes recorded yet.</div>
+                <div class="text-2xs text-base-content/50 px-2.5">No changes recorded yet.</div>
               }
               @for (h of activityLogs(); track h.id) {
-                <div class="flex gap-2 text-xs">
-                  <svg class="mt-0.5 h-3.5 w-3.5 shrink-0 text-base-content/30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-                  <div class="min-w-0">
-                    <div class="leading-normal text-base-content">{{ h.actionText }}</div>
-                    <div class="mt-px text-3xs text-base-content/40">{{ h.createdAt | date: 'HH:mm dd/MM/yyyy' }}</div>
+                <div class="flex items-start gap-2.5 px-1 text-xs">
+                  @if (logUserAvatar(h); as avUrl) {
+                    <img [src]="avUrl" [alt]="logUserName(h)" class="mt-0.5 h-6 w-6 shrink-0 rounded-full object-cover border border-base-300 shadow-xs" />
+                  } @else {
+                    <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-3xs font-bold text-white shadow-xs" [style.background]="logUserColor(h)">
+                      {{ logUserInitials(h) }}
+                    </span>
+                  }
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-baseline gap-1.5 flex-wrap">
+                      <span class="font-semibold text-2xs text-base-content">{{ logUserName(h) }}</span>
+                      <span class="text-3xs text-base-content/40">{{ h.createdAt | date: 'HH:mm dd/MM/yyyy' }}</span>
+                    </div>
+                    <div class="mt-0.5 leading-normal text-xs text-base-content/75">{{ h.actionText }}</div>
                   </div>
                 </div>
               }
