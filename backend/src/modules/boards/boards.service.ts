@@ -3,6 +3,7 @@ import {
   ForbiddenException,
   Injectable,
   InternalServerErrorException,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { AccessService } from '../../common/access/access.service';
@@ -112,6 +113,8 @@ function laUuidSai(error: { code?: string } | null): boolean {
 /** CRUD board + visibility (#3). Xoá board chỉ owner (#7). */
 @Injectable()
 export class BoardsService {
+  private readonly logger = new Logger(BoardsService.name);
+
   constructor(
     private readonly supabase: SupabaseService,
     private readonly realtime: RealtimeGateway,
