@@ -187,6 +187,26 @@ describe('TourStore', () => {
     expect(store.onboarding().seeded).toEqual({ listIds: ['l1'], cardIds: ['c1', 'c2'] });
   });
 
+  it('số cột của board CŨ không được làm mốc cho board mới', () => {
+    const store = make();
+    store.hydrate(emptyOnboardingState());
+    // Người dùng ghé một board có sẵn 3 cột trước khi bắt đầu tour.
+    store.observe({ workspaces: 1, boards: 1, lists: 3, cards: 12 });
+    store.start('full');
+    store.observe({ workspaces: 2 });
+    store.observe({ boards: 2 });
+    expect(store.currentStep()?.id).toBe('add-list');
+
+    // Mở board MỚI vừa tạo — trang Board quên số của board cũ đi.
+    store.resetBoardCounts();
+    store.observe({ lists: 0, cards: 0 });
+
+    // Thêm đúng MỘT cột là xong bước 3. Không có resetBoardCounts thì mốc vẫn
+    // là 3, và người dùng phải thêm tới cột thứ tư mới thoát được bước này.
+    store.observe({ lists: 1 });
+    expect(store.currentStep()?.id).toBe('add-card');
+  });
+
   it('mở một board đã có sẵn cột và thẻ KHÔNG được tính là làm xong bước 3 và 4', () => {
     const store = make();
     store.hydrate(emptyOnboardingState());
@@ -283,17 +303,37 @@ describe('TourStore', () => {
     expect(store.currentStep()?.id).toBe('try-ai');
   });
 
-  it('điều kiện bước sau ĐÃ thoả sẵn thì đi luôn, không đứng chờ một thay đổi không bao giờ tới', async () => {
+  it('khung chat vốn đã mở thì bước đó vẫn phải được KỂ, không lặng lẽ bỏ qua', async () => {
     const store = make();
     chayHetTang1(store, 'full');
     await store.acceptSeed();
     expect(store.currentStep()?.id).toBe('use-filter');
 
-    // Người dùng đang để khung chat mở sẵn từ phiên trước (localStorage nhớ
+    // Người dùng để khung chat mở sẵn từ phiên trước (localStorage nhớ
     // `trello_chat_panel_collapsed`), nên `chatOpen` đã bật trước khi tới bước
-    // "open-chat". Mở bộ lọc phải đẩy tour qua CẢ HAI bước.
+    // "open-chat".
     store.observeFlags({ filterOpen: true, chatOpen: true });
 
+    // Phải DỪNG ở bước chat chứ không nhảy sang bước 7. Nhảy qua là người dùng
+    // không bao giờ biết app có khung chat — họ chỉ thấy màn hình tự đổi.
+    expect(store.currentStep()?.id).toBe('open-chat');
+    expect(store.needsAck()).toBe(true);
+
+    // Không bắt làm lại việc đã làm — đọc xong bấm "Got it" là đi tiếp.
+    store.acknowledgeStep();
+    expect(store.currentStep()?.id).toBe('try-ai');
+  });
+
+  it('cờ bật lên TRONG lúc đang ở bước đó thì tự sang bước sau, không cần bấm gì', async () => {
+    const store = make();
+    chayHetTang1(store, 'full');
+    await store.acceptSeed();
+
+    store.observeFlags({ filterOpen: true });
+    expect(store.currentStep()?.id).toBe('open-chat');
+    expect(store.needsAck()).toBe(false);
+
+    store.observeFlags({ chatOpen: true });
     expect(store.currentStep()?.id).toBe('try-ai');
   });
 
@@ -315,7 +355,8 @@ describe('TourStore', () => {
     const store = make();
     chayHetTang1(store, 'full');
     await store.acceptSeed();
-    store.observeFlags({ filterOpen: true, chatOpen: true });
+    store.observeFlags({ filterOpen: true });
+    store.observeFlags({ chatOpen: true });
     expect(store.currentStep()?.id).toBe('try-ai');
 
     // Gemini không được cấu hình (thiếu GEMINI_API_KEY) → chip gợi ý không bao

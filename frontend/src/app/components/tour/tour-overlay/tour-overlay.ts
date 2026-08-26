@@ -8,7 +8,9 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { Router } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router } from '@angular/router';
+import { filter, map } from 'rxjs';
 import { LucideArrowLeft, LucideArrowRight, LucideX } from '@lucide/angular';
 import { OrganizationStore } from '../../../ngrx/organization/organization.store';
 import { TourStore } from '../../../ngrx/tour/tour.store';
@@ -100,10 +102,30 @@ export class TourOverlay {
    */
   readonly hasAnchor = computed(() => this.anchorRect() !== null);
 
-  /** Bước hiện tại thuộc trang nào, để chỉ đường khi chưa thấy neo. */
+  /** URL hiện tại, cập nhật theo mỗi lần điều hướng. */
+  private readonly url = toSignal(
+    this.router.events.pipe(
+      filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+      map((e) => e.urlAfterRedirects),
+    ),
+    { initialValue: this.router.url },
+  );
+
+  /**
+   * Chỉ đường khi chưa thấy neo — và phải nói ĐÚNG hoàn cảnh.
+   *
+   * Có hai lý do rất khác nhau khiến không thấy neo, đừng gộp làm một:
+   *   - đang ở sai trang  → bảo họ đi đâu.
+   *   - đã đúng trang rồi → thứ cần soi chưa xuất hiện, họ không phải đi đâu cả.
+   * Bảo "Open a board" khi người ta đang đứng trong board là câu vô nghĩa, và nó
+   * khiến họ đi tìm một việc không tồn tại.
+   */
   readonly waitingFor = computed(() => {
     const s = this.step();
     if (!s || this.hasAnchor()) return null;
+    const u = this.url();
+    const dungTrang = s.page === 'board' ? u.includes('/board/') : u.includes('/workspace');
+    if (dungTrang) return 'Waiting for it to show up on this page…';
     return s.page === 'board'
       ? 'Open a board to keep going — this step happens there.'
       : 'Head back to your workspace to keep going.';
@@ -404,6 +426,13 @@ export class TourOverlay {
       e.preventDefault();
       this.tour.back();
     }
+  }
+
+  /** Bước này đã hoàn thành sẵn — người dùng chỉ cần đọc rồi xác nhận. */
+  readonly needsAck = this.tour.needsAck;
+
+  onAck(): void {
+    this.tour.acknowledgeStep();
   }
 
   onSkip(): void {

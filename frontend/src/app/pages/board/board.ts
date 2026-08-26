@@ -618,6 +618,10 @@ export class Board {
     // còn đang mở board này.
     const routeContext = inject(RouteContextStore);
     routeContext.setActiveBoard(this.boardId);
+
+    // Quên số cột/thẻ của board trước — chúng là số của riêng một board, mang
+    // sang board khác là mốc của tour sai hẳn. Xem `resetBoardCounts()`.
+    this.tour.resetBoardCounts();
     inject(DestroyRef).onDestroy(() => routeContext.setActiveBoard(null));
 
     void this.bootstrap();
@@ -641,11 +645,24 @@ export class Board {
     // ⚠️ `untracked()` bắt buộc — xem ghi chú cùng chỗ ở pages/workspace/workspace.ts.
     //    `observe()` đọc rồi ghi `counts`, gọi trần trong effect là vòng lặp vô hạn.
     effect(() => {
-      const cards = Object.values(this.cardsByList()).reduce(
-        (sum, list) => sum + list.length,
-        0,
-      );
-      const lists = this.lists().length;
+      // ⚠️ CHỜ DỮ LIỆU CỦA CHÍNH BOARD NÀY nạp xong rồi mới đếm.
+      //
+      //  `ListStore`/`CardStore` dùng chung cho mọi board, và ngay sau khi điều
+      //  hướng chúng vẫn giữ dữ liệu board TRƯỚC. Báo sớm là hỏng theo cả hai
+      //  chiều, cùng một gốc:
+      //    - đếm thẳng    → chộp số của board cũ (3 cột) làm mốc, board mới
+      //      trống thì bước "tạo cột đầu tiên" không bao giờ xong.
+      //    - lọc theo id  → lúc chưa nạp thì lọc ra 0, mốc thành 0, và mấy cột
+      //      vốn đã có của board này lại bị tính thành thành tích của người dùng.
+      //  Cả hai biến mất khi chỉ đếm lúc `loadedBoardId` đã đúng và hết `loading`.
+      if (this.listService.loadedBoardId() !== this.boardId || this.listService.loading()) {
+        return;
+      }
+      const cuaBoardNay = this.lists().filter((l) => l.boardId === this.boardId);
+      const idCot = new Set(cuaBoardNay.map((l) => l.id));
+      const theoCot = this.cardsByList();
+      const cards = [...idCot].reduce((sum, id) => sum + (theoCot[id]?.length ?? 0), 0);
+      const lists = cuaBoardNay.length;
 
       // ⚠️ Đang mở modal chi tiết thẻ thì CHƯA chốt số.
       //

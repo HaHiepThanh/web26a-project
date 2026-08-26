@@ -76,6 +76,18 @@ export interface TourState {
   counts: TourCounts;
   /** Trạng thái bật/tắt mới nhất các trang báo về (tầng 2). */
   flags: TourFlags;
+  /**
+   * Cờ đã BẬT SẴN từ trước khi bước hiện tại bắt đầu.
+   *
+   * Khung chat nhớ trạng thái mở/thu gọn trong localStorage, nên người đang để
+   * chat mở sẵn thì tới bước "open-chat" cờ `chatOpen` vốn đã true. Coi thế là
+   * xong thì tour lặng lẽ nhảy qua — người dùng KHÔNG BAO GIỜ được dạy về chat,
+   * chỉ thấy màn hình tự nhảy sang bước 7.
+   *
+   * Bật sẵn thì bước vẫn phải hiện ra và được đọc; người dùng bấm "Got it" để
+   * xác nhận. Việc đã làm rồi thì không bắt làm lại, nhưng phải được kể.
+   */
+  flagsAtStepStart: Partial<TourFlags>;
 
   // ---- Tầng 2 ----
   /** Hộp hỏi "gieo 8 thẻ mẫu nhé?" đang mở. */
@@ -98,6 +110,7 @@ const initialState: TourState = {
   countsSeen: {},
   counts: EMPTY_COUNTS,
   flags: EMPTY_FLAGS,
+  flagsAtStepStart: {},
   seedOfferOpen: false,
   cleanupOfferOpen: false,
   seedBusy: false,
@@ -137,6 +150,21 @@ export const TourStore = signalStore(
       const s = store.onboarding();
       return !store.running() && s.status !== 'done' && s.status !== 'not-started';
     }),
+
+    /**
+     * Bước này người dùng đã "làm" từ trước, chỉ còn chờ họ đọc và xác nhận.
+     *
+     * Xảy ra với bước dạy khung chat khi panel vốn đã mở sẵn (localStorage nhớ
+     * trạng thái đó). Không có nút xác nhận thì hoặc tour lặng lẽ bỏ bước —
+     * người dùng không bao giờ biết có khung chat — hoặc nó chờ một hành động
+     * không bao giờ xảy ra, vì việc đó đã xong rồi.
+     */
+    needsAck: computed(() => {
+      if (!store.running()) return false;
+      const step = TOUR_STEPS[store.stepIndex()];
+      if (!step || step.advance.on !== 'flag') return false;
+      return store.flagsAtStepStart()[step.advance.key] === true;
+    }),
   })),
 
   withMethods((
@@ -163,10 +191,15 @@ export const TourStore = signalStore(
      * Tầng 1 so SỐ LƯỢNG với mốc chốt lúc bắt đầu — "tăng thêm", không phải
      * "lớn hơn 0". Tầng 2 chỉ cần một CỜ bật lên, vì nó không tạo dữ liệu mới.
      */
-    const isStepSatisfied = (step: TourStep): boolean =>
-      step.advance.on === 'count'
-        ? store.counts()[step.advance.key] > store.baseline()[step.advance.key]
-        : store.flags()[step.advance.key];
+    const isStepSatisfied = (step: TourStep): boolean => {
+      if (step.advance.on === 'count') {
+        return store.counts()[step.advance.key] > store.baseline()[step.advance.key];
+      }
+      // Cờ bật SẴN từ trước khi vào bước thì không tính — người dùng chưa làm
+      // gì cả, và bỏ qua ở đây là họ không bao giờ đọc được bước này. Lúc đó
+      // popover hiện kèm nút "Got it" (xem `needsAck`).
+      return store.flags()[step.advance.key] && !store.flagsAtStepStart()[step.advance.key];
+    };
 
     /**
      * Bước hiện tại vừa thoả điều kiện thì ghi nhận và đi tiếp.
@@ -214,7 +247,7 @@ export const TourStore = signalStore(
         return false;
       }
 
-      patchState(store, { stepIndex: nextIndex });
+      patchState(store, { stepIndex: nextIndex, flagsAtStepStart: { ...store.flags() } });
       persist({ status: 'running', currentStep: TOUR_STEPS[nextIndex].id, completed });
       return true;
     };
@@ -314,6 +347,7 @@ export const TourStore = signalStore(
           invitationOpen: false,
           mode,
           stepIndex: target,
+          flagsAtStepStart: { ...store.flags() },
           baseline: store.counts(),
           baselineFresh: { ...store.countsSeen() },
         });
@@ -329,6 +363,7 @@ export const TourStore = signalStore(
           stepIndex: 0,
           baseline: store.counts(),
           baselineFresh: { ...store.countsSeen() },
+          flagsAtStepStart: { ...store.flags() },
         });
         persist({ status: 'running', currentStep: TOUR_STEPS[0].id, completed: [] });
       },
@@ -413,6 +448,32 @@ export const TourStore = signalStore(
       },
 
       /**
+       * Quên số cột/thẻ của board trước. Trang Board gọi khi mở một board.
+       *
+       * ⚠️ `lists` và `cards` là số của MỘT board cụ thể, không phải của cả tài
+       *    khoản như `workspaces`/`boards`. Không quên đi thì mốc mang từ board
+       *    cũ sang: mở một board có 3 cột rồi bắt đầu tour → mốc `lists` chốt
+       *    bằng 3 → sang board mới trống, thêm một cột được 1, mà 1 không lớn
+       *    hơn 3 → bước "tạo cột đầu tiên" KHÔNG BAO GIỜ xong, tour cứ bắt thêm
+       *    cột mãi. Phải thêm đủ 4 cột mới thoát.
+       */
+      resetBoardCounts(): void {
+        const counts = { ...store.counts(), lists: 0, cards: 0 };
+        const fresh = { ...store.baselineFresh() };
+        const seen = { ...store.countsSeen() };
+        delete fresh.lists;
+        delete fresh.cards;
+        delete seen.lists;
+        delete seen.cards;
+        patchState(store, {
+          counts,
+          baseline: { ...store.baseline(), lists: 0, cards: 0 },
+          baselineFresh: fresh,
+          countsSeen: seen,
+        });
+      },
+
+      /**
        * Trang báo về trạng thái bật/tắt của Filter, Chat, AI (tầng 2).
        *
        * Tách khỏi `observe()` vì bản chất khác: `observe` so số lượng với mốc
@@ -464,6 +525,7 @@ export const TourStore = signalStore(
           seedOfferOpen: false,
           running: true,
           stepIndex: FIRST_TIER_2_INDEX,
+          flagsAtStepStart: { ...store.flags() },
           // Mốc mới cho tầng 2: số thẻ vừa tăng vọt vì chính ta gieo vào, giữ
           // mốc cũ thì mọi điều kiện đếm còn lại thoả ngay lập tức.
           baseline: store.counts(),
@@ -511,6 +573,26 @@ export const TourStore = signalStore(
         persist({ seeded: null });
       },
 
+      /**
+       * Nút "Got it" — người dùng đã đọc xong một bước vốn đã hoàn thành sẵn.
+       *
+       * Khác `skipStep()`: bước này ĐƯỢC ghi là đã xong, vì việc đó thật sự đã
+       * làm rồi (khung chat đang mở). Chỉ là họ làm trước khi tour kịp kể.
+       */
+      acknowledgeStep(): void {
+        const step = TOUR_STEPS[store.stepIndex()];
+        if (!step) return;
+        // Gỡ cờ "đã bật sẵn" để điều kiện của bước thoả, rồi để đúng một đường
+        // chuyển bước duy nhất lo phần còn lại — không nhân bản logic kết thúc
+        // tour và hỏi dọn thẻ mẫu ra thêm một chỗ nữa.
+        if (step.advance.on === 'flag') {
+          const next = { ...store.flagsAtStepStart() };
+          delete next[step.advance.key];
+          patchState(store, { flagsAtStepStart: next });
+        }
+        tryAdvance();
+      },
+
       /** Nút "Skip this step" — bỏ qua mà không đánh dấu đã xong. */
       skipStep(): void {
         const step = TOUR_STEPS[store.stepIndex()];
@@ -554,14 +636,14 @@ export const TourStore = signalStore(
           return;
         }
 
-        patchState(store, { stepIndex: nextIndex, baseline: store.counts() });
+        patchState(store, { stepIndex: nextIndex, baseline: store.counts(), flagsAtStepStart: { ...store.flags() } });
         persist({ status: 'running', currentStep: TOUR_STEPS[nextIndex].id });
       },
 
       back(): void {
         const prev = store.stepIndex() - 1;
         if (prev < 0) return;
-        patchState(store, { stepIndex: prev, baseline: store.counts() });
+        patchState(store, { stepIndex: prev, baseline: store.counts(), flagsAtStepStart: { ...store.flags() } });
         persist({ status: 'running', currentStep: TOUR_STEPS[prev].id });
       },
 
