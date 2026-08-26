@@ -23,8 +23,7 @@ import {
   LucideUser,
   LucideUserPlus,
   LucideX,
-} from '@lucide/angular';
-import { AppNotification, BoardSearchResult } from '../../models';
+import { AppNotification } from '../../models';
 import { HeaderActionsService } from '../../services/header-actions.service';
 import { WorkspaceUiService } from '../../services/workspace-ui.service';
 import { InvitesPanel } from '../shared/invites-panel/invites-panel';
@@ -135,18 +134,13 @@ export class MobileActionBar {
   }
 
   onSearchInput(event: Event): void {
-    this.actions.onSearchInput((event.target as HTMLInputElement).value);
+    this.actions.setSearchQuery((event.target as HTMLInputElement).value);
   }
 
   /** Xoá chữ đang lọc rồi thu ô lại — nút "x" bên trong ô. */
   clearSearch(): void {
-    this.actions.onSearchInput('');
+    this.actions.setSearchQuery('');
     this.searchOpen.set(false);
-  }
-
-  selectBoard(board: BoardSearchResult): void {
-    this.searchOpen.set(false);
-    this.actions.openBoard(board);
   }
 
   /* -------------------------- speed dial -------------------------- */

@@ -111,7 +111,7 @@ export class HeaderActionsService {
   }
 
   isSettingsPage(): boolean {
-    return this.router.url.includes('/settings');
+    return this.router.url.split('?')[0].split('#')[0].includes('/settings');
   }
 
   onSearchInput(value: string): void {
@@ -120,9 +120,9 @@ export class HeaderActionsService {
 
     const trimmed = value.trim();
 
-    // Khi ở trang Settings (hoặc khi có từ khóa tìm kiếm):
-    // Xổ dropdown và gọi API tìm kiếm
-    if (this.isSettingsPage() || trimmed.length > 0) {
+    // CHỈ khi ở trang Settings mới xổ dropdown và gọi API tìm kiếm
+    // Ở trang Workspace thì không xổ dropdown mà chỉ lọc tại chỗ
+    if (this.isSettingsPage()) {
       this.searchDropdownOpen.set(true);
       if (this.searchDebounceTimer) {
         clearTimeout(this.searchDebounceTimer);
@@ -137,7 +137,8 @@ export class HeaderActionsService {
   }
 
   onSearchFocus(): void {
-    if (this.isSettingsPage() || this.searchQuery().trim().length > 0) {
+    // CHỈ khi ở trang Settings mới xổ dropdown khi focus ô search
+    if (this.isSettingsPage()) {
       this.searchDropdownOpen.set(true);
       if (this.searchResults().length === 0) {
         void this.fetchBoardSearchResults(this.searchQuery().trim());

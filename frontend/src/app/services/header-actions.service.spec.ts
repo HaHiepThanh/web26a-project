@@ -3,6 +3,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideRouter, Router } from '@angular/router';
 import { HeaderActionsService } from './header-actions.service';
 import { ApiService } from './api.service';
+import { WorkspaceUiService } from './workspace-ui.service';
 import { BoardSearchResult } from '../models';
 
 const MOCK_BOARDS: BoardSearchResult[] = [
@@ -28,10 +29,11 @@ const MOCK_BOARDS: BoardSearchResult[] = [
   },
 ];
 
-describe('HeaderActionsService — Tìm kiếm Board khi ở trang Settings & chung', () => {
+describe('HeaderActionsService — Tìm kiếm Board khi ở trang Settings', () => {
   let service: HeaderActionsService;
   let api: ApiService;
   let router: Router;
+  let workspaceUi: WorkspaceUiService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -40,6 +42,7 @@ describe('HeaderActionsService — Tìm kiếm Board khi ở trang Settings & ch
     service = TestBed.inject(HeaderActionsService);
     api = TestBed.inject(ApiService);
     router = TestBed.inject(Router);
+    workspaceUi = TestBed.inject(WorkspaceUiService);
   });
 
   afterEach(() => {
@@ -53,9 +56,27 @@ describe('HeaderActionsService — Tìm kiếm Board khi ở trang Settings & ch
     expect(service.searchDropdownOpen()).toBe(false);
   });
 
-  it('gọi API tìm kiếm board và mở dropdown khi có từ khoá', async () => {
+  it('ở trang Workspace thì KHÔNG mở dropdown và KHÔNG gọi API search mà chỉ cập nhật workspaceUi query', () => {
+    vi.spyOn(router, 'url', 'get').mockReturnValue('/my-org/workspace');
+    const getSpy = vi.spyOn(api, 'get');
+
+    service.onSearchInput('Frontend');
+
+    expect(service.isSettingsPage()).toBe(false);
+    expect(service.searchDropdownOpen()).toBe(false);
+    expect(workspaceUi.searchQuery()).toBe('Frontend');
+    expect(getSpy).not.toHaveBeenCalled();
+
+    service.onSearchFocus();
+    expect(service.searchDropdownOpen()).toBe(false);
+  });
+
+  it('ở trang Settings: gọi API tìm kiếm board và mở dropdown khi có từ khoá', async () => {
+    vi.spyOn(router, 'url', 'get').mockReturnValue('/settings');
     vi.useFakeTimers();
     const getSpy = vi.spyOn(api, 'get').mockResolvedValue(MOCK_BOARDS);
+
+    expect(service.isSettingsPage()).toBe(true);
 
     service.onSearchInput('Frontend');
     expect(service.searchDropdownOpen()).toBe(true);
@@ -65,11 +86,9 @@ describe('HeaderActionsService — Tìm kiếm Board khi ở trang Settings & ch
     expect(getSpy).toHaveBeenCalledWith(expect.stringContaining('/boards/search?q=Frontend'));
   });
 
-  it('nhận diện trang settings và mở dropdown tìm kiếm khi focus', async () => {
+  it('ở trang Settings: mở dropdown tìm kiếm khi focus ô search', async () => {
     vi.spyOn(router, 'url', 'get').mockReturnValue('/settings');
     vi.spyOn(api, 'get').mockResolvedValue(MOCK_BOARDS);
-
-    expect(service.isSettingsPage()).toBe(true);
 
     service.onSearchFocus();
     expect(service.searchDropdownOpen()).toBe(true);
