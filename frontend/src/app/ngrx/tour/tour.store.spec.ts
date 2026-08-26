@@ -209,7 +209,7 @@ describe('TourStore', () => {
     expect(store.currentStep()?.id).toBe('add-card');
   });
 
-  it('bấm Skip ở bước cuối tầng 1 cũng dừng lại hỏi gieo, không rơi thẳng vào tầng 2', () => {
+  it('bỏ qua bước tạo thẻ thì KHÔNG gieo thẻ mẫu — người dùng phải tự làm trước', () => {
     const store = make();
     store.hydrate(emptyOnboardingState());
     store.observe({ workspaces: 0, boards: 0, lists: 0, cards: 0 });
@@ -221,8 +221,43 @@ describe('TourStore', () => {
 
     store.skipStep();
 
+    // Đổ 8 thẻ mẫu vào board của người chưa hề tự tạo thẻ nào là lấy mất đúng
+    // cái khoảnh khắc mà cả tầng 1 tồn tại để tạo ra.
+    expect(store.seedOfferOpen()).toBe(false);
+    expect(store.running()).toBe(false);
+    expect(store.onboarding().status).toBe('skipped');
+  });
+
+  it('tải lại trang đúng lúc hộp gieo đang mở thì lần sau hỏi lại, không rơi vào tầng 2', () => {
+    const store = make();
+    // Trạng thái đọc từ DB: đã xong tầng 1, đang ở bước 5, nhưng CHƯA gieo gì.
+    store.hydrate({
+      ...emptyOnboardingState(),
+      status: 'running',
+      completed: ['create-workspace', 'create-board', 'add-list', 'add-card'],
+      currentStep: 'use-filter',
+      seeded: null,
+    });
+    store.observe({ workspaces: 1, boards: 1, lists: 1, cards: 1 });
+
+    store.start('full');
+
     expect(store.seedOfferOpen()).toBe(true);
     expect(store.running()).toBe(false);
+  });
+
+  it('tự tạo thẻ xong rồi bỏ qua thì VẪN được mời gieo', () => {
+    const store = make();
+    store.hydrate(emptyOnboardingState());
+    store.observe({ workspaces: 0, boards: 0, lists: 0, cards: 0 });
+    store.start('full');
+    store.observe({ workspaces: 1 });
+    store.observe({ boards: 1 });
+    store.observe({ lists: 1 });
+    store.observe({ cards: 1 });
+
+    expect(store.onboarding().completed).toContain('add-card');
+    expect(store.seedOfferOpen()).toBe(true);
   });
 
   it('từ chối gieo: kết thúc tour, KHÔNG cố dẫn tiếp tầng 2 trên board trống', () => {

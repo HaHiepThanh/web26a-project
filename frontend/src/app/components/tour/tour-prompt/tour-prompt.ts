@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { LucideSparkles, LucideTrash2 } from '@lucide/angular';
 import { TourStore } from '../../../ngrx/tour/tour.store';
 
@@ -29,6 +29,38 @@ export class TourPrompt {
   readonly busy = this.tour.seedBusy;
 
   readonly isOpen = computed(() => this.seedOpen() || this.cleanupOpen());
+
+  /**
+   * Có hộp thoại nào KHÁC của app đang mở không.
+   *
+   * Bấm "Add card" ở bước 4 thì app vừa tạo thẻ vừa mở luôn modal chi tiết thẻ.
+   * Tour thấy số thẻ tăng nên bật hộp "thêm 8 thẻ mẫu?" ngay lập tức — thành hai
+   * hộp thoại chồng nhau, người dùng chưa kịp nhìn cái thẻ mình vừa tạo đã bị
+   * hỏi một câu khác.
+   *
+   * Chờ họ đóng modal kia rồi mới hỏi. Câu hỏi không mất đi đâu cả: state vẫn
+   * là `seedOfferOpen`, chỉ là chưa vẽ.
+   */
+  private readonly otherModal = signal(false);
+  readonly otherModalOpen = this.otherModal.asReadonly();
+
+  constructor() {
+    // `:not(.tour-prompt-modal)` để không tự đếm chính mình — hộp này cũng dùng
+    // lớp `.modal-open`, thiếu bộ lọc là nó tự ẩn ngay khi vừa hiện.
+    const sync = () =>
+      this.otherModal.set(
+        document.querySelector('.modal-open:not(.tour-prompt-modal)') !== null,
+      );
+    const obs = new MutationObserver(sync);
+    obs.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+    sync();
+    inject(DestroyRef).onDestroy(() => obs.disconnect());
+  }
 
   onYes(): void {
     if (this.seedOpen()) void this.tour.acceptSeed();

@@ -295,18 +295,29 @@ export const TourStore = signalStore(
         // Chạy tiếp từ bước dở dang đầu tiên, không phải luôn từ bước 1: người
         // bỏ dở ở bước 3 mà bị bắt tạo lại workspace từ đầu sẽ bỏ luôn.
         const firstUnfinished = TOUR_STEPS.findIndex((s) => !done.includes(s.id));
+        const target = firstUnfinished === -1 ? 0 : firstUnfinished;
+
+        // Chạy tiếp vào giữa tầng 2 mà chưa từng gieo dữ liệu — hỏi gieo trước.
+        //
+        // Xảy ra khi người dùng tải lại trang đúng lúc hộp "thêm 8 thẻ mẫu?"
+        // đang mở: hộp đó chỉ nằm trong bộ nhớ nên mất theo, còn `currentStep`
+        // đã kịp ghi là bước 5. Không có nhánh này thì họ quay lại và bị dạy bộ
+        // lọc trên một board đúng một thẻ — thứ mà cả tầng 2 sinh ra để tránh.
+        if (mode === 'full' && target >= FIRST_TIER_2_INDEX && !store.onboarding().seeded) {
+          patchState(store, { running: false, invitationOpen: false, mode, seedOfferOpen: true });
+          persist({ status: 'running', currentStep: TOUR_STEPS[FIRST_TIER_2_INDEX].id });
+          return;
+        }
+
         patchState(store, {
           running: true,
           invitationOpen: false,
           mode,
-          stepIndex: firstUnfinished === -1 ? 0 : firstUnfinished,
+          stepIndex: target,
           baseline: store.counts(),
           baselineFresh: { ...store.countsSeen() },
         });
-        persist({
-          status: 'running',
-          currentStep: TOUR_STEPS[firstUnfinished === -1 ? 0 : firstUnfinished].id,
-        });
+        persist({ status: 'running', currentStep: TOUR_STEPS[target].id });
       },
 
       /** Chạy lại từ đầu — mục "Restart tutorial" trong Cài đặt. */
@@ -526,7 +537,14 @@ export const TourStore = signalStore(
         // một board trống — tức đi dạy bộ lọc trên đúng thứ mà cả tầng 2 sinh ra
         // để tránh, và cuối tour lại hỏi "xoá thẻ mẫu?" trong khi chưa gieo gì.
         if (step?.tier === 1 && nextIndex === FIRST_TIER_2_INDEX) {
-          if (store.mode() === 'basics') {
+          // ⚠️ CHƯA TỰ TẠO THẺ THÌ KHÔNG GIEO.
+          //
+          // Cả tầng 1 tồn tại để người dùng tự tay làm ra thứ đầu tiên của mình.
+          // Bấm Skip ở bước tạo thẻ rồi lại đổ 8 thẻ mẫu vào là lấy mất đúng cái
+          // khoảnh khắc đó: board đầy thẻ của người khác, còn họ thì chưa hề tạo
+          // gì. Thà kết thúc tour ở đây, thanh checklist vẫn còn để quay lại.
+          const daTuTaoThe = store.onboarding().completed.includes('add-card');
+          if (store.mode() === 'basics' || !daTuTaoThe) {
             patchState(store, { running: false });
             persist({ status: 'skipped', currentStep: null });
             return;
