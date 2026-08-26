@@ -1,4 +1,4 @@
-import { Component, DestroyRef, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
+import { Component, DestroyRef, ElementRef, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
@@ -25,6 +25,7 @@ import { AttachmentStore } from '../../ngrx/attachment/attachment.store';
 import { RealtimeService } from '../../services/realtime.service';
 import { BoardPrefsStore } from '../../ngrx/board-prefs/board-prefs.store';
 import { TaskSuggestionStore } from '../../ngrx/task-suggestion/task-suggestion.store';
+import { TourStore } from '../../ngrx/tour/tour.store';
 import { TaskSuggestionModal } from '../../components/chat/task-suggestion-modal/task-suggestion-modal';
 import { BoardList } from '../../components/board/board-list/board-list';
 import { AddList } from '../../components/board/add-list/add-list';
@@ -133,6 +134,7 @@ export class Board {
   private readonly realtime = inject(RealtimeService);
   private readonly boardPrefs = inject(BoardPrefsStore);
   private readonly taskSuggestions = inject(TaskSuggestionStore);
+  private readonly tour = inject(TourStore);
   private readonly router = inject(Router);
 
   readonly boardId = this.route.snapshot.paramMap.get('id') ?? 'demo-board';
@@ -633,6 +635,20 @@ export class Board {
         void this.router.navigate(['/workspace']);
       }
     });
+    // Báo số cột/thẻ về tour hướng dẫn (bước 3 và 4). Đếm dữ liệu thật thay vì
+    // nghe cú bấm — thêm cột mà API trả lỗi thì tour phải đứng nguyên.
+    //
+    // ⚠️ `untracked()` bắt buộc — xem ghi chú cùng chỗ ở pages/workspace/workspace.ts.
+    //    `observe()` đọc rồi ghi `counts`, gọi trần trong effect là vòng lặp vô hạn.
+    effect(() => {
+      const cards = Object.values(this.cardsByList()).reduce(
+        (sum, list) => sum + list.length,
+        0,
+      );
+      const lists = this.lists().length;
+      untracked(() => this.tour.observe({ lists, cards }));
+    });
+
     void this.loadSavedFilters();
     void this.loadSavedHighlightGroups();
     this.loadCollapsedLists();

@@ -8,6 +8,15 @@ import { FormsModule } from '@angular/forms';
   imports: [FormsModule],
   templateUrl: './add-list.html',
   styleUrl: './add-list.css',
+  // Neo của tour đặt trên HOST, không đặt trên cái nút bên trong.
+  //
+  // Template có hai nhánh: chưa sửa thì là nút, đang sửa thì là ô nhập — nút
+  // BIẾN MẤT khỏi DOM ngay khi người dùng bấm vào nó. Neo nằm trên nút thì tour
+  // vừa được người dùng làm theo là mất neo, hết 3 giây thì bỏ qua bước 3, rồi
+  // bước 4 (neo `add-card` chỉ có bên trong một cột) cũng không tìm được nốt —
+  // tour tự kết thúc trong khi người dùng đang gõ tên cột.
+  // Host tồn tại ở cả hai trạng thái và không thêm thẻ DOM nào.
+  host: { 'data-tour': 'add-list' },
 })
 export class AddList {
   readonly create = output<string>();

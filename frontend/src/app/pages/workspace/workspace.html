@@ -109,7 +109,13 @@
           }
         </div>
 
-        <button type="button" class="btn btn-primary btn-xs px-3.5 font-black gap-1 shadow-xs"
+        <!-- data-tour: neo bước 1 của tour hướng dẫn. Neo ở ĐÂY chứ không ở nút
+             trong welcome banner, vì banner chỉ hiện khi có 0 workspace — người
+             chạy lại tour từ Cài đặt sẽ không thấy nó, và tour trỏ vào hư không.
+             Neo bằng data-tour chứ không bằng class CSS: đổi giao diện một cái
+             là selector kiểu `.btn-primary.gap-1` chết câm. -->
+        <button type="button" data-tour="create-workspace"
+          class="btn btn-primary btn-xs px-3.5 font-black gap-1 shadow-xs"
           (click)="openCreateWorkspace()" [class.hidden]="!canManage()">
           <svg lucidePlus class="h-3 w-3 shrink-0" [strokeWidth]="3"></svg>
           <span>New Workspace</span>

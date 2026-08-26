@@ -1,11 +1,14 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import {
   LucideBuilding2,
+  LucideGraduationCap,
   LucideUser,
   LucideUsers,
 } from '@lucide/angular';
+import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { OrganizationStore } from '../../ngrx/organization/organization.store';
+import { TourStore } from '../../ngrx/tour/tour.store';
 import { OrgInviteRole, OrgMemberView, Role, User } from '../../models';
 import { NAV_ITEMS, SettingsTab } from './settings.models';
 import {
@@ -24,6 +27,7 @@ import { ManageOrganizationTab } from '../../components/settings/manage-organiza
   selector: 'app-settings',
   imports: [
     LucideBuilding2,
+    LucideGraduationCap,
     LucideUser,
     LucideUsers,
     ProfileTab,
@@ -37,6 +41,21 @@ import { ManageOrganizationTab } from '../../components/settings/manage-organiza
 export class Settings {
   readonly auth = inject(AuthService);
   readonly orgService = inject(OrganizationStore);
+  private readonly tour = inject(TourStore);
+  private readonly router = inject(Router);
+
+  /**
+   * Chạy lại tour hướng dẫn từ bước 1.
+   *
+   * Phải điều hướng về trang workspace: cả bốn neo `data-tour` của tầng 1 đều
+   * nằm ở trang workspace và trang board, không có cái nào ở đây. Gọi `restart()`
+   * mà đứng lại trang Cài đặt thì overlay đi tìm neo, không thấy, chờ 3 giây rồi
+   * bỏ qua từng bước một — tour "chạy" xong trong 12 giây mà không dạy được gì.
+   */
+  onRestartTour(): void {
+    this.tour.restart();
+    void this.router.navigate(['/', this.orgService.activeOrgSlug(), 'workspace']);
+  }
 
   readonly currentUser = this.auth.currentUser;
   readonly searchableUsers = computed(() => this.auth.getSearchableUsers());

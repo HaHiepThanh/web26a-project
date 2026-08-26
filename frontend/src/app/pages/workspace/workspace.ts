@@ -7,6 +7,7 @@ import { AuthService } from '../../services/auth.service';
 import { OrganizationStore } from '../../ngrx/organization/organization.store';
 import { WorkspaceService } from '../../services/workspace.service';
 import { BoardPrefsStore } from '../../ngrx/board-prefs/board-prefs.store';
+import { TourStore } from '../../ngrx/tour/tour.store';
 import {
   Board,
   BoardBackground,
@@ -84,6 +85,7 @@ export class Workspace {
   private readonly orgService = inject(OrganizationStore);
   private readonly workspaceService = inject(WorkspaceService);
   private readonly boardPrefs = inject(BoardPrefsStore);
+  private readonly tour = inject(TourStore);
   private readonly router = inject(Router);
 
   private readonly orgManageModal = viewChild(OrgManageModal);
@@ -211,6 +213,32 @@ export class Workspace {
         if (req === 'create-board') this.openCreateBoard();
         else this.openCreateWorkspace();
       });
+    });
+
+    // ---- Tour hướng dẫn người dùng mới ----
+    //
+    // Báo số lượng về TourStore. Tour chuyển bước theo DỮ LIỆU chứ không theo cú
+    // bấm: bấm nút rồi API trả lỗi thì tour phải đứng yên, không được hớn hở đi
+    // tiếp rồi trỏ vào một cái board không tồn tại.
+    //
+    // ⚠️ `observe()` phải nằm trong `untracked()`. Bên trong nó ĐỌC `counts()`
+    //    rồi GHI lại chính `counts` — gọi trần trong effect thì effect nhận
+    //    `counts` làm phụ thuộc, ghi xong tự chạy lại, tạo object mới, ghi tiếp:
+    //    vòng lặp vô hạn khoá cứng luồng chính, trang workspace đứng hình.
+    //    Đọc hai signal của trang TRƯỚC untracked để chúng vẫn là phụ thuộc thật.
+    effect(() => {
+      if (!this.workspacesReady()) return;
+      const workspaces = this.workspaces().length;
+      const boards = this.totalBoardsCount();
+      untracked(() => this.tour.observe({ workspaces, boards }));
+    });
+
+    // Hộp mời chỉ hiện SAU khi danh sách đã nạp xong. Hỏi lúc còn đang tải thì
+    // nó chồng lên khung xương chờ, và nếu người dùng bấm "Show me around" ngay
+    // thì `baseline` chốt nhầm số 0 trong khi thật ra họ đã có 5 workspace.
+    effect(() => {
+      if (!this.workspacesReady()) return;
+      untracked(() => this.tour.maybeInvite());
     });
 
     // Rời trang mà yêu cầu chưa kịp xử lý (đổi tổ chức, bấm Back ngay) thì bỏ đi
