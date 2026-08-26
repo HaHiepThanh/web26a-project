@@ -1,0 +1,89 @@
+/* ---------------------------------------------------------------------------
+   Cụm avatar người đang mở board — xếp chồng như xếp dĩa.
+
+   Khác chỗ nào so với bản cũ (`-space-x-2` của Tailwind):
+
+   1. THỨ TỰ CHỒNG. Mặc định phần tử đứng sau đè lên phần tử đứng trước, nên
+      trước đây người CUỐI cùng nằm trên — ngược với chồng dĩa thật, nơi cái
+      trên cùng là cái nhìn thấy trọn vẹn. Đảo bằng z-index giảm dần (đặt trong
+      template) nên người ĐẦU nằm trên, những người sau lấp ló phía dưới đúng
+      như mép dĩa.
+
+   2. CHIỀU SÂU. Mỗi cái ra sau thu nhỏ và chìm xuống một chút, tạo cảm giác
+      xếp lớp thay vì dán phẳng cạnh nhau.
+
+   3. XOÈ RA KHI RÊ CHUỘT. Chồng sâu thì tiết kiệm chỗ nhưng che mất mặt người.
+
+   ⚠️ Phần xoè dùng `transform`, KHÔNG dùng `margin`. Đây là điểm dễ làm sai:
+      xoè bằng margin thì cụm rộng thêm 56px thật, mà thanh header chỉ đủ một
+      hàng từ ~847px trở lên — cộng thêm 56px là có một khoảng bề rộng mà chỉ
+      cần rê chuột vào cụm avatar là CẢ THANH rớt xuống hai dòng rồi nhảy lại
+      khi rời chuột. `transform` không đụng tới bố cục nên hộp của cụm giữ
+      nguyên bề rộng, không kéo theo thứ gì.
+
+      Và xoè sang TRÁI (dịch âm) chứ không sang phải: cụm này nằm sát nút
+      Filter ở mép phải, xoè sang phải là trùm lên đúng cái nút đó. Bên trái là
+      khoảng trống giữa thanh — kể cả khi thanh đã rớt dòng thì nhóm phải cũng
+      nằm một mình một hàng, trống trải phía trái.
+
+      Dùng `nth-last-child` chứ không `nth-child`: cái NGOÀI CÙNG BÊN PHẢI phải
+      đứng yên làm mốc, những cái còn lại dịch trái theo khoảng cách tới nó. Đếm
+      từ đầu thì số người thay đổi (2 người hay 5 người) là lệch hết.
+   --------------------------------------------------------------------------- */
+
+.chong-dia {
+  display: flex;
+  align-items: center;
+}
+
+.chong-dia > .dia {
+  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Chồng lên nhau: mỗi cái sau lùi vào 12px so với cái trước.
+   Giá trị này KHÔNG đổi khi rê chuột — giữ bố cục đứng yên. */
+.chong-dia > .dia + .dia {
+  margin-left: -12px;
+}
+
+/* Càng ra sau càng nhỏ và chìm xuống — mắt đọc ra ngay là một chồng có lớp. */
+.chong-dia > .dia:nth-child(2) {
+  transform: scale(0.94) translateY(1px);
+}
+.chong-dia > .dia:nth-child(3) {
+  transform: scale(0.88) translateY(2px);
+}
+.chong-dia > .dia:nth-child(n + 4) {
+  transform: scale(0.82) translateY(3px);
+}
+
+/* Xoè sang trái. Mỗi bậc 14px = đủ để 28px avatar chồng −12px giãn thành cách
+   nhau 2px. Cái cuối (ngoài cùng phải) đứng yên làm mốc. */
+.chong-dia:hover > .dia,
+.chong-dia:focus-within > .dia {
+  transform: translateX(0);
+}
+.chong-dia:hover > .dia:nth-last-child(2),
+.chong-dia:focus-within > .dia:nth-last-child(2) {
+  transform: translateX(-14px);
+}
+.chong-dia:hover > .dia:nth-last-child(3),
+.chong-dia:focus-within > .dia:nth-last-child(3) {
+  transform: translateX(-28px);
+}
+.chong-dia:hover > .dia:nth-last-child(4),
+.chong-dia:focus-within > .dia:nth-last-child(4) {
+  transform: translateX(-42px);
+}
+.chong-dia:hover > .dia:nth-last-child(5),
+.chong-dia:focus-within > .dia:nth-last-child(5) {
+  transform: translateX(-56px);
+}
+
+/* Người dùng đã tắt hiệu ứng chuyển động thì bỏ phần trượt — chồng vẫn xếp lớp
+   bình thường, chỉ là đổi trạng thái tức thì. */
+@media (prefers-reduced-motion: reduce) {
+  .chong-dia > .dia {
+    transition: none;
+  }
+}

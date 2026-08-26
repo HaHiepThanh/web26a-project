@@ -1,4 +1,4 @@
-import { Component, input, output } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { LucideArrowLeft, LucideFolderKanban, LucideListFilter, LucidePin, LucideStar, LucideX, LucideChartLine } from '@lucide/angular';
@@ -19,6 +19,7 @@ const PRIORITY_ACTIVE: Record<CardPriority, string> = {
   selector: 'app-board-header-bar',
   imports: [RouterLink, FormsModule, LucideArrowLeft, LucideFolderKanban, LucideListFilter, LucidePin, LucideStar, LucideX, LucideChartLine, UserAvatar],
   templateUrl: './board-header-bar.html',
+  styleUrl: './board-header-bar.css',
 })
 export class BoardHeaderBar {
   readonly board = input<Board | null>(null);
@@ -30,6 +31,12 @@ export class BoardHeaderBar {
 
   /** Chỉ vẽ tối đa 4 avatar, còn lại gộp thành "+N" cho khỏi tràn thanh tiêu đề. */
   readonly VIEWERS_SHOWN = 4;
+
+  /** Phần thực sự được vẽ. Tách ra `computed` thay vì gọi `viewers().slice(...)`
+   *  thẳng trong template: template cần đọc độ dài của nó ở mỗi vòng lặp để
+   *  tính z-index, mà gọi `.slice()` trong biểu thức là cắt lại mảng mới ở mọi
+   *  chu kỳ kiểm tra. */
+  readonly viewersShown = computed(() => this.viewers().slice(0, this.VIEWERS_SHOWN));
 
   viewerLabel(v: BoardViewer): string {
     return v.displayName ?? 'Anonymous';

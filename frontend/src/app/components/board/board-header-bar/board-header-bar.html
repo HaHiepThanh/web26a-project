@@ -1,49 +1,28 @@
-<!-- Top Header -->
-<div class="flex shrink-0 items-center justify-between border-b border-base-300 bg-base-100 px-4 py-2.5">
-  <div class="flex min-w-0 items-center gap-2.5">
-    <a routerLink="/workspace" class="btn btn-square btn-ghost btn-sm shrink-0" aria-label="Back to Workspace">
-      <svg lucideArrowLeft class="h-[15px] w-[15px]" [strokeWidth]="2"></svg>
-    </a>
-    <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-      <svg lucideFolderKanban class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg>
-    </span>
-    <div class="flex min-w-0 flex-col">
-      <span class="truncate text-base font-bold text-base-content">{{ board()?.name ?? 'Loading board...' }}</span>
-      <span class="text-2xs text-base-content/50">{{ listsCount() }} list(s) · {{ totalCards() }} card(s)</span>
-    </div>
-  </div>
-
-  <!-- Ai đang mở board này (realtime) -->
-  <div class="flex shrink-0 items-center gap-2">
-    @if (!realtimeConnected()) {
-      <span class="badge badge-warning badge-sm gap-1" title="Couldn't reach the realtime server — content may be outdated, reload the page to sync.">
-        Disconnected
+<!-- MỘT thanh duy nhất.
+     Trước đây là hai hàng: hàng trên chỉ để tên board + cụm avatar, hàng dưới là
+     các nút. Sau khi dời tên board xuống cạnh cụm bố cục và dời avatar về cạnh
+     nút Filter (theo yêu cầu), hàng trên chỉ còn mỗi nút quay lại — một dải
+     trống chiếm chiều cao mà không chở gì. Gộp lại trả chỗ đó cho nội dung
+     board, thứ đang thiếu nhất ở màn này. -->
+<div class="flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-base-300 bg-base-100 px-4 py-2">
+  <div class="flex min-w-0 flex-wrap items-center gap-3">
+    <div class="flex min-w-0 items-center gap-2.5">
+      <a routerLink="/workspace" class="btn btn-square btn-ghost btn-sm shrink-0" aria-label="Back to Workspace">
+        <svg lucideArrowLeft class="h-[15px] w-[15px]" [strokeWidth]="2"></svg>
+      </a>
+      <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+        <svg lucideFolderKanban class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg>
       </span>
-    }
-    @if (viewers().length) {
-      <!-- data-tour: neo coach mark giải thích cụm avatar realtime. -->
-      <div data-tour="viewers" class="flex items-center -space-x-2" [attr.aria-label]="viewers().length + ' people viewing this board'">
-        @for (v of viewers().slice(0, VIEWERS_SHOWN); track v.id) {
-          <app-user-avatar [userId]="v.id" [name]="viewerLabel(v)" [avatarUrl]="v.avatarUrl" [size]="28" extraClass="border-2 border-base-100" />
-        }
-        @if (viewers().length > VIEWERS_SHOWN) {
-          <span class="flex h-7 w-7 items-center justify-center rounded-full border-2 border-base-100 bg-base-300 text-2xs font-bold text-base-content">
-            +{{ viewers().length - VIEWERS_SHOWN }}
-          </span>
-        }
+      <div class="flex min-w-0 flex-col">
+        <span class="truncate text-base font-bold leading-tight text-base-content">{{ board()?.name ?? 'Loading board...' }}</span>
+        <span class="text-2xs leading-tight text-base-content/50">{{ listsCount() }} list(s) · {{ totalCards() }} card(s)</span>
       </div>
-    }
-  </div>
-</div>
+    </div>
 
-<!-- Controls Bar -->
-<div class="flex shrink-0 flex-wrap items-center justify-between gap-y-2 border-b border-base-300 bg-base-100 px-4 py-2">
-  <div class="flex flex-wrap items-center gap-3">
     @if (viewMode() === 'status') {
-      <span class="text-2xs font-semibold text-base-content/50">Layout</span>
-      <!-- data-tour: neo coach mark gợi ý đổi sang Row View. Trên cả cụm hai nút
-           chứ không riêng một nút — chỉ dẫn nói về lựa chọn bố cục, không phải
-           về đúng cái nút đang bật. -->
+      <!-- Nhãn chữ "Layout" đã bỏ: tên board nằm ngay sát bên trái rồi, và hai
+           nút đã tự nói rõ chúng làm gì. data-tour giữ nguyên trên cả CỤM hai
+           nút — chỉ dẫn nói về lựa chọn bố cục, không phải về nút đang bật. -->
       <div class="join" data-tour="layout">
         <button type="button" class="btn btn-sm join-item gap-1.5" [class.btn-active]="layoutMode() === 'column'" (click)="layoutModeChange.emit('column')" title="Lists side by side, cards stacked within each list">
           Column View
@@ -59,7 +38,34 @@
     </button>
   </div>
 
-  <div class="flex flex-wrap items-center justify-end gap-3">
+  <div class="flex flex-wrap items-center justify-end gap-2.5">
+    @if (!realtimeConnected()) {
+      <span class="badge badge-warning badge-sm gap-1" title="Couldn't reach the realtime server — content may be outdated, reload the page to sync.">
+        Disconnected
+      </span>
+    }
+
+    <!-- Ai đang mở board này (realtime) — ngay sát bên trái nút Filter. -->
+    @if (viewers().length) {
+      <!-- data-tour: neo coach mark giải thích cụm avatar realtime. -->
+      <div data-tour="viewers" class="chong-dia shrink-0" [attr.aria-label]="viewers().length + ' people viewing this board'">
+        @for (v of viewersShown(); track v.id; let i = $index) {
+          <!-- z-index giảm dần: người ĐẦU nằm trên cùng, giống chồng dĩa thật.
+               Để mặc định thì người cuối lại đè lên tất cả. -->
+          <span class="dia" [style.z-index]="viewersShown().length - i" [title]="viewerLabel(v)">
+            <app-user-avatar [userId]="v.id" [name]="viewerLabel(v)" [avatarUrl]="v.avatarUrl" [size]="28" extraClass="border-2 border-base-100 shadow-sm" />
+          </span>
+        }
+        @if (viewers().length > VIEWERS_SHOWN) {
+          <span class="dia" [style.z-index]="0" [title]="viewers().length - VIEWERS_SHOWN + ' more'">
+            <span class="flex h-7 w-7 items-center justify-center rounded-full border-2 border-base-100 bg-base-300 text-2xs font-bold text-base-content shadow-sm">
+              +{{ viewers().length - VIEWERS_SHOWN }}
+            </span>
+          </span>
+        }
+      </div>
+    }
+
     <div class="relative">
       <!-- data-tour: neo bước "use-filter". Nút này luôn có mặt ở cả hai trạng
            thái đóng/mở của bảng lọc, khác với nút đóng ở trong bảng. -->

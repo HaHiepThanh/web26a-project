@@ -167,17 +167,9 @@ export class Board {
   readonly sortOptions = SORT_OPTIONS;
   readonly sortMode = signal<SortMode>('manual');
 
-  // ---- Nhắc deadline — Mức 1 (#10): banner khi mở board, không cron job/email/push ----
-  readonly myDueCounts = this.cardService.myDueCounts;
-  readonly dueBannerDismissed = signal(false);
-  readonly showDueBanner = computed(() => {
-    const c = this.myDueCounts();
-    return !this.dueBannerDismissed() && c.overdue + c.dueSoon > 0;
-  });
-
-  dismissDueBanner(): void {
-    this.dueBannerDismissed.set(true);
-  }
+  // Banner "You have N card(s) due soon on this board" ĐÃ GỠ theo yêu cầu.
+  // `CardStore.myDueCounts` vẫn còn và vẫn được dùng — chuông thông báo ở header
+  // đọc nó qua `header-actions.service.ts`. Chỉ dải cảnh báo trên board là bỏ.
 
   // ---- Thu gọn danh sách (#9) — lưu theo user ở localStorage, không cần cột DB mới ----
   readonly collapsedListIds = signal<Set<string>>(new Set());
