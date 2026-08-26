@@ -22,19 +22,16 @@
  *      Tailwind sinh ra giá trị đúng lúc build.
  */
 .composer {
-  min-height: 2.25rem;
-  max-height: 120px;
-  padding: 0.5rem 0.75rem;
+  min-height: 3.25rem;
+  max-height: 140px;
+  padding: 0.625rem 0.75rem;
   font-size: 0.8125rem;
-  line-height: 1.35;
+  line-height: 1.4;
   resize: none;
   overflow-y: auto;
 }
 
 .composer::placeholder {
-  /* Khung chat hẹp — placeholder dài phải cắt bớt chứ không được xuống dòng,
-     nếu không nó đẩy ô cao gấp đôi ngay khi chưa gõ gì. */
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: pre-wrap;
+  word-break: break-word;
 }

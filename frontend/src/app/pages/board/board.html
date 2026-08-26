@@ -285,10 +285,17 @@
     (clearSelection)="clearSelection()">
   </app-board-bulk-actions>
 
-  <!-- Toast notifications -->
-  <div class="toast toast-end z-[2000]">
+  <!-- Toast notifications: khi có minimap thì chuyển sang bên trái để tránh đè lên nhau, khi không có minimap thì nằm ở góc phải mặc định -->
+  <div
+    class="toast z-[2000] pointer-events-none transition-all duration-300"
+    [class.toast-end]="!showMinimap()"
+    [class.toast-start]="showMinimap()">
     @for (toast of toasts(); track toast.id) {
-      <div class="alert font-bold" [class.alert-error]="toast.type === 'error'" [class.alert-success]="toast.type === 'success'" [class.alert-info]="toast.type === 'info'">
+      <div
+        class="alert pointer-events-auto font-bold shadow-lg"
+        [class.alert-error]="toast.type === 'error'"
+        [class.alert-success]="toast.type === 'success'"
+        [class.alert-info]="toast.type === 'info'">
         <span>{{ toast.message }}</span>
       </div>
     }

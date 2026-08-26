@@ -2,7 +2,7 @@ import { Component, ElementRef, computed, input, output, signal, viewChild } fro
 import { User } from '../../../models';
 
 /** Ô soạn tin cao tối đa ngần này rồi mới cuộn — khớp `max-height` trong chat-input.css. */
-const MAX_COMPOSER_HEIGHT = 120;
+const MAX_COMPOSER_HEIGHT = 140;
 
 /** Ô nhập chat: gõ "@" để autocomplete tên thành viên board (#8), Enter để gửi. */
 @Component({

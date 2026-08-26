@@ -1,4 +1,5 @@
 :host {
   flex: 0 0 272px;
   align-self: flex-start;
+  display: block;
 }
