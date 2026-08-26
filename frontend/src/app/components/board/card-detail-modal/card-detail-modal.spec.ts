@@ -141,4 +141,15 @@ describe('CardDetailModal — đính kèm chờ lưu', () => {
 
     expect(component.coverRow()).toBeNull();
   });
+
+  it('bấm "Delete card" thì hiện dải cảnh báo xác nhận xoá', () => {
+    expect(component.confirmDelete()).toBe(false);
+    component.requestDelete();
+    expect(component.confirmDelete()).toBe(true);
+
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.textContent).toContain('Delete card "Thẻ thử"? This cannot be undone.');
+    expect(el.textContent).toContain('Yes, delete');
+  });
 });
