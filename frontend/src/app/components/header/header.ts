@@ -79,6 +79,12 @@ export class Header {
   readonly bellTitle = this.actions.bellTitle;
   readonly bellBadgeCount = this.actions.bellBadgeCount;
   readonly pendingInviteCount = this.actions.pendingInviteCount;
+  readonly activeOrgSlug = this.actions.activeOrgSlug;
+
+  readonly workspaceLink = computed(() => {
+    const slug = this.activeOrgSlug() || this.actions.organizations()[0]?.slug;
+    return slug ? ['/', slug, 'workspace'] : ['/workspace'];
+  });
 
   /* ---- Trạng thái đóng/mở: của riêng thanh này ---- */
   readonly menuOpen = signal(false);
@@ -222,6 +228,11 @@ export class Header {
   requestCreateWorkspace(): void {
     this.createMenuOpen.set(false);
     this.actions.requestCreateWorkspace();
+  }
+
+  onLogoClick(event: MouseEvent): void {
+    event.preventDefault();
+    void this.actions.navigateToWorkspace();
   }
 
   readonly copiedUuid = signal(false);

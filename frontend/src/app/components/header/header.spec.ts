@@ -48,4 +48,13 @@ describe('Header', () => {
     component.clearSearch();
     expect(searchSpy).toHaveBeenCalledWith('');
   });
+
+  it('gọi actions.navigateToWorkspace khi bấm vào logo', () => {
+    const navSpy = vi.spyOn(component.actions, 'navigateToWorkspace').mockImplementation(() => Promise.resolve());
+    const event = new MouseEvent('click');
+    const preventSpy = vi.spyOn(event, 'preventDefault');
+    component.onLogoClick(event);
+    expect(preventSpy).toHaveBeenCalled();
+    expect(navSpy).toHaveBeenCalled();
+  });
 });

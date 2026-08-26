@@ -1,7 +1,7 @@
 <!-- Lớp phủ bắt cú bấm ra ngoài để đóng bảng. Chỉ tồn tại khi CÓ bảng đang mở —
      lúc bình thường không có gì nằm chắn trước nội dung. -->
 @if (backdropVisible()) {
-  <div class="fixed inset-0 z-40 lg:hidden" (click)="closeAll()" aria-hidden="true"></div>
+  <div class="fixed inset-0 z-40 sm:hidden" (click)="closeAll()" aria-hidden="true"></div>
 }
 
 <!-- Khung đáy: `pointer-events-none` để khoảng trống giữa hai cụm không nuốt cú
@@ -10,7 +10,7 @@
      Khe giữa hai cụm khi ô tìm kiếm đang mở là `gap-2` (8px) — ĐÚNG BẰNG khe
      giữa nút "+" và ô ở cụm trái, để ô nằm cân giữa hai bên thay vì dính sát một
      bên. Lúc ô thu, khe trở lại 12px cho hai cụm tách bạch hẳn. -->
-<div class="pointer-events-none fixed bottom-4 left-4 right-4 z-50 flex items-end justify-between lg:hidden"
+<div class="pointer-events-none fixed bottom-4 left-4 right-4 z-50 flex items-end justify-between sm:hidden"
   [class]="searchOpen() ? 'gap-2' : 'gap-3'">
 
   <!-- ============================ CỤM TRÁI ============================ -->

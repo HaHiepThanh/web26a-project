@@ -4,8 +4,9 @@
      khung lại cao đúng màn hình và `sticky` vô hại như trước. -->
 <header
   class="sticky top-0 z-[100] flex h-14 items-center justify-between gap-4 border-b border-base-300/70 bg-base-100 px-4 shadow-sm max-lg:static">
-  <a routerLink="/workspace"
-    class="flex shrink-0 items-center gap-2 rounded-lg px-1.5 py-1 font-bold text-base-content transition-colors hover:bg-base-200">
+  <a [routerLink]="workspaceLink()"
+    (click)="onLogoClick($event)"
+    class="flex shrink-0 items-center gap-2 rounded-lg px-1.5 py-1 font-bold text-base-content transition-colors hover:bg-base-200 cursor-pointer">
     <img src="/HHH-logo-256.png" alt="Horizon Hub Harmony Logo" class="h-7 w-7 shrink-0 rounded-md object-cover shadow-sm" />
     <div class="flex flex-col leading-[1.05]">
       <span class="text-base tracking-[-0.3px] text-primary">Horizon Hub Harmony</span>
@@ -13,11 +14,9 @@
     </div>
   </a>
 
-  <!-- Từ `lg` trở xuống, ô tìm kiếm và toàn bộ cụm nút bên phải chuyển xuống
-       thanh nổi ở đáy màn hình (`app-mobile-action-bar`). Header khổ hẹp chỉ còn
-       logo và ô người dùng — trước đây nhồi hết vào một hàng thì nội dung rộng
-       538px trong khung 375px, và thứ bị đẩy khỏi màn hình luôn là mấy nút cuối. -->
-  <div class="relative hidden max-w-[480px] flex-1 lg:block">
+  <!-- Khổ tablet (sm trở lên) và máy tính (lg): hiện ô tìm kiếm.
+       Khổ hẹp (phone - dưới sm): tìm kiếm nằm ở thanh nổi đáy. -->
+  <div class="relative hidden max-w-[480px] flex-1 sm:block">
     <label
       class="input input-sm h-9 w-full rounded-md border border-base-300 bg-base-100 px-3 flex items-center gap-2 shadow-xs transition-all focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
       <svg lucideSearch class="h-4 w-4 shrink-0 text-base-content/40" [strokeWidth]="2"></svg>
@@ -94,8 +93,8 @@
   </div>
 
   <div class="flex shrink-0 items-center gap-2">
-    <!-- Nút tạo nhanh: khổ hẹp đã có nút "+" ở thanh dưới nên ẩn đi cho khỏi trùng. -->
-    <div class="relative hidden lg:block">
+    <!-- Nút tạo nhanh (+): hiện từ khổ tablet (sm) trở lên để tạo workspace và board. -->
+    <div class="relative hidden sm:block">
       <button class="btn btn-primary btn-sm h-9 gap-1.5 rounded-md px-3.5 font-bold shadow-sm" (click)="toggleCreateMenu()">
         <svg lucidePlus class="h-4 w-4" [strokeWidth]="2.4"></svg>
         <span>Create</span>

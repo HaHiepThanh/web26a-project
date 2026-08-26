@@ -40,6 +40,8 @@ export class HeaderActionsService {
 
   readonly myInvites = this.orgService.myInvites;
   readonly pendingInviteCount = this.orgService.pendingInviteCount;
+  readonly activeOrgSlug = this.orgService.activeOrgSlug;
+  readonly organizations = this.orgService.organizations;
 
   /* ---------------------- tìm kiếm bảng (Boards Search) ---------------------- */
 
@@ -186,15 +188,36 @@ export class HeaderActionsService {
     this.searchDropdownOpen.set(false);
   }
 
+  async navigateToWorkspace(): Promise<void> {
+    this.closeSearchDropdown();
+    await this.orgService.ensureLoaded();
+    const slug = this.orgService.activeOrgSlug() || this.orgService.organizations()[0]?.slug;
+    if (slug) {
+      void this.router.navigate(['/', slug, 'workspace']);
+    } else {
+      void this.router.navigateByUrl('/workspace');
+    }
+  }
+
   /** Tạo nhanh chỉ có nghĩa ở trang Workspace (nơi có modal tương ứng), nên đặt
-   *  yêu cầu rồi điều hướng về đó — bấm từ trong board vẫn chạy. */
+   *  yêu cầu rồi điều hướng về đó — bấm từ trong board hoặc settings vẫn chạy. */
   requestCreateBoard(): void {
     this.workspaceUi.requestCreateBoard();
-    void this.router.navigateByUrl('/workspace');
+    const slug = this.orgService.activeOrgSlug() || this.orgService.organizations()[0]?.slug;
+    if (slug) {
+      void this.router.navigate(['/', slug, 'workspace']);
+    } else {
+      void this.router.navigateByUrl('/workspace');
+    }
   }
 
   requestCreateWorkspace(): void {
     this.workspaceUi.requestCreateWorkspace();
-    void this.router.navigateByUrl('/workspace');
+    const slug = this.orgService.activeOrgSlug() || this.orgService.organizations()[0]?.slug;
+    if (slug) {
+      void this.router.navigate(['/', slug, 'workspace']);
+    } else {
+      void this.router.navigateByUrl('/workspace');
+    }
   }
 }

@@ -36,17 +36,16 @@
     overflow: visible;
   }
 
-  /* Chừa chỗ cho thanh nổi ở đáy — CHỈ ở trang thật sự có thanh (Workspace).
-     Giờ trang cuộn tới tận cùng nên nếu không chừa, thanh sẽ đè lên footer và
-     phần cuối nội dung; ngược lại chừa ở trang không có thanh thì thừa ra một
-     khoảng trống vô cớ. */
-  :host(:not(.trang-board).co-thanh-mobile) {
-    padding-bottom: 5.5rem;
-  }
-
   /* Bỏ nốt tầng cắt ở giữa, nếu không thì dù :host mở, phần thân vẫn bị kẹp. */
   :host(:not(.trang-board)) main {
     overflow: visible;
     min-height: 0;
+  }
+}
+
+/* Chừa chỗ cho thanh nổi ở đáy — CHỈ ở trang thật sự có thanh (Workspace) trên điện thoại (< 40rem / 640px). */
+@media (width < 40rem) {
+  :host(:not(.trang-board).co-thanh-mobile) {
+    padding-bottom: 5.5rem;
   }
 }

@@ -29,11 +29,11 @@ export function withOrganizationComputed() {
       );
 
       const activeOrg = computed(
-        () => store.entities().find((o) => o.id === route.activeOrgId()) ?? null,
+        () => store.entities().find((o) => o.id === route.activeOrgId()) ?? store.entities()[0] ?? null,
       );
 
       const myRole = computed(() => {
-        const id = route.activeOrgId();
+        const id = route.activeOrgId() ?? store.entities()[0]?.id;
         return id ? (store.myRoleByOrg()[id] ?? null) : null;
       });
 
