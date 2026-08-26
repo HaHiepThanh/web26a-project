@@ -695,6 +695,28 @@ export class Board {
       untracked(() => this.tour.observeFlags({ filterOpen, aiOpen }));
     });
 
+    // Tầng 3: báo hoàn cảnh để coach mark tự quyết có đáng ghé vào không.
+    //
+    // Chỉ báo khi dữ liệu của CHÍNH board này đã nạp xong — cùng lý do với effect
+    // đếm ở trên: `ListStore`/`CardStore` còn giữ dữ liệu board trước, và một
+    // gợi ý dựa trên số liệu của board khác là gợi ý sai chỗ.
+    effect(() => {
+      if (this.listService.loadedBoardId() !== this.boardId || this.listService.loading()) {
+        return;
+      }
+      const cuaBoardNay = this.lists().filter((l) => l.boardId === this.boardId);
+      const idCot = new Set(cuaBoardNay.map((l) => l.id));
+      const theoCot = this.cardsByList();
+      const ctx = {
+        cards: [...idCot].reduce((s, id) => s + (theoCot[id]?.length ?? 0), 0),
+        lists: cuaBoardNay.length,
+        viewers: this.viewers().length,
+        overflowsWidth: this.showMinimap(),
+        layout: this.layoutMode(),
+      };
+      untracked(() => this.tour.maybeShowCoachMark(ctx));
+    });
+
     void this.loadSavedFilters();
     void this.loadSavedHighlightGroups();
     this.loadCollapsedLists();

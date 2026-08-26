@@ -1,4 +1,8 @@
+<!-- data-tour: neo coach mark giới thiệu minimap. Đặt ở ĐÂY chứ không trên
+     host `<app-board-minimap>`: host không có layout riêng nên đo ra 0×0, và
+     chỉ dẫn không có chỗ nào để trỏ vào. -->
 <div
+  data-tour="minimap"
   class="w-fit rounded-box border-2 border-primary/25 bg-base-100/95 p-2 shadow-xl backdrop-blur-sm transition-opacity duration-300"
   [class.opacity-100]="!dimmed()"
   [class.opacity-35]="dimmed()"

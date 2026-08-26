@@ -1,0 +1,20 @@
+@if (visible()) {
+@let m = mark()!;
+@let p = pos();
+
+<!-- Lớp bọc KHÔNG nhận chuột: coach mark ghé vào giữa lúc người ta đang làm
+     việc, nó không được phép nuốt một cú bấm nào. Chỉ bản thân bong bóng mới
+     nhận chuột, để bấm được nút "Got it". -->
+<div class="coach-layer" aria-live="polite">
+  <div #bubble class="coach-bubble" role="status"
+       [style.top.px]="p.top" [style.left.px]="p.left">
+    <span class="coach-icon">
+      <svg lucideLightbulb class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg>
+    </span>
+    <p class="coach-text">{{ m.text }}</p>
+    <button type="button" class="coach-close" (click)="onGotIt()" aria-label="Got it">
+      <svg lucideX class="h-3 w-3" [strokeWidth]="2.6"></svg>
+    </button>
+  </div>
+</div>
+}

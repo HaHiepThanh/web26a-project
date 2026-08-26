@@ -3,6 +3,7 @@ import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
 import { Header } from '../../components/header/header';
 import { Footer } from '../../components/footer/footer';
+import { CoachMark } from '../../components/tour/coach-mark/coach-mark';
 import { TourChecklist } from '../../components/tour/tour-checklist/tour-checklist';
 import { TourInvitation } from '../../components/tour/tour-invitation/tour-invitation';
 import { TourOverlay } from '../../components/tour/tour-overlay/tour-overlay';
@@ -17,7 +18,7 @@ import { emptyOnboardingState } from '../../models';
  */
 @Component({
   selector: 'app-app-layout',
-  imports: [RouterOutlet, Header, Footer, TourOverlay, TourInvitation, TourChecklist, TourPrompt],
+  imports: [RouterOutlet, Header, Footer, TourOverlay, TourInvitation, TourChecklist, TourPrompt, CoachMark],
   templateUrl: './app-layout.html',
   styleUrl: './app-layout.css',
 })

@@ -487,4 +487,104 @@ describe('TourStore', () => {
     expect(store.counts().workspaces).toBe(3);
     expect(store.counts().lists).toBe(2);
   });
+
+  // ------------------------------------------------------------ tầng 3
+
+  /** Hoàn cảnh làm thoả điều kiện của `filter-hint`. */
+  const boardDongThe = { cards: 20, lists: 3, viewers: 1, overflowsWidth: false, layout: 'column' as const };
+
+  it('coach mark chỉ ghé vào khi vấn đề đã xuất hiện', () => {
+    const store = make();
+    store.hydrate({ ...emptyOnboardingState(), status: 'done' });
+
+    store.maybeShowCoachMark({ ...boardDongThe, cards: 5 });
+    expect(store.coachMark()).toBeNull();
+
+    store.maybeShowCoachMark(boardDongThe);
+    expect(store.coachMark()?.id).toBe('filter-hint');
+  });
+
+  it('luật 1 — mỗi phiên tối đa MỘT, không bao giờ hai cái cùng lúc', () => {
+    const store = make();
+    store.hydrate({ ...emptyOnboardingState(), status: 'done' });
+    store.maybeShowCoachMark({ cards: 20, lists: 5, viewers: 3, overflowsWidth: true, layout: 'column' });
+    expect(store.coachMark()?.id).toBe('filter-hint');
+    store.confirmCoachMarkShown();   // bong bóng hiện thật → mới tiêu suất
+    store.dismissCoachMark();
+
+    // Ba điều kiện còn lại vẫn đang thoả, nhưng phiên này đã nói một câu rồi.
+    store.maybeShowCoachMark({ cards: 20, lists: 5, viewers: 3, overflowsWidth: true, layout: 'column' });
+    expect(store.coachMark()).toBeNull();
+  });
+
+  it('mẩu không hiện được thì KHÔNG tiêu suất của phiên', () => {
+    const store = make();
+    store.hydrate({ ...emptyOnboardingState(), status: 'done' });
+    store.maybeShowCoachMark(boardDongThe);
+    expect(store.coachMark()?.id).toBe('filter-hint');
+
+    // Neo không bao giờ xuất hiện → component bỏ mẩu này, không ghi nhớ.
+    store.dropCoachMark();
+    expect(store.onboarding().seenCoachMarks).toEqual([]);
+
+    // Suất của phiên vẫn còn, nhưng KHÔNG chọn lại đúng mẩu vừa hỏng — chọn lại
+    // là quay vòng vô tận và ba mẩu còn lại không bao giờ tới lượt.
+    store.maybeShowCoachMark({ ...boardDongThe, viewers: 3 });
+    expect(store.coachMark()?.id).toBe('viewers-hint');
+  });
+
+  it('luật 2 — im lặng khi tour đang chạy', () => {
+    const store = make();
+    store.hydrate(emptyOnboardingState());
+    store.observe({ workspaces: 0, boards: 0, lists: 0, cards: 0 });
+    store.start('full');
+
+    store.maybeShowCoachMark(boardDongThe);
+
+    expect(store.coachMark()).toBeNull();
+  });
+
+  it('luật 3 — im lặng với người chưa từng chạy tour', () => {
+    const store = make();
+    store.hydrate(emptyOnboardingState());  // status = not-started
+
+    store.maybeShowCoachMark(boardDongThe);
+
+    expect(store.coachMark()).toBeNull();
+  });
+
+  it('mỗi mẩu chỉ hiện MỘT LẦN trong đời — ghi vào seenCoachMarks', () => {
+    const store = make();
+    store.hydrate({ ...emptyOnboardingState(), status: 'done' });
+    store.maybeShowCoachMark(boardDongThe);
+    store.dismissCoachMark();
+    expect(store.onboarding().seenCoachMarks).toContain('filter-hint');
+
+    // Phiên mới (store mới) nhưng hồ sơ đã ghi nhớ.
+    const sau = make();
+    sau.hydrate({ ...emptyOnboardingState(), status: 'done', seenCoachMarks: ['filter-hint'] });
+    sau.maybeShowCoachMark(boardDongThe);
+    expect(sau.coachMark()).toBeNull();
+  });
+
+  it('gợi ý Row View chỉ bật khi cuộn ngang đã thành phiền', () => {
+    const store = make();
+    store.hydrate({ ...emptyOnboardingState(), status: 'done', seenCoachMarks: ['filter-hint'] });
+
+    // Bốn cột nhưng vừa màn hình → chưa có vấn đề gì để giải.
+    store.maybeShowCoachMark({ cards: 5, lists: 4, viewers: 1, overflowsWidth: false, layout: 'column' });
+    expect(store.coachMark()).toBeNull();
+
+    store.maybeShowCoachMark({ cards: 5, lists: 4, viewers: 1, overflowsWidth: true, layout: 'column' });
+    expect(store.coachMark()?.id).toBe('layout-hint');
+  });
+
+  it('đang ở Row View rồi thì không gợi ý đổi sang Row View nữa', () => {
+    const store = make();
+    store.hydrate({ ...emptyOnboardingState(), status: 'done', seenCoachMarks: ['filter-hint','minimap-hint'] });
+
+    store.maybeShowCoachMark({ cards: 5, lists: 4, viewers: 1, overflowsWidth: true, layout: 'row' });
+
+    expect(store.coachMark()).toBeNull();
+  });
 });

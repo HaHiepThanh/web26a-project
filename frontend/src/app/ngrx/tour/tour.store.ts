@@ -18,6 +18,7 @@ import {
   TourStep,
   stepIndexOf,
 } from './tour.steps';
+import { COACH_MARKS, CoachContext, CoachMark } from './coach-marks';
 import { TourSeedService } from './tour.seed';
 
 /**
@@ -89,6 +90,27 @@ export interface TourState {
    */
   flagsAtStepStart: Partial<TourFlags>;
 
+  // ---- Tầng 3: coach mark ----
+  /** Mẩu chỉ dẫn đang hiện, hoặc null. Tối đa MỘT, xem `maybeShowCoachMark`. */
+  coachMark: CoachMark | null;
+  /**
+   * Phiên này đã hiện một coach mark chưa.
+   *
+   * Luật 1: mỗi phiên tối đa MỘT. Không có nó thì người dùng mở board đông thẻ
+   * là ăn liền bốn bong bóng nối đuôi — đúng kiểu phần mềm mà ai cũng tắt.
+   */
+  coachShownThisSession: boolean;
+  /**
+   * Mẩu đã thử hiện trong phiên này mà neo không xuất hiện được.
+   *
+   * Ví dụ thật: minimap bị CSS ẩn (`display:none`) ở màn hẹp, nhưng phần tử vẫn
+   * nằm trong DOM nên store không biết. Không nhớ lại thì cứ chọn nó, chờ 2 giây,
+   * bỏ, rồi lần báo sau lại chọn đúng nó — quay vòng và ba mẩu còn lại không bao
+   * giờ tới lượt. KHÔNG ghi vào `seenCoachMarks`: người dùng chưa từng thấy nó,
+   * phiên sau ở màn rộng vẫn phải được xem.
+   */
+  coachFailedThisSession: string[];
+
   // ---- Tầng 2 ----
   /** Hộp hỏi "gieo 8 thẻ mẫu nhé?" đang mở. */
   seedOfferOpen: boolean;
@@ -111,6 +133,9 @@ const initialState: TourState = {
   counts: EMPTY_COUNTS,
   flags: EMPTY_FLAGS,
   flagsAtStepStart: {},
+  coachMark: null,
+  coachShownThisSession: false,
+  coachFailedThisSession: [],
   seedOfferOpen: false,
   cleanupOfferOpen: false,
   seedBusy: false,
@@ -685,6 +710,85 @@ export const TourStore = signalStore(
       setChecklistCollapsed(value: boolean): void {
         if (store.checklistCollapsed() === value) return;
         patchState(store, { checklistCollapsed: value });
+      },
+
+      // ------------------------------------------------------ tầng 3: coach mark
+
+      /**
+       * Trang Board báo hoàn cảnh về; nếu có mẩu chỉ dẫn nào đáng bật thì bật.
+       *
+       * BA LUẬT CHỐNG PHIỀN, cả ba đều nằm ở đây vì bỏ sót một cái là coach mark
+       * biến thành thứ người ta tắt đi:
+       *
+       *  1. Không bao giờ hai cái cùng lúc, và mỗi phiên tối đa MỘT. Mở một board
+       *     đông thẻ có thể thoả cả bốn điều kiện — bắn hết là mưa bong bóng.
+       *  2. Im lặng khi tour đang chạy hoặc có hộp thoại tour đang mở. Hai giọng
+       *     nói cùng chỉ đạo một người là tệ hơn không có giọng nào.
+       *  3. Im lặng với người MỚI TINH. Ai chưa từng chạy tour thì đang còn ngợp;
+       *     coach mark sinh ra cho người đã quen việc và vừa chạm phải một vấn
+       *     đề cụ thể, không phải để chào đón.
+       *
+       * Và mỗi mẩu chỉ hiện đúng MỘT LẦN trong đời — `seenCoachMarks` lưu ở DB.
+       */
+      maybeShowCoachMark(ctx: CoachContext): void {
+        if (store.coachMark() || store.coachShownThisSession()) return;
+        if (store.running() || store.invitationOpen()) return;
+        if (store.seedOfferOpen() || store.cleanupOfferOpen()) return;
+
+        const s = store.onboarding();
+        if (s.status === 'not-started') return;
+
+        const daXem = new Set([...s.seenCoachMarks, ...store.coachFailedThisSession()]);
+        const chon = COACH_MARKS.find((m) => !daXem.has(m.id) && m.when(ctx));
+        if (!chon) return;
+
+        // Chỉ CHỌN, chưa tiêu suất của phiên. Suất chỉ mất khi bong bóng thật sự
+        // hiện lên — xem `confirmCoachMarkShown`.
+        patchState(store, { coachMark: chon });
+      },
+
+      /**
+       * Bong bóng đã hiện thật — giờ mới tính là phiên này đã nói một câu.
+       *
+       * ⚠️ Tách khỏi `maybeShowCoachMark` vì neo có thể không dùng được: minimap
+       *    từng bị neo nhầm vào host của component, đo ra 0×0. Chọn xong là tiêu
+       *    suất duy nhất của phiên, rồi chẳng hiện gì cả — ba mẩu còn lại im
+       *    lặng theo, và không ai biết vì sao.
+       */
+      confirmCoachMarkShown(): void {
+        if (store.coachShownThisSession()) return;
+        patchState(store, { coachShownThisSession: true });
+      },
+
+      /**
+       * Bỏ mẩu đang chọn mà KHÔNG ghi nhớ — neo không xuất hiện được.
+       *
+       * Khác `dismissCoachMark`: người dùng chưa từng nhìn thấy nó, nên không
+       * được đánh dấu "đã xem". Lần sau vào lại vẫn còn cơ hội.
+       */
+      dropCoachMark(): void {
+        const m = store.coachMark();
+        if (!m) return;
+        patchState(store, {
+          coachMark: null,
+          coachFailedThisSession: [...store.coachFailedThisSession(), m.id],
+        });
+      },
+
+      /**
+       * Đóng mẩu chỉ dẫn — và ghi nhớ là đã hiện, vĩnh viễn.
+       *
+       * Gọi cho cả nút "Got it" lẫn bấm ra ngoài. Coach mark KHÔNG chặn chuột
+       * (luật 2 của đặc tả), nên bấm ra ngoài là hành vi bình thường và phải
+       * được coi là "đã đọc" — bắt họ tìm đúng cái nút mới cho tắt là phiền.
+       */
+      dismissCoachMark(): void {
+        const m = store.coachMark();
+        if (!m) return;
+        patchState(store, { coachMark: null });
+        const daXem = store.onboarding().seenCoachMarks;
+        if (daXem.includes(m.id)) return;
+        persist({ seenCoachMarks: [...daXem, m.id] });
       },
 
       /**

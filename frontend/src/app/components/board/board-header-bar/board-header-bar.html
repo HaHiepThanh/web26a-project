@@ -21,7 +21,8 @@
       </span>
     }
     @if (viewers().length) {
-      <div class="flex items-center -space-x-2" [attr.aria-label]="viewers().length + ' people viewing this board'">
+      <!-- data-tour: neo coach mark giải thích cụm avatar realtime. -->
+      <div data-tour="viewers" class="flex items-center -space-x-2" [attr.aria-label]="viewers().length + ' people viewing this board'">
         @for (v of viewers().slice(0, VIEWERS_SHOWN); track v.id) {
           <span
             class="flex h-7 w-7 items-center justify-center rounded-full border-2 border-base-100 text-2xs font-bold text-white"
@@ -49,7 +50,10 @@
   <div class="flex flex-wrap items-center gap-3">
     @if (viewMode() === 'status') {
       <span class="text-2xs font-semibold text-base-content/50">Layout</span>
-      <div class="join">
+      <!-- data-tour: neo coach mark gợi ý đổi sang Row View. Trên cả cụm hai nút
+           chứ không riêng một nút — chỉ dẫn nói về lựa chọn bố cục, không phải
+           về đúng cái nút đang bật. -->
+      <div class="join" data-tour="layout">
         <button type="button" class="btn btn-sm join-item gap-1.5" [class.btn-active]="layoutMode() === 'column'" (click)="layoutModeChange.emit('column')" title="Lists side by side, cards stacked within each list">
           Column View
         </button>
