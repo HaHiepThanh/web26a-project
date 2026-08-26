@@ -90,6 +90,20 @@ export interface TourStep {
    * trong bóng tối — đúng cái mâu thuẫn đã phải sửa một lần với modal.
    */
   dim?: boolean;
+  /**
+   * Neo của bước này nằm BÊN TRONG khung chat.
+   *
+   * Dưới 768px khung chat mở ra là lớp phủ toàn màn hình, và lớp phủ đó bình
+   * thường làm tour tự ẩn đi — nó che kín board nên soi sáng thứ nằm sau nó là
+   * vô nghĩa. Nhưng neo của bước này lại nằm TRONG chính khung đó, nên luật kia
+   * quay ra khoá chết bước: mở chat để thấy neo thì tour biến mất, đóng chat để
+   * thấy tour thì neo biến mất theo.
+   *
+   * Phải khai báo tay chứ không dò bằng `contains()` được: lúc bước bắt đầu, chip
+   * gợi ý CHƯA tồn tại — nó chỉ hiện sau khi Gemini trả lời — nên không có phần
+   * tử nào để mà hỏi nó nằm ở đâu.
+   */
+  anchorInChat?: boolean;
 }
 
 export const TOUR_STEPS: readonly TourStep[] = [
@@ -182,6 +196,7 @@ export const TOUR_STEPS: readonly TourStep[] = [
     // chính đoạn hội thoại mà assistant vừa đọc để nghĩ ra gợi ý.
     placement: 'bottom',
     dim: false,
+    anchorInChat: true,
     optional: true,
     waitMs: 12000,
     title: 'The assistant reads the chat',

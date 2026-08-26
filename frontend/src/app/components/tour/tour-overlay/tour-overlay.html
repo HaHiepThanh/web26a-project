@@ -82,9 +82,14 @@
     Take me there
   </button>
   }
-  } @else {
+  } @else if (!needsAck()) {
   <!-- Không có nút "Next": bước chỉ sang khi người dùng LÀM THẬT. Nói rõ ra để
-       họ không ngồi tìm nút. -->
+       họ không ngồi tìm nút.
+
+       ⚠️ Phải loại bước tầng 2 ra. Bước đó CÓ nút Next và cố tình không tự đi
+          tiếp, nên câu "the tour moves on by itself" nói ngược lại chính cái nút
+          nằm ngay bên trên: người dùng mở bảng lọc, chọn High, rồi ngồi chờ một
+          thứ không bao giờ tới. -->
   <p class="tour-hint">Do it on the highlighted control — the tour moves on by itself.</p>
   }
 </div>

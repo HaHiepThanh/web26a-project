@@ -192,17 +192,28 @@ export class TourOverlay {
     // và ngược lại.
     if (vw <= 560) {
       const w = Math.min(POPOVER_W, vw - 24);
-      // Bước `placement: 'bottom'` → ghim LÊN TRÊN ở điện thoại.
+      // Bước `placement: 'bottom'` trên điện thoại → nằm NGAY DƯỚI neo.
       //
-      // Nghe ngược, nhưng đúng: `bottom` nghĩa là "tránh xa thứ sắp bung ra".
-      // Trên màn rộng thứ đó đổ xuống góc trên-phải nên popover nằm đáy; dưới
-      // 768px chính bảng lọc lại đổi thành tấm dán ĐÁY, nên chỗ trống bây giờ là
-      // ở trên. Bám theo vị trí neo như các bước khác thì popover rơi xuống đáy
-      // và đè lên đúng cái bảng nó vừa bảo mở.
-      if (this.step()?.placement === 'bottom') {
-        return { top: 12, left: Math.max(12, (vw - w) / 2) };
-      }
+      // Ba chỗ đều chật nên phải chọn kỹ. Ghim lên đỉnh màn hình thì popover phủ
+      // luôn thanh điều khiển, tức che mất chính cái nút Filter đang được soi.
+      // Thả xuống đáy thì đè lên bảng lọc — mà dưới 768px bảng lọc chính là tấm
+      // dán đáy. Nằm ngay dưới neo là dải duy nhất còn trống: dưới thanh điều
+      // khiển, trên mép bảng lọc (bảng đã thu còn 50vh để chừa đúng dải này).
+      //
+      // ⚠️ CHỈ khi dải đó thật sự đủ chỗ. Luật này sinh ra cho nút Filter — nằm ở
+      //    ĐỈNH màn hình, bảng bung xuống dưới. Nút chat trên mobile thì ngược
+      //    hẳn: nó là FAB ở góc ĐÁY, nên "ngay dưới neo" rơi ra ngoài màn hình,
+      //    bị kẹp ngược lên và đậu trúng chính cái nút đang soi (đo ở 390×844:
+      //    popover 598–799 chồng lên FAB 772–828). Không vừa thì trả về đúng luật
+      //    nửa-đối-diện ở dưới, thứ vốn dành cho đúng tình huống này.
       const neoONuaDuoi = h.top + h.height / 2 > vh / 2;
+      const duDuoiNeo = h.top + h.height + GAP + ph <= vh - 12;
+      if (this.step()?.placement === 'bottom' && duDuoiNeo) {
+        return {
+          top: h.top + h.height + GAP,
+          left: Math.max(12, (vw - w) / 2),
+        };
+      }
       return {
         top: neoONuaDuoi ? 12 : Math.max(12, vh - ph - 12),
         left: Math.max(12, (vw - w) / 2),
@@ -256,7 +267,15 @@ export class TourOverlay {
     });
 
     // Đo popover sau khi nó có nội dung — cần chiều cao thật mới lật đúng.
+    //
+    // ⚠️ Phải đọc `step()` ở đây, dù không dùng tới giá trị. Đó là thứ duy nhất
+    //    báo cho effect biết phải đo LẠI. Chỉ phụ thuộc `visible()` thì đổi bước
+    //    mà popover vẫn đang hiện sẽ không kích hoạt gì cả, và chiều cao của bước
+    //    trước bị dùng để kẹp vị trí bước sau. Đo được ở 390×844: bước 3 cao 230,
+    //    bước 4 cao 250, phép kẹp `vh - ph - 12` tính bằng 230 nên popover bước 4
+    //    thò 8px xuống dưới mép màn hình.
     effect(() => {
+      this.step();
       if (!this.visible()) return;
       queueMicrotask(() => {
         const el = this.popover()?.nativeElement;
@@ -270,16 +289,37 @@ export class TourOverlay {
     // Theo dõi modal của app. Quan sát cả `childList` lẫn thuộc tính `class`:
     // có modal được thêm/bớt khỏi DOM (`@if (isOpen())`), có modal luôn nằm đó
     // và chỉ bật tắt lớp `.modal-open`. Thiếu một trong hai là bỏ sót một nửa.
-    // `.chat-mobile-overlay` cũng tính là modal.
+    // `.chat-mobile-overlay` cũng tính là modal — NHƯNG CÓ ĐIỀU KIỆN.
     //
     // Dưới 768px khung chat mở ra KHÔNG phải một cột bên cạnh mà là lớp phủ
     // toàn màn hình, che kín board. Không tính nó vào đây thì tour vẫn soi sáng
     // một cái nút nằm PHÍA SAU lớp phủ — người dùng thấy một khung sáng rỗng
     // giữa màn hình đen, chỉ vào thứ họ không nhìn thấy và không bấm được.
-    const syncModal = () =>
-      this.modalOpen.set(
-        document.querySelector('.modal-open, .chat-mobile-overlay') !== null,
-      );
+    //
+    // ⚠️ Trừ khi NEO CỦA BƯỚC NẰM TRONG chính khung chat đó. Bước 7 soi chip gợi
+    //    ý của assistant, mà chip nằm trong `message-list` — tức bên trong khung
+    //    chat. Ẩn tour mỗi khi chat mở thành ra khoá chết bước 7 trên điện thoại:
+    //    mở chat để thấy chip thì tour biến mất, đóng chat để thấy tour thì chip
+    //    biến mất theo. Không có thứ tự thao tác nào thoát ra được.
+    //
+    //    Lớp phủ chat ở `z-index: 50`, tour ở 9000, nên vẽ đè lên là chuyện bình
+    //    thường — không phải đụng gì tới z-index.
+    const syncModal = () => {
+      const modalApp = document.querySelector('.modal-open') !== null;
+      const chat = document.querySelector('.chat-mobile-overlay');
+      const buoc = this.step();
+      const neo = buoc
+        ? document.querySelector(`[data-tour="${buoc.anchor}"]`)
+        : null;
+      // `contains()` coi một phần tử là chứa CHÍNH NÓ, nên phải loại trường hợp
+      // neo chính là khung chat — đó là bước 6, nơi neo là cái nút mở chat và
+      // luật ẩn tour vẫn phải giữ nguyên như cũ.
+      const neoThuocChat =
+        buoc?.anchorInChat === true ||
+        (neo !== null && chat !== null && neo !== chat && chat.contains(neo));
+      const chatChe = chat !== null && !neoThuocChat;
+      this.modalOpen.set(modalApp || chatChe);
+    };
     const modalObserver = new MutationObserver(syncModal);
     modalObserver.observe(document.body, {
       childList: true,
@@ -288,6 +328,18 @@ export class TourOverlay {
       attributeFilter: ['class'],
     });
     syncModal();
+
+    // Đổi bước thì tính LẠI, dù DOM không đổi gì.
+    //
+    // `syncModal` chỉ chạy khi MutationObserver bắn. Nhưng cùng một khung chat
+    // đang mở lại mang hai nghĩa khác nhau tuỳ bước: với bước 6 nó là tấm chắn
+    // phải ẩn tour đi, với bước 7 nó là chỗ chứa neo nên phải để tour hiện. Bấm
+    // Next từ 6 sang 7 không đụng tới DOM của chat, nên thiếu effect này thì
+    // trạng thái cũ đứng nguyên.
+    effect(() => {
+      this.step();
+      syncModal();
+    });
 
     inject(DestroyRef).onDestroy(() => {
       window.removeEventListener('keydown', onKey);
@@ -320,13 +372,32 @@ export class TourOverlay {
      * đồng hồ đếm ngược, rồi ngồi chờ mãi một khung không bao giờ tới: tour treo
      * cứng, không popover, không lối thoát nào ngoài Esc.
      */
-    const isUsable = (node: HTMLElement | null): node is HTMLElement => {
+    /**
+     * Neo đã TÌM THẤY chưa — chỉ hỏi "có trong DOM và có kích thước".
+     *
+     * ⚠️ Cố ý KHÔNG hỏi "có nằm trong khung nhìn không". Bản trước hỏi, và đó là
+     *    một hồi quy: trên điện thoại trang workspace xếp dọc nên nút "Add board"
+     *    nằm dưới màn hình, bị coi là chưa dùng được, hết 3 giây rồi bỏ luôn
+     *    bước 2 — người dùng bị nhảy thẳng sang bước 3 mà không hiểu vì sao.
+     *    Nút ở dưới màn hình không phải là nút không tồn tại; `scrollIntoView`
+     *    trong `attach()` sinh ra chính để cuộn tới nó.
+     */
+    const isFound = (node: HTMLElement | null): node is HTMLElement => {
       if (!node || !node.isConnected) return false;
       const r = node.getBoundingClientRect();
-      if (r.width <= 0 && r.height <= 0) return false;
+      return r.width > 0 || r.height > 0;
+    };
 
-      // Nằm ngoài khung nhìn thì chưa dùng được — soi sáng một chỗ người dùng
-      // không nhìn thấy còn tệ hơn là chưa soi gì.
+    /**
+     * Neo có ĐANG NHÌN THẤY ĐƯỢC không — dùng để quyết định có vẽ viền sáng hay
+     * không, KHÔNG dùng để quyết định bỏ bước.
+     */
+    const isUsable = (node: HTMLElement | null): node is HTMLElement => {
+      if (!isFound(node)) return false;
+      const r = node.getBoundingClientRect();
+
+      // Đang ở ngoài khung nhìn (thường vì `scrollIntoView` chưa cuộn xong) —
+      // chưa vẽ viền, nhưng vẫn bám tiếp, không bỏ bước.
       if (r.bottom < 0 || r.top > window.innerHeight) return false;
       if (r.right < 0 || r.left > window.innerWidth) return false;
 
@@ -377,8 +448,10 @@ export class TourOverlay {
           lastRect = null;
           this.anchorRect.set(null);
         }
-        // Neo mất giữa chừng: bấm giờ lại để không treo vô hạn.
-        armTimeout();
+        // Bấm giờ bỏ bước CHỈ khi thật sự không tìm thấy neo. Tìm thấy rồi mà
+        // đang khuất (chưa cuộn tới, hoặc bị che tạm) thì cứ chờ — bỏ bước lúc
+        // đó là bỏ một việc người dùng hoàn toàn làm được.
+        if (!isFound(el)) armTimeout();
       } else {
         const r = el.getBoundingClientRect();
         const next: Rect = { top: r.top, left: r.left, width: r.width, height: r.height };
@@ -451,14 +524,16 @@ export class TourOverlay {
     };
 
     const existing = document.querySelector<HTMLElement>(selector);
-    if (isUsable(existing)) {
+    // Quyết định BÁM VÀO neo dựa trên `isFound`, không phải `isUsable`: nút nằm
+    // dưới màn hình vẫn là nút có thật, chỉ cần cuộn tới.
+    if (isFound(existing)) {
       attach(existing);
     } else {
       // Quan sát cả thuộc tính `class`: phần tử có thể đã nằm sẵn trong DOM mà
       // đang bị `.hidden`, và thứ thay đổi là class chứ không phải cây DOM.
       observer = new MutationObserver(() => {
         const found = document.querySelector<HTMLElement>(selector);
-        if (isUsable(found)) attach(found);
+        if (isFound(found)) attach(found);
         else armTimeout();
       });
       observer.observe(document.body, {
