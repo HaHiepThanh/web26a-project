@@ -23,6 +23,7 @@ import {
   LucideUser,
   LucideUserPlus,
   LucideX,
+} from '@lucide/angular';
 import { AppNotification } from '../../models';
 import { HeaderActionsService } from '../../services/header-actions.service';
 import { WorkspaceUiService } from '../../services/workspace-ui.service';
