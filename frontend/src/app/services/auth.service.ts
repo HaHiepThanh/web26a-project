@@ -287,16 +287,58 @@ export class AuthService {
     if (!cur) return;
     this.setUser({ ...cur, onboardingState: state });
 
+    // Hỏng một lần thì THÔI HẲN trong phiên này.
+    //
+    // Nguyên nhân hỏng thường trực nhất là cột `users.onboarding_state` chưa
+    // được tạo (migration 0007 chưa chạy) — và lỗi đó thì gọi lại bao nhiêu lần
+    // cũng hỏng. Không có cái cờ này thì mỗi bước tour lại bắn thêm một request
+    // chắc chắn trả 500: bảng Network đỏ rực, backend nhận một tràng lệnh vô
+    // nghĩa, và trên mạng chậm là mỗi bước thêm một vòng chờ vô ích.
+    if (AuthService.onboardingSaveDisabled) return;
+
+    // Xếp hàng MỘT LƯỢT MỘT, và chỉ giữ trạng thái mới nhất.
+    //
+    // Chỗ gọi bắn kiểu `void` nên nhiều lượt chạy song song. Đo thật: bỏ qua bốn
+    // bước liên tiếp là bốn request cùng bay đi, cầu dao bên dưới chỉ sập khi
+    // phản hồi ĐẦU TIÊN về — nên vẫn có bốn lỗi 500 thay vì một. Gộp lại thì
+    // vừa hết tràng lỗi đó, vừa bớt hẳn lưu lượng lúc bình thường: các bước đổi
+    // dồn dập chỉ tốn một request mang trạng thái cuối cùng.
+    this.pendingOnboarding = state;
+    if (this.savingOnboarding) return;
+
+    this.savingOnboarding = true;
     try {
-      await this.api.patch<MeResponse['user']>('/auth/profile', {
-        onboardingState: state,
-      });
+      while (this.pendingOnboarding) {
+        const gui = this.pendingOnboarding;
+        this.pendingOnboarding = null;
+        await this.api.patch<MeResponse['user']>('/auth/profile', {
+          onboardingState: gui,
+        });
+      }
     } catch {
-      // Im lặng có chủ đích: không có toast nào đáng bật lên giữa lúc người dùng
-      // đang được hướng dẫn. Bản localStorage vừa ghi vẫn giữ tour chạy đúng
-      // hết phiên này.
+      AuthService.onboardingSaveDisabled = true;
+      this.pendingOnboarding = null;
+      // Không toast: giữa lúc đang hướng dẫn thì một hộp lỗi còn phiền hơn cái
+      // lỗi. Ghi một dòng cảnh báo DUY NHẤT để người phát triển biết đường sửa.
+      console.warn(
+        '[onboarding] Không lưu được tiến độ tour xuống máy chủ — tạm dùng ' +
+          'localStorage cho phiên này. Thường là do chưa chạy migration ' +
+          'backend/migrations/0007_trang_thai_huong_dan.sql.',
+      );
+    } finally {
+      this.savingOnboarding = false;
     }
   }
+
+  /** Trạng thái mới nhất còn chờ gửi; lượt đang chạy sẽ nuốt luôn nó. */
+  private pendingOnboarding: OnboardingState | null = null;
+  private savingOnboarding = false;
+
+  /**
+   * Tĩnh, không phải theo từng instance: `AuthService` là singleton cấp gốc, mà
+   * để tĩnh thì cờ này còn sống qua cả những lần tạo lại service trong test.
+   */
+  private static onboardingSaveDisabled = false;
 
   /** Một chỗ duy nhất dựng `User` từ hồ sơ backend trả về. */
   private toUser(row: MeResponse['user']): User {
