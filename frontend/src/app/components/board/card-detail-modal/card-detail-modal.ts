@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, computed, effect, inject, input, output, signal, untracked, viewChild } from '@angular/core';
+import { Component, DestroyRef, ElementRef, HostListener, computed, effect, inject, input, output, signal, untracked, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { Card, CardPriority, User } from '../../../models';
@@ -20,6 +20,36 @@ const PRIORITIES: { id: CardPriority; label: string }[] = [
   { id: 'low', label: 'Low' },
 ];
 const PRIORITY_LABEL: Record<CardPriority, string> = { high: 'High', medium: 'Medium', low: 'Low' };
+
+/** Backend chặn ở 10MB — kiểm ngay lúc CHỌN tệp để báo liền, thay vì để người
+ *  dùng bấm Lưu rồi mới biết tệp bị từ chối. */
+const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
+
+/** Tệp đã chọn nhưng chưa tải lên. `previewUrl` là object URL của chính tệp đó —
+ *  phải `revokeObjectURL` khi bỏ đi, nếu không là rò bộ nhớ. */
+interface PendingAttachment {
+  localId: string;
+  file: File;
+  name: string;
+  size: number;
+  isImage: boolean;
+  previewUrl: string;
+}
+
+/** Một dòng trong danh sách đính kèm — gộp chung tệp đã lưu và tệp đang chờ lưu
+ *  để template chỉ phải vẽ MỘT kiểu, không rẽ nhánh hai danh sách. */
+export interface AttachmentRow {
+  key: string;
+  /** id thật trên server; `null` nghĩa là tệp còn đang chờ tải lên. */
+  id: string | null;
+  name: string;
+  size: number;
+  mimeType: string;
+  isImage: boolean;
+  url: string | null;
+  isCover: boolean;
+  isPending: boolean;
+}
 
 /**
  * Modal chi tiết thẻ: sửa tiêu đề / mô tả / phụ trách / hạn / ưu tiên / nhãn + xoá thẻ.
@@ -74,7 +104,17 @@ export class CardDetailModal {
       const c = this.card();
       if (c.id === thẻĐangMở) return;
       thẻĐangMở = c.id;
-      untracked(() => this.nạpBảnNháp(c));
+      untracked(() => {
+        // Tệp đang chờ lưu thuộc về THẺ CŨ — mang sang thẻ mới là đính nhầm chỗ.
+        this.xoaDinhKemChoLuu();
+        this.nạpBảnNháp(c);
+      });
+    });
+
+    // Object URL sống tới khi tab đóng nếu không thu hồi; đóng modal lúc còn tệp
+    // chờ lưu (bấm X, hoặc rời board) là rò đúng bằng dung lượng các tệp đó.
+    inject(DestroyRef).onDestroy(() => {
+      for (const p of this.pendingFiles()) URL.revokeObjectURL(p.previewUrl);
     });
 
     // Đính kèm nạp từ server. Bắt buộc `force` khi mở lại thẻ: link tải là link
@@ -143,6 +183,21 @@ export class CardDetailModal {
   private readonly savedOnce = signal(false);
   /** Bấm ra ngoài khi còn thay đổi chưa lưu → hiện dải hỏi lại thay vì đóng luôn. */
   readonly confirmClose = signal(false);
+  /** Tệp vừa chọn nhưng CHƯA tải lên — xem khối "Đính kèm" bên dưới. */
+  readonly pendingFiles = signal<PendingAttachment[]>([]);
+  /** id các đính kèm ĐÃ LƯU bị bấm xoá nhưng chưa gửi lệnh xoá lên server. */
+  readonly pendingRemovals = signal<ReadonlySet<string>>(new Set());
+  /**
+   * Ảnh bìa người dùng tự chọn trong bản nháp, và cờ "đã đụng vào".
+   *
+   * Cần cờ riêng chứ không thể chỉ giữ một giá trị: đính kèm nạp về BẤT ĐỒNG BỘ
+   * sau khi modal đã mở, nên bìa đang lưu lúc đầu luôn là `null` rồi mới nhảy
+   * sang giá trị thật. Nếu đặt sẵn bản nháp bằng giá trị lúc đầu thì mở một thẻ
+   * đã có bìa là bản nháp lệch ngay, nút "Lưu thay đổi" sáng lên dù người dùng
+   * chưa làm gì. Chưa đụng vào thì bìa nháp = bìa đang lưu, đọc thẳng.
+   */
+  private readonly coverTouched = signal(false);
+  private readonly coverChoice = signal<string | null>(null);
   /** Bấm "Delete card" → hiện dải hỏi lại NGAY TRONG modal thay vì `window.confirm`.
    *  Trình duyệt (Chrome) tự tắt hộp `confirm()`/`alert()` sau khi trang gọi liên
    *  tiếp nhiều lần trong thời gian ngắn — lúc đó `confirm()` trả `false` NGAY LẬP
@@ -158,6 +213,8 @@ export class CardDetailModal {
     this.draftPriority.set(card.priority);
     this.confirmClose.set(false);
     this.confirmDelete.set(false);
+    this.coverTouched.set(false);
+    this.coverChoice.set(null);
   }
 
   /** Còn thay đổi chưa lưu không? Quyết định việc hiện nút Lưu và dải hỏi lại. */
@@ -168,7 +225,8 @@ export class CardDetailModal {
       this.draftDescription() !== (c.description ?? '') ||
       this.draftAssigneeId() !== (c.assigneeId ?? null) ||
       this.draftDueDate() !== (c.dueDate ?? '') ||
-      this.draftPriority() !== c.priority
+      this.draftPriority() !== c.priority ||
+      this.attachmentsDirty()
     );
   });
 
@@ -215,9 +273,15 @@ export class CardDetailModal {
     }
 
     this.saving.set(true);
-    // MỘT request cho tất cả trường đã đổi, thay vì mỗi ô một request như trước.
-    await this.cardService.updateCard(c.id, changes);
-    this.saving.set(false);
+    try {
+      // MỘT request cho tất cả trường đã đổi, thay vì mỗi ô một request như trước.
+      // Chỉ gọi khi thực sự có trường đổi: người dùng có thể chỉ đính kèm ảnh mà
+      // không đụng ô nào, lúc đó patch rỗng và backend trả 400 "Nothing to update".
+      if (Object.keys(changes).length > 0) await this.cardService.updateCard(c.id, changes);
+      await this.luuDinhKem();
+    } finally {
+      this.saving.set(false);
+    }
     this.savedOnce.set(true);
 
     for (const d of nhatKy) this.log(d);
@@ -226,6 +290,7 @@ export class CardDetailModal {
 
   /** Bỏ mọi thay đổi, quay lại đúng dữ liệu đang có trên server. */
   discard(): void {
+    this.xoaDinhKemChoLuu();
     this.nạpBảnNháp(this.card());
     this.editingDesc.set(false);
   }
@@ -311,8 +376,70 @@ export class CardDetailModal {
   }
 
   // ---- Đính kèm tệp/hình ----
+  //
+  // Đính kèm nằm TRONG BẢN NHÁP giống 5 trường ở trên: chọn tệp / bỏ tệp / đổi
+  // ảnh bìa đều chỉ đổi trên màn hình, bấm "Lưu thay đổi" mới thật sự tải lên và
+  // xoá trên server. Trước đây mỗi thao tác gọi API ngay, nên chọn nhầm một tệp
+  // 8MB là nó đã nằm trên Storage rồi, bấm "Bỏ thay đổi" cũng không gỡ ra được.
   readonly attachments = computed(() => this.attachmentService.attachmentsFor(this.card().id));
   readonly cover = computed(() => this.attachmentService.coverFor(this.card().id));
+
+  /** Ảnh bìa đang lưu trên server, dưới dạng `key` để so với bìa nháp. */
+  private readonly savedCoverKey = computed(() => {
+    const c = this.cover();
+    return c ? `saved:${c.id}` : null;
+  });
+
+  /** Bìa đang hiển thị: bản người dùng chọn nếu họ đã đụng vào, còn không thì bám theo server. */
+  readonly draftCoverKey = computed(() =>
+    this.coverTouched() ? this.coverChoice() : this.savedCoverKey(),
+  );
+
+  /** Danh sách hiển thị: tệp đã lưu (trừ tệp bị đánh dấu xoá) + tệp đang chờ tải lên. */
+  readonly attachmentRows = computed<AttachmentRow[]>(() => {
+    const removed = this.pendingRemovals();
+    const coverKey = this.draftCoverKey();
+
+    const saved: AttachmentRow[] = this.attachments()
+      .filter((a) => !removed.has(a.id))
+      .map((a) => ({
+        key: `saved:${a.id}`,
+        id: a.id,
+        name: a.name,
+        size: a.size,
+        mimeType: a.mimeType,
+        isImage: a.isImage,
+        url: a.url,
+        isCover: coverKey === `saved:${a.id}`,
+        isPending: false,
+      }));
+
+    const pending: AttachmentRow[] = this.pendingFiles().map((p) => ({
+      key: `new:${p.localId}`,
+      id: null,
+      name: p.name,
+      size: p.size,
+      mimeType: p.file.type,
+      isImage: p.isImage,
+      url: p.previewUrl,
+      isCover: coverKey === `new:${p.localId}`,
+      isPending: true,
+    }));
+
+    return [...saved, ...pending];
+  });
+
+  /** Dòng đang được chọn làm bìa — dải ảnh đầu modal xem trước theo BẢN NHÁP,
+   *  nên chọn bìa mới (kể cả ảnh chưa tải lên) là thấy ngay, chưa cần lưu. */
+  readonly coverRow = computed(() => this.attachmentRows().find((r) => r.isCover) ?? null);
+
+  /** Có thay đổi đính kèm nào chưa lưu không? */
+  private readonly attachmentsDirty = computed(
+    () =>
+      this.pendingFiles().length > 0 ||
+      this.pendingRemovals().size > 0 ||
+      (this.coverTouched() && this.coverChoice() !== this.savedCoverKey()),
+  );
   /** Toggle mở khối mô tả sang chế độ chỉnh sửa — Trello ẩn textarea tới khi bấm "Chỉnh sửa". */
   readonly editingDesc = signal(false);
 
@@ -330,25 +457,142 @@ export class CardDetailModal {
     setTimeout(() => this.justSaved.set(false), 2000);
   }
 
-  async onFilesSelected(event: Event): Promise<void> {
+  /** Tệp quá nặng — báo ngay tại chỗ chọn, không đợi tới lúc lưu. */
+  readonly attachmentError = signal<string | null>(null);
+
+  onFilesSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const files = input.files ? Array.from(input.files) : [];
-    if (!files.length) return;
-    const added = await this.attachmentService.addFiles(this.card().id, files);
     input.value = ''; // cho phép chọn lại cùng tệp
-    for (const a of added) this.log(`attached "${a.name}"`);
-    if (added.length) this.flashSaved();
+    if (!files.length) return;
+
+    const quaNang = files.filter((f) => f.size > MAX_ATTACHMENT_BYTES);
+    this.attachmentError.set(
+      quaNang.length
+        ? `${quaNang.map((f) => `"${f.name}"`).join(', ')} vượt quá ${MAX_ATTACHMENT_BYTES / 1024 / 1024}MB nên đã bị bỏ qua.`
+        : null,
+    );
+
+    const them = files
+      .filter((f) => f.size <= MAX_ATTACHMENT_BYTES)
+      .map<PendingAttachment>((file) => ({
+        localId: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        file,
+        name: file.name,
+        size: file.size,
+        isImage: file.type.startsWith('image/'),
+        previewUrl: URL.createObjectURL(file),
+      }));
+
+    if (them.length) this.pendingFiles.update((list) => [...list, ...them]);
   }
 
-  removeAttachment(id: string, name: string): void {
-    void this.attachmentService.remove(this.card().id, id);
-    this.log(`removed attachment "${name}"`);
-    this.flashSaved();
+  /**
+   * Bỏ một đính kèm khỏi danh sách.
+   *
+   * Tệp chưa lưu → gỡ khỏi bản nháp và thu hồi object URL luôn. Tệp đã lưu →
+   * chỉ ĐÁNH DẤU xoá; lệnh xoá thật gửi đi lúc bấm Lưu, nên bấm nhầm vẫn hoàn
+   * tác được bằng "Bỏ thay đổi".
+   */
+  removeAttachment(row: AttachmentRow): void {
+    // Bỏ tệp đang là bìa thì bìa cũng phải bỏ theo, không để trỏ vào tệp không còn.
+    if (this.draftCoverKey() === row.key) {
+      this.coverTouched.set(true);
+      this.coverChoice.set(null);
+    }
+
+    if (row.isPending) {
+      const localId = row.key.slice('new:'.length);
+      const bo = this.pendingFiles().find((p) => p.localId === localId);
+      if (bo) URL.revokeObjectURL(bo.previewUrl);
+      this.pendingFiles.update((list) => list.filter((p) => p.localId !== localId));
+      return;
+    }
+
+    if (row.id) {
+      this.pendingRemovals.update((s) => new Set(s).add(row.id as string));
+    }
   }
 
-  toggleCover(id: string): void {
-    void this.attachmentService.toggleCover(this.card().id, id);
-    this.flashSaved();
+  toggleCover(row: AttachmentRow): void {
+    const dangLa = this.draftCoverKey() === row.key;
+    this.coverTouched.set(true);
+    this.coverChoice.set(dangLa ? null : row.key);
+  }
+
+  /**
+   * Gửi mọi thay đổi đính kèm lên server. Chạy trong `save()`.
+   *
+   * Thứ tự bắt buộc: tải tệp mới lên TRƯỚC để lấy id thật, vì ảnh bìa có thể là
+   * một tệp vừa chọn — lúc đó `draftCoverKey` mới quy ra được id để gọi API.
+   */
+  private async luuDinhKem(): Promise<void> {
+    const cardId = this.card().id;
+    const cho = this.pendingFiles();
+    const coverKey = this.draftCoverKey();
+
+    if (!cho.length && !this.pendingRemovals().size && !this.coverTouched()) return;
+
+    let coverId: string | null = coverKey?.startsWith('saved:') ? coverKey.slice('saved:'.length) : null;
+
+    if (cho.length) {
+      const added = await this.attachmentService.addFiles(
+        cardId,
+        cho.map((p) => p.file),
+      );
+      for (const a of added) this.log(`attached "${a.name}"`);
+
+      // Ghép tệp vừa tải lên với tệp đang chờ theo THỨ TỰ: `addFiles` trả về
+      // đúng thứ tự nhận vào, nhưng bỏ qua tệp lỗi — nên dò theo tên+cỡ để
+      // không gán nhầm bìa sang tệp khác khi có tệp hỏng ở giữa.
+      if (coverKey?.startsWith('new:')) {
+        const localId = coverKey.slice('new:'.length);
+        const muon = cho.find((p) => p.localId === localId);
+        coverId = added.find((a) => a.name === muon?.name && a.size === muon?.size)?.id ?? null;
+      }
+
+      for (const p of cho) URL.revokeObjectURL(p.previewUrl);
+      this.pendingFiles.set([]);
+    }
+
+    const xoa = [...this.pendingRemovals()];
+    for (const id of xoa) {
+      const ten = this.attachments().find((a) => a.id === id)?.name ?? 'file';
+      await this.attachmentService.remove(cardId, id);
+      this.log(`removed attachment "${ten}"`);
+    }
+    if (xoa.length) this.pendingRemovals.set(new Set());
+
+    // Bìa: CHỈ đụng tới khi người dùng thật sự đã bấm đổi bìa.
+    //
+    // Không có điều kiện `coverTouched()` ở đây thì lần đính ảnh đầu tiên bị gỡ
+    // bìa oan: backend tự đặt ảnh đầu tiên của thẻ làm bìa, còn bản nháp lúc đó
+    // vẫn mang giá trị "chưa có bìa" chụp từ TRƯỚC khi tải lên — so ra thấy khác
+    // nên code lại gọi toggle để gỡ đúng cái bìa backend vừa đặt.
+    if (this.coverTouched()) {
+      const biaDangLuu = this.cover();
+      if (coverId !== (biaDangLuu?.id ?? null)) {
+        // Bỏ bìa cũ trước (API là "toggle", không phải "set"), rồi bật bìa mới.
+        if (biaDangLuu && biaDangLuu.id !== coverId) {
+          await this.attachmentService.toggleCover(cardId, biaDangLuu.id);
+        }
+        if (coverId) await this.attachmentService.toggleCover(cardId, coverId);
+      }
+    }
+
+    // Về lại chế độ "bám theo server" — bản nháp bìa đã thành sự thật rồi.
+    this.coverTouched.set(false);
+    this.coverChoice.set(null);
+  }
+
+  /** Bỏ mọi đính kèm đang chờ và thu hồi object URL của chúng. */
+  private xoaDinhKemChoLuu(): void {
+    for (const p of this.pendingFiles()) URL.revokeObjectURL(p.previewUrl);
+    this.pendingFiles.set([]);
+    this.pendingRemovals.set(new Set());
+    this.attachmentError.set(null);
+    this.coverTouched.set(false);
+    this.coverChoice.set(null);
   }
 
   /** Mở tệp bằng link ký. `null` nghĩa là link chưa cấp được — báo thay vì mở tab trắng. */
