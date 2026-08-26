@@ -184,6 +184,21 @@ export class TourOverlay {
     const vw = window.innerWidth;
     const ph = this.popoverH();
 
+    // Màn hẹp: popover thành tấm ngang, và nằm ở nửa ĐỐI DIỆN với neo.
+    //
+    // Ở 320×568 tấm này cao ~230px, gần nửa màn hình. Ghim cứng xuống đáy (bản
+    // trước làm vậy bằng CSS `!important`) là nó phủ luôn lên chính cái nút đang
+    // được soi — đo được `popover_che_neo: true`. Neo ở dưới thì tấm lên trên,
+    // và ngược lại.
+    if (vw <= 560) {
+      const w = Math.min(POPOVER_W, vw - 24);
+      const neoONuaDuoi = h.top + h.height / 2 > vh / 2;
+      return {
+        top: neoONuaDuoi ? 12 : Math.max(12, vh - ph - 12),
+        left: Math.max(12, (vw - w) / 2),
+      };
+    }
+
     // Ghim xuống ĐÁY MÀN HÌNH, căn giữa ngang.
     //
     // Dành cho nút mà bấm vào là bung ra một bảng lớn. Bảng lọc chẳng hạn: rộng
@@ -245,8 +260,16 @@ export class TourOverlay {
     // Theo dõi modal của app. Quan sát cả `childList` lẫn thuộc tính `class`:
     // có modal được thêm/bớt khỏi DOM (`@if (isOpen())`), có modal luôn nằm đó
     // và chỉ bật tắt lớp `.modal-open`. Thiếu một trong hai là bỏ sót một nửa.
+    // `.chat-mobile-overlay` cũng tính là modal.
+    //
+    // Dưới 768px khung chat mở ra KHÔNG phải một cột bên cạnh mà là lớp phủ
+    // toàn màn hình, che kín board. Không tính nó vào đây thì tour vẫn soi sáng
+    // một cái nút nằm PHÍA SAU lớp phủ — người dùng thấy một khung sáng rỗng
+    // giữa màn hình đen, chỉ vào thứ họ không nhìn thấy và không bấm được.
     const syncModal = () =>
-      this.modalOpen.set(document.querySelector('.modal-open') !== null);
+      this.modalOpen.set(
+        document.querySelector('.modal-open, .chat-mobile-overlay') !== null,
+      );
     const modalObserver = new MutationObserver(syncModal);
     modalObserver.observe(document.body, {
       childList: true,
@@ -290,7 +313,28 @@ export class TourOverlay {
     const isUsable = (node: HTMLElement | null): node is HTMLElement => {
       if (!node || !node.isConnected) return false;
       const r = node.getBoundingClientRect();
-      return r.width > 0 || r.height > 0;
+      if (r.width <= 0 && r.height <= 0) return false;
+
+      // Nằm ngoài khung nhìn thì chưa dùng được — soi sáng một chỗ người dùng
+      // không nhìn thấy còn tệ hơn là chưa soi gì.
+      if (r.bottom < 0 || r.top > window.innerHeight) return false;
+      if (r.right < 0 || r.left > window.innerWidth) return false;
+
+      // Và phải THẬT SỰ NHÌN THẤY, không bị thứ khác phủ lên.
+      //
+      // Có kích thước mà vẫn bị che là chuyện thường: ở mobile khung chat mở
+      // thành lớp phủ toàn màn hình, cái nút phía sau vẫn đo ra 272×40 nhưng
+      // người dùng chỉ thấy một khung sáng rỗng trên nền đen.
+      //
+      // Bỏ qua chính giao diện của tour khi kiểm: popover và viền sáng là của
+      // ta, chúng "che" neo cũng không tính — nếu tính thì xoá khung → popover
+      // nhảy ra giữa → hết che → lại vẽ khung, dao động vô tận.
+      const cx = Math.min(Math.max(r.left + r.width / 2, 1), window.innerWidth - 1);
+      const cy = Math.min(Math.max(r.top + r.height / 2, 1), window.innerHeight - 1);
+      const hit = document.elementFromPoint(cx, cy);
+      if (!hit) return false;
+      if (hit.closest('app-tour-overlay')) return true;
+      return node.contains(hit) || hit.contains(node);
     };
 
     /**
