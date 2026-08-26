@@ -133,13 +133,22 @@
            và người dùng thấy banner "Start building..." nháy lên rồi biến mất ngay
            khi dữ liệu thật về, trông như một lỗi UI. -->
       @if (!workspacesReady()) {
-      <div class="flex flex-col gap-6 pb-12" aria-hidden="true">
+      <!-- Skeleton dùng class `skeleton` của daisyUI thay vì `animate-pulse` tự
+           dựng: nó đã có sẵn hiệu ứng quét sáng và tự tắt khi người dùng bật
+           "giảm chuyển động" trong hệ điều hành.
+           `aria-hidden` vì đây là chỗ giữ chỗ, trình đọc màn hình đọc lên chỉ
+           gây nhiễu — `aria-busy` ở khối cha mới là thứ báo "đang tải". -->
+      <div class="flex flex-col gap-6 pb-12" aria-busy="true" aria-label="Loading workspaces">
         @for (i of [0, 1]; track i) {
-        <div class="animate-pulse rounded-2xl border border-base-300 bg-base-100 p-4 shadow-xs">
-          <div class="mb-3 h-4 w-40 rounded bg-base-300"></div>
+        <div class="rounded-2xl border border-base-300 bg-base-100 p-4 shadow-xs" aria-hidden="true">
+          <div class="mb-1 flex items-center gap-2">
+            <div class="skeleton h-7 w-7 shrink-0 rounded-lg"></div>
+            <div class="skeleton h-4 w-40"></div>
+          </div>
+          <div class="skeleton mb-3 h-3 w-64"></div>
           <div class="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2.5">
             @for (j of [0, 1, 2]; track j) {
-            <div class="h-[92px] rounded-xl bg-base-200"></div>
+            <div class="skeleton h-[92px] rounded-xl"></div>
             }
           </div>
         </div>

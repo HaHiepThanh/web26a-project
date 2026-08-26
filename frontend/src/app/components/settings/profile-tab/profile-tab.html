@@ -173,3 +173,46 @@
     </form>
   </div>
 </section>
+
+<!-- 4. Liên kết Google — điều kiện để dùng nút họp trên trang Board -->
+<section class="mt-5 rounded-2xl border border-base-300/70 bg-base-100 p-5 shadow-xs">
+  <div class="mb-3 flex items-start gap-3">
+    <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-base-200">
+      <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M15 10l4.55-2.27A1 1 0 0121 8.62v6.76a1 1 0 01-1.45.89L15 14M5 6h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z" />
+      </svg>
+    </span>
+    <div class="min-w-0 flex-1">
+      <h3 class="text-sm font-black text-base-content">Google account</h3>
+      <p class="mt-0.5 text-2xs leading-relaxed text-base-content/60">
+        Link Google to start Meet calls from a board. The meeting is created in your own
+        Google Calendar — this app never stores your Google password or a long-lived token.
+      </p>
+    </div>
+  </div>
+
+  @if (googleEmail(); as linked) {
+    <div class="flex flex-wrap items-center gap-2 rounded-xl border border-success/30 bg-success/10 px-3 py-2.5">
+      <svg class="h-4 w-4 shrink-0 text-success" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+        <path d="M20 6L9 17l-5-5" />
+      </svg>
+      <span class="min-w-0 flex-1 truncate text-xs font-semibold text-base-content">{{ linked }}</span>
+      <button type="button" class="btn btn-ghost btn-xs font-semibold" [disabled]="googleBusy()" (click)="unlinkGoogle()">
+        Unlink
+      </button>
+    </div>
+  } @else {
+    <button type="button" class="btn btn-outline btn-sm gap-2 font-bold" [disabled]="googleBusy()" (click)="linkGoogle()">
+      @if (googleBusy()) {
+        <span class="loading loading-spinner h-4 w-4"></span> Linking...
+      } @else {
+        <svg class="h-4 w-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.65l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0012 23z"/><path fill="#FBBC05" d="M5.84 14.11a6.6 6.6 0 010-4.22V7.05H2.18a11 11 0 000 9.9l3.66-2.84z"/><path fill="#EA4335" d="M12 4.75c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 1.46 14.97.5 12 .5A11 11 0 002.18 7.05l3.66 2.84c.87-2.6 3.3-4.14 6.16-4.14z"/></svg>
+        Link Google account
+      }
+    </button>
+    <p class="mt-2 text-3xs leading-relaxed text-base-content/50">
+      You must pick the Google account for <b>{{ loginEmail() }}</b>. Choosing a different
+      one is rejected, so meetings always land in the right calendar.
+    </p>
+  }
+</section>

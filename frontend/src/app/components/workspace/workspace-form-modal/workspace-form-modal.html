@@ -46,9 +46,14 @@
             {{ descInput().length }}/300 characters
           </span>
         </div>
+        <!-- Chiều cao CỐ ĐỊNH + `resize-none`.
+             `rows="3"` chỉ đặt chiều cao BAN ĐẦU: người dùng vẫn kéo được góc
+             dưới phải để phóng to, và ô phóng to thì cả hộp thoại giãn theo, đẩy
+             mấy nút ở dưới trôi khỏi tầm mắt. Khoá lại rồi cho nội dung dài tự
+             cuộn bên trong — hộp thoại giữ nguyên kích thước dù gõ bao nhiêu. -->
         <textarea id="workspace-desc-input"
           maxlength="300"
-          class="textarea textarea-bordered border-base-300 focus:border-primary focus:ring-2 focus:ring-primary/20 w-full rounded-md font-medium text-base-content bg-base-100 shadow-xs text-sm leading-relaxed"
+          class="textarea textarea-bordered border-base-300 focus:border-primary focus:ring-2 focus:ring-primary/20 h-24 w-full resize-none overflow-y-auto rounded-md font-medium text-base-content bg-base-100 shadow-xs text-sm leading-relaxed"
           rows="3"
           placeholder="Describe the purpose of this workspace..." [ngModel]="descInput()"
           (ngModelChange)="descInput.set($event)" name="workspaceDesc"></textarea>

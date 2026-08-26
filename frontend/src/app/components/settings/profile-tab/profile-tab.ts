@@ -18,6 +18,7 @@ import {
 } from '@lucide/angular';
 import { User } from '../../../models';
 import { initialsOf } from '../../../mocks';
+import { GoogleMeetService } from '../../../services/google-meet.service';
 import { AuthService } from '../../../services/auth.service';
 import { checkPassword, type PasswordCheck } from '../../../utils/password.util';
 
@@ -71,6 +72,75 @@ export class ProfileTab {
   readonly avatarPreview = signal<string | null>(null);
   /** Đang lưu avatar (upload/gỡ) — khoá 2 nút lại, tránh bấm chồng trong lúc chờ. */
   readonly savingAvatar = signal(false);
+
+  // ---- Liên kết Google (điều kiện để dùng nút họp trên trang Board) ----
+  private readonly googleMeet = inject(GoogleMeetService);
+
+  /** Email Google đã nối. Signal chứ không computed: Firebase cập nhật
+   *  `providerData` ngoài hệ thống signal của Angular, nên phải tự đọc lại sau
+   *  mỗi lần nối/gỡ thì giao diện mới đổi. */
+  readonly googleEmail = signal(this.googleMeet.emailGoogle());
+  readonly loginEmail = signal(this.googleMeet.emailDangNhap());
+  readonly googleBusy = signal(false);
+
+  async linkGoogle(): Promise<void> {
+    if (this.googleBusy()) return;
+    this.googleBusy.set(true);
+    try {
+      const loi = await this.choToiDa(this.googleMeet.noiGoogle());
+      this.googleEmail.set(this.googleMeet.emailGoogle());
+
+      if (loi) {
+        this.flashMessage.emit({ message: loi, type: 'error' });
+      } else if (this.googleEmail()) {
+        this.flashMessage.emit({ message: 'Google account linked.', type: 'success' });
+      } else {
+        // Không lỗi mà cũng chưa nối được = người dùng đóng popup giữa chừng
+        // (kể cả khi popup đang hiện trang lỗi của Google). Vẫn phải nói một
+        // câu — im lặng thì họ tưởng nút hỏng và đi F5.
+        this.flashMessage.emit({
+          message: 'Linking was not completed. Please try again.',
+          type: 'info',
+        });
+      }
+    } finally {
+      // LUÔN tắt vòng quay, kể cả khi trên kia ném lỗi. Đây chính là chỗ trước
+      // đây bắt người dùng F5 mới bấm lại được.
+      this.googleBusy.set(false);
+    }
+  }
+
+  /**
+   * Chặn trường hợp popup treo không bao giờ trả lời.
+   *
+   * Firebase thường tự báo khi cửa sổ popup bị đóng, nhưng không phải lúc nào
+   * cũng vậy — Google hiện trang lỗi của họ, người dùng bỏ đi, và lời hứa
+   * (promise) nằm im mãi. Không có mốc thời gian thì nút quay vĩnh viễn.
+   */
+  private choToiDa(viec: Promise<string | null>): Promise<string | null> {
+    return Promise.race([
+      viec,
+      new Promise<string | null>((resolve) =>
+        setTimeout(() => resolve('Google did not respond in time. Please try again.'), 90_000),
+      ),
+    ]);
+  }
+
+  async unlinkGoogle(): Promise<void> {
+    if (this.googleBusy()) return;
+    this.googleBusy.set(true);
+    try {
+      const loi = await this.googleMeet.goLienKet();
+      this.googleEmail.set(this.googleMeet.emailGoogle());
+      this.flashMessage.emit(
+        loi
+          ? { message: loi, type: 'error' }
+          : { message: 'Google account unlinked.', type: 'info' },
+      );
+    } finally {
+      this.googleBusy.set(false);
+    }
+  }
   /** Dang goi Firebase doi mat khau — khoa nut, tranh bam chong. */
   readonly savingPassword = signal(false);
   readonly copiedUuid = signal(false);

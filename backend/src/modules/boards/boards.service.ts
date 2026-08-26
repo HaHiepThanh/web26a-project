@@ -61,6 +61,8 @@ interface BoardRow {
   visibility: string;
   background: string | null;
   background_image_path: string | null;
+  meet_url: string | null;
+  meet_created_by: string | null;
   created_by: string;
   created_at: string;
 }
@@ -81,6 +83,10 @@ export interface BoardResponse {
    * board vẫn hiện bình thường với màu nền, chỉ mất ảnh).
    */
   backgroundImageUrl: string | null;
+  /** Link Google Meet dùng chung. `null` = chưa ai mở cuộc họp cho board này. */
+  meetUrl: string | null;
+  /** Ai đã mở cuộc họp — giao diện dùng để nói "do X tạo". */
+  meetCreatedBy: string | null;
   /**
    * Người được chỉ định xem board. CHỈ có ý nghĩa khi `visibility === 'private'`;
    * với 'workspace'/'public' thì rỗng vì lúc đó cả workspace đều thấy.
@@ -119,6 +125,8 @@ function toBoard(row: BoardRow, memberIds: string[] = []): BoardResponse {
     background: row.background,
     backgroundImagePath: row.background_image_path,
     backgroundImageUrl: null,
+    meetUrl: row.meet_url,
+    meetCreatedBy: row.meet_created_by,
     createdBy: row.created_by,
     createdAt: row.created_at,
   };
@@ -644,6 +652,7 @@ export class BoardsService {
       memberIds?: string[];
       background?: string | null;
       backgroundImagePath?: string | null;
+      meetUrl?: string | null;
     },
   ): Promise<unknown> {
     const current = await this.findOne(uid, id); // ném 404 nếu không tồn tại / khác tổ chức
@@ -666,6 +675,13 @@ export class BoardsService {
     // localStorage, đổi máy là mất nền. Nhận `null` để người dùng gỡ nền về mặc định.
     if (changes.background !== undefined)
       patch.background = changes.background || null;
+    // Ghi kèm dấu vết ai/lúc nào — `meet_created_at` để về sau còn dọn được
+    // những cuộc họp bỏ quên, `meet_created_by` để giao diện nói rõ do ai mở.
+    if (changes.meetUrl !== undefined) {
+      patch.meet_url = changes.meetUrl || null;
+      patch.meet_created_at = changes.meetUrl ? new Date().toISOString() : null;
+      patch.meet_created_by = changes.meetUrl ? uid : null;
+    }
     if (changes.backgroundImagePath !== undefined) {
       patch.background_image_path = changes.backgroundImagePath || null;
     }
@@ -699,6 +715,8 @@ export class BoardsService {
       visibility: current.visibility,
       background: current.background,
       background_image_path: current.backgroundImagePath,
+      meet_url: current.meetUrl,
+      meet_created_by: current.meetCreatedBy,
       created_by: current.createdBy,
       created_at: current.createdAt,
     };

@@ -10,6 +10,8 @@ export function toBoard(row: ApiBoard, local: LocalBoardOverride | undefined): B
     visibility: row.visibility,
     background: (row.background as BoardBackground | null) ?? undefined,
     backgroundImageUrl: row.backgroundImageUrl ?? undefined,
+    meetUrl: row.meetUrl ?? undefined,
+    meetCreatedBy: row.meetCreatedBy ?? undefined,
     createdBy: row.createdBy,
     createdAt: row.createdAt,
   };

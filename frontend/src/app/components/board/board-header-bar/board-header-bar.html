@@ -36,6 +36,66 @@
       <svg lucideChartLine class="h-[15px] w-[15px]" [strokeWidth]="2"></svg>
       Stats &amp; Reports
     </button>
+
+    <!-- Google Meet. BA trạng thái, cố ý không gộp:
+         1. Đã có cuộc họp  → AI CŨNG vào được (kể cả thành viên thường).
+         2. Chưa có + mình quản lý được board → nút mở cuộc họp.
+         3. Chưa có + mình là thành viên thường → KHÔNG hiện gì. Hiện một nút
+            bấm vào chỉ để báo "bạn không có quyền" là trêu người dùng. -->
+    @if (meetUrl(); as link) {
+      <a
+        [href]="link"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="btn btn-success btn-sm gap-1.5"
+        title="Open the Google Meet room for this board"
+      >
+        <svg class="h-[15px] w-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M15 10l4.55-2.27A1 1 0 0121 8.62v6.76a1 1 0 01-1.45.89L15 14M5 6h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z" />
+        </svg>
+        Join meeting
+      </a>
+      @if (canManageMeet()) {
+        <button
+          type="button"
+          class="btn btn-ghost btn-sm px-2"
+          [disabled]="meetBusy()"
+          (click)="endMeet.emit()"
+          title="End the meeting for this board"
+          aria-label="End the meeting for this board"
+        >
+          <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+      }
+    } @else if (canManageMeet()) {
+      <!-- Chưa liên kết Google thì KHOÁ nút, không phải ẩn.
+           Ẩn đi thì người dùng chẳng có đường nào biết là cần liên kết; khoá
+           lại kèm lời mách nói rõ phải làm gì mới là chỉ đường. -->
+      <button
+        type="button"
+        class="btn btn-outline btn-sm gap-1.5"
+        [disabled]="meetBusy() || !googleLinked()"
+        (click)="startMeet.emit()"
+        [title]="googleLinked()
+          ? 'Create a Google Meet room named after this board'
+          : 'Link your Google account in Settings -> Profile to start meetings'"
+      >
+        @if (meetBusy()) {
+          <span class="loading loading-spinner h-[15px] w-[15px]"></span>
+          Starting...
+        } @else {
+          <svg class="h-[15px] w-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 10l4.55-2.27A1 1 0 0121 8.62v6.76a1 1 0 01-1.45.89L15 14M5 6h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z" />
+          </svg>
+          Start meeting
+          @if (!googleLinked()) {
+            <span class="badge badge-warning badge-xs font-bold">Google required</span>
+          }
+        }
+      </button>
+    }
   </div>
 
   <div class="flex flex-wrap items-center justify-end gap-2.5">

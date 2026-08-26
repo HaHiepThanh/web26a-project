@@ -24,6 +24,10 @@ export interface Board {
   /** Ảnh nền tuỳ chọn (base64, demo lưu tại chỗ như AttachmentService) — có thì ưu tiên
    *  hiển thị thay cho `background` (màu có sẵn). */
   backgroundImageUrl?: string;
+  /** Link Google Meet dùng chung cho board. Chưa ai mở họp thì không có. */
+  meetUrl?: string;
+  /** uid người đã mở cuộc họp. */
+  meetCreatedBy?: string;
   createdBy: string; // FK auth.users.id
   createdAt: string; // ISO timestamptz
 }

@@ -150,6 +150,8 @@ export interface ApiBoard {
   backgroundImagePath: string | null;
   /** Link ký tạm để tải ảnh nền (bucket riêng tư). `null` khi board không có ảnh. */
   backgroundImageUrl: string | null;
+  meetUrl: string | null;
+  meetCreatedBy: string | null;
   createdBy: string;
   createdAt: string;
 }

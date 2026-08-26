@@ -28,6 +28,17 @@ export class BoardHeaderBar {
   /** false = mất kết nối realtime → nội dung trên màn hình có thể đã cũ. */
   readonly realtimeConnected = input<boolean>(true);
 
+  // ---- Google Meet ----
+  /** Link phòng họp của board. Có = mọi người vào được; không = chưa ai mở. */
+  readonly meetUrl = input<string | null>(null);
+  /** Mình có quyền mở/gỡ cuộc họp không (owner/admin của tổ chức). */
+  readonly canManageMeet = input<boolean>(false);
+  /** Tài khoản đã nối Google chưa — chỉ để đổi lời mách trên nút, KHÔNG để ẩn
+   *  nút: ẩn thì người dùng không có đường nào biết là cần liên kết. */
+  readonly googleLinked = input<boolean>(false);
+  /** Đang chờ Google trả lời — khoá nút, tránh mở hai phòng cho cùng một board. */
+  readonly meetBusy = input<boolean>(false);
+
 
   /** Chỉ vẽ tối đa 4 avatar, còn lại gộp thành "+N" cho khỏi tràn thanh tiêu đề. */
   readonly VIEWERS_SHOWN = 4;
@@ -41,6 +52,9 @@ export class BoardHeaderBar {
   viewerLabel(v: BoardViewer): string {
     return v.displayName ?? 'Anonymous';
   }
+  readonly startMeet = output<void>();
+  readonly endMeet = output<void>();
+
   readonly listsCount = input<number>(0);
   readonly totalCards = input<number>(0);
   readonly viewMode = input<'status' | 'matrix'>('status');

@@ -267,6 +267,19 @@ export class Workspace {
    */
   private async loadWorkspaces(userId: string | undefined, orgId: string | null): Promise<void> {
     this.activeWorkspaceId.set(null);
+
+    // ĐỔI TỔ CHỨC = quay về trạng thái đang tải, và DỌN danh sách cũ.
+    //
+    // Trước đây `workspacesReady` chỉ bật `true` một lần rồi ở nguyên đó, nên
+    // đổi tổ chức là màn hình giữ nguyên workspace của tổ chức TRƯỚC cho tới
+    // khi dữ liệu mới về — người dùng nhìn thấy dữ liệu không thuộc về nơi họ
+    // vừa chuyển tới, tưởng là bấm nhầm hoặc app hỏng.
+    //
+    // Dọn `workspaces` chứ không chỉ hạ cờ: giữ lại thì có một nhịp mà cả
+    // skeleton lẫn danh sách cũ đều biến mất/hiện lộn xộn.
+    this.workspacesReady.set(false);
+    this.workspaces.set([]);
+
     if (!userId || !orgId) {
       this.workspaces.set([]);
       // Vẫn coi là "nạp xong": không có tổ chức thì cũng không có gì để chờ nữa,

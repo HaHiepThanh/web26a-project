@@ -5,6 +5,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  Matches,
   MaxLength,
 } from 'class-validator';
 import { BOARD_VISIBILITY } from './create-board.dto';
@@ -43,4 +44,18 @@ export class UpdateBoardDto {
   @IsString({ message: 'backgroundImagePath must be text or null.' })
   @MaxLength(400, { message: 'backgroundImagePath is too long.' })
   backgroundImagePath?: string | null;
+
+  /**
+   * Link Google Meet dùng chung cho board. `null` = gỡ cuộc họp.
+   *
+   * `Matches` chứ không chỉ `IsUrl`: trường này rồi sẽ thành một link người
+   * dùng bấm vào, nên phải chặn `javascript:` và mọi thứ trỏ ra ngoài Google
+   * Meet ngay tại cổng. Client tự dựng chuỗi này (nó gọi Calendar API), nên
+   * coi như dữ liệu KHÔNG tin được.
+   */
+  @IsOptional()
+  @Matches(/^https:\/\/meet\.google\.com\/[A-Za-z0-9-]+$/, {
+    message: 'meetUrl must be a https://meet.google.com/... link.',
+  })
+  meetUrl?: string | null;
 }

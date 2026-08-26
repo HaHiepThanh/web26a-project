@@ -14,6 +14,7 @@ import {
   User,
 } from '../../models';
 import { BoardStore } from '../../ngrx/board/board.store';
+import { OrganizationStore } from '../../ngrx/organization/organization.store';
 import { RouteContextStore } from '../../ngrx/route-context/route-context.store';
 import { ListStore } from '../../ngrx/list/list.store';
 import { CardStore } from '../../ngrx/card/card.store';
@@ -23,6 +24,7 @@ import { ChecklistStore } from '../../ngrx/checklist/checklist.store';
 import { CommentStore } from '../../ngrx/comment/comment.store';
 import { AttachmentStore } from '../../ngrx/attachment/attachment.store';
 import { RealtimeService } from '../../services/realtime.service';
+import { GoogleMeetService } from '../../services/google-meet.service';
 import { BoardPrefsStore } from '../../ngrx/board-prefs/board-prefs.store';
 import { TaskSuggestionStore } from '../../ngrx/task-suggestion/task-suggestion.store';
 import { TourStore } from '../../ngrx/tour/tour.store';
@@ -132,6 +134,8 @@ export class Board {
   private readonly commentService = inject(CommentStore);
   private readonly attachmentService = inject(AttachmentStore);
   private readonly realtime = inject(RealtimeService);
+  private readonly googleMeet = inject(GoogleMeetService);
+  private readonly orgs = inject(OrganizationStore);
   private readonly boardPrefs = inject(BoardPrefsStore);
   private readonly taskSuggestions = inject(TaskSuggestionStore);
   private readonly tour = inject(TourStore);
@@ -170,6 +174,71 @@ export class Board {
   // Banner "You have N card(s) due soon on this board" ĐÃ GỠ theo yêu cầu.
   // `CardStore.myDueCounts` vẫn còn và vẫn được dùng — chuông thông báo ở header
   // đọc nó qua `header-actions.service.ts`. Chỉ dải cảnh báo trên board là bỏ.
+
+  // ---- Google Meet gắn theo board ----
+
+  /** Link phòng họp — đọc từ board, tức từ SERVER, nên ai cũng thấy như nhau. */
+  readonly meetUrl = computed(() => this.board()?.meetUrl ?? null);
+  /** Chỉ owner/admin tổ chức mở/gỡ được cuộc họp. Backend cũng chặn (403), đây
+   *  chỉ là để không bày ra một cái nút bấm vào là báo lỗi. */
+  readonly canManageMeet = this.orgs.isAdminOrOwner;
+  readonly googleLinked = signal(this.googleMeet.daNoiGoogle());
+  readonly meetBusy = signal(false);
+
+  /**
+   * Mở phòng họp mang tên board.
+   *
+   * Chưa nối Google thì nối trước rồi mới tạo — gộp thành MỘT thao tác. Bắt
+   * người dùng bấm "liên kết" ở Cài đặt rồi quay lại board bấm tiếp là một
+   * đường vòng không cần thiết.
+   */
+  async startMeet(): Promise<void> {
+    if (this.meetBusy()) return;
+    const b = this.board();
+    if (!b) return;
+
+    this.meetBusy.set(true);
+    try {
+      if (!this.googleMeet.daNoiGoogle()) {
+        const loi = await this.googleMeet.noiGoogle();
+        this.googleLinked.set(this.googleMeet.daNoiGoogle());
+        // `null` cũng là kết quả của việc người dùng tự đóng popup — không phải
+        // lỗi, nhưng cũng chưa nối xong, nên dừng ở đây thay vì chạy tiếp.
+        if (loi) { this.addToast(loi, 'error'); return; }
+        if (!this.googleMeet.daNoiGoogle()) return;
+      }
+
+      const { meetUrl, error } = await this.googleMeet.taoPhongHop(b.name);
+      if (error || !meetUrl) {
+        if (error) this.addToast(error, 'error');
+        return;
+      }
+
+      const loiLuu = await this.boardService.luuLinkMeet(this.boardId, meetUrl);
+      if (loiLuu) {
+        // Phòng ĐÃ tạo trên Google rồi mà lưu hỏng — đưa link tận tay thay vì
+        // để công đó mất trắng.
+        this.addToast(`${loiLuu} The meeting was created: ${meetUrl}`, 'error');
+        return;
+      }
+      this.addToast('Meeting room opened for this board.', 'success');
+    } finally {
+      this.meetBusy.set(false);
+    }
+  }
+
+  /** Gỡ cuộc họp khỏi board. Không xoá sự kiện bên Google — nó nằm trong lịch
+   *  riêng của người tạo, ta không đụng vào. */
+  async endMeet(): Promise<void> {
+    if (this.meetBusy()) return;
+    this.meetBusy.set(true);
+    try {
+      const loi = await this.boardService.luuLinkMeet(this.boardId, null);
+      this.addToast(loi ?? 'Meeting removed from this board.', loi ? 'error' : 'info');
+    } finally {
+      this.meetBusy.set(false);
+    }
+  }
 
   // ---- Thu gọn danh sách (#9) — lưu theo user ở localStorage, không cần cột DB mới ----
   readonly collapsedListIds = signal<Set<string>>(new Set());

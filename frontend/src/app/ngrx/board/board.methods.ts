@@ -40,9 +40,16 @@ export function boardMethods<S extends Store>(store: S, api = inject(ApiService)
     /** Áp thay đổi board nhận từ WebSocket — chỉ `name`/`visibility`, màu/ảnh
      *  nền vẫn ở localStorage (server chưa lưu được ảnh). */
     applyRemoteBoard(r: ApiBoard): void {
-      const current = store.entities().find((b) => b.id === r.id);
-      const merged = toBoard(r, localFor(r.id));
-      patchState(store, upsertEntity(current ? { ...merged, ...current, name: r.name, visibility: r.visibility } : merged));
+      // ⚠️ Dữ liệu SERVER thắng. Trước đây dòng này là
+      //    `{ ...merged, ...current, name, visibility }` — tức bản CŨ ở local
+      //    được spread SAU nên đè ngược lên dữ liệu vừa nhận, và chỉ `name` với
+      //    `visibility` được cứu ra tường minh. Mọi thay đổi khác đến qua
+      //    WebSocket đều bị vứt lặng lẽ: người kia mở cuộc họp mà mình không
+      //    thấy nút "Join meeting" hiện lên, phải F5 mới có.
+      //
+      //    `toBoard` đã lo phần dự phòng localStorage rồi, và `upsertEntity`
+      //    vốn GỘP chứ không thay thế, nên không cần giữ `current` làm gì.
+      patchState(store, upsertEntity(toBoard(r, localFor(r.id))));
     },
 
     async loadBoards(workspaceId: string): Promise<void> {
@@ -158,6 +165,40 @@ export function boardMethods<S extends Store>(store: S, api = inject(ApiService)
       return board;
     },
 
+    /**
+     * Lưu link Meet lên server để MỌI thành viên vào cùng một phòng.
+     *
+     * Không tạo phòng ở đây — việc đó do `GoogleMeetService` làm trong trình
+     * duyệt của chủ board. Hàm này chỉ chở đúng một chuỗi URL đã có sẵn.
+     *
+     * Backend phát `board.updated` sau khi ghi, nên người đang mở board thấy nút
+     * đổi thành "Vào họp" ngay, không phải F5.
+     */
+    async luuLinkMeet(id: string, meetUrl: string | null): Promise<string | null> {
+      try {
+        const row = await api.patch<ApiBoard>(`/boards/${id}`, { meetUrl });
+        const cu = store.entities().find((b) => b.id === id);
+        if (cu) {
+          // ⚠️ Gán `undefined` TƯỜNG MINH, KHÔNG dùng `delete`.
+          //    `upsertEntity` gộp bằng `{ ...cũ, ...mới }` (xem
+          //    `setEntityMutably` với `replace = false`). `delete` làm khoá
+          //    VẮNG MẶT khỏi object, mà khoá vắng mặt thì phép gộp giữ nguyên
+          //    giá trị cũ — nên đóng cuộc họp xong link vẫn còn, phải F5 mới
+          //    thấy nút "Start meeting" quay lại. Khoá có mặt mang giá trị
+          //    `undefined` thì mới ghi đè được.
+          const moi: Board = {
+            ...cu,
+            meetUrl: row.meetUrl ?? undefined,
+            meetCreatedBy: row.meetCreatedBy ?? undefined,
+          };
+          patchState(store, upsertEntity(moi));
+        }
+        return null;
+      } catch (e) {
+        return describeError(e, 'Could not save the meeting link.');
+      }
+    },
+
     async updateBoard(
       id: string,
       changes: Partial<Pick<Board, 'name' | 'visibility' | 'background' | 'backgroundImageUrl'>>,
@@ -190,9 +231,10 @@ export function boardMethods<S extends Store>(store: S, api = inject(ApiService)
             // Dựng rồi mới gán, không spread thẳng `?? undefined`: `Board` khai
             // trường này là optional, còn spread một giá trị `undefined` tường
             // minh lại biến nó thành bắt buộc-mà-rỗng — TypeScript từ chối.
-            const moi: Board = { ...existingBoard };
-            if (row.backgroundImageUrl) moi.backgroundImageUrl = row.backgroundImageUrl;
-            else delete moi.backgroundImageUrl;
+            const moi: Board = {
+              ...existingBoard,
+              backgroundImageUrl: row.backgroundImageUrl ?? undefined,
+            };
             patchState(store, upsertEntity(moi));
           }
           // Đã có bản trên server thì bản localStorage chỉ còn là rác chiếm quota.
@@ -218,8 +260,9 @@ export function boardMethods<S extends Store>(store: S, api = inject(ApiService)
         if (existingBoard?.backgroundImageUrl) {
           try {
             await api.patch<ApiBoard>(`/boards/${id}`, { backgroundImagePath: null });
-            const moi: Board = { ...existingBoard };
-            delete moi.backgroundImageUrl;
+            // `undefined` tường minh, không `delete` — xem chú thích trong
+            // `luuLinkMeet` về việc `upsertEntity` gộp chứ không thay thế.
+            const moi: Board = { ...existingBoard, backgroundImageUrl: undefined };
             patchState(store, upsertEntity(moi));
           } catch (e) {
             return describeError(e, 'Failed to remove the background image.');
