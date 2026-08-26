@@ -54,6 +54,20 @@ export interface TourState {
    *    đầu", không phải "lớn hơn 0".
    */
   baseline: TourCounts;
+  /**
+   * `baseline` có đáng tin không.
+   *
+   * Bắt đầu tour ở một trang KHÔNG báo số lượng (trang Cài đặt, qua nút "Restart
+   * tutorial") thì lúc chốt mốc ta chưa biết gì cả — `counts` vẫn là 0 hết vì
+   * app vừa tải lại. Về tới trang workspace, trang báo "2 workspace, 3 board",
+   * vượt mốc 0, và tour nhảy qua hai bước người dùng chưa hề làm.
+   *
+   * Nên: mốc chốt khi chưa có số liệu bị đánh dấu KHÔNG đáng tin, và lần báo số
+   * đầu tiên chỉ dùng để dựng lại mốc chứ không được tính là tiến độ.
+   */
+  baselineFresh: boolean;
+  /** Đã có trang nào báo số lượng kể từ khi app tải chưa. */
+  countsSeen: boolean;
   /** Số lượng mới nhất các trang báo về. */
   counts: TourCounts;
   /** Trạng thái bật/tắt mới nhất các trang báo về (tầng 2). */
@@ -76,6 +90,8 @@ const initialState: TourState = {
   invitationOpen: false,
   checklistCollapsed: false,
   baseline: EMPTY_COUNTS,
+  baselineFresh: false,
+  countsSeen: false,
   counts: EMPTY_COUNTS,
   flags: EMPTY_FLAGS,
   seedOfferOpen: false,
@@ -281,6 +297,7 @@ export const TourStore = signalStore(
           mode,
           stepIndex: firstUnfinished === -1 ? 0 : firstUnfinished,
           baseline: store.counts(),
+          baselineFresh: store.countsSeen(),
         });
         persist({
           status: 'running',
@@ -296,6 +313,7 @@ export const TourStore = signalStore(
           mode: 'full',
           stepIndex: 0,
           baseline: store.counts(),
+          baselineFresh: store.countsSeen(),
         });
         persist({ status: 'running', currentStep: TOUR_STEPS[0].id, completed: [] });
       },
@@ -332,6 +350,12 @@ export const TourStore = signalStore(
         // đánh thức mọi effect đang đọc `counts` — và nếu chỗ gọi quên
         // `untracked()` thì thành vòng lặp vô hạn khoá cứng trang. Chốt chặn ở
         // đây để lỗi đó không thể tái diễn từ một chỗ gọi khác.
+        // "Đã có trang báo số" là thông tin RIÊNG, không phụ thuộc số có đổi hay
+        // không. Ghi trước chốt chặn bên dưới: một trang báo đúng bằng giá trị
+        // cũ vẫn chứng minh rằng ta đã biết số thật, và `start()` cần biết điều
+        // đó để chốt mốc đáng tin. Chỉ ghi một lần nên không đánh thức ai.
+        if (!store.countsSeen()) patchState(store, { countsSeen: true });
+
         const same =
           prev.workspaces === merged.workspaces &&
           prev.boards === merged.boards &&
@@ -339,7 +363,20 @@ export const TourStore = signalStore(
           prev.cards === merged.cards;
         if (same) return;
 
-        patchState(store, { counts: merged });
+        // Mốc chưa đáng tin (tour khởi động ở trang không báo số, ví dụ bấm
+        // "Restart tutorial" từ Cài đặt): lần báo số ĐẦU TIÊN chỉ dùng để dựng
+        // lại mốc, không được tính là người dùng vừa làm được gì.
+        if (!store.baselineFresh()) {
+          patchState(store, {
+            counts: merged,
+            baseline: merged,
+            baselineFresh: true,
+            countsSeen: true,
+          });
+          return;
+        }
+
+        patchState(store, { counts: merged, countsSeen: true });
         tryAdvance();
       },
 

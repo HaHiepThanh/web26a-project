@@ -72,6 +72,7 @@ describe('TourStore', () => {
   it('có thêm workspace thì tự sang bước 2', () => {
     const store = make();
     store.hydrate(emptyOnboardingState());
+    store.observe({ workspaces: 0, boards: 0, lists: 0, cards: 0 });
     store.start('full');
 
     store.observe({ workspaces: 1 });
@@ -83,12 +84,33 @@ describe('TourStore', () => {
   it('số lượng KHÔNG tăng thì đứng yên — bấm nút mà API lỗi không được đi tiếp', () => {
     const store = make();
     store.hydrate(emptyOnboardingState());
+    store.observe({ workspaces: 0, boards: 0, lists: 0, cards: 0 });
     store.start('full');
 
     store.observe({ workspaces: 0 });
 
     expect(store.currentStep()?.id).toBe('create-workspace');
     expect(store.onboarding().completed).toEqual([]);
+  });
+
+  it('"Restart tutorial" từ trang Cài đặt KHÔNG được nhảy qua bước nào', () => {
+    const store = make();
+    store.hydrate(emptyOnboardingState());
+
+    // Trang Cài đặt không báo số lượng, và vừa tải lại app nên counts còn là 0.
+    // Chốt mốc lúc này là chốt bằng 0 — không đáng tin.
+    store.restart();
+    expect(store.currentStep()?.id).toBe('create-workspace');
+
+    // Về tới trang workspace, trang báo tài khoản vốn đã có 2 workspace, 3 board.
+    // Đây là DỰNG LẠI MỐC, không phải người dùng vừa tạo ra chúng.
+    store.observe({ workspaces: 2, boards: 3 });
+    expect(store.currentStep()?.id).toBe('create-workspace');
+    expect(store.completedCount()).toBe(0);
+
+    // Chỉ khi tạo thêm thật mới được đi tiếp.
+    store.observe({ workspaces: 3 });
+    expect(store.currentStep()?.id).toBe('create-board');
   });
 
   it('chạy lại trên tài khoản đã có sẵn dữ liệu thì KHÔNG nhảy hết các bước', () => {
@@ -113,6 +135,7 @@ describe('TourStore', () => {
   /** Chạy hết tầng 1 ở chế độ đã cho. */
   const chayHetTang1 = (store: ReturnType<typeof make>, mode: 'full' | 'basics') => {
     store.hydrate(emptyOnboardingState());
+    store.observe({ workspaces: 0, boards: 0, lists: 0, cards: 0 });
     store.start(mode);
     store.observe({ workspaces: 1 });
     store.observe({ boards: 1 });
@@ -134,6 +157,7 @@ describe('TourStore', () => {
   it('"Just the basics" đếm tổng số bước là 4, không phải 7', () => {
     const store = make();
     store.hydrate(emptyOnboardingState());
+    store.observe({ workspaces: 0, boards: 0, lists: 0, cards: 0 });
     store.start('basics');
     expect(store.totalSteps()).toBe(4);
 
@@ -166,6 +190,7 @@ describe('TourStore', () => {
   it('bấm Skip ở bước cuối tầng 1 cũng dừng lại hỏi gieo, không rơi thẳng vào tầng 2', () => {
     const store = make();
     store.hydrate(emptyOnboardingState());
+    store.observe({ workspaces: 0, boards: 0, lists: 0, cards: 0 });
     store.start('full');
     store.skipStep();
     store.skipStep();
@@ -249,6 +274,7 @@ describe('TourStore', () => {
   it('bỏ qua một bước BẮT BUỘC ở cuối thì vẫn là skipped', () => {
     const store = make();
     store.hydrate(emptyOnboardingState());
+    store.observe({ workspaces: 0, boards: 0, lists: 0, cards: 0 });
     store.start('basics');
     store.skipStep();
     store.skipStep();
@@ -299,6 +325,7 @@ describe('TourStore', () => {
   it('đang chạy tour thì trạng thái rỗng từ server KHÔNG được ghi đè', () => {
     const store = make();
     store.hydrate(emptyOnboardingState());
+    store.observe({ workspaces: 0, boards: 0, lists: 0, cards: 0 });
     store.start('full');
     store.observe({ workspaces: 1 });
     expect(store.currentStep()?.id).toBe('create-board');
@@ -314,6 +341,7 @@ describe('TourStore', () => {
   it('server vẫn ghi đè được khi mang thông tin thật', () => {
     const store = make();
     store.hydrate(emptyOnboardingState());
+    store.observe({ workspaces: 0, boards: 0, lists: 0, cards: 0 });
     store.start('full');
 
     store.hydrate({ ...emptyOnboardingState(), status: 'done' });
