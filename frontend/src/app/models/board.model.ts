@@ -33,3 +33,15 @@ export interface BoardMember {
   boardId: string; // FK boards.id
   userId: string; // FK auth.users.id
 }
+
+/** Kết quả tìm kiếm board từ API `GET /boards/search?q=...` */
+export interface BoardSearchResult {
+  id: string;
+  name: string;
+  workspaceId: string;
+  workspaceName: string;
+  orgId: string;
+  orgSlug: string;
+  visibility: BoardVisibility;
+  background: string | null;
+}

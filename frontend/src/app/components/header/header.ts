@@ -16,8 +16,9 @@ import {
   LucideUser,
   LucideUserPlus,
   LucideCheck,
+  LucideX,
 } from '@lucide/angular';
-import { AppNotification } from '../../models';
+import { AppNotification, BoardSearchResult } from '../../models';
 import { AuthService } from '../../services/auth.service';
 import { HeaderActionsService } from '../../services/header-actions.service';
 import { RealtimeService } from '../../services/realtime.service';
@@ -54,6 +55,7 @@ const INVITE_TOAST_MS = 6000;
     LucideSun,
     LucideUser,
     LucideUserPlus,
+    LucideX,
     NotificationsPanel,
     InvitesPanel,
   ],
@@ -142,6 +144,7 @@ export class Header {
       this.createMenuOpen.set(false);
       this.inviteMenuOpen.set(false);
       this.notifyMenuOpen.set(false);
+      this.actions.closeSearchDropdown();
     }
   }
 
@@ -149,6 +152,7 @@ export class Header {
     this.menuOpen.set(false);
     this.createMenuOpen.set(false);
     this.notifyMenuOpen.set(false);
+    this.actions.closeSearchDropdown();
     this.inviteMenuOpen.update((v) => !v);
   }
 
@@ -156,16 +160,19 @@ export class Header {
     this.menuOpen.set(false);
     this.createMenuOpen.set(false);
     this.inviteMenuOpen.set(false);
+    this.actions.closeSearchDropdown();
     this.notifyMenuOpen.update((v) => !v);
   }
 
   toggleUserMenu(): void {
     this.createMenuOpen.set(false);
+    this.actions.closeSearchDropdown();
     this.menuOpen.update((v) => !v);
   }
 
   toggleCreateMenu(): void {
     this.menuOpen.set(false);
+    this.actions.closeSearchDropdown();
     this.createMenuOpen.update((v) => !v);
   }
 
@@ -191,7 +198,20 @@ export class Header {
   }
 
   onSearchInput(event: Event): void {
-    this.actions.setSearchQuery((event.target as HTMLInputElement).value);
+    this.actions.onSearchInput((event.target as HTMLInputElement).value);
+  }
+
+  onSearchFocus(): void {
+    this.actions.onSearchFocus();
+  }
+
+  selectBoard(board: BoardSearchResult): void {
+    this.actions.openBoard(board);
+  }
+
+  clearSearch(inputEl?: HTMLInputElement): void {
+    if (inputEl) inputEl.value = '';
+    this.actions.onSearchInput('');
   }
 
   requestCreateBoard(): void {

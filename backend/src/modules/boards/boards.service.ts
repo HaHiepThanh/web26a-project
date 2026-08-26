@@ -72,6 +72,17 @@ export interface BoardResponse {
   createdAt: string;
 }
 
+export interface BoardSearchResult {
+  id: string;
+  name: string;
+  workspaceId: string;
+  workspaceName: string;
+  orgId: string;
+  orgSlug: string;
+  visibility: string;
+  background: string | null;
+}
+
 /**
  * Đổi snake_case của Supabase sang camelCase trước khi trả ra.
  *
@@ -313,6 +324,109 @@ export class BoardsService {
           (theoBoard.get(b.id) ?? []).includes(uid),
       )
       .map((b) => toBoard(b, theoBoard.get(b.id) ?? []));
+  }
+
+  /**
+   * Tìm kiếm board theo từ khoá — dùng cho thanh Search trong Header (đặc biệt khi ở trang Settings).
+   *
+   * Chỉ trả về các board mà user ĐƯỢC PHÉP TRUY CẬP:
+   *   1. Thuộc tổ chức user đang tham gia (nếu truyền `orgId` thì lọc theo org đó).
+   *   2. Workspace `restricted` chỉ lấy nếu user là thành viên trong `workspace_members`.
+   *   3. Board `private` chỉ lấy nếu user có tên trong `board_members`.
+   */
+  async search(
+    uid: string,
+    query: string = '',
+    orgId?: string,
+  ): Promise<BoardSearchResult[]> {
+    const sb = this.supabase.client;
+
+    // 1. Lấy danh sách tổ chức user tham gia
+    let orgQuery = sb
+      .from('organization_members')
+      .select('org_id, organizations(slug)')
+      .eq('user_id', uid);
+
+    if (orgId) {
+      orgQuery = orgQuery.eq('org_id', orgId);
+    }
+
+    const { data: memberships, error: memberError } = await orgQuery;
+    if (memberError) {
+      this.logger.error(`Đọc tổ chức thất bại: ${memberError.message}`);
+      throw new InternalServerErrorException('Failed to search boards');
+    }
+
+    if (!memberships?.length) return [];
+    const orgIds = memberships.map((m) => m.org_id as string);
+    const slugByOrgId = new Map<string, string>();
+    for (const m of memberships) {
+      const org = m.organizations as unknown as { slug: string } | null;
+      if (org?.slug) slugByOrgId.set(m.org_id as string, org.slug);
+    }
+
+    // 2. Lấy workspace hợp lệ mà user có quyền xem
+    const { data: wsRows, error: wsError } = await sb
+      .from('workspaces')
+      .select('id, org_id, name, visibility, workspace_members(user_id)')
+      .in('org_id', orgIds);
+
+    if (wsError) {
+      this.logger.error(`Đọc workspace thất bại: ${wsError.message}`);
+      throw new InternalServerErrorException('Failed to search boards');
+    }
+
+    const allowedWorkspaces = (wsRows ?? []).filter((w) => {
+      if (w.visibility !== 'restricted') return true;
+      const members =
+        (w.workspace_members as unknown as { user_id: string }[]) ?? [];
+      return members.some((m) => m.user_id === uid);
+    });
+
+    if (!allowedWorkspaces.length) return [];
+    const wsIds = allowedWorkspaces.map((w) => w.id);
+    const wsMap = new Map(allowedWorkspaces.map((w) => [w.id, w]));
+
+    // 3. Tìm boards trong các workspace này
+    let boardQuery = sb
+      .from('boards')
+      .select(
+        'id, org_id, workspace_id, name, visibility, background, board_members(user_id)',
+      )
+      .in('workspace_id', wsIds);
+
+    const cleanQ = query?.trim();
+    if (cleanQ) {
+      boardQuery = boardQuery.ilike('name', `%${cleanQ}%`);
+    }
+
+    const { data: boardRows, error: boardError } =
+      await boardQuery.order('name');
+    if (boardError) {
+      this.logger.error(`Tìm kiếm board thất bại: ${boardError.message}`);
+      throw new InternalServerErrorException('Failed to search boards');
+    }
+
+    return (boardRows ?? [])
+      .filter((b) => {
+        if (b.visibility !== 'private') return true;
+        const bMembers =
+          (b.board_members as unknown as { user_id: string }[]) ?? [];
+        return bMembers.some((m) => m.user_id === uid);
+      })
+      .map((b) => {
+        const ws = wsMap.get(b.workspace_id);
+        return {
+          id: b.id,
+          name: b.name,
+          workspaceId: b.workspace_id,
+          workspaceName: ws?.name ?? '',
+          orgId: b.org_id,
+          orgSlug: slugByOrgId.get(b.org_id) ?? '',
+          visibility: b.visibility,
+          background: b.background,
+        };
+      });
   }
 
   /**

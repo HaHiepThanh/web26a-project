@@ -1,8 +1,9 @@
-import { Injectable, computed, inject } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { AppNotification } from '../models';
+import { AppNotification, BoardSearchResult } from '../models';
 import { CardStore } from '../ngrx/card/card.store';
 import { OrganizationStore } from '../ngrx/organization/organization.store';
+import { ApiService } from './api.service';
 import { NotificationService } from './notification.service';
 import { ThemeService } from './theme.service';
 import { WorkspaceUiService } from './workspace-ui.service';
@@ -23,6 +24,7 @@ import { WorkspaceUiService } from './workspace-ui.service';
 @Injectable({ providedIn: 'root' })
 export class HeaderActionsService {
   private readonly router = inject(Router);
+  private readonly api = inject(ApiService);
   private readonly cardService = inject(CardStore);
   private readonly orgService = inject(OrganizationStore);
   private readonly notificationService = inject(NotificationService);
@@ -38,6 +40,15 @@ export class HeaderActionsService {
 
   readonly myInvites = this.orgService.myInvites;
   readonly pendingInviteCount = this.orgService.pendingInviteCount;
+
+  /* ---------------------- tìm kiếm bảng (Boards Search) ---------------------- */
+
+  readonly searchQuery = signal('');
+  readonly searchResults = signal<BoardSearchResult[]>([]);
+  readonly searchLoading = signal(false);
+  readonly searchDropdownOpen = signal(false);
+
+  private searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
   /** Thành viên thường không tạo được workspace/board — ẩn mục trong menu tạo
    *  nhanh cho gọn mắt. Backend (assertCanManage) mới là nơi chặn thật. */
@@ -96,7 +107,72 @@ export class HeaderActionsService {
   }
 
   setSearchQuery(value: string): void {
+    this.onSearchInput(value);
+  }
+
+  isSettingsPage(): boolean {
+    return this.router.url.includes('/settings');
+  }
+
+  onSearchInput(value: string): void {
+    this.searchQuery.set(value);
     this.workspaceUi.setSearchQuery(value);
+
+    const trimmed = value.trim();
+
+    // Khi ở trang Settings (hoặc khi có từ khóa tìm kiếm):
+    // Xổ dropdown và gọi API tìm kiếm
+    if (this.isSettingsPage() || trimmed.length > 0) {
+      this.searchDropdownOpen.set(true);
+      if (this.searchDebounceTimer) {
+        clearTimeout(this.searchDebounceTimer);
+      }
+      this.searchDebounceTimer = setTimeout(() => {
+        void this.fetchBoardSearchResults(trimmed);
+      }, 200);
+    } else {
+      this.searchDropdownOpen.set(false);
+      this.searchResults.set([]);
+    }
+  }
+
+  onSearchFocus(): void {
+    if (this.isSettingsPage() || this.searchQuery().trim().length > 0) {
+      this.searchDropdownOpen.set(true);
+      if (this.searchResults().length === 0) {
+        void this.fetchBoardSearchResults(this.searchQuery().trim());
+      }
+    }
+  }
+
+  async fetchBoardSearchResults(query: string): Promise<void> {
+    this.searchLoading.set(true);
+    try {
+      const orgId = this.orgService.activeOrgId();
+      const params = new URLSearchParams();
+      if (query) params.set('q', query);
+      if (orgId) params.set('orgId', orgId);
+
+      const qs = params.toString() ? `?${params.toString()}` : '';
+      const results = await this.api.get<BoardSearchResult[]>(`/boards/search${qs}`);
+      this.searchResults.set(results);
+    } catch {
+      this.searchResults.set([]);
+    } finally {
+      this.searchLoading.set(false);
+    }
+  }
+
+  openBoard(board: BoardSearchResult): void {
+    this.searchDropdownOpen.set(false);
+    this.searchQuery.set('');
+    this.workspaceUi.setSearchQuery('');
+    const slug = board.orgSlug || this.orgService.activeOrgSlug();
+    void this.router.navigate(['/', slug, 'board', board.id]);
+  }
+
+  closeSearchDropdown(): void {
+    this.searchDropdownOpen.set(false);
   }
 
   /** Tạo nhanh chỉ có nghĩa ở trang Workspace (nơi có modal tương ứng), nên đặt

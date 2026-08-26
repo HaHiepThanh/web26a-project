@@ -29,6 +29,19 @@ export class BoardsController {
     return this.boards.findAll(user.uid, workspaceId);
   }
 
+  /**
+   * GET /boards/search?q=...&orgId=...
+   * Phải đặt trước :id để chuỗi 'search' không bị nuốt thành ID của board.
+   */
+  @Get('search')
+  search(
+    @CurrentUser() user: CurrentUserInfo,
+    @Query('q') query: string = '',
+    @Query('orgId') orgId?: string,
+  ) {
+    return this.boards.search(user.uid, query, orgId);
+  }
+
   @Get(':id')
   findOne(@CurrentUser() user: CurrentUserInfo, @Param('id') id: string) {
     return this.boards.findOne(user.uid, id);
