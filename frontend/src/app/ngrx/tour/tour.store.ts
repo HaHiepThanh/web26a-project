@@ -681,6 +681,12 @@ export const TourStore = signalStore(
         patchState(store, { checklistCollapsed: !store.checklistCollapsed() });
       },
 
+      /** Đặt thẳng trạng thái thu gọn — dùng cho mặc định theo bề rộng màn hình. */
+      setChecklistCollapsed(value: boolean): void {
+        if (store.checklistCollapsed() === value) return;
+        patchState(store, { checklistCollapsed: value });
+      },
+
       /**
        * Ẩn hẳn thanh checklist — người dùng dứt khoát không muốn nữa.
        *

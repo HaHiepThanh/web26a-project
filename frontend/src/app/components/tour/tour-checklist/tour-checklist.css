@@ -115,11 +115,15 @@
   to   { opacity: 1; transform: none; }
 }
 
-/* Ở màn hẹp thu về một dải mỏng sát đáy, không chiếm mất góc thao tác. */
+/* Ở màn hẹp thu về một dải mỏng sát đáy, không chiếm mất góc thao tác.
+   `right: 76px` chứ không 12px: góc dưới-phải là chỗ của nút chat nổi
+   (`chat-mobile-fab`, 56px + lề). Kéo dài hết bề ngang là thanh này nằm đè lên
+   đúng nút đó — đo ở 360px: checklist 12–348, FAB 288–344, chồng nhau hoàn toàn
+   và người dùng không mở được chat. */
 @media (max-width: 560px) {
   .tour-checklist {
     left: 12px;
-    right: 12px;
+    right: 76px;
     bottom: 12px;
     width: auto;
   }

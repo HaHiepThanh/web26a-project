@@ -42,6 +42,16 @@ export class TourChecklist {
     Math.round((this.doneCount() / this.total()) * 100),
   );
 
+  constructor() {
+    // Màn hẹp thì mặc định THU GỌN.
+    //
+    // Ở 360×640 thanh này mở sẵn chiếm từ y=379 tới 628 — gần 40% chiều cao màn
+    // hình, và nó nằm đè lên chỗ thao tác. Trên desktop thì 248px ở góc là vô
+    // hại, nhưng cùng một nội dung trên điện thoại là chắn đường. Đặt một lần
+    // lúc khởi tạo, sau đó người dùng bấm mở là quyền của họ.
+    if (window.innerWidth < 768) this.tour.setChecklistCollapsed(true);
+  }
+
   onToggle(): void {
     this.tour.toggleChecklist();
   }
