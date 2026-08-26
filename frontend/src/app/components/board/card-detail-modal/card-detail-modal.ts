@@ -135,8 +135,20 @@ export class CardDetailModal {
   readonly saving = signal(false);
   /** Vừa lưu xong — hiện "Đã lưu" vài giây để người dùng biết chắc là đã ăn. */
   readonly justSaved = signal(false);
+  /** Đã bấm "Lưu thay đổi" thành công ít nhất 1 lần từ lúc thẻ này được mở.
+   *  `dirty()` tự trở về false ngay sau khi lưu (bản nháp lại khớp thẻ đã lưu),
+   *  nên KHÔNG thể dùng `!dirty()` một mình để suy ra "thẻ chưa từng được sửa" —
+   *  làm vậy thì gõ tên xong bấm Lưu rồi bấm đóng sẽ bị hiểu nhầm thành "bấm nhầm
+   *  chưa đụng gì" và xoá mất thẻ vừa lưu. Cờ này chặn đúng trường hợp đó. */
+  private readonly savedOnce = signal(false);
   /** Bấm ra ngoài khi còn thay đổi chưa lưu → hiện dải hỏi lại thay vì đóng luôn. */
   readonly confirmClose = signal(false);
+  /** Bấm "Delete card" → hiện dải hỏi lại NGAY TRONG modal thay vì `window.confirm`.
+   *  Trình duyệt (Chrome) tự tắt hộp `confirm()`/`alert()` sau khi trang gọi liên
+   *  tiếp nhiều lần trong thời gian ngắn — lúc đó `confirm()` trả `false` NGAY LẬP
+   *  TỨC, không hiện gì cả, người dùng bấm nút mà tưởng nó không phản hồi. Dải hỏi
+   *  lại tự vẽ bằng HTML không bao giờ bị chặn kiểu đó. */
+  readonly confirmDelete = signal(false);
 
   private nạpBảnNháp(card: Card): void {
     this.draftTitle.set(card.title);
@@ -145,6 +157,7 @@ export class CardDetailModal {
     this.draftDueDate.set(card.dueDate ?? '');
     this.draftPriority.set(card.priority);
     this.confirmClose.set(false);
+    this.confirmDelete.set(false);
   }
 
   /** Còn thay đổi chưa lưu không? Quyết định việc hiện nút Lưu và dải hỏi lại. */
@@ -205,6 +218,7 @@ export class CardDetailModal {
     // MỘT request cho tất cả trường đã đổi, thay vì mỗi ô một request như trước.
     await this.cardService.updateCard(c.id, changes);
     this.saving.set(false);
+    this.savedOnce.set(true);
 
     for (const d of nhatKy) this.log(d);
     this.flashSaved();
@@ -239,6 +253,7 @@ export class CardDetailModal {
     () =>
       this.autoFocusTitle() &&
       !this.dirty() &&
+      !this.savedOnce() &&
       this.attachments().length === 0 &&
       this.selectedLabelIds().length === 0 &&
       this.checklistService.itemsFor(this.card().id).length === 0 &&
@@ -362,7 +377,11 @@ export class CardDetailModal {
   }
 
   requestDelete(): void {
-    if (!window.confirm(`Delete card "${this.card().title}"? This cannot be undone.`)) return;
+    this.confirmDelete.set(true);
+  }
+
+  confirmDeleteCard(): void {
+    this.confirmDelete.set(false);
     void this.cardService.deleteCard(this.card().id, this.card().listId);
     this.checklistService.clearCard(this.card().id);
     this.commentService.clearCard(this.card().id);
