@@ -142,7 +142,7 @@ export class RealtimeGateway
           .select('org_id')
           .eq('user_id', decoded.uid);
         for (const t of toChuc ?? []) {
-          await client.join(orgRoom((t as { org_id: string }).org_id));
+          await client.join(orgRoom(t.org_id));
         }
       } catch (e) {
         this.logger.warn(

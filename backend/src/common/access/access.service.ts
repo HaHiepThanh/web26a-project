@@ -136,7 +136,8 @@ export class AccessService {
 
     const boardName = (board.name as string) ?? '';
     const orgSlug =
-      ((board.organizations as unknown as { slug: string } | null)?.slug as string) ?? '';
+      ((board.organizations as unknown as { slug: string } | null)
+        ?.slug as string) ?? '';
 
     let uids: string[] = [];
     if ((board.visibility as string) === 'private') {
@@ -144,7 +145,7 @@ export class AccessService {
         .from('board_members')
         .select('user_id')
         .eq('board_id', boardId);
-      uids = (data ?? []).map((r) => (r as { user_id: string }).user_id);
+      uids = (data ?? []).map((r) => r.user_id);
     } else {
       const { data: ws } = await sb
         .from('workspaces')
@@ -157,13 +158,13 @@ export class AccessService {
           .from('workspace_members')
           .select('user_id')
           .eq('workspace_id', board.workspace_id as string);
-        uids = (data ?? []).map((r) => (r as { user_id: string }).user_id);
+        uids = (data ?? []).map((r) => r.user_id);
       } else {
         const { data } = await sb
           .from('organization_members')
           .select('user_id')
           .eq('org_id', board.org_id as string);
-        uids = (data ?? []).map((r) => (r as { user_id: string }).user_id);
+        uids = (data ?? []).map((r) => r.user_id);
       }
     }
 

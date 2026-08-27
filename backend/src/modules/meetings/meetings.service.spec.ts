@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import * as fs from 'fs';
-import * as path from 'path';
 import { MeetingsService } from './meetings.service';
 import { SupabaseService } from '../../common/supabase/supabase.service';
 import { AccessService } from '../../common/access/access.service';
@@ -58,6 +57,8 @@ describe('MeetingsService - parseGoogleCalendarPdf', () => {
     expect(result.endTime).toBe('11:45');
     expect(result.duration).toBe(30);
     expect(result.description).toBe('Scheduled from Horizon Hub Harmony.');
-    expect(result.attendeeEmails).toContain('thanh.hh01270@sinhvien.hoasen.edu.vn');
+    expect(result.attendeeEmails).toContain(
+      'thanh.hh01270@sinhvien.hoasen.edu.vn',
+    );
   });
 });

@@ -180,7 +180,9 @@ export class CardsService {
       .select('org_id')
       .eq('user_id', uid);
     if (memberError) {
-      this.logger.error(`Đọc tổ chức của user thất bại: ${memberError.message}`);
+      this.logger.error(
+        `Đọc tổ chức của user thất bại: ${memberError.message}`,
+      );
       throw new InternalServerErrorException('Failed to load organizations');
     }
     const orgIds = (memberships ?? []).map((m) => m.org_id as string);
@@ -353,7 +355,10 @@ export class CardsService {
           : `Reopened task "${updated.title}"`,
         updated.id,
       );
-    } else if (changes.assigneeId !== undefined && changes.assigneeId !== truocKhiSua) {
+    } else if (
+      changes.assigneeId !== undefined &&
+      changes.assigneeId !== truocKhiSua
+    ) {
       await this.activity.record(
         boardId,
         uid,
@@ -363,7 +368,11 @@ export class CardsService {
           : `Unassigned task "${updated.title}"`,
         updated.id,
       );
-    } else if (changes.title || changes.priority || changes.dueDate !== undefined) {
+    } else if (
+      changes.title ||
+      changes.priority ||
+      changes.dueDate !== undefined
+    ) {
       await this.activity.record(
         boardId,
         uid,

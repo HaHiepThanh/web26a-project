@@ -13,7 +13,9 @@ describe('AppController', () => {
         AppService,
         {
           provide: SupabaseService,
-          useValue: { client: { from: () => ({ select: async () => ({ error: null }) }) } },
+          useValue: {
+            client: { from: () => ({ select: async () => ({ error: null }) }) },
+          },
         },
       ],
     }).compile();

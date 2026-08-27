@@ -73,7 +73,8 @@ export class CreateMeetingDto {
    */
   @IsOptional()
   @Matches(/^https:\/\/(www\.)?google\.com\/calendar\/[^\s"'<>]*$/, {
-    message: 'googleHtmlLink must be a https://www.google.com/calendar/... link.',
+    message:
+      'googleHtmlLink must be a https://www.google.com/calendar/... link.',
   })
   googleHtmlLink?: string | null;
 

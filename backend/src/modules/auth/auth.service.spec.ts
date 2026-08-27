@@ -16,8 +16,7 @@ describe('AuthService - uploadAvatar', () => {
             upload: jest.fn().mockResolvedValue({ error: null }),
             getPublicUrl: jest.fn().mockReturnValue({
               data: {
-                publicUrl:
-                  'https://test.supabase.co/avatars/user-1/123.jpg',
+                publicUrl: 'https://test.supabase.co/avatars/user-1/123.jpg',
               },
             }),
           }),
@@ -31,7 +30,8 @@ describe('AuthService - uploadAvatar', () => {
                     id: 'u1',
                     email: 'test@dev.com',
                     display_name: 'Test User',
-                    avatar_url: 'https://test.supabase.co/avatars/user-1/123.jpg',
+                    avatar_url:
+                      'https://test.supabase.co/avatars/user-1/123.jpg',
                   },
                   error: null,
                 }),

@@ -311,12 +311,7 @@ export class AuthService {
         avatarUrl: row.avatar_url,
       };
       for (const t of data ?? []) {
-        this.realtime.emitToOrg(
-          (t as { org_id: string }).org_id,
-          'user.updated',
-          uid,
-          payload,
-        );
+        this.realtime.emitToOrg(t.org_id, 'user.updated', uid, payload);
       }
     } catch (e) {
       this.logger.warn(

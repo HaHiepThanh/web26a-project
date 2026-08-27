@@ -23,8 +23,7 @@ import type { CurrentUserInfo } from './current-user.decorator';
  */
 function coNoiGoogle(decoded: DecodedIdToken): boolean {
   const ids = decoded.firebase?.identities as
-    | Record<string, unknown>
-    | undefined;
+    Record<string, unknown> | undefined;
   const google = ids?.['google.com'];
   // Firebase trả về mảng id (một tài khoản có thể nối nhiều id cùng provider).
   // Mảng rỗng nghĩa là không nối, nên phải xét độ dài chứ không chỉ tồn tại.

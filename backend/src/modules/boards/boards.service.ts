@@ -618,11 +618,15 @@ export class BoardsService {
       const { data: rows } = restricted
         ? await this.supabase.client
             .from('workspace_members')
-            .select('user_id, users(id, email, display_name, avatar_url, google_linked_at)')
+            .select(
+              'user_id, users(id, email, display_name, avatar_url, google_linked_at)',
+            )
             .eq('workspace_id', board.workspaceId)
         : await this.supabase.client
             .from('organization_members')
-            .select('user_id, users(id, email, display_name, avatar_url, google_linked_at)')
+            .select(
+              'user_id, users(id, email, display_name, avatar_url, google_linked_at)',
+            )
             .eq('org_id', data?.org_id as string);
       return (rows ?? []).map((r) => ({
         userId: r.user_id as string,
@@ -632,7 +636,9 @@ export class BoardsService {
 
     const { data: rows } = await this.supabase.client
       .from('board_members')
-      .select('user_id, users(id, email, display_name, avatar_url, google_linked_at)')
+      .select(
+        'user_id, users(id, email, display_name, avatar_url, google_linked_at)',
+      )
       .eq('board_id', id);
     return (rows ?? []).map((r) => ({
       userId: r.user_id as string,
@@ -782,7 +788,9 @@ export class BoardsService {
     };
     const duoi = loaiChoPhep[file.mimetype];
     if (!duoi) {
-      throw new BadRequestException('Only JPG, PNG or WEBP images are allowed.');
+      throw new BadRequestException(
+        'Only JPG, PNG or WEBP images are allowed.',
+      );
     }
 
     const board = await this.access.assertBoardAccess(uid, boardId);
@@ -796,8 +804,12 @@ export class BoardsService {
       .upload(duongDan, file.buffer, { contentType: file.mimetype });
 
     if (loiTai) {
-      this.logger.error(`Tải ảnh nền thất bại (board=${boardId}): ${loiTai.message}`);
-      throw new InternalServerErrorException('Failed to upload the background image.');
+      this.logger.error(
+        `Tải ảnh nền thất bại (board=${boardId}): ${loiTai.message}`,
+      );
+      throw new InternalServerErrorException(
+        'Failed to upload the background image.',
+      );
     }
 
     // Dọn ảnh cũ SAU khi ảnh mới đã lên — hỏng giữa chừng thì board vẫn còn nền.
@@ -816,11 +828,12 @@ export class BoardsService {
 
     if (error) {
       this.logger.error(`Ghi đường dẫn ảnh nền thất bại: ${error.message}`);
-      throw new InternalServerErrorException('Failed to save the background image.');
+      throw new InternalServerErrorException(
+        'Failed to save the background image.',
+      );
     }
 
-    const duongDanCu = (cu as { background_image_path: string | null } | null)
-      ?.background_image_path;
+    const duongDanCu = cu?.background_image_path;
     if (duongDanCu && duongDanCu !== duongDan) {
       await this.supabase.client.storage.from(BUCKET_NEN).remove([duongDanCu]);
     }

@@ -132,8 +132,11 @@ export class MeetingsService {
       throw new BadRequestException('endAt must be after startAt.');
     }
 
-    const { uids: nguoiXemDuoc, boardName, orgSlug } =
-      await this.access.nguoiXemDuocBoard(dto.boardId);
+    const {
+      uids: nguoiXemDuoc,
+      boardName,
+      orgSlug,
+    } = await this.access.nguoiXemDuocBoard(dto.boardId);
 
     // ⚠️ LỌC LẠI DANH SÁCH NGƯỜI DỰ, không tin `attendeeIds` gửi lên.
     //
@@ -254,7 +257,9 @@ export class MeetingsService {
 
     if (error) {
       this.logger.error(`Đọc lịch sắp tới thất bại: ${error.message}`);
-      throw new InternalServerErrorException('Failed to load upcoming meetings.');
+      throw new InternalServerErrorException(
+        'Failed to load upcoming meetings.',
+      );
     }
 
     return (data ?? []).map((r) => {
@@ -292,7 +297,11 @@ export class MeetingsService {
   async cancel(
     uid: string,
     meetingId: string,
-  ): Promise<{ id: string; googleEventId: string | null; xoaDuocTrenGoogle: boolean }> {
+  ): Promise<{
+    id: string;
+    googleEventId: string | null;
+    xoaDuocTrenGoogle: boolean;
+  }> {
     const { data, error } = await this.supabase.client
       .from('board_meetings')
       .select()
@@ -456,9 +465,10 @@ export class MeetingsService {
    */
   async parseGoogleCalendarPdf(buffer: Buffer): Promise<ParsedMeetingPdf> {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
       const pdf = require('pdf-parse');
-      const res = await pdf(buffer);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+      const res = (await pdf(buffer)) as { text?: string };
       const rawText: string = res?.text || '';
 
       if (!rawText.trim()) {
@@ -510,9 +520,7 @@ export class MeetingsService {
 
       // 3. Thời gian
       let timeStr = '';
-      const timeIdx = lines.findIndex((l: string) =>
-        /^(?:Giờ|Time)$/i.test(l),
-      );
+      const timeIdx = lines.findIndex((l: string) => /^(?:Giờ|Time)$/i.test(l));
       if (timeIdx >= 0) {
         timeStr = lines.slice(timeIdx + 1, timeIdx + 4).join(' ');
       } else {
@@ -602,7 +610,9 @@ export class MeetingsService {
             date = `${enDateMatch[3]}-${String(m).padStart(2, '0')}-${String(enDateMatch[2]).padStart(2, '0')}`;
           }
         } else {
-          const slashMatch = dateSearchBlock.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+          const slashMatch = dateSearchBlock.match(
+            /(\d{1,2})\/(\d{1,2})\/(\d{4})/,
+          );
           if (slashMatch) {
             date = `${slashMatch[3]}-${String(slashMatch[2]).padStart(2, '0')}-${String(slashMatch[1]).padStart(2, '0')}`;
           }
@@ -636,9 +646,8 @@ export class MeetingsService {
       // 7. Danh sách email người dự
       const attendeeEmails = [
         ...new Set(
-          unwrapped.match(
-            /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
-          ) || [],
+          unwrapped.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g) ||
+            [],
         ),
       ];
 
