@@ -811,6 +811,8 @@ export class Workspace {
     this.showWorkspaceModal.set(true);
   }
 
+  readonly isSavingWorkspace = signal<boolean>(false);
+
   async handleWorkspaceSave(data: {
     orgId?: string;
     name: string;
@@ -819,18 +821,22 @@ export class Workspace {
     memberIds: string[];
     members: WorkspaceMember[];
   }): Promise<void> {
-    const { name, description, visibility, memberIds, members } = data;
-    const orgId = data.orgId || this.orgService.activeOrgId();
-    if (!orgId) return;
+    if (this.isSavingWorkspace()) return;
+    this.isSavingWorkspace.set(true);
 
-    if (this.workspaceModalMode() === 'create') {
-      const { workspace, error } = await this.workspaceService.createWorkspace(
-        orgId,
-        name,
-        description,
-        visibility,
-        memberIds,
-      );
+    try {
+      const { name, description, visibility, memberIds, members } = data;
+      const orgId = data.orgId || this.orgService.activeOrgId();
+      if (!orgId) return;
+
+      if (this.workspaceModalMode() === 'create') {
+        const { workspace, error } = await this.workspaceService.createWorkspace(
+          orgId,
+          name,
+          description,
+          visibility,
+          memberIds,
+        );
       if (!workspace) {
         this.addToast(error ?? 'Failed to create the workspace.', 'error');
         return;
@@ -886,6 +892,9 @@ export class Workspace {
       this.addToast(`Updated Workspace "${name}"`, 'success');
     }
     this.showWorkspaceModal.set(false);
+    } finally {
+      this.isSavingWorkspace.set(false);
+    }
   }
 
   /** Bước 1 — chỉ mở hộp thoại xác nhận. Chưa gọi API, chưa đụng gì tới dữ liệu. */

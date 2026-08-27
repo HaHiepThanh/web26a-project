@@ -212,9 +212,14 @@
         }
 
         <div class="flex gap-2">
-          <button type="button" class="btn btn-ghost btn-sm rounded-md font-bold" (click)="close.emit()">Cancel</button>
-          <button type="submit" class="btn btn-primary btn-sm rounded-md font-black px-5 shadow-sm">
+          <button type="button" class="btn btn-ghost btn-sm rounded-md font-bold" [disabled]="submitting()" (click)="close.emit()">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm rounded-md font-black px-5 shadow-sm" [disabled]="submitting() || !nameInput().trim()">
+            @if (submitting()) {
+            <span class="loading loading-spinner loading-xs"></span>
+            {{ mode() === 'create' ? 'Creating…' : 'Saving…' }}
+            } @else {
             {{ mode() === 'create' ? 'Create Workspace' : 'Save changes' }}
+            }
           </button>
         </div>
       </div>

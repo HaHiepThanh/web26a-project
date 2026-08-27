@@ -70,6 +70,8 @@ export class WorkspaceService {
     }
   }
 
+  private readonly pendingCreateKeys = new Set<string>();
+
   /** Tạo workspace. Trả `{ workspace }` khi thành công, `{ error }` khi hỏng. */
   async createWorkspace(
     orgId: string,
@@ -78,6 +80,12 @@ export class WorkspaceService {
     visibility: WorkspaceVisibility = 'org',
     memberIds: string[] = [],
   ): Promise<{ workspace?: Workspace; error?: string }> {
+    const key = `${orgId}::${name.trim()}`;
+    if (this.pendingCreateKeys.has(key)) {
+      return { error: 'Workspace creation is already in progress.' };
+    }
+    this.pendingCreateKeys.add(key);
+
     try {
       const row = await this.api.post<ApiWorkspace>('/workspaces', {
         orgId,
@@ -92,6 +100,8 @@ export class WorkspaceService {
       return { workspace: ws };
     } catch (e) {
       return { error: describeError(e, 'Failed to create workspace.') };
+    } finally {
+      this.pendingCreateKeys.delete(key);
     }
   }
 

@@ -121,6 +121,7 @@
 <app-workspace-form-modal [isOpen]="showWorkspaceModal()" [mode]="workspaceModalMode()"
   [workspace]="selectedWorkspaceForEdit()" [currentUser]="auth.currentUser()"
   [initialOrgId]="selectedOrgFilter() || orgService.activeOrgId()"
+  [submitting]="isSavingWorkspace()"
   (close)="showWorkspaceModal.set(false)"
   (save)="handleWorkspaceSave($event)" (requestDelete)="requestDeleteWorkspace($event)">
 </app-workspace-form-modal>

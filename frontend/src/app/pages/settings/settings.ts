@@ -419,6 +419,8 @@ export class Settings {
     this.showWorkspaceModal.set(true);
   }
 
+  readonly isSavingWorkspace = signal<boolean>(false);
+
   async handleWorkspaceSave(data: {
     orgId?: string;
     name: string;
@@ -427,53 +429,60 @@ export class Settings {
     memberIds: string[];
     members: WorkspaceMember[];
   }): Promise<void> {
-    const { name, description, visibility, memberIds, members } = data;
-    const orgId = data.orgId || this.selectedOrgFilter() || this.orgService.activeOrgId() || this.orgService.organizations()[0]?.id;
-    if (!orgId) {
-      this.flash('No active Organization found. Please create or select an organization first.', 'error');
-      return;
+    if (this.isSavingWorkspace()) return;
+    this.isSavingWorkspace.set(true);
+
+    try {
+      const { name, description, visibility, memberIds, members } = data;
+      const orgId = data.orgId || this.selectedOrgFilter() || this.orgService.activeOrgId() || this.orgService.organizations()[0]?.id;
+      if (!orgId) {
+        this.flash('No active Organization found. Please create or select an organization first.', 'error');
+        return;
+      }
+
+      const role = this.orgService.myRoleByOrg()[orgId];
+      if (role !== 'owner' && role !== 'admin') {
+        this.flash('Only the Organization Owner or Admins can create workspaces.', 'error');
+        return;
+      }
+
+      const { workspace, error } = await this.workspaceService.createWorkspace(
+        orgId,
+        name,
+        description,
+        visibility,
+        memberIds,
+      );
+      if (!workspace) {
+        this.flash(error ?? 'Failed to create the workspace.', 'error');
+        return;
+      }
+
+      const foundOrg = this.orgService.organizations().find((o) => o.id === orgId);
+      const newWs: WorkspaceWithOrg = {
+        id: workspace.id,
+        orgId,
+        orgName: foundOrg?.name ?? 'Organization',
+        name: workspace.name,
+        visibility: workspace.visibility,
+        memberIds: workspace.memberIds,
+        membersCount: members.length,
+        members,
+        description: description || 'A brand-new Workspace just got created.',
+        boards: [],
+      };
+
+      const userId = this.auth.currentUser()?.id;
+      const orgWorkspaces = loadStoredWorkspaces(userId, orgId);
+      persistWorkspaces([...orgWorkspaces, newWs], userId, orgId);
+
+      this.showWorkspaceModal.set(false);
+      this.flash(`Created Workspace "${newWs.name}"!`);
+      await this.loadWorkspacesForOrganizations();
+      this.selectedWorkspaceId.set(newWs.id);
+    } finally {
+      this.isSavingWorkspace.set(false);
     }
-
-    const role = this.orgService.myRoleByOrg()[orgId];
-    if (role !== 'owner' && role !== 'admin') {
-      this.flash('Only the Organization Owner or Admins can create workspaces.', 'error');
-      return;
-    }
-
-    const { workspace, error } = await this.workspaceService.createWorkspace(
-      orgId,
-      name,
-      description,
-      visibility,
-      memberIds,
-    );
-    if (!workspace) {
-      this.flash(error ?? 'Failed to create the workspace.', 'error');
-      return;
-    }
-
-    const foundOrg = this.orgService.organizations().find((o) => o.id === orgId);
-    const newWs: WorkspaceWithOrg = {
-      id: workspace.id,
-      orgId,
-      orgName: foundOrg?.name ?? 'Organization',
-      name: workspace.name,
-      visibility: workspace.visibility,
-      memberIds: workspace.memberIds,
-      membersCount: members.length,
-      members,
-      description: description || 'A brand-new Workspace just got created.',
-      boards: [],
-    };
-
-    const userId = this.auth.currentUser()?.id;
-    const orgWorkspaces = loadStoredWorkspaces(userId, orgId);
-    persistWorkspaces([...orgWorkspaces, newWs], userId, orgId);
-
-    this.showWorkspaceModal.set(false);
-    this.flash(`Created Workspace "${newWs.name}"!`);
-    await this.loadWorkspacesForOrganizations();
-    this.selectedWorkspaceId.set(newWs.id);
   }
 
   // ---- Modal xác nhận xoá Workspace (GitHub style) ----

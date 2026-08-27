@@ -35,6 +35,7 @@ export class WorkspaceFormModal {
   readonly workspace = input<WorkspaceItem | null>(null);
   readonly currentUser = input<User | null>(null);
   readonly initialOrgId = input<string | null>(null);
+  readonly submitting = input<boolean>(false);
 
   readonly close = output<void>();
   readonly save = output<{
@@ -170,6 +171,7 @@ export class WorkspaceFormModal {
   }
 
   onSubmit(): void {
+    if (this.submitting()) return;
     const name = this.nameInput().trim();
     if (!name) {
       this.nameError.set('Please enter a Workspace name!');
