@@ -255,11 +255,24 @@ export class AuthService {
   }
 
   /**
-   * Gửi email đặt lại mật khẩu qua Firebase Auth.
+   * Gửi email đặt lại mật khẩu qua Firebase Auth (có fallback an toàn).
    */
   async sendPasswordReset(email: string): Promise<void> {
     if (!this.firebase?.auth) throw new Error('Firebase is not configured.');
-    await sendPasswordResetEmail(this.firebase.auth, email.trim());
+    try {
+      const origin = typeof window !== 'undefined' && window.location?.origin
+        ? window.location.origin
+        : 'https://horizon-hub-harmony.firebaseapp.com';
+
+      const actionCodeSettings = {
+        url: `${origin}/reset-password`,
+        handleCodeInApp: true,
+      };
+      await sendPasswordResetEmail(this.firebase.auth, email.trim(), actionCodeSettings);
+    } catch {
+      // Fallback chuẩn nếu Firebase không cho phép actionCodeSettings tuỳ biến
+      await sendPasswordResetEmail(this.firebase.auth, email.trim());
+    }
   }
 
   /**

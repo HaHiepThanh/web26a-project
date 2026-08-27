@@ -11,6 +11,20 @@
     />
     <meta name="theme-color" content="#0b0d14" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+
+    <!-- Tự động chuyển hướng link reset password của Firebase về trang /reset-password của website -->
+    <script>
+      (function() {
+        try {
+          var params = new URLSearchParams(window.location.search);
+          var mode = params.get('mode');
+          var oobCode = params.get('oobCode');
+          if (mode === 'resetPassword' && oobCode && !window.location.pathname.includes('/reset-password')) {
+            window.location.replace('/reset-password' + window.location.search);
+          }
+        } catch (e) {}
+      })();
+    </script>
     <!-- Icon trên tab trình duyệt. Dùng logo thương hiệu (HHH-logo.png) thay cho
        favicon.ico mặc định của Angular. Bản 32px cắt sẵn từ file gốc 1295px:
        trình duyệt vẽ icon ở 16-32px, đưa file gốc 907kB vào đây là bắt mọi lượt
