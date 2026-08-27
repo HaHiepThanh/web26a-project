@@ -80,13 +80,23 @@
           <span class="badge badge-sm badge-ghost font-bold">{{ filteredActivityLogs().length }}</span>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-          <input
-            class="input input-sm w-full sm:w-44 lg:w-48"
-            type="text"
-            placeholder="Search keyword..."
-            [ngModel]="logSearch()"
-            (ngModelChange)="logSearch.set($event)"
-          />
+          <!-- Bề rộng đáp ứng chuyển lên thẻ bọc vì GIỜ NÓ mới là con của flex;
+               để lại trên input thì thẻ bọc co theo nội dung và ô tìm kiếm teo
+               lại, không còn giãn full ở khổ hẹp nữa. -->
+          <div class="relative w-full sm:w-44 lg:w-48">
+            <svg class="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-base-content/50"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input
+              class="input input-sm w-full pl-9"
+              type="text"
+              placeholder="Search keyword..."
+              [ngModel]="logSearch()"
+              (ngModelChange)="logSearch.set($event)"
+            />
+          </div>
           <select class="select select-sm w-36 shrink-0" [ngModel]="actionFilter()" (ngModelChange)="actionFilter.set($event)">
             @for (group of actionGroups; track trackByGroup($index, group)) {
               <option [value]="group">{{ actionGroupLabel[group] }}</option>

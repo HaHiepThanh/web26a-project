@@ -225,13 +225,22 @@
           Only people already in <b>{{ workspaceName() }}</b> can be added — invite them to the organization first if they're not listed.
         </p>
 
-        <input
-          type="text"
-          class="input mb-3 w-full"
-          placeholder="Search people..."
-          [value]="candidateQuery()"
-          (input)="candidateQuery.set($any($event.target).value)"
-        />
+        <!-- `mb-3` chuyển lên thẻ bọc: khoảng cách là việc của cả cụm ô tìm kiếm,
+             để lại trên input thì icon (định vị theo thẻ bọc) bị lệch xuống. -->
+        <div class="relative mb-3">
+          <svg class="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-base-content/50"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input
+            type="text"
+            class="input w-full pl-9"
+            placeholder="Search people..."
+            [value]="candidateQuery()"
+            (input)="candidateQuery.set($any($event.target).value)"
+          />
+        </div>
 
         <div class="min-h-0 flex-1 overflow-y-auto">
           @if (loadingCandidates()) {

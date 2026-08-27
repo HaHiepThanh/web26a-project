@@ -198,9 +198,21 @@
       <!-- Search Input -->
       <div class="space-y-1.5">
         <label class="text-xs font-bold text-base-content/80">Search by name, email, or UUID</label>
-        <input type="text" class="input input-sm rounded-xl w-full font-semibold"
-          placeholder="Type a search term..." [ngModel]="memberSearchQuery()"
-          (ngModelChange)="memberSearchQuery.set($event)" />
+        <div class="relative">
+          <!-- `z-10` bắt buộc: daisyUI 5 đặt `input.input` thành `position: relative`
+               kèm nền đục, mà input đứng SAU icon trong DOM — cùng được định vị,
+               cùng `z-index: auto`, nên input vẽ đè và icon lọt xuống dưới nền.
+               Bỏ `z-10` đi thì `pl-9` vẫn chừa chỗ nhưng chỗ đó trống trơn,
+               trông như quên đặt icon. -->
+          <svg class="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-base-content/50"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" class="input input-sm rounded-xl w-full pl-9 font-semibold"
+            placeholder="Type a search term..." [ngModel]="memberSearchQuery()"
+            (ngModelChange)="memberSearchQuery.set($event)" />
+        </div>
       </div>
 
       <!-- Candidate list -->
