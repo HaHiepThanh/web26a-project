@@ -70,7 +70,13 @@
            dời node trong DOM không sinh ra thuộc tính nào để CSS nội suy. -->
       <div class="tb-cols" #grid appFlipReorder>
         @for (name of columns; track name; let ci = $index) {
-          <section class="tb-col" [attr.aria-label]="name + ' column'">
+          <!-- `is-target` sáng cả cột đang nhắm tới. Chỉ ô báo chỗ thôi là chưa
+               đủ ở khổ hẹp, nơi cột bên cạnh có thể đang nằm ngoài tầm mắt. -->
+          <section
+            class="tb-col"
+            [class.is-target]="dropCol() === ci"
+            [attr.aria-label]="name + ' column'"
+          >
             <header class="tb-chead">
               <span>{{ name }}</span>
               <em>{{ cardsIn(ci).length }}</em>
@@ -140,7 +146,19 @@
                   </article>
                 </li>
               } @empty {
-                <li class="tb-empty" aria-hidden="true">Drop one here</li>
+                @if (dropCol() !== ci) {
+                  <li class="tb-empty" aria-hidden="true">Drop one here</li>
+                }
+              }
+
+              <!-- Ô BÁO CHỖ. Bảng thật dùng `*cdkDragPlaceholder`; ở đây dựng
+                   lại bằng tay vì khu này không kéo cả @angular/cdk vào.
+                   Đặt ở CUỐI cột vì `moveTo()` đẩy thẻ xuống cuối mảng — chỗ
+                   báo và chỗ rơi phải là một, xem ghi chú ở landing-try.ts.
+                   Không mở ô trong chính cột cũ của thẻ: thẻ đã chiếm sẵn một
+                   chỗ ở đó rồi, mở thêm là cột phình ra vô cớ. -->
+              @if (dragging() && dropCol() === ci && card(dragging())?.col !== ci) {
+                <li class="tb-slot" aria-hidden="true"></li>
               }
             </ul>
 

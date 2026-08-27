@@ -665,3 +665,59 @@
     gap: var(--lp-4);
   }
 }
+
+/* ==========================================================================
+   Ô báo chỗ khi kéo.
+
+   Bảng thật dùng `*cdkDragPlaceholder` của Angular CDK; ở đây dựng lại bằng
+   tay vì khu giới thiệu không kéo cả @angular/cdk vào chỉ để làm một cái ô.
+
+   Đây là khác biệt xúc giác lớn nhất giữa "bảng thật" và "bản minh hoạ": không
+   có nó thì thẻ biến mất chỗ này rồi hiện ra chỗ kia lúc thả tay, và người
+   dùng không bao giờ chắc mình đang thả vào đâu cho tới khi đã lỡ tay.
+   ========================================================================== */
+.tb-slot {
+  height: 46px;
+  border: 2px dashed color-mix(in oklab, var(--lp-ink-blue) 55%, transparent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklab, var(--lp-ink-blue) 8%, transparent);
+  /* Nở ra thay vì hiện phắt: ô bung mở đúng kiểu chỗ trống đang được dọn sẵn. */
+  animation: tb-slot-in var(--lp-dur-2) var(--lp-ease) both;
+}
+@keyframes tb-slot-in {
+  from {
+    height: 0;
+    opacity: 0;
+  }
+}
+
+/* Cả cột đích sáng lên. Riêng ô báo chỗ là chưa đủ ở khổ hẹp, nơi cột bên cạnh
+   có thể đang nằm ngoài tầm mắt vì lưới đang cuộn ngang. */
+.tb-col.is-target {
+  /* 6%, KHÔNG phải 10%. Chữ đầu cột nằm TRỰC TIẾP trên nền này, và đo ra thì
+     10% kéo nó từ 4.94:1 xuống 4.44:1 — trượt chuẩn AA đúng lúc cột đang được
+     nhắm tới, tức đúng lúc người dùng cần đọc tên cột nhất.
+     Đo cả thang: 4% → 4.75   6% → 4.63   8% → 4.53   10% → 4.44
+     8% qua ngưỡng nhưng chỉ hơn 0.03, sát tới mức một lần chỉnh màu theme là
+     trượt lại. Lấy 6% cho có biên, rồi bù tín hiệu bằng VÒNG VIỀN đậm hơn —
+     viền không có chữ nằm trên nên tô đậm bao nhiêu cũng không hại ai. */
+  background: color-mix(in oklab, var(--lp-ink-blue) 6%, var(--lp-surface-2));
+  box-shadow: inset 0 0 0 2px color-mix(in oklab, var(--lp-ink-blue) 55%, transparent);
+}
+
+/* Thẻ đang được "cầm": nghiêng nhẹ và to lên một chút, đúng phản xạ ai cũng
+   quen từ bảng vật lý — nhấc lên là vật rời khỏi mặt bàn.
+   Gộp vào cùng một transform với --dx/--dy, vì hai khai báo transform trên cùng
+   phần tử thì cái sau đè mất cái trước. */
+.tb-card.is-dragging {
+  transform: translate3d(var(--dx, 0), var(--dy, 0), 0) rotate(-1.8deg) scale(1.03);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tb-slot {
+    animation: none;
+  }
+  .tb-card.is-dragging {
+    transform: translate3d(var(--dx, 0), var(--dy, 0), 0);
+  }
+}

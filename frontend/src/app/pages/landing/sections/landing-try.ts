@@ -154,6 +154,12 @@ export class LandingTry {
   readonly openCard = signal<string | null>(null);
   readonly composing = signal<number | null>(null);
   readonly dragging = signal<string | null>(null);
+
+  /**
+   * Cột mà thẻ đang kéo sẽ rơi vào — dùng để mở ô báo chỗ và làm sáng cột đích.
+   * `null` khi không kéo, hoặc khi đang lơ lửng trên chính cột cũ của thẻ.
+   */
+  readonly dropCol = signal<number | null>(null);
   readonly announcement = signal('');
 
   // ---- Ba bước dẫn dắt -----------------------------------------------------
@@ -165,6 +171,23 @@ export class LandingTry {
 
   private readonly grid = viewChild<ElementRef<HTMLElement>>('grid');
   private dragFrom = { x: 0, y: 0 };
+  /**
+   * Hộp của lưới, ĐO MỘT LẦN lúc bắt đầu kéo.
+   * `getBoundingClientRect()` ép trình duyệt tính lại bố cục; gọi nó ở mỗi sự
+   * kiện pointermove — tức mỗi khung hình trong suốt cú kéo — là tự tạo ra giật.
+   */
+  private dragBox: DOMRect | null = null;
+  /**
+   * Hộp của TỪNG cột, cũng đo một lần lúc bắt đầu kéo.
+   *
+   * Bản trước chia hộp lưới làm ba phần đều nhau và nó SAI ở khổ hẹp: dưới
+   * 720px lưới chuyển sang cuộn ngang, nên hộp nhìn thấy chỉ chứa khoảng một
+   * cột rưỡi trong khi phép chia vẫn tưởng có đủ ba. Đo được: kéo sang cột
+   * "Done" ở khổ 375px thì hàm trả về null và thẻ không nhúc nhích.
+   * Dò trúng hộp thật của từng cột thì đúng ở mọi khổ, và tiện thể tính luôn
+   * cả phần đệm với khe giữa các cột.
+   */
+  private dragCols: DOMRect[] = [];
   private nextId = 100;
   private hydrated = false;
 
@@ -297,7 +320,16 @@ export class LandingTry {
   moveTo(card: TryCard, col: number): void {
     const target = Math.max(0, Math.min(COLUMNS.length - 1, col));
     if (target === card.col) return;
-    this.patch(card.id, { col: target });
+
+    // ĐẨY XUỐNG CUỐI MẢNG, không chỉ đổi số cột.
+    // `cardsIn()` lọc theo đúng thứ tự mảng gốc, nên chỉ đổi `col` tại chỗ thì
+    // thẻ sẽ chen vào GIỮA cột đích theo vị trí cũ của nó — trong khi ô báo chỗ
+    // lúc kéo lại nằm ở cuối cột. Ô báo chỗ mà chỉ sai một chỗ thôi là mất sạch
+    // niềm tin vào cả cú kéo. Đưa xuống cuối thì chỗ nó rơi đúng bằng chỗ đã hứa.
+    this.cards.update((list) => [
+      ...list.filter((c) => c.id !== card.id),
+      { ...card, col: target },
+    ]);
     this.didMove.set(true);
     this.announce(`Moved “${card.title}” to ${COLUMNS[target]}.`);
   }
@@ -325,6 +357,11 @@ export class LandingTry {
     if ((event.target as HTMLElement).closest('button')) return;
     this.dragging.set(card.id);
     this.dragFrom = { x: event.clientX, y: event.clientY };
+    const grid = this.grid()?.nativeElement;
+    this.dragBox = grid?.getBoundingClientRect() ?? null;
+    this.dragCols = grid
+      ? [...grid.querySelectorAll('.tb-col')].map((c) => c.getBoundingClientRect())
+      : [];
     (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
     event.preventDefault();
   }
@@ -336,6 +373,43 @@ export class LandingTry {
     // pixel con trỏ, cho nó chạy qua change detection mỗi lần là phí.
     el.style.setProperty('--dx', `${event.clientX - this.dragFrom.x}px`);
     el.style.setProperty('--dy', `${event.clientY - this.dragFrom.y}px`);
+
+    // Cột đích thì NGƯỢC LẠI phải đi qua signal: nó mở ô báo chỗ và làm sáng
+    // cột, tức là có đổi giao diện. Nhưng chỉ ghi khi đổi cột — mỗi pixel một
+    // lần dựng lại là vô ích.
+    const next = this.colAt(event.clientX);
+    if (next !== this.dropCol()) this.dropCol.set(next);
+  }
+
+  /**
+   * Cột dưới toạ độ x, hoặc null nếu con trỏ đã ra ngoài lưới.
+   *
+   * Dò theo hộp thật của từng cột, KHÔNG chia đều hộp lưới — xem ghi chú ở
+   * `dragCols`. Rơi vào khe giữa hai cột thì lấy cột có tâm gần nhất, chứ không
+   * trả null: khe rộng chỉ 12px, mà tắt ô báo chỗ mỗi lần con trỏ lướt qua khe
+   * thì nó nhấp nháy suốt cú kéo.
+   */
+  private colAt(clientX: number): number | null {
+    const box = this.dragBox;
+    if (!box || !this.dragCols.length) return null;
+    if (clientX < box.left || clientX > box.right) return null;
+
+    let best = 0;
+    let bestGap = Infinity;
+    this.dragCols.forEach((r, i) => {
+      if (clientX >= r.left && clientX <= r.right) {
+        best = i;
+        bestGap = -1; // trúng hẳn trong cột — không cần so tiếp
+        return;
+      }
+      if (bestGap === -1) return;
+      const gap = Math.abs(clientX - (r.left + r.width / 2));
+      if (gap < bestGap) {
+        bestGap = gap;
+        best = i;
+      }
+    });
+    return best;
   }
 
   onPointerUp(card: TryCard, event: PointerEvent): void {
@@ -345,8 +419,9 @@ export class LandingTry {
     el.style.removeProperty('--dy');
     this.dragging.set(null);
 
-    const box = this.grid()?.nativeElement.getBoundingClientRect();
-    if (!box) return;
+    const target = this.colAt(event.clientX);
+    this.dropCol.set(null);
+    this.dragBox = null;
 
     const moved =
       Math.abs(event.clientX - this.dragFrom.x) + Math.abs(event.clientY - this.dragFrom.y);
@@ -358,10 +433,10 @@ export class LandingTry {
       return;
     }
 
-    // Chia lưới làm ba phần đều nhau theo bề ngang. Thô hơn việc đo từng cột,
-    // nhưng đúng thứ người dùng cảm thấy: thả vào vùng nào thì rơi vào cột đó.
-    const col = Math.floor(((event.clientX - box.left) / box.width) * COLUMNS.length);
-    this.moveTo(card, col);
+    // Thả ra ngoài lưới thì thẻ về chỗ cũ — đúng như ô báo chỗ đã báo (lúc đó
+    // nó cũng đã tắt).
+    if (target === null) return;
+    this.moveTo(card, target);
   }
 
   // ==========================================================================
