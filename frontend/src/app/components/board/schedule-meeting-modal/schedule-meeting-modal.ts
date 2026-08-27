@@ -1,11 +1,21 @@
 import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { LucideCalendarPlus, LucideTriangleAlert, LucideVideo, LucideX } from '@lucide/angular';
+import {
+  LucideCalendarPlus,
+  LucideDownload,
+  LucideFileText,
+  LucideTriangleAlert,
+  LucideUpload,
+  LucideVideo,
+  LucideX,
+} from '@lucide/angular';
 import { ApiBoardMember } from '../../../models';
 import { ApiService } from '../../../services/api.service';
 import { GoogleCalendarService } from '../../../services/google-calendar.service';
 import { MeetingsService } from '../../../services/meetings.service';
 import { UserAvatar } from '../../shared/user-avatar/user-avatar';
+import { docIcs, taoIcs } from '../../../utils/ics.util';
+import { MIME_ICS, taiVeFile, tenFileAnToan } from '../../../utils/download.util';
 
 /** Các mốc nhắc cho chọn. 0 = không nhắc. */
 export const MOC_NHAC = [
@@ -30,7 +40,17 @@ export interface UngVien {
 
 @Component({
   selector: 'app-schedule-meeting-modal',
-  imports: [FormsModule, LucideCalendarPlus, LucideTriangleAlert, LucideVideo, LucideX, UserAvatar],
+  imports: [
+    FormsModule,
+    LucideCalendarPlus,
+    LucideDownload,
+    LucideFileText,
+    LucideTriangleAlert,
+    LucideUpload,
+    LucideVideo,
+    LucideX,
+    UserAvatar,
+  ],
   templateUrl: './schedule-meeting-modal.html',
 })
 export class ScheduleMeetingModal {
@@ -62,21 +82,22 @@ export class ScheduleMeetingModal {
   readonly dangGui = signal(false);
   readonly loi = signal<string | null>(null);
   readonly loiTruong = signal<Record<string, string>>({});
+  readonly thongBaoNhap = signal<string | null>(null);
 
   readonly dangTaiNguoi = signal(false);
   readonly ungVien = signal<UngVien[]>([]);
 
   /**
    * Múi giờ của trình duyệt, ví dụ 'Asia/Ho_Chi_Minh'.
-   *
-   * Gửi kèm lên Google là bắt buộc: thiếu nó thì cùng một chuỗi giờ có thể được
-   * hiểu theo múi giờ mặc định của lịch người tạo, và cuộc họp lệch giờ với
-   * người đặt mà không ai thấy sai ở đâu.
    */
   readonly muiGio = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 
   readonly soNguoiMoiDuoc = computed(() => this.ungVien().filter((u) => u.moiDuoc).length);
   readonly coNguoiChuaNoi = computed(() => this.ungVien().some((u) => !u.moiDuoc));
+  readonly nguoiDaChon = computed(() => {
+    const set = new Set(this.daChon());
+    return this.ungVien().filter((u) => set.has(u.id));
+  });
 
   constructor() {
     effect(() => {
@@ -89,13 +110,6 @@ export class ScheduleMeetingModal {
 
   // ---------------------------------------------------------------- dữ liệu
 
-  /**
-   * Ai mời được — hỏi `GET /boards/:id/members`.
-   *
-   * KHÔNG dùng danh sách thành viên tổ chức có sẵn trong store: endpoint này
-   * mới trả về đúng người XEM ĐƯỢC BOARD (board riêng tư thì hẹp hơn tổ chức),
-   * và cũng chỉ nó mới có cờ `googleLinked`.
-   */
   private async taiNguoi(): Promise<void> {
     const id = this.boardId();
     if (!id) return;
@@ -122,7 +136,6 @@ export class ScheduleMeetingModal {
   }
 
   private datLaiBieuMau(): void {
-    // Mặc định: một tiếng nữa, làm tròn lên mốc 5 phút cho gọn mắt.
     const t = new Date(Date.now() + 60 * 60_000);
     t.setMinutes(Math.ceil(t.getMinutes() / 5) * 5, 0, 0);
 
@@ -136,6 +149,7 @@ export class ScheduleMeetingModal {
     this.daChon.set([]);
     this.loi.set(null);
     this.loiTruong.set({});
+    this.thongBaoNhap.set(null);
   }
 
   doiChon(id: string): void {
@@ -147,14 +161,124 @@ export class ScheduleMeetingModal {
     this.daChon.set(this.daChon().length === tatCa.length ? [] : tatCa);
   }
 
+  // ---------------------------------------------------------------- Import / Export
+
+  async nhapFileIcs(e: Event): Promise<void> {
+    const input = e.target as HTMLInputElement;
+    const f = input.files?.[0];
+    input.value = '';
+    if (!f) return;
+
+    this.loi.set(null);
+    this.thongBaoNhap.set(null);
+
+    try {
+      const text = await f.text();
+      const kq = docIcs(text);
+      if (kq.loi) {
+        this.loi.set(kq.loi);
+        return;
+      }
+
+      const sk = kq.suKien[0];
+      if (!sk) {
+        this.loi.set('No usable events found in this .ics file.');
+        return;
+      }
+
+      // 1. Tiêu đề
+      if (sk.title && sk.title !== '(untitled event)') {
+        this.title.set(sk.title);
+      }
+
+      // 2. Mô tả
+      if (sk.description) {
+        this.description.set(sk.description);
+      }
+
+      // 3. Thời gian bắt đầu & kết thúc
+      const batDau = new Date(sk.startAt);
+      const ketThuc = new Date(sk.endAt);
+      this.ngay.set(chuoiNgay(batDau));
+      this.gio.set(chuoiGio(batDau));
+
+      // 4. Thời lượng
+      const diffMinutes = Math.max(15, Math.round((ketThuc.getTime() - batDau.getTime()) / 60_000));
+      const closestDuration = THOI_LUONG.reduce((prev, curr) =>
+        Math.abs(curr - diffMinutes) < Math.abs(prev - diffMinutes) ? curr : prev,
+      );
+      this.phutKeoDai.set(closestDuration);
+
+      // 5. Nhắc trước
+      if (sk.remindMinutes !== null) {
+        const matchRemind = MOC_NHAC.find((m) => m.phut === sk.remindMinutes);
+        if (matchRemind) {
+          this.nhacTruoc.set(sk.remindMinutes);
+        }
+      }
+
+      // 6. Meet room
+      if (sk.location && laLinkMeet(sk.location)) {
+        this.kemMeet.set(true);
+      }
+
+      // 7. Khớp email người dự với thành viên board
+      let soNguoiKhop = 0;
+      if (sk.attendeeEmails.length > 0) {
+        const emailSet = new Set(sk.attendeeEmails.map((em) => em.toLowerCase()));
+        const khopUids = this.ungVien()
+          .filter((u) => u.moiDuoc && emailSet.has(u.email.toLowerCase()))
+          .map((u) => u.id);
+
+        if (khopUids.length > 0) {
+          soNguoiKhop = khopUids.length;
+          this.daChon.set([...new Set([...this.daChon(), ...khopUids])]);
+        }
+      }
+
+      const matchMsg = soNguoiKhop > 0
+        ? ` and pre-selected ${soNguoiKhop} board member(s)`
+        : '';
+      this.thongBaoNhap.set(`Imported meeting details from "${f.name}"${matchMsg}. You can adjust any fields and invitees before scheduling.`);
+      this.loiTruong.set({});
+    } catch {
+      this.loi.set('Failed to parse the .ics file. Please check file format.');
+    }
+  }
+
+  xuatIcs(): void {
+    const t = this.title().trim() || (this.boardName() ? `${this.boardName()} meeting` : 'Meeting');
+    const moc = this.mocThoiGian();
+    const batDau = moc ? moc.batDau.toISOString() : new Date().toISOString();
+    const ketThuc = moc
+      ? moc.ketThuc.toISOString()
+      : new Date(Date.now() + this.phutKeoDai() * 60_000).toISOString();
+
+    const chon = new Set(this.daChon());
+    const khach = this.ungVien().filter((u) => chon.has(u.id));
+
+    const icsContent = taoIcs([
+      {
+        id: `meeting-${Date.now()}`,
+        title: t,
+        description: this.description().trim() || null,
+        startAt: batDau,
+        endAt: ketThuc,
+        location: this.kemMeet() ? 'Google Meet' : null,
+        attendees: khach.map((k) => ({ name: k.ten, email: k.email })),
+        remindMinutes: this.nhacTruoc(),
+      },
+    ]);
+
+    taiVeFile(tenFileAnToan(t, 'ics'), icsContent, MIME_ICS);
+  }
+
+  xuatPdf(): void {
+    window.print();
+  }
+
   // ---------------------------------------------------------------- gửi
 
-  /**
-   * Mốc bắt đầu/kết thúc dưới dạng thời điểm tuyệt đối.
-   *
-   * `new Date('2026-09-01T14:30')` (không có hậu tố Z) được JS hiểu theo giờ ĐỊA
-   * PHƯƠNG — đúng ý ở đây, vì người dùng gõ giờ theo đồng hồ của họ.
-   */
   private mocThoiGian(): { batDau: Date; ketThuc: Date } | null {
     if (!this.ngay() || !this.gio()) return null;
     const batDau = new Date(`${this.ngay()}T${this.gio()}`);
@@ -162,13 +286,6 @@ export class ScheduleMeetingModal {
     return { batDau, ketThuc: new Date(batDau.getTime() + this.phutKeoDai() * 60_000) };
   }
 
-  /**
-   * Kiểm tra TRƯỚC khi gọi Google.
-   *
-   * ⚠️ Phải làm đủ ở đây, không ỷ vào backend. Thứ tự là: tạo trên Google →
-   *    rồi mới lưu về mình. Nên một lỗi phát hiện muộn (ở backend) đồng nghĩa
-   *    sự kiện đã tạo và thư mời đã bay đi rồi — không thu lại được.
-   */
   private kiemTra(): boolean {
     const loi: Record<string, string> = {};
 
@@ -176,9 +293,6 @@ export class ScheduleMeetingModal {
     const moc = this.mocThoiGian();
     if (!moc) loi['time'] = 'Pick a valid date and time.';
     else if (moc.batDau.getTime() < Date.now()) {
-      // Hẹn vào quá khứ gần như luôn là gõ nhầm, và lời nhắc sẽ không bao giờ
-      // kêu. Chặn ở đây vì backend CỐ Ý không chặn (từ chối muộn chỉ đẻ ra sự
-      // kiện mồ côi bên Google) — xem ghi chú ở MeetingsService.
       loi['time'] = 'That time is in the past. Pick a time from now on.';
     }
     if (this.daChon().length === 0) loi['people'] = 'Invite at least one person.';
@@ -232,9 +346,6 @@ export class ScheduleMeetingModal {
           meetUrl: kq.meetUrl ?? null,
         });
       } catch {
-        // Sự kiện ĐÃ tạo và thư mời ĐÃ gửi — nói thẳng chuyện đó ra thay vì báo
-        // một lỗi chung chung khiến người dùng bấm "Tạo" lần nữa và đẻ ra cuộc
-        // họp thứ hai.
         this.loi.set(
           'The Google Calendar event was created and invitations were sent, but we could not save it here — this meeting will not show a reminder in the app.',
         );
@@ -252,11 +363,12 @@ export class ScheduleMeetingModal {
 function hai(n: number): string {
   return String(n).padStart(2, '0');
 }
-/** `<input type="date">` đòi đúng dạng yyyy-MM-dd theo giờ ĐỊA PHƯƠNG —
- *  `toISOString()` sẽ trả giờ UTC và lệch ngày với ai ở múi giờ dương. */
 function chuoiNgay(d: Date): string {
   return `${d.getFullYear()}-${hai(d.getMonth() + 1)}-${hai(d.getDate())}`;
 }
 function chuoiGio(d: Date): string {
   return `${hai(d.getHours())}:${hai(d.getMinutes())}`;
+}
+function laLinkMeet(v: string | null): boolean {
+  return !!v && /^https:\/\/meet\.google\.com\/[A-Za-z0-9-]+$/.test(v);
 }

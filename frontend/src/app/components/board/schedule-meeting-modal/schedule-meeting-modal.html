@@ -1,16 +1,62 @@
 @if (isOpen()) {
 <div class="modal modal-open z-[1000] p-4 backdrop-blur-[2px]" (click)="close.emit()">
-  <div class="modal-box max-h-[90vh] max-w-[560px] border border-base-300" (click)="$event.stopPropagation()">
+  <div class="modal-box max-h-[90vh] max-w-[580px] border border-base-300 shadow-2xl" (click)="$event.stopPropagation()">
 
-    <div class="mb-5 flex items-center justify-between">
+    <!-- Header: Title + Action buttons (Import .ics, Export) + Close -->
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-base-200 pb-3">
       <h3 class="flex items-center gap-2 text-lg font-black text-base-content">
         <svg lucideCalendarPlus class="h-5 w-5 text-primary" [strokeWidth]="2.2"></svg>
         Schedule a meeting
       </h3>
-      <button class="btn btn-circle btn-ghost btn-sm" (click)="close.emit()" aria-label="Close">
-        <svg lucideX class="h-4 w-4" [strokeWidth]="2.4"></svg>
-      </button>
+
+      <div class="flex items-center gap-2">
+        <!-- Import .ics -->
+        <label class="btn btn-outline btn-xs gap-1.5 font-bold cursor-pointer transition-all hover:bg-base-200"
+          title="Import an .ics calendar file to pre-fill details">
+          <svg lucideUpload class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg>
+          Import .ics
+          <input type="file" accept=".ics,text/calendar" class="hidden" (change)="nhapFileIcs($event)" />
+        </label>
+
+        <!-- Export Dropdown (.ics / PDF) -->
+        <div class="dropdown dropdown-end">
+          <button tabindex="0" type="button" class="btn btn-outline btn-xs gap-1 font-bold transition-all hover:bg-base-200" title="Export meeting draft">
+            <svg lucideDownload class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg>
+            Export
+            <svg class="h-3 w-3 opacity-60" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
+          </button>
+          <ul tabindex="0" class="dropdown-content menu z-[100] mt-1 w-36 rounded-box border border-base-300 bg-base-100 p-1 shadow-xl text-xs font-bold">
+            <li>
+              <button type="button" class="gap-2" (click)="xuatIcs()">
+                <svg lucideDownload class="h-3.5 w-3.5 text-primary"></svg> Export .ics
+              </button>
+            </li>
+            <li>
+              <button type="button" class="gap-2" (click)="xuatPdf()">
+                <svg lucideFileText class="h-3.5 w-3.5 text-secondary"></svg> Export PDF
+              </button>
+            </li>
+          </ul>
+        </div>
+
+        <button class="btn btn-circle btn-ghost btn-xs ml-1" (click)="close.emit()" aria-label="Close">
+          <svg lucideX class="h-4 w-4" [strokeWidth]="2.4"></svg>
+        </button>
+      </div>
     </div>
+
+    <!-- Thông báo sau khi Import .ics -->
+    @if (thongBaoNhap()) {
+      <div role="status" class="alert alert-info border border-info/40 bg-info/10 text-xs font-semibold mb-3 py-2 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <svg lucideUpload class="h-4 w-4 shrink-0 text-info" [strokeWidth]="2.2"></svg>
+          <span>{{ thongBaoNhap() }}</span>
+        </div>
+        <button type="button" class="btn btn-ghost btn-circle btn-xs h-5 w-5 min-h-0" (click)="thongBaoNhap.set(null)">
+          <svg lucideX class="h-3 w-3" [strokeWidth]="2.2"></svg>
+        </button>
+      </div>
+    }
 
     <!-- Tiêu đề -->
     <div class="mb-4">
@@ -99,7 +145,7 @@
           Invite <span class="text-error">*</span>
         </span>
         @if (soNguoiMoiDuoc() > 0) {
-          <button type="button" class="btn btn-ghost btn-xs" (click)="chonHet()">
+          <button type="button" class="btn btn-ghost btn-xs font-bold" (click)="chonHet()">
             {{ daChon().length === soNguoiMoiDuoc() ? 'Clear all' : 'Select all' }}
           </button>
         }
@@ -155,10 +201,10 @@
     }
 
     <div class="modal-action mt-2">
-      <button type="button" class="btn btn-ghost btn-sm" [disabled]="dangGui()" (click)="close.emit()">
+      <button type="button" class="btn btn-ghost btn-sm font-bold" [disabled]="dangGui()" (click)="close.emit()">
         Cancel
       </button>
-      <button type="button" class="btn btn-primary btn-sm gap-1.5" [disabled]="dangGui()" (click)="guiDi()">
+      <button type="button" class="btn btn-primary btn-sm gap-1.5 font-bold" [disabled]="dangGui()" (click)="guiDi()">
         @if (dangGui()) {
           <span class="loading loading-spinner loading-xs"></span>
           Creating&hellip;
@@ -169,6 +215,62 @@
       </button>
     </div>
 
+  </div>
+</div>
+
+<!-- Bản in PDF: chỉ hiển thị khi in qua window.print() -->
+<div id="ban-in-lich-soan" class="hidden print:block p-8 font-sans text-black bg-white">
+  <div class="border-b-2 border-black pb-4 mb-6">
+    <p class="text-xs uppercase tracking-wider text-gray-500 font-bold">Horizon Hub Harmony &bull; Meeting Schedule</p>
+    <h1 class="text-2xl font-black mt-1 text-black">{{ title() || 'Untitled Meeting' }}</h1>
+    @if (boardName()) {
+      <p class="text-sm font-semibold text-gray-600 mt-0.5">Board: {{ boardName() }}</p>
+    }
+  </div>
+
+  <div class="grid grid-cols-2 gap-4 mb-6 text-sm">
+    <div class="p-3 bg-gray-50 border border-gray-200 rounded">
+      <p class="text-xs font-bold text-gray-500 uppercase">Date &amp; Time</p>
+      <p class="font-bold text-black mt-1">
+        {{ ngay() }} &bull; {{ gio() }} ({{ phutKeoDai() }} min)
+      </p>
+      <p class="text-xs text-gray-500 mt-0.5">Timezone: {{ muiGio }}</p>
+    </div>
+
+    <div class="p-3 bg-gray-50 border border-gray-200 rounded">
+      <p class="text-xs font-bold text-gray-500 uppercase">Meeting Room &amp; Reminder</p>
+      <p class="font-bold text-black mt-1">
+        {{ kemMeet() ? 'Google Meet' : 'No online room' }}
+      </p>
+      <p class="text-xs text-gray-500 mt-0.5">Reminder: {{ nhacTruoc() }} minutes before</p>
+    </div>
+  </div>
+
+  @if (description()) {
+    <div class="mb-6">
+      <h2 class="text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Agenda / Description</h2>
+      <div class="p-3 bg-gray-50 border border-gray-200 rounded text-sm whitespace-pre-wrap text-black">
+        {{ description() }}
+      </div>
+    </div>
+  }
+
+  <div>
+    <h2 class="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">
+      Invited Attendees ({{ daChon().length }})
+    </h2>
+    @if (nguoiDaChon().length > 0) {
+      <ul class="divide-y divide-gray-200 border border-gray-200 rounded">
+        @for (u of nguoiDaChon(); track u.id) {
+          <li class="px-3 py-2 flex items-center justify-between text-xs">
+            <span class="font-bold text-black">{{ u.ten }}</span>
+            <span class="text-gray-600">{{ u.email }}</span>
+          </li>
+        }
+      </ul>
+    } @else {
+      <p class="text-xs text-gray-400 italic">No attendees selected.</p>
+    }
   </div>
 </div>
 }

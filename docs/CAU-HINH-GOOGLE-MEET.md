@@ -227,11 +227,11 @@ khi đã tạo. Muốn xoá thì tự xoá trong Google Calendar.
 
 ---
 
-## 7. Hẹn lịch họp (nút **Schedule**) — cần thêm gì?
+## 7. Hẹn lịch họp (nút **Meetings**) — cần thêm gì?
 
 ### Câu trả lời ngắn: **không cần thêm gì cả.**
 
-Nút *Schedule* dùng **đúng scope đã khai ở mục 3** — `calendar.events`. Cùng
+Nút *Meetings* dùng **đúng scope đã khai ở mục 3** — `calendar.events`. Cùng
 một quyền đó vừa tạo phòng Meet "họp ngay", vừa tạo sự kiện có mời người và
 gửi thư. Đã cấu hình xong cho Meet thì lịch họp chạy luôn, không phải vào
 Google Cloud Console lần nữa.
@@ -305,6 +305,78 @@ tưởng đã xong.
 
 ---
 
+## 8. Nhập / xuất file lịch
+
+### Vì sao PDF **không** nhập vào lịch được
+
+Apple Calendar và Google Calendar chỉ nhập được **`.ics`** (iCalendar, RFC
+5545). PDF không mang dữ liệu sự kiện có cấu trúc — muốn đọc giờ họp từ PDF
+thì phải đoán bố cục hoặc OCR, và sai giờ mà không có gì báo. Nên:
+
+| Định dạng | Xuất | Nhập | Vào được Apple/Google |
+|---|---|---|---|
+| `.ics` | ✅ | ✅ | ✅ |
+| PDF | ✅ | ❌ | ❌ — chỉ để đọc/in/gửi |
+
+### Xuất `.ics`
+
+Mở **Meetings** trên thanh board:
+- **Export all .ics** — mọi cuộc sắp tới gói trong một file
+- Nút **.ics** ở từng dòng — chỉ cuộc đó
+
+Mở file ra là Apple Calendar nhận luôn; với Google thì
+*Google Calendar → Settings → Import & export → Import*.
+
+Giờ được ghi dạng **UTC** (`...Z`) chứ không phải `TZID`. Lý do: dùng `TZID`
+thì RFC bắt buộc file phải kèm cả khối `VTIMEZONE` mô tả đầy đủ quy tắc đổi
+giờ mùa — thiếu là file không hợp lệ và Apple Calendar từ chối. Dạng UTC không
+cần VTIMEZONE, và trình lịch nào cũng tự đổi về giờ địa phương người xem.
+
+### Xuất PDF
+
+Nút **Export PDF** mở hộp thoại in của trình duyệt → chọn **Save as PDF**.
+
+Không dùng thư viện PDF (jsPDF/pdfmake nặng ~300KB, mà bundle đã vượt ngân
+sách sẵn). Bản in nói rõ ngay trên đầu trang rằng muốn thêm vào lịch thì phải
+dùng `.ics`.
+
+### Nhập `.ics`
+
+**Meetings → Import .ics**. App đọc file, hiện danh sách sự kiện kèm giờ
+**quy về múi giờ máy bạn**, cho chọn cái nào nhập.
+
+File không hợp lệ thì báo rõ nguyên nhân:
+
+| Tình huống | Báo |
+|---|---|
+| File rỗng | *The file is empty.* |
+| PDF, ảnh, văn bản thường | *This is not a calendar file…* |
+| `.ics` đúng nhưng không có sự kiện | *…contains no events.* |
+| Có sự kiện nhưng đều thiếu giờ bắt đầu | *…none of them has a usable start time.* |
+
+Cảnh báo **không chặn** (vẫn nhập được, có ghi chú vàng ở từng dòng): thiếu
+giờ kết thúc (mặc định 1 giờ), giờ kết thúc trước giờ bắt đầu, và **múi giờ
+lạ** — Outlook ghi tên kiểu Windows (`Pacific Standard Time`) chứ không phải
+tên IANA, app đọc như giờ máy nên **giờ có thể lệch**.
+
+Một file nhiều nhất **50 sự kiện** — chặn một file lịch cả năm nhập vào rồi
+bắn hàng trăm thông báo.
+
+### ⚠️ Nhập KHÔNG đẩy ngược lên Google
+
+Cuộc họp nhập vào **chỉ nằm ở board này** (`google_event_id = NULL`). Cố ý như
+vậy: file `.ics` vốn được xuất ra **từ một lịch**, đẩy ngược lên Google là
+nhân đôi cuộc họp trong lịch người dùng, và `sendUpdates=all` sẽ bắn lại thư
+mời cho những người đã nhận từ lâu.
+
+Nhập ở đây nghĩa là *"cho app biết về cuộc họp này"* — để chuông nhắc trước
+giờ và board hiện nó ra. Không phải *"tạo cuộc họp mới"*.
+
+Email khách mời trong file được đối chiếu với người trên board; ai không phải
+người dùng của app thì bỏ qua (app không gửi thư cho họ được).
+
+---
+
 ## Phụ lục — phần code liên quan
 
 **Chung cho cả hai tính năng**
@@ -338,4 +410,14 @@ tưởng đã xong.
 | Lưu lịch, lọc người dự, báo chuông | `backend/src/modules/meetings/meetings.service.ts` |
 | Chặn dữ liệu xấu | `backend/src/modules/meetings/dto/create-meeting.dto.ts` |
 | Bảng database | `backend/migrations/0009_lich_hop_google_calendar.sql` (đã chạy) |
-| Kiểm tra đầu-cuối (38 bài) | `backend/scripts/kiem-tra-lich-hop.mjs` — `npm run kiem-tra:lich-hop` |
+| Kiểm tra đầu-cuối (45 bài) | `backend/scripts/kiem-tra-lich-hop.mjs` — `npm run kiem-tra:lich-hop` |
+
+**Nhập / xuất file**
+
+| Việc | Ở đâu |
+|---|---|
+| Dựng và đọc `.ics` (RFC 5545) | `frontend/src/app/utils/ics.util.ts` |
+| Test cho phần trên (39 bài) | `frontend/src/app/utils/ics.util.spec.ts` |
+| Danh sách + nút nhập/xuất | `frontend/src/app/components/board/meetings-panel/` |
+| Tải file về máy | `frontend/src/app/utils/download.util.ts` |
+| Kiểu chữ cho bản in PDF | `frontend/src/styles.css` (khối `@media print`) |

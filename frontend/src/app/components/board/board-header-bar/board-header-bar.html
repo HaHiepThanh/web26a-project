@@ -103,9 +103,10 @@
       </button>
     }
 
-    <!-- Hẹn lịch họp. Cùng điều kiện quyền + liên kết Google với nút Meet ở
-         trên, nhưng hiện ĐỘC LẬP với việc có đang họp hay không: đang họp bây
-         giờ không liên quan gì tới việc hẹn một cuộc cho tuần sau. -->
+    <!-- Hẹn lịch họp: tạo lịch + nhập/xuất .ics + bản in PDF.
+         Cùng điều kiện quyền + liên kết Google với nút Meet ở trên, nhưng hiện
+         ĐỘC LẬP với việc có đang họp hay không: đang họp bây giờ không liên
+         quan gì tới việc hẹn một cuộc cho tuần sau. -->
     @if (canManageMeet()) {
       <button
         type="button"
@@ -113,7 +114,7 @@
         [disabled]="!googleLinked()"
         (click)="openSchedule.emit()"
         [title]="googleLinked()
-          ? 'Schedule a meeting on Google Calendar and invite people'
+          ? 'Schedule a meeting — create, import and export .ics'
           : 'Link your Google account in Settings -> Profile to schedule meetings'"
       >
         <svg class="h-[15px] w-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

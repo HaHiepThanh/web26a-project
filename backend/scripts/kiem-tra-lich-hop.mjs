@@ -219,6 +219,39 @@ const [, mCu] = await api('POST', '/meetings', A.token,
 const [, upB3] = await api('GET', '/meetings/my-upcoming', B.token);
 check('cuộc họp đã qua không còn nhắc', !upB3.some((m) => m.id === mCu.id));
 
+// --------------------------------------------------- 5b. NHẬP TỪ FILE .ics
+section('5b. CUỘC HỌP NHẬP TỪ FILE .ics');
+// Nhập KHÔNG tạo sự kiện bên Google (file vốn xuất ra từ một lịch — đẩy ngược
+// lên là nhân đôi và bắn lại thư mời), nên ba trường Google đều null.
+const [stNhap, mNhap] = await api('POST', '/meetings', A.token, body({
+  title: 'Họp nhập từ Apple Calendar',
+  googleEventId: null, googleHtmlLink: null, meetUrl: null,
+  remindMinutes: 0, attendeeIds: [],
+}));
+check('lưu được cuộc họp không có sự kiện Google', stNhap === 201, `status ${stNhap} ${JSON.stringify(mNhap)}`);
+check('không có googleEventId vẫn hợp lệ', mNhap?.googleEventId === null);
+check('remindMinutes = 0 (không nhắc) được chấp nhận', mNhap?.remindMinutes === 0);
+check('danh sách người dự rỗng → người tạo vẫn được thêm',
+  (mNhap?.attendees ?? []).length === 1 && mNhap.attendees[0].id === A.uid,
+  JSON.stringify(mNhap?.attendees));
+
+const [, upKhongNhac] = await api('GET', '/meetings/my-upcoming', A.token);
+const cuocKhongNhac = (upKhongNhac ?? []).find((m) => m.id === mNhap.id);
+check('cuộc chọn không nhắc vẫn nằm trong danh sách (client tự bỏ qua)',
+  !!cuocKhongNhac && cuocKhongNhac.remindMinutes === 0);
+
+// Sự kiện .ics hay có mô tả dài và ký tự lạ — không được làm hỏng gì.
+const [stDai] = await api('POST', '/meetings', A.token, body({
+  title: 'Họp quý ba — đội sản phẩm & thiết kế',
+  description: 'Chương trình:\n- Điểm tiến độ, rủi ro; ngân sách\n- Q&A',
+  googleEventId: null, googleHtmlLink: null, meetUrl: null,
+}));
+check('tiêu đề/mô tả có dấu tiếng Việt và ký tự đặc biệt vẫn lưu được', stDai === 201, `status ${stDai}`);
+
+// UID của file .ics KHÔNG được nhận làm id — id do database sinh.
+check('id do database sinh, không nhận từ client',
+  /^[0-9a-f]{8}-[0-9a-f]{4}/.test(mNhap?.id ?? ''), `id=${mNhap?.id}`);
+
 // ------------------------------------------------------------------ 6. HUỶ
 section('6. HUỶ');
 const [stHuyC] = await api('DELETE', `/meetings/${m1.id}`, C.token);

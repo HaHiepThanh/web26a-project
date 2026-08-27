@@ -1,6 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { SupabaseService } from '../../common/supabase/supabase.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 import { AuthService } from './auth.service';
 
 describe('AuthService - uploadAvatar', () => {
@@ -23,7 +24,19 @@ describe('AuthService - uploadAvatar', () => {
         },
         from: jest.fn().mockReturnValue({
           update: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({ error: null }),
+            eq: jest.fn().mockReturnValue({
+              select: jest.fn().mockReturnValue({
+                single: jest.fn().mockResolvedValue({
+                  data: {
+                    id: 'u1',
+                    email: 'test@dev.com',
+                    display_name: 'Test User',
+                    avatar_url: 'https://test.supabase.co/avatars/user-1/123.jpg',
+                  },
+                  error: null,
+                }),
+              }),
+            }),
           }),
         }),
       },
@@ -33,6 +46,12 @@ describe('AuthService - uploadAvatar', () => {
       providers: [
         AuthService,
         { provide: SupabaseService, useValue: mockSupabase },
+        {
+          provide: RealtimeGateway,
+          useValue: {
+            broadcastUserProfileUpdated: jest.fn(),
+          },
+        },
       ],
     }).compile();
 

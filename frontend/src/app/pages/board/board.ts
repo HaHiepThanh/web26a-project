@@ -189,7 +189,7 @@ export class Board {
   readonly googleLinked = signal(this.googleOauth.daNoiGoogle());
   readonly meetBusy = signal(false);
 
-  /** Hộp thoại hẹn lịch họp đang mở hay không. */
+  /** Hộp thoại soạn một cuộc họp mới. */
   readonly scheduleOpen = signal(false);
 
   /**
