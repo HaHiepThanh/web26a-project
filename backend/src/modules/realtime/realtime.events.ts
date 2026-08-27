@@ -19,6 +19,8 @@ export type BoardEventType =
   | 'card.moved'
   | 'card.deleted'
   | 'label.created'
+  | 'label.updated'
+  | 'label.deleted'
   | 'label.attached'
   | 'label.detached'
   | 'comment.created'

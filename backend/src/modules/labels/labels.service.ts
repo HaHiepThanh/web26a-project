@@ -235,4 +235,79 @@ export class LabelsService {
       labelId,
     });
   }
+
+  /** Cập nhật tên hoặc màu của nhãn. */
+  async update(
+    uid: string,
+    labelId: string,
+    name?: string,
+    color?: string,
+  ): Promise<LabelResponse> {
+    const { data: label, error: labelError } = await this.supabase.client
+      .from('labels')
+      .select('id, board_id, org_id, name, color')
+      .eq('id', labelId)
+      .maybeSingle();
+    if (labelError) {
+      if (laUuidSai(labelError)) throw new NotFoundException('Label not found.');
+      throw new InternalServerErrorException('Failed to load label.');
+    }
+    if (!label) {
+      throw new NotFoundException('Label not found.');
+    }
+
+    await this.access.assertBoardAccess(uid, label.board_id as string);
+
+    const patch: Partial<LabelRow> = {};
+    if (name !== undefined && name.trim()) {
+      patch.name = name.trim();
+    }
+    if (color !== undefined && HEX_COLOR.test(color)) {
+      patch.color = color;
+    }
+
+    const { data, error } = await this.supabase.client
+      .from('labels')
+      .update(patch)
+      .eq('id', labelId)
+      .select()
+      .single();
+    if (error) {
+      throw new InternalServerErrorException('Failed to update label.');
+    }
+    const updated = toLabel(data as LabelRow);
+    this.realtime.emitToBoard(updated.boardId, 'label.updated', uid, updated);
+    return updated;
+  }
+
+  /** Xoá nhãn khỏi board và các card đang gắn. */
+  async delete(uid: string, labelId: string): Promise<void> {
+    const { data: label, error: labelError } = await this.supabase.client
+      .from('labels')
+      .select('id, board_id, org_id')
+      .eq('id', labelId)
+      .maybeSingle();
+    if (labelError) {
+      if (laUuidSai(labelError)) throw new NotFoundException('Label not found.');
+      throw new InternalServerErrorException('Failed to load label.');
+    }
+    if (!label) {
+      throw new NotFoundException('Label not found.');
+    }
+
+    await this.access.assertBoardAccess(uid, label.board_id as string);
+
+    // Gỡ liên kết khỏi các card
+    await this.supabase.client.from('card_labels').delete().eq('label_id', labelId);
+
+    const { error } = await this.supabase.client
+      .from('labels')
+      .delete()
+      .eq('id', labelId);
+    if (error) {
+      throw new InternalServerErrorException('Failed to delete label.');
+    }
+
+    this.realtime.emitToBoard(label.board_id as string, 'label.deleted', uid, { id: labelId });
+  }
 }

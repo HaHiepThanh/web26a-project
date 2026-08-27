@@ -396,7 +396,7 @@ export class CardDetailModal {
     // h-8 (32px) — khớp chiều cao select-sm/input-sm ở 2 ô cùng hàng (Assignee,
     // Due date); trước đây pill này chỉ cao theo padding chữ (py-1.5 ≈ 26px),
     // thấp hơn rõ rệt so với 2 ô bên cạnh trong cùng lưới 3 cột.
-    const base = 'btn btn-sm h-8 min-h-0 flex-1 px-1 text-center text-[11.5px] font-semibold';
+    const base = 'btn btn-sm h-8 min-h-0 flex-1 px-1 text-center text-[11.5px] font-bold rounded-md';
     if (this.draftPriority() !== id) return `${base} btn-outline`;
     const selected: Record<CardPriority, string> = {
       high: 'btn-error btn-soft',

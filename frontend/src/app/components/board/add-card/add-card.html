@@ -1,7 +1,7 @@
 <button
   type="button"
   data-tour="add-card"
-  class="btn btn-ghost btn-sm w-full justify-start gap-1.5 px-1.5 text-[12px] font-medium text-base-content/50 hover:text-base-content/70 disabled:cursor-progress disabled:opacity-60 disabled:hover:bg-transparent"
+  class="btn btn-ghost btn-sm w-full justify-start gap-1.5 px-1.5 text-[12px] font-bold text-base-content/60 hover:text-base-content hover:bg-base-200/80 rounded-md disabled:cursor-progress disabled:opacity-60 disabled:hover:bg-transparent transition-colors"
   [disabled]="creating()"
   (click)="open.emit()"
 >
@@ -9,7 +9,7 @@
     <span class="loading loading-spinner h-3 w-3"></span>
     Adding card…
   } @else {
-    <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
     Add card
   }
 </button>

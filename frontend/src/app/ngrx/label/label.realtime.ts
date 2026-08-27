@@ -1,5 +1,5 @@
 import { signalStoreFeature, withMethods, patchState, type } from '@ngrx/signals';
-import { EntityState, upsertEntity } from '@ngrx/signals/entities';
+import { EntityState, removeEntity, upsertEntity } from '@ngrx/signals/entities';
 import { ApiLabel, Label } from '../../models';
 import { toLabel } from './label.mapper';
 import { LabelExtraState } from './label.state';
@@ -12,6 +12,10 @@ export function withLabelRealtime() {
       /** Áp nhãn mới nhận từ WebSocket — có rồi thì ghi đè, chưa có thì thêm. */
       applyRemoteLabel(r: ApiLabel): void {
         patchState(store, upsertEntity(toLabel(r)));
+      },
+
+      applyRemoteRemoveLabel(id: string): void {
+        patchState(store, removeEntity(id));
       },
 
       applyRemoteAttach(cardId: string, labelId: string): void {

@@ -1,11 +1,11 @@
 <div class="modal modal-open z-[1000] items-start overflow-y-auto p-4 md:p-8" (click)="attemptClose()">
-  <div class="modal-box my-auto flex h-[85vh] max-h-[85vh] w-full max-w-[880px] flex-col overflow-hidden p-0" (click)="$event.stopPropagation()">
+  <div class="modal-box my-auto flex h-[85vh] max-h-[85vh] w-full max-w-[880px] flex-col overflow-hidden p-0 rounded-md border border-base-300 shadow-2xl" (click)="$event.stopPropagation()">
 
     <!-- ===== Ảnh bìa ===== -->
     @if (coverRow(); as cov) {
       <div class="relative h-40 w-full shrink-0 bg-base-200">
         <img [src]="cov.url" [alt]="cov.name" class="h-full w-full object-cover" />
-        <button type="button" class="btn btn-sm absolute bottom-3 right-3 gap-1.5 bg-base-100/90 text-base-content shadow hover:bg-base-100" (click)="toggleCover(cov)">
+        <button type="button" class="btn btn-sm absolute bottom-3 right-3 gap-1.5 bg-base-100/90 text-base-content shadow-sm hover:bg-base-100 rounded-md font-bold" (click)="toggleCover(cov)">
           <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
           Remove cover
         </button>
@@ -15,26 +15,15 @@
     <!-- ===== Header: tiêu đề + presence + đóng ===== -->
     <div class="flex shrink-0 items-start gap-2 border-b border-base-200 px-5 pb-3 pt-4">
       <svg class="mt-2 h-5 w-5 shrink-0 text-base-content/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
-      <!-- data-tour: neo coach mark cảnh báo thẻ chưa đặt tên sẽ bị xoá. -->
-      <!-- Enter trong ô tiêu đề = Save changes.
-
-           Ô này là dòng đơn, và tour vừa dạy đúng nếp "gõ tên rồi Enter" ở bước
-           thêm danh sách. Vào tới đây gõ tên thẻ rồi Enter mà không có gì xảy ra
-           thì người dùng tưởng đã lưu — trong khi bản nháp vẫn treo, và nút Save
-           thật thì nằm dưới đáy một hộp cao 717px (đo ở 390×844), phải cuộn mới
-           thấy. Trên điện thoại đó là cả một quãng đường.
-
-           Chỉ gắn cho tiêu đề. Ô mô tả là textarea nhiều dòng, ở đó Enter phải
-           xuống dòng như bình thường. -->
-      <input #titleInput data-tour="card-title" class="min-w-0 flex-1 rounded-md bg-transparent px-1.5 py-1 text-lg font-bold text-base-content outline-none hover:bg-base-200 focus:bg-base-200" [value]="draftTitle()" spellcheck="false" (input)="draftTitle.set($any($event.target).value)" (keydown.enter)="save()" />
+      <input #titleInput data-tour="card-title" class="min-w-0 flex-1 rounded-md bg-transparent px-1.5 py-1 text-lg font-bold text-base-content outline-none hover:bg-base-200 focus:bg-base-200 transition-colors" [value]="draftTitle()" spellcheck="false" (input)="draftTitle.set($any($event.target).value)" (keydown.enter)="save()" />
 
       @if (dirty()) {
-        <span class="mt-2 shrink-0 rounded-full bg-warning/15 px-2 py-0.5 text-2xs font-bold text-warning">Unsaved</span>
+        <span class="mt-2 shrink-0 rounded-md bg-warning/15 px-2 py-0.5 text-2xs font-bold text-warning border border-warning/30">Unsaved</span>
       } @else if (justSaved()) {
-        <span class="mt-2 shrink-0 rounded-full bg-success/15 px-2 py-0.5 text-2xs font-bold text-success">Saved</span>
+        <span class="mt-2 shrink-0 rounded-md bg-success/15 px-2 py-0.5 text-2xs font-bold text-success border border-success/30">Saved</span>
       }
 
-      <button type="button" class="btn btn-circle btn-ghost btn-sm relative shrink-0 before:absolute before:-inset-2 before:content-['']" (click)="attemptClose()" aria-label="Close">
+      <button type="button" class="btn btn-ghost btn-sm rounded-md relative shrink-0" (click)="attemptClose()" aria-label="Close">
         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </button>
     </div>
@@ -49,7 +38,7 @@
         <div class="flex flex-wrap items-center gap-2">
           <button
             type="button"
-            class="btn btn-sm gap-1.5 font-bold transition-all shadow-xs"
+            class="btn btn-sm gap-1.5 font-bold transition-all shadow-xs rounded-md"
             [class.btn-success]="isCompleted()"
             [class.btn-outline]="!isCompleted()"
             (click)="toggleCompleted()">
@@ -62,7 +51,7 @@
             }
           </button>
 
-          <label class="btn btn-sm btn-outline gap-1.5">
+          <label class="btn btn-sm btn-outline gap-1.5 rounded-md font-bold">
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a5 5 0 01-7.07-7.07l9.19-9.19a3.5 3.5 0 014.95 4.95L9.88 18.56a1.5 1.5 0 01-2.12-2.12l8.49-8.49"/></svg>
             Attach
             <input type="file" multiple class="hidden" (change)="onFilesSelected($event)" />
@@ -72,12 +61,11 @@
         <!-- Meta: người phụ trách + hạn + ưu tiên -->
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div class="min-w-0">
-            <label class="mb-1.5 flex items-center gap-1.5 text-2xs font-bold uppercase tracking-wide text-base-content/50" for="detail-assignee-select">
-              <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.4"/><path d="M4.5 20c1.6-3.6 4.6-5.4 7.5-5.4s5.9 1.8 7.5 5.4"/></svg>
+            <label class="mb-1.5 flex items-center gap-1.5 text-xs font-bold text-base-content" for="detail-assignee-select">
+              <svg class="h-3.5 w-3.5 text-base-content/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.4"/><path d="M4.5 20c1.6-3.6 4.6-5.4 7.5-5.4s5.9 1.8 7.5 5.4"/></svg>
               Assignee
             </label>
-            <!-- data-tour: neo coach mark gợi ý mời thành viên. -->
-            <select id="detail-assignee-select" data-tour="assignee" class="select select-sm w-full" [ngModel]="draftAssigneeId()" (ngModelChange)="draftAssigneeId.set($event)">
+            <select id="detail-assignee-select" data-tour="assignee" class="select select-sm w-full rounded-md font-semibold" [ngModel]="draftAssigneeId()" (ngModelChange)="draftAssigneeId.set($event)">
               <option [ngValue]="null">Unassigned</option>
               @for (m of members(); track m.id) {
                 <option [ngValue]="m.id">{{ m.displayName ?? m.email }}</option>
@@ -86,16 +74,16 @@
           </div>
 
           <div class="min-w-0">
-            <label class="mb-1.5 flex items-center gap-1.5 text-2xs font-bold uppercase tracking-wide text-base-content/50" for="detail-due-input">
-              <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            <label class="mb-1.5 flex items-center gap-1.5 text-xs font-bold text-base-content" for="detail-due-input">
+              <svg class="h-3.5 w-3.5 text-base-content/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
               Due date
             </label>
-            <input type="date" id="detail-due-input" class="input input-sm w-full" [value]="draftDueDate()" (input)="draftDueDate.set($any($event.target).value)" />
+            <input type="date" id="detail-due-input" class="input input-sm w-full rounded-md font-semibold" [value]="draftDueDate()" (input)="draftDueDate.set($any($event.target).value)" />
           </div>
 
           <div class="min-w-0">
-            <label class="mb-1.5 flex items-center gap-1.5 text-2xs font-bold uppercase tracking-wide text-base-content/50">
-              <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 21V4a1 1 0 011-1h11.4a1 1 0 01.8 1.6L15 9l3.2 4.4a1 1 0 01-.8 1.6H6"/></svg>
+            <label class="mb-1.5 flex items-center gap-1.5 text-xs font-bold text-base-content">
+              <svg class="h-3.5 w-3.5 text-base-content/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 21V4a1 1 0 011-1h11.4a1 1 0 01.8 1.6L15 9l3.2 4.4a1 1 0 01-.8 1.6H6"/></svg>
               Priority
             </label>
             <div class="flex gap-1">
@@ -108,8 +96,8 @@
 
         <!-- Nhãn -->
         <div>
-          <label class="mb-1.5 flex items-center gap-1.5 text-2xs font-bold uppercase tracking-wide text-base-content/50">
-            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><circle cx="7" cy="7" r="1.2" fill="currentColor"/></svg>
+          <label class="mb-1.5 flex items-center gap-1.5 text-xs font-bold text-base-content">
+            <svg class="h-3.5 w-3.5 text-base-content/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><circle cx="7" cy="7" r="1.2" fill="currentColor"/></svg>
             Labels
           </label>
           <app-label-picker [boardId]="boardId()" [selectedIds]="selectedLabelIds()" (selectionChange)="onLabelsChange($event)" />
@@ -118,20 +106,20 @@
         <!-- Mô tả -->
         <div>
           <div class="mb-1.5 flex items-center justify-between">
-            <label class="flex items-center gap-1.5 text-2xs font-bold uppercase tracking-wide text-base-content/50">
-              <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+            <label class="flex items-center gap-1.5 text-xs font-bold text-base-content">
+              <svg class="h-3.5 w-3.5 text-base-content/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
               Description
             </label>
             @if (!editingDesc()) {
-              <button type="button" class="btn btn-ghost btn-xs relative before:absolute before:-inset-2 before:content-['']" (click)="toggleEditDesc()">Edit</button>
+              <button type="button" class="btn btn-ghost btn-xs rounded-md font-bold" (click)="toggleEditDesc()">Edit</button>
             }
           </div>
           @if (editingDesc()) {
-            <textarea id="detail-desc" class="textarea resize-none w-full text-xs min-h-[58px] max-h-[120px] leading-relaxed py-2 px-3" rows="2" placeholder="Add a more detailed description..." [value]="draftDescription()" (input)="draftDescription.set($any($event.target).value)"></textarea>
+            <textarea id="detail-desc" class="textarea resize-none w-full text-xs min-h-[58px] max-h-[120px] leading-relaxed py-2 px-3 rounded-md" rows="2" placeholder="Add a more detailed description..." [value]="draftDescription()" (input)="draftDescription.set($any($event.target).value)"></textarea>
           } @else if (draftDescription()) {
-            <div class="cursor-text whitespace-pre-wrap break-words rounded-lg bg-base-200/60 px-3 py-2 text-xs text-base-content leading-relaxed" (click)="toggleEditDesc()">{{ draftDescription() }}</div>
+            <div class="cursor-text whitespace-pre-wrap break-words rounded-md bg-base-200/60 px-3 py-2 text-xs text-base-content leading-relaxed" (click)="toggleEditDesc()">{{ draftDescription() }}</div>
           } @else {
-            <button type="button" class="btn btn-ghost h-auto min-h-[34px] w-full justify-start rounded-lg bg-base-200/60 px-3 py-2 text-left text-xs font-normal normal-case text-base-content/50" (click)="toggleEditDesc()">Add a more detailed description...</button>
+            <button type="button" class="btn btn-ghost h-auto min-h-[34px] w-full justify-start rounded-md bg-base-200/60 px-3 py-2 text-left text-xs font-normal normal-case text-base-content/50" (click)="toggleEditDesc()">Add a more detailed description...</button>
           }
         </div>
 
@@ -143,11 +131,11 @@
         <!-- Các tập tin đính kèm -->
         <div class="border-t border-base-200 pt-4">
           <div class="mb-2 flex items-center justify-between">
-            <label class="flex items-center gap-1.5 text-2xs font-bold uppercase tracking-wide text-base-content/50">
-              <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a5 5 0 01-7.07-7.07l9.19-9.19a3.5 3.5 0 014.95 4.95L9.88 18.56a1.5 1.5 0 01-2.12-2.12l8.49-8.49"/></svg>
+            <label class="flex items-center gap-1.5 text-xs font-bold text-base-content">
+              <svg class="h-3.5 w-3.5 text-base-content/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a5 5 0 01-7.07-7.07l9.19-9.19a3.5 3.5 0 014.95 4.95L9.88 18.56a1.5 1.5 0 01-2.12-2.12l8.49-8.49"/></svg>
               Attachments
             </label>
-            <label class="btn btn-ghost btn-xs">
+            <label class="btn btn-ghost btn-xs rounded-md font-bold">
               Add
               <input type="file" multiple class="hidden" (change)="onFilesSelected($event)" />
             </label>
@@ -162,8 +150,8 @@
           } @else {
             <div class="flex flex-col gap-2">
               @for (att of attachmentRows(); track att.key) {
-                <div class="group flex items-center gap-3 rounded-lg border border-base-200 p-2 hover:bg-base-200/50">
-                  <button type="button" class="btn btn-ghost h-12 min-h-0 w-16 shrink-0 overflow-hidden p-0" (click)="openAttachment(att.url)" [title]="'Open ' + att.name">
+                <div class="group flex items-center gap-3 rounded-md border border-base-200 p-2 hover:bg-base-200/50 transition-colors">
+                  <button type="button" class="btn btn-ghost h-12 min-h-0 w-16 shrink-0 overflow-hidden p-0 rounded-md" (click)="openAttachment(att.url)" [title]="'Open ' + att.name">
                     @if (att.isImage) {
                       <img [src]="att.url" [alt]="att.name" class="h-full w-full object-cover" />
                     } @else {
@@ -175,23 +163,23 @@
                     <div class="flex items-center gap-1.5 text-2xs text-base-content/50">
                       <span>{{ formatSize(att.size) }}</span>
                       @if (att.isCover) {
-                        <span class="badge badge-primary badge-xs gap-0.5">Cover</span>
+                        <span class="badge badge-primary badge-xs gap-0.5 rounded-md">Cover</span>
                       }
                       @if (att.isPending) {
-                        <span class="badge badge-warning badge-soft badge-xs gap-0.5">Not saved yet</span>
+                        <span class="badge badge-warning badge-soft badge-xs gap-0.5 rounded-md">Not saved yet</span>
                       }
                     </div>
                   </div>
                   <div class="flex shrink-0 items-center gap-0.5">
                     @if (att.isImage) {
-                      <button type="button" class="btn btn-ghost btn-xs btn-square" [class.text-primary]="att.isCover" (click)="toggleCover(att)" [title]="att.isCover ? 'Unset as cover' : 'Set as cover'">
+                      <button type="button" class="btn btn-ghost btn-xs btn-square rounded-md" [class.text-primary]="att.isCover" (click)="toggleCover(att)" [title]="att.isCover ? 'Unset as cover' : 'Set as cover'">
                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
                       </button>
                     }
-                    <button type="button" class="btn btn-ghost btn-xs btn-square" (click)="openAttachment(att.url)" title="Open in new tab">
+                    <button type="button" class="btn btn-ghost btn-xs btn-square rounded-md" (click)="openAttachment(att.url)" title="Open in new tab">
                       <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
                     </button>
-                    <button type="button" class="btn btn-ghost btn-xs btn-square text-base-content/50 hover:text-error" (click)="removeAttachment(att)" title="Remove attachment">
+                    <button type="button" class="btn btn-ghost btn-xs btn-square rounded-md text-base-content/50 hover:text-error" (click)="removeAttachment(att)" title="Remove attachment">
                       <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>
                     </button>
                   </div>
@@ -218,7 +206,7 @@
             type="button"
             class="btn btn-ghost btn-xs h-auto min-h-[32px] w-full justify-between px-2.5 py-1.5 rounded-md font-normal normal-case hover:bg-base-300/60 transition-colors"
             (click)="toggleHistory()">
-            <span class="text-2xs font-bold uppercase tracking-wide text-base-content/60">Change history ({{ activityLogs().length }})</span>
+            <span class="text-xs font-bold text-base-content/80">Change history ({{ activityLogs().length }})</span>
             <svg class="h-3.5 w-3.5 text-base-content/50 transition-transform duration-200" [class.rotate-90]="historyOpen()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
           </button>
 
@@ -248,23 +236,23 @@
     <!-- ===== Thanh chân: lưu có xác nhận & xoá thẻ ===== -->
     <div class="flex shrink-0 flex-col gap-2 border-t border-base-200 bg-base-100 px-5 py-3">
       @if (confirmClose()) {
-        <div class="flex flex-wrap items-center gap-2 rounded-xl border border-warning/40 bg-warning/10 px-3 py-2">
+        <div class="flex flex-wrap items-center gap-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-2">
           <span class="min-w-0 flex-1 text-xs font-semibold text-base-content">
             You have unsaved changes. Save before closing?
           </span>
-          <button type="button" class="btn btn-ghost btn-xs" (click)="confirmClose.set(false)">Keep editing</button>
-          <button type="button" class="btn btn-ghost btn-xs text-error" (click)="discardAndClose()">Close without saving</button>
-          <button type="button" class="btn btn-primary btn-xs" [disabled]="!canSave()" (click)="saveAndClose()">Save and close</button>
+          <button type="button" class="btn btn-ghost btn-xs rounded-md font-bold" (click)="confirmClose.set(false)">Keep editing</button>
+          <button type="button" class="btn btn-ghost btn-xs text-error rounded-md font-bold" (click)="discardAndClose()">Close without saving</button>
+          <button type="button" class="btn btn-primary btn-xs rounded-md font-black" [disabled]="!canSave()" (click)="saveAndClose()">Save and close</button>
         </div>
       }
 
       @if (confirmDelete()) {
-        <div class="flex flex-wrap items-center gap-2 rounded-xl border border-error/40 bg-error/10 px-3 py-2">
+        <div class="flex flex-wrap items-center gap-2 rounded-md border border-error/40 bg-error/10 px-3 py-2">
           <span class="min-w-0 flex-1 text-xs font-semibold text-base-content">
             Delete card "{{ card().title }}"? This cannot be undone.
           </span>
-          <button type="button" class="btn btn-ghost btn-xs" (click)="confirmDelete.set(false)">Cancel</button>
-          <button type="button" class="btn btn-error btn-xs" (click)="confirmDeleteCard()">Yes, delete</button>
+          <button type="button" class="btn btn-ghost btn-xs rounded-md font-bold" (click)="confirmDelete.set(false)">Cancel</button>
+          <button type="button" class="btn btn-error btn-xs rounded-md font-black" (click)="confirmDeleteCard()">Yes, delete</button>
         </div>
       }
 
@@ -275,18 +263,18 @@
         </span>
         <div class="flex items-center gap-2 shrink-0">
           @if (dirty()) {
-            <button type="button" class="btn btn-ghost btn-sm" (click)="discard()">Discard changes</button>
+            <button type="button" class="btn btn-ghost btn-sm rounded-md font-bold" (click)="discard()">Discard changes</button>
           }
-          <button type="button" class="btn btn-ghost btn-sm gap-1.5 text-error hover:bg-error/10" (click)="requestDelete()">
+          <button type="button" class="btn btn-ghost btn-sm gap-1.5 text-error hover:bg-error/10 rounded-md font-bold" (click)="requestDelete()">
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>
             Delete card
           </button>
-          <button type="button" class="btn btn-primary btn-sm gap-1.5" [disabled]="!canSave()" (click)="saveAndClose()">
+          <button type="button" class="btn btn-primary btn-sm gap-1.5 rounded-md font-black" [disabled]="!canSave()" (click)="saveAndClose()">
             @if (saving()) { <span class="loading loading-spinner loading-xs"></span> }
             Save changes
           </button>
         </div>
       </div>
     </div>
-</div>
+  </div>
 </div>

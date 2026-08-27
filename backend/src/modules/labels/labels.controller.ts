@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -13,6 +14,7 @@ import { CurrentUser } from '../../common/firebase/current-user.decorator';
 import type { CurrentUserInfo } from '../../common/firebase/current-user.decorator';
 import { LabelsService } from './labels.service';
 import { CreateLabelDto } from './dto/create-label.dto';
+import { UpdateLabelDto } from './dto/update-label.dto';
 
 @UseGuards(FirebaseAuthGuard)
 @Controller('labels')
@@ -30,6 +32,23 @@ export class LabelsController {
   @Post()
   create(@CurrentUser() user: CurrentUserInfo, @Body() body: CreateLabelDto) {
     return this.labels.create(user.uid, body.boardId, body.name, body.color);
+  }
+
+  @Patch(':id')
+  update(
+    @CurrentUser() user: CurrentUserInfo,
+    @Param('id') labelId: string,
+    @Body() body: UpdateLabelDto,
+  ) {
+    return this.labels.update(user.uid, labelId, body.name, body.color);
+  }
+
+  @Delete(':id')
+  remove(
+    @CurrentUser() user: CurrentUserInfo,
+    @Param('id') labelId: string,
+  ) {
+    return this.labels.delete(user.uid, labelId);
   }
 
   // Gắn nhãn vào card.

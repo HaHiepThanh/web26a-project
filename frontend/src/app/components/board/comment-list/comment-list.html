@@ -1,7 +1,8 @@
-<label class="mb-1.5 block text-2xs font-bold uppercase tracking-wide text-base-content/50">
+<label class="mb-1.5 flex items-center gap-1.5 text-xs font-bold text-base-content">
+  <svg class="h-3.5 w-3.5 text-base-content/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
   Comments
   @if (comments().length > 0) {
-    <span class="normal-case tracking-normal text-base-content/40">({{ comments().length }})</span>
+    <span class="normal-case tracking-normal font-normal text-xs text-base-content/50">({{ comments().length }})</span>
   }
 </label>
 
@@ -15,12 +16,12 @@
             <span class="text-2xs font-semibold text-base-content/80">{{ displayNameOf(c) }}</span>
             <span class="text-3xs text-base-content/40">{{ timeLabel(c.createdAt) }}</span>
             @if (c.userId === currentUserId()) {
-              <button type="button" class="btn btn-link btn-xs ml-auto h-auto min-h-0 p-0 text-3xs text-base-content/40 no-underline opacity-0 transition-opacity hover:text-error group-hover:opacity-100" (click)="deleteComment(c.id)">
+              <button type="button" class="btn btn-link btn-xs ml-auto h-auto min-h-0 p-0 text-3xs text-base-content/40 no-underline opacity-0 transition-opacity hover:text-error group-hover:opacity-100 font-bold" (click)="deleteComment(c.id)">
                 Delete
               </button>
             }
           </div>
-          <div class="mt-0.5 whitespace-pre-wrap break-words rounded-md rounded-tl-sm bg-base-200 px-2.5 py-1.5 text-xs text-base-content">{{ c.content }}</div>
+          <div class="mt-0.5 whitespace-pre-wrap break-words rounded-md bg-base-200 px-2.5 py-1.5 text-xs text-base-content">{{ c.content }}</div>
         </div>
       </div>
     }
@@ -32,7 +33,7 @@
 <div class="flex gap-1.5">
   <div class="min-w-0 flex-1">
     <textarea
-      class="textarea resize-none w-full text-xs min-h-[64px] max-h-[64px] leading-relaxed overflow-y-auto py-2"
+      class="textarea resize-none w-full text-xs min-h-[64px] max-h-[64px] leading-relaxed overflow-y-auto py-2 rounded-md"
       [class.textarea-error]="tooLong()"
       rows="3"
       placeholder="Write a comment..."
@@ -42,8 +43,6 @@
       (input)="onInput($event)"
       (keydown.enter)="$event.preventDefault(); addComment()"
     ></textarea>
-    <!-- Chỉ hiện khi sắp chạm trần: ô nhập này nhỏ, đếm suốt từ ký tự đầu chỉ
-         tổ chật chỗ mà lúc đó chẳng ai cần biết. -->
     @if (showCounter()) {
       <div
         id="comment-counter"
@@ -57,7 +56,7 @@
   </div>
   <button
     type="button"
-    class="btn btn-primary btn-sm h-auto min-h-[64px] px-3 self-stretch"
+    class="btn btn-primary btn-sm h-auto min-h-[64px] px-3 self-stretch rounded-md font-bold"
     [disabled]="!canSend()"
     (click)="addComment()"
     aria-label="Send comment"

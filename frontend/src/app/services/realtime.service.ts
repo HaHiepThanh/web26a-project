@@ -336,8 +336,14 @@ export class RealtimeService {
       }
 
       case 'label.created':
+      case 'label.updated':
         this.labels.applyRemoteLabel(event.data as ApiLabel);
         break;
+      case 'label.deleted': {
+        const { id } = event.data as { id: string };
+        this.labels.applyRemoteRemoveLabel(id);
+        break;
+      }
       case 'label.attached': {
         const { cardId, labelId } = event.data as { cardId: string; labelId: string };
         this.labels.applyRemoteAttach(cardId, labelId);

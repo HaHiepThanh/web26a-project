@@ -1,49 +1,100 @@
-<div class="mb-2 flex max-h-40 flex-col gap-0.5 overflow-y-auto">
+<div class="mb-2 flex max-h-44 flex-col gap-1 overflow-y-auto pr-0.5">
   @for (lb of labels(); track lb.id) {
-    <label class="flex cursor-pointer items-center gap-2 rounded-md px-1 py-1.5 hover:bg-base-200">
-      <input type="checkbox" class="sr-only" [checked]="isSelected(lb.id)" (change)="toggle(lb.id)" />
-      <span class="flex h-5 w-[30px] shrink-0 items-center justify-center rounded-[5px] text-white" [style.background]="lb.color">
-        @if (isSelected(lb.id)) {
-          <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
-        }
-      </span>
-      <span class="text-xs font-medium text-base-content">{{ lb.name }}</span>
-    </label>
+    <div class="group flex items-center justify-between gap-1.5 rounded-md px-1.5 py-1 hover:bg-base-200/70 transition-colors">
+      <label class="flex min-w-0 flex-1 cursor-pointer items-center gap-2">
+        <input type="checkbox" class="sr-only" [checked]="isSelected(lb.id)" (change)="toggle(lb.id)" />
+        <span class="flex h-5 w-[30px] shrink-0 items-center justify-center rounded-md text-white shadow-2xs font-bold text-xs" [style.background]="lb.color">
+          @if (isSelected(lb.id)) {
+            <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+          }
+        </span>
+        <span class="truncate text-xs font-semibold text-base-content">{{ lb.name }}</span>
+      </label>
+
+      <div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+        <button
+          type="button"
+          class="btn btn-ghost btn-square btn-xs h-6 w-6 min-h-0 rounded-md text-base-content/60 hover:text-primary hover:bg-base-300/60"
+          (click)="startEditLabel(lb, $event)"
+          title="Edit label">
+          <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button
+          type="button"
+          class="btn btn-ghost btn-square btn-xs h-6 w-6 min-h-0 rounded-md text-base-content/60 hover:text-error hover:bg-error/10"
+          (click)="deleteLabel(lb.id, $event)"
+          title="Delete label">
+          <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+        </button>
+      </div>
+    </div>
   }
   @if (labels().length === 0) {
-    <div class="px-0.5 py-1.5 text-2xs text-base-content/50">This board has no labels yet — create the first one below.</div>
+    <div class="px-1 py-1.5 text-2xs text-base-content/50">This board has no labels yet — create the first one below.</div>
   }
 </div>
 
 @if (!showCreateForm()) {
-  <button type="button" class="btn btn-ghost btn-xs gap-1 px-1 text-2xs font-semibold" (click)="openCreateForm()">
-    <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+  <button type="button" class="btn btn-ghost btn-xs gap-1 rounded-md px-1.5 text-2xs font-bold text-primary hover:bg-primary/10" (click)="openCreateForm()">
+    <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
     New label
   </button>
 } @else {
-  <div class="rounded-md border border-dashed border-base-300 p-2">
-    <input
-      type="text"
-      class="input input-sm mb-2 w-full"
-      placeholder="Label name..."
-      [ngModel]="newName()"
-      (ngModelChange)="newName.set($event)"
-      (keydown.enter)="submitCreateForm()"
-    />
-    <div class="mb-2 flex flex-wrap gap-1.5">
-      @for (c of palette; track c) {
-        <button type="button" class="btn btn-circle btn-xs h-5 min-h-0 w-5 border-2 border-transparent p-0" [style.background]="c" [class.border-base-content]="newColor() === c" (click)="newColor.set(c)"></button>
-      }
+  <div class="rounded-md border border-dashed border-base-300 p-2.5 space-y-2 bg-base-200/30">
+    <!-- Hàng ngang: Ô nhập tên nhãn + Nút Cancel + Nút Create/Save label -->
+    <div class="flex items-center gap-1.5">
+      <input
+        type="text"
+        class="input input-sm min-w-0 flex-1 rounded-md font-semibold text-xs h-7 min-h-7 px-2"
+        placeholder="Label name (max 15 chars)..."
+        maxlength="15"
+        [ngModel]="newName()"
+        (ngModelChange)="newName.set($event)"
+        (keydown.enter)="submitCreateForm()"
+      />
+      <button type="button" class="btn btn-ghost btn-xs rounded-md font-bold shrink-0 h-7 min-h-7" (click)="cancelCreateForm()">Cancel</button>
+      <button
+        type="button"
+        class="btn btn-primary btn-xs rounded-md font-black shrink-0 h-7 min-h-7 px-2.5"
+        [disabled]="!newName().trim()"
+        (click)="submitCreateForm()">
+        {{ editingLabelId() ? 'Save' : 'Create label' }}
+      </button>
     </div>
+
+    <!-- Chọn màu: Palette cố định + Color Picker tuỳ chỉnh -->
+    <div class="flex flex-wrap items-center gap-1.5 pt-0.5">
+      @for (c of palette; track c) {
+        <button
+          type="button"
+          class="btn btn-xs h-5 min-h-0 w-5 border-2 border-transparent p-0 rounded-md shadow-2xs hover:scale-110 transition-transform"
+          [style.background]="c"
+          [class.ring-2]="newColor() === c"
+          [class.ring-primary]="newColor() === c"
+          (click)="newColor.set(c)"
+          [title]="c"></button>
+      }
+
+      <!-- Custom Color Picker với ô màu trực quan -->
+      <label
+        class="relative flex h-5 w-5 cursor-pointer items-center justify-center rounded-md border border-base-300 bg-base-100 hover:border-primary shadow-2xs hover:scale-110 transition-all overflow-hidden"
+        [title]="'Pick custom color: ' + newColor()">
+        <input
+          type="color"
+          class="absolute -inset-2 h-10 w-10 cursor-pointer opacity-0"
+          [value]="newColor()"
+          (input)="onCustomColorInput($any($event.target).value)" />
+        <span class="h-3.5 w-3.5 rounded-xs shadow-2xs" [style.background]="newColor()"></span>
+      </label>
+
+      <span class="text-3xs font-mono text-base-content/50 uppercase ml-1">{{ newColor() }}</span>
+    </div>
+
     @if (isDuplicateColor()) {
-      <div class="mb-2 flex items-center gap-1 text-3xs font-semibold text-warning">
+      <div class="flex items-center gap-1 text-3xs font-bold text-warning">
         <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 9v4M12 17h.01M10.3 3.9L2.5 17a1.8 1.8 0 001.5 2.7h16a1.8 1.8 0 001.5-2.7L13.7 3.9a1.8 1.8 0 00-3.4 0z"/></svg>
         Another label already uses this color.
       </div>
     }
-    <div class="flex justify-end gap-1.5">
-      <button type="button" class="btn btn-ghost btn-xs" (click)="cancelCreateForm()">Cancel</button>
-      <button type="button" class="btn btn-primary btn-xs" [disabled]="!newName().trim()" (click)="submitCreateForm()">Create label</button>
-    </div>
   </div>
 }

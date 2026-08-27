@@ -1,6 +1,6 @@
 import { inject } from '@angular/core';
 import { signalStoreFeature, withMethods, patchState, type } from '@ngrx/signals';
-import { EntityState, setAllEntities, upsertEntity } from '@ngrx/signals/entities';
+import { EntityState, removeEntity, setAllEntities, upsertEntity } from '@ngrx/signals/entities';
 import { ApiLabel, Label } from '../../models';
 import { ApiService } from '../../services/api.service';
 import { describeError } from '../../services/api-error.util';
@@ -82,6 +82,32 @@ export function withLabelMethods() {
           } catch (e) {
             store.fail(describeError(e, 'Failed to create label.'));
             return null;
+          }
+        },
+
+        async updateLabel(labelId: string, name?: string, color?: string): Promise<Label | null> {
+          try {
+            const row = await api.patch<ApiLabel>(`/labels/${labelId}`, { name, color });
+            patchState(store, upsertEntity(toLabel(row)));
+            return toLabel(row);
+          } catch (e) {
+            store.fail(describeError(e, 'Failed to update label.'));
+            return null;
+          }
+        },
+
+        async deleteLabel(labelId: string): Promise<void> {
+          try {
+            await api.delete(`/labels/${labelId}`);
+            patchState(store, removeEntity(labelId));
+            const currentCardLabels = store.cardLabelIds();
+            const updated: Record<string, string[]> = {};
+            for (const [cardId, ids] of Object.entries(currentCardLabels)) {
+              updated[cardId] = ids.filter((id) => id !== labelId);
+            }
+            patchState(store, { cardLabelIds: updated });
+          } catch (e) {
+            store.fail(describeError(e, 'Failed to delete label.'));
           }
         },
 
