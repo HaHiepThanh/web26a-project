@@ -10,9 +10,9 @@
  *
  * Vì sao tách ra như vậy?
  *
- *   1. `.textarea` của daisyUI đặt `min-height` khoảng 3rem cho ô nhiều dòng.
- *      Ở đây `rows="1"` nên ô cao 70px trong khi chữ chỉ chiếm 1 dòng —
- *      placeholder xuống hàng và trôi trong một khoảng trống to.
+ *   1. `.textarea` của daisyUI đặt `min-height` khoảng 3rem cho ô nhiều dòng —
+ *      quá cao cho một composer single-line. Tự đặt `min-height` ở đây thay vì
+ *      dùng class `.textarea` để có toàn quyền kiểm soát chiều cao mặc định.
  *
  *   2. ⚠️ Bản sửa đầu tiên viết `border: 1px solid oklch(var(--bc) / 0.2)` —
  *      đoán tên biến nội bộ của daisyUI. Biến `--bc` KHÔNG tồn tại ở phiên bản
@@ -20,11 +20,17 @@
  *      `border` (shorthand sai một phần là hỏng cả cụm) → viền vẫn 0px y như cũ.
  *      Bài học: đừng đoán biến CSS của thư viện, cứ dùng `border-base-300` để
  *      Tailwind sinh ra giá trị đúng lúc build.
+ *
+ *   3. `min-height: 2.5rem` (40px) khớp đúng `h-10` của nút Send bên cạnh —
+ *      cả hai cao bằng nhau ở trạng thái mặc định 1 dòng. Padding trên/dưới
+ *      bằng nhau (0.5rem) nên text/placeholder tự nằm giữa theo chiều dọc mà
+ *      không cần canh tay; ô vẫn giãn cao tới `max-height` khi gõ nhiều dòng
+ *      (Shift+Enter) qua `autoGrow()` ở chat-input.ts, không đổi behavior đó.
  */
 .composer {
-  min-height: 3.25rem;
+  min-height: 2.5rem;
   max-height: 140px;
-  padding: 0.625rem 0.75rem;
+  padding: 0.5rem 0.75rem;
   font-size: 0.8125rem;
   line-height: 1.4;
   resize: none;
