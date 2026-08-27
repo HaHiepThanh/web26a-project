@@ -16,6 +16,19 @@ export class ResetPassword implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
+  /**
+   * Loại hành động trong liên kết.
+   *
+   * Trang này là **action handler** của Firebase: khi đã trỏ Action URL về
+   * `/auth/action` (Console → Authentication → Templates), NÓ NHẬN MỌI LOẠI
+   * liên kết, không riêng đặt lại mật khẩu — bật xác minh email là `verifyEmail`
+   * cũng về đây. Không phân nhánh thì trang sẽ cố "đặt lại mật khẩu" cho một mã
+   * `verifyEmail` và báo một lỗi chẳng liên quan gì.
+   */
+  readonly mode = signal<'resetPassword' | 'verifyEmail' | 'recoverEmail' | 'khac'>(
+    'resetPassword',
+  );
+
   readonly oobCode = signal('');
   readonly userEmail = signal('');
   readonly verifying = signal(true);
@@ -35,6 +48,15 @@ export class ResetPassword implements OnInit {
     const code = params.get('oobCode') || params.get('code') || '';
     this.oobCode.set(code);
 
+    // Thiếu `mode` thì coi là đặt lại mật khẩu: route `/reset-password` cũ
+    // không có tham số này, và giữ nguyên đường đó chạy được.
+    const mode = params.get('mode') ?? 'resetPassword';
+    this.mode.set(
+      mode === 'verifyEmail' || mode === 'recoverEmail' || mode === 'resetPassword'
+        ? mode
+        : 'khac',
+    );
+
     if (!code) {
       this.verifying.set(false);
       this.validCode.set(false);
@@ -42,7 +64,63 @@ export class ResetPassword implements OnInit {
       return;
     }
 
-    void this.verifyCode(code);
+    if (this.mode() === 'resetPassword') {
+      void this.verifyCode(code);
+      return;
+    }
+    void this.apDungMaKhac(code);
+  }
+
+  /**
+   * Xác minh email / khôi phục email cũ — hai loại này KHÔNG có biểu mẫu.
+   *
+   * Chỉ cần áp mã rồi báo kết quả, nên dùng lại đúng hai trạng thái sẵn có của
+   * trang: thành công hoặc lỗi.
+   */
+  private async apDungMaKhac(code: string): Promise<void> {
+    this.verifying.set(true);
+    try {
+      if (this.mode() === 'khac') {
+        // Firebase còn vài `mode` khác (`signIn`, `revertSecondFactorAddition`).
+        // App chưa dùng cái nào — nói thẳng thay vì im lặng làm sai.
+        throw new Error('unsupported-mode');
+      }
+      await this.auth.applyActionCode(code);
+      this.validCode.set(true);
+      this.success.set(true);
+    } catch (err) {
+      this.validCode.set(false);
+      this.verifyError.set(
+        (err as Error)?.message === 'unsupported-mode'
+          ? 'This kind of link is not handled here. Open it from the original email, or contact support.'
+          : this.describeVerifyError(err),
+      );
+    } finally {
+      this.verifying.set(false);
+    }
+  }
+
+  /** Tiêu đề màn thành công — khác nhau theo loại liên kết. */
+  tieuDeThanhCong(): string {
+    switch (this.mode()) {
+      case 'verifyEmail':
+        return 'Email verified!';
+      case 'recoverEmail':
+        return 'Email restored!';
+      default:
+        return 'Password Reset!';
+    }
+  }
+
+  moTaThanhCong(): string {
+    switch (this.mode()) {
+      case 'verifyEmail':
+        return 'Your email address is confirmed. You can sign in now.';
+      case 'recoverEmail':
+        return 'Your previous email address has been restored. We recommend resetting your password as well.';
+      default:
+        return 'Your password has been successfully updated. You can now sign in with your new credentials.';
+    }
   }
 
   get passwordCheck(): PasswordCheck {
