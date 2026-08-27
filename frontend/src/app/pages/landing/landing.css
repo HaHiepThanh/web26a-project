@@ -28,7 +28,7 @@
   /* Đẩy khuất lên trên thay vì display:none — phần tử bị ẩn hẳn thì bàn phím
      không tab tới được, mà tab tới được mới là toàn bộ mục đích của nó. */
   transform: translateY(-200%);
-  transition: transform 180ms var(--lp-ease);
+  transition: transform var(--lp-dur-1) var(--lp-ease);
 }
 
 .skip-link:focus-visible {
@@ -91,9 +91,9 @@
   top: 0;
   z-index: 50;
   transition:
-    background-color 260ms ease,
-    border-color 260ms ease,
-    backdrop-filter 260ms ease;
+    background-color var(--lp-dur-2) var(--lp-ease),
+    border-color var(--lp-dur-2) var(--lp-ease),
+    backdrop-filter var(--lp-dur-2) var(--lp-ease);
   border-bottom: 1px solid transparent;
 }
 
@@ -201,8 +201,8 @@
   white-space: nowrap;
   color: var(--lp-text-2);
   transition:
-    color 160ms ease,
-    background-color 160ms ease;
+    color var(--lp-dur-1) var(--lp-ease),
+    background-color var(--lp-dur-1) var(--lp-ease);
 }
 
 .nav-links a:hover {
@@ -264,9 +264,9 @@
   border: 1px solid transparent;
   color: var(--lp-text-2);
   transition:
-    background-color 180ms ease,
-    border-color 180ms ease,
-    color 180ms ease;
+    background-color var(--lp-dur-1) var(--lp-ease),
+    border-color var(--lp-dur-1) var(--lp-ease),
+    color var(--lp-dur-1) var(--lp-ease);
 }
 
 .theme-toggle:hover {
@@ -296,8 +296,8 @@
   width: 19px;
   height: 19px;
   transition:
-    transform 420ms var(--lp-ease),
-    opacity 260ms ease;
+    transform var(--lp-dur-4) var(--lp-ease),
+    opacity var(--lp-dur-2) var(--lp-ease);
 }
 
 .ico-sun {
@@ -352,7 +352,7 @@
   padding: var(--lp-4) clamp(20px, 5vw, 32px) var(--lp-5);
   border-top: 1px solid var(--lp-border);
   background: var(--lp-bg);
-  animation: sheet-in 200ms var(--lp-ease) both;
+  animation: sheet-in var(--lp-dur-2) var(--lp-ease) both;
 }
 
 .nav-sheet a:not(.lp-btn) {
@@ -457,7 +457,7 @@
   background: color-mix(in srgb, var(--lp-bg) 88%, transparent);
   backdrop-filter: blur(12px);
   border-top: 1px solid var(--lp-border);
-  animation: dock-in 220ms var(--lp-ease) both;
+  animation: dock-in var(--lp-dur-2) var(--lp-ease) both;
 }
 
 .cta-dock-btn {
@@ -567,7 +567,7 @@
   padding: 11px 0;
   font-size: var(--lp-text-sm);
   color: var(--lp-text-2);
-  transition: color 160ms ease;
+  transition: color var(--lp-dur-1) var(--lp-ease);
 }
 
 .foot-links a:hover {

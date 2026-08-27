@@ -21,7 +21,7 @@
 
     <!-- Bốn tấm thẻ. Khi một thẻ mở, lưới đổi sang chế độ "đang xem chi tiết":
          thẻ đó chiếm trọn bề ngang, ba thẻ kia co lại thành hàng nhỏ bên dưới. -->
-    <div class="deck" [class.is-open]="open() !== null" appReveal [revealDelay]="160">
+    <div class="deck" [class.is-open]="open() !== null" appReveal [revealDelay]="180">
       @for (g of groups; track g.title; let i = $index) {
         <article
           class="tcard"

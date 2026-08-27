@@ -100,8 +100,8 @@
   background: var(--lp-text-3);
   transform: translate(-50%, -50%);
   transition:
-    transform 260ms var(--lp-ease),
-    background-color 200ms ease;
+    transform var(--lp-dur-2) var(--lp-ease),
+    background-color var(--lp-dur-2) var(--lp-ease);
 }
 
 .faq-sign::after {

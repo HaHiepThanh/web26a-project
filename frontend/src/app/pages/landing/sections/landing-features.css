@@ -42,8 +42,8 @@
   text-align: left;
   cursor: pointer;
   transition:
-    background-color 220ms ease,
-    border-color 220ms ease;
+    background-color var(--lp-dur-2) var(--lp-ease),
+    border-color var(--lp-dur-2) var(--lp-ease);
 }
 
 .feat:hover {
@@ -83,7 +83,7 @@
   border: 1px solid var(--lp-border);
   background: var(--lp-surface);
   color: var(--lp-text-2);
-  transition: color 220ms ease;
+  transition: color var(--lp-dur-2) var(--lp-ease);
 }
 .feat-icon svg {
   width: 19px;
@@ -297,8 +297,25 @@
   border-radius: var(--radius-md);
   background: var(--lp-surface-2);
   overflow: hidden;
-  transition: width 380ms var(--lp-ease);
 }
+
+/* ⚠️ Độ ưu tiên phải là HAI class, và phải khai lại đủ cả bốn thuộc tính.
+   Khung này vừa là `.fb-chat` vừa là `.zone`, mà rule `.zone` bên dưới cũng đặt
+   `transition` — shorthand thì THAY TRỌN danh sách chứ không cộng dồn, và hai
+   rule cùng độ ưu tiên thì rule đứng sau thắng. Nên khi `transition: width`
+   viết ở `.fb-chat`, nó bị `.zone` xoá sạch: đo được `transition-property` chỉ
+   còn `opacity, box-shadow, transform`, và khung chat nhảy phắt từ 62px sang
+   148px thay vì nở ra.
+   `--lp-ease-inout` riêng cho `width` vì đây là thứ đi VÀ VỀ giữa hai trạng
+   thái, cần mềm ở cả hai đầu chứ không riêng đầu cuối. */
+.zone.fb-chat {
+  transition:
+    opacity var(--lp-dur-3) var(--lp-ease),
+    box-shadow var(--lp-dur-3) var(--lp-ease),
+    transform var(--lp-dur-3) var(--lp-ease),
+    width var(--lp-dur-3) var(--lp-ease-inout);
+}
+
 .fb-chat.is-lit {
   width: 148px;
 }
@@ -356,9 +373,9 @@
   border-radius: var(--radius-sm);
   opacity: 0.42;
   transition:
-    opacity 320ms ease,
-    box-shadow 320ms ease,
-    transform 320ms var(--lp-ease);
+    opacity var(--lp-dur-3) var(--lp-ease),
+    box-shadow var(--lp-dur-3) var(--lp-ease),
+    transform var(--lp-dur-3) var(--lp-ease);
 }
 
 .zone.is-lit {

@@ -33,9 +33,9 @@
   border: 1px solid var(--lp-border);
   box-shadow: var(--lp-shadow-sm);
   transition:
-    transform 320ms var(--lp-ease),
-    box-shadow 320ms var(--lp-ease),
-    border-color 200ms ease;
+    transform var(--lp-dur-3) var(--lp-ease),
+    box-shadow var(--lp-dur-3) var(--lp-ease),
+    border-color var(--lp-dur-2) var(--lp-ease);
 }
 
 .tcard:hover {
@@ -220,7 +220,7 @@
 /* -------------------- Chi tiết thẻ -------------------- */
 .tcard-detail {
   padding: 0 var(--lp-4) var(--lp-4);
-  animation: detail-in 280ms var(--lp-ease) both;
+  animation: detail-in var(--lp-dur-3) var(--lp-ease) both;
 }
 @keyframes detail-in {
   from {
@@ -252,7 +252,7 @@
   background: var(--lp-surface);
   color: var(--lp-text);
   cursor: pointer;
-  transition: border-color 160ms ease;
+  transition: border-color var(--lp-dur-1) var(--lp-ease);
 }
 .detail-close:hover {
   border-color: var(--lp-ink-blue);
@@ -310,25 +310,25 @@
 /* Từng mục hiện so le khi thẻ mở ra. */
 @media (prefers-reduced-motion: no-preference) {
   .check {
-    animation: check-in 260ms var(--lp-ease) both;
+    animation: check-in var(--lp-dur-2) var(--lp-ease) both;
   }
   .check:nth-child(1) {
-    animation-delay: 40ms;
+    animation-delay: calc(var(--lp-stagger-tight) * 2);
   }
   .check:nth-child(2) {
-    animation-delay: 60ms;
+    animation-delay: calc(var(--lp-stagger-tight) * 3);
   }
   .check:nth-child(3) {
-    animation-delay: 80ms;
+    animation-delay: calc(var(--lp-stagger-tight) * 4);
   }
   .check:nth-child(4) {
-    animation-delay: 100ms;
+    animation-delay: calc(var(--lp-stagger-tight) * 5);
   }
   .check:nth-child(5) {
-    animation-delay: 120ms;
+    animation-delay: calc(var(--lp-stagger-tight) * 6);
   }
   .check:nth-child(n + 6) {
-    animation-delay: 140ms;
+    animation-delay: calc(var(--lp-stagger-tight) * 7);
   }
   @keyframes check-in {
     from {

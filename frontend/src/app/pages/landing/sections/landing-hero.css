@@ -25,7 +25,7 @@
      không thành trò đu đưa. Transition dài để nó đuổi theo lười biếng, không
      dính chặt vào con trỏ. */
   transform: translate3d(calc(var(--px, 0) * 26px), calc(var(--py, 0) * 26px), 0);
-  transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform var(--lp-dur-4) var(--lp-ease);
 }
 
 /* Lớp trong giữ hoạt ảnh trôi. Tách khỏi lớp ngoài vì transform lồng nhau thì
@@ -729,8 +729,8 @@
     ),
     0
   );
-  /* 900ms phải khớp với hằng số trong landing-hero.ts (chỗ hạ cờ `moving`). */
-  transition: transform 900ms var(--lp-ease);
+  /* var(--lp-dur-5) phải khớp với hằng số trong landing-hero.ts (chỗ hạ cờ `moving`). */
+  transition: transform var(--lp-dur-5) var(--lp-ease);
   will-change: transform;
   cursor: grab;
   /* Chặn cử chỉ mặc định của trình duyệt trên vùng này. Không có dòng này thì
@@ -745,7 +745,7 @@
 }
 
 /* Đang bị kéo: bỏ transition để thẻ bám sát ngón tay theo từng khung hình.
-   Còn nguyên transition thì thẻ chạy sau con trỏ 900ms — cảm giác như đang kéo
+   Còn nguyên transition thì thẻ chạy sau con trỏ var(--lp-dur-5) — cảm giác như đang kéo
    một vật qua bùn. */
 .traveller.is-dragging {
   transition: none;
@@ -762,8 +762,8 @@
   border-color: color-mix(in oklab, var(--accent-purple) 45%, transparent);
   box-shadow: var(--lp-shadow-md);
   transition:
-    transform 900ms var(--lp-ease),
-    box-shadow 900ms var(--lp-ease);
+    transform var(--lp-dur-5) var(--lp-ease),
+    box-shadow var(--lp-dur-5) var(--lp-ease);
 }
 
 /* Nhấc lên khỏi mặt bảng trong đúng quãng bay — thẻ đang được "cầm" chứ không
@@ -850,7 +850,7 @@
      nhìn thấy nó thì không ai biết bảng kéo được, và cả phần tương tác thành ra
      vô nghĩa. Đây đúng chỗ không được phép nhạt. */
   color: var(--lp-text);
-  transition: color 300ms ease;
+  transition: color var(--lp-dur-2) var(--lp-ease);
 }
 
 .board-hint svg {

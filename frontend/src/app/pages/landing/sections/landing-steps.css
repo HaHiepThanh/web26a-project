@@ -27,8 +27,8 @@
   box-shadow: var(--lp-shadow-sm);
   overflow: hidden;
   transition:
-    border-color 240ms var(--lp-ease),
-    transform 240ms var(--lp-ease);
+    border-color var(--lp-dur-2) var(--lp-ease),
+    transform var(--lp-dur-2) var(--lp-ease);
 }
 
 .lp-step:hover {
@@ -70,7 +70,7 @@
      vẽ, không đụng layout, nên vẫn nằm trong nhóm hiệu ứng rẻ tiền. */
   stroke-dasharray: 64;
   stroke-dashoffset: 64;
-  transition: stroke-dashoffset 900ms var(--lp-ease) 180ms;
+  transition: stroke-dashoffset var(--lp-dur-5) var(--lp-ease) var(--lp-dur-1);
 }
 
 .is-revealed .lp-step-icon svg,

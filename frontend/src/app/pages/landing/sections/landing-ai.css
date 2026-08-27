@@ -257,7 +257,7 @@
   display: flex;
   align-items: flex-end;
   gap: var(--lp-2);
-  animation: msg-in 380ms var(--lp-ease) both;
+  animation: msg-in var(--lp-dur-3) var(--lp-ease) both;
 }
 
 .msg-me {
@@ -349,7 +349,7 @@
   font-size: var(--lp-text-micro);
   font-weight: 600;
   color: var(--lp-ink-purple);
-  animation: msg-in 300ms var(--lp-ease) both;
+  animation: msg-in var(--lp-dur-3) var(--lp-ease) both;
 }
 
 .ai-thinking svg {
@@ -400,7 +400,7 @@
   border: 1px solid color-mix(in oklab, var(--accent-purple) 55%, transparent);
   border-radius: var(--radius-md);
   background: color-mix(in oklab, var(--accent-purple) 12%, var(--lp-surface-2));
-  animation: suggest-in 520ms var(--lp-ease) both;
+  animation: suggest-in var(--lp-dur-4) var(--lp-ease) both;
 }
 
 /* Quầng sáng nhấp nháy quanh viền — dấu hiệu "vừa được phát hiện". Vẽ bằng một
@@ -541,9 +541,9 @@
   font-weight: 600;
   cursor: pointer;
   transition:
-    filter 160ms ease,
-    background-color 160ms ease,
-    color 160ms ease;
+    filter var(--lp-dur-1) var(--lp-ease),
+    background-color var(--lp-dur-1) var(--lp-ease),
+    color var(--lp-dur-1) var(--lp-ease);
 }
 
 .suggest-btn svg {
@@ -583,7 +583,7 @@
   margin: 0;
   font-size: var(--lp-text-micro);
   color: var(--lp-ink-green);
-  animation: msg-in 320ms var(--lp-ease) both;
+  animation: msg-in var(--lp-dur-3) var(--lp-ease) both;
 }
 
 .created-note svg {
@@ -617,7 +617,7 @@
   border-radius: var(--radius-sm);
   background: var(--lp-surface-2);
   font-size: var(--lp-text-sm);
-  transition: border-color 200ms ease;
+  transition: border-color var(--lp-dur-2) var(--lp-ease);
 }
 
 .is-typing .chat-field {

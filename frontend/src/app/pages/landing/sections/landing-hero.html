@@ -31,18 +31,18 @@
            ngắt thành "Your team's / work, on / one board" — chữ "on" đứng lẻ
            cuối dòng và cụm màu nhấn bị xé làm đôi giữa hai dòng. Khoá cụm lại
            thì dòng ngắt luôn rơi đúng chỗ ranh giới ý nghĩa. -->
-      <h1 id="hero-title" class="hero-title" appReveal [revealDelay]="70">
+      <h1 id="hero-title" class="hero-title" appReveal [revealDelay]="60">
         Your team's work,
         <span class="lp-grad">on&nbsp;one&nbsp;board</span>
       </h1>
 
-      <p class="lp-lead hero-lead" appReveal [revealDelay]="140">
+      <p class="lp-lead hero-lead" appReveal [revealDelay]="120">
         A real-time Kanban board for small teams. Dragging is saving — there is no "Save" button.
         And while your team is chatting, the assistant spots the work and asks you one question
         before it creates anything.
       </p>
 
-      <div class="hero-cta" appReveal [revealDelay]="210">
+      <div class="hero-cta" appReveal [revealDelay]="180">
         <!-- Nút chính DUY NHẤT của khu vực này. Mọi hành động khác phải nhẹ hơn
              về mặt thị giác, nếu không mắt sẽ không biết bấm gì trước. -->
         <a class="lp-btn lp-btn-primary lp-btn-lg" routerLink="/register" appMagnetic>
@@ -55,7 +55,7 @@
         </a>
       </div>
 
-      <ul class="hero-trust" appReveal [revealDelay]="280">
+      <ul class="hero-trust" appReveal [revealDelay]="240">
         @for (item of trust; track item) {
           <li>
             <svg lucideCheck [strokeWidth]="2.2" aria-hidden="true"></svg>

@@ -129,7 +129,49 @@
   /* Độ dài dòng lý tưởng 40–80 ký tự. */
   --lp-measure: 62ch;
 
+  /* --------------------------------------------------------------------------
+     HỆ CHUYỂN ĐỘNG
+
+     Trước khi có khối này, trang dùng 21 giá trị thời lượng rời rạc (40ms →
+     var(--lp-dur-5)) và 26 trên 31 transition chạy bằng `ease` mặc định của trình duyệt,
+     dù token đường cong đã có sẵn và chỉ 5 chỗ dùng tới. Hệ quả không nằm ở
+     chỗ nào cụ thể — nó nằm ở cảm giác chung: mỗi khu vực chuyển động theo một
+     tính cách riêng, và mắt đọc ra "trang này được lắp ráp" chứ không phải
+     "được thiết kế".
+
+     HAI LUẬT, áp cho mọi chuyển động trên trang:
+
+     1. THỜI LƯỢNG CHỌN THEO QUÃNG ĐƯỜNG, không theo cảm tính.
+        Thang dưới đây mỗi bậc gấp ~1,6 lần bậc trước — đủ xa để tai-mắt phân
+        biệt được hai bậc liền nhau, đủ gần để không có khoảng trống phải chế
+        thêm số lẻ.
+
+     2. ĐỔI TẠI CHỖ THÌ NHANH, DI CHUYỂN THÌ CHẬM HƠN.
+        Màu, viền, nền, opacity không vẽ ra đường đi nào nên mắt bắt xong ngay:
+        cho bậc 1–2. Còn transform, width, box-shadow thì mắt phải đi theo, cần
+        thời gian để hãm lại: bậc 3 trở lên.
+     -------------------------------------------------------------------------- */
+
+  --lp-dur-1: 120ms; /* đổi tại chỗ, phần tử nhỏ: link, icon, chip */
+  --lp-dur-2: 200ms; /* đổi tại chỗ, phần tử lớn: thẻ, thanh nav */
+  --lp-dur-3: 320ms; /* di chuyển thấy rõ: thẻ nhấc lên, panel mở ra */
+  --lp-dur-4: 520ms; /* khối lớn hiện dần khi cuộn */
+  --lp-dur-5: 840ms; /* quãng thật dài: thẻ bay sang cột khác, vạch tự vẽ */
+
+  /* Bước so le khi nhiều phần tử cùng hiện. Thưa cho vài phần tử lớn, sít cho
+     danh sách dày — 10 mục mà cách nhau 60ms thì mục cuối phải chờ hơn nửa
+     giây, người đọc tưởng trang treo. */
+  --lp-stagger: 60ms;
+  --lp-stagger-tight: 20ms;
+
+  /* Đường cong.
+     `--lp-ease` (easeOutQuint) cho gần như mọi thứ: bung nhanh rồi hãm mạnh,
+     đúng cảm giác một vật có khối lượng dừng lại — dùng cho cái gì đi tới
+     trạng thái nghỉ.
+     `--lp-ease-inout` chỉ cho thứ đi và VỀ liên tục giữa hai trạng thái, nơi
+     hai đầu đều cần mềm chứ không riêng đầu cuối. */
   --lp-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --lp-ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
 
   display: block;
   color: var(--lp-text);
@@ -362,11 +404,11 @@
   cursor: pointer;
   transform: translate3d(var(--magnet-x), var(--magnet-y), 0);
   transition:
-    transform 220ms var(--lp-ease),
-    box-shadow 220ms var(--lp-ease),
-    background-color 160ms ease,
-    border-color 160ms ease,
-    color 160ms ease;
+    transform var(--lp-dur-2) var(--lp-ease),
+    box-shadow var(--lp-dur-2) var(--lp-ease),
+    background-color var(--lp-dur-1) var(--lp-ease),
+    border-color var(--lp-dur-1) var(--lp-ease),
+    color var(--lp-dur-1) var(--lp-ease);
 }
 
 .lp-btn:focus-visible {
@@ -434,7 +476,7 @@
 }
 
 .lp-btn-arrow {
-  transition: transform 240ms var(--lp-ease);
+  transition: transform var(--lp-dur-2) var(--lp-ease);
 }
 
 .lp-btn:hover .lp-btn-arrow {
@@ -506,9 +548,14 @@
 .reveal {
   opacity: 0;
   transform: translate3d(0, 22px, 0);
+  /* NGOẠI LỆ có chủ ý của luật "đổi tại chỗ thì nhanh": ở đây opacity không
+     phải một thay đổi riêng, nó là MỘT PHẦN của cú dịch 22px. Cho nó thời
+     lượng ngắn hơn transform thì phần tử hiện rõ xong mới đi nốt quãng đường
+     còn lại — nhìn ra ngay là hai chuyển động rời nhau. Đi cùng nhau thì phải
+     cùng thời lượng. */
   transition:
-    opacity 620ms var(--lp-ease),
-    transform 620ms var(--lp-ease);
+    opacity var(--lp-dur-4) var(--lp-ease),
+    transform var(--lp-dur-4) var(--lp-ease);
   /* Báo trước cho trình duyệt để nó tách phần tử ra lớp vẽ riêng, nhưng CHỈ khi
      chưa hiện — giữ `will-change` vĩnh viễn trên hàng chục phần tử là cách
      nhanh nhất để ngốn sạch bộ nhớ GPU. */
