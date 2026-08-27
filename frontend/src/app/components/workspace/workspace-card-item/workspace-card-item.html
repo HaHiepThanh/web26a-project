@@ -171,7 +171,7 @@
 
       <!-- Tile: Create new board -->
       <button type="button"
-        class="btn btn-dash h-[96px] flex-col gap-1.5 rounded-md text-xs font-bold hover:btn-primary"
+        class="btn btn-dash h-[96px] flex-col gap-1.5 rounded-md text-xs font-bold hover:btn-primary cursor-pointer"
         (click)="createBoard.emit(workspace().id)" [class.hidden]="!canManage()">
         <span class="flex h-7 w-7 items-center justify-center rounded-full bg-base-300/70 text-base font-bold leading-none">+</span>
         <span>Create new board</span>

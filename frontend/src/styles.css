@@ -209,6 +209,21 @@
   background: linear-gradient(135deg, #4c0a0a 0%, #dc2626 50%, #fb7185 100%);
 }
 
+/* Con trỏ bàn tay khi rê chuột vào các Board trong trang Workspace */
+.board-tile,
+.board-tile:hover {
+  cursor: pointer !important;
+}
+
+.board-tile * {
+  cursor: pointer;
+}
+
+.board-tile .cursor-default,
+.board-tile .cursor-default * {
+  cursor: default;
+}
+
 
 /* =====================================================================
    BẢN IN — dùng cho "Export PDF" của lịch họp.
