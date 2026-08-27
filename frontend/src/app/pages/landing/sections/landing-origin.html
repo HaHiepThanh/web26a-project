@@ -15,7 +15,7 @@
   trước của tính năng, nên đoạn này không chỉ kể chuyện mà còn bán hàng.
 -->
 <section class="origin lp-section lp-seam-y" id="our-story" aria-labelledby="origin-title">
-  <div class="lp-shell" appScrollSkew>
+  <div class="lp-shell">
     <div class="lp-head lp-head--center">
       <p class="lp-eyebrow" appReveal>
         <span class="lp-eyebrow-dot" aria-hidden="true"></span>
@@ -35,6 +35,10 @@
       sách định nghĩa, và trình đọc màn hình sẽ đọc ra quan hệ "từ này — nghĩa
       này" thay vì ba khối chữ rời.
     -->
+    <!-- Khối bọc chỉ để mang hiệu ứng nghiêng — xem ghi chú ở
+         landing-capabilities.html về lý do không gắn thẳng vào phần tử có
+         `appReveal`, và không gắn lên `.lp-shell` bao ngoài. -->
+    <div appScrollSkew>
     <dl class="plate" appReveal [revealDelay]="180">
       <div class="term tone-blue">
         <!-- Chữ H khổ lớn, tự viết ra khi cuộn tới. `track` là nét mờ có sẵn để
@@ -80,6 +84,7 @@
           change what.</dd>
       </div>
     </dl>
+    </div>
 
     <!--
       Ý NGHĨA KHI BA CHỮ ĐI CHUNG.

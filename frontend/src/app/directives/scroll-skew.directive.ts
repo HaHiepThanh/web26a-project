@@ -32,10 +32,10 @@ export class ScrollSkewDirective implements OnDestroy {
    * Độ nghiêng tối đa, tính bằng độ. Giữ NHỎ: quá 4 độ là chữ bắt đầu khó đọc
    * và hiệu ứng lộ ra thành trò, thay vì cảm giác khối có quán tính.
    */
-  readonly skewMax = input(3.2);
+  readonly skewMax = input(2);
 
   /** Bao nhiêu độ trên mỗi pixel-mỗi-khung của vận tốc. */
-  readonly skewPerPx = input(0.045);
+  readonly skewPerPx = input(0.03);
 
   private readonly host = inject(ElementRef<HTMLElement>);
   private ticker?: () => void;
@@ -50,10 +50,14 @@ export class ScrollSkewDirective implements OnDestroy {
       if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
 
       const setSkew = gsap.quickTo(el, 'skewY', {
-        // Ngắn hơn hẳn thang thời lượng của trang, vì đây không phải một cú
-        // chuyển trạng thái mà là độ trễ đàn hồi — dài quá thì khối lê thê chạy
-        // theo sau tay cuộn như bị dính.
-        duration: 0.45,
+        // 0.28s, KHÔNG phải 0.45s.
+        // Người dùng báo khu "Four cards" có cảm giác lag, và đo ra thì không
+        // phải rớt khung — 16.7ms mỗi khung, không khung nào quá 20ms, y hệt
+        // các khu không có hiệu ứng. Thủ phạm là ĐỘ TRỄ ĐUỔI THEO: ngừng cuộn
+        // rồi khối vẫn còn nghiêng 0.86 độ và gần một giây sau mới thẳng lại.
+        // Một khối lớn còn đang ngả trong khi tay đã dừng thì mắt đọc ra đúng
+        // là "trang không theo kịp" — dù đồng hồ nói ngược lại.
+        duration: 0.28,
         ease: 'power3.out',
       });
 
