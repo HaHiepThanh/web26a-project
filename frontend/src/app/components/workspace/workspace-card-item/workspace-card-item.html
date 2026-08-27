@@ -76,7 +76,7 @@
     <div class="grid grid-cols-[repeat(auto-fill,minmax(205px,1fr))] gap-3">
       @for (board of workspace().boards; track board.id) {
       <div
-        class="board-tile group relative flex h-[96px] cursor-pointer flex-col justify-between overflow-hidden rounded-lg p-3 text-white shadow-xs transition-all duration-200 hover:-translate-y-1 hover:shadow-md hover:brightness-105"
+        class="board-tile group relative flex h-[96px] cursor-pointer flex-col justify-between overflow-hidden rounded-md p-3 text-white shadow-xs transition-all duration-200 hover:-translate-y-1 hover:shadow-md hover:brightness-105"
         [class]="board.bgClass"
         [style.background-image]="bgImageByBoardId()[board.id] ? 'url(' + bgImageByBoardId()[board.id] + ')' : null"
         [style.background-size]="bgImageByBoardId()[board.id] ? 'cover' : null"
@@ -131,7 +131,7 @@
         <div class="fixed inset-0 z-[999] cursor-default"
           (click)="$event.stopPropagation(); openMenuKey.set(null)"></div>
         <ul
-          class="menu menu-xs absolute right-2 top-9 z-[1000] w-32 gap-0.5 rounded-lg border border-base-300 bg-base-100 p-1 text-left text-base-content shadow-2xl"
+          class="menu menu-xs absolute right-2 top-9 z-[1000] w-32 gap-0.5 rounded-md border border-base-300 bg-base-100 p-1 text-left text-base-content shadow-2xl"
           (click)="$event.stopPropagation()">
           <li>
             <button type="button" class="font-bold rounded" (click)="onEditBoard(board)">
@@ -156,7 +156,7 @@
         <div class="fixed inset-0 z-[999] cursor-default"
           (click)="$event.stopPropagation(); confirmDeleteKeyChange.emit(null)"></div>
         <div
-          class="absolute right-2 top-9 z-[1000] w-36 rounded-lg border border-base-300 bg-base-100 p-2.5 text-left text-base-content shadow-2xl"
+          class="absolute right-2 top-9 z-[1000] w-36 rounded-md border border-base-300 bg-base-100 p-2.5 text-left text-base-content shadow-2xl"
           (click)="$event.stopPropagation()">
           <p class="mb-2 text-2xs font-bold">Delete this board?</p>
           <div class="flex justify-end gap-1.5">
@@ -171,7 +171,7 @@
 
       <!-- Tile: Create new board -->
       <button type="button"
-        class="btn btn-dash h-[96px] flex-col gap-1.5 rounded-lg text-xs font-bold hover:btn-primary"
+        class="btn btn-dash h-[96px] flex-col gap-1.5 rounded-md text-xs font-bold hover:btn-primary"
         (click)="createBoard.emit(workspace().id)" [class.hidden]="!canManage()">
         <span class="flex h-7 w-7 items-center justify-center rounded-full bg-base-300/70 text-base font-bold leading-none">+</span>
         <span>Create new board</span>

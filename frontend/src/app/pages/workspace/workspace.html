@@ -49,7 +49,7 @@
     <div class="min-w-0 flex-1 w-full max-lg:h-auto lg:h-full lg:overflow-y-auto lg:pr-2 space-y-4">
       <!-- Starred boards section (Placed inside the right workspace area) -->
       @if (starredBoards().length > 0) {
-      <section class="rounded-lg border border-base-300 bg-base-100 p-4 shadow-xs">
+      <section class="rounded-md border border-base-300 bg-base-100 p-4 shadow-xs">
         <div class="mb-3 flex items-center gap-2">
           <span class="flex h-6 w-6 items-center justify-center rounded-md bg-warning/15 text-warning">
             <svg lucideStar class="h-3.5 w-3.5" [strokeWidth]="2.2" fill="currentColor"></svg>
@@ -60,7 +60,7 @@
         <div class="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2.5">
           @for (board of starredBoards(); track board.id) {
           <div
-            class="board-tile group relative flex h-[92px] cursor-pointer flex-col justify-between overflow-hidden rounded-lg p-2.5 text-white shadow-xs transition hover:-translate-y-1 hover:brightness-110"
+            class="board-tile group relative flex h-[92px] cursor-pointer flex-col justify-between overflow-hidden rounded-md p-2.5 text-white shadow-xs transition hover:-translate-y-1 hover:brightness-110"
             [class]="board.bgClass"
             [style.background-image]="bgImageByBoardId()[board.id] ? 'url(' + bgImageByBoardId()[board.id] + ')' : null"
             [style.background-size]="bgImageByBoardId()[board.id] ? 'cover' : null"
@@ -121,7 +121,7 @@
              Neo bằng data-tour chứ không bằng class CSS: đổi giao diện một cái
              là selector kiểu `.btn-primary.gap-1` chết câm. -->
         <button type="button" data-tour="create-workspace"
-          class="btn btn-primary btn-xs px-3.5 font-black gap-1 shadow-xs"
+          class="btn btn-primary btn-xs px-3.5 font-black gap-1 shadow-xs rounded-md"
           (click)="openCreateWorkspace()" [class.hidden]="!canManage()">
           <svg lucidePlus class="h-3 w-3 shrink-0" [strokeWidth]="3"></svg>
           <span>New Workspace</span>
@@ -140,15 +140,15 @@
            gây nhiễu — `aria-busy` ở khối cha mới là thứ báo "đang tải". -->
       <div class="flex flex-col gap-6 pb-12" aria-busy="true" aria-label="Loading workspaces">
         @for (i of [0, 1]; track i) {
-        <div class="rounded-2xl border border-base-300 bg-base-100 p-4 shadow-xs" aria-hidden="true">
+        <div class="rounded-md border border-base-300 bg-base-100 p-4 shadow-xs" aria-hidden="true">
           <div class="mb-1 flex items-center gap-2">
-            <div class="skeleton h-7 w-7 shrink-0 rounded-lg"></div>
+            <div class="skeleton h-7 w-7 shrink-0 rounded-md"></div>
             <div class="skeleton h-4 w-40"></div>
           </div>
           <div class="skeleton mb-3 h-3 w-64"></div>
           <div class="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2.5">
             @for (j of [0, 1, 2]; track j) {
-            <div class="skeleton h-[92px] rounded-xl"></div>
+            <div class="skeleton h-[92px] rounded-md"></div>
             }
           </div>
         </div>
@@ -165,7 +165,7 @@
       <!-- 2. Search has no results -->
       @else if (searchHasNoResults()) {
       <div
-        class="flex flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-base-300 bg-base-100/60 px-4 py-12 text-center">
+        class="flex flex-col items-center gap-2 rounded-md border-2 border-dashed border-base-300 bg-base-100/60 px-4 py-12 text-center">
         <div class="flex h-12 w-12 items-center justify-center rounded-full bg-base-200 text-base-content/40">
           <svg lucideSearch class="h-5 w-5" [strokeWidth]="2"></svg>
         </div>

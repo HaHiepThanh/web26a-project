@@ -40,7 +40,7 @@
     <!-- Search Results Dropdown -->
     @if (actions.searchDropdownOpen()) {
       <div
-        class="absolute left-0 right-0 top-[42px] z-[250] max-h-[360px] overflow-y-auto rounded-lg border border-base-300/80 bg-base-100 p-2 shadow-xl backdrop-blur-md">
+        class="absolute left-0 right-0 top-[42px] z-[250] max-h-[360px] overflow-y-auto rounded-md border border-base-300/80 bg-base-100 p-2 shadow-xl backdrop-blur-md">
         @if (actions.searchLoading()) {
           <div class="flex items-center justify-center gap-2.5 py-4 text-xs text-base-content/60">
             <span class="loading loading-spinner loading-xs text-primary"></span>
@@ -113,7 +113,7 @@
       <!-- Create Dropdown Menu -->
       @if (createMenuOpen()) {
       <ul
-        class="menu menu-sm absolute left-0 top-[42px] z-[200] w-[240px] gap-1 rounded-lg border border-base-300/70 bg-base-100 p-1.5 shadow-xl">
+        class="menu menu-sm absolute left-0 top-[42px] z-[200] w-[240px] gap-1 rounded-md border border-base-300/70 bg-base-100 p-1.5 shadow-xl">
         @if (!canManage()) {
         <li class="menu-title whitespace-normal text-2xs leading-snug">
           You're a <b>member</b> of this organization, so you can't create new workspaces or boards.
@@ -168,7 +168,7 @@
 
         @if (notifyMenuOpen()) {
         <div
-          class="absolute right-0 top-[42px] z-[200] w-[320px] rounded-lg border border-base-300/70 bg-base-100 p-2 shadow-xl">
+          class="absolute right-0 top-[42px] z-[200] w-[320px] rounded-md border border-base-300/70 bg-base-100 p-2 shadow-xl">
           <app-notifications-panel
             [notifications]="actions.notifications()"
             [unreadCount]="actions.unreadNotifications()"
@@ -196,7 +196,7 @@
 
         @if (inviteToast(); as t) {
         <button type="button"
-          class="invite-toast btn btn-ghost absolute right-0 top-[42px] z-[210] block h-auto min-h-0 w-[268px] rounded-lg border border-primary/40 bg-base-100 p-3 text-left font-normal normal-case shadow-xl"
+          class="invite-toast btn btn-ghost absolute right-0 top-[42px] z-[210] block h-auto min-h-0 w-[268px] rounded-md border border-primary/40 bg-base-100 p-3 text-left font-normal normal-case shadow-xl"
           (click)="inviteToast.set(null); toggleInviteMenu()">
           <div class="text-2xs font-black uppercase tracking-wider text-primary">New invite</div>
           <div class="mt-1 text-xs font-bold leading-snug text-base-content">
@@ -208,7 +208,7 @@
 
         @if (inviteMenuOpen()) {
         <div
-          class="absolute right-0 top-[42px] z-[200] w-[300px] rounded-lg border border-base-300/70 bg-base-100 p-2 shadow-xl">
+          class="absolute right-0 top-[42px] z-[200] w-[300px] rounded-md border border-base-300/70 bg-base-100 p-2 shadow-xl">
           <app-invites-panel
             [invites]="actions.myInvites()"
             [error]="inviteError()"
@@ -254,7 +254,7 @@
   </div>
 
   <div
-    class="absolute right-4 top-[54px] z-[200] mt-1 w-[290px] rounded-lg border border-base-300/70 bg-base-100 p-2.5 shadow-xl"
+    class="absolute right-4 top-[54px] z-[200] mt-1 w-[290px] rounded-md border border-base-300/70 bg-base-100 p-2.5 shadow-xl"
     [class.hidden]="!menuOpen()">
     <div class="flex items-center gap-2.5 px-1.5 py-1">
       <app-user-avatar [userId]="currentUser()?.id ?? ''" [name]="avatarName()" [size]="36" />
@@ -266,7 +266,7 @@
     </div>
 
     <!-- UUID Box with 1-click Copy -->
-    <div class="my-2 rounded-lg border border-primary/20 bg-primary/5 p-2 text-left">
+    <div class="my-2 rounded border border-primary/20 bg-primary/5 p-2 text-left">
       <div class="flex items-center justify-between">
         <span class="flex items-center gap-1 text-3xs font-extrabold uppercase tracking-wider text-primary">
           <svg lucideKeyRound class="h-3 w-3" [strokeWidth]="2.4"></svg>

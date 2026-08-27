@@ -20,7 +20,7 @@
     <div class="relative shrink-0">
       @if (panel() === 'create') {
         <ul
-          class="menu menu-sm absolute bottom-full left-0 z-10 mb-2 w-[240px] gap-1 rounded-lg border border-base-300/70 bg-base-100 p-1.5 shadow-xl">
+          class="menu menu-sm absolute bottom-full left-0 z-10 mb-2 w-[240px] gap-1 rounded-md border border-base-300/70 bg-base-100 p-1.5 shadow-xl">
           @if (!actions.canManage()) {
             <li class="menu-title whitespace-normal text-2xs leading-snug">
               You're a <b>member</b> of this organization, so you can't create new workspaces or boards.
