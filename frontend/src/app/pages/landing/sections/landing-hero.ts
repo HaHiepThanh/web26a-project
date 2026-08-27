@@ -101,15 +101,6 @@ export class LandingHero implements OnDestroy {
   readonly columnNames = ['To do', 'In progress', 'Done'];
   readonly cardTitles = ['Finish the demo slides', 'Lock in the brand palette'];
 
-  /** Thẻ đang bị kéo bằng con trỏ (null = không có). */
-  readonly dragging = signal<number | null>(null);
-
-  /** Người dùng đã tự dời một thẻ chưa — quyết định dòng chữ gợi ý dưới bảng. */
-  readonly moved = signal(false);
-
-  /** Câu thông báo cho trình đọc màn hình sau mỗi lần dời thẻ. */
-  readonly announcement = signal('');
-
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly grid = viewChild<ElementRef<HTMLElement>>('grid');
   private readonly stage = viewChild<ElementRef<HTMLElement>>('stage');
@@ -119,10 +110,6 @@ export class LandingHero implements OnDestroy {
   private liftTimer?: ReturnType<typeof setTimeout>;
   private observer?: IntersectionObserver;
   private running = false;
-
-  /** Người dùng đã chạm vào bảng thì bảng thôi tự diễn, vĩnh viễn. */
-  private handedOver = false;
-  private dragFrom = { x: 0, y: 0 };
 
   constructor() {
     afterNextRender(() => {
@@ -147,78 +134,6 @@ export class LandingHero implements OnDestroy {
     });
   }
 
-  // ==========================================================================
-  //  Kéo thả
-  // ==========================================================================
-
-  /**
-   * Bắt đầu kéo. `setPointerCapture` để mọi sự kiện con trỏ tiếp theo vẫn về
-   * đúng tấm thẻ này, kể cả khi ngón tay trượt ra ngoài nó — không có dòng đó
-   * thì kéo nhanh một cái là thẻ rớt lại giữa đường.
-   */
-  onPointerDown(index: number, event: PointerEvent): void {
-    // Chuột phải / chuột giữa để yên cho trình duyệt lo.
-    if (event.button !== 0) return;
-    this.handOver();
-    this.dragging.set(index);
-    this.dragFrom = { x: event.clientX, y: event.clientY };
-    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
-    // Chặn hành vi mặc định: trên di động, không chặn thì cả trang cuộn theo ngón tay.
-    event.preventDefault();
-  }
-
-  onPointerMove(index: number, event: PointerEvent): void {
-    if (this.dragging() !== index) return;
-    const el = event.currentTarget as HTMLElement;
-    // Ghi thẳng vào CSS custom property, không đi qua signal: giá trị đổi theo
-    // từng pixel con trỏ, cho nó chạy qua change detection mỗi lần là phí.
-    el.style.setProperty('--dx', `${event.clientX - this.dragFrom.x}px`);
-    el.style.setProperty('--dy', `${event.clientY - this.dragFrom.y}px`);
-  }
-
-  /** Thả tay: tìm ô gần nhất theo vị trí con trỏ rồi cho thẻ đáp vào đó. */
-  onPointerUp(index: number, event: PointerEvent): void {
-    if (this.dragging() !== index) return;
-    const el = event.currentTarget as HTMLElement;
-    el.style.removeProperty('--dx');
-    el.style.removeProperty('--dy');
-    this.dragging.set(null);
-
-    const box = this.grid()?.nativeElement.getBoundingClientRect();
-    if (!box) return;
-
-    // Chia lưới thành ba vùng dọc và hai vùng ngang. Cách này thô hơn việc đo
-    // đúng từng cột, nhưng lại là thứ người dùng cảm thấy đúng: thả vào đâu thì
-    // rơi vào đó, không cần trúng tâm.
-    const col = clamp(Math.floor(((event.clientX - box.left) / box.width) * 3), 0, 2);
-    const lane = event.clientY - box.top > box.height / 2 ? 1 : 0;
-    this.place(index, { col, lane });
-  }
-
-  /**
-   * Bàn phím: mũi tên dời thẻ đang được chọn.
-   *
-   * Không làm kiểu "bấm để nhấc, bấm lần nữa để thả" — với một bảng ba cột thì
-   * thêm một trạng thái chỉ tổ rối. Mũi tên dời thẳng, mỗi lần một ô.
-   */
-  onKeydown(index: number, event: KeyboardEvent): void {
-    const map: Record<string, [number, number]> = {
-      ArrowLeft: [-1, 0],
-      ArrowRight: [1, 0],
-      ArrowUp: [0, -1],
-      ArrowDown: [0, 1],
-    };
-    const delta = map[event.key];
-    if (!delta) return;
-    event.preventDefault();
-    this.handOver();
-    const me = this.spots()[index];
-    this.place(index, {
-      col: clamp(me.col + delta[0], 0, 2),
-      lane: clamp(me.lane + delta[1], 0, 1),
-    });
-  }
-
   /**
    * Đặt một thẻ vào ô đích. Nếu ô đó đang có thẻ kia thì HAI THẺ ĐỔI CHỖ, chứ
    * không từ chối cú thả — người dùng đã ra hiệu rõ ràng là muốn đưa thẻ tới đó,
@@ -237,33 +152,11 @@ export class LandingHero implements OnDestroy {
       list.map((v, i) => (i === index ? target : swap && i === otherIndex ? me : v)),
     );
 
-    this.moved.set(true);
     this.bloom(target.col);
-    this.announcement.set(
-      `${this.cardTitles[index]} moved to ${this.columnNames[target.col]}. Saved.`,
-    );
-  }
-
-  /** Nhãn trợ năng của một tấm thẻ, đọc ra vị trí hiện tại và cách dời nó. */
-  cardLabel(index: number): string {
-    const spot = this.spots()[index];
-    return `${this.cardTitles[index]}, in ${this.columnNames[spot.col]}. Use the arrow keys to move it.`;
-  }
-
-  /**
-   * Người dùng vừa chạm vào bảng: dừng hẳn phần tự diễn.
-   *
-   * Bảng tự chạy là để MỜI GỌI. Mời được rồi mà vẫn tự dời thẻ thì thành ra
-   * giành tay lái với người đang chơi — thẻ tự bay đi trong lúc họ định kéo nó.
-   */
-  private handOver(): void {
-    if (this.handedOver) return;
-    this.handedOver = true;
-    this.stop();
   }
 
   private start(): void {
-    if (this.running || this.handedOver) return;
+    if (this.running) return;
     this.running = true;
     this.schedule();
   }

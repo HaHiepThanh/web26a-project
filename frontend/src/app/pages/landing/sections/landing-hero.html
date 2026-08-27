@@ -195,20 +195,17 @@
                  sang tới cột cuối thì tiêu đề gạch ngang — đúng cách app thật
                  suy ra "đã xong" từ vị trí chứ không từ một ô tick. -->
             @for (spot of spots(); track $index) {
+              <!-- KHÔNG còn kéo thả, và không còn lấy được tiêu điểm.
+                   Bảng này nay chỉ để XEM: bảng của một nhóm đang làm việc.
+                   Chỗ để tự tay làm là khu "Try it" phía dưới, nơi có đủ thêm
+                   thẻ, checklist, nhãn, hạn và nhớ được sau khi tải lại trang —
+                   giữ kéo thả ở cả hai chỗ thì động tác thứ hai không dạy thêm
+                   gì, chỉ lặp lại một bản kém hơn. -->
               <div
                 class="traveller"
                 [class.is-moving]="moving() === $index"
-                [class.is-dragging]="dragging() === $index"
                 [style.--col]="spot.col"
                 [style.--lane]="spot.lane"
-                tabindex="0"
-                role="button"
-                [attr.aria-label]="cardLabel($index)"
-                (pointerdown)="onPointerDown($index, $event)"
-                (pointermove)="onPointerMove($index, $event)"
-                (pointerup)="onPointerUp($index, $event)"
-                (pointercancel)="onPointerUp($index, $event)"
-                (keydown)="onKeydown($index, $event)"
               >
                 <article class="kan-card kan-card-travel">
                   @if ($index === 0) {
@@ -245,21 +242,13 @@
       </div>
     </div>
 
-    <!-- Dòng gợi ý. Trước khi chạm: một lời mời. Sau khi kéo: chữ "Saved." —
-         chứng minh đúng câu đã viết ở đoạn dẫn phía trên ("Dragging is saving,
-         there is no Save button"). Người đọc vừa tự kiểm chứng lời quảng cáo
-         bằng chính tay mình, và đó là thứ không câu chữ nào thay được. -->
-    <p class="board-hint" [class.is-done]="moved()">
-      @if (moved()) {
-        <svg lucideCheck [strokeWidth]="2.6" aria-hidden="true"></svg>
-        Saved. No Save button — that is the whole idea.
-      } @else {
-        Drag a card to another column. Or focus it and use the arrow keys.
-      }
+    <!-- Dòng này nay là LỜI CHỈ ĐƯỜNG, không còn là lời mời nghịch.
+         Bảng trên đầu để xem một nhóm làm việc; bảng để tự tay làm nằm ở khu
+         "Try it". Nói thẳng ra như vậy thì người đọc biết chỗ nào làm được gì,
+         thay vì thử kéo ở đây rồi tưởng trang hỏng. -->
+    <p class="board-hint">
+      A team's board, mid-week. Yours is a few scrolls down —
+      <a href="#try-it">try it there</a>.
     </p>
-
-    <!-- Thông báo cho trình đọc màn hình sau mỗi lần dời thẻ. `polite` để nó
-         chờ người dùng ngừng nói rồi mới chen vào. -->
-    <p class="lp-sr-only" aria-live="polite">{{ announcement() }}</p>
   </div>
 </section>

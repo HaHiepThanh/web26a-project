@@ -719,43 +719,20 @@
      một cột mà không cần biết nó là bao nhiêu pixel. */
   width: calc((100% - 2 * var(--bgap)) / 3);
   padding-inline: var(--cpad);
-  /* --dx/--dy là độ lệch con trỏ trong lúc kéo, cộng thẳng vào vị trí ô. Nhờ vậy
-     một phép transform lo cả hai việc — không phải chồng thêm lớp bọc. */
+  /* Một phép transform đưa thẻ tới đúng ô: cột nhân bề ngang cột, làn nhân
+     chiều cao thẻ. Không còn --dx/--dy vì bảng này thôi kéo thả. */
   transform: translate3d(
-    calc(var(--col, 0) * (100% + var(--bgap)) + var(--dx, 0px)),
-    calc(
-      var(--cpad) + var(--chead) + var(--cgap) + var(--lane, 0) * 2 * (var(--ch) + var(--cgap)) +
-        var(--dy, 0px)
-    ),
+    calc(var(--col, 0) * (100% + var(--bgap))),
+    calc(var(--cpad) + var(--chead) + var(--cgap) + var(--lane, 0) * 2 * (var(--ch) + var(--cgap))),
     0
   );
   /* var(--lp-dur-5) phải khớp với hằng số trong landing-hero.ts (chỗ hạ cờ `moving`). */
   transition: transform var(--lp-dur-5) var(--lp-ease);
   will-change: transform;
-  cursor: grab;
-  /* Chặn cử chỉ mặc định của trình duyệt trên vùng này. Không có dòng này thì
-     trên di động, vuốt để kéo thẻ sẽ bị hiểu thành vuốt để cuộn trang. */
-  touch-action: none;
-}
-
-.traveller:focus-visible {
-  outline: 2px solid var(--accent-blue);
-  outline-offset: 4px;
-  border-radius: var(--radius-md);
-}
-
-/* Đang bị kéo: bỏ transition để thẻ bám sát ngón tay theo từng khung hình.
-   Còn nguyên transition thì thẻ chạy sau con trỏ var(--lp-dur-5) — cảm giác như đang kéo
-   một vật qua bùn. */
-.traveller.is-dragging {
-  transition: none;
-  z-index: 3;
-  cursor: grabbing;
-}
-
-.traveller.is-dragging .kan-card-travel {
-  transform: scale(1.06) rotate(-2deg);
-  box-shadow: var(--lp-shadow-lg);
+  /* ⚠️ ĐÃ GỠ cursor: grab và touch-action: none cùng lúc với việc gỡ kéo thả.
+     Giữ con trỏ hình bàn tay là hứa một thứ không còn tồn tại; còn
+     `touch-action: none` thì tệ hơn hẳn — nó chặn luôn cú vuốt để CUỘN TRANG
+     trên điện thoại, tức là đổi một lỗi thật lấy một tính năng đã bỏ. */
 }
 
 .kan-card-travel {
@@ -858,10 +835,19 @@
   height: 16px;
 }
 
-/* Đã kéo xong: đổi sang màu nhấn để câu trả lời nổi hơn lời mời. */
-.board-hint.is-done {
-  color: var(--lp-ink-green);
+/* Liên kết xuống khu "Try it" — gạch chân sẵn, không chờ rê chuột: đây là lối
+   đi chính từ hero xuống chỗ tự tay làm, nên nó phải trông như một liên kết
+   ngay từ cái nhìn đầu tiên. */
+.board-hint a {
+  color: var(--lp-ink-blue);
   font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.board-hint a:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+  border-radius: 3px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -882,14 +868,10 @@
    tải trang: chạy độc lập thì hoạt ảnh diễn xong từ lâu trong khi khối vẫn còn
    trong suốt, và người xem chỉ thấy một tấm bảng hiện ra đã xếp sẵn.
 
-   ⚠️ KHÔNG đụng tới `.kan-card-travel`. Hai tấm thẻ đó do JavaScript điều khiển
-   qua `--dx/--dy` trong transform; thêm transform của hoạt ảnh vào là hai bên
-   tranh nhau ghi cùng một thuộc tính, và cú kéo sẽ giật.
-
-   An toàn với phần kéo thả: chỗ đáp tính bằng cách chia hộp của cả lưới
-   `.board-cols` làm ba phần, mà lưới đó không hề được hoạt ảnh — nên toạ độ
-   không phụ thuộc việc từng cột có đang dịch chuyển hay không. Phép đo cũng chỉ
-   chạy lúc thả chuột, tức là rất lâu sau khi hoạt ảnh kết thúc.
+   ⚠️ KHÔNG đụng tới `.kan-card-travel`. Vị trí hai tấm thẻ đó nằm trong
+   `transform` của `.traveller`, do JavaScript ghi qua `--col` / `--lane` mỗi
+   lần bảng tự dời thẻ. Thêm một transform của hoạt ảnh vào đúng phần tử ấy là
+   hai bên tranh nhau ghi cùng một thuộc tính, và cú bay sẽ giật.
    ========================================================================== */
 @media (prefers-reduced-motion: no-preference) {
   /* ⚠️ KHÔNG viết `.reveal .col { opacity: 0 }` để ẩn trước. Đã thử và hỏng:
