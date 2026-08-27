@@ -115,12 +115,19 @@
       (addMember)="onAddWorkspaceMember($event)" (changeRole)="onChangeWorkspaceRole($event)"
       (removeMember)="onRemoveWorkspaceMember($event)"
       (requestDeleteWorkspace)="requestDeleteWorkspace($event)"
+      (requestCreateWorkspace)="openCreateWorkspace()"
       (flashMessage)="flash($event.message, $event.type ?? 'success')">
     </app-manage-workspace-tab>
     }
     }
   </main>
 </div>
+
+<!-- MODAL: tạo / sửa Workspace -->
+<app-workspace-form-modal [isOpen]="showWorkspaceModal()" [mode]="workspaceModalMode()"
+  [workspace]="selectedWorkspaceForEdit()" [currentUser]="auth.currentUser()" (close)="showWorkspaceModal.set(false)"
+  (save)="handleWorkspaceSave($event)" (requestDelete)="requestDeleteWorkspace($event)">
+</app-workspace-form-modal>
 
 <!-- MODAL: xác nhận xoá Organization (gõ lại đúng tên mới bấm được Delete) -->
 <app-org-delete-modal [isOpen]="showDeleteOrgModal()" [org]="orgPendingDelete()" [deleting]="deletingOrg()"

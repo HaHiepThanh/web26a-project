@@ -24,6 +24,7 @@ export class ManageWorkspaceTab {
   readonly changeRole = output<{ workspaceId: string; orgId?: string; memberId: string; newRole: WorkspaceRole }>();
   readonly removeMember = output<{ workspaceId: string; orgId?: string; member: WorkspaceMember }>();
   readonly requestDeleteWorkspace = output<string>();
+  readonly requestCreateWorkspace = output<void>();
   readonly flashMessage = output<{ message: string; type?: 'success' | 'error' | 'info' }>();
 
 

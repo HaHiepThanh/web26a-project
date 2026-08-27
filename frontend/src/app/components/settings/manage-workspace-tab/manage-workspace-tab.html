@@ -1,7 +1,14 @@
 <section class="mx-auto max-w-[920px] space-y-6">
-  <header>
-    <h2 class="text-2xl font-black text-base-content tracking-tight">Manage Workspace</h2>
-    <p class="mt-1 text-sm text-base-content/60">View and manage Workspace members across your Organizations.</p>
+  <header class="flex items-center justify-between gap-4 flex-wrap">
+    <div>
+      <h2 class="text-2xl font-black text-base-content tracking-tight">Manage Workspace</h2>
+      <p class="mt-1 text-sm text-base-content/60">View and manage Workspace members across your Organizations.</p>
+    </div>
+    <button type="button" class="btn btn-primary btn-sm rounded-md gap-1.5 px-3.5 font-bold shadow-xs hover:scale-105 transition-all"
+      (click)="requestCreateWorkspace.emit()">
+      <svg lucidePlus class="h-4 w-4" [strokeWidth]="2.6"></svg>
+      <span>New Workspace</span>
+    </button>
   </header>
 
   <!-- 1. BỘ LỌC THEO ORGANIZATION -->
@@ -51,6 +58,12 @@
       <span class="badge badge-xs badge-ghost ml-1 shrink-0 font-bold rounded-full">{{ ws.members.length }}</span>
     </button>
     }
+
+    <button type="button" class="btn btn-sm btn-ghost btn-outline rounded-md shrink-0 gap-1.5 text-xs font-bold border-dashed hover:bg-base-200"
+      (click)="requestCreateWorkspace.emit()" title="Create a new workspace">
+      <svg lucidePlus class="h-3.5 w-3.5" [strokeWidth]="2.6"></svg>
+      <span>New</span>
+    </button>
   </div>
   }
 
@@ -187,11 +200,16 @@
     <h3 class="text-base font-black text-base-content">No Workspace yet</h3>
     <p class="text-xs text-base-content/60 max-w-md mx-auto">
       @if (selectedOrgFilter() !== null) {
-      This organization has no Workspace yet. You can create one from the Workspace page.
+      This organization has no Workspace yet. Create your first workspace below.
       } @else {
-      No Workspace has been created yet. You can create one from the Workspace page.
+      No Workspace has been created yet. Create your first workspace below.
       }
     </p>
+    <button type="button" class="btn btn-primary btn-sm rounded-md gap-1.5 font-bold mx-auto shadow-xs"
+      (click)="requestCreateWorkspace.emit()">
+      <svg lucidePlus class="h-4 w-4" [strokeWidth]="2.6"></svg>
+      Create Workspace
+    </button>
   </div>
   }
 </section>

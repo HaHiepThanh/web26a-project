@@ -33,6 +33,7 @@ import { ManageWorkspaceTab } from '../../components/settings/manage-workspace-t
 import { ManageOrganizationTab } from '../../components/settings/manage-organization-tab/manage-organization-tab';
 import { OrgDeleteModal } from '../../components/workspace/org-delete-modal/org-delete-modal';
 import { WorkspaceDeleteModal } from '../../components/workspace/workspace-delete-modal/workspace-delete-modal';
+import { WorkspaceFormModal } from '../../components/workspace/workspace-form-modal/workspace-form-modal';
 import { WorkspaceService } from '../../services/workspace.service';
 
 @Component({
@@ -47,6 +48,7 @@ import { WorkspaceService } from '../../services/workspace.service';
     ManageOrganizationTab,
     OrgDeleteModal,
     WorkspaceDeleteModal,
+    WorkspaceFormModal,
   ],
   templateUrl: './settings.html',
   styleUrl: './settings.css',
@@ -340,6 +342,67 @@ export class Settings {
   readonly orgPendingDelete = signal<Organization | null>(null);
   readonly deletingOrg = signal(false);
   readonly deleteOrgError = signal<string | null>(null);
+
+  // ---- Modal tạo / sửa Workspace ----
+  readonly showWorkspaceModal = signal(false);
+  readonly workspaceModalMode = signal<'create' | 'edit'>('create');
+  readonly selectedWorkspaceForEdit = signal<WorkspaceItem | null>(null);
+
+  openCreateWorkspace(): void {
+    this.workspaceModalMode.set('create');
+    this.selectedWorkspaceForEdit.set(null);
+    this.showWorkspaceModal.set(true);
+  }
+
+  async handleWorkspaceSave(data: {
+    name: string;
+    description: string;
+    visibility: import('../../models').WorkspaceVisibility;
+    memberIds: string[];
+    members: WorkspaceMember[];
+  }): Promise<void> {
+    const { name, description, visibility, memberIds, members } = data;
+    const orgId = this.selectedOrgFilter() || this.orgService.activeOrgId() || this.orgService.organizations()[0]?.id;
+    if (!orgId) {
+      this.flash('No active Organization found. Please create or select an organization first.', 'error');
+      return;
+    }
+
+    const { workspace, error } = await this.workspaceService.createWorkspace(
+      orgId,
+      name,
+      description,
+      visibility,
+      memberIds,
+    );
+    if (!workspace) {
+      this.flash(error ?? 'Failed to create the workspace.', 'error');
+      return;
+    }
+
+    const foundOrg = this.orgService.organizations().find((o) => o.id === orgId);
+    const newWs: WorkspaceWithOrg = {
+      id: workspace.id,
+      orgId,
+      orgName: foundOrg?.name ?? 'Organization',
+      name: workspace.name,
+      visibility: workspace.visibility,
+      memberIds: workspace.memberIds,
+      membersCount: members.length,
+      members,
+      description: description || 'A brand-new Workspace just got created.',
+      boards: [],
+    };
+
+    const userId = this.auth.currentUser()?.id;
+    const orgWorkspaces = loadStoredWorkspaces(userId, orgId);
+    persistWorkspaces([...orgWorkspaces, newWs], userId, orgId);
+
+    this.workspaces.update((list) => [...list, newWs]);
+    this.selectedWorkspaceId.set(newWs.id);
+    this.showWorkspaceModal.set(false);
+    this.flash(`Created Workspace "${newWs.name}"!`);
+  }
 
   // ---- Modal xác nhận xoá Workspace (GitHub style) ----
   readonly showDeleteWorkspaceModal = signal(false);
