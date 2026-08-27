@@ -22,6 +22,7 @@ import { AppNotification, BoardSearchResult } from '../../models';
 import { AuthService } from '../../services/auth.service';
 import { HeaderActionsService } from '../../services/header-actions.service';
 import { RealtimeService } from '../../services/realtime.service';
+import { RouteContextStore } from '../../ngrx/route-context/route-context.store';
 import { UserAvatar } from '../shared/user-avatar/user-avatar';
 import { InvitesPanel } from '../shared/invites-panel/invites-panel';
 import { NotificationsPanel } from '../shared/notifications-panel/notifications-panel';
@@ -74,6 +75,8 @@ export class Header {
 
   /** Công khai cho template: hai bảng dùng chung đọc dữ liệu thẳng từ đây. */
   readonly actions = inject(HeaderActionsService);
+  readonly routeContext = inject(RouteContextStore);
+  readonly currentBoardId = this.routeContext.activeBoardId;
 
   readonly currentUser = this.auth.currentUser;
 

@@ -1,16 +1,18 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import {
+  LucideArrowLeft,
   LucideBuilding2,
   LucideGraduationCap,
   LucideUser,
   LucideUsers,
 } from '@lucide/angular';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
 import { OrganizationStore } from '../../ngrx/organization/organization.store';
 import { TourStore } from '../../ngrx/tour/tour.store';
 import { BoardStore } from '../../ngrx/board/board.store';
+import { RouteContextStore } from '../../ngrx/route-context/route-context.store';
 import {
   Organization,
   OrgInviteRole,
@@ -40,6 +42,8 @@ import { WorkspaceService } from '../../services/workspace.service';
 @Component({
   selector: 'app-settings',
   imports: [
+    RouterLink,
+    LucideArrowLeft,
     LucideBuilding2,
     LucideGraduationCap,
     LucideUser,
@@ -61,8 +65,25 @@ export class Settings {
   readonly orgService = inject(OrganizationStore);
   private readonly workspaceService = inject(WorkspaceService);
   private readonly boardService = inject(BoardStore);
+  private readonly routeContext = inject(RouteContextStore);
+  private readonly activatedRoute = inject(ActivatedRoute);
   private readonly tour = inject(TourStore);
   private readonly router = inject(Router);
+
+  /** Board để quay lại nếu người dùng chuyển sang trang Settings từ 1 board */
+  readonly returnBoard = computed(() => {
+    const queryBoardId = this.activatedRoute.snapshot.queryParamMap.get('fromBoardId');
+    if (queryBoardId) {
+      const b = this.boardService.entities().find((item) => item.id === queryBoardId);
+      return { id: queryBoardId, name: b?.name || 'Board' };
+    }
+    const last = this.routeContext.lastActiveBoard();
+    if (last) {
+      const b = this.boardService.entities().find((item) => item.id === last.id);
+      return { id: last.id, name: b?.name || last.name || 'Board' };
+    }
+    return null;
+  });
 
   /**
    * Chạy lại tour hướng dẫn từ bước 1.

@@ -735,6 +735,13 @@ export class Board {
       if (roiPhong) roiPhong();
     });
 
+    effect(() => {
+      const b = this.board();
+      if (b) {
+        routeContext.setLastActiveBoard({ id: b.id, name: b.name });
+      }
+    });
+
     // Người khác vừa xoá đúng board mình đang mở → rời đi, đừng để người dùng
     // thao tác tiếp rồi ăn 404 ở mọi nút bấm.
     effect(() => {

@@ -20,6 +20,15 @@
   <!-- ============================== LEFT NAVIGATION ============================== -->
   <aside
     class="w-[280px] shrink-0 overflow-y-auto border-r border-base-300 bg-base-100 p-5 max-[900px]:w-full max-[900px]:border-b max-[900px]:border-r-0 max-lg:overflow-visible">
+    @if (returnBoard(); as rb) {
+      <div class="mb-3 px-1">
+        <a [routerLink]="['/board', rb.id]" class="btn btn-outline btn-sm gap-2 w-full rounded-md font-bold text-xs border-base-300 hover:bg-base-200 hover:text-primary transition-all">
+          <svg lucideArrowLeft class="h-4 w-4 shrink-0" [strokeWidth]="2.2"></svg>
+          <span class="truncate">Back to {{ rb.name }}</span>
+        </a>
+      </div>
+    }
+
     <div class="px-2 pb-6 pt-1">
       <h1 class="text-xl font-black tracking-tight text-base-content">Settings</h1>
       <p class="mt-1 text-xs text-base-content/60">Manage your profile and Workspace members</p>

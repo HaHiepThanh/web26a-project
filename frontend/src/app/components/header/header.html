@@ -226,7 +226,7 @@
       </button>
 
       <a class="btn btn-ghost btn-square btn-xs h-7 w-7 rounded-md relative hover:bg-base-100 hover:shadow-xs"
-        routerLink="/settings" title="Settings">
+        routerLink="/settings" [queryParams]="currentBoardId() ? { fromBoardId: currentBoardId() } : null" title="Settings">
         <svg lucideSettings class="h-4 w-4" [strokeWidth]="2"></svg>
       </a>
     </div>
@@ -290,7 +290,7 @@
 
     <div class="my-1 h-px bg-base-300"></div>
     <a class="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm text-base-content hover:bg-base-200"
-      routerLink="/settings" (click)="menuOpen.set(false)">
+      routerLink="/settings" [queryParams]="currentBoardId() ? { fromBoardId: currentBoardId() } : null" (click)="menuOpen.set(false)">
       <svg lucideUser class="h-4 w-4" [strokeWidth]="2"></svg>
       Profile &amp; settings</a>
     <div

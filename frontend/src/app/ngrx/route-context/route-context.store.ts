@@ -19,11 +19,14 @@ export interface RouteContextState {
   activeOrgId: string | null;
   /** Board đang mở. Null khi ở Dashboard hoặc trang cài đặt. */
   activeBoardId: string | null;
+  /** Board xem gần nhất — dùng cho nút quay lại từ trang Cài đặt hoặc trang khác. */
+  lastActiveBoard: { id: string; name: string } | null;
 }
 
 const initialState: RouteContextState = {
   activeOrgId: null,
   activeBoardId: null,
+  lastActiveBoard: null,
 };
 
 export const RouteContextStore = signalStore(
@@ -45,6 +48,10 @@ export const RouteContextStore = signalStore(
 
     setActiveBoard(boardId: string | null): void {
       patchState(store, { activeBoardId: boardId });
+    },
+
+    setLastActiveBoard(board: { id: string; name: string } | null): void {
+      patchState(store, { lastActiveBoard: board });
     },
 
     /** Đăng xuất → quên hết ngữ cảnh, tránh người sau thấy board của người trước. */
