@@ -480,3 +480,129 @@
     animation: none;
   }
 }
+
+/* ==========================================================================
+   Thẻ Kanban ở hai rìa.
+
+   Phần chữ chỉ rộng 720px nên ở màn rộng hai bên còn trống hẳn ra. Mấy tấm thẻ
+   này lấp vào đó, và tràn một phần ra ngoài mép để tấm bảng có vẻ còn chạy tiếp
+   ra ngoài khung hình.
+
+   ⚠️ CHỈ HIỆN TỪ 1180px TRỞ LÊN. Dưới ngưỡng đó, phần chữ 720px và mấy tấm thẻ
+   bắt đầu tranh chỗ: ở 1000px thì mép trong của thẻ trái rơi vào x=160 trong khi
+   chữ bắt đầu ở x=140 — chồng lên nhau, và nền có hoa văn nằm dưới chữ là cách
+   nhanh nhất để giết tương phản.
+   ========================================================================== */
+.wc-cards {
+  display: none;
+}
+
+@media (min-width: 1180px) {
+  .wc-cards {
+    display: block;
+    position: absolute;
+    inset: 0;
+  }
+
+  .wc-card {
+    position: absolute;
+    display: grid;
+    gap: 7px;
+    width: 190px;
+    padding: 13px;
+    border-radius: var(--radius-md);
+    /* Nhạt và lùi sâu. Thẻ ở hero nét và nằm tiền cảnh; hai thứ phải khác nhau
+       về ĐỘ SÂU, nếu không nhìn ra là một hiệu ứng lặp lại hai lần. */
+    background: color-mix(in oklab, var(--lp-surface) 62%, transparent);
+    border: 1px solid color-mix(in oklab, var(--lp-text) 9%, transparent);
+    box-shadow: var(--lp-shadow-sm);
+    opacity: 0.6;
+    animation: wc-float 16s ease-in-out infinite alternate;
+    will-change: transform;
+  }
+
+  /* Vạch nhãn màu — dấu hiệu nhận ra một tấm thẻ Kanban nhanh nhất, kể cả khi
+     thẻ không có chữ nào. */
+  .wc-lb {
+    width: 34px;
+    height: 5px;
+    border-radius: 999px;
+  }
+  .lb-blue {
+    background: var(--lp-solid-blue);
+  }
+  .lb-purple {
+    background: var(--lp-solid-purple);
+  }
+  .lb-green {
+    background: var(--lp-solid-green);
+  }
+  .lb-amber {
+    background: var(--lp-solid-amber);
+  }
+
+  /* Vạch xám thay cho dòng chữ. Cố ý KHÔNG dùng chữ thật — xem ghi chú ở HTML. */
+  .wc-ln {
+    height: 7px;
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--lp-text) 15%, transparent);
+  }
+  .wc-ln-s {
+    width: 62%;
+  }
+
+  /* Ba thẻ bên trái, hai bên phải, mỗi cái một độ cao và một góc nghiêng khác
+     nhau. Tràn ra ngoài mép (giá trị âm) để bảng có vẻ chạy tiếp ra ngoài. */
+  .wc-k1 {
+    top: 16%;
+    left: -46px;
+    rotate: -5deg;
+    animation-duration: 15s;
+  }
+  .wc-k2 {
+    top: 44%;
+    left: 24px;
+    rotate: 3deg;
+    animation-duration: 19s;
+    animation-delay: -4s;
+  }
+  .wc-k3 {
+    bottom: 13%;
+    left: -30px;
+    rotate: -2deg;
+    animation-duration: 17s;
+    animation-delay: -8s;
+  }
+  .wc-k4 {
+    top: 22%;
+    right: -38px;
+    rotate: 4deg;
+    animation-duration: 18s;
+    animation-delay: -2s;
+  }
+  .wc-k5 {
+    bottom: 20%;
+    right: 10px;
+    rotate: -3deg;
+    animation-duration: 21s;
+    animation-delay: -11s;
+  }
+
+  /* Trôi bằng `translate` riêng chứ không gộp vào `transform`: góc nghiêng ở
+     trên dùng thuộc tính `rotate` riêng, hai thứ tách nhau thì không cái nào đè
+     mất cái nào. */
+  @keyframes wc-float {
+    from {
+      translate: 0 0;
+    }
+    to {
+      translate: 0 -18px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .wc-card {
+      animation: none;
+    }
+  }
+}
