@@ -5,7 +5,7 @@
   </header>
 
   <!-- 1. Ảnh đại diện LỚN & UUID -->
-  <div class="rounded-3xl border-2 border-base-300 bg-base-100 p-6 shadow-xs">
+  <div class="rounded-md border border-base-300 bg-base-100 p-6 shadow-xs">
     <h3 class="mb-4 text-sm font-black uppercase tracking-wider text-base-content/80">Avatar & Identity</h3>
     <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6">
       <!-- Large Avatar -->
@@ -20,13 +20,13 @@
       <!-- Controls & UUID -->
       <div class="flex-1 min-w-0 space-y-3">
         <div class="flex flex-wrap items-center gap-2.5">
-          <label class="btn btn-primary btn-sm font-bold cursor-pointer gap-1.5 shadow-xs" [class.btn-disabled]="savingAvatar()">
+          <label class="btn btn-primary btn-sm rounded-md font-bold cursor-pointer gap-1.5 shadow-xs" [class.btn-disabled]="savingAvatar()">
             @if (savingAvatar()) { <span class="loading loading-spinner loading-xs"></span> } @else { <svg lucideCamera class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg> }
             <span>Upload photo</span>
             <input type="file" accept="image/*" class="sr-only" [disabled]="savingAvatar()" (change)="onUploadAvatar($event)" />
           </label>
           @if (avatarPreview()) {
-          <button type="button" class="btn btn-ghost btn-sm font-bold text-error hover:bg-error/10" [disabled]="savingAvatar()" (click)="onRemoveAvatar()">
+          <button type="button" class="btn btn-ghost btn-sm rounded-md font-bold text-error hover:bg-error/10" [disabled]="savingAvatar()" (click)="onRemoveAvatar()">
             Remove photo
           </button>
           }
@@ -34,13 +34,13 @@
         <p class="text-xs text-base-content/50">JPG, PNG, or GIF. Max 5MB.</p>
 
         <!-- UUID Box with 1-click Copy -->
-        <div class="flex items-center gap-2 rounded-2xl border-2 border-base-300 bg-base-200 p-2.5">
+        <div class="flex items-center gap-2 rounded-md border border-base-300 bg-base-200 p-2.5">
           <span class="flex items-center gap-1 text-xs font-black text-base-content/60 shrink-0">
             <svg lucideKeyRound class="h-3 w-3" [strokeWidth]="2.4"></svg> UUID:</span>
           <code class="font-mono text-xs text-primary font-bold truncate flex-1 select-all">{{ currentUser()?.id || 'No UUID assigned' }}</code>
           <button
             type="button"
-            class="btn btn-xs font-bold gap-1 shrink-0"
+            class="btn btn-xs rounded-md font-bold gap-1 shrink-0"
             [class.btn-success]="copiedUuid()"
             [class.btn-outline]="!copiedUuid()"
             (click)="copyUuid()">
@@ -57,14 +57,14 @@
 
   <!-- 2. Thông tin cơ bản của User khi đăng ký -->
   <form [formGroup]="profileForm" (ngSubmit)="onSubmitProfile()" class="space-y-6">
-    <div class="rounded-lg border border-base-300 bg-base-100 p-6 shadow-xs space-y-5">
+    <div class="rounded-md border border-base-300 bg-base-100 p-6 shadow-xs space-y-5">
       <h3 class="text-sm font-black uppercase tracking-wider text-base-content/80">Account information</h3>
 
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <!-- Họ và tên -->
         <div class="flex flex-col gap-1.5">
           <label class="text-xs font-bold text-base-content/80" for="fullName">Full name *</label>
-          <input id="fullName" type="text" class="input input-bordered input-sm rounded-field w-full border-base-300 font-semibold text-[12px]" formControlName="fullName" placeholder="e.g. Jane Doe" />
+          <input id="fullName" type="text" class="input input-bordered input-sm rounded-md w-full border-base-300 font-semibold text-[12px]" formControlName="fullName" placeholder="e.g. Jane Doe" />
           @if (profileForm.get('fullName')?.invalid && profileForm.get('fullName')?.touched) {
             <span class="text-2xs font-bold text-error">Please enter your full name (at least 2 characters).</span>
           }
@@ -73,7 +73,7 @@
         <!-- Username -->
         <div class="flex flex-col gap-1.5">
           <label class="text-xs font-bold text-base-content/80" for="username">Username *</label>
-          <input id="username" type="text" class="input input-bordered input-sm rounded-field w-full border-base-300 font-semibold text-[12px]" formControlName="username" placeholder="e.g. janedoe" />
+          <input id="username" type="text" class="input input-bordered input-sm rounded-md w-full border-base-300 font-semibold text-[12px]" formControlName="username" placeholder="e.g. janedoe" />
           @if (profileForm.get('username')?.invalid && profileForm.get('username')?.touched) {
             <span class="text-2xs font-bold text-error">Username must be 3-25 characters, no diacritics.</span>
           }
@@ -82,13 +82,13 @@
         <!-- Email -->
         <div class="flex flex-col gap-1.5">
           <label class="text-xs font-bold text-base-content/80" for="email">Email address</label>
-          <input id="email" type="email" class="input input-bordered input-sm rounded-field w-full border-base-300 font-semibold text-[12px]" formControlName="email" />
+          <input id="email" type="email" class="input input-bordered input-sm rounded-md w-full border-base-300 font-semibold text-[12px]" formControlName="email" />
         </div>
 
         <!-- Phone -->
         <div class="flex flex-col gap-1.5">
           <label class="text-xs font-bold text-base-content/80" for="phone">Phone number</label>
-          <input id="phone" type="tel" class="input input-bordered input-sm rounded-field w-full border-base-300 font-semibold text-[12px]" formControlName="phone" placeholder="e.g. 0912345678" />
+          <input id="phone" type="tel" class="input input-bordered input-sm rounded-md w-full border-base-300 font-semibold text-[12px]" formControlName="phone" placeholder="e.g. 0912345678" />
           @if (profileForm.get('phone')?.invalid && profileForm.get('phone')?.touched) {
             <span class="text-2xs font-bold text-error">Invalid phone number format.</span>
           }
@@ -97,12 +97,12 @@
         <!-- Job Title -->
         <div class="flex flex-col gap-1.5 sm:col-span-2">
           <label class="text-xs font-bold text-base-content/80" for="jobTitle">Job title</label>
-          <input id="jobTitle" type="text" class="input input-bordered input-sm rounded-field w-full border-base-300 font-semibold text-[12px]" formControlName="jobTitle" placeholder="e.g. Lead Software Engineer" />
+          <input id="jobTitle" type="text" class="input input-bordered input-sm rounded-md w-full border-base-300 font-semibold text-[12px]" formControlName="jobTitle" placeholder="e.g. Lead Software Engineer" />
         </div>
       </div>
 
       <div class="flex justify-end pt-2">
-        <button type="submit" class="btn btn-primary btn-sm rounded-field gap-1.5 px-5 font-black text-[12px] shadow-xs">
+        <button type="submit" class="btn btn-primary btn-sm rounded-md gap-1.5 px-5 font-black text-[12px] shadow-xs">
           <svg lucideSave class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg> Save profile
         </button>
       </div>
@@ -110,7 +110,7 @@
   </form>
 
   <!-- 3. Đổi mật khẩu (Xác thực mật khẩu cũ) -->
-  <div class="rounded-lg border border-base-300 bg-base-100 p-6 shadow-xs space-y-4">
+  <div class="rounded-md border border-base-300 bg-base-100 p-6 shadow-xs space-y-4">
     <div>
       <h3 class="text-sm font-black uppercase tracking-wider text-base-content/80">Change password</h3>
       <p class="text-xs text-base-content/60 mt-0.5">Verify your current password to set a new one.</p>
@@ -120,7 +120,7 @@
       <!-- Mật khẩu hiện tại (Cũ) -->
       <div class="flex flex-col gap-1.5 sm:col-span-2">
         <label class="text-xs font-bold text-base-content/80" for="currentPassword">Current password *</label>
-        <input id="currentPassword" type="password" class="input input-bordered input-sm rounded-field w-full border-base-300 font-semibold text-[12px]" formControlName="currentPassword" placeholder="Enter your current password..." />
+        <input id="currentPassword" type="password" class="input input-bordered input-sm rounded-md w-full border-base-300 font-semibold text-[12px]" formControlName="currentPassword" placeholder="Enter your current password..." />
         @if (passwordForm.get('currentPassword')?.invalid && passwordForm.get('currentPassword')?.touched) {
           <span class="text-2xs font-bold text-error">Please enter your current password to verify.</span>
         }
@@ -129,7 +129,7 @@
       <!-- Mật khẩu mới -->
       <div class="flex flex-col gap-1.5">
         <label class="text-xs font-bold text-base-content/80" for="newPassword">New password *</label>
-        <input id="newPassword" type="password" class="input input-bordered input-sm rounded-field w-full border-base-300 font-semibold text-[12px]" formControlName="newPassword" placeholder="At least 8 characters..." />
+        <input id="newPassword" type="password" class="input input-bordered input-sm rounded-md w-full border-base-300 font-semibold text-[12px]" formControlName="newPassword" placeholder="At least 8 characters..." />
         @if (passwordForm.get('newPassword')?.value) {
           <div class="mt-1 flex items-center gap-2">
             <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-base-300">
@@ -159,14 +159,14 @@
       <!-- Xác nhận mật khẩu mới -->
       <div class="flex flex-col gap-1.5">
         <label class="text-xs font-bold text-base-content/80" for="confirmPassword">Confirm new password *</label>
-        <input id="confirmPassword" type="password" class="input input-bordered input-sm rounded-field w-full border-base-300 font-semibold text-[12px]" formControlName="confirmPassword" placeholder="Re-enter your new password..." />
+        <input id="confirmPassword" type="password" class="input input-bordered input-sm rounded-md w-full border-base-300 font-semibold text-[12px]" formControlName="confirmPassword" placeholder="Re-enter your new password..." />
         @if (passwordForm.hasError('passwordMismatch') && passwordForm.get('confirmPassword')?.touched) {
           <span class="text-2xs font-bold text-error">Passwords do not match.</span>
         }
       </div>
 
       <div class="sm:col-span-2 flex justify-end pt-1">
-        <button type="submit" class="btn btn-primary btn-sm rounded-field gap-1.5 px-5 font-black text-[12px] shadow-xs" [disabled]="passwordForm.invalid || savingPassword()">
+        <button type="submit" class="btn btn-primary btn-sm rounded-md gap-1.5 px-5 font-black text-[12px] shadow-xs" [disabled]="passwordForm.invalid || savingPassword()">
           <svg lucideLock class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg> Update password
         </button>
       </div>
@@ -174,9 +174,9 @@
   </div>
 
   <!-- 4. Liên kết Google — điều kiện để dùng nút họp trên trang Board -->
-  <div class="rounded-lg border border-base-300 bg-base-100 p-6 shadow-xs space-y-4">
+  <div class="rounded-md border border-base-300 bg-base-100 p-6 shadow-xs space-y-4">
     <div class="flex items-start gap-3">
-      <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-base-200">
+      <span class="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-base-200">
         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M15 10l4.55-2.27A1 1 0 0121 8.62v6.76a1 1 0 01-1.45.89L15 14M5 6h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z" />
         </svg>
@@ -191,18 +191,18 @@
     </div>
 
     @if (googleEmail(); as linked) {
-      <div class="flex flex-wrap items-center gap-2 rounded-xl border border-success/30 bg-success/10 px-4 py-3">
+      <div class="flex flex-wrap items-center gap-2 rounded-md border border-success/30 bg-success/10 px-4 py-3">
         <svg class="h-4 w-4 shrink-0 text-success" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
           <path d="M20 6L9 17l-5-5" />
         </svg>
         <span class="min-w-0 flex-1 truncate text-xs font-bold text-base-content">{{ linked }}</span>
-        <button type="button" class="btn btn-ghost btn-xs font-bold" [disabled]="googleBusy()" (click)="unlinkGoogle()">
+        <button type="button" class="btn btn-ghost btn-xs rounded-md font-bold" [disabled]="googleBusy()" (click)="unlinkGoogle()">
           Unlink
         </button>
       </div>
     } @else {
       <div>
-        <button type="button" class="btn btn-outline btn-sm gap-2 font-bold" [disabled]="googleBusy()" (click)="linkGoogle()">
+        <button type="button" class="btn btn-outline btn-sm rounded-md gap-2 font-bold" [disabled]="googleBusy()" (click)="linkGoogle()">
           @if (googleBusy()) {
             <span class="loading loading-spinner h-4 w-4"></span> Linking...
           } @else {

@@ -26,7 +26,7 @@
     </svg>
     <input
       type="text"
-      class="input h-[38px] w-full pl-9"
+      class="input input-sm rounded-md h-[38px] w-full pl-9 font-semibold"
       placeholder="Search projects..."
       [value]="searchQuery()"
       (input)="searchQuery.set($any($event.target).value)"
@@ -34,26 +34,26 @@
   </div>
 
   @if (loading()) {
-    <div class="flex items-center justify-center gap-3 rounded-box border border-dashed border-base-300 bg-base-100 px-4 py-12 text-base-content/50">
+    <div class="flex items-center justify-center gap-3 rounded-md border border-dashed border-base-300 bg-base-100 px-4 py-12 text-base-content/50">
       <span class="loading loading-spinner loading-sm"></span>
       <span>Loading projects…</span>
     </div>
   } @else if (filteredProjects().length === 0) {
-    <div class="flex flex-col items-center gap-4 rounded-box border border-dashed border-base-300 bg-base-100 px-4 py-12 text-center text-base-content/50">
+    <div class="flex flex-col items-center gap-4 rounded-md border border-dashed border-base-300 bg-base-100 px-4 py-12 text-center text-base-content/50">
       @if (searchQuery()) {
         <p>No projects found matching "{{ searchQuery() }}".</p>
       } @else {
         <p>You haven't joined any project in this organization yet.</p>
-        <a routerLink="/workspace" class="btn btn-primary">Explore Workspace</a>
+        <a routerLink="/workspace" class="btn btn-primary btn-sm rounded-md font-bold">Explore Workspace</a>
       }
     </div>
   } @else {
     <div class="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4">
       @for (project of filteredProjects(); track trackById($index, project)) {
-        <a [routerLink]="['/settings/manage-workspace', project.id]" class="flex flex-col gap-2.5 rounded-box border border-base-300 bg-base-100 p-[1.1rem] text-base-content transition hover:-translate-y-0.5 hover:border-primary hover:shadow-md">
+        <a [routerLink]="['/settings/manage-workspace', project.id]" class="flex flex-col gap-2.5 rounded-md border border-base-300 bg-base-100 p-[1.1rem] text-base-content transition hover:-translate-y-0.5 hover:border-primary hover:shadow-md">
           <div class="flex items-start justify-between gap-2">
             <span class="text-[0.95rem] font-bold leading-tight">{{ project.name }}</span>
-            <span class="badge badge-sm shrink-0" [class]="roleBadge(project.myRole)" [title]="'Your role in this organization'">{{ roleLabel(project.myRole) }}</span>
+            <span class="badge badge-sm shrink-0 rounded-md" [class]="roleBadge(project.myRole)" [title]="'Your role in this organization'">{{ roleLabel(project.myRole) }}</span>
           </div>
           <span class="text-[0.72rem] uppercase tracking-wide text-base-content/50">{{ project.workspaceName }}</span>
           <div class="mt-1 flex items-center justify-between">

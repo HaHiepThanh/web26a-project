@@ -4,10 +4,10 @@
      khung lại cao đúng màn hình và `sticky` vô hại như trước. -->
 <header
   class="sticky top-0 z-[100] flex h-14 items-center justify-between gap-4 border-b border-base-300/70 bg-base-100 px-4 shadow-sm max-lg:static">
-  <a [routerLink]="workspaceLink()"
-    (click)="onLogoClick($event)"
-    class="flex shrink-0 items-center gap-2 rounded-lg px-1.5 py-1 font-bold text-base-content transition-colors hover:bg-base-200 cursor-pointer">
-    <img src="/HHH-logo-256.png" alt="Horizon Hub Harmony Logo" class="h-7 w-7 shrink-0 rounded-md object-cover shadow-sm" />
+  <a [routerLink]="workspaceLink()" (click)="onLogoClick($event)"
+    class="flex shrink-0 items-center gap-2 rounded-md px-1.5 py-1 font-bold text-base-content transition-colors hover:bg-base-200 cursor-pointer">
+    <img src="/HHH-logo-256.png" alt="Horizon Hub Harmony Logo"
+      class="h-7 w-7 shrink-0 rounded-md object-cover shadow-sm" />
     <div class="flex flex-col leading-[1.05]">
       <span class="text-base tracking-[-0.3px] text-primary">Horizon Hub Harmony</span>
       <span class="text-3xs font-extrabold tracking-[0.6px] text-base-content/40">WORKSPACE</span>
@@ -20,91 +20,88 @@
     <label
       class="input input-sm h-9 w-full rounded-md border border-base-300 bg-base-100 px-3 flex items-center gap-2 shadow-xs transition-all focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
       <svg lucideSearch class="h-4 w-4 shrink-0 text-base-content/40" [strokeWidth]="2"></svg>
-      <input #searchInput type="text" class="grow bg-transparent text-sm text-base-content placeholder:text-base-content/40 focus:outline-none"
-        placeholder="Search boards..."
-        [value]="actions.searchQuery()"
-        (input)="onSearchInput($event)"
-        (focus)="onSearchFocus()"
-        (keydown.escape)="actions.closeSearchDropdown()" />
+      <input #searchInput type="text"
+        class="grow bg-transparent text-sm text-base-content placeholder:text-base-content/40 focus:outline-none"
+        placeholder="Search boards..." [value]="actions.searchQuery()" (input)="onSearchInput($event)"
+        (focus)="onSearchFocus()" (keydown.escape)="actions.closeSearchDropdown()" />
       @if (actions.searchLoading()) {
-        <span class="loading loading-spinner loading-xs text-primary"></span>
+      <span class="loading loading-spinner loading-xs text-primary"></span>
       } @else if (actions.searchQuery()) {
-        <button type="button" class="btn btn-ghost btn-circle btn-xs h-5 w-5 min-h-0 text-base-content/50 hover:text-base-content" (click)="clearSearch(searchInput)">
-          <svg lucideX class="h-3.5 w-3.5" [strokeWidth]="2.5"></svg>
-        </button>
+      <button type="button"
+        class="btn btn-ghost btn-circle btn-xs h-5 w-5 min-h-0 text-base-content/50 hover:text-base-content"
+        (click)="clearSearch(searchInput)">
+        <svg lucideX class="h-3.5 w-3.5" [strokeWidth]="2.5"></svg>
+      </button>
       } @else {
-        <span class="kbd kbd-sm border-none bg-base-200/80 text-base-content/50">/</span>
+      <span class="kbd kbd-sm border-none bg-base-200/80 text-base-content/50">/</span>
       }
     </label>
 
     <!-- Search Results Dropdown -->
     @if (actions.searchDropdownOpen()) {
-      <div
-        class="absolute left-0 right-0 top-[42px] z-[250] max-h-[360px] overflow-y-auto rounded-md border border-base-300/80 bg-base-100 p-2 shadow-xl backdrop-blur-md">
-        @if (actions.searchLoading()) {
-          <div class="flex items-center justify-center gap-2.5 py-4 text-xs text-base-content/60">
-            <span class="loading loading-spinner loading-xs text-primary"></span>
-            <span>Searching boards...</span>
-          </div>
-        } @else if (actions.searchResults().length === 0) {
-          <div class="py-4 text-center text-xs text-base-content/50">
-            @if (actions.searchQuery().trim()) {
-              No boards found for "{{ actions.searchQuery() }}"
-            } @else {
-              No boards found in this organization
-            }
-          </div>
+    <div
+      class="absolute left-0 right-0 top-[42px] z-[250] max-h-[360px] overflow-y-auto rounded-md border border-base-300/80 bg-base-100 p-2 shadow-xl backdrop-blur-md">
+      @if (actions.searchLoading()) {
+      <div class="flex items-center justify-center gap-2.5 py-4 text-xs text-base-content/60">
+        <span class="loading loading-spinner loading-xs text-primary"></span>
+        <span>Searching boards...</span>
+      </div>
+      } @else if (actions.searchResults().length === 0) {
+      <div class="py-4 text-center text-xs text-base-content/50">
+        @if (actions.searchQuery().trim()) {
+        No boards found for "{{ actions.searchQuery() }}"
         } @else {
-          <div class="mb-1 flex items-center justify-between px-2 pt-1 text-3xs font-extrabold uppercase tracking-wider text-base-content/45">
-            <span>Boards ({{ actions.searchResults().length }})</span>
-            <span class="text-3xs font-normal lowercase tracking-normal">Click to navigate</span>
-          </div>
-          <div class="flex flex-col gap-1">
-            @for (b of actions.searchResults(); track b.id) {
-              <button
-                type="button"
-                class="btn btn-ghost h-auto min-h-0 justify-start rounded-md border border-transparent px-2.5 py-2 text-left font-normal normal-case transition-colors hover:border-base-300 hover:bg-base-200/60"
-                (mousedown)="$event.preventDefault()"
-                (click)="selectBoard(b)">
-                <div class="flex w-full items-center gap-2.5">
-                  <span
-                    class="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-md text-white shadow-xs"
-                    [class]="b.background ? b.background : 'bg-primary'">
-                    @if (b.backgroundImageUrl) {
-                      <img
-                        [src]="b.backgroundImageUrl"
-                        [alt]="b.name"
-                        class="absolute inset-0 h-full w-full object-cover"
-                        loading="lazy" />
-                      <div class="absolute inset-0 bg-black/10"></div>
-                    } @else {
-                      <svg lucideKanban class="h-4 w-4" [strokeWidth]="2"></svg>
-                    }
-                  </span>
-                  <div class="min-w-0 flex-1">
-                    <span class="block truncate text-xs font-semibold text-base-content">{{ b.name }}</span>
-                    @if (b.workspaceName) {
-                      <span class="block truncate text-3xs text-base-content/50">
-                        {{ b.workspaceName }}
-                      </span>
-                    }
-                  </div>
-                  @if (b.visibility === 'private') {
-                    <span class="badge badge-xs badge-ghost text-3xs opacity-70">Private</span>
-                  }
-                </div>
-              </button>
-            }
-          </div>
+        No boards found in this organization
         }
       </div>
+      } @else {
+      <div
+        class="mb-1 flex items-center justify-between px-2 pt-1 text-3xs font-extrabold uppercase tracking-wider text-base-content/45">
+        <span>Boards ({{ actions.searchResults().length }})</span>
+        <span class="text-3xs font-normal lowercase tracking-normal">Click to navigate</span>
+      </div>
+      <div class="flex flex-col gap-1">
+        @for (b of actions.searchResults(); track b.id) {
+        <button type="button"
+          class="btn btn-ghost h-auto min-h-0 justify-start rounded-md border border-transparent px-2.5 py-2 text-left font-normal normal-case transition-colors hover:border-base-300 hover:bg-base-200/60"
+          (mousedown)="$event.preventDefault()" (click)="selectBoard(b)">
+          <div class="flex w-full items-center gap-2.5">
+            <span
+              class="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-md text-white shadow-xs"
+              [class]="b.background ? b.background : 'bg-primary'">
+              @if (b.backgroundImageUrl) {
+              <img [src]="b.backgroundImageUrl" [alt]="b.name" class="absolute inset-0 h-full w-full object-cover"
+                loading="lazy" />
+              <div class="absolute inset-0 bg-black/10"></div>
+              } @else {
+              <svg lucideKanban class="h-4 w-4" [strokeWidth]="2"></svg>
+              }
+            </span>
+            <div class="min-w-0 flex-1">
+              <span class="block truncate text-xs font-semibold text-base-content">{{ b.name }}</span>
+              @if (b.workspaceName) {
+              <span class="block truncate text-3xs text-base-content/50">
+                {{ b.workspaceName }}
+              </span>
+              }
+            </div>
+            @if (b.visibility === 'private') {
+            <span class="badge badge-xs badge-ghost text-3xs opacity-70">Private</span>
+            }
+          </div>
+        </button>
+        }
+      </div>
+      }
+    </div>
     }
   </div>
 
   <div class="flex shrink-0 items-center gap-2">
     <!-- Nút tạo nhanh (+): hiện từ khổ tablet (sm) trở lên để tạo workspace và board. -->
     <div class="relative hidden sm:block">
-      <button class="btn btn-primary btn-sm h-9 gap-1.5 rounded-md px-3.5 font-bold shadow-sm" (click)="toggleCreateMenu()">
+      <button class="btn btn-primary btn-sm h-9 gap-1.5 rounded-md px-3.5 font-bold shadow-sm"
+        (click)="toggleCreateMenu()">
         <svg lucidePlus class="h-4 w-4" [strokeWidth]="2.4"></svg>
         <span>Create</span>
         <svg lucideChevronDown class="h-3 w-3 opacity-70" [strokeWidth]="2.5"></svg>
@@ -121,9 +118,9 @@
         </li>
         } @else {
         <li>
-          <button type="button" class="flex w-full items-center gap-2.5 rounded text-left"
+          <button type="button" class="flex w-full items-center gap-2.5 rounded-md text-left"
             (click)="requestCreateBoard()">
-            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-primary/10 text-primary">
+            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
               <svg lucideKanban class="h-4 w-4" [strokeWidth]="2"></svg>
             </span>
             <span class="min-w-0">
@@ -133,9 +130,9 @@
           </button>
         </li>
         <li>
-          <button type="button" class="flex w-full items-center gap-2.5 rounded text-left"
+          <button type="button" class="flex w-full items-center gap-2.5 rounded-md text-left"
             (click)="requestCreateWorkspace()">
-            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-secondary/10 text-secondary">
+            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-secondary/10 text-secondary">
               <svg lucideFolderKanban class="h-4 w-4" [strokeWidth]="2"></svg>
             </span>
             <span class="min-w-0">
@@ -156,7 +153,8 @@
          ở thanh dưới, nên cả dải này chỉ hiện từ `lg` trở lên. -->
     <div class="hidden h-9 items-center gap-1 rounded-md border border-base-300/70 bg-base-200/50 px-1 lg:flex">
       <div class="relative">
-        <button type="button" class="btn btn-ghost btn-square btn-xs h-7 w-7 rounded relative hover:bg-base-100 hover:shadow-xs"
+        <button type="button"
+          class="btn btn-ghost btn-square btn-xs h-7 w-7 rounded-md relative hover:bg-base-100 hover:shadow-xs"
           [title]="bellTitle()" (click)="toggleNotifyMenu()">
           <svg lucideBell class="h-4 w-4" [class.invite-pulse]="notifyPulse()" [strokeWidth]="2"></svg>
           @if (bellBadgeCount() > 0) {
@@ -169,12 +167,9 @@
         @if (notifyMenuOpen()) {
         <div
           class="absolute right-0 top-[42px] z-[200] w-[320px] rounded-md border border-base-300/70 bg-base-100 p-2 shadow-xl">
-          <app-notifications-panel
-            [notifications]="actions.notifications()"
-            [unreadCount]="actions.unreadNotifications()"
-            [dueCount]="actions.dueBadgeCount()"
-            (markAllRead)="markAllNotificationsRead()"
-            (openNotification)="openNotification($event)" />
+          <app-notifications-panel [notifications]="actions.notifications()"
+            [unreadCount]="actions.unreadNotifications()" [dueCount]="actions.dueBadgeCount()"
+            (markAllRead)="markAllNotificationsRead()" (openNotification)="openNotification($event)" />
         </div>
         }
 
@@ -183,7 +178,8 @@
 
       <!-- Lời mời tham gia Organization -->
       <div class="relative">
-        <button type="button" class="btn btn-ghost btn-square btn-xs h-7 w-7 rounded relative hover:bg-base-100 hover:shadow-xs"
+        <button type="button"
+          class="btn btn-ghost btn-square btn-xs h-7 w-7 rounded-md relative hover:bg-base-100 hover:shadow-xs"
           [title]="pendingInviteCount() > 0 ? pendingInviteCount() + ' pending organization invite(s)' : 'Organization invites'"
           (click)="toggleInviteMenu()">
           <svg lucideUserPlus class="h-4 w-4" [class.invite-pulse]="bellPulse()" [strokeWidth]="2"></svg>
@@ -209,10 +205,7 @@
         @if (inviteMenuOpen()) {
         <div
           class="absolute right-0 top-[42px] z-[200] w-[300px] rounded-md border border-base-300/70 bg-base-100 p-2 shadow-xl">
-          <app-invites-panel
-            [invites]="actions.myInvites()"
-            [error]="inviteError()"
-            (accept)="acceptInvite($event)"
+          <app-invites-panel [invites]="actions.myInvites()" [error]="inviteError()" (accept)="acceptInvite($event)"
             (decline)="declineInvite($event)" />
         </div>
         }
@@ -220,11 +213,10 @@
 
       <!-- Đổi giao diện sáng/tối -->
       <button type="button"
-        class="btn btn-ghost btn-square btn-xs h-7 w-7 rounded relative hover:bg-base-100 hover:shadow-xs"
+        class="btn btn-ghost btn-square btn-xs h-7 w-7 rounded-md relative hover:bg-base-100 hover:shadow-xs"
         [attr.aria-pressed]="theme() === 'dark'"
         [attr.aria-label]="theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
-        [title]="theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
-        (click)="toggleTheme()">
+        [title]="theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'" (click)="toggleTheme()">
         @if (theme() === 'dark') {
         <svg lucideSun class="h-4 w-4" [strokeWidth]="2"></svg>
         } @else {
@@ -232,7 +224,8 @@
         }
       </button>
 
-      <a class="btn btn-ghost btn-square btn-xs h-7 w-7 rounded relative hover:bg-base-100 hover:shadow-xs" routerLink="/settings" title="Settings">
+      <a class="btn btn-ghost btn-square btn-xs h-7 w-7 rounded-md relative hover:bg-base-100 hover:shadow-xs"
+        routerLink="/settings" title="Settings">
         <svg lucideSettings class="h-4 w-4" [strokeWidth]="2"></svg>
       </a>
     </div>
@@ -266,7 +259,7 @@
     </div>
 
     <!-- UUID Box with 1-click Copy -->
-    <div class="my-2 rounded border border-primary/20 bg-primary/5 p-2 text-left">
+    <div class="my-2 rounded-md border border-primary/20 bg-primary/5 p-2 text-left">
       <div class="flex items-center justify-between">
         <span class="flex items-center gap-1 text-3xs font-extrabold uppercase tracking-wider text-primary">
           <svg lucideKeyRound class="h-3 w-3" [strokeWidth]="2.4"></svg>
@@ -284,7 +277,7 @@
       </div>
       <div class="mt-1 flex items-center gap-1">
         <code
-          class="block w-full select-all truncate rounded bg-base-100 px-1.5 py-1 font-mono text-2xs text-base-content/85 shadow-inner"
+          class="block w-full select-all truncate rounded-md bg-base-100 px-1.5 py-1 font-mono text-2xs text-base-content/85 shadow-inner"
           [title]="currentUser()?.id ?? ''">
           {{ currentUser()?.id ?? 'No UUID assigned' }}
         </code>
@@ -303,6 +296,7 @@
       class="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold text-error hover:bg-error/10"
       (click)="logout()">
       <svg lucideLogOut class="h-4 w-4" [strokeWidth]="2"></svg>
-      Log out</div>
+      Log out
+    </div>
   </div>
 </header>

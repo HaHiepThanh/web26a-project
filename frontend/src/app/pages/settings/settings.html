@@ -8,7 +8,7 @@
   @if (toastMessage()) {
   <div class="toast toast-top toast-end z-[9999] pointer-events-none">
     <div
-      class="alert text-xs shadow-xl pointer-events-auto flex items-center gap-2.5 py-2.5 px-4 rounded-2xl border text-white font-bold transition-all"
+      class="alert text-xs shadow-xl pointer-events-auto flex items-center gap-2.5 py-2.5 px-4 rounded-md border text-white font-bold transition-all"
       [class.bg-success]="toastType() === 'success'" [class.border-success]="toastType() === 'success'"
       [class.bg-error]="toastType() === 'error'" [class.border-error]="toastType() === 'error'"
       [class.bg-neutral]="toastType() === 'info'" [class.border-base-300]="toastType() === 'info'">
@@ -33,10 +33,10 @@
            dùng phải kéo ngang mới thấy tab kế tiếp. Nằm ngang thì để tab tự co
            theo nội dung. -->
       <li class="w-full max-[900px]:w-auto">
-        <button type="button" class="group flex w-full items-center gap-3 text-left"
+        <button type="button" class="group flex w-full items-center gap-3 text-left rounded-md"
           [class.menu-active]="activeTab() === item.id" (click)="onTabChange(item.id)">
           <span
-            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-lg transition-transform group-hover:scale-110"
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-lg transition-transform group-hover:scale-110"
             [class.bg-secondary]="activeTab() === item.id"
             [class.text-secondary-content]="activeTab() === item.id"
             [class.bg-base-200]="activeTab() !== item.id">
@@ -58,9 +58,9 @@
 
     <!-- Đường quay lại tour hướng dẫn. Người dùng từ chối ở phút đầu vì đang vội
          phải tìm lại được — không có chỗ này thì "Không" là vĩnh viễn. -->
-    <div class="mt-4 rounded-2xl border border-base-300 bg-base-100 p-3.5">
+    <div class="mt-4 rounded-md border border-base-300 bg-base-100 p-3.5">
       <div class="flex items-center gap-2.5">
-        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
           <svg lucideGraduationCap class="h-4 w-4" [strokeWidth]="2.2"></svg>
         </span>
         <div class="min-w-0">
@@ -68,14 +68,14 @@
           <p class="mt-0.5 text-2xs leading-tight text-base-content/60">Walk through the basics again.</p>
         </div>
       </div>
-      <button type="button" class="btn btn-outline btn-xs mt-3 w-full font-bold"
+      <button type="button" class="btn btn-outline btn-xs mt-3 w-full font-bold rounded-md"
         (click)="onRestartTour()">
         Restart tutorial
       </button>
       <!-- Coach mark cũng phải có đường quay lại, đúng như tour. Chúng hiện đúng
            một lần rồi thôi, mà "một lần" ấy có thể trôi qua lúc người dùng đang
            bận nhìn chỗ khác. -->
-      <button type="button" class="btn btn-ghost btn-xs mt-1.5 w-full font-bold"
+      <button type="button" class="btn btn-ghost btn-xs mt-1.5 w-full font-bold rounded-md"
         (click)="onResetHints()">
         Show hints again
       </button>

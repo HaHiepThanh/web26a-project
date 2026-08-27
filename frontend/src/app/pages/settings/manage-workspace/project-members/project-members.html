@@ -1,7 +1,7 @@
 @if (loading()) {
   <div class="mx-auto max-w-[1000px] px-10 pb-16 pt-8">
     <a routerLink="/settings/manage-workspace" class="mb-4 inline-block text-[0.8125rem] text-base-content/50 hover:text-base-content">← Project list</a>
-    <div class="flex items-center justify-center gap-3 rounded-box border border-dashed border-base-300 bg-base-100 px-4 py-12 text-base-content/50">
+    <div class="flex items-center justify-center gap-3 rounded-md border border-dashed border-base-300 bg-base-100 px-4 py-12 text-base-content/50">
       <span class="loading loading-spinner loading-sm"></span>
       <span>Loading project…</span>
     </div>
@@ -10,11 +10,11 @@
   <div class="mx-auto max-w-[1000px] px-10 pb-16 pt-8">
     <a routerLink="/settings/manage-workspace" class="mb-4 inline-block text-[0.8125rem] text-base-content/50 hover:text-base-content">← Project list</a>
     @if (loadError()) {
-      <div class="alert alert-error">
+      <div class="alert alert-error rounded-md">
         <span>{{ loadError() }}</span>
       </div>
     } @else {
-      <div class="rounded-box border border-dashed border-base-300 bg-base-100 px-4 py-12 text-center text-base-content/50">
+      <div class="rounded-md border border-dashed border-base-300 bg-base-100 px-4 py-12 text-center text-base-content/50">
         <p>{{ board() ? "You're not a member of this project." : 'Project not found.' }}</p>
       </div>
     }
@@ -28,7 +28,7 @@
         <h1 class="mb-1 text-[1.4rem] font-bold text-base-content">{{ board()!.name }}</h1>
         <span class="text-xs uppercase tracking-wide text-base-content/50">{{ workspaceName() }}</span>
       </div>
-      <span class="badge shrink-0" [class]="roleBadge(myRole())" title="Your role in this organization">
+      <span class="badge shrink-0 rounded-md" [class]="roleBadge(myRole())" title="Your role in this organization">
         Org role: {{ roleLabel(myRole()) }}
       </span>
     </header>
@@ -42,19 +42,19 @@
           <button type="button" role="tab" class="tab gap-1.5" [class.tab-active]="activeTab() === 'invitations'" (click)="setTab('invitations')">
             Organization Invitations
             @if (pendingInvites().length > 0) {
-              <span class="badge badge-ghost badge-sm">{{ pendingInvites().length }}</span>
+              <span class="badge badge-ghost badge-sm rounded-md">{{ pendingInvites().length }}</span>
             }
           </button>
         }
       </div>
 
       @if (canEditMembers()) {
-        <button type="button" class="btn btn-primary btn-sm" (click)="openAddModal()">+ Add member</button>
+        <button type="button" class="btn btn-primary btn-sm rounded-md" (click)="openAddModal()">+ Add member</button>
       }
     </div>
 
     @if (loadError()) {
-      <div class="alert alert-error mb-4">
+      <div class="alert alert-error mb-4 rounded-md">
         <span>{{ loadError() }}</span>
       </div>
     }
@@ -62,7 +62,7 @@
     <!-- ======================= TAB: MEMBERS (mọi thành viên xem được) ======================= -->
     @if (activeTab() === 'members') {
       @if (!isPrivateBoard()) {
-        <div class="alert alert-info mb-4">
+        <div class="alert alert-info mb-4 rounded-md">
           <span>
             <b>Why there's no "Add member" button here.</b>
             This board is <b>{{ board()!.visibility }}</b>, so it has no member list of its own — everyone in
@@ -80,15 +80,15 @@
           <circle cx="11" cy="11" r="8"></circle>
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
-        <input type="text" class="input h-9 w-full pl-9" placeholder="Search members..." [value]="searchQuery()" (input)="searchQuery.set($any($event.target).value)" />
+        <input type="text" class="input input-sm rounded-md h-9 w-full pl-9 font-semibold" placeholder="Search members..." [value]="searchQuery()" (input)="searchQuery.set($any($event.target).value)" />
       </div>
 
       @if (filteredMembers().length === 0) {
-        <div class="rounded-box border border-dashed border-base-300 bg-base-100 px-4 py-7 text-center text-base-content/50">
+        <div class="rounded-md border border-dashed border-base-300 bg-base-100 px-4 py-7 text-center text-base-content/50">
           {{ searchQuery() ? 'No members match your search.' : 'This project has no members yet.' }}
         </div>
       } @else {
-        <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
+        <div class="overflow-x-auto rounded-md border border-base-300 bg-base-100">
           <table class="table">
             <thead>
               <tr>
@@ -110,8 +110,8 @@
                       <div>
                         <div class="flex items-center gap-1.5 font-semibold">
                           {{ member.name }}
-                          @if (member.userId === currentUserId()) { <span class="badge badge-primary badge-soft badge-sm">You</span> }
-                          @if (member.userId === boardCreatorId()) { <span class="badge badge-ghost badge-sm">Creator</span> }
+                          @if (member.userId === currentUserId()) { <span class="badge badge-primary badge-soft badge-sm rounded-md">You</span> }
+                          @if (member.userId === boardCreatorId()) { <span class="badge badge-ghost badge-sm rounded-md">Creator</span> }
                         </div>
                         <div class="text-[0.76rem] text-base-content/50">{{ member.email }}</div>
                       </div>
@@ -121,7 +121,7 @@
                     @if (canChangeRole(member)) {
                       <select
                         #roleSelect
-                        class="select select-sm"
+                        class="select select-sm rounded-md"
                         [value]="member.role"
                         (change)="onChangeRole(member, $any($event.target).value, roleSelect)"
                         [disabled]="busyUserId() === member.userId"
@@ -131,14 +131,14 @@
                         }
                       </select>
                     } @else {
-                      <span class="badge badge-sm" [class]="roleBadge(member.role)">{{ roleLabel(member.role) }}</span>
+                      <span class="badge badge-sm rounded-md" [class]="roleBadge(member.role)">{{ roleLabel(member.role) }}</span>
                     }
                   </td>
                   <td>
                     @if (member.assignedCards.length === 0) {
                       <span class="text-sm text-base-content/50">No cards</span>
                     } @else {
-                      <button type="button" class="btn btn-link btn-sm h-auto min-h-0 gap-1 p-0 text-sm font-semibold no-underline" (click)="toggleExpandedCards(member.userId)">
+                      <button type="button" class="btn btn-link btn-sm h-auto min-h-0 gap-1 p-0 text-sm font-semibold no-underline rounded-md" (click)="toggleExpandedCards(member.userId)">
                         {{ member.assignedCards.length }} card{{ member.assignedCards.length > 1 ? 's' : '' }}
                         <span class="text-[0.7rem] transition-transform" [class.rotate-180]="expandedMemberId() === member.userId">▾</span>
                       </button>
@@ -159,7 +159,7 @@
                       @if (canRemove(member)) {
                         <button
                           type="button"
-                          class="btn btn-ghost btn-sm text-error hover:bg-error/10"
+                          class="btn btn-ghost btn-sm text-error hover:bg-error/10 rounded-md font-bold"
                           [disabled]="savingMembership()"
                           (click)="openRemoveConfirm(member)"
                         >
@@ -178,7 +178,7 @@
 
     <!-- ================= TAB: ORGANIZATION INVITATIONS (owner/admin) ================= -->
     @if (activeTab() === 'invitations' && isAdmin()) {
-      <div class="alert alert-info mb-4">
+      <div class="alert alert-info mb-4 rounded-md">
         <span>
           Invitations are sent per <b>organization</b>, not per project — accepting one grants access to
           every board the invitee's role allows. Send new invites from the organization settings.
@@ -186,9 +186,9 @@
       </div>
 
       @if (pendingInvites().length === 0) {
-        <div class="rounded-box border border-dashed border-base-300 bg-base-100 px-4 py-7 text-center text-base-content/50">No pending invitations.</div>
+        <div class="rounded-md border border-dashed border-base-300 bg-base-100 px-4 py-7 text-center text-base-content/50">No pending invitations.</div>
       } @else {
-        <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
+        <div class="overflow-x-auto rounded-md border border-base-300 bg-base-100">
           <table class="table">
             <thead>
               <tr>
@@ -202,10 +202,10 @@
               @for (inv of pendingInvites(); track trackByInvitationId($index, inv)) {
                 <tr>
                   <td>{{ inv.fromUserName }}</td>
-                  <td><span class="badge badge-sm" [class]="roleBadge(inv.role)">{{ roleLabel(inv.role) }}</span></td>
+                  <td><span class="badge badge-sm rounded-md" [class]="roleBadge(inv.role)">{{ roleLabel(inv.role) }}</span></td>
                   <td>{{ inv.createdAt | date: 'mediumDate' }}</td>
                   <td class="whitespace-nowrap text-right">
-                    <button type="button" class="btn btn-ghost btn-sm text-error hover:bg-error/10" (click)="revokeInvitation(inv.id)">Revoke</button>
+                    <button type="button" class="btn btn-ghost btn-sm text-error hover:bg-error/10 rounded-md font-bold" (click)="revokeInvitation(inv.id)">Revoke</button>
                   </td>
                 </tr>
               }
@@ -219,7 +219,7 @@
   <!-- ============================== MODALS (owner/admin) ============================== -->
   @if (showAddModal()) {
     <div class="modal modal-open z-50 p-4" (click)="closeAddModal()">
-      <div class="modal-box flex max-h-[80vh] w-full max-w-[440px] flex-col" (click)="$event.stopPropagation()">
+      <div class="modal-box flex max-h-[80vh] w-full max-w-[440px] flex-col rounded-md border border-base-300" (click)="$event.stopPropagation()">
         <h3 class="mb-1 text-[1.05rem] font-semibold text-base-content">Add a member to this project</h3>
         <p class="mb-4 text-sm text-base-content/60">
           Only people already in <b>{{ workspaceName() }}</b> can be added — invite them to the organization first if they're not listed.
@@ -235,7 +235,7 @@
           </svg>
           <input
             type="text"
-            class="input w-full pl-9"
+            class="input input-sm rounded-md w-full pl-9 font-semibold"
             placeholder="Search people..."
             [value]="candidateQuery()"
             (input)="candidateQuery.set($any($event.target).value)"
@@ -264,7 +264,7 @@
                   </span>
                   <button
                     type="button"
-                    class="btn btn-primary btn-xs shrink-0"
+                    class="btn btn-primary btn-xs shrink-0 rounded-md font-bold"
                     [disabled]="savingMembership()"
                     (click)="addMember(candidate)"
                   >{{ busyUserId() === candidate.userId ? 'Adding…' : 'Add' }}</button>
@@ -275,7 +275,7 @@
         </div>
 
         <div class="mt-4 flex justify-end">
-          <button type="button" class="btn btn-ghost" (click)="closeAddModal()">Done</button>
+          <button type="button" class="btn btn-ghost btn-sm rounded-md font-bold" (click)="closeAddModal()">Done</button>
         </div>
       </div>
     </div>
@@ -283,7 +283,7 @@
 
   @if (memberToRemove(); as member) {
     <div class="modal modal-open z-50 p-4" (click)="closeRemoveConfirm()">
-      <div class="modal-box w-full max-w-[400px]" (click)="$event.stopPropagation()">
+      <div class="modal-box w-full max-w-[400px] rounded-md border border-base-300" (click)="$event.stopPropagation()">
         <h3 class="mb-4 text-[1.05rem] font-semibold text-base-content">{{ member.userId === currentUserId() ? 'Leave this project?' : 'Remove member?' }}</h3>
         <p class="mb-5 text-sm leading-relaxed text-base-content/80">
           {{ member.userId === currentUserId()
@@ -291,8 +291,8 @@
             : (member.name + ' will lose access to this board. They stay in the organization.') }}
         </p>
         <div class="mt-1 flex justify-end gap-2.5">
-          <button type="button" class="btn btn-ghost" (click)="closeRemoveConfirm()">Cancel</button>
-          <button type="button" class="btn btn-error" (click)="confirmRemove()">
+          <button type="button" class="btn btn-ghost btn-sm rounded-md font-bold" (click)="closeRemoveConfirm()">Cancel</button>
+          <button type="button" class="btn btn-error btn-sm rounded-md font-black" (click)="confirmRemove()">
             {{ member.userId === currentUserId() ? 'Leave project' : 'Remove member' }}
           </button>
         </div>
@@ -303,7 +303,7 @@
 
 <div class="toast toast-end z-[60]">
   @for (toast of toasts(); track toast.id) {
-    <div class="alert" [class.alert-success]="toast.type === 'success'" [class.alert-error]="toast.type === 'error'" [class.alert-info]="toast.type === 'info'">
+    <div class="alert rounded-md" [class.alert-success]="toast.type === 'success'" [class.alert-error]="toast.type === 'error'" [class.alert-info]="toast.type === 'info'">
       <span>{{ toast.message }}</span>
     </div>
   }
