@@ -6,7 +6,7 @@
 
   <!-- 1. BỘ LỌC THEO ORGANIZATION -->
   <div
-    class="rounded-2xl border border-base-300 bg-base-100 p-3 shadow-xs space-y-2">
+    class="rounded-lg border border-base-300 bg-base-100 p-3 shadow-xs space-y-2">
     <div class="flex items-center justify-between px-1">
       <span class="text-2xs font-black uppercase tracking-wider text-base-content/60">
         Organization:
@@ -18,7 +18,7 @@
 
     <div class="flex items-center gap-2 overflow-x-auto pb-0.5 max-w-full">
       <!-- Option: Tất cả Organization -->
-      <button type="button" class="btn btn-sm shrink-0 gap-1.5 text-xs font-bold"
+      <button type="button" class="btn btn-sm rounded-md shrink-0 gap-1.5 text-xs font-bold"
         [class.btn-neutral]="selectedOrgFilter() === null"
         [class.btn-outline]="selectedOrgFilter() !== null"
         (click)="changeOrgFilter.emit(null)">
@@ -28,12 +28,12 @@
 
       <!-- Each Organization -->
       @for (org of organizations(); track org.id) {
-      <button type="button" class="btn btn-sm max-w-[200px] shrink-0 gap-1.5 text-xs font-bold"
+      <button type="button" class="btn btn-sm rounded-md shrink-0 gap-1.5 text-xs font-bold whitespace-nowrap"
         [class.btn-primary]="selectedOrgFilter() === org.id"
         [class.btn-outline]="selectedOrgFilter() !== org.id"
         [title]="org.name"
         (click)="changeOrgFilter.emit(org.id)">
-        <span class="truncate min-w-0 flex-1 text-left">{{ org.name }}</span>
+        <span>{{ org.name }}</span>
       </button>
       }
     </div>
@@ -43,21 +43,21 @@
   @if (workspaces().length > 0) {
   <div class="flex items-center gap-2 overflow-x-auto pb-1 max-w-full">
     @for (ws of workspaces(); track ws.id) {
-    <button type="button" class="btn btn-sm max-w-[240px] shrink-0 gap-2 text-xs font-bold"
+    <button type="button" class="btn btn-sm rounded-md max-w-[240px] shrink-0 gap-2 text-xs font-bold"
       [class.btn-primary]="selectedWorkspaceId() === ws.id"
       [class.btn-outline]="selectedWorkspaceId() !== ws.id"
       [title]="ws.name + (ws.orgName ? ' — ' + ws.orgName : '')" (click)="selectWorkspace.emit(ws.id)">
       <span class="font-black truncate min-w-0 flex-1 text-left">{{ ws.name }}</span>
-      <span class="badge badge-xs badge-ghost ml-1 shrink-0 font-bold">{{ ws.members.length }}</span>
+      <span class="badge badge-xs badge-ghost ml-1 shrink-0 font-bold rounded-full">{{ ws.members.length }}</span>
     </button>
     }
   </div>
   }
 
-  <!-- 3. SELECTED WORKSPACE DETAIL & MEMBER ROSTER -->
+  <!-- 3. SELECTED WORKSPACE DETAIL & Member Roster -->
   @if (selectedWorkspace(); as curWs) {
   <div
-    class="rounded-3xl border border-base-300 bg-base-100 p-6 shadow-xs space-y-5">
+    class="rounded-lg border border-base-300 bg-base-100 p-6 shadow-xs space-y-5">
     <!-- Workspace Overview -->
     <div class="flex items-start justify-between gap-4 pb-4 border-b border-base-300 min-w-0">
       <div class="flex items-start gap-3.5 min-w-0 flex-1">
@@ -68,7 +68,7 @@
               {{ curWs.name }}
             </h3>
             @if (curWs.orgName) {
-            <span class="badge badge-sm badge-ghost font-bold text-2xs truncate max-w-[180px] shrink-0"
+            <span class="badge badge-sm badge-ghost font-bold text-2xs truncate max-w-[180px] shrink-0 rounded-md"
               [title]="curWs.orgName">
               {{ curWs.orgName }}
             </span>
@@ -82,7 +82,7 @@
       </div>
 
       <div class="text-right shrink-0">
-        <span class="badge badge-primary badge-outline badge-sm font-black">{{ curWs.boards.length }} board(s)</span>
+        <span class="inline-flex items-center px-2.5 py-1 rounded-md border border-primary text-primary font-bold text-xs bg-base-100 shadow-2xs">{{ curWs.boards.length }} board(s)</span>
       </div>
     </div>
 
@@ -94,27 +94,27 @@
         </h4>
 
         <button type="button"
-          class="btn btn-primary btn-xs px-3 font-black shadow-xs gap-1 hover:scale-105 transition-all"
+          class="btn btn-primary btn-sm rounded-md px-3.5 font-bold shadow-xs gap-1.5 hover:scale-105 transition-all"
           (click)="openAddMember()">
-          <svg lucidePlus class="h-3 w-3" [strokeWidth]="2.6"></svg>
+          <svg lucidePlus class="h-3.5 w-3.5" [strokeWidth]="2.6"></svg>
           <span>Add member</span>
         </button>
       </div>
 
-      <div class="overflow-x-auto rounded-2xl border border-base-300">
+      <div class="overflow-x-auto rounded-md border border-base-300 bg-base-100">
         <table class="table w-full text-left">
           <thead>
             <tr
-              class="bg-base-200 text-base-content/70 text-xs uppercase font-black">
-              <th class="py-3 px-4">Member</th>
-              <th class="py-3 px-4">UUID</th>
-              <th class="py-3 px-4">Role</th>
-              <th class="py-3 px-4 text-right">Actions</th>
+              class="bg-base-200/70 text-base-content/60 text-xs uppercase font-black">
+              <th class="py-3 px-4 w-[28%]">Member</th>
+              <th class="py-3 px-4 w-[46%]">UUID</th>
+              <th class="py-3 px-4 w-[16%]">Role</th>
+              <th class="py-3 px-4 w-[10%] text-right">Actions</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-base-300 text-xs font-medium">
             @for (mem of curWs.members; track mem.id) {
-            <tr class="hover:bg-base-200 transition-colors">
+            <tr class="hover:bg-base-200/50 transition-colors">
               <!-- Member info -->
               <td class="py-3 px-4">
                 <div class="flex items-center gap-3">
@@ -126,20 +126,21 @@
                 </div>
               </td>
 
-              <!-- UUID -->
-              <td class="py-3 px-4 font-mono text-2xs text-base-content/60">
-                <span class="select-all" [title]="mem.id">{{ mem.id.slice(0, 8) }}...{{ mem.id.slice(-4) }}</span>
+              <!-- UUID: hiển thị đầy đủ không cắt ngắn -->
+              <td class="py-3 px-4 font-mono text-2xs text-base-content/80 select-all">
+                <span class="select-all break-all select-text font-mono text-2xs" [title]="mem.id">{{ mem.id }}</span>
               </td>
 
-              <!-- Role select -->
+              <!-- Role select: bóp nhỏ gọn gàng với rounded-md -->
               <td class="py-3 px-4">
                 @if (mem.role === 'owner') {
-                <span class="badge badge-primary gap-1 font-black text-xs px-2.5 py-1">
-                  <svg lucideCrown class="h-3 w-3" [strokeWidth]="2.2"></svg> Owner</span>
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-primary text-primary-content font-bold text-xs shadow-xs whitespace-nowrap">
+                  <svg lucideCrown class="h-3 w-3" [strokeWidth]="2.4"></svg> Owner</span>
                 } @else {
-                <select class="select select-xs rounded-lg font-bold" [ngModel]="mem.role"
+                <select class="select select-xs rounded-md border border-base-300 bg-base-100 text-base-content font-bold text-xs h-7 min-h-7 px-2.5 w-24 text-center cursor-pointer shadow-2xs focus:border-primary focus:outline-none" [ngModel]="mem.role"
                   (ngModelChange)="onChangeMemberRole(mem.id, $event)">
                   <option value="member">Member</option>
+                  <option value="admin">Admin</option>
                   <option value="owner">Owner</option>
                 </select>
                 }
@@ -148,7 +149,7 @@
               <!-- Action -->
               <td class="py-3 px-4 text-right">
                 @if (mem.role !== 'owner') {
-                <button type="button" class="btn btn-ghost btn-xs text-error hover:bg-error/10 font-bold"
+                <button type="button" class="text-error font-bold text-xs hover:underline hover:opacity-80 transition-opacity"
                   (click)="onRemoveMember(mem)">
                   Remove
                 </button>
@@ -163,8 +164,8 @@
   </div>
   } @else {
   <div
-    class="rounded-3xl border-2 border-dashed border-base-300 bg-base-100 p-8 text-center shadow-xs space-y-3">
-    <div class="flex h-14 w-14 mx-auto items-center justify-center rounded-2xl bg-primary/10 text-primary"><svg lucideBuilding2 class="h-7 w-7" [strokeWidth]="2"></svg></div>
+    class="rounded-lg border-2 border-dashed border-base-300 bg-base-100 p-8 text-center shadow-xs space-y-3">
+    <div class="flex h-14 w-14 mx-auto items-center justify-center rounded-md bg-primary/10 text-primary"><svg lucideBuilding2 class="h-7 w-7" [strokeWidth]="2"></svg></div>
     <h3 class="text-base font-black text-base-content">No Workspace yet</h3>
     <p class="text-xs text-base-content/60 max-w-md mx-auto">
       @if (selectedOrgFilter() !== null) {
@@ -182,7 +183,7 @@
 <div class="modal modal-open z-[1000] p-4"
   (click)="closeAddMember()">
   <div
-    class="modal-box w-full max-w-[460px] border border-base-300"
+    class="modal-box w-full max-w-[460px] rounded-lg border border-base-300"
     (click)="$event.stopPropagation()">
     <div class="flex items-center justify-between pb-3 border-b border-base-300">
       <h3 class="text-base font-black text-base-content truncate"
@@ -209,7 +210,7 @@
             <circle cx="11" cy="11" r="8"></circle>
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
-          <input type="text" class="input input-sm rounded-xl w-full pl-9 font-semibold"
+          <input type="text" class="input input-bordered input-sm rounded-md w-full pl-9 font-semibold"
             placeholder="Type a search term..." [ngModel]="memberSearchQuery()"
             (ngModelChange)="memberSearchQuery.set($event)" />
         </div>
@@ -217,12 +218,12 @@
 
       <!-- Candidate list -->
       <div
-        class="space-y-1.5 max-h-[180px] overflow-y-auto rounded-2xl border border-base-300 p-2 bg-base-200">
+        class="space-y-1.5 max-h-[180px] overflow-y-auto rounded-md border border-base-300 p-2 bg-base-200">
         @if (searchCandidateUsers().length === 0) {
         <div class="py-4 text-center text-xs text-base-content/50">No matching users found.</div>
         } @else {
         @for (cand of searchCandidateUsers(); track cand.id) {
-        <button type="button" class="btn btn-ghost h-auto min-h-0 w-full justify-between p-2 text-left font-normal normal-case"
+        <button type="button" class="btn btn-ghost h-auto min-h-0 w-full justify-between p-2 rounded-md text-left font-normal normal-case"
           [class.bg-primary/15]="selectedUserToAdd()?.id === cand.id"
           [class.border]="selectedUserToAdd()?.id === cand.id"
           [class.border-primary/40]="selectedUserToAdd()?.id === cand.id"
@@ -244,7 +245,7 @@
       <!-- Role Select -->
       <div class="space-y-1.5">
         <label class="text-xs font-bold text-base-content/80">Initial role</label>
-        <select class="select select-sm rounded-field w-full font-semibold" [ngModel]="memberRoleSelect()"
+        <select class="select select-sm select-bordered rounded-md w-full font-semibold" [ngModel]="memberRoleSelect()"
           (ngModelChange)="memberRoleSelect.set($event)">
           <option value="member">Member</option>
           <option value="owner">Owner</option>
@@ -254,8 +255,8 @@
 
     <!-- Actions -->
     <div class="flex justify-end gap-2 pt-2 border-t border-base-300">
-      <button type="button" class="btn btn-ghost btn-sm font-bold" (click)="closeAddMember()">Cancel</button>
-      <button type="button" class="btn btn-primary btn-sm px-4 font-black" [disabled]="!selectedUserToAdd()"
+      <button type="button" class="btn btn-ghost btn-sm rounded-md font-bold" (click)="closeAddMember()">Cancel</button>
+      <button type="button" class="btn btn-primary btn-sm rounded-md px-4 font-black" [disabled]="!selectedUserToAdd()"
         (click)="confirmAddMember()">
         + Add now
       </button>

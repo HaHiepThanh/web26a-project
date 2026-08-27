@@ -2,7 +2,7 @@ import { Component, computed, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LucideBuilding2, LucideCrown, LucideGlobe, LucidePlus, LucideX } from '@lucide/angular';
 import { User } from '../../../models';
-import { Organization, WorkspaceMember, WorkspaceWithOrg } from '../../../mocks';
+import { Organization, WorkspaceMember, WorkspaceRole, WorkspaceWithOrg } from '../../../mocks';
 import { UserAvatar } from '../../shared/user-avatar/user-avatar';
 
 @Component({
@@ -20,8 +20,8 @@ export class ManageWorkspaceTab {
 
   readonly changeOrgFilter = output<string | null>();
   readonly selectWorkspace = output<string>();
-  readonly addMember = output<{ workspaceId: string; orgId?: string; user: User; role: 'owner' | 'member' }>();
-  readonly changeRole = output<{ workspaceId: string; orgId?: string; memberId: string; newRole: 'owner' | 'member' }>();
+  readonly addMember = output<{ workspaceId: string; orgId?: string; user: User; role: WorkspaceRole }>();
+  readonly changeRole = output<{ workspaceId: string; orgId?: string; memberId: string; newRole: WorkspaceRole }>();
   readonly removeMember = output<{ workspaceId: string; orgId?: string; member: WorkspaceMember }>();
   readonly flashMessage = output<{ message: string; type?: 'success' | 'error' | 'info' }>();
 
@@ -34,7 +34,7 @@ export class ManageWorkspaceTab {
   // Add Member Modal State
   readonly showAddMemberModal = signal(false);
   readonly memberSearchQuery = signal('');
-  readonly memberRoleSelect = signal<'member' | 'owner'>('member');
+  readonly memberRoleSelect = signal<WorkspaceRole>('member');
   readonly selectedUserToAdd = signal<User | null>(null);
 
   readonly searchCandidateUsers = computed(() => {
@@ -86,7 +86,7 @@ export class ManageWorkspaceTab {
     this.closeAddMember();
   }
 
-  onChangeMemberRole(memberId: string, newRole: 'owner' | 'member'): void {
+  onChangeMemberRole(memberId: string, newRole: WorkspaceRole): void {
     const ws = this.selectedWorkspace();
     if (!ws) return;
     this.changeRole.emit({ workspaceId: ws.id, orgId: ws.orgId, memberId, newRole });

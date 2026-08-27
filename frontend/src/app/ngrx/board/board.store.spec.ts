@@ -58,5 +58,26 @@ describe('BoardStore', () => {
 
     expect(store.currentBoard()).toBeNull();
     expect(store.loadError()).toBeTruthy();
+    expect(store.loading()).toBe(false);
+  });
+
+  it('loadBoard: trong lúc đang nạp thì loading = true và currentBoard = null (chống dính dữ liệu cũ)', async () => {
+    let resolver: (v: ApiBoard) => void;
+    const pendingPromise = new Promise<ApiBoard>((res) => {
+      resolver = res;
+    });
+    api.get.mockReturnValue(pendingPromise);
+    const store = TestBed.inject(BoardStore);
+
+    const loadPromise = store.loadBoard('b-2');
+
+    expect(store.loading()).toBe(true);
+    expect(store.currentBoard()).toBeNull();
+
+    resolver!(apiBoardRow({ id: 'b-2', name: 'Board B' }));
+    await loadPromise;
+
+    expect(store.loading()).toBe(false);
+    expect(store.currentBoard()?.id).toBe('b-2');
   });
 });

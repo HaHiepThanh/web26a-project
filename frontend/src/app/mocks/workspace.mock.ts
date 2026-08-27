@@ -9,6 +9,7 @@ import {
   TrashedBoard,
   WorkspaceItem,
   WorkspaceMember,
+  WorkspaceRole,
   WorkspaceWithOrg,
 } from '../models';
 
@@ -23,6 +24,7 @@ export type {
   TrashedBoard,
   WorkspaceItem,
   WorkspaceMember,
+  WorkspaceRole,
   WorkspaceWithOrg,
 };
 

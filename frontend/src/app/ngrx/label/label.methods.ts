@@ -61,7 +61,7 @@ export function withLabelMethods() {
             return;
           }
           if (!force && store.loadedBoardId() === boardId) return;
-          patchState(store, { loadedBoardId: boardId });
+          patchState(store, setAllEntities<Label>([]), { loadedBoardId: boardId });
           try {
             const rows = await api.get<ApiLabel[]>(`/labels?boardId=${boardId}`);
             patchState(store, setAllEntities(rows.map(toLabel)));

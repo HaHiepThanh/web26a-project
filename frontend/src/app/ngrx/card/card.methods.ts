@@ -6,6 +6,7 @@ import { ApiService } from '../../services/api.service';
 import { describeError } from '../../services/api-error.util';
 import { toCard } from './card.mapper';
 import { CardExtraState } from './card.state';
+import { ErrorState } from '../shared/error.feature';
 import { withId, withoutId, midpoint } from '../shared/entity.util';
 
 /** 5 trường mà PATCH /cards/:id nhận. Khai tường minh thay vì Record<string, unknown>
@@ -50,23 +51,23 @@ export type CardChanges = Omit<Partial<Card>, 'description' | 'dueDate' | 'assig
 export function withCardMethods() {
   return signalStoreFeature(
     {
-      state: type<EntityState<Card> & CardExtraState>(),
+      state: type<EntityState<Card> & CardExtraState & ErrorState>(),
       props: type<EntityProps<Card>>(),
       methods: type<{ fail(message: string): void }>(),
     },
     withMethods((store, api = inject(ApiService)) => ({
       async loadCards(boardId: string, force = false): Promise<void> {
         if (!boardId) {
-          patchState(store, setAllEntities<Card>([]), { loadedBoardId: null });
+          patchState(store, setAllEntities<Card>([]), { loadedBoardId: null, loading: false });
           return;
         }
-        if (!force && store.loadedBoardId() === boardId) return;
-        patchState(store, { loadedBoardId: boardId });
+        if (!force && store.loadedBoardId() === boardId && !store.loading()) return;
+        patchState(store, setAllEntities<Card>([]), { loadedBoardId: boardId, loading: true });
         try {
           const rows = await api.get<ApiCard[]>(`/cards?boardId=${boardId}`);
-          patchState(store, setAllEntities(rows.map(toCard)));
+          patchState(store, setAllEntities(rows.map(toCard)), { loading: false });
         } catch (e) {
-          patchState(store, setAllEntities<Card>([]));
+          patchState(store, setAllEntities<Card>([]), { loading: false });
           store.fail(describeError(e, 'Failed to load cards.'));
         }
       },

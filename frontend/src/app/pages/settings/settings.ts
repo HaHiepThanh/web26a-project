@@ -9,7 +9,8 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { OrganizationStore } from '../../ngrx/organization/organization.store';
 import { TourStore } from '../../ngrx/tour/tour.store';
-import { OrgInviteRole, OrgMemberView, Role, User } from '../../models';
+import { BoardStore } from '../../ngrx/board/board.store';
+import { OrgInviteRole, OrgMemberView, Privacy, Role, User, WorkspaceRole } from '../../models';
 import { NAV_ITEMS, SettingsTab } from './settings.models';
 import {
   WorkspaceItem,
@@ -41,6 +42,7 @@ import { ManageOrganizationTab } from '../../components/settings/manage-organiza
 export class Settings {
   readonly auth = inject(AuthService);
   readonly orgService = inject(OrganizationStore);
+  private readonly boardService = inject(BoardStore);
   private readonly tour = inject(TourStore);
   private readonly router = inject(Router);
 
@@ -153,10 +155,13 @@ export class Settings {
   readonly selectedWorkspaceId = signal<string | null>(null);
 
   constructor() {
+    void this.boardService.loadAllBoards();
+
     effect(() => {
       const userId = this.auth.currentUser()?.id;
       const orgFilter = this.selectedOrgFilter();
       const orgs = this.orgService.organizations();
+      const allBoards = this.boardService.allBoards();
 
       let list: WorkspaceWithOrg[];
       if (orgFilter === null) {
@@ -170,6 +175,23 @@ export class Settings {
           orgName: foundOrg?.name ?? 'Organization',
         }));
       }
+
+      // Luôn đồng bộ danh sách board thực tế từ BoardStore cho từng workspace
+      list = list.map((w) => {
+        const matchingBoards = allBoards.filter((b) => b.workspaceId === w.id);
+        return {
+          ...w,
+          boards: matchingBoards.map((b) => ({
+            id: b.id,
+            title: b.name,
+            tag: (w.name || '').toUpperCase(),
+            privacy: (b.visibility === 'public' ? 'Public' : b.visibility === 'private' ? 'Private' : 'Workspace') as Privacy,
+            badge: 'KANBAN',
+            starred: false,
+            bgClass: (b.backgroundImageUrl ? 'bg-base-200' : b.background || 'bg-board-blue') as any,
+          })),
+        };
+      });
 
       this.workspaces.set(list);
       if (list.length > 0) {
@@ -198,7 +220,7 @@ export class Settings {
     persistWorkspaces(saved, userId, targetOrgId);
   }
 
-  onAddWorkspaceMember(event: { workspaceId: string; orgId?: string; user: User; role: 'owner' | 'member' }): void {
+  onAddWorkspaceMember(event: { workspaceId: string; orgId?: string; user: User; role: WorkspaceRole }): void {
     const newMember: WorkspaceMember = {
       id: event.user.id,
       displayName: event.user.displayName || event.user.email.split('@')[0],
@@ -224,7 +246,7 @@ export class Settings {
     this.flash(`Added ${newMember.displayName} to the Workspace.`);
   }
 
-  onChangeWorkspaceRole(event: { workspaceId: string; orgId?: string; memberId: string; newRole: 'owner' | 'member' }): void {
+  onChangeWorkspaceRole(event: { workspaceId: string; orgId?: string; memberId: string; newRole: WorkspaceRole }): void {
     let targetUpdatedWs: WorkspaceItem | null = null;
     const updated = this.workspaces().map((w) => {
       if (w.id === event.workspaceId) {

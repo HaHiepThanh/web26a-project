@@ -12,6 +12,7 @@ import { toList } from './list.mapper';
 type Store = WritableStateSource<EntityState<List> & ListOwnState & ErrorState> & {
   lists: Signal<List[]>;
   loadedBoardId: Signal<string | null>;
+  loading: Signal<boolean>;
   fail: (message: string) => void;
 };
 
@@ -40,11 +41,11 @@ export function listMethods<S extends Store>(store: S, api = inject(ApiService))
 
     async loadLists(boardId: string, force = false): Promise<void> {
       if (!boardId) {
-        patchState(store, setAllEntities<List>([]), { loadedBoardId: null });
+        patchState(store, setAllEntities<List>([]), { loadedBoardId: null, loading: false });
         return;
       }
-      if (!force && store.loadedBoardId() === boardId) return;
-      patchState(store, { loading: true, loadedBoardId: boardId });
+      if (!force && store.loadedBoardId() === boardId && !store.loading()) return;
+      patchState(store, setAllEntities<List>([]), { loading: true, loadedBoardId: boardId });
       try {
         const rows = await api.get<ApiList[]>(`/lists?boardId=${boardId}`);
         patchState(store, setAllEntities(rows.map(toList)), { loading: false });
