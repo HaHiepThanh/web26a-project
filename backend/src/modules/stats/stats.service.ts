@@ -19,6 +19,7 @@ export interface BoardStatsResponse {
   memberWorkload: {
     userId: string;
     displayName: string | null;
+    avatarUrl: string | null;
     assignedCount: number;
     completedCount: number;
     doingCount: number;
@@ -87,6 +88,38 @@ export class StatsService {
       throw new InternalServerErrorException('Failed to load statistics');
     }
 
+    // Lấy thông tin avatar + tên hiển thị mới nhất từ bảng `users` cho toàn bộ
+    // thành viên có trong workload / overdueCards để hai bên trình duyệt luôn
+    // thấy đúng ảnh thật, không bị rơi về chữ cái đầu.
+    const workloadRows = (workloadRes.data ?? []) as Record<string, unknown>[];
+    const userIds = [
+      ...new Set(
+        workloadRows
+          .map((r) => r.user_id as string)
+          .filter(Boolean),
+      ),
+    ];
+
+    const userMap = new Map<
+      string,
+      { displayName: string | null; avatarUrl: string | null }
+    >();
+    if (userIds.length > 0) {
+      const { data: usersData } = await sb
+        .from('users')
+        .select('id, display_name, avatar_url')
+        .in('id', userIds);
+
+      if (usersData) {
+        for (const u of usersData) {
+          userMap.set(u.id, {
+            displayName: u.display_name ?? null,
+            avatarUrl: u.avatar_url ?? null,
+          });
+        }
+      }
+    }
+
     const o = overviewRes.data as Record<string, unknown> | null;
 
     return {
@@ -101,17 +134,19 @@ export class StatsService {
             onTimeRatePct: Number(o.on_time_rate_pct ?? 0),
           }
         : null,
-      memberWorkload: (
-        (workloadRes.data ?? []) as Record<string, unknown>[]
-      ).map((r) => ({
-        userId: r.user_id as string,
-        displayName: (r.display_name as string) ?? null,
-        assignedCount: Number(r.assigned_count ?? 0),
-        completedCount: Number(r.completed_count ?? 0),
-        doingCount: Number(r.doing_count ?? 0),
-        overdueCount: Number(r.overdue_count ?? 0),
-        lastActiveAt: (r.last_active_at as string) ?? null,
-      })),
+      memberWorkload: workloadRows.map((r) => {
+        const u = userMap.get(r.user_id as string);
+        return {
+          userId: r.user_id as string,
+          displayName: (r.display_name as string) ?? u?.displayName ?? null,
+          avatarUrl: u?.avatarUrl ?? null,
+          assignedCount: Number(r.assigned_count ?? 0),
+          completedCount: Number(r.completed_count ?? 0),
+          doingCount: Number(r.doing_count ?? 0),
+          overdueCount: Number(r.overdue_count ?? 0),
+          lastActiveAt: (r.last_active_at as string) ?? null,
+        };
+      }),
       overdueCards: ((overdueRes.data ?? []) as Record<string, unknown>[]).map(
         (r) => ({
           cardId: r.card_id as string,

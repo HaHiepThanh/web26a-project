@@ -310,6 +310,7 @@ export interface ApiBoardStats {
   memberWorkload: {
     userId: string;
     displayName: string | null;
+    avatarUrl?: string | null;
     assignedCount: number;
     completedCount: number;
     doingCount: number;

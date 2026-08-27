@@ -3,6 +3,7 @@ import { ApiBoardStats, WorkspaceStatsData } from '../../../models';
 import { ApiService } from '../../../services/api.service';
 import { ActivityStore } from '../../../ngrx/activity/activity.store';
 import { BoardStore } from '../../../ngrx/board/board.store';
+import { OrganizationStore } from '../../../ngrx/organization/organization.store';
 import { describeError } from '../../../services/api-error.util';
 import { WorkspaceStatsPanel } from '../workspace-stats-panel/workspace-stats-panel';
 
@@ -26,6 +27,7 @@ export class WorkspaceStatsModal {
   private readonly api = inject(ApiService);
   private readonly activityService = inject(ActivityStore);
   private readonly boardService = inject(BoardStore);
+  private readonly orgService = inject(OrganizationStore);
 
   readonly boardId = input.required<string>();
   readonly boardName = input<string | null>(null);
@@ -57,6 +59,8 @@ export class WorkspaceStatsModal {
         this.api.get<ApiBoardStats>(`/stats/boards/${boardId}`),
         // Nhật ký cần cho khối cuối của modal; gọi song song, không nối đuôi.
         this.activityService.loadLogs(boardId).catch(() => undefined),
+        // Đảm bảo thông tin thành viên tổ chức (kèm avatar) được nạp đầy đủ
+        this.orgService.ensureLoaded().catch(() => undefined),
       ]);
       this.stats.set(s);
     } catch (e) {
@@ -70,9 +74,18 @@ export class WorkspaceStatsModal {
   /** Đổi hình dạng API sang hình dạng mà `WorkspaceStatsPanel` đang vẽ. */
   readonly data = computed<WorkspaceStatsData>(() => {
     const s = this.stats();
-    const roster = this.boardService.members();
-    const tenTheoId = new Map(roster.map((m) => [m.id, m.displayName || m.email]));
-    const anhTheoId = new Map(roster.map((m) => [m.id, m.avatarUrl ?? '']));
+    // Gom toàn bộ thành viên từ boardService + OrganizationStore để dự phòng
+    const board = this.boardService.currentBoard();
+    const orgId = board?.orgId || this.orgService.activeOrgId();
+    const orgMembers = this.orgService.membersOf(orgId).map((m) => m.user);
+    const allKnownUsers = [
+      ...this.boardService.members(),
+      ...orgMembers,
+      ...Object.values(this.orgService.membersByOrg()).flatMap((list) => list.map((m) => m.user)),
+    ];
+
+    const tenTheoId = new Map(allKnownUsers.map((m) => [m.id, m.displayName || m.email]));
+    const anhTheoId = new Map(allKnownUsers.map((m) => [m.id, m.avatarUrl ?? '']));
 
     return {
       workspaceName: s?.overview?.boardName || this.boardName() || 'This board',
@@ -87,7 +100,7 @@ export class WorkspaceStatsModal {
       memberWorkload: (s?.memberWorkload ?? []).map((m) => ({
         userId: m.userId,
         name: m.displayName || tenTheoId.get(m.userId) || 'Anonymous',
-        avatarUrl: anhTheoId.get(m.userId) ?? '',
+        avatarUrl: m.avatarUrl || anhTheoId.get(m.userId) || '',
         assignedCount: m.assignedCount,
         completedCount: m.completedCount,
         doingCount: m.doingCount,

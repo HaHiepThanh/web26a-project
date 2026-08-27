@@ -144,10 +144,9 @@ export class WorkspaceStatsPanel {
     return this.memberWorkload().find((m) => m.userId === userId)?.name ?? userId;
   }
 
-  /** Ảnh của người ghi nhật ký — tra trong cùng bảng khối lượng công việc đã có,
-   *  khỏi gọi thêm API chỉ để lấy một link ảnh. */
-  memberAvatarUrl(userId: string): string | undefined {
-    return this.memberWorkload().find((m) => m.userId === userId)?.avatarUrl || undefined;
+  /** Ảnh của người ghi nhật ký — ưu tiên lấy từ chính log.user nếu có, rồi tra sang memberWorkload */
+  memberAvatarUrl(userId: string, log?: ActivityLog): string | undefined {
+    return log?.user?.avatarUrl ?? this.memberWorkload().find((m) => m.userId === userId)?.avatarUrl ?? undefined;
   }
 
   actionIconClass(actionType: ActivityActionType): string {

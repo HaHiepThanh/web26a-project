@@ -124,7 +124,7 @@
         }
         @for (log of filteredActivityLogs(); track trackByLogId($index, log)) {
           <div class="flex items-start gap-3 p-3">
-            <app-user-avatar [userId]="log.userId" [name]="memberName(log.userId)" [avatarUrl]="memberAvatarUrl(log.userId)" [size]="28" />
+            <app-user-avatar [userId]="log.userId" [name]="memberName(log.userId)" [avatarUrl]="memberAvatarUrl(log.userId, log)" [size]="28" />
             <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full" [class]="actionIconClass(log.actionType)">
               @switch (log.actionType) {
                 @case ('card_created') { <svg lucideFilePlus class="h-3.5 w-3.5" [strokeWidth]="2.5"></svg> }
