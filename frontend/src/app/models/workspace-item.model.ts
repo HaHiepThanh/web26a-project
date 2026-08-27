@@ -10,11 +10,13 @@ import { BoardBackground } from './board.model';
  *  (`Workspace`→`workspace`, `Private`→`private`, `Public`→`public`). */
 export type Privacy = 'Workspace' | 'Private' | 'Public';
 
+export type WorkspaceRole = 'owner' | 'admin' | 'member';
+
 export interface WorkspaceMember {
   id: string;
   displayName: string;
   email: string;
-  role: 'owner' | 'member';
+  role: WorkspaceRole;
   avatarUrl?: string;
 }
 
