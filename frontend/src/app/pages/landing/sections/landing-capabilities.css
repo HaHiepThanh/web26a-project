@@ -16,7 +16,12 @@
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--lp-3);
-  align-items: start;
+  /* `stretch`, KHÔNG phải `start`.
+     Với `start` thì mỗi thẻ chỉ cao bằng nội dung của chính nó, và vì chip xem
+     trước ở hai thẻ sau dài hơn nên chúng xuống hai hàng — đo được 267, 267,
+     288, 288, lệch 21px. Bốn tấm thẻ cùng một hàng mà cao thấp khác nhau thì
+     nhìn ra ngay là xếp ẩu, chứ không ai nghĩ là có chủ ý. */
+  align-items: stretch;
 }
 
 /* Khi một thẻ mở: lưới chuyển sang một cột, thẻ mở nằm trên, ba thẻ còn lại co
@@ -28,6 +33,10 @@
 /* -------------------- Tấm thẻ -------------------- */
 .tcard {
   position: relative;
+  /* Cột dọc để mặt thẻ giãn hết chiều cao ô lưới — không có nó thì `stretch` ở
+     trên chỉ kéo cái khung, còn ruột vẫn co lại và chân thẻ vẫn so le. */
+  display: flex;
+  flex-direction: column;
   border-radius: var(--radius-lg);
   background: var(--lp-surface);
   border: 1px solid var(--lp-border);
@@ -66,7 +75,11 @@
 }
 
 .tcard-face {
-  display: grid;
+  display: flex;
+  flex-direction: column;
+  /* Chiếm hết chiều cao còn lại của thẻ, để dòng chân có chỗ mà tụt xuống đáy. */
+  flex: 1;
+  align-items: flex-start;
   gap: var(--lp-2);
   width: 100%;
   padding: var(--lp-4);
@@ -181,8 +194,12 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--lp-2);
-  margin-top: var(--lp-2);
+  /* `auto` chứ không phải một khoảng cố định: nó đẩy dòng chân xuống ĐÁY thẻ,
+     nên bốn dòng "0/10 · Open card" nằm thẳng hàng nhau dù phần trên của mỗi
+     thẻ dài ngắn khác nhau. Đây mới là thứ mắt đọc ra là "cùng cỡ". */
+  margin-top: auto;
   padding-top: var(--lp-3);
+  width: 100%;
   border-top: 1px solid var(--lp-border);
 }
 .meta-chip {
