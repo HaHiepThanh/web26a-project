@@ -57,4 +57,16 @@ describe('Header', () => {
     expect(preventSpy).toHaveBeenCalled();
     expect(navSpy).toHaveBeenCalled();
   });
+
+  it('tự động focus vào thanh tìm kiếm khi bấm phím / ngoài input', () => {
+    fixture.detectChanges();
+    const focusSpy = vi.spyOn(component.actions, 'onSearchFocus');
+    const event = new KeyboardEvent('keydown', { key: '/' });
+    const preventSpy = vi.spyOn(event, 'preventDefault');
+
+    component.onDocumentKeyDown(event);
+
+    expect(preventSpy).toHaveBeenCalled();
+    expect(focusSpy).toHaveBeenCalled();
+  });
 });

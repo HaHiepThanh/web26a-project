@@ -1,4 +1,4 @@
-import { Component, DestroyRef, ElementRef, HostListener, computed, effect, inject, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, HostListener, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import {
   LucideBell,
@@ -69,6 +69,8 @@ export class Header {
   private readonly router = inject(Router);
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly realtime = inject(RealtimeService);
+
+  private readonly searchInputRef = viewChild<ElementRef<HTMLInputElement>>('searchInput');
 
   /** Công khai cho template: hai bảng dùng chung đọc dữ liệu thẳng từ đây. */
   readonly actions = inject(HeaderActionsService);
@@ -142,6 +144,29 @@ export class Header {
       this.inviteMenuOpen.set(false);
       this.notifyMenuOpen.set(false);
       this.actions.closeSearchDropdown();
+    }
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  onDocumentKeyDown(event: KeyboardEvent): void {
+    if (event.key === '/' && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      const target = event.target as HTMLElement | null;
+      const tagName = target?.tagName?.toLowerCase();
+      const isEditing =
+        tagName === 'input' ||
+        tagName === 'textarea' ||
+        tagName === 'select' ||
+        target?.isContentEditable;
+
+      if (!isEditing) {
+        event.preventDefault();
+        const inputEl = this.searchInputRef()?.nativeElement;
+        if (inputEl) {
+          inputEl.focus();
+          inputEl.select();
+          this.onSearchFocus();
+        }
+      }
     }
   }
 
