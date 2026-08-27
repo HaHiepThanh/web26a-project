@@ -345,3 +345,323 @@
     transition: none;
   }
 }
+
+/* ==========================================================================
+   Ba bước dẫn dắt.
+
+   Vì sao cần: một hộp cát không lời nào thì người ta kéo một thẻ rồi thôi,
+   không biết phải chú ý điều gì — đúng phản hồi "chưa rõ lắm". Ba dấu tick
+   biến chỗ này từ đồ chơi thành một chuỗi chứng minh có đích đến.
+   ========================================================================== */
+.tb-steps {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--lp-2) var(--lp-5);
+  max-width: 900px;
+  margin: 0 auto var(--lp-5);
+  padding: 0;
+  list-style: none;
+  font-size: var(--lp-text-sm);
+  color: var(--lp-text-2);
+}
+
+.tb-steps li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--lp-2);
+  transition: color var(--lp-dur-2) var(--lp-ease);
+}
+.tb-steps li.is-done {
+  color: var(--lp-text);
+}
+.tb-steps b {
+  font-weight: 700;
+  color: var(--lp-ink-green);
+}
+
+.tb-tick {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  flex: none;
+  border: 1px solid var(--lp-border-strong);
+  border-radius: 50%;
+  color: var(--lp-on-solid);
+  transition:
+    background-color var(--lp-dur-2) var(--lp-ease),
+    border-color var(--lp-dur-2) var(--lp-ease);
+}
+.is-done .tb-tick {
+  background: var(--lp-solid-green);
+  border-color: var(--lp-solid-green);
+}
+.tb-tick svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* ==========================================================================
+   Nhãn và hạn trên mặt thẻ — đúng dáng thẻ thật trong app.
+   ========================================================================== */
+.tb-card {
+  /* Xếp dọc vì thẻ nay có nhiều tầng: nhãn, dòng tiêu đề, dòng chân. */
+  flex-direction: column;
+  align-items: stretch;
+  gap: 7px;
+}
+
+.tb-label {
+  width: 34px;
+  height: 5px;
+  border-radius: 999px;
+}
+.lb-blue {
+  background: var(--lp-solid-blue);
+}
+.lb-purple {
+  background: var(--lp-solid-purple);
+}
+.lb-green {
+  background: var(--lp-solid-green);
+}
+.lb-amber {
+  background: var(--lp-solid-amber);
+}
+
+.tb-card-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--lp-2);
+}
+
+.tb-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tb-chip,
+.tb-due {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.tb-chip {
+  background: var(--lp-surface-2);
+  color: var(--lp-text-2);
+}
+/* Tick hết thì đổi màu — một tín hiệu nhỏ nhưng là lý do người ta tick tiếp. */
+.tb-chip.is-full {
+  background: color-mix(in oklab, var(--lp-ink-green) 20%, transparent);
+  color: var(--lp-ink-green);
+}
+.tb-chip svg {
+  width: 11px;
+  height: 11px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.tb-due {
+  background: color-mix(in oklab, var(--warning) 20%, transparent);
+  color: var(--lp-ink-amber);
+}
+
+.tb-card.is-open {
+  border-color: var(--lp-ink-blue);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--lp-ink-blue) 35%, transparent);
+}
+
+/* ==========================================================================
+   Khay chi tiết, nằm dưới bảng.
+   ========================================================================== */
+.tb-detail {
+  padding: var(--lp-4);
+  border-top: 1px solid var(--lp-border);
+  background: var(--lp-surface-2);
+  animation: tb-detail-in var(--lp-dur-3) var(--lp-ease) both;
+}
+@keyframes tb-detail-in {
+  from {
+    opacity: 0;
+    translate: 0 -10px;
+  }
+}
+
+.tb-detail-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--lp-3);
+  margin-bottom: var(--lp-4);
+}
+
+.tb-detail-title {
+  font-size: var(--lp-text-h3);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--lp-text);
+  overflow-wrap: anywhere;
+}
+
+.tb-detail-close {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--lp-border-strong);
+  border-radius: 8px;
+  background: var(--lp-surface);
+  color: var(--lp-text);
+  cursor: pointer;
+}
+.tb-detail-close:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+.tb-detail-close svg {
+  width: 15px;
+  height: 15px;
+}
+
+.tb-detail-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--lp-5);
+  margin-bottom: var(--lp-5);
+}
+
+.tb-field {
+  display: grid;
+  gap: var(--lp-2);
+  min-width: 0;
+}
+
+.tb-field-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--lp-text-micro);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--lp-text-2);
+}
+.tb-field-name em {
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.75;
+}
+
+.tb-swatches,
+.tb-dues {
+  display: flex;
+  gap: 6px;
+}
+
+.tb-swatch {
+  width: 30px;
+  height: 22px;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.tb-swatch.is-on {
+  /* Viền TRẮNG bên trong cộng vòng đậm bên ngoài, vì chính ô màu là thứ đang
+     được chọn — không thể báo trạng thái bằng đổi màu nền của nó. */
+  border-color: var(--lp-surface);
+  box-shadow: 0 0 0 2px var(--lp-text);
+}
+.tb-swatch:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+.tb-duebtn {
+  padding: 4px 11px;
+  border: 1px solid var(--lp-border-strong);
+  border-radius: 999px;
+  background: var(--lp-surface);
+  font-size: var(--lp-text-micro);
+  font-weight: 700;
+  color: var(--lp-text-2);
+  cursor: pointer;
+  transition:
+    background-color var(--lp-dur-1) var(--lp-ease),
+    color var(--lp-dur-1) var(--lp-ease);
+}
+.tb-duebtn.is-on {
+  background: var(--lp-solid-blue);
+  border-color: var(--lp-solid-blue);
+  color: var(--lp-on-solid);
+}
+.tb-duebtn:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+/* ---------------- Checklist ---------------- */
+.tb-checks {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tb-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 5px 6px;
+  border-radius: var(--radius-sm);
+  font-size: var(--lp-text-sm);
+  line-height: 1.5;
+  color: var(--lp-text);
+  cursor: pointer;
+  transition: background-color var(--lp-dur-1) var(--lp-ease);
+}
+.tb-check:hover {
+  background: var(--lp-surface);
+}
+.tb-check input {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  flex: none;
+  accent-color: var(--lp-solid-green);
+  cursor: pointer;
+}
+/* Gạch ngang mục đã xong — dấu hiệu thứ hai ngoài ô tick, để người mù màu vẫn
+   đọc ra trạng thái. */
+.tb-check.is-done span {
+  text-decoration: line-through;
+  color: var(--lp-text-2);
+}
+
+.tb-checks-empty {
+  padding: 5px 6px;
+  font-size: var(--lp-text-sm);
+  color: var(--lp-text-3);
+}
+
+.tb-check-input {
+  margin-top: var(--lp-2);
+  border-color: var(--lp-border-strong);
+}
+
+@media (max-width: 720px) {
+  .tb-detail-grid {
+    gap: var(--lp-4);
+  }
+}

@@ -1,6 +1,6 @@
 <!--
-  Bảng CHẠY THẬT. Xem ghi chú dài ở landing-try.ts về lý do khu này tồn tại và
-  vì sao nó không dùng lại component bảng của app.
+  Bảng CHẠY THẬT. Xem ghi chú dài ở landing-try.ts về lý do khu này tồn tại,
+  vì sao thẻ phải có nội dung thật, và vì sao bước ba là "bấm F5".
 
   Đặt sau khu bản kê: lúc đó khách đã xem hết sản phẩm có gì và đang ở đúng
   trạng thái "để tôi thử xem". Đặt sớm hơn thì họ chưa biết thử cái gì.
@@ -16,10 +16,46 @@
         Build one <span class="lp-grad">right here.</span>
       </h2>
       <p class="lp-lead" appReveal [revealDelay]="120">
-        Not a screenshot and not a video. Add a card, drag it across, throw it away. Nothing to sign
-        up for, and it will still be here when you come back.
+        Not a screenshot and not a video. Open a card, tick something off, drag it across. Nothing
+        to sign up for.
       </p>
     </div>
+
+    <!-- BA BƯỚC DẪN DẮT.
+         Một hộp cát không có dẫn dắt thì người ta kéo một thẻ rồi thôi, không
+         biết phải chú ý điều gì. Bước ba mới là cú chốt: nó biến câu "kéo là
+         lưu, không có nút Save" ở hero từ lời khẳng định thành thứ khách tự
+         chứng minh. -->
+    <ol class="tb-steps" appReveal [revealDelay]="150">
+      <li [class.is-done]="didAdd()">
+        <span class="tb-tick" aria-hidden="true">
+          @if (didAdd()) {
+            <svg lucideCheck [strokeWidth]="3"></svg>
+          }
+        </span>
+        Add a card
+      </li>
+      <li [class.is-done]="didMove()">
+        <span class="tb-tick" aria-hidden="true">
+          @if (didMove()) {
+            <svg lucideCheck [strokeWidth]="3"></svg>
+          }
+        </span>
+        Drag it to another column
+      </li>
+      <li [class.is-done]="didReload()">
+        <span class="tb-tick" aria-hidden="true">
+          @if (didReload()) {
+            <svg lucideCheck [strokeWidth]="3"></svg>
+          }
+        </span>
+        @if (didReload()) {
+          <b>Still here.</b> That is what “no Save button” means.
+        } @else {
+          Now reload the page
+        }
+      </li>
+    </ol>
 
     <div class="tb" appReveal [revealDelay]="180">
       <div class="tb-chrome">
@@ -30,9 +66,8 @@
         </button>
       </div>
 
-      <!-- `appFlipReorder` cho thẻ TRƯỢT sang cột mới thay vì nhảy tức thì.
-           Không có nó thì việc đổi cột chỉ là dời node trong DOM — không có
-           thuộc tính nào biến thiên để CSS nội suy. -->
+      <!-- `appFlipReorder` cho thẻ TRƯỢT sang cột mới thay vì nhảy tức thì:
+           dời node trong DOM không sinh ra thuộc tính nào để CSS nội suy. -->
       <div class="tb-cols" #grid appFlipReorder>
         @for (name of columns; track name; let ci = $index) {
           <section class="tb-col" [attr.aria-label]="name + ' column'">
@@ -44,23 +79,23 @@
             <ul class="tb-list">
               @for (card of cardsIn(ci); track card.id) {
                 <li>
-                  <!--
-                    Thẻ là <article> mang tabindex chứ không phải <button>: bên
-                    trong đã có nút xoá riêng, mà nút lồng trong nút là HTML sai
-                    và trình duyệt sẽ tự gỡ ra.
-                    `data-flip-id` là thứ FlipReorder dùng để nhận ra thẻ nào là
-                    thẻ nào giữa hai lần bố cục.
-                  -->
+                  <!-- Thẻ là <article> mang tabindex chứ không phải <button>:
+                       bên trong đã có nút xoá riêng, mà nút lồng trong nút là
+                       HTML sai và trình duyệt sẽ tự gỡ ra.
+                       `data-flip-id` là thứ FlipReorder dùng để nhận ra thẻ nào
+                       là thẻ nào giữa hai lần bố cục. -->
                   <article
                     class="tb-card"
                     [class.is-dragging]="dragging() === card.id"
+                    [class.is-open]="openCard() === card.id"
                     [attr.data-flip-id]="card.id"
                     tabindex="0"
+                    [attr.aria-expanded]="openCard() === card.id"
                     [attr.aria-label]="
                       card.title +
                       ', in ' +
                       name +
-                      '. Use the left and right arrow keys to move it, Delete to remove it.'
+                      '. Enter to open, left and right arrows to move it, Delete to remove it.'
                     "
                     (keydown)="onCardKeydown(card, $event)"
                     (pointerdown)="onPointerDown(card, $event)"
@@ -68,16 +103,40 @@
                     (pointerup)="onPointerUp(card, $event)"
                     (pointercancel)="onPointerUp(card, $event)"
                   >
-                    <span class="tb-card-title">{{ card.title }}</span>
+                    @if (card.label) {
+                      <span class="tb-label" [class]="'tb-label lb-' + card.label"></span>
+                    }
 
-                    <button
-                      type="button"
-                      class="tb-del"
-                      (click)="remove(card)"
-                      [attr.aria-label]="'Delete ' + card.title"
-                    >
-                      <svg lucideX [strokeWidth]="2.4"></svg>
-                    </button>
+                    <span class="tb-card-row">
+                      <span class="tb-card-title">{{ card.title }}</span>
+                      <button
+                        type="button"
+                        class="tb-del"
+                        (click)="remove(card)"
+                        [attr.aria-label]="'Delete ' + card.title"
+                      >
+                        <svg lucideX [strokeWidth]="2.4"></svg>
+                      </button>
+                    </span>
+
+                    <!-- Dòng chân thẻ đúng kiểu thẻ thật: số checklist và hạn.
+                         Chỉ hiện khi có thật, chứ không bày ra mấy ô rỗng. -->
+                    @if (card.checks.length || card.due) {
+                      <span class="tb-meta" aria-hidden="true">
+                        @if (card.checks.length) {
+                          <span
+                            class="tb-chip"
+                            [class.is-full]="doneCount(card) === card.checks.length"
+                          >
+                            <svg viewBox="0 0 20 20"><path d="M4 10.5l3.2 3.2L16 5" /></svg>
+                            {{ doneCount(card) }}/{{ card.checks.length }}
+                          </span>
+                        }
+                        @if (card.due) {
+                          <span class="tb-due">{{ card.due }}</span>
+                        }
+                      </span>
+                    }
                   </article>
                 </li>
               } @empty {
@@ -86,9 +145,6 @@
             </ul>
 
             @if (composing() === ci) {
-              <!-- #newCard là ô nhập; truyền thẳng phần tử vào add() thay vì
-                   giữ một signal cho từng cột — giá trị chỉ cần đọc đúng một
-                   lần lúc bấm Enter. -->
               <div class="tb-compose">
                 <input
                   #newCard
@@ -117,6 +173,97 @@
           </section>
         }
       </div>
+
+      <!-- CHI TIẾT THẺ.
+           Đặt dưới bảng chứ không làm hộp thoại nổi: hộp thoại cần bẫy tiêu
+           điểm, lớp phủ và đường thoát riêng — cả một bộ máy cho một khu vực mà
+           người dùng chỉ ghé chơi. Khay dưới bảng thì Tab đi tiếp là tới, không
+           ai bị kẹt. -->
+      @if (card(openCard()); as sel) {
+        <div class="tb-detail" role="region" aria-label="Card detail">
+          <div class="tb-detail-head">
+            <h3 class="tb-detail-title">{{ sel.title }}</h3>
+            <button type="button" class="tb-detail-close" (click)="closeDetail()" aria-label="Close card">
+              <svg lucideX [strokeWidth]="2.4"></svg>
+            </button>
+          </div>
+
+          <div class="tb-detail-grid">
+            <div class="tb-field">
+              <span class="tb-field-name" id="lbl-label">Label</span>
+              <div class="tb-swatches" role="group" aria-labelledby="lbl-label">
+                @for (l of labels; track l) {
+                  <button
+                    type="button"
+                    class="tb-swatch"
+                    [class]="'tb-swatch lb-' + l"
+                    [class.is-on]="sel.label === l"
+                    [attr.aria-pressed]="sel.label === l"
+                    [attr.aria-label]="l + ' label'"
+                    (click)="setLabel(sel, l)"
+                  ></button>
+                }
+              </div>
+            </div>
+
+            <div class="tb-field">
+              <span class="tb-field-name" id="lbl-due">Due</span>
+              <div class="tb-dues" role="group" aria-labelledby="lbl-due">
+                @for (d of dues; track d) {
+                  <button
+                    type="button"
+                    class="tb-duebtn"
+                    [class.is-on]="sel.due === d"
+                    [attr.aria-pressed]="sel.due === d"
+                    (click)="setDue(sel, d)"
+                  >
+                    {{ d }}
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+
+          <div class="tb-field">
+            <span class="tb-field-name">
+              Checklist
+              @if (sel.checks.length) {
+                <em>{{ doneCount(sel) }}/{{ sel.checks.length }}</em>
+              }
+            </span>
+
+            <ul class="tb-checks">
+              @for (item of sel.checks; track $index) {
+                <li>
+                  <!-- <label> bọc ô tick thật: bấm vào chữ cũng tick được, và
+                       trình đọc màn hình đọc ra đúng "checkbox, đã chọn". Tự
+                       dựng bằng div thì mất cả hai. -->
+                  <label class="tb-check" [class.is-done]="item.done">
+                    <input
+                      type="checkbox"
+                      [checked]="item.done"
+                      (change)="toggleCheck(sel, $index)"
+                    />
+                    <span>{{ item.text }}</span>
+                  </label>
+                </li>
+              } @empty {
+                <li class="tb-checks-empty">Nothing on this one yet.</li>
+              }
+            </ul>
+
+            <input
+              #newCheck
+              class="tb-input tb-check-input"
+              type="text"
+              maxlength="80"
+              aria-label="New checklist item"
+              placeholder="Add a checklist item"
+              (keydown.enter)="addCheck(sel, newCheck)"
+            />
+          </div>
+        </div>
+      }
     </div>
 
     <p class="tb-foot" appReveal>
