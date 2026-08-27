@@ -1,9 +1,9 @@
 <div class="relative">
   @if (mentionOpen() && mentionMatches().length) {
   <ul
-    class="menu menu-xs absolute bottom-full left-2.5 right-2.5 mb-1 gap-0.5 overflow-hidden rounded-box border border-base-300 bg-base-100 p-1 shadow-md">
+    class="menu menu-xs absolute bottom-full left-2.5 right-2.5 mb-1 gap-0.5 overflow-hidden rounded-md border border-base-300 bg-base-100 p-1 shadow-md">
     @for (m of mentionMatches(); track m.id) {
-    <li><button type="button" class="font-medium" (click)="pickMention(m, msgInput)">
+    <li><button type="button" class="font-medium rounded-md" (click)="pickMention(m, msgInput)">
         {{ m.displayName ?? m.email }}
       </button></li>
     }

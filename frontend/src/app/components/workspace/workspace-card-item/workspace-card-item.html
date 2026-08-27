@@ -135,12 +135,12 @@
           class="menu menu-xs absolute right-2 top-9 z-[1000] w-32 gap-0.5 rounded-md border border-base-300 bg-base-100 p-1 text-left text-base-content shadow-2xl"
           (click)="$event.stopPropagation()">
           <li>
-            <button type="button" class="font-bold rounded" (click)="onEditBoard(board)">
+            <button type="button" class="font-bold rounded-md" (click)="onEditBoard(board)">
               <svg lucidePencil class="h-3 w-3 shrink-0" [strokeWidth]="2.4"></svg> Edit board
             </button>
           </li>
           <li>
-            <button type="button" class="font-bold text-error rounded"
+            <button type="button" class="font-bold text-error rounded-md"
               (click)="onAskDeleteBoard(workspace().id + ':' + board.id)">
               <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M3 6h18" />
@@ -161,8 +161,8 @@
           (click)="$event.stopPropagation()">
           <p class="mb-2 text-2xs font-bold">Delete this board?</p>
           <div class="flex justify-end gap-1.5">
-            <button type="button" class="btn btn-ghost btn-xs rounded" (click)="confirmDeleteKeyChange.emit(null)">Cancel</button>
-            <button type="button" class="btn btn-error btn-xs font-black rounded"
+            <button type="button" class="btn btn-ghost btn-xs rounded-md" (click)="confirmDeleteKeyChange.emit(null)">Cancel</button>
+            <button type="button" class="btn btn-error btn-xs font-black rounded-md"
               (click)="onDeleteBoard(workspace().id, board)">Delete</button>
           </div>
         </div>

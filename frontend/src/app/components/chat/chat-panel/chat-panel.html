@@ -3,8 +3,8 @@
   @if (toastMessage(); as toast) {
   <div
     [class]="isMobile()
-      ? 'msg-toast fixed bottom-20 right-4 z-50 flex w-[250px] cursor-pointer gap-2 rounded-box border border-base-300 bg-base-100 p-2.5 shadow-lg'
-      : 'msg-toast absolute left-full top-3 z-20 ml-2 flex w-[250px] cursor-pointer gap-2 rounded-box border border-base-300 bg-base-100 p-2.5 shadow-lg'"
+      ? 'msg-toast fixed bottom-20 right-4 z-50 flex w-[250px] cursor-pointer gap-2 rounded-md border border-base-300 bg-base-100 p-2.5 shadow-lg'
+      : 'msg-toast absolute left-full top-3 z-20 ml-2 flex w-[250px] cursor-pointer gap-2 rounded-md border border-base-300 bg-base-100 p-2.5 shadow-lg'"
     (click)="openFromToast()">
     <span
       class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--accent-purple)] text-2xs font-bold text-white">{{

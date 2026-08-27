@@ -85,7 +85,7 @@ export class CommentList {
   }
 
   onInput(event: Event): void {
-    this.newCommentText.set((event.target as HTMLTextAreaElement).value);
+    this.newCommentText.set((event.target as HTMLInputElement | HTMLTextAreaElement).value);
   }
 
   addComment(): void {

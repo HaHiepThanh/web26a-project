@@ -30,19 +30,19 @@
   <div class="mb-2.5 text-2xs text-base-content/50">No comments yet.</div>
 }
 
-<div class="flex gap-1.5">
+<div class="flex items-center gap-1.5">
   <div class="min-w-0 flex-1">
-    <textarea
-      class="textarea resize-none w-full text-xs min-h-[64px] max-h-[64px] leading-relaxed overflow-y-auto py-2 rounded-md"
-      [class.textarea-error]="tooLong()"
-      rows="3"
+    <input
+      type="text"
+      class="input input-bordered h-10 w-full rounded-md text-xs font-medium focus:border-primary focus:outline-none"
+      [class.input-error]="tooLong()"
       placeholder="Write a comment..."
       [attr.maxlength]="maxLength"
       [attr.aria-describedby]="showCounter() ? 'comment-counter' : null"
       [value]="newCommentText()"
       (input)="onInput($event)"
       (keydown.enter)="$event.preventDefault(); addComment()"
-    ></textarea>
+    />
     @if (showCounter()) {
       <div
         id="comment-counter"
@@ -56,7 +56,7 @@
   </div>
   <button
     type="button"
-    class="btn btn-primary btn-sm h-auto min-h-[64px] px-3 self-stretch rounded-md font-bold"
+    class="btn btn-primary btn-square h-10 w-10 min-h-0 shrink-0 rounded-md font-bold"
     [disabled]="!canSend()"
     (click)="addComment()"
     aria-label="Send comment"
