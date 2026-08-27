@@ -31,7 +31,12 @@
   <main
     class="flex flex-col lg:flex-row gap-4 lg:gap-5 items-stretch flex-1 min-h-0 h-full max-lg:h-auto lg:overflow-hidden">
     <!-- Left Sidebar Component (Fixed on desktop / Natural stack on mobile) -->
-    <aside class="w-full lg:w-64 max-w-full min-w-0 shrink-0 max-lg:h-auto lg:h-full lg:overflow-y-auto lg:pr-1">
+    <!-- Bề rộng máy tính: 256px cũ chỉ chừa ~150px cho tên (trừ padding khung +
+         `pr-16` dành chỗ cho badge/nút 3 chấm), nên tên tổ chức dài kiểu
+         "dachoang33's Organization" luôn bị cắt. 288/320px đưa phần chữ lên
+         ~182/214px — đủ cho tên thường gặp mà khu vực bảng bên phải vẫn giữ
+         nguyên 5 cột ở khổ tối đa 1440px. Khổ hẹp vẫn `w-full` như cũ. -->
+    <aside class="w-full lg:w-72 xl:w-80 max-w-full min-w-0 shrink-0 max-lg:h-auto lg:h-full lg:overflow-y-auto lg:pr-1">
       <div class="divide-y divide-base-200 overflow-hidden rounded-lg border border-base-300/70 bg-base-100 shadow-sm">
         <app-org-switcher [organizations]="organizations()" [activeOrg]="activeOrg()"
           (switchOrg)="switchOrg($event)" (openCreateOrg)="showOrgCreateModal.set(true)" (manageOrg)="openManageOrg($event)">
