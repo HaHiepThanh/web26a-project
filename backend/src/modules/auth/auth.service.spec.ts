@@ -2,11 +2,14 @@ import { BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { SupabaseService } from '../../common/supabase/supabase.service';
 import { ModerationService } from '../../common/moderation/moderation.service';
+import { MailService } from '../../common/mail/mail.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 import { AuthService } from './auth.service';
 
 describe('AuthService - uploadAvatar', () => {
+  let service: AuthService;
   let mockModeration: any;
+  let mockSupabase: any;
 
   beforeEach(async () => {
     mockModeration = {
@@ -64,6 +67,12 @@ describe('AuthService - uploadAvatar', () => {
         {
           provide: ModerationService,
           useValue: mockModeration,
+        },
+        {
+          provide: MailService,
+          useValue: {
+            sendPasswordResetEmail: jest.fn().mockResolvedValue(true),
+          },
         },
       ],
     }).compile();

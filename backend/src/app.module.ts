@@ -4,6 +4,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { SupabaseModule } from './common/supabase/supabase.module';
 import { FirebaseModule } from './common/firebase/firebase.module';
+import { MailModule } from './common/mail/mail.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { OrganizationsModule } from './modules/organizations/organizations.module';
@@ -45,6 +46,7 @@ import { MeetingsModule } from './modules/meetings/meetings.module';
     // Hạ tầng dùng chung (global)
     SupabaseModule,
     FirebaseModule,
+    MailModule,
     // WebSocket theo board — @Global, mọi module dưới đây phát sự kiện qua nó.
     RealtimeModule,
     // Kiểm tra quyền dùng chung — @Global, xem common/access/access.service.ts.

@@ -2,6 +2,7 @@ import { Injectable, inject, signal, computed } from '@angular/core';
 import {
   EmailAuthProvider,
   GoogleAuthProvider,
+  applyActionCode,
   confirmPasswordReset,
   createUserWithEmailAndPassword,
   linkWithCredential,
@@ -255,24 +256,71 @@ export class AuthService {
   }
 
   /**
-   * Gửi email đặt lại mật khẩu qua Firebase Auth (có fallback an toàn).
+   * Gửi email đặt lại mật khẩu.
+   *
+   * ─── VÌ SAO QUA BACKEND CHỨ KHÔNG GỌI THẲNG FIREBASE ───
+   *
+   * Liên kết trong email của Firebase trỏ tới trang xử lý dựng sẵn của họ tại
+   * `<project>.firebaseapp.com/__/auth/action` — một giao diện Material chẳng
+   * liên quan gì tới app. Vùng `/__/` do Firebase Hosting tự phục vụ nên luật
+   * rewrite trong `firebase.json` không chạm tới được: trang
+   * `/reset-password` của app dù đã dựng xong vẫn không bao giờ hiện ra.
+   *
+   * Đổi trang đó cần sửa **Action URL** trong Firebase Console. Nhưng dự án này
+   * KHÔNG sửa được: cả Console lẫn Admin API đều trả
+   * `EMAIL_TEMPLATE_UPDATE_NOT_ALLOWED` (đã thử bằng service account có quyền —
+   * ghi `authorizedDomains` thì được, riêng trường email template thì bị khoá).
+   *
+   * Đường vòng: backend dùng Admin SDK sinh link reset, TÁCH `oobCode` ra, rồi
+   * tự gửi email trỏ thẳng về `/reset-password` của app. Xem
+   * `AuthService.handleForgotPassword` phía backend.
+   *
+   * ─── VÌ SAO VẪN GIỮ ĐƯỜNG LUI ───
+   *
+   * Backend chỉ gửi được khi có `SMTP_USER`/`SMTP_PASS`. Chưa cấu hình thì nó
+   * báo `mailConfigured: false` và ta quay về đường của Firebase — người dùng
+   * vẫn đặt lại được mật khẩu (chỉ là bằng giao diện của Firebase) thay vì ngồi
+   * chờ một lá thư không bao giờ tới.
    */
   async sendPasswordReset(email: string): Promise<void> {
-    if (!this.firebase?.auth) throw new Error('Firebase is not configured.');
+    const sach = email.trim();
     try {
-      const origin = typeof window !== 'undefined' && window.location?.origin
-        ? window.location.origin
-        : 'https://horizon-hub-harmony.firebaseapp.com';
-
-      const actionCodeSettings = {
-        url: `${origin}/reset-password`,
-        handleCodeInApp: true,
-      };
-      await sendPasswordResetEmail(this.firebase.auth, email.trim(), actionCodeSettings);
+      const kq = await this.api.post<{ mailConfigured?: boolean }>(
+        '/auth/forgot-password',
+        { email: sach, origin: window.location.origin },
+      );
+      if (kq?.mailConfigured) return;
     } catch {
-      // Fallback chuẩn nếu Firebase không cho phép actionCodeSettings tuỳ biến
-      await sendPasswordResetEmail(this.firebase.auth, email.trim());
+      // Backend hỏng/không với tới được — vẫn còn đường Firebase bên dưới.
     }
+    await this.guiQuaFirebase(sach);
+  }
+
+  /**
+   * Đường lui: để Firebase tự gửi email.
+   *
+   * ⚠️ `actionCodeSettings.url` KHÔNG đổi được trang xử lý — nó chỉ là
+   *    `continueUrl`, nơi đưa người dùng tới SAU KHI xong việc. Đây là chỗ rất
+   *    dễ mất thời gian: sửa mỗi chỗ này rồi tưởng hỏng, vì liên kết trong email
+   *    vẫn về trang dựng sẵn của Firebase.
+   */
+  private async guiQuaFirebase(email: string): Promise<void> {
+    if (!this.firebase?.auth) throw new Error('Firebase is not configured.');
+    await sendPasswordResetEmail(this.firebase.auth, email, {
+      url: `${window.location.origin}/login`,
+      // Chỉ đặt `true` khi có app di động bắt liên kết; web thuần thì bật lên
+      // là Firebase đòi cấu hình Android/iOS rồi ném lỗi.
+      handleCodeInApp: false,
+    });
+  }
+
+  /**
+   * Áp một action code không phải reset mật khẩu (xác minh email, khôi phục
+   * email cũ). Cùng một trang `/auth/action` nhận mọi loại — xem `ResetPassword`.
+   */
+  async applyActionCode(oobCode: string): Promise<void> {
+    if (!this.firebase?.auth) throw new Error('Firebase is not configured.');
+    await applyActionCode(this.firebase.auth, oobCode);
   }
 
   /**

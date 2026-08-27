@@ -5,11 +5,14 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
+import { getAuth } from 'firebase-admin/auth';
+import { MailService } from '../../common/mail/mail.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 import { ModerationService } from '../../common/moderation/moderation.service';
 import { SupabaseService } from '../../common/supabase/supabase.service';
 import { CurrentUserInfo } from '../../common/firebase/current-user.decorator';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
 
 /**
  * Ép chuỗi về đúng định dạng username mà frontend đang validate:
@@ -113,7 +116,43 @@ export class AuthService {
     private readonly supabase: SupabaseService,
     private readonly realtime: RealtimeGateway,
     private readonly moderation: ModerationService,
+    private readonly mailService: MailService,
   ) {}
+
+  /**
+   * Xử lý yêu cầu quên mật khẩu: tạo link reset chuẩn của Firebase Admin
+   * và gửi email HTML đẹp chứa link trực tiếp về trang /reset-password của website.
+   */
+  async handleForgotPassword(
+    dto: ForgotPasswordDto,
+  ): Promise<{ message: string; mailConfigured: boolean }> {
+    const email = dto.email.trim().toLowerCase();
+    try {
+      // Dùng Firebase Admin SDK để tạo link reset
+      const rawLink = await getAuth().generatePasswordResetLink(email);
+      const parsed = new URL(rawLink);
+      const oobCode = parsed.searchParams.get('oobCode');
+      const origin =
+        dto.origin?.replace(/\/+$/, '') ||
+        'https://horizon-hub-harmony.firebaseapp.com';
+      const customResetUrl = `${origin}/reset-password?oobCode=${oobCode}`;
+
+      // Gửi email qua MailService
+      await this.mailService.sendPasswordResetEmail(email, customResetUrl);
+    } catch (err) {
+      this.logger.error(`Lỗi tạo link reset password cho ${email}:`, err);
+      // Không ném lỗi ra ngoài để tránh user enumeration attack
+    }
+
+    return {
+      // Câu chung chung để không lộ địa chỉ nào có tài khoản.
+      message:
+        'If an account exists with this email, a password reset link has been sent.',
+      // Chỉ nói về CẤU HÌNH MÁY CHỦ, không nói về tài khoản — client dùng nó để
+      // biết có phải quay về đường gửi mail của Firebase hay không.
+      mailConfigured: this.mailService.daCauHinh,
+    };
+  }
 
   /**
    * Ghi hồ sơ Firebase vào bảng `users`.
