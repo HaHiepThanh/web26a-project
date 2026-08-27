@@ -28,12 +28,12 @@
 
       <!-- Each Organization -->
       @for (org of organizations(); track org.id) {
-      <button type="button" class="btn btn-sm max-w-[200px] shrink-0 gap-1.5 text-xs font-bold"
+      <button type="button" class="btn btn-sm shrink-0 gap-1.5 text-xs font-bold whitespace-nowrap"
         [class.btn-primary]="selectedOrgFilter() === org.id"
         [class.btn-outline]="selectedOrgFilter() !== org.id"
         [title]="org.name"
         (click)="changeOrgFilter.emit(org.id)">
-        <span class="truncate min-w-0 flex-1 text-left">{{ org.name }}</span>
+        <span>{{ org.name }}</span>
       </button>
       }
     </div>

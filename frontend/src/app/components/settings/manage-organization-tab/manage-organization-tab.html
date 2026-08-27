@@ -16,11 +16,12 @@
   @if (organizations().length > 0) {
   <div class="flex items-center gap-2 overflow-x-auto pb-1 max-w-full">
     @for (org of organizations(); track org.id) {
-    <button type="button" class="btn btn-sm max-w-[220px] shrink-0 gap-2 text-xs font-bold"
+    <button type="button" class="btn btn-sm shrink-0 gap-2 text-xs font-bold whitespace-nowrap"
       [class.btn-primary]="activeOrgId() === org.id"
       [class.btn-outline]="activeOrgId() !== org.id"
+      [title]="org.name"
       (click)="switchOrg.emit(org.id)">
-      <span class="font-black truncate min-w-0 flex-1 text-left">{{ org.name }}</span>
+      <span class="font-black">{{ org.name }}</span>
       <span class="badge badge-xs badge-ghost ml-1 shrink-0 font-bold">{{ org.memberIds.length }}</span>
     </button>
     }
