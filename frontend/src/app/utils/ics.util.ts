@@ -27,6 +27,8 @@
  * Ngắn hơn, hợp lệ chắc chắn, và hiển thị đúng ở mọi múi giờ.
  */
 
+import { docRrule, QuyTacLap, taoRrule, traiQuyTac } from './lap-lai.util';
+
 const PRODID = '-//Horizon Hub Harmony//Meetings//EN';
 /** Hậu tố UID — giữ cố định để nhập lại cùng một file là CẬP NHẬT, không nhân đôi. */
 const UID_DOMAIN = 'horizon-hub-harmony';
@@ -50,6 +52,8 @@ export interface SuKienXuat {
   attendees?: { name?: string | null; email: string }[];
   /** Nhắc trước bao nhiêu phút. 0 hoặc null = không kèm VALARM. */
   remindMinutes?: number | null;
+  /** Quy tắc lặp. `null` = chỉ diễn ra một lần. */
+  quyTac?: QuyTacLap | null;
 }
 
 /** Gói nhiều sự kiện thành MỘT file .ics. */
@@ -84,6 +88,13 @@ export function taoIcs(suKien: SuKienXuat[]): string {
       const cn = k.name ? `;CN=${thamSoAnToan(k.name)}` : '';
       dong.push(`ATTENDEE${cn};ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:mailto:${k.email}`);
     }
+    // RRULE phải đứng trong VEVENT, sau DTSTART/DTEND. Một dòng duy nhất mô tả
+    // cả chuỗi lặp — KHÔNG ghi mỗi lần diễn ra thành một VEVENT riêng, vì như
+    // thế trình lịch coi chúng là những sự kiện rời rạc và người dùng phải xoá
+    // từng cái một thay vì xoá cả chuỗi.
+    const rrule = taoRrule(s.quyTac ?? null);
+    if (rrule) dong.push(rrule);
+
     if (s.remindMinutes && s.remindMinutes > 0) {
       dong.push('BEGIN:VALARM');
       dong.push(`TRIGGER:-PT${Math.round(s.remindMinutes)}M`);
@@ -179,6 +190,10 @@ export interface SuKienNhap {
   timeZone: string | null;
   remindMinutes: number | null;
   attendeeEmails: string[];
+  /** Quy tắc lặp đọc được trong file. `null` = chỉ một lần. */
+  quyTac: QuyTacLap | null;
+  /** Sự kiện này là MỘT LẦN diễn ra được trải ra từ một quy tắc lặp. */
+  laLanLap: boolean;
   /** Vấn đề KHÔNG chặn — vẫn nhập được nhưng người dùng nên biết. */
   canhBao: string[];
 }
@@ -193,9 +208,25 @@ export interface KetQuaDocIcs {
 
 /** Nhiều nhất chừng này sự kiện một file — chặn một file lịch cả năm nhập vào
  *  đây rồi bắn hàng trăm thông báo. */
-export const TOI_DA_SU_KIEN = 50;
+export const TOI_DA_SU_KIEN = 100;
 
-export function docIcs(noiDung: string): KetQuaDocIcs {
+/** Tuỳ chọn khi đọc file — dùng cho việc nhập lịch theo khoảng ngày. */
+export interface TuyChonNhap {
+  /** Chỉ lấy sự kiện bắt đầu TỪ ngày này (dạng 'YYYY-MM-DD'). */
+  tuNgay?: string | null;
+  /** Chỉ lấy sự kiện bắt đầu ĐẾN HẾT ngày này. */
+  denNgay?: string | null;
+  /**
+   * Trải sự kiện lặp thành từng lần diễn ra trong khoảng đã chọn.
+   *
+   * Mặc định BẬT: bộ nhắc của app đặt hẹn giờ theo một mốc cụ thể, nó không
+   * biết đọc quy tắc lặp. Không trải thì một cuộc "mỗi thứ Hai" chỉ nhắc đúng
+   * lần đầu rồi im.
+   */
+  traiLap?: boolean;
+}
+
+export function docIcs(noiDung: string, tuyChon: TuyChonNhap = {}): KetQuaDocIcs {
   const rong: KetQuaDocIcs = { suKien: [], loi: null, soBoQua: 0 };
 
   if (!noiDung || !noiDung.trim()) {
@@ -277,8 +308,18 @@ export function docIcs(noiDung: string): KetQuaDocIcs {
     };
   }
 
-  suKien.sort((a, b) => a.startAt.localeCompare(b.startAt));
-  return { suKien: suKien.slice(0, TOI_DA_SU_KIEN), loi: null, soBoQua };
+  const ra = locVaTrai(suKien, tuyChon);
+
+  if (ra.length === 0) {
+    return {
+      suKien: [],
+      soBoQua,
+      loi: 'No events fall inside the date range you picked. Widen the range and try again.',
+    };
+  }
+
+  ra.sort((a, b) => a.startAt.localeCompare(b.startAt));
+  return { suKien: ra.slice(0, TOI_DA_SU_KIEN), loi: null, soBoQua };
 }
 
 /**
@@ -288,6 +329,58 @@ export function docIcs(noiDung: string): KetQuaDocIcs {
  * MỘT ký tự trắng đó (bỏ nhiều hơn là ăn mất khoảng trắng thật trong mô tả).
  * Tách thuộc tính trước rồi mới bỏ gấp thì mọi giá trị dài đều vỡ.
  */
+/**
+ * Trải sự kiện lặp thành từng lần diễn ra, rồi lọc theo khoảng ngày đã chọn.
+ *
+ * ─── VÌ SAO TRẢI RA THÀNH TỪNG DÒNG ───
+ *
+ * Bộ nhắc của app đặt hẹn giờ theo một mốc CỤ THỂ; nó không biết đọc quy tắc
+ * lặp. Giữ nguyên một dòng kèm RRULE thì cuộc "mỗi thứ Hai" chỉ nhắc đúng lần
+ * đầu rồi im mãi.
+ *
+ * ─── VÌ SAO PHẢI TRẢI TRƯỚC RỒI MỚI LỌC ───
+ *
+ * Một chuỗi lặp bắt đầu từ tháng 1 mà người dùng chọn nhập tháng 6 thì mốc bắt
+ * đầu GỐC nằm ngoài khoảng — lọc trước là loại luôn cả chuỗi, và tháng 6 không
+ * có gì để nhập dù thực tế tuần nào cũng có buổi.
+ */
+function locVaTrai(ds: SuKienNhap[], t: TuyChonNhap): SuKienNhap[] {
+  const tu = t.tuNgay ? new Date(`${t.tuNgay}T00:00:00`).getTime() : null;
+  // Hết ngày, không phải đầu ngày: chọn "đến 30/9" mà cắt ở 00:00 là mất sạch
+  // những buổi trong chính ngày 30.
+  const den = t.denNgay ? new Date(`${t.denNgay}T23:59:59.999`).getTime() : null;
+  const trongKhoang = (ms: number) =>
+    (tu === null || ms >= tu) && (den === null || ms <= den);
+
+  const ra: SuKienNhap[] = [];
+  for (const sk of ds) {
+    const batDau = new Date(sk.startAt);
+    const dai = new Date(sk.endAt).getTime() - batDau.getTime();
+
+    if (!sk.quyTac || t.traiLap === false) {
+      if (trongKhoang(batDau.getTime())) ra.push(sk);
+      continue;
+    }
+
+    let lanDau = true;
+    for (const moc of traiQuyTac(batDau, sk.quyTac)) {
+      if (!trongKhoang(moc.getTime())) continue;
+      ra.push({
+        ...sk,
+        startAt: moc.toISOString(),
+        endAt: new Date(moc.getTime() + dai).toISOString(),
+        // Chỉ lần ĐẦU giữ quy tắc: nó là dòng đại diện cho cả chuỗi khi xuất
+        // lại ra .ics. Những lần sau mà cũng mang quy tắc thì xuất ra sẽ thành
+        // nhiều chuỗi lặp chồng lên nhau.
+        quyTac: lanDau ? sk.quyTac : null,
+        laLanLap: !lanDau,
+      });
+      lanDau = false;
+    }
+  }
+  return ra;
+}
+
 function goGap(noiDung: string): string[] {
   const raw = noiDung.replace(/^﻿/, '').split(/\r\n|\r|\n/);
   const ra: string[] = [];
@@ -401,7 +494,14 @@ function dungSuKien(
     canhBao.push('End time was not after the start time — adjusted.');
   }
 
+  const quyTac = tho['RRULE'] ? docRrule(tho['RRULE'].giaTri) : null;
+  if (tho['RRULE'] && !quyTac) {
+    canhBao.push('The repeat rule in this file is not supported — imported as a single event.');
+  }
+
   return {
+    quyTac,
+    laLanLap: false,
     uid: tho['UID'] ? boThoat(tho['UID'].giaTri) : null,
     title: tho['SUMMARY'] ? boThoat(tho['SUMMARY'].giaTri).trim() : '(untitled event)',
     description: tho['DESCRIPTION'] ? boThoat(tho['DESCRIPTION'].giaTri) : null,

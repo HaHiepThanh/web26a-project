@@ -61,6 +61,38 @@ export class CreateMeetingDto {
   @ArrayMaxSize(100, { message: 'Cannot invite more than 100 people at once.' })
   attendeeIds!: string[];
 
+  /**
+   * Quy tắc lặp dạng RRULE, ví dụ `FREQ=WEEKLY;COUNT=12`.
+   *
+   * Chỉ để LƯU LẠI và xuất ra .ics — server không tự trải quy tắc này.
+   * Regex chặt vì chuỗi sẽ được ghi thẳng vào file .ics của người dùng.
+   */
+  @IsOptional()
+  @Matches(/^(RRULE:)?FREQ=(DAILY|WEEKLY|MONTHLY|YEARLY)(;[A-Z]+=[A-Za-z0-9,\-:+]+)*$/, {
+    message: 'recurrence must be an RRULE such as FREQ=WEEKLY;COUNT=12.',
+  })
+  @MaxLength(200, { message: 'recurrence is too long.' })
+  recurrence?: string | null;
+
+  /**
+   * Mốc bắt đầu của TỪNG LẦN diễn ra, khi cuộc họp có lặp.
+   *
+   * ⚠️ Việc TRẢI quy tắc thành danh sách này do CLIENT làm
+   *    (frontend/src/app/utils/lap-lai.util.ts). Cố ý: phép tính lặp có nhiều
+   *    bẫy (ngày 31 hằng tháng, 29 tháng 2) và đã có 26 bài test canh ở đó —
+   *    viết lại lần thứ hai ở server là chép một cái bẫy sang chỗ mới.
+   *
+   *    Server không tin danh sách này: nó kiểm số lượng, kiểm từng mốc có phải
+   *    ISO hợp lệ không, rồi mới ghi.
+   *
+   * Rỗng = chỉ diễn ra một lần, dùng `startAt`.
+   */
+  @IsOptional()
+  @IsArray({ message: 'occurrences must be a list.' })
+  @IsISO8601({}, { each: true, message: 'each occurrence must be an ISO 8601 timestamp.' })
+  @ArrayMaxSize(200, { message: 'A repeating meeting cannot have more than 200 occurrences.' })
+  occurrences?: string[];
+
   @IsOptional()
   @IsString({ message: 'googleEventId must be text.' })
   @MaxLength(200, { message: 'googleEventId is too long.' })

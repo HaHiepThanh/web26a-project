@@ -12,6 +12,10 @@ export interface TaoLichHopRequest {
   timeZone: string;
   remindMinutes: number;
   attendeeIds: string[];
+  /** Quy tắc lặp dạng RRULE (không kèm tiền tố `RRULE:`). */
+  recurrence?: string | null;
+  /** Mốc bắt đầu của từng lần diễn ra, khi cuộc họp có lặp. */
+  occurrences?: string[];
   googleEventId?: string | null;
   googleHtmlLink?: string | null;
   meetUrl?: string | null;

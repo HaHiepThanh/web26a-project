@@ -1,7 +1,9 @@
 import { Injectable, inject } from '@angular/core';
 import { GoogleOauthService } from './google-oauth.service';
 
-const API = 'https://www.googleapis.com/calendar/v3/calendars/primary/events';
+const API_BASE = 'https://www.googleapis.com/calendar/v3/calendars';
+/** Tạo/xoá luôn ghi vào lịch CHÍNH của người đang đăng nhập. */
+const API = `${API_BASE}/primary/events`;
 
 export interface KhachMoi {
   email: string;
@@ -23,6 +25,8 @@ export interface YeuCauTaoLich {
   khach: KhachMoi[];
   /** Có kèm phòng Google Meet cho cuộc họp này không. */
   kemMeet: boolean;
+  /** Dòng `RRULE:...` nếu cuộc họp lặp lại. */
+  rrule?: string | null;
 }
 
 export interface KetQuaTaoLich {
@@ -84,6 +88,17 @@ export class GoogleCalendarService {
       },
     };
 
+    if (yc.rrule) {
+      // Google tự hiểu quy tắc lặp và tạo CẢ CHUỖI, chỉ gửi MỘT thư mời phủ
+      // mọi lần diễn ra. Tự trải rồi tạo N sự kiện riêng sẽ bắn N thư mời vào
+      // hộp thư người nhận — và họ phải trả lời từng cái.
+      //
+      // `recurrence` là MẢNG chuỗi, mỗi chuỗi có tiền tố đầy đủ ('RRULE:...').
+      body['recurrence'] = [
+        yc.rrule.startsWith('RRULE:') ? yc.rrule : `RRULE:${yc.rrule}`,
+      ];
+    }
+
     if (yc.kemMeet) {
       body['conferenceData'] = {
         createRequest: {
@@ -129,6 +144,85 @@ export class GoogleCalendarService {
   }
 
   /**
+   * Đọc một sự kiện từ Google Calendar theo link người dùng dán vào.
+   *
+   * Cần token OAuth vì link chỉ mang định danh, không mang nội dung — xem ghi
+   * chú ở `tachLinkGoogle`. Người dán phải CÓ QUYỀN XEM lịch đó; lịch của người
+   * khác sẽ trả 404.
+   */
+  async docTheoLink(url: string): Promise<{ suKien?: SuKienGoogle; error?: string }> {
+    const ma = tachLinkGoogle(url);
+    if (!ma) {
+      return {
+        error:
+          'That does not look like a Google Calendar event link. Open the event in Google Calendar, use “Publish event” or copy the link from the address bar, then paste it here.',
+      };
+    }
+
+    const { token, error } = await this.oauth.layToken();
+    if (!token) return { error: error ?? 'Could not get Google permission.' };
+
+    try {
+      const res = await fetch(
+        `${API_BASE}/${encodeURIComponent(ma.calendarId)}/events/${encodeURIComponent(ma.eventId)}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      if (res.status === 404) {
+        return {
+          error:
+            'That event was not found in your Google Calendar. You can only import events from a calendar you have access to.',
+        };
+      }
+      if (!res.ok) return { error: this.oauth.doiLoiGoogle(res.status) };
+
+      const d = (await res.json()) as {
+        summary?: string;
+        description?: string;
+        start?: { dateTime?: string; date?: string; timeZone?: string };
+        end?: { dateTime?: string; date?: string; timeZone?: string };
+        hangoutLink?: string;
+        location?: string;
+        attendees?: { email?: string }[];
+        status?: string;
+      };
+
+      if (d.status === 'cancelled') {
+        return { error: 'That event has been cancelled in Google Calendar.' };
+      }
+
+      // Sự kiện cả ngày dùng `date` (không giờ); sự kiện thường dùng `dateTime`.
+      const allDay = !d.start?.dateTime;
+      const batDau = d.start?.dateTime ?? (d.start?.date ? `${d.start.date}T00:00:00` : null);
+      const ketThuc = d.end?.dateTime ?? (d.end?.date ? `${d.end.date}T00:00:00` : null);
+      if (!batDau) return { error: 'That event has no start time.' };
+
+      const b = new Date(batDau);
+      // Thiếu giờ kết thúc thì cho mặc định 1 giờ — database từ chối độ dài 0.
+      const k = ketThuc ? new Date(ketThuc) : new Date(b.getTime() + 60 * 60_000);
+
+      return {
+        suKien: {
+          title: d.summary?.trim() || '(untitled event)',
+          description: lamSachHtml(d.description ?? '') || null,
+          startAt: b.toISOString(),
+          endAt: (k > b ? k : new Date(b.getTime() + 60 * 60_000)).toISOString(),
+          timeZone: d.start?.timeZone ?? null,
+          meetUrl:
+            d.hangoutLink ??
+            /https:\/\/meet\.google\.com\/[A-Za-z0-9-]+/.exec(d.location ?? '')?.[0] ??
+            null,
+          attendeeEmails: (d.attendees ?? [])
+            .map((a) => (a.email ?? '').toLowerCase())
+            .filter(Boolean),
+          allDay,
+        },
+      };
+    } catch {
+      return { error: 'Could not reach Google Calendar. Check your connection.' };
+    }
+  }
+
+  /**
    * Xoá sự kiện khỏi Google Calendar và báo huỷ cho khách.
    *
    * ⚠️ CHỈ NGƯỜI TẠO gọi được — Calendar API xoá theo lịch `primary` của chủ
@@ -154,4 +248,77 @@ export class GoogleCalendarService {
       return 'Could not reach Google Calendar. Check your connection.';
     }
   }
+}
+
+/** Một sự kiện đọc được từ Google Calendar. */
+export interface SuKienGoogle {
+  title: string;
+  description: string | null;
+  startAt: string;
+  endAt: string;
+  timeZone: string | null;
+  meetUrl: string | null;
+  attendeeEmails: string[];
+  allDay: boolean;
+}
+
+/**
+ * Tách `calendarId` + `eventId` ra khỏi một đường link Google Calendar.
+ *
+ * ⚠️ ĐƯỜNG LINK KHÔNG CHỨA DỮ LIỆU SỰ KIỆN. Nó chỉ mang ĐỊNH DANH:
+ *
+ *     ?action=TEMPLATE&tmeid=<base64>&tmsrc=<email lịch>
+ *
+ * `tmeid` giải base64 ra `"<eventId> <calendarId rút gọn>"` — có mã sự kiện
+ * nhưng không có tên, giờ, hay người dự. Muốn biết nội dung thì BẮT BUỘC phải
+ * gọi Calendar API; không có cách nào đọc được từ chính chuỗi link.
+ *
+ * Dùng `tmsrc` làm calendarId vì phần trong `tmeid` bị cắt cụt
+ * (`hahiepthanhhhtt@m` thay vì `...@gmail.com`).
+ */
+export function tachLinkGoogle(
+  url: string,
+): { calendarId: string; eventId: string } | null {
+  let u: URL;
+  try {
+    u = new URL(url.trim());
+  } catch {
+    return null;
+  }
+  if (!/(^|\.)google\.com$/i.test(u.hostname)) return null;
+
+  // Google dùng `eid` ở link chia sẻ thường và `tmeid` ở link TEMPLATE.
+  const ma = u.searchParams.get('tmeid') ?? u.searchParams.get('eid');
+  if (!ma) return null;
+
+  let giai: string;
+  try {
+    // base64url: đổi ký tự và bù dấu `=` cho đủ bội số 4.
+    const chuan = ma.replace(/-/g, '+').replace(/_/g, '/');
+    giai = atob(chuan + '='.repeat((4 - (chuan.length % 4)) % 4));
+  } catch {
+    return null;
+  }
+
+  const [eventId, lichRutGon] = giai.split(' ');
+  if (!eventId) return null;
+
+  const calendarId = u.searchParams.get('tmsrc') ?? lichRutGon ?? 'primary';
+  return { calendarId, eventId };
+}
+
+/** Mô tả của Google là HTML — gỡ thẻ ra, nếu không người dùng thấy nguyên thẻ. */
+function lamSachHtml(v: string): string {
+  return v
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
 }

@@ -17,11 +17,47 @@ import { CurrentUser } from '../../common/firebase/current-user.decorator';
 import type { CurrentUserInfo } from '../../common/firebase/current-user.decorator';
 import { MeetingsService } from './meetings.service';
 import { CreateMeetingDto } from './dto/create-meeting.dto';
+import { ImportMeetingsDto } from './dto/import-meetings.dto';
+import { IcsParserService } from './ics-parser.service';
 
 @UseGuards(FirebaseAuthGuard)
 @Controller('meetings')
 export class MeetingsController {
-  constructor(private readonly meetings: MeetingsService) {}
+  constructor(
+    private readonly meetings: MeetingsService,
+    private readonly ics: IcsParserService,
+  ) {}
+
+  /**
+   * POST /meetings/parse-ics — đọc file .ics, TRẢ VỀ danh sách sự kiện.
+   *
+   * Chỉ ĐỌC, không ghi gì. Người dùng xem danh sách, tick chọn, rồi mới gọi
+   * `/meetings/import`. Tách hai bước vì một file lịch có thể chứa cả trăm
+   * buổi và gần như không ai muốn nhập hết.
+   *
+   * ⚠️ Khai TRƯỚC mọi route `:id`, nếu không Nest khớp 'parse-ics' thành id.
+   */
+  @Post('parse-ics')
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 5 * 1024 * 1024 } }))
+  parseIcs(
+    @UploadedFile() file: Express.Multer.File,
+    @Body('tuNgay') tuNgay?: string,
+    @Body('denNgay') denNgay?: string,
+  ) {
+    if (!file?.buffer) {
+      throw new BadRequestException('No calendar file uploaded.');
+    }
+    return this.ics.doc(file.buffer.toString('utf8'), tuNgay, denNgay);
+  }
+
+  /** POST /meetings/import — ghi những buổi người dùng đã tick chọn. */
+  @Post('import')
+  nhapHangLoat(
+    @CurrentUser() user: CurrentUserInfo,
+    @Body() body: ImportMeetingsDto,
+  ) {
+    return this.meetings.nhapHangLoat(user.uid, body);
+  }
 
   /**
    * POST /meetings/parse-pdf — trích xuất thông tin lịch họp từ file PDF của Google Calendar.

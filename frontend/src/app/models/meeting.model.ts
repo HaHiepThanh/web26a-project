@@ -24,6 +24,8 @@ export interface Meeting {
   createdBy: string | null;
   attendees: MeetingAttendee[];
   canceledAt: string | null;
+  /** Quy tắc lặp dạng RRULE — chỉ buổi ĐẦU của chuỗi có giá trị. */
+  recurrence: string | null;
 }
 
 /**

@@ -263,6 +263,46 @@ check('tiêu đề/mô tả có dấu tiếng Việt và ký tự đặc biệt 
 check('id do database sinh, không nhận từ client',
   /^[0-9a-f]{8}-[0-9a-f]{4}/.test(mNhap?.id ?? ''), `id=${mNhap?.id}`);
 
+// --------------------------------------------------- 5c. LỊCH LẶP LẠI
+section('5c. LỊCH LẶP LẠI');
+// Client trải quy tắc rồi gửi từng mốc; server chỉ kiểm rồi ghi mỗi mốc một dòng.
+const mocLap = [gio(60), gio(60 + 24 * 60), gio(60 + 48 * 60)];
+const [stLap, mLap] = await api('POST', '/meetings', A.token, body({
+  title: 'Daily standup',
+  startAt: mocLap[0], endAt: gio(90),
+  recurrence: 'FREQ=DAILY;COUNT=3',
+  occurrences: mocLap,
+}));
+check('tạo được cuộc họp lặp', stLap === 201, `status ${stLap} ${JSON.stringify(mLap)}`);
+check('trả về quy tắc lặp', mLap?.recurrence === 'FREQ=DAILY;COUNT=3', JSON.stringify(mLap?.recurrence));
+
+const [, dsLap] = await api('GET', `/meetings?boardId=${board.id}`, A.token);
+const cacBuoi = (dsLap ?? []).filter((m) => m.title === 'Daily standup');
+check('MỖI lần diễn ra là MỘT dòng (bộ nhắc chỉ hiểu mốc cụ thể)',
+  cacBuoi.length === 3, `co ${cacBuoi.length} dong`);
+check('CHỈ buổi đầu mang quy tắc — xuất .ics phải ra MỘT chuỗi lặp',
+  cacBuoi.filter((m) => m.recurrence).length === 1,
+  JSON.stringify(cacBuoi.map((m) => m.recurrence)));
+check('mọi buổi giữ nguyên độ dài 30 phút',
+  cacBuoi.every((m) => new Date(m.endAt) - new Date(m.startAt) === 30 * 60_000));
+check('người dự được gắn cho MỌI buổi, không chỉ buổi đầu',
+  cacBuoi.every((m) => m.attendees.some((a) => a.id === B.uid)),
+  JSON.stringify(cacBuoi.map((m) => m.attendees.length)));
+
+const [, upLap] = await api('GET', '/meetings/my-upcoming', B.token);
+check('B được nhắc cho từng buổi trong chuỗi',
+  cacBuoi.filter((m) => upLap.some((u) => u.id === m.id)).length >= 2);
+
+// DTO phải chặn quy tắc rác — chuỗi này đi thẳng vào file .ics người dùng tải về.
+for (const xau of ['FREQ=HOURLY', 'DROP TABLE', 'FREQ=WEEKLY;X=<script>']) {
+  const [st] = await api('POST', '/meetings', A.token, body({ recurrence: xau }));
+  check(`quy tắc rác bị chặn: "${xau}"`, st === 400, `status ${st}`);
+}
+const [stQua] = await api('POST', '/meetings', A.token, body({
+  occurrences: Array.from({ length: 250 }, (_, i) => gio(60 + i * 60)),
+}));
+check('quá 200 lần diễn ra bị chặn', stQua === 400, `status ${stQua}`);
+
 // ------------------------------------------------------------------ 6. HUỶ
 section('6. HUỶ');
 const [stHuyC] = await api('DELETE', `/meetings/${m1.id}`, C.token);

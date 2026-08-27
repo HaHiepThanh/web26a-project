@@ -16,6 +16,9 @@ import { GoogleCalendarService } from '../../../services/google-calendar.service
 import { MeetingsService } from '../../../services/meetings.service';
 import { UserAvatar } from '../../shared/user-avatar/user-avatar';
 import { docIcs, taoIcs } from '../../../utils/ics.util';
+import {
+  moTaQuyTac, QuyTacLap, TAN_SUAT, TanSuat, taoRrule, TOI_DA_LAN, traiQuyTac,
+} from '../../../utils/lap-lai.util';
 import { MIME_ICS, taiVeFile, tenFileAnToan } from '../../../utils/download.util';
 
 /** Các mốc nhắc cho chọn. 0 = không nhắc. */
@@ -28,7 +31,14 @@ export const MOC_NHAC = [
   { phut: 1440, nhan: '1 day before' },
 ];
 
-export const THOI_LUONG = [15, 30, 45, 60, 90, 120];
+/**
+ * Gợi ý độ dài để bấm nhanh — KHÔNG còn là cách nhập chính.
+ *
+ * Trước đây người dùng chỉ chọn được "bao lâu" (30 phút, 60 phút…), nên một
+ * cuộc 09:15–10:45 phải nhẩm ra 90 rồi tìm trong danh sách. Nay nhập thẳng giờ
+ * bắt đầu và giờ kết thúc; mấy nút này chỉ để bấm cho nhanh những mốc hay dùng.
+ */
+export const GOI_Y_DAI = [15, 30, 45, 60, 90, 120];
 
 /** Một người có thể mời, kèm lý do vì sao không mời được (nếu có). */
 export interface UngVien {
@@ -69,15 +79,31 @@ export class ScheduleMeetingModal {
   readonly created = output<{ title: string; meetUrl: string | null }>();
 
   readonly mocNhac = MOC_NHAC;
-  readonly thoiLuong = THOI_LUONG;
+  readonly goiYDai = GOI_Y_DAI;
+  readonly tanSuat = TAN_SUAT;
 
   // ---------------------------------------------------------------- biểu mẫu
   readonly title = signal('');
   readonly description = signal('');
   readonly ngay = signal('');
   readonly gio = signal('');
-  readonly phutKeoDai = signal(30);
+  /** Ngày kết thúc — riêng, để đặt được cuộc họp vắt qua nửa đêm. */
+  readonly ngayKetThuc = signal('');
+  readonly gioKetThuc = signal('');
   readonly nhacTruoc = signal(10);
+
+  // ------------------------------------------------------------ lặp lại
+  readonly lapFreq = signal<TanSuat | ''>('');
+  readonly lapCach = signal(1);
+  /** 'khong' = lặp mãi (bị chặn ở trần), 'sau' = sau N lần, 'ngay' = tới ngày. */
+  readonly lapKetThuc = signal<'khong' | 'sau' | 'ngay'>('khong');
+  readonly lapSoLan = signal(10);
+  readonly lapDenNgay = signal('');
+
+  // ------------------------------------------------------- nhập theo khoảng
+  // --------------------------------------------------- dán link Google
+  readonly linkGoogle = signal('');
+  readonly dangDocLink = signal(false);
   readonly kemMeet = signal(true);
   readonly daChon = signal<string[]>([]);
 
@@ -86,6 +112,9 @@ export class ScheduleMeetingModal {
   readonly loi = signal<string | null>(null);
   readonly loiTruong = signal<Record<string, string>>({});
   readonly thongBaoNhap = signal<string | null>(null);
+  /** Đọc được bao nhiêu sự kiện từ file — hiện lại để người dùng biết khoảng
+   *  ngày họ chọn có đúng ý không. */
+  readonly soSuKienDocDuoc = signal(0);
 
   readonly dangTaiNguoi = signal(false);
   readonly ungVien = signal<UngVien[]>([]);
@@ -113,7 +142,7 @@ export class ScheduleMeetingModal {
   inGioPdf(): string {
     const moc = this.mocThoiGian();
     const b = moc ? moc.batDau : new Date();
-    const k = moc ? moc.ketThuc : new Date(Date.now() + this.phutKeoDai() * 60_000);
+    const k = moc ? moc.ketThuc : new Date(Date.now() + 30 * 60_000);
     const fmt = (d: Date) => {
       let h = d.getHours();
       const m = String(d.getMinutes()).padStart(2, '0');
@@ -178,15 +207,72 @@ export class ScheduleMeetingModal {
 
     this.title.set(this.boardName() ? `${this.boardName()} sync` : '');
     this.description.set('');
+    const k = new Date(t.getTime() + 30 * 60_000);
     this.ngay.set(chuoiNgay(t));
     this.gio.set(chuoiGio(t));
-    this.phutKeoDai.set(30);
+    this.ngayKetThuc.set(chuoiNgay(k));
+    this.gioKetThuc.set(chuoiGio(k));
     this.nhacTruoc.set(10);
+    this.lapFreq.set('');
+    this.lapCach.set(1);
+    this.lapKetThuc.set('khong');
+    this.lapSoLan.set(10);
+    this.lapDenNgay.set('');
+    this.linkGoogle.set('');
     this.kemMeet.set(true);
     this.daChon.set([]);
     this.loi.set(null);
     this.loiTruong.set({});
     this.thongBaoNhap.set(null);
+  }
+
+  /**
+   * Dán link Google Calendar → tự điền cả biểu mẫu.
+   *
+   * Link CHỈ mang định danh sự kiện, không mang nội dung, nên phải gọi Calendar
+   * API để đọc — xem ghi chú ở `tachLinkGoogle`. Việc còn lại của người dùng
+   * đúng như bạn muốn: chỉ chọn thành viên.
+   */
+  async docLink(): Promise<void> {
+    const url = this.linkGoogle().trim();
+    if (!url || this.dangDocLink()) return;
+
+    this.dangDocLink.set(true);
+    this.loi.set(null);
+    try {
+      const { suKien, error } = await this.calendar.docTheoLink(url);
+      if (error || !suKien) {
+        this.loi.set(error ?? 'Could not read that event.');
+        return;
+      }
+
+      const b = new Date(suKien.startAt);
+      const k = new Date(suKien.endAt);
+      this.title.set(suKien.title);
+      this.description.set(suKien.description ?? '');
+      this.ngay.set(chuoiNgay(b));
+      this.gio.set(chuoiGio(b));
+      this.ngayKetThuc.set(chuoiNgay(k));
+      this.gioKetThuc.set(chuoiGio(k));
+      this.kemMeet.set(!!suKien.meetUrl);
+
+      // Khách mời trong sự kiện Google khớp được với ai trên board thì tick sẵn.
+      // Người không phải thành viên board thì bỏ qua — app không mời họ được.
+      const theoEmail = new Set(suKien.attendeeEmails);
+      const khop = this.ungVien()
+        .filter((u) => u.moiDuoc && theoEmail.has(u.email.toLowerCase()))
+        .map((u) => u.id);
+      if (khop.length) this.daChon.set(khop);
+
+      const soKhac = suKien.attendeeEmails.length - khop.length;
+      const themVe = soKhac > 0 ? ` ${soKhac} guest(s) are not members of this board and were skipped.` : '';
+      this.thongBaoNhap.set(
+        `Loaded "${suKien.title}" from Google Calendar.${khop.length ? ` Pre-selected ${khop.length} board member(s).` : ''}${themVe} Pick who to invite, then create.`,
+      );
+      this.loiTruong.set({});
+    } finally {
+      this.dangDocLink.set(false);
+    }
   }
 
   doiChon(id: string): void {
@@ -229,11 +315,16 @@ export class ScheduleMeetingModal {
         if (pdfData.startTime) {
           this.gio.set(pdfData.startTime);
         }
-        if (pdfData.duration) {
-          const closestDuration = THOI_LUONG.reduce((prev, curr) =>
-            Math.abs(curr - pdfData.duration) < Math.abs(prev - pdfData.duration) ? curr : prev,
+        if (pdfData.duration && pdfData.date && pdfData.startTime) {
+          // Ghi ĐÚNG độ dài đọc được. Bản cũ ép nó về mốc gần nhất trong danh
+          // sách chọn sẵn, nên một buổi 50 phút bị đổi thành 45 — sai lệch âm
+          // thầm ngay ở bước nhập.
+          const k = new Date(
+            new Date(`${pdfData.date}T${pdfData.startTime}`).getTime() +
+              pdfData.duration * 60_000,
           );
-          this.phutKeoDai.set(closestDuration);
+          this.ngayKetThuc.set(chuoiNgay(k));
+          this.gioKetThuc.set(chuoiGio(k));
         }
         if (pdfData.meetUrl) {
           this.kemMeet.set(true);
@@ -261,6 +352,8 @@ export class ScheduleMeetingModal {
       } else {
         // Nhập từ file .ics
         const text = await f.text();
+        // Khoảng ngày do người dùng chọn — để nhập đúng đoạn lịch họ cần thay
+        // vì nuốt cả file. Để trống cả hai thì lấy tất như trước.
         const kq = docIcs(text);
         if (kq.loi) {
           this.loi.set(kq.loi);
@@ -272,6 +365,8 @@ export class ScheduleMeetingModal {
           this.loi.set('No usable events found in this .ics file.');
           return;
         }
+
+        this.soSuKienDocDuoc.set(kq.suKien.length);
 
         // 1. Tiêu đề
         if (sk.title && sk.title !== '(untitled event)') {
@@ -289,12 +384,24 @@ export class ScheduleMeetingModal {
         this.ngay.set(chuoiNgay(batDau));
         this.gio.set(chuoiGio(batDau));
 
-        // 4. Thời lượng
-        const diffMinutes = Math.max(15, Math.round((ketThuc.getTime() - batDau.getTime()) / 60_000));
-        const closestDuration = THOI_LUONG.reduce((prev, curr) =>
-          Math.abs(curr - diffMinutes) < Math.abs(prev - diffMinutes) ? curr : prev,
-        );
-        this.phutKeoDai.set(closestDuration);
+        // 4. Giờ kết thúc — lấy ĐÚNG từ file, không ép về mốc chọn sẵn nữa.
+        this.ngayKetThuc.set(chuoiNgay(ketThuc));
+        this.gioKetThuc.set(chuoiGio(ketThuc));
+
+        // 5. Quy tắc lặp, nếu file có
+        if (sk.quyTac) {
+          this.lapFreq.set(sk.quyTac.freq);
+          this.lapCach.set(sk.quyTac.interval ?? 1);
+          if (sk.quyTac.count) {
+            this.lapKetThuc.set('sau');
+            this.lapSoLan.set(sk.quyTac.count);
+          } else if (sk.quyTac.until) {
+            this.lapKetThuc.set('ngay');
+            this.lapDenNgay.set(chuoiNgay(new Date(sk.quyTac.until)));
+          } else {
+            this.lapKetThuc.set('khong');
+          }
+        }
 
         // 5. Nhắc trước
         if (sk.remindMinutes !== null) {
@@ -324,8 +431,15 @@ export class ScheduleMeetingModal {
         }
 
         const matchMsg = soNguoiKhop > 0 ? ` and pre-selected ${soNguoiKhop} board member(s)` : '';
+        // Nói rõ file có bao nhiêu buổi và ta đang mở buổi nào: người dùng chọn
+        // một khoảng ngày rồi chỉ thấy MỘT biểu mẫu thì rất dễ tưởng đã mất
+        // phần còn lại.
+        const nhieu =
+          kq.suKien.length > 1
+            ? ` The file has ${kq.suKien.length} events in this range — the first one is loaded below; adjust the date range or import again for the others.`
+            : '';
         this.thongBaoNhap.set(
-          `Imported meeting details from "${f.name}"${matchMsg}. You can adjust any fields and invitees before scheduling.`,
+          `Imported meeting details from "${f.name}"${matchMsg}.${nhieu} You can adjust any fields and invitees before scheduling.`,
         );
         this.loiTruong.set({});
       }
@@ -348,7 +462,7 @@ export class ScheduleMeetingModal {
     const batDau = moc ? moc.batDau.toISOString() : new Date().toISOString();
     const ketThuc = moc
       ? moc.ketThuc.toISOString()
-      : new Date(Date.now() + this.phutKeoDai() * 60_000).toISOString();
+      : new Date(Date.now() + 30 * 60_000).toISOString();
 
     const chon = new Set(this.daChon());
     const khach = this.ungVien().filter((u) => chon.has(u.id));
@@ -363,6 +477,7 @@ export class ScheduleMeetingModal {
         location: this.kemMeet() ? 'Google Meet' : null,
         attendees: khach.map((k) => ({ name: k.ten, email: k.email })),
         remindMinutes: this.nhacTruoc(),
+        quyTac: this.quyTacHienTai(),
       },
     ]);
 
@@ -375,11 +490,97 @@ export class ScheduleMeetingModal {
 
   // ---------------------------------------------------------------- gửi
 
+  /**
+   * Mốc bắt đầu và kết thúc, từ giờ NHẬP TƯỜNG MINH.
+   *
+   * Trước đây chỉ nhập được "bao lâu", nên một cuộc 09:15–10:45 phải tự nhẩm ra
+   * 90 phút rồi tìm trong danh sách chọn sẵn — và những độ dài không có trong
+   * danh sách thì đành chịu.
+   *
+   * `new Date('2026-09-01T14:30')` (không hậu tố Z) được JS hiểu theo giờ ĐỊA
+   * PHƯƠNG — đúng ý, vì người dùng gõ giờ theo đồng hồ của họ.
+   */
   private mocThoiGian(): { batDau: Date; ketThuc: Date } | null {
-    if (!this.ngay() || !this.gio()) return null;
+    if (!this.ngay() || !this.gio() || !this.gioKetThuc()) return null;
     const batDau = new Date(`${this.ngay()}T${this.gio()}`);
-    if (Number.isNaN(batDau.getTime())) return null;
-    return { batDau, ketThuc: new Date(batDau.getTime() + this.phutKeoDai() * 60_000) };
+    // Ngày kết thúc để trống thì hiểu là cùng ngày — trường này chỉ cần khi
+    // cuộc họp vắt qua nửa đêm.
+    const ngayK = this.ngayKetThuc() || this.ngay();
+    const ketThuc = new Date(`${ngayK}T${this.gioKetThuc()}`);
+    if (Number.isNaN(batDau.getTime()) || Number.isNaN(ketThuc.getTime())) return null;
+    return { batDau, ketThuc };
+  }
+
+  /** Quy tắc lặp dựng từ các ô trên biểu mẫu. `null` = không lặp. */
+  quyTacHienTai(): QuyTacLap | null {
+    const freq = this.lapFreq();
+    if (!freq) return null;
+    const q: QuyTacLap = { freq, interval: Math.max(1, this.lapCach()) };
+    if (this.lapKetThuc() === 'sau') q.count = Math.max(1, this.lapSoLan());
+    else if (this.lapKetThuc() === 'ngay' && this.lapDenNgay()) {
+      q.until = new Date(`${this.lapDenNgay()}T23:59:59`).toISOString();
+    }
+    return q;
+  }
+
+  /** Câu mô tả quy tắc, hiện ngay dưới ô chọn để người dùng đọc lại cho chắc. */
+  readonly moTaLap = computed(() => moTaQuyTac(this.quyTacHienTai()));
+
+  /** Bao nhiêu buổi sẽ được tạo — con số này quyết định người dùng bấm hay không. */
+  readonly soBuoi = computed(() => {
+    const moc = this.mocThoiGian();
+    const q = this.quyTacHienTai();
+    if (!moc || !q) return 1;
+    return traiQuyTac(moc.batDau, q).length;
+  });
+
+  readonly chamTranLap = computed(() => this.soBuoi() >= TOI_DA_LAN);
+
+  /** Độ dài hiện tại, tính bằng phút. `null` khi giờ chưa hợp lệ. */
+  readonly soPhut = computed(() => {
+    const moc = this.mocThoiGian();
+    if (!moc) return null;
+    return Math.round((moc.ketThuc.getTime() - moc.batDau.getTime()) / 60_000);
+  });
+
+  /** Nút bấm nhanh: đặt giờ kết thúc = giờ bắt đầu + n phút. */
+  datDai(phut: number): void {
+    if (!this.ngay() || !this.gio()) return;
+    const k = new Date(new Date(`${this.ngay()}T${this.gio()}`).getTime() + phut * 60_000);
+    this.ngayKetThuc.set(chuoiNgay(k));
+    this.gioKetThuc.set(chuoiGio(k));
+  }
+
+  /**
+   * Đổi ngày bắt đầu — ngày kết thúc TRÔI THEO, giữ nguyên độ lệch.
+   *
+   * Không kéo theo thì đổi ngày bắt đầu sang tuần sau sẽ để ngày kết thúc ở lại
+   * tuần này, tức giờ kết thúc nằm TRƯỚC giờ bắt đầu — và người dùng chỉ biết
+   * khi bấm Tạo rồi bị báo lỗi.
+   */
+  datNgayBatDau(v: string): void {
+    const lech = this.lechNgay();
+    this.ngay.set(v);
+    if (v) this.ngayKetThuc.set(congNgay(v, lech));
+  }
+
+  /** Nhảy về hôm nay, giữ nguyên giờ và độ dài đang chọn. */
+  homNay(): void {
+    this.datNgayBatDau(chuoiNgay(new Date()));
+  }
+
+  /**
+   * Ngày kết thúc lệch ngày bắt đầu bao nhiêu ngày.
+   *
+   * Kẹp về 0 khi âm: trạng thái đó là dữ liệu hỏng (kết thúc trước khi bắt
+   * đầu), và kéo theo một độ lệch âm chỉ làm hỏng tiếp.
+   */
+  private lechNgay(): number {
+    if (!this.ngay() || !this.ngayKetThuc()) return 0;
+    const a = new Date(`${this.ngay()}T00:00:00`).getTime();
+    const b = new Date(`${this.ngayKetThuc()}T00:00:00`).getTime();
+    if (Number.isNaN(a) || Number.isNaN(b)) return 0;
+    return Math.max(0, Math.round((b - a) / 86_400_000));
   }
 
   private kiemTra(): boolean {
@@ -387,9 +588,17 @@ export class ScheduleMeetingModal {
 
     if (!this.title().trim()) loi['title'] = 'Give the meeting a title.';
     const moc = this.mocThoiGian();
-    if (!moc) loi['time'] = 'Pick a valid date and time.';
-    else if (moc.batDau.getTime() < Date.now()) {
+    if (!moc) loi['time'] = 'Pick a valid start and end time.';
+    else if (moc.ketThuc.getTime() <= moc.batDau.getTime()) {
+      // Database có `check (end_at > start_at)` — để lọt xuống là lỗi Postgres
+      // 500 khó hiểu. Và cuộc họp kết thúc trước khi bắt đầu là vô nghĩa.
+      loi['time'] =
+        'The end time must be after the start time. For a meeting that runs past midnight, set the end date to the next day.';
+    } else if (moc.batDau.getTime() < Date.now()) {
       loi['time'] = 'That time is in the past. Pick a time from now on.';
+    }
+    if (this.lapKetThuc() === 'ngay' && this.lapFreq() && !this.lapDenNgay()) {
+      loi['lap'] = 'Pick the date the repeat should stop.';
     }
     if (this.daChon().length === 0) loi['people'] = 'Invite at least one person.';
 
@@ -409,6 +618,7 @@ export class ScheduleMeetingModal {
     try {
       const chon = new Set(this.daChon());
       const khach = this.ungVien().filter((u) => chon.has(u.id));
+      const quyTac = this.quyTacHienTai();
 
       // BƯỚC 1 — tạo trên Google (và Google gửi thư mời).
       const kq = await this.calendar.taoLichHop({
@@ -420,6 +630,10 @@ export class ScheduleMeetingModal {
         remindMinutes: this.nhacTruoc(),
         khach: khach.map((k) => ({ email: k.email })),
         kemMeet: this.kemMeet(),
+        // Google tự dựng CẢ CHUỖI từ quy tắc này và chỉ gửi MỘT thư mời phủ
+        // mọi lần diễn ra. Tự trải rồi tạo N sự kiện riêng sẽ bắn N thư vào
+        // hộp thư người nhận, và họ phải trả lời từng cái.
+        rrule: taoRrule(quyTac),
       });
       if (kq.error) {
         this.loi.set(kq.error);
@@ -440,6 +654,15 @@ export class ScheduleMeetingModal {
           googleEventId: kq.googleEventId ?? null,
           googleHtmlLink: kq.googleHtmlLink ?? null,
           meetUrl: kq.meetUrl ?? null,
+          recurrence: taoRrule(quyTac)?.replace(/^RRULE:/, '') ?? null,
+          // TRẢI quy tắc ở CLIENT rồi gửi từng mốc: bộ nhắc của app đặt hẹn
+          // giờ theo mốc cụ thể, nó không biết đọc quy tắc lặp. Trải ở đây
+          // cũng giữ phép tính lặp ở đúng MỘT nơi (lap-lai.util.ts, nơi đã có
+          // test canh những bẫy như ngày 31 hằng tháng) thay vì viết lại ở
+          // server.
+          occurrences: quyTac
+            ? traiQuyTac(moc.batDau, quyTac).map((d) => d.toISOString())
+            : undefined,
         });
       } catch {
         this.loi.set(
@@ -454,6 +677,13 @@ export class ScheduleMeetingModal {
       this.dangGui.set(false);
     }
   }
+}
+
+/** Cộng thêm `n` ngày vào chuỗi 'YYYY-MM-DD'. */
+function congNgay(ngay: string, n: number): string {
+  const d = new Date(`${ngay}T00:00:00`);
+  d.setDate(d.getDate() + n);
+  return chuoiNgay(d);
 }
 
 function hai(n: number): string {

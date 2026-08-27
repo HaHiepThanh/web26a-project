@@ -85,13 +85,88 @@ describe('ScheduleMeetingModal', () => {
     });
   });
 
-  it('khởi tạo với các giá trị mặc định hợp lệ', () => {
+  it('MỞ ra thì biểu mẫu có mặc định hợp lệ', () => {
+    // Mặc định được đặt lúc MỞ, không phải lúc dựng component: mở lại lần sau
+    // phải là biểu mẫu sạch, không dính dữ liệu của lần trước.
     const fixture = TestBed.createComponent(ScheduleMeetingModal);
     const comp = fixture.componentInstance;
-    expect(comp.phutKeoDai()).toBe(30);
+    fixture.componentRef.setInput('isOpen', true);
+    fixture.detectChanges();
+
+    // Không còn ô "bao lâu" — mặc định là một khoảng 30 phút tường minh.
+    expect(comp.soPhut()).toBe(30);
     expect(comp.nhacTruoc()).toBe(10);
     expect(comp.kemMeet()).toBe(true);
     expect(comp.daChon()).toEqual([]);
+    // Không lặp cho tới khi người dùng chủ động chọn.
+    expect(comp.lapFreq()).toBe('');
+    expect(comp.soBuoi()).toBe(1);
+  });
+
+  it('chọn lặp thì số buổi sẽ tạo được tính đúng', () => {
+    const fixture = TestBed.createComponent(ScheduleMeetingModal);
+    const comp = fixture.componentInstance;
+    fixture.componentRef.setInput('isOpen', true);
+    fixture.detectChanges();
+
+    comp.ngay.set('2026-09-01');
+    comp.gio.set('09:00');
+    comp.ngayKetThuc.set('2026-09-01');
+    comp.gioKetThuc.set('09:30');
+    comp.lapFreq.set('WEEKLY');
+    comp.lapKetThuc.set('sau');
+    comp.lapSoLan.set(4);
+
+    expect(comp.soBuoi()).toBe(4);
+    expect(comp.moTaLap()).toContain('4 times');
+  });
+
+  it('nút Today nhảy về hôm nay mà không phá giờ đang chọn', () => {
+    const fixture = TestBed.createComponent(ScheduleMeetingModal);
+    const comp = fixture.componentInstance;
+    fixture.componentRef.setInput('isOpen', true);
+    fixture.detectChanges();
+
+    comp.ngay.set('2030-01-01');
+    comp.gio.set('14:00');
+    comp.gioKetThuc.set('15:30');
+    comp.homNay();
+
+    const n = new Date();
+    const mong = `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`;
+    expect(comp.ngay()).toBe(mong);
+    expect(comp.gio()).toBe('14:00');
+    expect(comp.soPhut()).toBe(90);
+  });
+
+  it('datDai đặt giờ kết thúc theo lối tắt, vẫn cho phép độ dài lẻ', () => {
+    const fixture = TestBed.createComponent(ScheduleMeetingModal);
+    const comp = fixture.componentInstance;
+    fixture.componentRef.setInput('isOpen', true);
+    fixture.detectChanges();
+
+    comp.ngay.set('2026-09-01');
+    comp.gio.set('09:00');
+    comp.datDai(45);
+    expect(comp.gioKetThuc()).toBe('09:45');
+
+    // Độ dài KHÔNG có trong danh sách lối tắt vẫn đặt được bằng tay — đây là
+    // cả lý do bỏ ô "bao lâu".
+    comp.gioKetThuc.set('09:50');
+    expect(comp.soPhut()).toBe(50);
+  });
+
+  it('họp vắt qua nửa đêm: đặt ngày kết thúc sang hôm sau', () => {
+    const fixture = TestBed.createComponent(ScheduleMeetingModal);
+    const comp = fixture.componentInstance;
+    fixture.componentRef.setInput('isOpen', true);
+    fixture.detectChanges();
+
+    comp.ngay.set('2026-09-01');
+    comp.gio.set('23:00');
+    comp.ngayKetThuc.set('2026-09-02');
+    comp.gioKetThuc.set('01:00');
+    expect(comp.soPhut()).toBe(120);
   });
 
   it('nhập file .ics sẽ tự động điền các trường và chọn thành viên khớp email', async () => {
@@ -132,7 +207,9 @@ describe('ScheduleMeetingModal', () => {
     expect(comp.title()).toBe('Hop voi khach hang VIP');
     expect(comp.description()).toBe('Trao doi ve du an Q3');
     expect(comp.kemMeet()).toBe(true);
-    expect(comp.phutKeoDai()).toBe(45);
+    // Lấy ĐÚNG độ dài trong file. Bản cũ ép về mốc gần nhất trong danh sách
+    // chọn sẵn, nên một buổi 50 phút lặng lẽ thành 45.
+    expect(comp.soPhut()).toBe(45);
     // Alice khớp email và đã liên kết Google nên được tự động chọn
     expect(comp.daChon()).toContain('u-1');
     expect(comp.thongBaoNhap()).toContain('client-meeting.ics');
@@ -173,7 +250,7 @@ describe('ScheduleMeetingModal', () => {
     expect(comp.title()).toBe('Kế hoạch Tuần cá nhân sync');
     expect(comp.ngay()).toBe('2026-08-27');
     expect(comp.gio()).toBe('11:15');
-    expect(comp.phutKeoDai()).toBe(30);
+    expect(comp.soPhut()).toBe(30);
     expect(comp.description()).toBe('Scheduled from Horizon Hub Harmony.');
     expect(comp.kemMeet()).toBe(true);
     // u-1 (Alice) đã liên kết Google và nằm trong email list nên được chọn
@@ -232,7 +309,8 @@ describe('ScheduleMeetingModal', () => {
     comp.description.set('Thảo luận backlog');
     comp.ngay.set('2026-09-02');
     comp.gio.set('14:00');
-    comp.phutKeoDai.set(60);
+    comp.ngayKetThuc.set('2026-09-02');
+    comp.gioKetThuc.set('15:00');
 
     comp.xuatIcs();
 
@@ -255,7 +333,8 @@ describe('ScheduleMeetingModal', () => {
 
     comp.ngay.set('2026-08-27');
     comp.gio.set('11:15');
-    comp.phutKeoDai.set(30);
+    comp.ngayKetThuc.set('2026-08-27');
+    comp.gioKetThuc.set('11:45');
 
     expect(comp.inGioPdf()).toContain('11:15AM - 11:45AM');
     expect(comp.inNgayPdf()).toBe('thứ 5, 27 Tháng 8, 2026');

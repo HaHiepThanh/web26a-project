@@ -51,6 +51,34 @@
       </div>
     </div>
 
+    <!-- Dán link Google Calendar.
+         Link CHỈ mang mã sự kiện, không mang nội dung — nên phải gọi Calendar
+         API mới đọc được tên/giờ/khách mời. Xem tachLinkGoogle(). -->
+    <div class="mb-3">
+      <label class="mb-1.5 block text-xs font-black uppercase tracking-wider" for="link-gg">
+        Paste a Google Calendar event link
+      </label>
+      <div class="join w-full">
+        <input id="link-gg" type="url" inputmode="url"
+          class="input input-bordered join-item w-full rounded-md bg-base-100 text-sm shadow-xs"
+          placeholder="https://calendar.google.com/calendar/event?action=TEMPLATE&amp;tmeid=..."
+          [ngModel]="linkGoogle()" (ngModelChange)="linkGoogle.set($event)" name="linkGoogle"
+          (keydown.enter)="$event.preventDefault(); docLink()" />
+        <button type="button" class="btn btn-primary join-item gap-1.5"
+          [disabled]="!linkGoogle().trim() || dangDocLink()" (click)="docLink()">
+          @if (dangDocLink()) {
+            <span class="loading loading-spinner loading-xs"></span> Reading&hellip;
+          } @else {
+            Load
+          }
+        </button>
+      </div>
+      <p class="mt-1 px-1 text-2xs font-semibold text-base-content/50">
+        Fills in the title, time and description automatically — you just pick who to invite.
+        Only works for a calendar you have access to.
+      </p>
+    </div>
+
     <!-- Thông báo sau khi Import .ics -->
     @if (thongBaoNhap()) {
       <div role="status" class="alert alert-info border border-info/40 bg-info/10 text-xs font-semibold mb-3 py-2 flex items-center justify-between">
@@ -79,38 +107,128 @@
       }
     </div>
 
-    <!-- Thời gian -->
-    <div class="mb-1 grid grid-cols-1 gap-3 sm:grid-cols-3">
-      <div>
-        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider" for="meet-date">Date</label>
+    <!-- Thời gian: BẮT ĐẦU và KẾT THÚC tường minh (không còn chọn "bao lâu") -->
+    <div class="mb-1.5 flex items-center justify-between">
+      <span class="text-xs font-black uppercase tracking-wider">When</span>
+      <button type="button" class="btn btn-ghost btn-xs" (click)="homNay()">Today</button>
+    </div>
+
+    <!-- HAI cột: cột trái là mốc BẮT ĐẦU, cột phải là mốc KẾT THÚC.
+         Xếp theo "bắt đầu / kết thúc" đọc tự nhiên hơn bốn ô rời rạc, và ngày
+         nằm ngay trên giờ của chính nó nên không phải dò xem ô nào đi với ô nào. -->
+    <div class="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2">
+      <!-- Cột BẮT ĐẦU -->
+      <div class="rounded-md border border-base-300 p-2.5">
+        <div class="mb-1.5 text-2xs font-black uppercase tracking-wider text-primary">Starts</div>
         <input id="meet-date" type="date"
-          class="input input-bordered w-full rounded-md bg-base-100 text-sm font-semibold shadow-xs"
+          class="input input-bordered mb-1.5 w-full rounded-md bg-base-100 text-sm font-semibold shadow-xs"
           [class.input-error]="loiTruong()['time']"
-          [ngModel]="ngay()" (ngModelChange)="ngay.set($event)" name="ngay" />
-      </div>
-      <div>
-        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider" for="meet-time">Start</label>
+          [ngModel]="ngay()" (ngModelChange)="datNgayBatDau($event)" name="ngay" />
         <input id="meet-time" type="time"
           class="input input-bordered w-full rounded-md bg-base-100 text-sm font-semibold shadow-xs"
           [class.input-error]="loiTruong()['time']"
           [ngModel]="gio()" (ngModelChange)="gio.set($event)" name="gio" />
       </div>
-      <div>
-        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider" for="meet-len">Duration</label>
-        <select id="meet-len"
-          class="select select-bordered w-full rounded-md bg-base-100 text-sm font-semibold shadow-xs"
-          [ngModel]="phutKeoDai()" (ngModelChange)="phutKeoDai.set(+$event)" name="phutKeoDai">
-          @for (p of thoiLuong; track p) {
-            <option [value]="p">{{ p }} min</option>
+
+      <!-- Cột KẾT THÚC -->
+      <div class="rounded-md border border-base-300 p-2.5">
+        <div class="mb-1.5 flex items-baseline justify-between">
+          <span class="text-2xs font-black uppercase tracking-wider text-primary">Ends</span>
+          @if (soPhut() !== null && soPhut()! > 0) {
+            <span class="text-2xs font-bold text-base-content/55">{{ soPhut() }} min</span>
           }
-        </select>
+        </div>
+        <input id="meet-end-date" type="date"
+          class="input input-bordered mb-1.5 w-full rounded-md bg-base-100 text-sm font-semibold shadow-xs"
+          [class.input-error]="loiTruong()['time']"
+          [ngModel]="ngayKetThuc()" (ngModelChange)="ngayKetThuc.set($event)" name="ngayKetThuc" />
+        <input id="meet-end-time" type="time"
+          class="input input-bordered w-full rounded-md bg-base-100 text-sm font-semibold shadow-xs"
+          [class.input-error]="loiTruong()['time']"
+          [ngModel]="gioKetThuc()" (ngModelChange)="gioKetThuc.set($event)" name="gioKetThuc" />
       </div>
     </div>
+
+    <!-- Bấm nhanh những độ dài hay dùng. Chỉ là lối tắt — giờ kết thúc vẫn là
+         thứ quyết định, nên đặt được cả những độ dài lẻ. -->
+    <div class="mt-1.5 flex flex-wrap items-center gap-1">
+      <span class="text-2xs font-semibold text-base-content/40">Quick:</span>
+      @for (p of goiYDai; track p) {
+        <button type="button" class="btn btn-ghost btn-xs px-1.5 text-2xs"
+          [class.btn-active]="soPhut() === p" (click)="datDai(p)">{{ p }}m</button>
+      }
+      @if (soPhut() !== null && soPhut()! > 0) {
+        <span class="ml-auto text-2xs font-bold text-primary">{{ soPhut() }} min</span>
+      }
+    </div>
+
     @if (loiTruong()['time']) {
-      <p class="mb-3 px-1 text-2xs font-semibold text-error">{{ loiTruong()['time'] }}</p>
+      <p class="mb-3 mt-1 px-1 text-2xs font-semibold text-error">{{ loiTruong()['time'] }}</p>
     } @else {
-      <p class="mb-3 px-1 text-2xs font-semibold text-base-content/50">Times are in {{ muiGio }}</p>
+      <p class="mb-3 mt-1 px-1 text-2xs font-semibold text-base-content/50">Times are in {{ muiGio }}</p>
     }
+
+    <!-- Lặp lại -->
+    <div class="mb-4">
+      <label class="mb-1.5 block text-xs font-black uppercase tracking-wider" for="meet-freq">Repeat</label>
+      <div class="flex flex-wrap gap-2">
+        <select id="meet-freq"
+          class="select select-bordered flex-1 rounded-md bg-base-100 text-sm font-semibold shadow-xs"
+          [ngModel]="lapFreq()" (ngModelChange)="lapFreq.set($event)" name="lapFreq">
+          @for (t of tanSuat; track t.id) {
+            <option [value]="t.id">{{ t.nhan }}</option>
+          }
+        </select>
+
+        @if (lapFreq()) {
+          <label class="flex items-center gap-1.5 text-2xs font-semibold text-base-content/60">
+            every
+            <input type="number" min="1" max="30"
+              class="input input-bordered w-16 rounded-md bg-base-100 text-center text-sm font-semibold shadow-xs"
+              [ngModel]="lapCach()" (ngModelChange)="lapCach.set(+$event || 1)" name="lapCach" />
+          </label>
+        }
+      </div>
+
+      @if (lapFreq()) {
+        <div class="mt-2 flex flex-wrap items-center gap-2">
+          <select class="select select-bordered rounded-md bg-base-100 text-sm font-semibold shadow-xs"
+            [ngModel]="lapKetThuc()" (ngModelChange)="lapKetThuc.set($event)" name="lapKetThuc">
+            <option value="khong">Repeat forever</option>
+            <option value="sau">End after…</option>
+            <option value="ngay">End on date…</option>
+          </select>
+
+          @if (lapKetThuc() === 'sau') {
+            <label class="flex items-center gap-1.5 text-2xs font-semibold text-base-content/60">
+              <input type="number" min="1" max="200"
+                class="input input-bordered w-20 rounded-md bg-base-100 text-center text-sm font-semibold shadow-xs"
+                [ngModel]="lapSoLan()" (ngModelChange)="lapSoLan.set(+$event || 1)" name="lapSoLan" />
+              times
+            </label>
+          }
+          @if (lapKetThuc() === 'ngay') {
+            <input type="date"
+              class="input input-bordered rounded-md bg-base-100 text-sm font-semibold shadow-xs"
+              [class.input-error]="loiTruong()['lap']"
+              [ngModel]="lapDenNgay()" (ngModelChange)="lapDenNgay.set($event)" name="lapDenNgay" />
+          }
+        </div>
+
+        <p class="mt-1.5 px-1 text-2xs font-semibold text-base-content/60">
+          {{ moTaLap() }} — <span class="font-black text-primary">{{ soBuoi() }} meeting(s)</span> will be created.
+        </p>
+        @if (chamTranLap()) {
+          <p class="mt-1 flex items-start gap-1 px-1 text-2xs font-semibold text-warning">
+            <svg lucideTriangleAlert class="mt-px h-3 w-3 shrink-0" [strokeWidth]="2.4"></svg>
+            Capped at {{ soBuoi() }} occurrences. Set an end date or a number of times to control it.
+          </p>
+        }
+        @if (loiTruong()['lap']) {
+          <p class="mt-1 px-1 text-2xs font-semibold text-error">{{ loiTruong()['lap'] }}</p>
+        }
+      }
+    </div>
 
     <!-- Nhắc trước -->
     <div class="mb-4">

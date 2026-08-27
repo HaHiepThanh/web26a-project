@@ -10,6 +10,7 @@ import { SupabaseService } from '../../common/supabase/supabase.service';
 import { AccessService } from '../../common/access/access.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 import { CreateMeetingDto } from './dto/create-meeting.dto';
+import { ImportMeetingsDto } from './dto/import-meetings.dto';
 
 /**
  * Cửa sổ `my-upcoming` nhìn về phía trước.
@@ -60,6 +61,8 @@ export interface MeetingResponse {
   createdBy: string | null;
   attendees: MeetingAttendee[];
   canceledAt: string | null;
+  /** Quy tắc lặp — chỉ dòng ĐẦU của chuỗi có giá trị. */
+  recurrence: string | null;
 }
 
 interface MeetingRow {
@@ -76,6 +79,7 @@ interface MeetingRow {
   meet_url: string | null;
   created_by: string | null;
   canceled_at: string | null;
+  recurrence: string | null;
 }
 
 /**
@@ -151,36 +155,57 @@ export class MeetingsService {
     // nhìn đúng một bảng: không phải hỏi thêm "hoặc tôi là người tạo".
     nguoiDu.add(uid);
 
+    // MỖI LẦN DIỄN RA LÀ MỘT DÒNG.
+    //
+    // Bộ nhắc đặt hẹn giờ theo `start_at` — một mốc cụ thể; nó không biết đọc
+    // quy tắc lặp. Lưu một dòng kèm "mỗi thứ Hai" thì chuông chỉ kêu tuần đầu
+    // rồi im mãi.
+    //
+    // `occurrences` do client trải sẵn (xem ghi chú ở CreateMeetingDto). Ở đây
+    // chỉ kiểm lại rồi ghi. Rỗng thì đúng một dòng như cũ.
+    const keoDai = new Date(dto.endAt).getTime() - new Date(dto.startAt).getTime();
+    const mocBatDau = dto.occurrences?.length ? dto.occurrences : [dto.startAt];
+
+    const dong = mocBatDau.map((moc, i) => ({
+      board_id: dto.boardId,
+      org_id: board.orgId,
+      title: dto.title.trim(),
+      description: dto.description?.trim() || null,
+      start_at: new Date(moc).toISOString(),
+      end_at: new Date(new Date(moc).getTime() + keoDai).toISOString(),
+      time_zone: dto.timeZone,
+      remind_minutes: dto.remindMinutes,
+      google_event_id: dto.googleEventId || null,
+      google_html_link: dto.googleHtmlLink || null,
+      meet_url: dto.meetUrl || null,
+      created_by: uid,
+      // CHỈ dòng đầu mang quy tắc: xuất ra .ics phải là MỘT dòng RRULE cho cả
+      // chuỗi. Dòng nào cũng mang thì file xuất ra có N chuỗi lặp chồng nhau.
+      recurrence: i === 0 ? dto.recurrence || null : null,
+    }));
+
     const { data, error } = await this.supabase.client
       .from('board_meetings')
-      .insert({
-        board_id: dto.boardId,
-        org_id: board.orgId,
-        title: dto.title.trim(),
-        description: dto.description?.trim() || null,
-        start_at: dto.startAt,
-        end_at: dto.endAt,
-        time_zone: dto.timeZone,
-        remind_minutes: dto.remindMinutes,
-        google_event_id: dto.googleEventId || null,
-        google_html_link: dto.googleHtmlLink || null,
-        meet_url: dto.meetUrl || null,
-        created_by: uid,
-      })
-      .select()
-      .single();
+      .insert(dong)
+      .select();
 
-    if (error || !data) {
+    if (error || !data?.length) {
       this.logger.error(
         `Lưu lịch họp thất bại (board=${dto.boardId}): ${error?.message}`,
       );
       throw new InternalServerErrorException('Failed to save the meeting.');
     }
-    const row = data as MeetingRow;
+    const tatCa = data as MeetingRow[];
+    // Dòng đầu là dòng đại diện — nó mang quy tắc lặp và là thứ trả về cho client.
+    const row = tatCa[0];
 
+    // Người dự phải gắn cho MỌI lần diễn ra, không chỉ lần đầu — nếu không thì
+    // từ tuần thứ hai trở đi `my-upcoming` không thấy gì và chuông im.
     const { error: loiNguoiDu } = await this.supabase.client
       .from('board_meeting_attendees')
-      .insert([...nguoiDu].map((u) => ({ meeting_id: row.id, user_id: u })));
+      .insert(
+        tatCa.flatMap((r) => [...nguoiDu].map((u) => ({ meeting_id: r.id, user_id: u }))),
+      );
 
     if (loiNguoiDu) {
       // Cuộc họp không có người dự thì không ai được nhắc — vô dụng. Dọn luôn
@@ -189,7 +214,7 @@ export class MeetingsService {
       await this.supabase.client
         .from('board_meetings')
         .delete()
-        .eq('id', row.id);
+        .in('id', tatCa.map((r) => r.id));
       this.logger.error(`Lưu người dự thất bại: ${loiNguoiDu.message}`);
       throw new InternalServerErrorException('Failed to save the attendees.');
     }
@@ -200,6 +225,126 @@ export class MeetingsService {
     });
 
     return this.toResponse(row, await this.layNguoiDu([row.id]));
+  }
+
+
+  /**
+   * NHẬP HÀNG LOẠT từ file lịch.
+   *
+   * Khác `create()` ở ba điểm, và cả ba đều cố ý:
+   *
+   *   1. KHÔNG tạo sự kiện bên Google. File .ics vốn xuất ra TỪ một lịch — đẩy
+   *      ngược lên là nhân đôi trong lịch người dùng và bắn lại thư mời cho
+   *      những người đã nhận từ lâu.
+   *   2. Ghi MỘT lần cho cả loạt thay vì gọi API 30 lần.
+   *   3. Báo chuông MỘT lời tóm tắt cho mỗi người, không phải 30 lời. Nhập một
+   *      học kỳ mà mỗi buổi một thông báo là chuông của cả nhóm không dùng được
+   *      nữa.
+   */
+  async nhapHangLoat(
+    uid: string,
+    dto: ImportMeetingsDto,
+  ): Promise<{ daTao: number; boQua: number }> {
+    const board = await this.access.assertBoardAccess(uid, dto.boardId);
+    await this.access.assertCanManage(uid, board.orgId);
+
+    if (dto.events.length === 0) {
+      throw new BadRequestException('Pick at least one event to import.');
+    }
+
+    const { uids: nguoiXemDuoc, boardName, orgSlug } =
+      await this.access.nguoiXemDuocBoard(dto.boardId);
+
+    // Lọc lại người dự, không tin danh sách gửi lên — cùng lý do như `create`.
+    const duocPhep = new Set(nguoiXemDuoc);
+    const nguoiDu = new Set((dto.attendeeIds ?? []).filter((id) => duocPhep.has(id)));
+    nguoiDu.add(uid);
+
+    // Bỏ những buổi có giờ không hợp lệ thay vì để database ném lỗi 500 giữa
+    // chừng và người dùng mất cả mẻ.
+    const hopLe = dto.events.filter(
+      (e) => new Date(e.endAt).getTime() > new Date(e.startAt).getTime(),
+    );
+    if (hopLe.length === 0) {
+      throw new BadRequestException('None of the selected events has a valid time range.');
+    }
+
+    const { data, error } = await this.supabase.client
+      .from('board_meetings')
+      .insert(
+        hopLe.map((e) => ({
+          board_id: dto.boardId,
+          org_id: board.orgId,
+          title: e.title.trim().slice(0, 200),
+          description: e.description?.trim() || null,
+          start_at: new Date(e.startAt).toISOString(),
+          end_at: new Date(e.endAt).toISOString(),
+          time_zone: dto.timeZone,
+          // Buổi nhập từ file KHÔNG tự bật nhắc: nhập một học kỳ mà mỗi buổi
+          // đều nhắc là chuông kêu suốt. Người dùng bật lại từng buổi nếu muốn.
+          remind_minutes: 0,
+          google_event_id: null,
+          google_html_link: null,
+          meet_url: e.meetUrl || null,
+          created_by: uid,
+          recurrence: null,
+        })),
+      )
+      .select();
+
+    if (error || !data?.length) {
+      this.logger.error(`Nhập lịch thất bại (board=${dto.boardId}): ${error?.message}`);
+      throw new InternalServerErrorException('Failed to import the meetings.');
+    }
+    const tatCa = data as MeetingRow[];
+
+    const { error: loiNguoiDu } = await this.supabase.client
+      .from('board_meeting_attendees')
+      .insert(
+        tatCa.flatMap((r) => [...nguoiDu].map((u) => ({ meeting_id: r.id, user_id: u }))),
+      );
+    if (loiNguoiDu) {
+      await this.supabase.client
+        .from('board_meetings')
+        .delete()
+        .in('id', tatCa.map((r) => r.id));
+      this.logger.error(`Lưu người dự thất bại: ${loiNguoiDu.message}`);
+      throw new InternalServerErrorException('Failed to save the attendees.');
+    }
+
+    void this.baoNhapHangLoat(uid, tatCa.length, [...nguoiDu], {
+      boardId: dto.boardId,
+      boardName,
+      orgSlug,
+    });
+
+    return { daTao: tatCa.length, boQua: dto.events.length - hopLe.length };
+  }
+
+  /** MỘT thông báo tóm tắt cho cả mẻ nhập — xem ghi chú ở `nhapHangLoat`. */
+  private async baoNhapHangLoat(
+    actorUid: string,
+    soBuoi: number,
+    nguoiNhan: string[],
+    noi: { boardId: string; boardName: string; orgSlug: string },
+  ): Promise<void> {
+    try {
+      const ten = await this.access.tenHienThi(actorUid);
+      for (const uid of nguoiNhan) {
+        if (uid === actorUid) continue;
+        this.realtime.emitToUser(uid, 'meeting.scheduled', actorUid, {
+          meetingId: '',
+          boardId: noi.boardId,
+          boardName: noi.boardName,
+          orgSlug: noi.orgSlug,
+          title: `${soBuoi} imported meeting${soBuoi > 1 ? 's' : ''}`,
+          startAt: new Date().toISOString(),
+          byUserName: ten,
+        });
+      }
+    } catch (e) {
+      this.logger.warn(`Không báo được mẻ nhập: ${(e as Error).message}`);
+    }
   }
 
   /** Lịch họp của một board — sắp tới trước, đã qua thì thôi không trả. */
@@ -421,6 +566,7 @@ export class MeetingsService {
       createdBy: row.created_by,
       attendees: nguoiDu.get(row.id) ?? [],
       canceledAt: row.canceled_at,
+      recurrence: row.recurrence,
     };
   }
 

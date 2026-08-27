@@ -408,3 +408,132 @@ describe('đọc được file THẬT do Google và Apple xuất ra', () => {
     expect(kq.suKien[0].remindMinutes).toBe(10);
   });
 });
+
+describe('RRULE — xuất', () => {
+  it('không lặp thì không có dòng RRULE', () => {
+    expect(taoIcs([suKien()])).not.toContain('RRULE');
+  });
+
+  it('ghi RRULE vào trong VEVENT', () => {
+    const ics = taoIcs([suKien({ quyTac: { freq: 'WEEKLY', count: 4 } })]);
+    expect(ics).toContain('RRULE:FREQ=WEEKLY;COUNT=4');
+    // Phải nằm giữa BEGIN/END:VEVENT, không phải ở cấp VCALENDAR.
+    const than = ics.slice(ics.indexOf('BEGIN:VEVENT'), ics.indexOf('END:VEVENT'));
+    expect(than).toContain('RRULE:');
+  });
+
+  it('MỘT dòng RRULE cho cả chuỗi, không đẻ ra nhiều VEVENT', () => {
+    // Ghi mỗi lần diễn ra thành một VEVENT riêng thì trình lịch coi chúng là
+    // những sự kiện rời rạc, và người dùng phải xoá từng cái một.
+    const ics = taoIcs([suKien({ quyTac: { freq: 'DAILY', count: 30 } })]);
+    expect(ics.match(/BEGIN:VEVENT/g)).toHaveLength(1);
+  });
+});
+
+describe('RRULE — nhập', () => {
+  const boc = (than: string[]) =>
+    ['BEGIN:VCALENDAR', 'BEGIN:VEVENT', ...than, 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+
+  it('đọc được quy tắc lặp', () => {
+    const kq = docIcs(
+      boc(['SUMMARY:Daily standup', 'DTSTART:20260901T020000Z', 'RRULE:FREQ=DAILY;COUNT=3']),
+    );
+    expect(kq.suKien[0].quyTac).toMatchObject({ freq: 'DAILY', count: 3 });
+  });
+
+  it('TRẢI thành từng lần diễn ra', () => {
+    // Bộ nhắc đặt hẹn giờ theo mốc cụ thể; không trải thì chỉ nhắc lần đầu.
+    const kq = docIcs(
+      boc(['SUMMARY:Standup', 'DTSTART:20260901T020000Z', 'DTEND:20260901T023000Z',
+           'RRULE:FREQ=DAILY;COUNT=3']),
+    );
+    expect(kq.suKien).toHaveLength(3);
+    expect(kq.suKien.map((s) => s.startAt.slice(0, 10))).toEqual([
+      '2026-09-01', '2026-09-02', '2026-09-03',
+    ]);
+  });
+
+  it('mỗi lần trải giữ nguyên độ dài buổi họp', () => {
+    const kq = docIcs(
+      boc(['SUMMARY:X', 'DTSTART:20260901T020000Z', 'DTEND:20260901T030000Z',
+           'RRULE:FREQ=DAILY;COUNT=2']),
+    );
+    for (const sk of kq.suKien) {
+      expect(new Date(sk.endAt).getTime() - new Date(sk.startAt).getTime()).toBe(3600_000);
+    }
+  });
+
+  it('chỉ lần ĐẦU giữ quy tắc — những lần sau không', () => {
+    // Lần nào cũng mang quy tắc thì xuất lại ra .ics sẽ thành nhiều chuỗi lặp
+    // chồng lên nhau.
+    const kq = docIcs(
+      boc(['SUMMARY:X', 'DTSTART:20260901T020000Z', 'RRULE:FREQ=DAILY;COUNT=3']),
+    );
+    expect(kq.suKien[0].quyTac).toBeTruthy();
+    expect(kq.suKien[0].laLanLap).toBe(false);
+    expect(kq.suKien.slice(1).every((s) => s.quyTac === null && s.laLanLap)).toBe(true);
+  });
+
+  it('quy tắc KHÔNG hỗ trợ được → nhập như sự kiện đơn, kèm cảnh báo', () => {
+    const kq = docIcs(boc(['SUMMARY:X', 'DTSTART:20260901T020000Z', 'RRULE:FREQ=HOURLY']));
+    expect(kq.suKien).toHaveLength(1);
+    expect(kq.suKien[0].canhBao.join(' ')).toContain('not supported');
+  });
+
+  it('tắt trải lặp thì chỉ lấy lần đầu', () => {
+    const kq = docIcs(
+      boc(['SUMMARY:X', 'DTSTART:20260901T020000Z', 'RRULE:FREQ=DAILY;COUNT=5']),
+      { traiLap: false },
+    );
+    expect(kq.suKien).toHaveLength(1);
+  });
+});
+
+describe('nhập theo KHOẢNG NGÀY', () => {
+  const nhieuNgay = [
+    'BEGIN:VCALENDAR',
+    'BEGIN:VEVENT', 'SUMMARY:Thang 8', 'DTSTART:20260815T020000Z', 'END:VEVENT',
+    'BEGIN:VEVENT', 'SUMMARY:Thang 9', 'DTSTART:20260915T020000Z', 'END:VEVENT',
+    'BEGIN:VEVENT', 'SUMMARY:Thang 10', 'DTSTART:20261015T020000Z', 'END:VEVENT',
+    'END:VCALENDAR',
+  ].join('\r\n');
+
+  it('không chọn khoảng thì lấy tất', () => {
+    expect(docIcs(nhieuNgay).suKien).toHaveLength(3);
+  });
+
+  it('lọc đúng theo từ ngày — đến ngày', () => {
+    const kq = docIcs(nhieuNgay, { tuNgay: '2026-09-01', denNgay: '2026-09-30' });
+    expect(kq.suKien.map((s) => s.title)).toEqual(['Thang 9']);
+  });
+
+  it('chỉ có "từ ngày" thì lấy mọi thứ sau đó', () => {
+    expect(docIcs(nhieuNgay, { tuNgay: '2026-09-01' }).suKien).toHaveLength(2);
+  });
+
+  it('bao gồm TRỌN ngày cuối, không cắt ở 00:00', () => {
+    // Chọn "đến 15/9" mà cắt ở đầu ngày là mất sạch buổi trong chính ngày đó.
+    const kq = docIcs(nhieuNgay, { tuNgay: '2026-09-15', denNgay: '2026-09-15' });
+    expect(kq.suKien).toHaveLength(1);
+  });
+
+  it('khoảng không chứa sự kiện nào → báo lỗi nói rõ phải làm gì', () => {
+    const kq = docIcs(nhieuNgay, { tuNgay: '2027-01-01', denNgay: '2027-01-31' });
+    expect(kq.suKien).toHaveLength(0);
+    expect(kq.loi).toContain('date range');
+  });
+
+  it('chuỗi lặp bắt đầu TRƯỚC khoảng vẫn cho ra các buổi TRONG khoảng', () => {
+    // Đây là lý do phải TRẢI trước rồi mới LỌC. Lọc trước là loại luôn cả chuỗi
+    // vì mốc bắt đầu gốc nằm ngoài khoảng — và tháng 9 không có gì để nhập, dù
+    // thực tế tuần nào cũng có buổi.
+    const ics = [
+      'BEGIN:VCALENDAR', 'BEGIN:VEVENT', 'SUMMARY:Hop tuan',
+      'DTSTART:20260106T020000Z', 'RRULE:FREQ=WEEKLY;COUNT=60',
+      'END:VEVENT', 'END:VCALENDAR',
+    ].join('\r\n');
+    const kq = docIcs(ics, { tuNgay: '2026-09-01', denNgay: '2026-09-30' });
+    expect(kq.suKien.length).toBeGreaterThanOrEqual(4);
+    expect(kq.suKien.every((s) => s.startAt >= '2026-09-01' && s.startAt <= '2026-10-01')).toBe(true);
+  });
+});
