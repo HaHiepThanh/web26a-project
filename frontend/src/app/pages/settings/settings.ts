@@ -6,6 +6,7 @@ import {
   LucideUsers,
 } from '@lucide/angular';
 import { Router } from '@angular/router';
+import { ApiService } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
 import { OrganizationStore } from '../../ngrx/organization/organization.store';
 import { TourStore } from '../../ngrx/tour/tour.store';
@@ -55,6 +56,7 @@ import { WorkspaceService } from '../../services/workspace.service';
   host: { class: 'flex flex-1 min-h-0 overflow-hidden' },
 })
 export class Settings {
+  private readonly api = inject(ApiService);
   readonly auth = inject(AuthService);
   readonly orgService = inject(OrganizationStore);
   private readonly workspaceService = inject(WorkspaceService);
@@ -87,30 +89,45 @@ export class Settings {
   }
 
   readonly currentUser = this.auth.currentUser;
-  readonly searchableUsers = computed(() => this.auth.getSearchableUsers());
+  readonly searchableUsers = computed(() => {
+    const orgId = this.selectedOrgFilter() || this.orgService.activeOrgId();
+    if (!orgId) return this.auth.getSearchableUsers();
+    const orgMembers = this.orgService.membersOf(orgId).map((m) => m.user);
+    const localUsers = this.auth.getSearchableUsers();
+    const seen = new Set<string>();
+    const combined: User[] = [];
+    for (const u of [...orgMembers, ...localUsers]) {
+      if (!seen.has(u.id)) {
+        seen.add(u.id);
+        combined.push(u);
+      }
+    }
+    return combined;
+  });
 
   // ---------------------------------------------------------------------
   // Navigation & Tabs
   // ---------------------------------------------------------------------
   readonly navItems = NAV_ITEMS;
   readonly activeTab = signal<SettingsTab>('profile');
+  readonly toastMessage = signal<string | null>(null);
+  readonly toastType = signal<'success' | 'info' | 'error'>('success');
+  private toastTimer?: ReturnType<typeof setTimeout>;
+
+  flash(msg: string, type: 'success' | 'info' | 'error' = 'success'): void {
+    this.toastMessage.set(msg);
+    this.toastType.set(type);
+    if (this.toastTimer) clearTimeout(this.toastTimer);
+    this.toastTimer = setTimeout(() => {
+      this.toastMessage.set(null);
+    }, 3000);
+  }
 
   onTabChange(tab: SettingsTab): void {
     this.activeTab.set(tab);
-  }
-
-  // ---------------------------------------------------------------------
-  // Toast notifications
-  // ---------------------------------------------------------------------
-  readonly toastMessage = signal<string | null>(null);
-  readonly toastType = signal<'success' | 'error' | 'info'>('success');
-  private toastTimer?: ReturnType<typeof setTimeout>;
-
-  flash(message: string, type: 'success' | 'error' | 'info' = 'success'): void {
-    this.toastMessage.set(message);
-    this.toastType.set(type);
-    clearTimeout(this.toastTimer);
-    this.toastTimer = setTimeout(() => this.toastMessage.set(null), 3000);
+    if (tab === 'manage-workspace') {
+      void this.loadWorkspacesForOrganizations();
+    }
   }
 
   // ---------------------------------------------------------------------
@@ -147,16 +164,9 @@ export class Settings {
   }
 
   /**
-   * Hồ sơ vừa đổi → nạp lại danh sách thành viên tổ chức.
+   * Hồ sơ vừa đổi (tên / ảnh) → NẠP LẠI tổ chức để đồng bộ ngay.
    *
-   * `AuthService.currentUser` chỉ là bản sao của RIÊNG tôi, nên đổi xong thì mỗi
-   * avatar góc phải header đổi theo. Còn tên và ảnh ở danh sách thành viên
-   * workspace, ô "Người phụ trách", avatar trong board và trong chat đều đọc từ
-   * `OrganizationStore.membersByOrg` — nạp một lần lúc mở app rồi nằm im. Không
-   * nạp lại thì người dùng thấy ảnh mới ở một góc màn hình và ảnh cũ ở mọi chỗ
-   * còn lại, cho tới lần F5 kế tiếp.
-   *
-   * Dùng `reload()` (nạp lại cả tổ chức lẫn thành viên) thay vì sửa tay đúng
+   * ⚠️ Không tự mutate state cục bộ: gọi `orgService.reload()` để backend trả về
    * một dòng trong cache: đổi hồ sơ là việc hiếm, còn sửa tay thì phải nhớ mọi
    * chỗ đang giữ bản sao — quên một chỗ là lại lệch y như cũ.
    */
@@ -174,50 +184,97 @@ export class Settings {
     void this.boardService.loadAllBoards();
 
     effect(() => {
-      const userId = this.auth.currentUser()?.id;
-      const orgFilter = this.selectedOrgFilter();
-      const orgs = this.orgService.organizations();
-      const allBoards = this.boardService.allBoards();
+      // Theo dõi khi đổi filter hoặc danh sách org thay đổi hoặc allBoards nạp xong
+      this.selectedOrgFilter();
+      this.orgService.organizations();
+      this.boardService.allBoards();
 
-      let list: WorkspaceWithOrg[];
-      if (orgFilter === null) {
-        list = loadAllWorkspacesForUser(userId, orgs);
-      } else {
-        const foundOrg = orgs.find((o) => o.id === orgFilter);
-        const orgWorkspaces = loadStoredWorkspaces(userId, orgFilter);
-        list = orgWorkspaces.map((w) => ({
+      void this.loadWorkspacesForOrganizations();
+    });
+  }
+
+  private async loadWorkspacesForOrganizations(): Promise<void> {
+    const userId = this.auth.currentUser()?.id;
+    const orgFilter = this.selectedOrgFilter();
+    const orgs = this.orgService.organizations();
+    const allBoards = this.boardService.allBoards();
+
+    if (!orgs.length) {
+      this.workspaces.set([]);
+      this.selectedWorkspaceId.set(null);
+      return;
+    }
+
+    const targetOrgs = orgFilter
+      ? orgs.filter((o) => o.id === orgFilter)
+      : orgs;
+
+    const orgWorkspacePromises = targetOrgs.map(async (org) => {
+      try {
+        const serverWs = await this.api.get<import('../../models').ApiWorkspace[]>(`/workspaces?orgId=${org.id}`);
+        const orgRoster = this.orgService.membersOf(org.id);
+        const byId = new Map(orgRoster.map((m) => [m.user.id, m.user]));
+        const localItems = userId ? loadStoredWorkspaces(userId, org.id) : [];
+
+        return serverWs.map((w): WorkspaceWithOrg => {
+          const local = localItems.find((c) => c.id === w.id);
+          const ids = w.visibility === 'restricted' ? (w.memberIds ?? []) : orgRoster.map((m) => m.user.id);
+          const members: WorkspaceMember[] = ids
+            .map((id) => byId.get(id))
+            .filter((u): u is User => !!u)
+            .map((u) => ({
+              id: u.id,
+              displayName: u.displayName || u.email.split('@')[0],
+              email: u.email,
+              role: u.id === w.createdBy ? 'owner' : 'member',
+              avatarUrl: u.avatarUrl,
+            }));
+
+          const matchingBoards = allBoards.filter((b) => b.workspaceId === w.id);
+
+          return {
+            id: w.id,
+            orgId: org.id,
+            orgName: org.name,
+            name: w.name,
+            description: w.description || local?.description || '',
+            visibility: (w.visibility ?? 'org') as import('../../models').WorkspaceVisibility,
+            memberIds: w.memberIds ?? [],
+            membersCount: members.length || ids.length,
+            members,
+            boards: matchingBoards.map((b) => ({
+              id: b.id,
+              title: b.name,
+              tag: (w.name || '').toUpperCase(),
+              privacy: (b.visibility === 'public' ? 'Public' : b.visibility === 'private' ? 'Private' : 'Workspace') as Privacy,
+              badge: 'KANBAN',
+              starred: false,
+              bgClass: (b.backgroundImageUrl ? 'bg-base-200' : b.background || 'bg-board-blue') as any,
+            })),
+          };
+        });
+      } catch (err) {
+        console.warn(`Failed to fetch workspaces for org ${org.id}`, err);
+        const localItems = userId ? loadStoredWorkspaces(userId, org.id) : [];
+        return localItems.map((w) => ({
           ...w,
-          orgId: orgFilter,
-          orgName: foundOrg?.name ?? 'Organization',
+          orgId: org.id,
+          orgName: org.name,
         }));
       }
-
-      // Luôn đồng bộ danh sách board thực tế từ BoardStore cho từng workspace
-      list = list.map((w) => {
-        const matchingBoards = allBoards.filter((b) => b.workspaceId === w.id);
-        return {
-          ...w,
-          boards: matchingBoards.map((b) => ({
-            id: b.id,
-            title: b.name,
-            tag: (w.name || '').toUpperCase(),
-            privacy: (b.visibility === 'public' ? 'Public' : b.visibility === 'private' ? 'Private' : 'Workspace') as Privacy,
-            badge: 'KANBAN',
-            starred: false,
-            bgClass: (b.backgroundImageUrl ? 'bg-base-200' : b.background || 'bg-board-blue') as any,
-          })),
-        };
-      });
-
-      this.workspaces.set(list);
-      if (list.length > 0) {
-        if (!this.selectedWorkspaceId() || !list.some((w) => w.id === this.selectedWorkspaceId())) {
-          this.selectedWorkspaceId.set(list[0].id);
-        }
-      } else {
-        this.selectedWorkspaceId.set(null);
-      }
     });
+
+    const results = await Promise.all(orgWorkspacePromises);
+    const flatList = results.flat();
+
+    this.workspaces.set(flatList);
+    if (flatList.length > 0) {
+      if (!this.selectedWorkspaceId() || !flatList.some((w) => w.id === this.selectedWorkspaceId())) {
+        this.selectedWorkspaceId.set(flatList[0].id);
+      }
+    } else {
+      this.selectedWorkspaceId.set(null);
+    }
   }
 
   onOrgFilterChange(orgId: string | null): void {
@@ -398,10 +455,10 @@ export class Settings {
     const orgWorkspaces = loadStoredWorkspaces(userId, orgId);
     persistWorkspaces([...orgWorkspaces, newWs], userId, orgId);
 
-    this.workspaces.update((list) => [...list, newWs]);
-    this.selectedWorkspaceId.set(newWs.id);
     this.showWorkspaceModal.set(false);
     this.flash(`Created Workspace "${newWs.name}"!`);
+    await this.loadWorkspacesForOrganizations();
+    this.selectedWorkspaceId.set(newWs.id);
   }
 
   // ---- Modal xác nhận xoá Workspace (GitHub style) ----
@@ -450,15 +507,10 @@ export class Settings {
       const saved = orgWorkspaces.filter((w) => w.id !== ws.id);
       persistWorkspaces(saved, userId, targetOrgId);
 
-      this.workspaces.update((list) => list.filter((w) => w.id !== ws.id));
-      if (this.selectedWorkspaceId() === ws.id) {
-        const remaining = this.workspaces().filter((w) => w.id !== ws.id);
-        this.selectedWorkspaceId.set(remaining.length > 0 ? remaining[0].id : null);
-      }
-
       this.showDeleteWorkspaceModal.set(false);
       this.workspacePendingDelete.set(null);
       this.flash(`Deleted workspace "${ws.name}".`, 'info');
+      await this.loadWorkspacesForOrganizations();
     } finally {
       this.deletingWorkspace.set(false);
     }
