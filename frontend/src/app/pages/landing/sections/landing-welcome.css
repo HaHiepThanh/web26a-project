@@ -268,3 +268,215 @@
     padding: 5px 11px;
   }
 }
+
+/* ==========================================================================
+   BA LỚP NỀN.
+
+   Màn chào trước đây là nền phẳng trơn, trong khi hero ngay sau nó có cực
+   quang, lưới và thẻ trôi — hai màn liền nhau mà một giàu một trống thì mắt
+   đọc ra ngay là thiếu.
+   ========================================================================== */
+
+/* ⚠️ z-index 0, KHÔNG PHẢI -1 — và đây là lỗi đã mắc rồi mới thấy.
+   `.welcome` có nền đặc (`background: var(--lp-bg)`). Một phần tử con mang
+   z-index ÂM sẽ vẽ ra ở lớp nằm SAU nền của chính phần tử cha, nên cả ba lớp
+   cực quang + lưới + bóng cột bị nền che kín — nhìn ra y hệt như chưa hề thêm
+   gì. Ở z-index 0 thì nó nằm trên nền cha và dưới nội dung, đúng chỗ cần.
+   Vì đã đặt số cho lớp này nên các lớp trên cũng phải đặt số: cứ để `auto`
+   thì `.wc-inner` không được định vị sẽ rơi xuống dưới lớp nền này. */
+.wc-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.wc-inner {
+  position: relative;
+  z-index: 2;
+}
+
+.wc-meta {
+  z-index: 1;
+}
+
+/* ---------------- Lớp xa nhất: cực quang ---------------- */
+
+/* Vẽ bằng radial-gradient có điểm dừng mềm, KHÔNG dùng filter: blur().
+   Đây là quy tắc hero đã ghi và nó có lý do đo được: làm mờ một khối 900px
+   buộc trình duyệt vẽ lại rồi lấy mẫu cả vùng đó mỗi khung hình — mất khoảng
+   20fps trên máy dùng card đồ hoạ tích hợp. Gradient thì GPU vẽ một lần rồi
+   chỉ việc dịch. */
+.wc-aurora {
+  position: absolute;
+  border-radius: 50%;
+  will-change: transform;
+}
+
+/* Nhạt hơn hero một bậc (hero dùng --lp-glow-* nguyên bản; ở đây pha loãng còn
+   ~70%). Màn chào là chỗ hít vào — nếu nó rực bằng hero thì hero mất chỗ để
+   mạnh hơn, và cả hai cùng ồn. */
+.wc-a {
+  width: 68vw;
+  height: 68vw;
+  max-width: 880px;
+  max-height: 880px;
+  top: -24%;
+  left: -14%;
+  background: radial-gradient(
+    circle at 50% 50%,
+    color-mix(in oklab, var(--lp-glow-blue) 88%, transparent) 0%,
+    transparent 66%
+  );
+  animation: wc-drift-a 34s ease-in-out infinite alternate;
+}
+
+.wc-b {
+  width: 60vw;
+  height: 60vw;
+  max-width: 780px;
+  max-height: 780px;
+  top: -18%;
+  right: -12%;
+  background: radial-gradient(
+    circle at 50% 50%,
+    color-mix(in oklab, var(--lp-glow-purple) 88%, transparent) 0%,
+    transparent 66%
+  );
+  animation: wc-drift-b 42s ease-in-out infinite alternate;
+}
+
+.wc-c {
+  width: 78vw;
+  height: 44vw;
+  max-width: 1040px;
+  max-height: 580px;
+  bottom: -18%;
+  left: 12%;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    color-mix(in oklab, var(--accent-purple) 18%, transparent) 0%,
+    transparent 70%
+  );
+  animation: wc-drift-c 48s ease-in-out infinite alternate;
+}
+
+@keyframes wc-drift-a {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(7%, 6%, 0) scale(1.12);
+  }
+}
+@keyframes wc-drift-b {
+  from {
+    transform: translate3d(0, 0, 0) scale(1.06);
+  }
+  to {
+    transform: translate3d(-8%, 7%, 0) scale(0.95);
+  }
+}
+@keyframes wc-drift-c {
+  from {
+    transform: translate3d(-5%, 0, 0) scale(0.96);
+  }
+  to {
+    transform: translate3d(6%, -4%, 0) scale(1.1);
+  }
+}
+
+/* Lưới mảnh cho nền có "mặt phẳng" thay vì trôi nổi vô định. Mask làm nó tan
+   dần ra rìa nên không có đường cắt cứng ở mép màn hình. */
+.wc-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, var(--lp-border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--lp-border) 1px, transparent 1px);
+  background-size: 72px 72px;
+  -webkit-mask-image: radial-gradient(ellipse 62% 58% at 50% 45%, #000 0%, transparent 100%);
+  mask-image: radial-gradient(ellipse 62% 58% at 50% 45%, #000 0%, transparent 100%);
+  opacity: 0.55;
+}
+
+/* ---------------- Lớp giữa: bóng ba cột ---------------- */
+
+/* Hình bóng của một tấm bảng Kanban — ba khối dọc, đúng tỉ lệ ba cột của bảng
+   thật. Không thẻ, không chữ: đủ để mắt nhận ra "à, một tấm bảng", chưa tới
+   mức tranh chú ý với cái tên ở giữa.
+   Mask tan hai đầu để cột không đâm vào mép trên/dưới màn hình. */
+.wc-cols {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(12px, 2vw, 26px);
+  width: min(920px, 84%);
+  margin-inline: auto;
+  padding-block: 6vh;
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 22%, #000 72%, transparent);
+  mask-image: linear-gradient(180deg, transparent, #000 22%, #000 72%, transparent);
+}
+
+/* Hình cột được vẽ bằng VIỀN là chính, nền chỉ gợi ý.
+   Ở 4% nền / 5% viền thì đo ra là không ai nhìn thấy gì cả. Nhưng cách chữa
+   KHÔNG phải tô đậm cái nền: chữ nằm ĐÈ LÊN mấy cột này, nên mọi mảng đủ đậm
+   để thấy rõ cũng đủ đậm để kéo tụt tương phản của chữ.
+   Một đường viền 1px thì khác — nó vẽ ra được hình dáng, mà chữ gần như không
+   bao giờ rơi trúng đúng một đường mảnh. Nên viền tăng gấp ba, nền hạ xuống. */
+.wc-cols span {
+  border-radius: var(--radius-lg);
+  background: color-mix(in oklab, var(--lp-text) 3%, transparent);
+  border: 1px solid color-mix(in oklab, var(--lp-text) 15%, transparent);
+}
+
+/* ---------------- Lớp gần nhất: chữ bốn góc ---------------- */
+
+.wc-meta {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: clamp(18px, 3.5vw, 40px);
+  list-style: none;
+  pointer-events: none;
+}
+
+.wc-meta li {
+  position: absolute;
+  font-size: var(--lp-text-micro);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lp-text-3);
+  white-space: nowrap;
+  animation: wc-in var(--lp-dur-4) var(--lp-ease) 1520ms both;
+}
+
+.wc-bl {
+  bottom: clamp(18px, 3.5vw, 40px);
+  left: clamp(18px, 3.5vw, 40px);
+}
+.wc-br {
+  bottom: clamp(18px, 3.5vw, 40px);
+  right: clamp(18px, 3.5vw, 40px);
+}
+
+/* Dưới 860px thì bốn góc bắt đầu chạm vào phần chữ ở giữa và vào mũi tên cuộn.
+   Ẩn hẳn — chúng là chi tiết làm đầy khung, không phải nội dung; chen chúc thì
+   mất đúng cái tác dụng sinh ra chúng. */
+@media (max-width: 860px) {
+  .wc-meta {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wc-aurora {
+    animation: none;
+  }
+  .wc-meta li {
+    animation: none;
+  }
+}

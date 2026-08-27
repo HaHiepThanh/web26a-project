@@ -8,6 +8,43 @@
   vực tự xưng tên bằng `aria-label`.
 -->
 <section class="welcome" aria-label="Welcome to Horizon Hub Harmony">
+  <!--
+    BA LỚP CHIỀU SÂU, tất cả đều trang trí nên aria-hidden hết.
+
+    Trước khi có khối này, màn chào là một nền phẳng trơn — mà hero ngay sau nó
+    lại có cực quang, lưới và thẻ trôi. Hai màn liền nhau, một giàu một trống,
+    nên mắt đọc ra ngay là thiếu.
+
+    Xa nhất: cực quang, cùng kỹ thuật với hero nhưng DỊU HƠN MỘT BẬC — màn chào
+    là chỗ hít vào, hero mới là chỗ thở ra. Cũng nhờ vậy hai màn nối liền được
+    về thị giác thay vì như hai trang khác nhau.
+    Giữa: bóng ba cột Kanban. Không thẻ, không chữ — chỉ là hình bóng của một
+    tấm bảng, nói trước người ta sắp thấy gì mà không tốn một chữ nào. Ba chữ H
+    đứng giữa ba cột thành một bố cục có chủ ý.
+  -->
+  <div class="wc-bg" aria-hidden="true">
+    <span class="wc-aurora wc-a"></span>
+    <span class="wc-aurora wc-b"></span>
+    <span class="wc-aurora wc-c"></span>
+    <span class="wc-grid"></span>
+    <span class="wc-cols">
+      <span></span>
+      <span></span>
+      <span></span>
+    </span>
+  </div>
+
+  <!-- Gần nhất: chữ nhỏ ở HAI GÓC DƯỚI, biến khoảng trống thành một cái khung
+       có chủ ý thay vì chỗ chưa kịp điền.
+       Cố ý KHÔNG có hai góc trên: thanh nav cố định cao 69px đã chiếm trọn dải
+       đó với logo, sáu mục điều hướng và hai nút — đo được là hai nhãn trên rơi
+       vào y=39, tức nằm ĐÈ LÊN logo và bị nút "Start free" nuốt mất. Thanh nav
+       chính là cái khung phía trên rồi; chen thêm chữ vào chỉ tổ đè nhau. -->
+  <ul class="wc-meta">
+    <li class="wc-bl">Kanban, but quieter</li>
+    <li class="wc-br">Made by three students</li>
+  </ul>
+
   <div class="wc-inner" #inner>
     <p class="wc-eyebrow">Welcome</p>
 
