@@ -8,6 +8,7 @@ export * from './workspace.model';
 export * from './workspace-item.model';
 export * from './board.model';
 export * from './board-stats.model';
+export * from './board-filter.model';
 export * from './board-minimap.model';
 export * from './list.model';
 export * from './card.model';

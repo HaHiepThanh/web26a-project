@@ -2,7 +2,9 @@ import { Component, computed, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { LucideArrowLeft, LucideFolderKanban, LucideListFilter, LucidePin, LucideStar, LucideX, LucideChartLine } from '@lucide/angular';
-import { Board, BoardViewer, CardPriority, Label, List, User } from '../../../models';
+import {
+  Board, BoardViewer, CardPriority, DATE_OPTIONS, DateFilter, Label, List, NO_LABEL, UNASSIGNED, User,
+} from '../../../models';
 import { FLAG_PATH } from '../card-item/card-item';
 import { UserAvatar } from '../../shared/user-avatar/user-avatar';
 
@@ -87,15 +89,11 @@ export class BoardHeaderBar {
     { id: 'low', label: 'Low' },
   ];
 
-  readonly dateOptions = [
-    { id: 'overdue', label: 'Overdue' },
-    { id: 'today', label: 'Today' },
-    { id: 'week', label: 'Next 7 days' },
-    { id: 'no_due', label: 'No due date' },
-  ];
-
-  readonly UNASSIGNED = '__UNASSIGNED__';
-  readonly NO_LABEL = '__NO_LABEL__';
+  // Lấy từ models/board-filter.model.ts — KHÔNG khai lại ở đây. Bản khai riêng
+  // trước kia đã lệch chữ hoa/thường với board.ts và làm hỏng ba nút lọc.
+  readonly dateOptions = DATE_OPTIONS;
+  readonly UNASSIGNED = UNASSIGNED;
+  readonly NO_LABEL = NO_LABEL;
   readonly flagPath = FLAG_PATH;
 
   priorityTextClass(id: CardPriority): string {
@@ -118,7 +116,9 @@ export class BoardHeaderBar {
   readonly toggleFilterAssigneeEvent = output<string>();
   readonly toggleFilterLabelEvent = output<string>();
   readonly toggleFilterPriorityEvent = output<CardPriority>();
-  readonly toggleFilterDateEvent = output<any>();
+  // Kiểu chặt, KHÔNG dùng `any`: chính `any` ở đây đã che mất việc thanh này
+  // phát ra 'no_due' trong khi `DateFilter` chưa có mốc đó.
+  readonly toggleFilterDateEvent = output<DateFilter>();
 
   readonly clearFiltersEvent = output<void>();
   readonly openSaveFilterFormEvent = output<void>();

@@ -42,9 +42,15 @@ export class CreateSavedFilterDto {
   })
   priorities?: string[];
 
+  /**
+   * ⚠️ Danh sách này phải khớp `DateFilter` ở
+   *    frontend/src/app/models/board-filter.model.ts. Thiếu một mốc thì giao
+   *    diện vẫn bày ra nút, người dùng lọc được, nhưng bấm "Lưu bộ lọc" là
+   *    nhận 400 — hỏng ở một chỗ rất xa nơi gây ra.
+   */
   @IsOptional()
-  @IsIn(['overdue', 'today', 'week'], {
-    message: 'dateFilter must be overdue, today, or week.',
+  @IsIn(['overdue', 'today', 'week', 'no_due'], {
+    message: 'dateFilter must be overdue, today, week, or no_due.',
   })
   dateFilter?: string | null;
 }

@@ -5,12 +5,17 @@ import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import {
   Card,
   CardPriority,
+  DATE_OPTIONS,
+  DateFilter,
+  khopMocHan,
   Label,
   List,
   MinimapListGeom,
+  NO_LABEL,
   SuggestedCard,
   Toast,
   ToastType,
+  UNASSIGNED,
   User,
 } from '../../models';
 import { BoardStore } from '../../ngrx/board/board.store';
@@ -47,12 +52,8 @@ type ViewMode = 'status' | 'matrix';
 /** Row View (#14): cách trình bày khác của view "Theo trạng thái" — Lists xếp
  *  dọc, Cards trong mỗi List xếp ngang. Không phải 1 grouping mới (khác matrix). */
 type LayoutMode = 'column' | 'row';
-type DateFilter = 'overdue' | 'today' | 'week';
 /** Ký tự nối listId + priority thành 1 id cdkDropList duy nhất cho từng ô swimlane (#6). */
 const CELL_SEP = '__';
-/** Sentinel cho "Chưa gán ai" / "Chưa có nhãn nào" trong bộ lọc (#7). */
-const UNASSIGNED = '__unassigned__';
-const NO_LABEL = '__no_label__';
 
 interface SavedFilter {
   id: string;
@@ -82,11 +83,6 @@ const SORT_OPTIONS: { id: SortMode; label: string }[] = [
   { id: 'priority', label: 'Sort: Priority' },
   { id: 'due', label: 'Sort: Due date' },
   { id: 'new', label: 'Sort: Newest' },
-];
-const DATE_OPTIONS: { id: DateFilter; label: string }[] = [
-  { id: 'overdue', label: 'Overdue' },
-  { id: 'today', label: 'Today' },
-  { id: 'week', label: 'This week' },
 ];
 /** Mini Map (#13) chỉ hiện khi board đủ "lớn": nhiều list hoặc nội dung tràn viewport. */
 const MINIMAP_LIST_COUNT_THRESHOLD = 8;
@@ -380,15 +376,10 @@ export class Board {
     return true;
   }
 
+  /** Phép lọc thật nằm ở `khopMocHan` (models/board-filter.model.ts) — hàm thuần
+   *  nên test được; trang này chỉ cấp thêm "hôm nay". */
   private matchesDate(card: Card, mode: DateFilter): boolean {
-    if (!card.dueDate) return false;
-    if (mode === 'overdue') return card.dueDate < this.today;
-    if (mode === 'today') return card.dueDate === this.today;
-    const start = new Date(this.today);
-    const end = new Date(this.today);
-    end.setDate(end.getDate() + 6);
-    const due = new Date(card.dueDate);
-    return due >= start && due <= end;
+    return khopMocHan(card.dueDate, mode, this.today);
   }
 
   private allCards(): Card[] {

@@ -173,21 +173,21 @@
              mà nút nằm gần mép phải màn hình — nên trên điện thoại bảng thò sang
              trái ra ngoài khung nhìn. Đo ở 360px: bảng nằm ở x −228 tới 92, tức
              hơn hai phần ba ở ngoài màn hình và không ai chạm tới được. -->
-        <div class="absolute right-0 top-[42px] z-50 max-h-[80vh] w-[320px] overflow-y-auto rounded-2xl border border-base-300/70 bg-base-100 p-3.5 shadow-2xl
+        <div class="absolute right-0 top-[42px] z-50 max-h-[80vh] w-[320px] overflow-y-auto rounded-md border border-base-300/70 bg-base-100 p-3.5 shadow-2xl
                     max-md:fixed max-md:inset-x-3 max-md:bottom-3 max-md:top-auto max-md:w-auto max-md:max-h-[50vh]">
           <div class="mb-3 flex items-center justify-between">
             <span class="flex items-center gap-1.5 text-xs font-black text-base-content">
               <svg lucideListFilter class="h-3.5 w-3.5 text-primary" [strokeWidth]="2.2"></svg> Card filters
             </span>
-            <button type="button" class="btn btn-ghost btn-circle btn-xs" (click)="toggleFilter.emit()" aria-label="Close filters">
+            <button type="button" class="btn btn-ghost btn-circle btn-xs rounded-md" (click)="toggleFilter.emit()" aria-label="Close filters">
               <svg lucideX class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg>
             </button>
           </div>
 
           @if (savedFilters().length || savedHighlightGroups().length) {
-            <div class="mb-3.5 flex flex-wrap gap-1.5 rounded-xl border border-base-300/70 bg-base-200/40 p-2">
+            <div class="mb-3.5 flex flex-wrap gap-1.5 rounded-md border border-base-300/70 bg-base-200/40 p-2">
               @for (f of savedFilters(); track f.id) {
-                <button type="button" class="btn btn-xs gap-1.5 rounded-full" [class]="activeSavedFilterId() === f.id ? 'btn-primary' : 'btn-outline'" (click)="applySavedFilterEvent.emit(f)" title="Saved filter">
+                <button type="button" class="btn btn-xs gap-1.5 rounded-md" [class]="activeSavedFilterId() === f.id ? 'btn-primary' : 'btn-outline'" (click)="applySavedFilterEvent.emit(f)" title="Saved filter">
                   <svg lucideStar class="h-2.5 w-2.5" [strokeWidth]="2.4"></svg> {{ f.name }}
                   <span class="opacity-60 hover:opacity-100" (click)="removeSavedFilterEvent.emit({ id: f.id, event: $event })">
                     <svg lucideX class="h-2.5 w-2.5" [strokeWidth]="3"></svg>
@@ -195,7 +195,7 @@
                 </button>
               }
               @for (g of savedHighlightGroups(); track g.id) {
-                <button type="button" class="btn btn-xs gap-1.5 rounded-full" [class]="activeHighlightGroupId() === g.id ? 'btn-primary' : 'btn-outline'" (click)="applyHighlightGroupEvent.emit(g)" title="Manual highlight group ({{ g.cardIds.length }} card(s))">
+                <button type="button" class="btn btn-xs gap-1.5 rounded-md" [class]="activeHighlightGroupId() === g.id ? 'btn-primary' : 'btn-outline'" (click)="applyHighlightGroupEvent.emit(g)" title="Manual highlight group ({{ g.cardIds.length }} card(s))">
                   <svg lucidePin class="h-2.5 w-2.5" [strokeWidth]="2.4"></svg> {{ g.name }}
                   <span class="opacity-60 hover:opacity-100" (click)="removeHighlightGroupEvent.emit({ id: g.id, event: $event })">
                     <svg lucideX class="h-2.5 w-2.5" [strokeWidth]="3"></svg>
@@ -209,15 +209,15 @@
             <div class="mb-1.5 text-2xs font-bold uppercase tracking-wide text-base-content/45">Assignee</div>
             <div class="flex flex-wrap gap-1.5">
               @for (m of members(); track m.id) {
-                <button type="button" class="btn btn-xs gap-1.5 rounded-full pl-1" [class]="filterAssigneeIds().includes(m.id) ? 'btn-primary' : 'btn-outline'" (click)="toggleFilterAssigneeEvent.emit(m.id)">
-                  <span class="flex h-4 w-4 items-center justify-center rounded-full text-[8px] font-black"
+                <button type="button" class="btn btn-xs gap-1.5 rounded-md pl-1" [class]="filterAssigneeIds().includes(m.id) ? 'btn-primary' : 'btn-outline'" (click)="toggleFilterAssigneeEvent.emit(m.id)">
+                  <span class="flex h-4 w-4 items-center justify-center rounded text-[8px] font-black"
                     [class]="filterAssigneeIds().includes(m.id) ? 'bg-white/25 text-white' : 'bg-base-300 text-base-content/70'">
                     {{ (m.displayName ?? m.email).charAt(0).toUpperCase() }}
                   </span>
                   {{ m.displayName ?? m.email }}
                 </button>
               }
-              <button type="button" class="btn btn-xs rounded-full" [class]="filterAssigneeIds().includes(UNASSIGNED) ? 'btn-primary' : 'btn-outline'" (click)="toggleFilterAssigneeEvent.emit(UNASSIGNED)">
+              <button type="button" class="btn btn-xs rounded-md" [class]="filterAssigneeIds().includes(UNASSIGNED) ? 'btn-primary' : 'btn-outline'" (click)="toggleFilterAssigneeEvent.emit(UNASSIGNED)">
                 Unassigned
               </button>
             </div>
@@ -227,11 +227,11 @@
             <div class="mb-1.5 text-2xs font-bold uppercase tracking-wide text-base-content/45">Labels</div>
             <div class="flex flex-wrap gap-1.5">
               @for (lb of labels(); track lb.id) {
-                <button type="button" class="btn btn-xs gap-1.5 rounded-full" [class]="filterLabelIds().includes(lb.id) ? 'btn-primary' : 'btn-outline'" (click)="toggleFilterLabelEvent.emit(lb.id)">
-                  <span class="h-2 w-2 shrink-0 rounded-full ring-1 ring-black/10" [style.background]="lb.color"></span>{{ lb.name }}
+                <button type="button" class="btn btn-xs gap-1.5 rounded-md" [class]="filterLabelIds().includes(lb.id) ? 'btn-primary' : 'btn-outline'" (click)="toggleFilterLabelEvent.emit(lb.id)">
+                  <span class="h-2 w-2 shrink-0 rounded-xs ring-1 ring-black/10" [style.background]="lb.color"></span>{{ lb.name }}
                 </button>
               }
-              <button type="button" class="btn btn-xs rounded-full" [class]="filterLabelIds().includes(NO_LABEL) ? 'btn-primary' : 'btn-outline'" (click)="toggleFilterLabelEvent.emit(NO_LABEL)">
+              <button type="button" class="btn btn-xs rounded-md" [class]="filterLabelIds().includes(NO_LABEL) ? 'btn-primary' : 'btn-outline'" (click)="toggleFilterLabelEvent.emit(NO_LABEL)">
                 No labels
               </button>
             </div>
@@ -241,7 +241,7 @@
             <div class="mb-1.5 text-2xs font-bold uppercase tracking-wide text-base-content/45">Priority</div>
             <div class="flex flex-wrap gap-1.5">
               @for (p of priorities; track p.id) {
-                <button type="button" class="btn btn-xs gap-1.5 rounded-full"
+                <button type="button" class="btn btn-xs gap-1.5 rounded-md"
                   [class]="filterPriorities().includes(p.id) ? priorityActiveClass(p.id) : 'btn-outline ' + priorityTextClass(p.id)"
                   (click)="toggleFilterPriorityEvent.emit(p.id)">
                   <svg class="h-2.5 w-2.5 shrink-0" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path [attr.d]="flagPath" /></svg>
@@ -255,7 +255,7 @@
             <div class="mb-1.5 text-2xs font-bold uppercase tracking-wide text-base-content/45">Date</div>
             <div class="flex flex-wrap gap-1.5">
               @for (d of dateOptions; track d.id) {
-                <button type="button" class="btn btn-xs rounded-full" [class]="filterDate() === d.id ? 'btn-primary' : 'btn-outline'" (click)="toggleFilterDateEvent.emit(d.id)">
+                <button type="button" class="btn btn-xs rounded-md" [class]="filterDate() === d.id ? 'btn-primary' : 'btn-outline'" (click)="toggleFilterDateEvent.emit(d.id)">
                   {{ d.label }}
                 </button>
               }
@@ -272,20 +272,20 @@
           @if (hasActiveFilter()) {
             @if (!showSaveFilterForm()) {
               <!-- data-tour: neo coach mark gợi ý lưu bộ lọc. -->
-              <button type="button" data-tour="save-filter" class="btn btn-dash btn-xs btn-block mt-2.5 gap-1 text-2xs font-bold hover:btn-primary" (click)="openSaveFilterFormEvent.emit()">
+              <button type="button" data-tour="save-filter" class="btn btn-dash btn-xs btn-block mt-2.5 gap-1 text-2xs font-bold hover:btn-primary rounded-md" (click)="openSaveFilterFormEvent.emit()">
                 <svg lucideStar class="h-3 w-3" [strokeWidth]="2.4"></svg> Save as quick filter</button>
             } @else {
               <div class="mt-2.5 flex gap-1.5">
                 <input
                   type="text"
-                  class="input input-bordered input-sm flex-1 rounded-field"
+                  class="input input-bordered input-sm flex-1 rounded-md"
                   placeholder="Name this filter..."
                   [ngModel]="newFilterName()"
                   (ngModelChange)="newFilterNameChange.emit($event)"
                   (keydown.enter)="saveCurrentFilterEvent.emit()"
                 />
-                <button type="button" class="btn btn-primary btn-sm rounded-field" [disabled]="!newFilterName().trim()" (click)="saveCurrentFilterEvent.emit()">Save</button>
-                <button type="button" class="btn btn-ghost btn-sm rounded-field" (click)="cancelSaveFilterFormEvent.emit()">Cancel</button>
+                <button type="button" class="btn btn-primary btn-sm rounded-md" [disabled]="!newFilterName().trim()" (click)="saveCurrentFilterEvent.emit()">Save</button>
+                <button type="button" class="btn btn-ghost btn-sm rounded-md" (click)="cancelSaveFilterFormEvent.emit()">Cancel</button>
               </div>
             }
           }
