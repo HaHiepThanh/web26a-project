@@ -44,6 +44,8 @@ export interface UserRow {
   avatar_url: string | null;
   /** Tour hướng dẫn. NULL = tài khoản có trước migration 0007, hoặc chưa chạy. */
   onboarding_state: unknown | null;
+  /** Đã nối Google chưa (migration 0009). NULL = chưa. */
+  google_linked_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -72,6 +74,8 @@ export interface UserProfile {
   jobTitle: string | null;
   avatarUrl: string | null;
   onboardingState: unknown | null;
+  /** Đã nối tài khoản Google chưa — quyết định có bật được nút soạn lịch họp không. */
+  googleLinked: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -86,6 +90,7 @@ export function toUserProfile(row: UserRow): UserProfile {
     jobTitle: row.job_title,
     avatarUrl: row.avatar_url,
     onboardingState: row.onboarding_state ?? null,
+    googleLinked: !!row.google_linked_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -171,6 +176,17 @@ export class AuthService {
     if (!row.display_name && user.displayName)
       patch.display_name = user.displayName;
     if (!row.avatar_url && user.avatarUrl) patch.avatar_url = user.avatarUrl;
+
+    // Liên kết Google — nguồn là claim `firebase.identities` của ID token đã
+    // verify (xem firebase-auth.guard.ts), KHÔNG phải body request.
+    //
+    // Ghi cả hai chiều: nối thì đóng dấu thời gian, gỡ thì xoá về NULL. Chỉ ghi
+    // khi LỆCH, vì `syncProfile` chạy ở mọi `GET /auth/me` — ghi vô điều kiện là
+    // một UPDATE thừa mỗi lần mở app, và `updated_at` sẽ nhảy liên tục.
+    const daNoi = user.googleLinked === true;
+    if (daNoi !== !!row.google_linked_at) {
+      patch.google_linked_at = daNoi ? new Date().toISOString() : null;
+    }
 
     if (Object.keys(patch).length > 0) {
       const { data: updated, error: updateError } = await this.supabase.client

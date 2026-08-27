@@ -1,0 +1,174 @@
+@if (isOpen()) {
+<div class="modal modal-open z-[1000] p-4 backdrop-blur-[2px]" (click)="close.emit()">
+  <div class="modal-box max-h-[90vh] max-w-[560px] border border-base-300" (click)="$event.stopPropagation()">
+
+    <div class="mb-5 flex items-center justify-between">
+      <h3 class="flex items-center gap-2 text-lg font-black text-base-content">
+        <svg lucideCalendarPlus class="h-5 w-5 text-primary" [strokeWidth]="2.2"></svg>
+        Schedule a meeting
+      </h3>
+      <button class="btn btn-circle btn-ghost btn-sm" (click)="close.emit()" aria-label="Close">
+        <svg lucideX class="h-4 w-4" [strokeWidth]="2.4"></svg>
+      </button>
+    </div>
+
+    <!-- Tiêu đề -->
+    <div class="mb-4">
+      <label class="mb-1.5 block text-xs font-black uppercase tracking-wider" for="meet-title">
+        Title <span class="text-error">*</span>
+      </label>
+      <input id="meet-title" type="text" maxlength="200"
+        class="input input-bordered w-full rounded-md bg-base-100 text-sm font-bold shadow-xs"
+        [class.input-error]="loiTruong()['title']"
+        [ngModel]="title()" (ngModelChange)="title.set($event)" name="title"
+        placeholder="e.g. Sprint review" />
+      @if (loiTruong()['title']) {
+        <p class="mt-1 px-1 text-2xs font-semibold text-error">{{ loiTruong()['title'] }}</p>
+      }
+    </div>
+
+    <!-- Thời gian -->
+    <div class="mb-1 grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div>
+        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider" for="meet-date">Date</label>
+        <input id="meet-date" type="date"
+          class="input input-bordered w-full rounded-md bg-base-100 text-sm font-semibold shadow-xs"
+          [class.input-error]="loiTruong()['time']"
+          [ngModel]="ngay()" (ngModelChange)="ngay.set($event)" name="ngay" />
+      </div>
+      <div>
+        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider" for="meet-time">Start</label>
+        <input id="meet-time" type="time"
+          class="input input-bordered w-full rounded-md bg-base-100 text-sm font-semibold shadow-xs"
+          [class.input-error]="loiTruong()['time']"
+          [ngModel]="gio()" (ngModelChange)="gio.set($event)" name="gio" />
+      </div>
+      <div>
+        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider" for="meet-len">Duration</label>
+        <select id="meet-len"
+          class="select select-bordered w-full rounded-md bg-base-100 text-sm font-semibold shadow-xs"
+          [ngModel]="phutKeoDai()" (ngModelChange)="phutKeoDai.set(+$event)" name="phutKeoDai">
+          @for (p of thoiLuong; track p) {
+            <option [value]="p">{{ p }} min</option>
+          }
+        </select>
+      </div>
+    </div>
+    @if (loiTruong()['time']) {
+      <p class="mb-3 px-1 text-2xs font-semibold text-error">{{ loiTruong()['time'] }}</p>
+    } @else {
+      <p class="mb-3 px-1 text-2xs font-semibold text-base-content/50">Times are in {{ muiGio }}</p>
+    }
+
+    <!-- Nhắc trước -->
+    <div class="mb-4">
+      <label class="mb-1.5 block text-xs font-black uppercase tracking-wider" for="meet-remind">Reminder</label>
+      <select id="meet-remind"
+        class="select select-bordered w-full rounded-md bg-base-100 text-sm font-semibold shadow-xs"
+        [ngModel]="nhacTruoc()" (ngModelChange)="nhacTruoc.set(+$event)" name="nhacTruoc">
+        @for (m of mocNhac; track m.phut) {
+          <option [value]="m.phut">{{ m.nhan }}</option>
+        }
+      </select>
+      <p class="mt-1 px-1 text-2xs font-semibold text-base-content/50">
+        Rings the bell here, and Google sends its own popup and email reminder.
+      </p>
+    </div>
+
+    <!-- Mô tả -->
+    <div class="mb-4">
+      <label class="mb-1.5 block text-xs font-black uppercase tracking-wider" for="meet-desc">Description</label>
+      <textarea id="meet-desc" maxlength="2000"
+        class="textarea textarea-bordered h-20 w-full resize-none overflow-y-auto rounded-md bg-base-100 text-sm shadow-xs"
+        [ngModel]="description()" (ngModelChange)="description.set($event)" name="description"
+        placeholder="Agenda, links, anything the attendees should read first"></textarea>
+    </div>
+
+    <!-- Phòng Meet -->
+    <label class="mb-4 flex cursor-pointer items-center gap-3 rounded-md border border-base-300 px-3 py-2.5">
+      <input type="checkbox" class="checkbox checkbox-primary checkbox-sm"
+        [ngModel]="kemMeet()" (ngModelChange)="kemMeet.set($event)" name="kemMeet" />
+      <svg lucideVideo class="h-4 w-4 text-base-content/60" [strokeWidth]="2.2"></svg>
+      <span class="text-sm font-bold">Add a Google Meet room</span>
+    </label>
+
+    <!-- Người dự -->
+    <div class="mb-4">
+      <div class="mb-1.5 flex items-center justify-between">
+        <span class="text-xs font-black uppercase tracking-wider">
+          Invite <span class="text-error">*</span>
+        </span>
+        @if (soNguoiMoiDuoc() > 0) {
+          <button type="button" class="btn btn-ghost btn-xs" (click)="chonHet()">
+            {{ daChon().length === soNguoiMoiDuoc() ? 'Clear all' : 'Select all' }}
+          </button>
+        }
+      </div>
+
+      @if (dangTaiNguoi()) {
+        <div class="flex flex-col gap-2">
+          @for (i of [1, 2, 3]; track i) {
+            <div class="skeleton h-11 w-full rounded-md"></div>
+          }
+        </div>
+      } @else {
+        <div class="max-h-52 overflow-y-auto rounded-md border border-base-300">
+          @for (u of ungVien(); track u.id) {
+            <label class="flex items-center gap-3 border-b border-base-200 px-3 py-2 last:border-b-0"
+              [class.cursor-pointer]="u.moiDuoc"
+              [class.opacity-50]="!u.moiDuoc"
+              [attr.title]="u.moiDuoc ? null : u.ten + ' has not linked a Google account yet, so we cannot put this meeting in their Google Calendar. Ask them to link it in Settings -> Profile.'">
+              <input type="checkbox" class="checkbox checkbox-primary checkbox-sm"
+                [disabled]="!u.moiDuoc"
+                [checked]="daChon().includes(u.id)"
+                (change)="doiChon(u.id)" />
+              <app-user-avatar [userId]="u.id" [name]="u.ten" [avatarUrl]="u.avatarUrl ?? undefined" [size]="26" />
+              <span class="min-w-0 flex-1">
+                <span class="block truncate text-sm font-bold">{{ u.ten }}</span>
+                <span class="block truncate text-2xs text-base-content/50">{{ u.email }}</span>
+              </span>
+              @if (!u.moiDuoc) {
+                <span class="badge badge-ghost badge-sm shrink-0 font-semibold">No Google</span>
+              }
+            </label>
+          } @empty {
+            <p class="px-3 py-4 text-center text-sm text-base-content/50">No one else can see this board yet.</p>
+          }
+        </div>
+      }
+
+      @if (loiTruong()['people']) {
+        <p class="mt-1 px-1 text-2xs font-semibold text-error">{{ loiTruong()['people'] }}</p>
+      }
+      @if (coNguoiChuaNoi()) {
+        <p class="mt-1.5 px-1 text-2xs font-semibold text-base-content/50">
+          People without a linked Google account cannot be invited — ask them to link it in Settings &rarr; Profile.
+        </p>
+      }
+    </div>
+
+    @if (loi()) {
+      <div role="alert" class="alert alert-error mb-4 py-2.5">
+        <svg lucideTriangleAlert class="h-4 w-4 shrink-0" [strokeWidth]="2.2"></svg>
+        <span class="text-xs font-semibold">{{ loi() }}</span>
+      </div>
+    }
+
+    <div class="modal-action mt-2">
+      <button type="button" class="btn btn-ghost btn-sm" [disabled]="dangGui()" (click)="close.emit()">
+        Cancel
+      </button>
+      <button type="button" class="btn btn-primary btn-sm gap-1.5" [disabled]="dangGui()" (click)="guiDi()">
+        @if (dangGui()) {
+          <span class="loading loading-spinner loading-xs"></span>
+          Creating&hellip;
+        } @else {
+          <svg lucideCalendarPlus class="h-4 w-4" [strokeWidth]="2.2"></svg>
+          Create &amp; send invites
+        }
+      </button>
+    </div>
+
+  </div>
+</div>
+}

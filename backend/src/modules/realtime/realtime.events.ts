@@ -50,7 +50,35 @@ export type UserEventType =
   /** Được giao phụ trách một thẻ — chuông thông báo ở Header sáng lên. */
   | 'card.assigned'
   /** Ai đó trong tổ chức vừa đổi avatar hoặc tên hiển thị. */
-  | 'user.updated';
+  | 'user.updated'
+  /** Có người mở cuộc họp trên board mình tham gia. */
+  | 'meeting.started'
+  /** Có người @nhắc tên mình trong chat của một board. */
+  | 'chat.mention'
+  /** Có người hẹn một cuộc họp và mời mình — báo NGAY lúc tạo. */
+  | 'meeting.scheduled'
+  /** Cuộc họp mình được mời vừa bị huỷ. */
+  | 'meeting.canceled';
+
+/**
+ * Payload của `meeting.scheduled` / `meeting.canceled`.
+ *
+ * Đủ để dựng câu thông báo và điều hướng tới `/:orgSlug/board/:boardId` mà
+ * không phải gọi thêm API — cùng nguyên tắc với `CardAssignedPayload`.
+ *
+ * `startAt` là ISO 8601 (thời điểm tuyệt đối). Trình duyệt tự đổi sang giờ địa
+ * phương của người xem, nên hai người ở hai múi giờ đều đọc ra đúng giờ của
+ * mình mà server không phải làm gì.
+ */
+export interface MeetingPingPayload {
+  meetingId: string;
+  boardId: string;
+  boardName: string;
+  orgSlug: string;
+  title: string;
+  startAt: string;
+  byUserName: string;
+}
 
 /**
  * Payload của `card.assigned`.

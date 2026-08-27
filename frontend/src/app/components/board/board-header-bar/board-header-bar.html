@@ -43,32 +43,38 @@
          3. Chưa có + mình là thành viên thường → KHÔNG hiện gì. Hiện một nút
             bấm vào chỉ để báo "bạn không có quyền" là trêu người dùng. -->
     @if (meetUrl(); as link) {
-      <a
-        [href]="link"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="btn btn-success btn-sm gap-1.5"
-        title="Open the Google Meet room for this board"
-      >
-        <svg class="h-[15px] w-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M15 10l4.55-2.27A1 1 0 0121 8.62v6.76a1 1 0 01-1.45.89L15 14M5 6h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z" />
-        </svg>
-        Join meeting
-      </a>
-      @if (canManageMeet()) {
-        <button
-          type="button"
-          class="btn btn-ghost btn-sm px-2"
-          [disabled]="meetBusy()"
-          (click)="endMeet.emit()"
-          title="End the meeting for this board"
-          aria-label="End the meeting for this board"
+      <!-- `join` của daisyUI: hai nút dính liền thành MỘT khối có viền chung,
+           thay vì hai nút rời nhau trông như hai chức năng chẳng liên quan.
+           Người quản lý không có quyền gỡ thì chỉ còn một nút — `join` với một
+           con vẫn bo góc bình thường, không phải xử lý riêng. -->
+      <div class="join">
+        <a
+          [href]="link"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn btn-success btn-sm join-item gap-1.5"
+          title="Open the Google Meet room for this board"
         >
-          <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
-            <path d="M18 6L6 18M6 6l12 12" />
+          <svg class="h-[15px] w-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 10l4.55-2.27A1 1 0 0121 8.62v6.76a1 1 0 01-1.45.89L15 14M5 6h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z" />
           </svg>
-        </button>
-      }
+          Join meeting
+        </a>
+        @if (canManageMeet()) {
+          <button
+            type="button"
+            class="btn btn-success btn-sm join-item border-l border-l-success-content/25 px-2"
+            [disabled]="meetBusy()"
+            (click)="endMeet.emit()"
+            title="End the meeting for this board"
+            aria-label="End the meeting for this board"
+          >
+            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+        }
+      </div>
     } @else if (canManageMeet()) {
       <!-- Chưa liên kết Google thì KHOÁ nút, không phải ẩn.
            Ẩn đi thì người dùng chẳng có đường nào biết là cần liên kết; khoá
@@ -93,6 +99,29 @@
           @if (!googleLinked()) {
             <span class="badge badge-warning badge-xs font-bold">Google required</span>
           }
+        }
+      </button>
+    }
+
+    <!-- Hẹn lịch họp. Cùng điều kiện quyền + liên kết Google với nút Meet ở
+         trên, nhưng hiện ĐỘC LẬP với việc có đang họp hay không: đang họp bây
+         giờ không liên quan gì tới việc hẹn một cuộc cho tuần sau. -->
+    @if (canManageMeet()) {
+      <button
+        type="button"
+        class="btn btn-outline btn-sm gap-1.5"
+        [disabled]="!googleLinked()"
+        (click)="openSchedule.emit()"
+        [title]="googleLinked()
+          ? 'Schedule a meeting on Google Calendar and invite people'
+          : 'Link your Google account in Settings -> Profile to schedule meetings'"
+      >
+        <svg class="h-[15px] w-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2zM12 14v4M10 16h4" />
+        </svg>
+        Schedule
+        @if (!googleLinked()) {
+          <span class="badge badge-warning badge-xs font-bold">Google required</span>
         }
       </button>
     }

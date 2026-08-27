@@ -25,6 +25,7 @@ import { StatsModule } from './modules/stats/stats.module';
 import { AiModule } from './modules/ai/ai.module';
 import { TaskSuggestionsModule } from './modules/task-suggestions/task-suggestions.module';
 import { InviteLinksModule } from './modules/invite-links/invite-links.module';
+import { MeetingsModule } from './modules/meetings/meetings.module';
 
 @Module({
   imports: [
@@ -57,6 +58,8 @@ import { InviteLinksModule } from './modules/invite-links/invite-links.module';
     AiModule,
     TaskSuggestionsModule,
     InviteLinksModule,
+    // Lịch họp Google Calendar — bản sao phía mình để chuông nhắc trước giờ.
+    MeetingsModule,
     // Bonus
     ActivityModule,
     CommentsModule,

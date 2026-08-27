@@ -1,4 +1,4 @@
-# Cấu hình Google Cloud cho tính năng "Mở cuộc họp" (Google Meet)
+# Cấu hình Google Cloud cho cuộc họp & lịch họp (Google Meet + Calendar)
 
 > **Trạng thái: code đã xong và đã test. File này là phần CÒN LẠI — những bước
 > chỉ chủ tài khoản Google mới làm được.**
@@ -225,14 +225,117 @@ khi đã tạo. Muốn xoá thì tự xoá trong Google Calendar.
 
 ---
 
+---
+
+## 7. Hẹn lịch họp (nút **Schedule**) — cần thêm gì?
+
+### Câu trả lời ngắn: **không cần thêm gì cả.**
+
+Nút *Schedule* dùng **đúng scope đã khai ở mục 3** — `calendar.events`. Cùng
+một quyền đó vừa tạo phòng Meet "họp ngay", vừa tạo sự kiện có mời người và
+gửi thư. Đã cấu hình xong cho Meet thì lịch họp chạy luôn, không phải vào
+Google Cloud Console lần nữa.
+
+### Thư mời do ai gửi?
+
+**Google gửi, không phải app này.** Không có SMTP, không có dịch vụ mail nào
+được dựng lên. App truyền `sendUpdates=all` khi tạo sự kiện, và Google gửi
+đúng lá thư Calendar quen thuộc — có nút *Yes / No / Maybe*. Người nhận bấm
+đồng ý thì lịch vào thẳng Google Calendar của họ.
+
+### Ai mời được, ai không
+
+Chỉ chọn được người **đã liên kết Google** trong app (Settings → Profile).
+Người chưa liên kết vẫn hiện trong danh sách nhưng bị khoá, kèm nhãn
+*No Google*.
+
+Lý do: chưa liên kết thì app không có gì bảo đảm email của họ là một tài
+khoản Google, nên không hứa được rằng lời mời sẽ hiện trong Google Calendar
+của họ. Khoá lại là để cái nút giữ đúng lời hứa của nó — chọn được nghĩa là
+chắc chắn chạy.
+
+> Muốn nới ra thành "cảnh báo thay vì khoá" thì sửa `moiDuoc` trong
+> `schedule-meeting-modal.ts` — Google thật ra **mời được mọi email**.
+
+### ⚠️ Rủi ro riêng của tài khoản trường (`@sinhvien.hoasen.edu.vn`)
+
+Đây là tài khoản **Google Workspace của trường**, không phải Gmail cá nhân.
+Một số trường đặt chính sách **chặn mời người ngoài miền**. Nếu cả nhóm cùng
+dùng mail trường thì không sao; mời ra ngoài mà bị chặn thì đó là chính sách
+của quản trị viên trường, không phải lỗi cấu hình ở đây.
+
+Việc tạo Meet đã chạy được nghĩa là scope không có vấn đề gì.
+
+### Giới hạn 100 test user vẫn còn nguyên
+
+App vẫn ở chế độ *Testing*, nên **chỉ những người trong danh sách Test users**
+mới cấp quyền được. Người ngoài danh sách sẽ không liên kết Google được, và
+do đó không mời vào lịch được. Xem lại mục 2.
+
+### Nhắc trước giờ họp — hai đường song song
+
+| Đường | Ai lo | Tới được khi không mở app? |
+|---|---|---|
+| Popup + mail của Google Calendar | Google | ✅ có |
+| Chuông 🔔 trong app | App tự đếm giờ | ❌ phải đang mở app |
+
+Chuông **phải tự đếm giờ** vì nhắc của Google chạy trong hệ thống Google và
+không gọi về server này. Google chỉ có một cơ chế đẩy duy nhất là
+`events.watch`, mà nó chỉ bắn khi sự kiện **bị sửa** — không bắn khi tới giờ
+nhắc. Vì vậy lịch họp được lưu một bản sao ở Supabase
+(`migrations/0009_lich_hop_google_calendar.sql`).
+
+### Trạng thái nhận lời — app KHÔNG hiển thị
+
+Người ta bấm *Yes/No* bên Google và Google không báo về đây. Muốn biết thì
+phải đọc ngược sự kiện bằng token OAuth của người tạo, mà token sống ~1 giờ và
+chỉ nằm trong tab của họ — một cột "đã nhận lời" sẽ đúng lúc mới tạo rồi sai
+vĩnh viễn. **Xem trạng thái nhận lời ở Google Calendar**, nơi nó luôn đúng.
+
+### Huỷ lịch
+
+| Ai huỷ | Bên mình | Bên Google |
+|---|---|---|
+| Người **tạo** | ✅ gỡ | ✅ xoá + gửi thư báo huỷ |
+| Admin/owner khác | ✅ gỡ | ❌ **vẫn còn** |
+
+Calendar API xoá sự kiện theo lịch `primary` của chủ token, nên người khác
+không xoá hộ được. Giao diện nói thẳng điều này thay vì im lặng để người dùng
+tưởng đã xong.
+
+---
+
 ## Phụ lục — phần code liên quan
+
+**Chung cho cả hai tính năng**
 
 | Việc | Ở đâu |
 |---|---|
+| Liên kết Google, mở popup, xin token, dịch lỗi | `frontend/src/app/services/google-oauth.service.ts` |
+| Test cho phần trên (19 bài) | `frontend/src/app/services/google-oauth.service.spec.ts` |
 | Ô liên kết Google | `frontend/src/app/components/settings/profile-tab/profile-tab.html` |
-| Gọi Google, xử lý popup và lỗi | `frontend/src/app/services/google-meet.service.ts` |
-| Test cho phần trên (15 bài) | `frontend/src/app/services/google-meet.service.spec.ts` |
 | Nút trên thanh board | `frontend/src/app/components/board/board-header-bar/board-header-bar.html` |
+| Suy ra "đã nối Google" từ ID token | `backend/src/common/firebase/firebase-auth.guard.ts` (`coNoiGoogle`) |
+
+**Họp ngay (Meet)**
+
+| Việc | Ở đâu |
+|---|---|
+| Tạo phòng Meet | `frontend/src/app/services/google-meet.service.ts` |
+| Test (6 bài) | `frontend/src/app/services/google-meet.service.spec.ts` |
 | Nối nút với luồng tạo họp | `frontend/src/app/pages/board/board.ts` (`startMeet` / `endMeet`) |
 | Lưu link, chặn link độc hại | `backend/src/modules/boards/dto/update-board.dto.ts` |
 | Cột database | `backend/migrations/0008_lien_ket_google_meet.sql` (đã chạy) |
+
+**Hẹn lịch (Calendar)**
+
+| Việc | Ở đâu |
+|---|---|
+| Tạo/xoá sự kiện, mời người, gửi thư | `frontend/src/app/services/google-calendar.service.ts` |
+| Hộp thoại soạn lịch | `frontend/src/app/components/board/schedule-meeting-modal/` |
+| Nhắc trước giờ qua chuông | `frontend/src/app/services/meeting-reminder.service.ts` |
+| Test cho phần nhắc (13 bài) | `frontend/src/app/services/meeting-reminder.service.spec.ts` |
+| Lưu lịch, lọc người dự, báo chuông | `backend/src/modules/meetings/meetings.service.ts` |
+| Chặn dữ liệu xấu | `backend/src/modules/meetings/dto/create-meeting.dto.ts` |
+| Bảng database | `backend/migrations/0009_lich_hop_google_calendar.sql` (đã chạy) |
+| Kiểm tra đầu-cuối (38 bài) | `backend/scripts/kiem-tra-lich-hop.mjs` — `npm run kiem-tra:lich-hop` |

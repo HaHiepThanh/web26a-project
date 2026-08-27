@@ -28,6 +28,7 @@ interface JoinedUser {
   email: string;
   display_name: string | null;
   avatar_url: string | null;
+  google_linked_at?: string | null;
 }
 
 /** Khối `users(...)` Supabase join kèm → camelCase. */
@@ -39,6 +40,10 @@ function toUser(row: unknown) {
     email: u.email,
     displayName: u.display_name,
     avatarUrl: u.avatar_url,
+    // Bộ chọn người mời họp cần biết ai nối Google để bật/tắt dòng của họ. Trả
+    // BOOLEAN chứ không trả `google_linked_at`: thời điểm ai đó nối tài khoản
+    // là thông tin riêng của họ, giao diện không dùng tới.
+    googleLinked: !!u.google_linked_at,
   };
 }
 
@@ -613,11 +618,11 @@ export class BoardsService {
       const { data: rows } = restricted
         ? await this.supabase.client
             .from('workspace_members')
-            .select('user_id, users(id, email, display_name, avatar_url)')
+            .select('user_id, users(id, email, display_name, avatar_url, google_linked_at)')
             .eq('workspace_id', board.workspaceId)
         : await this.supabase.client
             .from('organization_members')
-            .select('user_id, users(id, email, display_name, avatar_url)')
+            .select('user_id, users(id, email, display_name, avatar_url, google_linked_at)')
             .eq('org_id', data?.org_id as string);
       return (rows ?? []).map((r) => ({
         userId: r.user_id as string,
@@ -627,7 +632,7 @@ export class BoardsService {
 
     const { data: rows } = await this.supabase.client
       .from('board_members')
-      .select('user_id, users(id, email, display_name, avatar_url)')
+      .select('user_id, users(id, email, display_name, avatar_url, google_linked_at)')
       .eq('board_id', id);
     return (rows ?? []).map((r) => ({
       userId: r.user_id as string,
@@ -737,6 +742,9 @@ export class BoardsService {
     if (phaiGhiThanhVien) await this.ghiThanhVien(id, ids);
 
     const updated = (await this.kyAnhNen([toBoard(row, ids)]))[0];
+
+    // Vừa MỞ cuộc họp (không phải gỡ) → báo chuông cho cả board.
+    if (changes.meetUrl) void this.baoCoCuocHop(uid, id);
     this.realtime.emitToBoard(id, 'board.updated', uid, updated);
     return updated;
   }
@@ -822,6 +830,41 @@ export class BoardsService {
     // Người khác đang mở board này thấy nền mới ngay, không phải F5.
     this.realtime.emitToBoard(boardId, 'board.updated', uid, updated);
     return updated;
+  }
+
+  /**
+   * Báo chuông cho mọi người xem được board: có cuộc họp vừa mở.
+   *
+   * Chỉ báo khi MỞ, không báo khi đóng — đóng họp không phải việc ai cần bỏ dở
+   * công việc để phản ứng.
+   *
+   * Không báo cho chính người mở: họ vừa bấm nút xong, tự báo cho mình là thừa.
+   *
+   * Nuốt mọi lỗi và không `await` ở chỗ gọi: cuộc họp ĐÃ mở và link ĐÃ lưu rồi,
+   * gửi thông báo hỏng thì cùng lắm mọi người biết chậm hơn — không đáng để
+   * người vừa bấm nút nhận về một lỗi.
+   */
+  private async baoCoCuocHop(actorUid: string, boardId: string): Promise<void> {
+    try {
+      const { uids, boardName, orgSlug } =
+        await this.access.nguoiXemDuocBoard(boardId);
+
+      const tenNguoiMo = await this.access.tenHienThi(actorUid);
+
+      for (const uid of uids) {
+        if (uid === actorUid) continue;
+        this.realtime.emitToUser(uid, 'meeting.started', actorUid, {
+          boardId,
+          boardName,
+          orgSlug,
+          byUserName: tenNguoiMo,
+        });
+      }
+    } catch (e) {
+      this.logger.warn(
+        `Không báo được cuộc họp (board=${boardId}): ${(e as Error).message}`,
+      );
+    }
   }
 
   async remove(uid: string, id: string): Promise<void> {

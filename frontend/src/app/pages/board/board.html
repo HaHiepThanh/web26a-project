@@ -60,6 +60,7 @@
     [meetBusy]="meetBusy()"
     (startMeet)="startMeet()"
     (endMeet)="endMeet()"
+    (openSchedule)="scheduleOpen.set(true)"
     (openStats)="openStatsModal()"
     (toggleFilter)="toggleFilterPanel()"
     (applySavedFilterEvent)="applySavedFilter($event)"
@@ -76,6 +77,13 @@
     (saveCurrentFilterEvent)="saveCurrentFilter()"
     (cancelSaveFilterFormEvent)="cancelSaveFilterForm()">
   </app-board-header-bar>
+
+  <app-schedule-meeting-modal
+    [isOpen]="scheduleOpen()"
+    [boardId]="boardId"
+    [boardName]="board()?.name ?? ''"
+    (close)="scheduleOpen.set(false)"
+    (created)="onMeetingScheduled($event)" />
 
   <!-- Main Board Canvas -->
   <div class="flex min-h-0 flex-1">

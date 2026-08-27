@@ -5,6 +5,25 @@ import { AuthService } from './auth.service';
 /** Giữ tối đa ngần này thông báo — chuông không phải nhật ký, cũ quá thì bỏ. */
 const MAX_ITEMS = 30;
 
+/**
+ * Giờ hiển thị cho người đọc — theo múi giờ TRÌNH DUYỆT của họ.
+ *
+ * Không dùng `time_zone` mà người tạo đã chọn: `startAt` là thời điểm tuyệt
+ * đối, nên người ở múi giờ khác cần thấy giờ CỦA HỌ, không phải giờ của người
+ * đặt lịch.
+ */
+function gioDoc(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleString(undefined, {
+    weekday: 'short',
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
 function storageKey(uid: string): string {
   return `trello_notifications_${uid}`;
 }
@@ -67,6 +86,52 @@ export class NotificationService {
   }
 
   /** Được giao phụ trách 1 thẻ. */
+  /**
+   * Có người mở cuộc họp trên board mình tham gia.
+   *
+   * `id` kèm thời điểm: mở rồi đóng rồi mở lại là hai lời mời khác nhau, người
+   * dùng cần thấy cả hai. Nhưng cùng MỘT sự kiện tới ở hai tab thì `add()`
+   * chống trùng theo id nên vẫn chỉ tính một.
+   */
+  addMeetingStarted(p: {
+    boardId: string;
+    boardName: string;
+    orgSlug: string;
+    byUserName: string;
+  }): void {
+    this.add({
+      id: `meeting-${p.boardId}-${Date.now()}`,
+      type: 'meeting.started',
+      text: `${p.byUserName} started a meeting on "${p.boardName}"`,
+      orgSlug: p.orgSlug,
+      boardId: p.boardId,
+      cardId: '',
+      createdAt: new Date().toISOString(),
+      read: false,
+    });
+  }
+
+  /** Có người @nhắc tên mình trong chat của một board. */
+  addChatMention(p: {
+    boardId: string;
+    boardName: string;
+    orgSlug: string;
+    byUserName: string;
+    excerpt?: string;
+  }): void {
+    const trich = p.excerpt ? `: "${p.excerpt}"` : '';
+    this.add({
+      id: `mention-${p.boardId}-${Date.now()}`,
+      type: 'chat.mention',
+      text: `${p.byUserName} mentioned you in "${p.boardName}"${trich}`,
+      orgSlug: p.orgSlug,
+      boardId: p.boardId,
+      cardId: '',
+      createdAt: new Date().toISOString(),
+      read: false,
+    });
+  }
+
   addCardAssigned(p: {
     cardId: string;
     cardTitle: string;
@@ -124,6 +189,87 @@ export class NotificationService {
       orgSlug: p.orgSlug,
       boardId: p.boardId,
       cardId: p.cardId,
+      createdAt: new Date().toISOString(),
+      read: false,
+    });
+  }
+
+  /**
+   * Có người hẹn một cuộc họp và mời mình.
+   *
+   * Giờ hiển thị theo múi giờ TRÌNH DUYỆT người xem, không theo múi giờ người
+   * tạo: `startAt` là thời điểm tuyệt đối, nên hai người ở hai nơi đều đọc ra
+   * đúng giờ của mình.
+   */
+  addMeetingScheduled(p: {
+    meetingId: string;
+    boardId: string;
+    boardName: string;
+    orgSlug: string;
+    title: string;
+    startAt: string;
+    byUserName: string;
+  }): void {
+    this.add({
+      id: `meeting-scheduled-${p.meetingId}`,
+      type: 'meeting.scheduled',
+      text: `${p.byUserName} invited you to "${p.title}" on ${gioDoc(p.startAt)} — board "${p.boardName}"`,
+      orgSlug: p.orgSlug,
+      boardId: p.boardId,
+      cardId: '',
+      createdAt: new Date().toISOString(),
+      read: false,
+    });
+  }
+
+  /** Một cuộc họp mình được mời vừa bị huỷ. */
+  addMeetingCanceled(p: {
+    meetingId: string;
+    boardId: string;
+    boardName: string;
+    orgSlug: string;
+    title: string;
+    startAt: string;
+    byUserName: string;
+  }): void {
+    this.add({
+      id: `meeting-canceled-${p.meetingId}`,
+      type: 'meeting.canceled',
+      text: `${p.byUserName} canceled "${p.title}" (${gioDoc(p.startAt)}) — board "${p.boardName}"`,
+      orgSlug: p.orgSlug,
+      boardId: p.boardId,
+      cardId: '',
+      createdAt: new Date().toISOString(),
+      read: false,
+    });
+  }
+
+  /**
+   * Sắp tới giờ một cuộc họp mình được mời.
+   *
+   * `id` CỐ Ý không kèm `Date.now()` — cùng lý do với `addCardOverdue`: nguồn
+   * của loại này là một truy vấn được hỏi lại nhiều lần
+   * (`GET /meetings/my-upcoming`), nên id có thời điểm sẽ đẻ ra một thông báo
+   * mới ở mỗi lần hỏi và chuông ngập cùng một cuộc họp. Khoá theo cuộc họp thì
+   * mỗi cuộc chỉ nhắc ĐÚNG MỘT lần.
+   */
+  addMeetingReminder(p: {
+    id: string;
+    boardId: string;
+    boardName: string;
+    orgSlug: string;
+    title: string;
+    startAt: string;
+  }): void {
+    const conMay = Math.max(0, Math.round((new Date(p.startAt).getTime() - Date.now()) / 60_000));
+    const khiNao = conMay <= 0 ? 'is starting now' : `starts in ${conMay} min`;
+    this.add({
+      id: `meeting-remind-${p.id}`,
+      type: 'meeting.reminder',
+      text: `"${p.title}" ${khiNao} (${gioDoc(p.startAt)}) — board "${p.boardName}"`,
+      orgSlug: p.orgSlug,
+      boardId: p.boardId,
+      cardId: '',
       createdAt: new Date().toISOString(),
       read: false,
     });

@@ -133,7 +133,22 @@ export interface ApiWorkspaceMember {
 /** GET /boards/:id/members */
 export interface ApiBoardMember {
   userId: string;
-  user: { id: string; email: string; displayName: string | null; avatarUrl: string | null } | null;
+  user: {
+    id: string;
+    email: string;
+    displayName: string | null;
+    avatarUrl: string | null;
+    /**
+     * Người này đã nối tài khoản Google chưa (migration 0009).
+     *
+     * Quyết định họ có mời được vào lịch họp không: chưa nối thì ta KHÔNG chắc
+     * email của họ là một tài khoản Google, nên không hứa được rằng lời mời sẽ
+     * hiện trong Google Calendar của họ.
+     *
+     * Tuỳ chọn vì các endpoint cũ hơn không trả trường này.
+     */
+    googleLinked?: boolean;
+  } | null;
 }
 
 /* ------------------------------------------------------------------ *

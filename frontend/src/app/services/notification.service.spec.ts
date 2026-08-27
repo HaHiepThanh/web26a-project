@@ -90,4 +90,86 @@ describe('NotificationService — nhắc thẻ quá hạn', () => {
 
     expect(service.items()[0].text).toContain('1 day overdue');
   });
+
+  // ---------------------------------------------------------------- lịch họp
+
+  const LICH = {
+    meetingId: 'mt-1',
+    boardId: 'b-1',
+    boardName: 'Board Seed',
+    orgSlug: 'org-seed',
+    title: 'Sprint review',
+    startAt: new Date(Date.now() + 60 * 60_000).toISOString(),
+    byUserName: 'An',
+  };
+
+  it('lời mời họp nói rõ ai mời, họp gì, ở board nào', () => {
+    service.addMeetingScheduled(LICH);
+
+    const n = service.items()[0];
+    expect(n.type).toBe('meeting.scheduled');
+    expect(n.text).toContain('An');
+    expect(n.text).toContain('Sprint review');
+    expect(n.text).toContain('Board Seed');
+    // Điều hướng chỉ cần orgSlug + boardId, không gắn thẻ nào.
+    expect(n.orgSlug).toBe('org-seed');
+    expect(n.boardId).toBe('b-1');
+    expect(n.cardId).toBe('');
+  });
+
+  it('cùng một lời mời tới ở hai tab chỉ tính MỘT thông báo', () => {
+    service.addMeetingScheduled(LICH);
+    service.addMeetingScheduled(LICH);
+
+    expect(service.items().length).toBe(1);
+  });
+
+  it('mời rồi huỷ là HAI thông báo khác nhau, không đè lên nhau', () => {
+    service.addMeetingScheduled(LICH);
+    service.addMeetingCanceled(LICH);
+
+    expect(service.items().length).toBe(2);
+    expect(service.items()[0].type).toBe('meeting.canceled');
+  });
+
+  it('lời nhắc trước giờ họp chỉ hiện MỘT lần dù hỏi lại bao nhiêu lần', () => {
+    // Nguồn của loại này là `GET /meetings/my-upcoming`, được hỏi lại mỗi vài
+    // phút — id có `Date.now()` sẽ làm chuông ngập cùng một cuộc họp.
+    const p = { id: 'mt-9', boardId: 'b-1', boardName: 'Board Seed', orgSlug: 'org-seed',
+                title: 'Daily', startAt: new Date(Date.now() + 10 * 60_000).toISOString() };
+    service.addMeetingReminder(p);
+    service.addMeetingReminder(p);
+    service.addMeetingReminder(p);
+
+    expect(service.items().length).toBe(1);
+  });
+
+  it('lời nhắc nói còn bao nhiêu phút nữa', () => {
+    service.addMeetingReminder({
+      id: 'mt-2', boardId: 'b-1', boardName: 'Board Seed', orgSlug: 'org-seed',
+      title: 'Daily', startAt: new Date(Date.now() + 10 * 60_000).toISOString(),
+    });
+
+    expect(service.items()[0].text).toContain('starts in 10 min');
+  });
+
+  it('đã tới giờ thì nói "starting now", không nói "còn -1 phút"', () => {
+    service.addMeetingReminder({
+      id: 'mt-3', boardId: 'b-1', boardName: 'Board Seed', orgSlug: 'org-seed',
+      title: 'Daily', startAt: new Date(Date.now() - 60_000).toISOString(),
+    });
+
+    expect(service.items()[0].text).toContain('is starting now');
+  });
+
+  it('đọc rồi thì lời nhắc lặp lại KHÔNG làm chuông sáng lại', () => {
+    const p = { id: 'mt-4', boardId: 'b-1', boardName: 'Board Seed', orgSlug: 'org-seed',
+                title: 'Daily', startAt: new Date(Date.now() + 5 * 60_000).toISOString() };
+    service.addMeetingReminder(p);
+    service.markRead(service.items()[0].id);
+
+    service.addMeetingReminder(p);
+
+    expect(service.unreadCount()).toBe(0);
+  });
 });

@@ -54,6 +54,8 @@ export class BoardHeaderBar {
   }
   readonly startMeet = output<void>();
   readonly endMeet = output<void>();
+  /** Mở hộp thoại hẹn lịch họp. */
+  readonly openSchedule = output<void>();
 
   readonly listsCount = input<number>(0);
   readonly totalCards = input<number>(0);

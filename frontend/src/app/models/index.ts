@@ -26,6 +26,8 @@ export * from './toast.model';
 export * from './api.model';
 // --- Hợp đồng sự kiện WebSocket (khớp backend/src/modules/realtime/realtime.events.ts) ---
 export * from './realtime.model';
+// --- Lịch họp Google Calendar ---
+export * from './meeting.model';
 // --- Thông báo ở chuông Header ---
 export * from './notification.model';
 // --- Tour hướng dẫn người dùng mới ---

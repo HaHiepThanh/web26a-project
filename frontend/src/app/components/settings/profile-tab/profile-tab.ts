@@ -18,7 +18,7 @@ import {
 } from '@lucide/angular';
 import { User } from '../../../models';
 import { initialsOf } from '../../../mocks';
-import { GoogleMeetService } from '../../../services/google-meet.service';
+import { GoogleOauthService } from '../../../services/google-oauth.service';
 import { AuthService } from '../../../services/auth.service';
 import { checkPassword, type PasswordCheck } from '../../../utils/password.util';
 
@@ -74,21 +74,21 @@ export class ProfileTab {
   readonly savingAvatar = signal(false);
 
   // ---- Liên kết Google (điều kiện để dùng nút họp trên trang Board) ----
-  private readonly googleMeet = inject(GoogleMeetService);
+  private readonly googleOauth = inject(GoogleOauthService);
 
   /** Email Google đã nối. Signal chứ không computed: Firebase cập nhật
    *  `providerData` ngoài hệ thống signal của Angular, nên phải tự đọc lại sau
    *  mỗi lần nối/gỡ thì giao diện mới đổi. */
-  readonly googleEmail = signal(this.googleMeet.emailGoogle());
-  readonly loginEmail = signal(this.googleMeet.emailDangNhap());
+  readonly googleEmail = signal(this.googleOauth.emailGoogle());
+  readonly loginEmail = signal(this.googleOauth.emailDangNhap());
   readonly googleBusy = signal(false);
 
   async linkGoogle(): Promise<void> {
     if (this.googleBusy()) return;
     this.googleBusy.set(true);
     try {
-      const loi = await this.choToiDa(this.googleMeet.noiGoogle());
-      this.googleEmail.set(this.googleMeet.emailGoogle());
+      const loi = await this.choToiDa(this.googleOauth.noiGoogle());
+      this.googleEmail.set(this.googleOauth.emailGoogle());
 
       if (loi) {
         this.flashMessage.emit({ message: loi, type: 'error' });
@@ -130,8 +130,8 @@ export class ProfileTab {
     if (this.googleBusy()) return;
     this.googleBusy.set(true);
     try {
-      const loi = await this.googleMeet.goLienKet();
-      this.googleEmail.set(this.googleMeet.emailGoogle());
+      const loi = await this.googleOauth.goLienKet();
+      this.googleEmail.set(this.googleOauth.emailGoogle());
       this.flashMessage.emit(
         loi
           ? { message: loi, type: 'error' }

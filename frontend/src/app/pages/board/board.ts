@@ -25,6 +25,8 @@ import { CommentStore } from '../../ngrx/comment/comment.store';
 import { AttachmentStore } from '../../ngrx/attachment/attachment.store';
 import { RealtimeService } from '../../services/realtime.service';
 import { GoogleMeetService } from '../../services/google-meet.service';
+import { GoogleOauthService } from '../../services/google-oauth.service';
+import { ScheduleMeetingModal } from '../../components/board/schedule-meeting-modal/schedule-meeting-modal';
 import { BoardPrefsStore } from '../../ngrx/board-prefs/board-prefs.store';
 import { TaskSuggestionStore } from '../../ngrx/task-suggestion/task-suggestion.store';
 import { TourStore } from '../../ngrx/tour/tour.store';
@@ -113,6 +115,7 @@ const MINIMAP_OVERFLOW_RATIO = 1.5;
     BoardHeaderBar,
     BoardBulkActions,
     TaskSuggestionModal,
+    ScheduleMeetingModal,
   ],
   templateUrl: './board.html',
   styleUrl: './board.css',
@@ -135,6 +138,7 @@ export class Board {
   private readonly attachmentService = inject(AttachmentStore);
   private readonly realtime = inject(RealtimeService);
   private readonly googleMeet = inject(GoogleMeetService);
+  private readonly googleOauth = inject(GoogleOauthService);
   private readonly orgs = inject(OrganizationStore);
   private readonly boardPrefs = inject(BoardPrefsStore);
   private readonly taskSuggestions = inject(TaskSuggestionStore);
@@ -182,8 +186,23 @@ export class Board {
   /** Chỉ owner/admin tổ chức mở/gỡ được cuộc họp. Backend cũng chặn (403), đây
    *  chỉ là để không bày ra một cái nút bấm vào là báo lỗi. */
   readonly canManageMeet = this.orgs.isAdminOrOwner;
-  readonly googleLinked = signal(this.googleMeet.daNoiGoogle());
+  readonly googleLinked = signal(this.googleOauth.daNoiGoogle());
   readonly meetBusy = signal(false);
+
+  /** Hộp thoại hẹn lịch họp đang mở hay không. */
+  readonly scheduleOpen = signal(false);
+
+  /**
+   * Hẹn lịch xong.
+   *
+   * Modal đã tự lo gọi Google và lưu về backend — ở đây chỉ báo cho người dùng.
+   * Không cần nạp lại gì: lời nhắc do `MeetingReminderService` tự kéo về, còn
+   * người được mời nhận thông báo qua WebSocket.
+   */
+  onMeetingScheduled(e: { title: string; meetUrl: string | null }): void {
+    const themMeet = e.meetUrl ? ' A Google Meet room was added.' : '';
+    this.addToast(`"${e.title}" was scheduled and invitations were sent.${themMeet}`, 'success');
+  }
 
   /**
    * Mở phòng họp mang tên board.
@@ -199,13 +218,13 @@ export class Board {
 
     this.meetBusy.set(true);
     try {
-      if (!this.googleMeet.daNoiGoogle()) {
-        const loi = await this.googleMeet.noiGoogle();
-        this.googleLinked.set(this.googleMeet.daNoiGoogle());
+      if (!this.googleOauth.daNoiGoogle()) {
+        const loi = await this.googleOauth.noiGoogle();
+        this.googleLinked.set(this.googleOauth.daNoiGoogle());
         // `null` cũng là kết quả của việc người dùng tự đóng popup — không phải
         // lỗi, nhưng cũng chưa nối xong, nên dừng ở đây thay vì chạy tiếp.
         if (loi) { this.addToast(loi, 'error'); return; }
-        if (!this.googleMeet.daNoiGoogle()) return;
+        if (!this.googleOauth.daNoiGoogle()) return;
       }
 
       const { meetUrl, error } = await this.googleMeet.taoPhongHop(b.name);

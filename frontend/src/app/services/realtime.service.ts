@@ -10,6 +10,8 @@ import {
   BoardEvent,
   BoardViewer,
   Comment,
+  BoardPingPayload,
+  MeetingPingPayload,
   CardAssignedPayload,
   OrgInvite,
   OrgInviteRole,
@@ -273,6 +275,22 @@ export class RealtimeService {
 
       case 'card.assigned':
         this.notifications.addCardAssigned(event.data as CardAssignedPayload);
+        break;
+
+      case 'meeting.started':
+        this.notifications.addMeetingStarted(event.data as BoardPingPayload);
+        break;
+
+      case 'chat.mention':
+        this.notifications.addChatMention(event.data as BoardPingPayload);
+        break;
+
+      case 'meeting.scheduled':
+        this.notifications.addMeetingScheduled(event.data as MeetingPingPayload);
+        break;
+
+      case 'meeting.canceled':
+        this.notifications.addMeetingCanceled(event.data as MeetingPingPayload);
         break;
     }
   }

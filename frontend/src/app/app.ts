@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { OfflineOverlay } from './components/offline-overlay/offline-overlay';
 import { AuthService } from './services/auth.service';
 import { OverdueWatcherService } from './services/overdue-watcher.service';
+import { MeetingReminderService } from './services/meeting-reminder.service';
 import { RealtimeService } from './services/realtime.service';
 import { ThemeService } from './services/theme.service';
 
@@ -28,6 +29,9 @@ export class App {
   // Cùng lý do với ThemeService ở trên: chỉ inject để CTOR chạy từ GỐC ứng dụng.
   // Service tự bật/tắt theo trạng thái đăng nhập bằng effect() bên trong nó.
   private readonly overdueWatcher = inject(OverdueWatcherService);
+  // Nhắc trước giờ họp. Inject ở đây vì service tự chạy theo trạng thái đăng
+  // nhập — không nơi nào gọi hàm của nó, nên không inject là nó không tồn tại.
+  private readonly meetingReminder = inject(MeetingReminderService);
 
   constructor() {
     // Mở kết nối realtime ở GỐC ứng dụng, không phải trong Header.

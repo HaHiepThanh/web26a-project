@@ -104,6 +104,90 @@ export class AccessService {
    *   2. workspace chứa nó có `restricted` mà mình không được chỉ định không
    *   3. bản thân board có `private` mà mình không được chỉ định không
    */
+  /**
+   * Ai NHÌN THẤY được board này — dùng để biết gửi thông báo cho những ai.
+   *
+   * Đặt ở `AccessService` vì cả `boards` (mở cuộc họp) lẫn `chat` (@nhắc tên)
+   * đều cần, và cả hai đã inject sẵn service này. Để trùng logic ở hai nơi là
+   * sớm muộn lệch nhau — nơi này gửi cho người kia không gửi.
+   *
+   * Ba tầng, khớp đúng `kiem_tra_quyen_board`:
+   *   board `private`        → chỉ người trong `board_members`
+   *   workspace `restricted` → thành viên workspace
+   *   còn lại                → cả tổ chức
+   *
+   * Kèm luôn tên board và slug tổ chức: nơi gọi cần chúng để dựng câu thông báo
+   * và để người bấm vào đi thẳng tới `/:orgSlug/board/:id`, khỏi gọi thêm API.
+   */
+  async nguoiXemDuocBoard(boardId: string): Promise<{
+    uids: string[];
+    boardName: string;
+    orgSlug: string;
+  }> {
+    const sb = this.supabase.client;
+    const { data: board } = await sb
+      .from('boards')
+      .select('id, name, org_id, workspace_id, visibility, organizations(slug)')
+      .eq('id', boardId)
+      .maybeSingle();
+
+    const rong = { uids: [], boardName: '', orgSlug: '' };
+    if (!board) return rong;
+
+    const boardName = (board.name as string) ?? '';
+    const orgSlug =
+      ((board.organizations as unknown as { slug: string } | null)?.slug as string) ?? '';
+
+    let uids: string[] = [];
+    if ((board.visibility as string) === 'private') {
+      const { data } = await sb
+        .from('board_members')
+        .select('user_id')
+        .eq('board_id', boardId);
+      uids = (data ?? []).map((r) => (r as { user_id: string }).user_id);
+    } else {
+      const { data: ws } = await sb
+        .from('workspaces')
+        .select('visibility')
+        .eq('id', board.workspace_id as string)
+        .maybeSingle();
+
+      if ((ws?.visibility as string) === 'restricted') {
+        const { data } = await sb
+          .from('workspace_members')
+          .select('user_id')
+          .eq('workspace_id', board.workspace_id as string);
+        uids = (data ?? []).map((r) => (r as { user_id: string }).user_id);
+      } else {
+        const { data } = await sb
+          .from('organization_members')
+          .select('user_id')
+          .eq('org_id', board.org_id as string);
+        uids = (data ?? []).map((r) => (r as { user_id: string }).user_id);
+      }
+    }
+
+    return { uids: [...new Set(uids)], boardName, orgSlug };
+  }
+
+  /**
+   * Tên để xưng hô trong thông báo: tên hiển thị, không có thì email.
+   *
+   * Gom về đây vì mọi luồng "ai đó vừa làm gì" đều cần đúng phép rơi này, và
+   * chép tay ở từng module thì sớm muộn có chỗ quên nhánh email rồi hiện
+   * "undefined vừa mời bạn họp".
+   */
+  async tenHienThi(uid: string): Promise<string> {
+    const { data } = await this.supabase.client
+      .from('users')
+      .select('display_name, email')
+      .eq('id', uid)
+      .maybeSingle();
+    return (
+      ((data?.display_name as string) || (data?.email as string)) ?? 'Someone'
+    );
+  }
+
   async assertBoardAccess(
     uid: string,
     boardId: string,

@@ -28,6 +28,15 @@
           @if (!n.read) {
             <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary"></span>
           }
+          <!-- Biểu tượng theo loại: chuông giờ chở BỐN loại tin khác hẳn nhau
+               (được giao thẻ / quá hạn / có cuộc họp / bị @nhắc). Chỉ có chữ thì
+               phải đọc hết mới biết cái nào đáng xử lý trước. -->
+          <span class="mt-px grid h-4 w-4 shrink-0 place-items-center rounded"
+            [class]="iconClass(n.type)">
+            <svg class="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6">
+              <path [attr.d]="iconPath(n.type)" />
+            </svg>
+          </span>
           <span class="min-w-0">
             <span class="block text-2xs font-semibold leading-snug text-base-content">{{ n.text }}</span>
             <span class="mt-0.5 block text-3xs text-base-content/45">{{ relativeTimeFrom(n.createdAt) }} · click to open board</span>

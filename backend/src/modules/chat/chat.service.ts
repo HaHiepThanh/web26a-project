@@ -120,6 +120,85 @@ export class ChatService {
       content,
     });
 
+    // @nhắc tên → báo chuông. Cũng KHÔNG `await`: tin nhắn đã lưu và đã phát đi
+    // rồi, thông báo hỏng không được làm hỏng việc gửi tin.
+    void this.baoNhacTen(userUid, boardId, content);
+
     return created;
+  }
+
+  /**
+   * Tìm người bị @nhắc trong tin nhắn rồi báo chuông cho họ.
+   *
+   * Đối chiếu với tên hiển thị của NGƯỜI XEM ĐƯỢC BOARD, không phải toàn bộ
+   * người dùng: `@Huy` chỉ nên chạm tới Huy trong nhóm này, không phải mọi Huy
+   * trong hệ thống.
+   *
+   * ⚠️ Xếp tên DÀI TRƯỚC khi ghép biểu thức. Có "An" và "An Huy" mà để "An"
+   *    trước thì `@An Huy` khớp ngay "An" rồi dừng — báo nhầm người. Đây cũng
+   *    là cách `message-item.ts` bên frontend tô màu @nhắc, giữ cho hai bên
+   *    hiểu giống nhau.
+   *
+   * Không tự báo cho chính mình: tự @tên mình không phải là được nhắc.
+   */
+  private async baoNhacTen(
+    actorUid: string,
+    boardId: string,
+    content: string,
+  ): Promise<void> {
+    try {
+      if (!content.includes('@')) return;
+
+      const { uids, boardName, orgSlug } =
+        await this.access.nguoiXemDuocBoard(boardId);
+      const khac = uids.filter((u) => u !== actorUid);
+      if (!khac.length) return;
+
+      const { data: users } = await this.supabase.client
+        .from('users')
+        .select('id, display_name, email')
+        .in('id', [...khac, actorUid]);
+
+      const dsUser = (users ?? []) as {
+        id: string;
+        display_name: string | null;
+        email: string | null;
+      }[];
+      const tenActor =
+        dsUser.find((u) => u.id === actorUid)?.display_name ||
+        dsUser.find((u) => u.id === actorUid)?.email ||
+        'Someone';
+
+      const thap = content.toLowerCase();
+      const daBao = new Set<string>();
+
+      const ungVien = dsUser
+        .filter((u) => khac.includes(u.id))
+        .flatMap((u) =>
+          [u.display_name, u.email]
+            .filter((t): t is string => !!t && t.trim().length > 0)
+            .map((ten) => ({ uid: u.id, ten: ten.trim().toLowerCase() })),
+        )
+        .sort((a, b) => b.ten.length - a.ten.length);
+
+      for (const { uid, ten } of ungVien) {
+        if (daBao.has(uid)) continue;
+        if (!thap.includes('@' + ten)) continue;
+        daBao.add(uid);
+
+        this.realtime.emitToUser(uid, 'chat.mention', actorUid, {
+          boardId,
+          boardName,
+          orgSlug,
+          byUserName: tenActor,
+          // Cắt ngắn: chuông là chỗ liếc qua, không phải chỗ đọc cả đoạn.
+          excerpt: content.length > 80 ? content.slice(0, 80) + '…' : content,
+        });
+      }
+    } catch (e) {
+      this.logger.warn(
+        `Không báo được @nhắc tên (board=${boardId}): ${(e as Error).message}`,
+      );
+    }
   }
 }
