@@ -6,8 +6,8 @@ import { TourStepId } from '../../models';
  * Tầng 1 (4 bước) — tour KHÔNG mô tả cách tạo workspace, nó bắt người dùng tạo
  * thật, và chỉ sang bước sau khi hành động THÀNH CÔNG.
  *
- * Tầng 2 (3 bước) — Filter, Chat, AI. Ba thứ này vô nghĩa trên board một thẻ,
- * nên trước tầng 2 phải gieo dữ liệu mẫu (xem tour.seed.ts).
+ * Tầng 2 (3 bước) — Filter, Chat + AI, Meet/Calendar. Hai bước đầu vô nghĩa
+ * trên board một thẻ, nên trước tầng 2 phải gieo dữ liệu mẫu (xem tour.seed.ts).
  */
 
 /**
@@ -48,10 +48,20 @@ export const EMPTY_FLAGS: TourFlags = {
   aiOpen: false,
 };
 
-/** Điều kiện sang bước sau: hoặc một con số tăng lên, hoặc một cờ bật lên. */
+/**
+ * Điều kiện sang bước sau: một con số tăng lên, một cờ bật lên, hoặc chỉ cần
+ * người dùng đọc xong rồi bấm Next.
+ *
+ * `ack` dành cho bước GIỚI THIỆU thuần tuý — thứ không đo được bằng gì cả.
+ * Bước Meet/Calendar là vậy: hai cái nút đó bị khoá cho tới khi người dùng liên
+ * kết Google, nên không có hành động nào để chờ và không có cờ nào để bật. Mượn
+ * tạm một cờ của tính năng khác cho đủ kiểu dữ liệu thì bước này sẽ tự đánh dấu
+ * "xong" mỗi khi người dùng vô tình mở đúng tính năng đó — sai lệch âm thầm.
+ */
 export type TourAdvance =
   | { on: 'count'; key: keyof TourCounts }
-  | { on: 'flag'; key: keyof TourFlags };
+  | { on: 'flag'; key: keyof TourFlags }
+  | { on: 'ack' };
 
 export interface TourStep {
   id: TourStepId;
@@ -91,19 +101,17 @@ export interface TourStep {
    */
   dim?: boolean;
   /**
-   * Neo của bước này nằm BÊN TRONG khung chat.
+   * Hình minh hoạ vẽ trong popover, thay cho việc bắt người dùng thao tác thật.
    *
-   * Dưới 768px khung chat mở ra là lớp phủ toàn màn hình, và lớp phủ đó bình
-   * thường làm tour tự ẩn đi — nó che kín board nên soi sáng thứ nằm sau nó là
-   * vô nghĩa. Nhưng neo của bước này lại nằm TRONG chính khung đó, nên luật kia
-   * quay ra khoá chết bước: mở chat để thấy neo thì tour biến mất, đóng chat để
-   * thấy tour thì neo biến mất theo.
+   * Chỉ dùng cho bước giới thiệu thứ mà người dùng CHƯA bấm được: nút Meet và
+   * nút Schedule đều khoá cho tới khi liên kết Google. Bảo họ "thử đi" là bảo
+   * làm một việc bất khả thi, nên tour tự vẽ ra cho họ xem trước.
    *
-   * Phải khai báo tay chứ không dò bằng `contains()` được: lúc bước bắt đầu, chip
-   * gợi ý CHƯA tồn tại — nó chỉ hiện sau khi Gemini trả lời — nên không có phần
-   * tử nào để mà hỏi nó nằm ở đâu.
+   * Là mã định danh chứ không phải đường dẫn ảnh: hình vẽ thẳng bằng SVG trong
+   * template nên tự đổi màu theo sáng/tối, không thêm file nào để tải, và không
+   * bị mờ trên màn hình nét cao.
    */
-  anchorInChat?: boolean;
+  art?: 'meet-calendar';
 }
 
 export const TOUR_STEPS: readonly TourStep[] = [
@@ -163,6 +171,17 @@ export const TOUR_STEPS: readonly TourStep[] = [
     body: 'Open Filter and pick High priority. Watch the badge — it counts how many of the cards survived the filter, so you can see it working.',
   },
   {
+    // MỘT bước cho cả khung chat lẫn trợ lý AI đọc chat.
+    //
+    // Trước đây là hai bước, và bước AI neo vào chip gợi ý trong khung chat.
+    // Chip đó do backend sinh ra sau khi Gemini đọc tin nhắn, mà Gemini là TÙY
+    // CHỌN: thiếu `GEMINI_API_KEY` thì backend tự tắt tính năng và chip không
+    // bao giờ xuất hiện — bước hết giờ chờ neo rồi bị bỏ, nên trên mọi môi
+    // trường chưa bật AI người dùng không nghe được một chữ nào về trợ lý.
+    //
+    // Neo giờ là cái NÚT MỞ CHAT, thứ luôn có mặt. Lời giới thiệu về trợ lý đi
+    // kèm trong cùng popover, còn chip có hiện hay không chỉ còn là minh hoạ
+    // chứ không quyết định bước này sống hay chết.
     id: 'open-chat',
     anchor: 'chat',
     page: 'board',
@@ -173,34 +192,33 @@ export const TOUR_STEPS: readonly TourStep[] = [
     placement: 'bottom',
     dim: false,
     title: 'Talk next to the work',
-    body: 'The chat lives beside the board, not in another app. Drag its edge to resize, collapse it when you need room. Everyone sees messages as they arrive.',
+    body: 'The chat lives beside the board, not in another app. Drag its edge to resize, collapse it when you need room, and everyone sees messages as they arrive. The assistant reads along: when a message hides real work, it drafts cards for it — every field editable, every card unticked with one click. It proposes, you decide.',
   },
   {
-    id: 'try-ai',
-    anchor: 'ai-suggestion',
+    // Bước GIỚI THIỆU, không bắt làm thử — và đó là điều bắt buộc, không phải
+    // lựa chọn cho gọn. Cả hai nút mang `[disabled]="!googleLinked()"`: người
+    // dùng mới tinh chưa liên kết Google thì bấm không ăn. Một bước tour chờ
+    // một cú bấm bất khả thi là một bước treo cứng.
+    //
+    // Nên nó dừng ở `on: 'ack'` — đọc, xem hình, bấm Finish.
+    id: 'meet-calendar',
+    anchor: 'meet-calendar',
     page: 'board',
     tier: 2,
-    advance: { on: 'flag', key: 'aiOpen' },
-    // Bước DUY NHẤT phụ thuộc vào một thứ tour không điều khiển được.
-    //
-    // Chip gợi ý do backend sinh ra sau khi Gemini đọc tin nhắn, và Gemini là
-    // TÙY CHỌN: thiếu `GEMINI_API_KEY` thì backend tự tắt tính năng và ghi log
-    // "tính năng gợi ý tạo thẻ TẮT" — chip sẽ không bao giờ xuất hiện. Kể cả khi
-    // có key, một lượt gọi API mất vài giây.
-    //
-    // Nên bước này chờ lâu hơn hẳn, và bỏ qua được mà không kéo cả tour xuống.
-    // Không có hai thứ đó thì trên mọi môi trường chưa cấu hình AI, người dùng
-    // làm xong sáu bước vẫn nhận về một tour "thất bại" — và 8 thẻ mẫu nằm lại
-    // board vì tour chết trước khi kịp hỏi dọn.
-    // Chip gợi ý nằm trong khung chat bên trái; popover đứng cạnh nó là đè lên
-    // chính đoạn hội thoại mà assistant vừa đọc để nghĩ ra gợi ý.
+    advance: { on: 'ack' },
+    // Neo nằm giữa thanh tiêu đề board, sát mép trên. Popover đứng dưới nó là
+    // đè lên hàng cột đầu tiên; ghim đáy màn hình để chừa nguyên board, giống
+    // bước Filter ngay trên.
     placement: 'bottom',
     dim: false,
-    anchorInChat: true,
+    art: 'meet-calendar',
+    // Neo là cái BỌC quanh hai nút, và cái bọc đó rỗng với thành viên thường —
+    // `canManageMeet()` false thì không nút nào được vẽ. Rỗng nghĩa là 0×0,
+    // nghĩa là lớp phủ không tìm thấy neo và hết giờ. `optional` để lúc đó tour
+    // vẫn kết thúc ở trạng thái "done" và vẫn kịp hỏi dọn thẻ mẫu.
     optional: true,
-    waitMs: 12000,
-    title: 'The assistant reads the chat',
-    body: 'It spotted work in a message and drafted cards for it. Open the suggestion: every field is editable and every card can be unticked. It proposes — you decide.',
+    title: 'Meet and schedule, without leaving the board',
+    body: 'Start meeting opens a Google Meet room named after this board — one click, no pasting links into chat. Schedule plans one for later: it writes the Google Calendar event, and imports or exports .ics so people outside the app still get it. Both unlock once you link Google in Settings → Profile.',
   },
 ] as const;
 

@@ -190,7 +190,17 @@ export class TourOverlay {
     // trước làm vậy bằng CSS `!important`) là nó phủ luôn lên chính cái nút đang
     // được soi — đo được `popover_che_neo: true`. Neo ở dưới thì tấm lên trên,
     // và ngược lại.
-    if (vw <= 560) {
+    //
+    // ⚠️ Ngưỡng PHẢI khớp 768 — breakpoint `md` của Tailwind mà chính hai thứ
+    //    bước tầng 2 chỉ vào cũng dùng: bảng lọc chuyển bottom-sheet ở
+    //    `max-md:` (board-header-bar.html) và khung chat chuyển FAB/overlay ở
+    //    `isMobile()` (chat-panel.ts, `viewportWidth() < 768`). Ngưỡng cũ 560
+    //    lệch với cả hai — đo được ở 700×900: bảng lọc đã là bottom-sheet đầy
+    //    màn hình, nhưng nhánh này chưa coi là "màn hẹp" nên rơi xuống nhánh
+    //    desktop bên dưới, ghim popover xuống đáy màn hình y hệt nơi bảng lọc
+    //    vừa bung ra — popover đè kín luôn chính cái bảng vừa bảo người dùng
+    //    mở ra xem.
+    if (vw < 768) {
       const w = Math.min(POPOVER_W, vw - 24);
       // Bước `placement: 'bottom'` trên điện thoại → nằm NGAY DƯỚI neo.
       //
@@ -296,11 +306,14 @@ export class TourOverlay {
     // một cái nút nằm PHÍA SAU lớp phủ — người dùng thấy một khung sáng rỗng
     // giữa màn hình đen, chỉ vào thứ họ không nhìn thấy và không bấm được.
     //
-    // ⚠️ Trừ khi NEO CỦA BƯỚC NẰM TRONG chính khung chat đó. Bước 7 soi chip gợi
-    //    ý của assistant, mà chip nằm trong `message-list` — tức bên trong khung
-    //    chat. Ẩn tour mỗi khi chat mở thành ra khoá chết bước 7 trên điện thoại:
-    //    mở chat để thấy chip thì tour biến mất, đóng chat để thấy tour thì chip
-    //    biến mất theo. Không có thứ tự thao tác nào thoát ra được.
+    // ⚠️ Trừ khi NEO CỦA BƯỚC NẰM TRONG chính khung chat đó — ẩn tour lúc ấy là
+    //    khoá chết bước: mở chat để thấy neo thì tour biến mất, đóng chat để
+    //    thấy tour thì neo biến mất theo, không có thứ tự thao tác nào thoát ra.
+    //
+    //    Hiện KHÔNG bước nào rơi vào cảnh đó (bước từng neo vào chip gợi ý của
+    //    assistant đã gộp vào bước chat, và neo giờ là cái nút mở chat nằm ngoài
+    //    khung). Phép `contains()` bên dưới vẫn giữ để nếu sau này có bước neo
+    //    vào thứ nằm trong chat thì nó tự đúng, không phải nhớ sửa lại chỗ này.
     //
     //    Lớp phủ chat ở `z-index: 50`, tour ở 9000, nên vẽ đè lên là chuyện bình
     //    thường — không phải đụng gì tới z-index.
@@ -315,8 +328,7 @@ export class TourOverlay {
       // neo chính là khung chat — đó là bước 6, nơi neo là cái nút mở chat và
       // luật ẩn tour vẫn phải giữ nguyên như cũ.
       const neoThuocChat =
-        buoc?.anchorInChat === true ||
-        (neo !== null && chat !== null && neo !== chat && chat.contains(neo));
+        neo !== null && chat !== null && neo !== chat && chat.contains(neo);
       const chatChe = chat !== null && !neoThuocChat;
       this.modalOpen.set(modalApp || chatChe);
     };
@@ -332,10 +344,9 @@ export class TourOverlay {
     // Đổi bước thì tính LẠI, dù DOM không đổi gì.
     //
     // `syncModal` chỉ chạy khi MutationObserver bắn. Nhưng cùng một khung chat
-    // đang mở lại mang hai nghĩa khác nhau tuỳ bước: với bước 6 nó là tấm chắn
-    // phải ẩn tour đi, với bước 7 nó là chỗ chứa neo nên phải để tour hiện. Bấm
-    // Next từ 6 sang 7 không đụng tới DOM của chat, nên thiếu effect này thì
-    // trạng thái cũ đứng nguyên.
+    // đang mở lại mang nghĩa khác nhau tuỳ bước — neo của bước này nằm trong nó
+    // hay nằm ngoài nó. Bấm Next sang bước sau không đụng tới DOM của chat, nên
+    // thiếu effect này thì kết luận của bước trước đứng nguyên.
     effect(() => {
       this.step();
       syncModal();

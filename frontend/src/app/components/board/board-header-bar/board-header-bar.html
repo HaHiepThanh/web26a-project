@@ -37,6 +37,22 @@
       Stats &amp; Reports
     </button>
 
+    <!-- data-tour: neo bước cuối của tour ("meet-calendar").
+
+         Bọc CẢ HAI nút — họp ngay và hẹn lịch — chứ không neo vào một cái.
+         Bước đó giới thiệu chúng như một cặp ("họp mà không rời board"), nên
+         viền sáng phải ôm đúng cái cặp đó; khoanh mỗi nút Schedule thì nửa câu
+         nói về Meet chỉ vào chỗ không được soi.
+
+         Giữ nguyên `flex-wrap ... gap-3` của thẻ cha để bọc thêm một lớp không
+         làm xê dịch khoảng cách giữa các nút, và để cụm này vẫn xuống dòng được
+         bình thường trên màn hẹp.
+
+         Rỗng cũng không sao: thành viên thường (`canManageMeet()` false) và
+         board chưa họp thì bên trong không vẽ gì, thẻ này thành 0×0, lớp phủ
+         không tìm thấy neo rồi bỏ qua bước — đúng ý đồ, vì lúc đó thật sự
+         không có gì để chỉ. -->
+    <div data-tour="meet-calendar" class="flex flex-wrap items-center gap-3">
     <!-- Google Meet. BA trạng thái, cố ý không gộp:
          1. Đã có cuộc họp  → AI CŨNG vào được (kể cả thành viên thường).
          2. Chưa có + mình quản lý được board → nút mở cuộc họp.
@@ -126,6 +142,7 @@
         }
       </button>
     }
+    </div>
   </div>
 
   <div class="flex flex-wrap items-center justify-end gap-2.5">

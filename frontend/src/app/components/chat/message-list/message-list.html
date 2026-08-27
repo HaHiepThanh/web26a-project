@@ -6,11 +6,12 @@
 
     <!-- Chip gợi ý nằm NGAY DƯỚI tin nhắn sinh ra nó -->
     @if (suggestionsByMessageId()[m.id]; as goiY) {
-      <!-- data-tour: neo bước "try-ai" của tour hướng dẫn. Đặt trên chip gợi ý
-           chứ không trên cả khung chat — tour cần trỏ đúng vào thứ assistant
-           vừa nghĩ ra, không phải vào cái ô chat chung chung. -->
+      <!-- Không còn `data-tour` ở đây.
+           Bước "try-ai" từng neo vào chip này đã gộp vào bước chat, vì chip chỉ
+           tồn tại khi backend có GEMINI_API_KEY — neo vào một thứ tuỳ chọn thì
+           nửa số môi trường chạy tour không có gì để chỉ. Giữ lại một `data-tour`
+           mà không bước nào tra tới chỉ khiến người đọc sau tưởng nó còn dùng. -->
       <app-task-suggestion-card
-        data-tour="ai-suggestion"
         [suggestion]="goiY"
         [members]="members()"
         (open)="openSuggestion.emit(goiY)"

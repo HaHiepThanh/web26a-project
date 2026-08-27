@@ -314,7 +314,7 @@ describe('TourStore', () => {
     expect(store.currentStep()?.id).toBe('open-chat');
 
     store.acknowledgeStep();
-    expect(store.currentStep()?.id).toBe('try-ai');
+    expect(store.currentStep()?.id).toBe('meet-calendar');
   });
 
   it('mọi bước tầng 2 đều chờ người dùng bấm Next, kể cả khi việc đó đã làm rồi', async () => {
@@ -333,7 +333,11 @@ describe('TourStore', () => {
     expect(store.needsAck()).toBe(true);
 
     store.acknowledgeStep();
-    expect(store.currentStep()?.id).toBe('try-ai');
+    expect(store.currentStep()?.id).toBe('meet-calendar');
+    // Bước giới thiệu Meet/Calendar không chờ hành động nào — hai nút đó khoá
+    // cho tới khi liên kết Google — nên nó BẮT BUỘC phải có nút Next, nếu không
+    // là bước cuối tour không có lối ra.
+    expect(store.needsAck()).toBe(true);
   });
 
 
@@ -351,16 +355,16 @@ describe('TourStore', () => {
     expect(store.cleanupOfferOpen()).toBe(true);
   });
 
-  it('bước AI không hiện được thì tour vẫn tính là XONG, và vẫn hỏi dọn thẻ mẫu', async () => {
+  it('bước Meet/Calendar không hiện được thì tour vẫn tính là XONG, và vẫn hỏi dọn thẻ mẫu', async () => {
     const store = make();
     chayHetTang1(store, 'full');
     await store.acceptSeed();
     store.acknowledgeStep();
     store.acknowledgeStep();
-    expect(store.currentStep()?.id).toBe('try-ai');
+    expect(store.currentStep()?.id).toBe('meet-calendar');
 
-    // Gemini không được cấu hình (thiếu GEMINI_API_KEY) → chip gợi ý không bao
-    // giờ xuất hiện → lớp phủ hết giờ chờ neo và gọi skipStep().
+    // Thành viên thường không có quyền mở họp → `canManageMeet()` false → khối
+    // bọc hai nút rỗng, đo ra 0×0 → lớp phủ hết giờ chờ neo và gọi skipStep().
     store.skipStep();
 
     expect(store.onboarding().status).toBe('done');

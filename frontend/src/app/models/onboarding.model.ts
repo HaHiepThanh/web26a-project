@@ -24,9 +24,37 @@ export const TOUR_STEP_IDS = [
   // Ba tính năng này VÔ NGHĨA trên board một thẻ: lọc 1/1 thẻ thì không ai hiểu
   // nó để làm gì. Nên tầng 2 gieo dữ liệu mẫu trước, rồi mới trỏ vào chúng.
   'use-filter',
+  // Khung chat VÀ trợ lý AI đọc chat — một bước, không phải hai.
+  //
+  // Trước đây tách 'open-chat' và 'try-ai'. Nhưng chip gợi ý của trợ lý chỉ tồn
+  // tại khi backend có GEMINI_API_KEY; thiếu key thì bước AI không bao giờ có
+  // neo để chỉ vào và bị bỏ qua — người dùng không nghe được một chữ nào về
+  // trợ lý. Gộp vào bước neo trên nút chat (thứ LUÔN có mặt) thì lời giới thiệu
+  // luôn tới được, còn cái chip có hiện hay không chỉ là minh hoạ.
   'open-chat',
-  'try-ai',
+  // Google Meet + hẹn lịch. Bước GIỚI THIỆU, không bắt làm thử: hai nút này bị
+  // khoá cho tới khi người dùng liên kết Google, nên bảo họ bấm là bảo làm một
+  // việc không bấm được.
+  'meet-calendar',
 ] as const;
+
+/**
+ * Id cũ → id mới, cho bản ghi lưu trước khi gộp bước.
+ *
+ * Người đang dở tour ở bước 'try-ai' có id đó nằm trong `onboarding_state` dưới
+ * DB. Không dịch thì `parseOnboardingState` coi là rác, ném đi, và `currentStep`
+ * rơi về null → tour lôi họ về bước 1 làm lại từ đầu chỉ vì ta đổi tên bước.
+ */
+const LEGACY_STEP_IDS: Record<string, TourStepId> = {
+  'try-ai': 'open-chat',
+};
+
+/** Dịch một id đọc từ DB sang id hiện hành; trả null nếu không nhận ra. */
+function normalizeStepId(raw: unknown): TourStepId | null {
+  if (typeof raw !== 'string') return null;
+  if ((TOUR_STEP_IDS as readonly string[]).includes(raw)) return raw as TourStepId;
+  return LEGACY_STEP_IDS[raw] ?? null;
+}
 
 /** Bốn bước đầu là tầng 1 — chế độ "Just the basics" dừng ở đây. */
 export const TIER_1_STEP_COUNT = 4;
@@ -118,22 +146,25 @@ export function parseOnboardingState(raw: unknown): OnboardingState {
   if (raw === null || typeof raw !== 'object') return base;
 
   const o = raw as Partial<Record<keyof OnboardingState, unknown>>;
-  const validIds = new Set<string>(TOUR_STEP_IDS);
   const statuses: TourStatus[] = ['not-started', 'running', 'done', 'skipped'];
 
   const status = statuses.includes(o.status as TourStatus)
     ? (o.status as TourStatus)
     : base.status;
 
-  const currentStep =
-    typeof o.currentStep === 'string' && validIds.has(o.currentStep)
-      ? (o.currentStep as TourStepId)
-      : null;
+  const currentStep = normalizeStepId(o.currentStep);
 
+  // Lọc + dịch id cũ, rồi bỏ trùng: 'try-ai' và 'open-chat' cùng dịch về
+  // 'open-chat', nên bản ghi có cả hai sẽ đếm bước đó hai lần và thanh
+  // "Getting started — 8/7" hiện ra một con số vô lý.
   const completed = Array.isArray(o.completed)
-    ? (o.completed.filter(
-        (s): s is TourStepId => typeof s === 'string' && validIds.has(s),
-      ) as TourStepId[])
+    ? ([
+        ...new Set(
+          o.completed
+            .map(normalizeStepId)
+            .filter((s): s is TourStepId => s !== null),
+        ),
+      ] as TourStepId[])
     : base.completed;
 
   const rawViews = o.coachViews;

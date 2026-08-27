@@ -44,7 +44,7 @@
 .tour-ring {
   position: fixed;
   pointer-events: none;
-  border-radius: 12px;
+  border-radius: 6px;
   box-shadow:
     0 0 0 3px oklch(100% 0 0 / 0.95),
     0 0 0 6px oklch(0% 0 0 / 0.7),
@@ -58,7 +58,7 @@
   width: 320px;
   max-width: calc(100vw - 24px);
   padding: 14px 16px 12px;
-  border-radius: 16px;
+  border-radius: 6px;
   border: 1px solid var(--color-base-300, #d4d4d8);
   background: var(--color-base-100, #fff);
   color: var(--color-base-content, #18181b);
@@ -96,6 +96,85 @@
   font-size: 0.8125rem;
   line-height: 1.55;
   color: color-mix(in oklab, currentColor 65%, transparent);
+}
+
+/* Hình minh hoạ của bước Meet/Calendar.
+ *
+ * Hai tấm bằng nhau, co theo bề ngang popover (320px trừ 32px padding = 288px,
+ * và popover còn hẹp hơn nữa trên điện thoại). Nên SVG để `width: 100%` và
+ * `height: auto` — viewBox lo phần tỉ lệ, không ghim px ở đâu cả.
+ *
+ * Mọi mảng xám đều lấy từ `currentColor` qua `color-mix` chứ không phải mã màu
+ * cố định: popover đổi nền theo chủ đề sáng/tối, mà hình vẽ ghim màu xám nhạt
+ * thì sang nền tối nó biến mất, còn ghim xám đậm thì sang nền sáng thành một
+ * vệt bẩn. Bám theo màu chữ là tự đúng ở cả hai. */
+.tour-art {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.tour-art-item {
+  /* `min-width: 0` để hai tấm chia đôi thật sự. Thiếu nó thì flex lấy kích
+     thước nội dung làm sàn và tấm nào vẽ rộng hơn sẽ lấn tấm kia. */
+  flex: 1 1 0;
+  min-width: 0;
+  /* ⚠️ `<figure>` mang sẵn `margin: 1em 40px` của trình duyệt.
+     Preflight của Tailwind có xoá nó, nên trong app hiện tại không thấy gì sai —
+     nhưng đó là may, không phải đúng. Đo trong một trang không có reset: 80px lề
+     mỗi tấm ăn hết chỗ, hai hình co từ ~115px xuống 34px, nhỏ tới mức không nhìn
+     ra là cái gì. Khai báo tại đây để hình vẽ không phụ thuộc vào một reset toàn
+     cục nằm ở file khác. */
+  margin: 0;
+}
+
+.tour-art svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.tour-art figcaption {
+  margin-top: 5px;
+  text-align: center;
+  font-size: 0.625rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: color-mix(in oklab, currentColor 55%, transparent);
+}
+
+.tour-art-frame {
+  fill: color-mix(in oklab, currentColor 6%, transparent);
+  stroke: color-mix(in oklab, currentColor 18%, transparent);
+  stroke-width: 1;
+}
+
+.tour-art-tile {
+  fill: color-mix(in oklab, currentColor 13%, transparent);
+}
+
+.tour-art-ghost {
+  fill: color-mix(in oklab, currentColor 22%, transparent);
+}
+
+.tour-art-head {
+  fill: color-mix(in oklab, currentColor 34%, transparent);
+}
+
+.tour-art-accent {
+  fill: var(--color-primary, #4f46e5);
+}
+
+/* Sự kiện đã đặt: cùng màu chủ đạo nhưng nhạt hơn ô ngày được chọn, để hai thứ
+   không đọc thành cùng một mảng. */
+.tour-art-event {
+  fill: color-mix(in oklab, var(--color-primary, #4f46e5) 55%, transparent);
+}
+
+/* Xanh "đang họp" — cùng màu với nút Join meeting thật trên thanh tiêu đề, để
+   người dùng nối được hình vẽ với cái nút họ sẽ thấy. */
+.tour-art-live {
+  fill: var(--color-success, #16a34a);
 }
 
 .tour-actions {

@@ -46,6 +46,73 @@
   <h2 id="tour-step-title" class="tour-title">{{ s.title }}</h2>
   <p class="tour-body">{{ s.body }}</p>
 
+  @if (s.art === 'meet-calendar') {
+  <!-- Hình minh hoạ THAY CHO việc bảo người dùng bấm thử.
+
+       Nút "Start meeting" và "Schedule" đều mang [disabled]="!googleLinked()",
+       nên với người vừa đăng ký chúng là hai cái nút xám bấm không ăn. Mô tả
+       suông thì họ nhìn vào hai nút xám và không hình dung được gì; bắt họ bấm
+       thì bấm không được. Vẽ ra cho xem là đường duy nhất còn lại.
+
+       Vẽ bằng SVG chứ không phải ảnh chụp: không thêm file để tải, không mờ
+       trên màn nét cao, và tự đổi màu theo sáng/tối vì mọi mảng đều lấy từ
+       currentColor hoặc biến chủ đề — ảnh chụp giao diện sáng dán vào nền tối
+       là một mảng trắng chói giữa popover.
+
+       aria-hidden: đây là tranh minh hoạ, mọi thông tin trong đó đã nằm ở đoạn
+       chữ ngay trên. Đọc lại lần nữa cho người dùng trình đọc màn hình chỉ là
+       tiếng ồn. -->
+  <div class="tour-art" aria-hidden="true">
+    <figure class="tour-art-item">
+      <svg viewBox="0 0 120 72" focusable="false">
+        <rect class="tour-art-frame" x="0.5" y="0.5" width="119" height="71" rx="9" />
+        <!-- Khung hình cuộc họp + ba người trong phòng. -->
+        <rect class="tour-art-tile" x="8" y="8" width="104" height="42" rx="6" />
+        <circle class="tour-art-head" cx="34" cy="25" r="7" />
+        <path class="tour-art-head" d="M23 42a11 11 0 0122 0z" />
+        <circle class="tour-art-head" cx="60" cy="25" r="7" />
+        <path class="tour-art-head" d="M49 42a11 11 0 0122 0z" />
+        <circle class="tour-art-head" cx="86" cy="25" r="7" />
+        <path class="tour-art-head" d="M75 42a11 11 0 0122 0z" />
+        <!-- Thanh điều khiển: chấm xanh "đang phát" + hai nút mờ. -->
+        <rect class="tour-art-live" x="8" y="56" width="22" height="10" rx="5" />
+        <rect class="tour-art-ghost" x="36" y="56" width="22" height="10" rx="5" />
+        <rect class="tour-art-ghost" x="64" y="56" width="22" height="10" rx="5" />
+        <rect class="tour-art-ghost" x="92" y="56" width="20" height="10" rx="5" />
+      </svg>
+      <figcaption>Meet room, one click</figcaption>
+    </figure>
+
+    <figure class="tour-art-item">
+      <svg viewBox="0 0 120 72" focusable="false">
+        <!-- Hai cái móc lịch nhô lên trên khung — thứ khiến người ta nhận ra
+             ngay đây là tờ lịch chứ không phải một cái bảng nào khác. -->
+        <rect class="tour-art-ghost" x="30" y="1" width="5" height="9" rx="2.5" />
+        <rect class="tour-art-ghost" x="85" y="1" width="5" height="9" rx="2.5" />
+        <rect class="tour-art-frame" x="0.5" y="6.5" width="119" height="65" rx="9" />
+        <rect class="tour-art-accent" x="8" y="14" width="104" height="8" rx="4" />
+        <!-- Lưới ngày: 6 cột x 3 hàng, một ô được chọn. -->
+        <rect class="tour-art-tile" x="10" y="28" width="13" height="8" rx="3" />
+        <rect class="tour-art-tile" x="28" y="28" width="13" height="8" rx="3" />
+        <rect class="tour-art-tile" x="46" y="28" width="13" height="8" rx="3" />
+        <rect class="tour-art-tile" x="64" y="28" width="13" height="8" rx="3" />
+        <rect class="tour-art-tile" x="82" y="28" width="13" height="8" rx="3" />
+        <rect class="tour-art-tile" x="99" y="28" width="13" height="8" rx="3" />
+        <rect class="tour-art-tile" x="10" y="40" width="13" height="8" rx="3" />
+        <rect class="tour-art-tile" x="28" y="40" width="13" height="8" rx="3" />
+        <rect class="tour-art-accent" x="46" y="40" width="13" height="8" rx="3" />
+        <rect class="tour-art-tile" x="64" y="40" width="13" height="8" rx="3" />
+        <rect class="tour-art-tile" x="82" y="40" width="13" height="8" rx="3" />
+        <rect class="tour-art-tile" x="99" y="40" width="13" height="8" rx="3" />
+        <!-- Sự kiện đã đặt, nằm vắt ngang cuối tờ lịch. -->
+        <rect class="tour-art-event" x="10" y="54" width="66" height="10" rx="5" />
+        <rect class="tour-art-ghost" x="80" y="54" width="32" height="10" rx="5" />
+      </svg>
+      <figcaption>Calendar event + .ics</figcaption>
+    </figure>
+  </div>
+  }
+
   <div class="tour-actions">
     <button type="button" class="btn btn-ghost btn-xs gap-1 font-bold"
             [disabled]="!canGoBack()" (click)="onBack()">
