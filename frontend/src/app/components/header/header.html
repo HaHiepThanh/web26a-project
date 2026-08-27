@@ -147,12 +147,12 @@
       }
     </div>
 
-    <div class="mx-0.5 hidden h-5 w-px bg-base-300/70 lg:block"></div>
+    <div class="mx-0.5 hidden h-5 w-px bg-base-300 lg:block"></div>
 
     <!-- Segmented icon toolbar -->
     <!-- Chuông, lời mời, đổi giao diện, cài đặt: khổ hẹp đều nằm trong speed dial
          ở thanh dưới, nên cả dải này chỉ hiện từ `lg` trở lên. -->
-    <div class="hidden h-9 items-center gap-1 rounded-md border border-base-300/70 bg-base-200/50 px-1 lg:flex">
+    <div class="hidden h-9 items-center gap-1 rounded-md border border-base-300 bg-base-200/50 px-1 lg:flex">
       <div class="relative">
         <button type="button"
           class="btn btn-ghost btn-square btn-xs h-7 w-7 rounded-md relative hover:bg-base-100 hover:shadow-xs"
@@ -167,7 +167,7 @@
 
         @if (notifyMenuOpen()) {
         <div
-          class="absolute right-0 top-[42px] z-[200] w-[320px] rounded-md border border-base-300/70 bg-base-100 p-2 shadow-xl">
+          class="absolute right-0 top-[42px] z-[200] w-[320px] rounded-md border border-base-300 bg-base-100 p-2 shadow-xl">
           <app-notifications-panel [notifications]="actions.notifications()"
             [unreadCount]="actions.unreadNotifications()" [dueCount]="actions.dueBadgeCount()"
             (markAllRead)="markAllNotificationsRead()" (openNotification)="openNotification($event)" />
@@ -205,7 +205,7 @@
 
         @if (inviteMenuOpen()) {
         <div
-          class="absolute right-0 top-[42px] z-[200] w-[300px] rounded-md border border-base-300/70 bg-base-100 p-2 shadow-xl">
+          class="absolute right-0 top-[42px] z-[200] w-[300px] rounded-md border border-base-300 bg-base-100 p-2 shadow-xl">
           <app-invites-panel [invites]="actions.myInvites()" [error]="inviteError()" (accept)="acceptInvite($event)"
             (decline)="declineInvite($event)" />
         </div>
@@ -232,7 +232,7 @@
     </div>
 
     <div
-      class="ml-0.5 flex h-9 cursor-pointer items-center gap-2 rounded-md border border-base-300/70 bg-base-200/50 px-2 transition-all hover:bg-base-200"
+      class="ml-0.5 flex h-9 cursor-pointer items-center gap-2 rounded-md border border-base-300 bg-base-200/50 px-2 transition-all hover:bg-base-200"
       (click)="toggleUserMenu()">
       <app-user-avatar [userId]="currentUser()?.id ?? ''" [name]="avatarName()" [size]="24" [square]="true" />
       <div class="flex max-w-[160px] flex-col leading-tight max-md:hidden">
@@ -248,7 +248,7 @@
   </div>
 
   <div
-    class="absolute right-4 top-[54px] z-[200] mt-1 w-[290px] rounded-md border border-base-300/70 bg-base-100 p-2.5 shadow-xl"
+    class="absolute right-4 top-[54px] z-[200] mt-1 w-[290px] rounded-md border border-base-300 bg-base-100 p-2.5 shadow-xl"
     [class.hidden]="!menuOpen()">
     <div class="flex items-center gap-2.5 px-1.5 py-1">
       <app-user-avatar [userId]="currentUser()?.id ?? ''" [name]="avatarName()" [size]="36" />

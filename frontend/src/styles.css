@@ -170,7 +170,8 @@
    Tailwind nên chỉ so độ đặc hiệu: (0,1,1) của rule này thắng `.border-base-300`
    trần (0,1,0) nhưng thua mọi biến thể có pseudo-class (0,2,0). */
 @layer utilities {
-  [data-theme='night'] .border-base-300 {
+  [data-theme='night'] .border-base-300,
+  [data-theme='night'] [class*="border-base-300"] {
     border-color: var(--border-color);
   }
 }
