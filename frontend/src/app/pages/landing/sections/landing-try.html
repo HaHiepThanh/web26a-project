@@ -57,6 +57,17 @@
       </li>
     </ol>
 
+    <!-- Lời chào DUY NHẤT trên trang, và nó chỉ dành cho người quay lại ở một
+         phiên mới. Khách lần đầu không thấy gì — không ai bị chặn đường. Với
+         người trở lại thì đây là phần thưởng, và là lần thứ hai câu "không có
+         nút Save" được chứng minh, ở thời điểm nặng ký hơn nhiều. -->
+    @if (returning()) {
+      <p class="tb-back" role="status">
+        <span class="tb-back-dot" aria-hidden="true"></span>
+        <b>Welcome back.</b> Your board is exactly where you left it.
+      </p>
+    }
+
     <div class="tb" appReveal [revealDelay]="180">
       <div class="tb-chrome">
         <span class="tb-name">Your board</span>

@@ -48,6 +48,16 @@ interface Saved {
 }
 
 const STORAGE_KEY = 'hhh-try-board';
+
+/**
+ * Dấu "phiên này đã ghé rồi", sống trong sessionStorage nên tự mất khi đóng tab.
+ *
+ * Đây là thứ phân biệt TẢI LẠI TRANG với QUAY LẠI HÔM SAU. Chỉ dựa vào
+ * localStorage thì cả hai đều giống nhau, và lời chào "welcome back" sẽ bật lên
+ * ngay sau khi người ta vừa bấm F5 ở bước ba — vô duyên, và làm hỏng luôn cú
+ * chốt của chính bước đó.
+ */
+const SESSION_KEY = 'hhh-try-seen';
 const COLUMNS = ['To do', 'In progress', 'Done'];
 const DUES = ['Today', 'Fri', 'Next week'];
 
@@ -167,6 +177,17 @@ export class LandingTry {
   readonly didMove = signal(false);
   /** Đã tải lại trang và bảng vẫn còn — chỉ bật được ở `restore()`. */
   readonly didReload = signal(false);
+
+  /**
+   * Người này quay lại ở một PHIÊN MỚI và bảng cũ vẫn còn nguyên.
+   *
+   * Đây là lời chào duy nhất trên trang, và nó cố ý chỉ dành cho người quay
+   * lại: khách lần đầu không thấy gì cả, nên không ai bị chặn đường. Với người
+   * đã đi rồi mà trở lại thì nó là phần thưởng, không phải thuế — và nó chứng
+   * minh lại lời hứa "không có nút Save" ở đúng thời điểm nặng ký nhất, tức là
+   * sau một ngày chứ không phải sau năm giây.
+   */
+  readonly returning = signal(false);
   readonly allDone = computed(() => this.didAdd() && this.didMove() && this.didReload());
 
   private readonly grid = viewChild<ElementRef<HTMLElement>>('grid');
@@ -455,6 +476,11 @@ export class LandingTry {
    * hỏng cả khu vực chỉ vì một bản ghi cũ sai định dạng.
    */
   private restore(): void {
+    // Đánh dấu phiên TRƯỚC mọi lối thoát sớm, và nhớ lại nó có mới hay không.
+    // Đặt sau các câu `return` bên dưới thì người chưa có bảng sẽ không bao giờ
+    // được đánh dấu, và lần tải lại kế tiếp lại bị tính là "phiên mới".
+    const freshSession = this.markSession();
+
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return;
@@ -470,6 +496,8 @@ export class LandingTry {
       if (!clean.length) return;
 
       this.cards.set(clean);
+      // Khôi phục được bảng CỘNG VỚI phiên mới = đúng nghĩa "quay lại".
+      if (freshSession) this.returning.set(true);
 
       const meta = Array.isArray(parsed) ? null : (parsed as Saved);
       if (meta?.added) this.didAdd.set(true);
@@ -482,6 +510,23 @@ export class LandingTry {
       this.nextId = max + 1;
     } catch {
       // Bản ghi hỏng — bỏ qua, dùng bảng mẫu.
+    }
+  }
+
+  /**
+   * Đặt dấu phiên, trả về `true` nếu đây là phiên MỚI.
+   *
+   * Trình duyệt ở chế độ riêng tư có thể chặn sessionStorage và ném lỗi. Chặn
+   * thì coi như KHÔNG phải phiên mới — thà không chào còn hơn chào nhầm người
+   * vừa bấm F5 năm giây trước.
+   */
+  private markSession(): boolean {
+    try {
+      const seen = sessionStorage.getItem(SESSION_KEY);
+      sessionStorage.setItem(SESSION_KEY, '1');
+      return !seen;
+    } catch {
+      return false;
     }
   }
 

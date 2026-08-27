@@ -721,3 +721,57 @@
     transform: translate3d(var(--dx, 0), var(--dy, 0), 0);
   }
 }
+
+/* ==========================================================================
+   Lời chào người quay lại.
+
+   Chỉ hiện với người mở lại ở một phiên mới mà bảng cũ vẫn còn — xem
+   landing-try.ts. Cố ý làm NHỎ và không có nút tắt: một dòng chữ thì không cần
+   ai phải đóng nó, còn thêm cái dấu × là biến một lời chào thành một thứ phải
+   xử lý.
+   ========================================================================== */
+.tb-back {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--lp-2);
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto var(--lp-4);
+  padding: 8px 16px;
+  border: 1px solid color-mix(in oklab, var(--lp-ink-green) 35%, transparent);
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--lp-ink-green) 9%, var(--lp-surface));
+  font-size: var(--lp-text-sm);
+  line-height: 1.5;
+  text-align: center;
+  color: var(--lp-text-2);
+  animation: tb-back-in var(--lp-dur-4) var(--lp-ease) both;
+}
+.tb-back b {
+  font-weight: 700;
+  color: var(--lp-text);
+}
+
+.tb-back-dot {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 999px;
+  background: var(--lp-solid-green);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--lp-ink-green) 20%, transparent);
+}
+
+@keyframes tb-back-in {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tb-back {
+    animation: none;
+  }
+}
