@@ -82,14 +82,14 @@ export function boardMethods<S extends Store>(store: S, api = inject(ApiService)
     },
 
     async loadBoard(boardId: string): Promise<void> {
-      patchState(store, { loadError: null });
+      patchState(store, { loading: true, loadError: null, currentBoardId: null });
       try {
         const row = await api.get<ApiBoard>(`/boards/${boardId}`);
-        patchState(store, upsertEntity(toBoard(row, localFor(row.id))), { currentBoardId: row.id });
+        patchState(store, upsertEntity(toBoard(row, localFor(row.id))), { currentBoardId: row.id, loading: false });
       } catch (e) {
         // 404 = không tồn tại HOẶC không thuộc tổ chức của mình (backend cố ý gộp
         // hai trường hợp để người ngoài không dò được id nào có thật).
-        patchState(store, { currentBoardId: null, loadError: describeError(e, 'Failed to open board.') });
+        patchState(store, { currentBoardId: null, loading: false, loadError: describeError(e, 'Failed to open board.') });
       }
     },
 

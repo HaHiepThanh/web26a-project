@@ -151,11 +151,28 @@ export class Board {
   }
 
   readonly board = this.boardService.currentBoard;
+  readonly boardLoading = this.boardService.loading;
+  readonly listLoading = this.listService.loading;
+  readonly cardLoading = this.cardService.loading;
   /** Board không tồn tại / đã bị xoá / không thuộc tổ chức của mình — `loadBoard()`
    *  ghi message vào đây thay vì để `board()` mãi mãi null với UI vẫn hiện
    *  "Loading board..." như đang tải dở. Reset về null ở ĐẦU mỗi lần loadBoard()
    *  chạy, nên chuyển sang board khác hợp lệ thì tự dọn sạch, không kẹt lại. */
   readonly boardLoadError = this.boardService.loadError;
+
+  /**
+   * Đang tải dữ liệu của board.
+   * Khi chuyển từ boardA sang boardB, trả về `true` để hiển thị Skeleton thay vì
+   * để dữ liệu và màu nền của boardA dính lại trong lúc chờ mạng.
+   */
+  readonly isLoading = computed(() => {
+    if (this.boardLoadError()) return false;
+    const b = this.board();
+    const boardLoaded = b !== null && b.id === this.boardId;
+    const listsLoaded = this.listService.loadedBoardId() === this.boardId && !this.listLoading();
+    const cardsLoaded = this.cardService.loadedBoardId() === this.boardId && !this.cardLoading();
+    return !boardLoaded || !listsLoaded || !cardsLoaded || this.boardLoading();
+  });
   /** Màu nền trang chọn lúc tạo board (Workspace) — không có thì giữ nền xám mặc định
    *  (board demo cũ). Nền màu để trang Board + danh sách nổi bật hơn, không bị chìm. */
   readonly pageBgClass = computed(() => (this.board()?.backgroundImageUrl ? 'bg-base-200' : this.board()?.background ?? 'bg-base-200'));
@@ -873,6 +890,8 @@ export class Board {
    */
   private async bootstrap(): Promise<void> {
     await Promise.all([
+      this.boardService.loadBoard(this.boardId),
+      this.listService.loadLists(this.boardId),
       this.labelService.loadLabels(this.boardId),
       this.cardService.loadCards(this.boardId),
     ]);
