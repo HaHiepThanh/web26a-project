@@ -105,7 +105,17 @@ export class LineRevealDirective implements OnDestroy {
       }
 
       // Phông tải xong thì chỗ ngắt dòng đổi — đo lúc còn phông dự phòng là đo sai.
-      document.fonts?.ready.then(() => this.split());
+      //
+      // Nhưng CHỈ tách lại khi hiệu ứng chưa chạy. Ở lần tải nguội, phông về sau
+      // khi tiêu đề đã lọt vào khung nhìn: tách lại lúc đó sẽ vứt bỏ mấy dòng
+      // đang trượt dở, dựng dòng mới ở vị trí xuất phát rồi gắn `is-in` ngay
+      // trong cùng khung hình — không còn trạng thái "trước" để chuyển, nên chữ
+      // nhảy phắt vào chỗ. Người dùng thấy hiệu ứng bị cắt ngang giữa chừng.
+      // Chữ có xê dịch một chút vì phông đổi thì cũng không sao; hiệu ứng bị
+      // giật mới là thứ nhìn ra ngay.
+      document.fonts?.ready.then(() => {
+        if (!this.shown) this.split();
+      });
     });
   }
 

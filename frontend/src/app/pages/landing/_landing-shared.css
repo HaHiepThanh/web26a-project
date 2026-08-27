@@ -601,7 +601,16 @@
      kể cả khi chiều cao dòng ra số lẻ. */
   transform: translateY(110%);
   transition: transform var(--lp-dur-4) var(--lp-ease);
-  transition-delay: calc(var(--lp-stagger) * var(--i, 0));
+  /* GẤP BA nhịp so le chung, và đây là lý do đo được.
+     Gần như mọi tiêu đề trên trang vỡ đúng HAI dòng (8/8 lúc đo). Với nhịp
+     thường 60ms trên nền thời lượng 520ms, dòng thứ hai chỉ trễ 12% — mắt
+     không tách nổi hai chuyển động lệch nhau chừng ấy, nên nó đọc ra là cả
+     khối cùng đi, tức trông y hệt cú fade-up mà hiệu ứng này thay thế. Hoạt
+     ảnh chạy đúng mà nhìn như không có gì.
+     180ms đẩy độ lệch lên ~35%: dòng dưới bắt đầu lúc dòng trên mới đi được
+     một phần ba, đủ để đọc ra thành hai nhịp rõ ràng. Vẫn là bội của nhịp
+     chung nên không phá hệ. */
+  transition-delay: calc(var(--lp-stagger) * 3 * var(--i, 0));
 }
 
 .line-reveal.is-split.is-in .lr-i {

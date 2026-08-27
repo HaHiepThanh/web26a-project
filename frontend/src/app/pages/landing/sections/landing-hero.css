@@ -906,18 +906,22 @@
   }
   /* `--enter` khai ở cột và được thẻ bên trong THỪA HƯỞNG, nên mỗi cột chỉ cần
      đặt một lần là cả cột đi cùng nhịp. */
+  /* Nhịp GẤP ĐÔI nhịp chung. Cùng lý do đã ghi ở `.lr-i` trong
+     _landing-shared.css: lệch 60ms trên nền thời lượng 520ms chỉ là 12%, mắt
+     đọc ra thành ba cột dựng cùng lúc — mất hẳn cảm giác "đang được xếp vào
+     chỗ", tức là mất luôn điều mà cả hiệu ứng này muốn nói. */
   .reveal.is-revealed .col:nth-of-type(2) {
-    --enter: var(--lp-stagger);
+    --enter: calc(var(--lp-stagger) * 2);
   }
   .reveal.is-revealed .col:nth-of-type(3) {
-    --enter: calc(var(--lp-stagger) * 2);
+    --enter: calc(var(--lp-stagger) * 4);
   }
 
   /* Thẻ rơi XUỐNG từ trên, không trồi lên từ dưới: đúng cảm giác được đặt vào
      cột, và ngược chiều với cú dựng của cột nên hai chuyển động không lẫn nhau. */
   .reveal.is-revealed .kan-card:not(.kan-card-travel) {
     animation: card-drop var(--lp-dur-3) var(--lp-ease) both;
-    animation-delay: calc(var(--enter, 0ms) + var(--lp-stagger));
+    animation-delay: calc(var(--enter, 0ms) + var(--lp-stagger) * 2);
   }
 
   /* Chỉ khai `from`. Không viết `to` thì trạng thái cuối chính là giá trị gốc
