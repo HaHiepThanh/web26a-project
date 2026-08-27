@@ -26,6 +26,7 @@ type Store = WritableStateSource<EntityState<List> & ListOwnState & ErrorState> 
  * nữa và `inject()` sẽ ném lỗi NG0203.
  */
 export function listMethods<S extends Store>(store: S, api = inject(ApiService)) {
+  const pendingCreateListKeys = new Set<string>();
   return {
     /**
      * Áp một cột nhận từ WebSocket (người khác vừa tạo/đổi tên/kéo) — luôn
@@ -58,6 +59,10 @@ export function listMethods<S extends Store>(store: S, api = inject(ApiService))
     async createList(boardId: string, name: string): Promise<List | null> {
       const trimmed = name.trim();
       if (!trimmed) return null;
+      const key = `${boardId}::${trimmed}`;
+      if (pendingCreateListKeys.has(key)) return null;
+      pendingCreateListKeys.add(key);
+
       try {
         // position do BACKEND tính (cột mới luôn về cuối) — client không tự đoán.
         const row = await api.post<ApiList>('/lists', { boardId, name: trimmed });
@@ -69,6 +74,8 @@ export function listMethods<S extends Store>(store: S, api = inject(ApiService))
       } catch (e) {
         store.fail(describeError(e, 'Failed to create list.'));
         return null;
+      } finally {
+        pendingCreateListKeys.delete(key);
       }
     },
 

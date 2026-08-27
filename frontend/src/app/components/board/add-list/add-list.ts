@@ -38,9 +38,9 @@ export class AddList {
       this.cancel();
       return;
     }
-    this.create.emit(trimmed);
-    this.editing.set(false);
     this.name.set('');
+    this.editing.set(false);
+    this.create.emit(trimmed);
   }
 
   cancel(): void {

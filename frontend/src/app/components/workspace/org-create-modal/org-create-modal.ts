@@ -12,6 +12,7 @@ export class OrgCreateModal {
   readonly isOpen = input<boolean>(false);
   /** Hàm kiểm slug đã bị chiếm chưa — trang cha truyền vào (nguồn: OrganizationService). */
   readonly isSlugTaken = input<(slug: string) => boolean>(() => false);
+  readonly submitting = input<boolean>(false);
 
   readonly close = output<void>();
   readonly createOrg = output<{ name: string; slug: string }>();
@@ -62,6 +63,7 @@ export class OrgCreateModal {
   }
 
   onSubmit(): void {
+    if (this.submitting()) return;
     const name = this.nameInput().trim();
     if (!name) {
       this.nameError.set('Please enter an Organization name!');

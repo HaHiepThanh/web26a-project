@@ -997,10 +997,18 @@ export class Board {
     void this.listService.reorderListOptimistic(ordered.map((l) => l.id));
   }
 
+  readonly creatingList = signal(false);
+
   // ---- Tạo danh sách inline (bấm "+ Thêm danh sách" → gõ tên → Enter, kiểu Trello) ----
   async createList(name: string): Promise<void> {
-    const list = await this.listService.createList(this.boardId, name);
-    if (list) this.addToast(`Created list "${name}"`, 'success');
+    if (this.creatingList()) return;
+    this.creatingList.set(true);
+    try {
+      const list = await this.listService.createList(this.boardId, name);
+      if (list) this.addToast(`Created list "${name}"`, 'success');
+    } finally {
+      this.creatingList.set(false);
+    }
   }
 
   // ---- Tạo thẻ (bấm "+ Thêm thẻ" → tạo ngay với tên mặc định, mở thẳng

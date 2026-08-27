@@ -50,6 +50,8 @@ export function withOrganizationMethods() {
          * một Promise vào state là DevTools ghi lại thứ không tuần tự hoá được.
          */
         let loadPromise: Promise<void> | null = null;
+        const pendingCreateOrgSlugs = new Set<string>();
+        const pendingInviteKeys = new Set<string>();
 
         /** Trả true khi nạp xong, false khi hỏng — nơi gọi dựa vào đó để bỏ cache. */
         async function fetchFromServer(uid: string): Promise<boolean> {
@@ -192,10 +194,16 @@ export function withOrganizationMethods() {
             name: string,
             slug: string,
           ): Promise<{ org?: Organization; error?: string }> {
+            const trimmedSlug = slug.trim();
+            if (pendingCreateOrgSlugs.has(trimmedSlug)) {
+              return { error: 'Đang tạo tổ chức, vui lòng chờ trong giây lát.' };
+            }
+            pendingCreateOrgSlugs.add(trimmedSlug);
+
             try {
               const created = await api.post<ApiCreatedOrg>('/organizations', {
                 name: name.trim(),
-                slug: slug.trim(),
+                slug: trimmedSlug,
               });
               await this.reload();
               const org = store.entities().find((o) => o.id === created.id) ?? null;
@@ -203,6 +211,8 @@ export function withOrganizationMethods() {
               return { org: org ?? undefined };
             } catch (e) {
               return { error: describeError(e, 'Không tạo được tổ chức.') };
+            } finally {
+              pendingCreateOrgSlugs.delete(trimmedSlug);
             }
           },
 
@@ -214,6 +224,10 @@ export function withOrganizationMethods() {
             const me = auth.currentUser();
             if (!me) return 'Bạn cần đăng nhập.';
             if (toUserId === me.id) return 'Bạn không thể tự mời chính mình.';
+            const key = `${orgId}::${toUserId}`;
+            if (pendingInviteKeys.has(key)) return 'Đang gửi lời mời...';
+            pendingInviteKeys.add(key);
+
             try {
               // role chỉ có hiệu lực KHI người ta bấm Đồng ý — backend đọc lại
               // organization_invites.role lúc đó, không phải lúc gửi.
@@ -224,6 +238,8 @@ export function withOrganizationMethods() {
               return null;
             } catch (e) {
               return describeError(e, 'Không gửi được lời mời.');
+            } finally {
+              pendingInviteKeys.delete(key);
             }
           },
 

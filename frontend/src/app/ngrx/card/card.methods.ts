@@ -55,57 +55,64 @@ export function withCardMethods() {
       props: type<EntityProps<Card>>(),
       methods: type<{ fail(message: string): void }>(),
     },
-    withMethods((store, api = inject(ApiService)) => ({
-      async loadCards(boardId: string, force = false): Promise<void> {
-        if (!boardId) {
-          patchState(store, setAllEntities<Card>([]), { loadedBoardId: null, loading: false });
-          return;
-        }
-        if (!force && store.loadedBoardId() === boardId && !store.loading()) return;
-        patchState(store, setAllEntities<Card>([]), { loadedBoardId: boardId, loading: true });
-        try {
-          const rows = await api.get<ApiCard[]>(`/cards?boardId=${boardId}`);
-          patchState(store, setAllEntities(rows.map(toCard)), { loading: false });
-        } catch (e) {
-          patchState(store, setAllEntities<Card>([]), { loading: false });
-          store.fail(describeError(e, 'Failed to load cards.'));
-        }
-      },
-
-      async createCard(listId: string, input: CreateCardInput): Promise<Card | null> {
-        const title = input.title.trim();
-        if (!title) return null;
-
-        try {
-          // POST /cards chỉ nhận listId + title; id và position do SERVER cấp.
-          const row = await api.post<ApiCard>('/cards', { listId, title });
-
-          // Các trường còn lại gửi ở bước hai. Hỏng thì thẻ vẫn tồn tại với giá trị
-          // mặc định — báo cho người dùng chứ không nuốt lỗi.
-          const patch: CardPatch = {};
-          if (input.description?.trim()) patch.description = input.description.trim();
-          if (input.priority && input.priority !== 'medium') patch.priority = input.priority;
-          if (input.assigneeId) patch.assigneeId = input.assigneeId;
-          if (input.dueDate) patch.dueDate = input.dueDate;
-
-          let final = row;
-          if (Object.keys(patch).length > 0) {
-            try {
-              final = await api.patch<ApiCard>(`/cards/${row.id}`, patch);
-            } catch {
-              store.fail('Card created but some details failed to save.');
-            }
+    withMethods((store, api = inject(ApiService)) => {
+      const pendingCreateCardKeys = new Set<string>();
+      return {
+        async loadCards(boardId: string, force = false): Promise<void> {
+          if (!boardId) {
+            patchState(store, setAllEntities<Card>([]), { loadedBoardId: null, loading: false });
+            return;
           }
+          if (!force && store.loadedBoardId() === boardId && !store.loading()) return;
+          patchState(store, setAllEntities<Card>([]), { loadedBoardId: boardId, loading: true });
+          try {
+            const rows = await api.get<ApiCard[]>(`/cards?boardId=${boardId}`);
+            patchState(store, setAllEntities(rows.map(toCard)), { loading: false });
+          } catch (e) {
+            patchState(store, setAllEntities<Card>([]), { loading: false });
+            store.fail(describeError(e, 'Failed to load cards.'));
+          }
+        },
 
-          // Upsert theo id, không phải thêm mù quáng: sự kiện WebSocket `card.created`
-          // có thể đã về trước khi POST trả lời.
-          patchState(store, upsertEntity(toCard(final)));
-          return toCard(final);
-        } catch (e) {
-          store.fail(describeError(e, 'Failed to create card.'));
-          return null;
-        }
-      },
+        async createCard(listId: string, input: CreateCardInput): Promise<Card | null> {
+          const title = input.title.trim();
+          if (!title) return null;
+          const key = `${listId}::${title}`;
+          if (pendingCreateCardKeys.has(key)) return null;
+          pendingCreateCardKeys.add(key);
+
+          try {
+            // POST /cards chỉ nhận listId + title; id và position do SERVER cấp.
+            const row = await api.post<ApiCard>('/cards', { listId, title });
+
+            // Các trường còn lại gửi ở bước hai. Hỏng thì thẻ vẫn tồn tại với giá trị
+            // mặc định — báo cho người dùng chứ không nuốt lỗi.
+            const patch: CardPatch = {};
+            if (input.description?.trim()) patch.description = input.description.trim();
+            if (input.priority && input.priority !== 'medium') patch.priority = input.priority;
+            if (input.assigneeId) patch.assigneeId = input.assigneeId;
+            if (input.dueDate) patch.dueDate = input.dueDate;
+
+            let final = row;
+            if (Object.keys(patch).length > 0) {
+              try {
+                final = await api.patch<ApiCard>(`/cards/${row.id}`, patch);
+              } catch {
+                store.fail('Card created but some details failed to save.');
+              }
+            }
+
+            // Upsert theo id, không phải thêm mù quáng: sự kiện WebSocket `card.created`
+            // có thể đã về trước khi POST trả lời.
+            patchState(store, upsertEntity(toCard(final)));
+            return toCard(final);
+          } catch (e) {
+            store.fail(describeError(e, 'Failed to create card.'));
+            return null;
+          } finally {
+            pendingCreateCardKeys.delete(key);
+          }
+        },
 
       async updateCard(id: string, changes: CardChanges): Promise<void> {
         const before = store.entityMap()[id];
@@ -214,6 +221,6 @@ export function withCardMethods() {
           }, 500);
         }
       },
-    })),
-  );
+    };
+  }));
 }

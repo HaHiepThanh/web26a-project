@@ -92,9 +92,14 @@
 
       <!-- Actions -->
       <div class="flex justify-end gap-2 pt-3 border-t border-base-300">
-        <button type="button" class="btn btn-ghost rounded-md font-bold" (click)="close.emit()">Cancel</button>
-        <button type="submit" class="btn btn-primary rounded-md font-black px-5 shadow-xs">
+        <button type="button" class="btn btn-ghost rounded-md font-bold" [disabled]="submitting()" (click)="close.emit()">Cancel</button>
+        <button type="submit" class="btn btn-primary rounded-md font-black px-5 shadow-xs" [disabled]="submitting() || !nameInput().trim() || !slugOk()">
+          @if (submitting()) {
+          <span class="loading loading-spinner loading-xs"></span>
+          Creating…
+          } @else {
           + Create Organization
+          }
         </button>
       </div>
     </form>

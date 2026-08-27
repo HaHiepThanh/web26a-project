@@ -595,6 +595,26 @@ export class BoardsService {
         ? await this.locTheoWorkspace(workspaceId, uid, memberIds)
         : [];
 
+    // Chống duplicate dữ liệu do spam click / concurrency (< 3 giây)
+    const baGiayTruoc = new Date(Date.now() - 3000).toISOString();
+    const { data: duplicateBoard } = await this.supabase.client
+      .from('boards')
+      .select('*')
+      .eq('workspace_id', workspaceId)
+      .eq('name', name.trim())
+      .eq('created_by', uid)
+      .gte('created_at', baGiayTruoc)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (duplicateBoard) {
+      const existingMembers = await this.memberIdsOf(duplicateBoard.id);
+      return (
+        await this.kyAnhNen([toBoard(duplicateBoard as BoardRow, existingMembers)])
+      )[0];
+    }
+
     const { data, error } = await this.supabase.client
       .from('boards')
       .insert({

@@ -100,6 +100,22 @@ export class ListsService {
 
     const { orgId } = await this.access.assertBoardAccess(uid, boardId);
 
+    // Chống duplicate dữ liệu do spam click / concurrency (< 3 giây)
+    const baGiayTruoc = new Date(Date.now() - 3000).toISOString();
+    const { data: duplicateList } = await this.supabase.client
+      .from('lists')
+      .select('*')
+      .eq('board_id', boardId)
+      .eq('name', name.trim())
+      .gte('created_at', baGiayTruoc)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (duplicateList) {
+      return toList(duplicateList as ListRow);
+    }
+
     const { data: last, error: lastError } = await this.supabase.client
       .from('lists')
       .select('position')

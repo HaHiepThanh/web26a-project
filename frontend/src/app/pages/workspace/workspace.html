@@ -219,7 +219,7 @@
 </app-board-edit-modal>
 
 <!-- MODAL: Tạo Organization mới -->
-<app-org-create-modal [isOpen]="showOrgCreateModal()"
+<app-org-create-modal [isOpen]="showOrgCreateModal()" [submitting]="isCreatingOrg()"
   (close)="showOrgCreateModal.set(false)" (createOrg)="createOrg($event)">
 </app-org-create-modal>
 

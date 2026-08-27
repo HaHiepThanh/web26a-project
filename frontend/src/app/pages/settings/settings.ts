@@ -604,13 +604,21 @@ export class Settings {
    *  trình duyệt này chỉ thấy tổ chức của user đang đăng nhập). Modal vì thế không
    *  cảnh báo lúc gõ nữa — bấm Tạo, backend trả 409 kèm câu tiếng Việt sẵn. */
 
+  readonly isCreatingOrg = signal(false);
+
   async onCreateOrg(event: { name: string; slug: string }): Promise<void> {
-    const { org, error } = await this.orgService.createOrg(event.name, event.slug);
-    if (!org) {
-      this.flash(error ?? 'Failed to create the organization, please try again!', 'error');
-      return;
+    if (this.isCreatingOrg()) return;
+    this.isCreatingOrg.set(true);
+    try {
+      const { org, error } = await this.orgService.createOrg(event.name, event.slug);
+      if (!org) {
+        this.flash(error ?? 'Failed to create the organization, please try again!', 'error');
+        return;
+      }
+      this.flash(`Created organization "${org.name}" successfully!`);
+    } finally {
+      this.isCreatingOrg.set(false);
     }
-    this.flash(`Created organization "${org.name}" successfully!`);
   }
 
   async onInviteOrgMember(data: { user: User; role: OrgInviteRole }): Promise<void> {

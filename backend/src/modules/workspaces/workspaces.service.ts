@@ -310,6 +310,24 @@ export class WorkspacesService {
         ? await this.loc(orgId, uid, memberIds)
         : [uid];
 
+    // 2.5 Chống duplicate dữ liệu do spam click / concurrency (< 3 giây)
+    const baGiayTruoc = new Date(Date.now() - 3000).toISOString();
+    const { data: duplicateWs } = await this.supabase.client
+      .from('workspaces')
+      .select('*')
+      .eq('org_id', orgId)
+      .eq('name', name.trim())
+      .eq('created_by', uid)
+      .gte('created_at', baGiayTruoc)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (duplicateWs) {
+      const existingMembers = await this.memberIdsOf(duplicateWs.id);
+      return this.toResponse(duplicateWs as WorkspaceRow, existingMembers);
+    }
+
     // 3. Tạo workspace. `created_by` lấy từ token, không lấy từ body.
     const { data: ws, error } = await this.supabase.client
       .from('workspaces')

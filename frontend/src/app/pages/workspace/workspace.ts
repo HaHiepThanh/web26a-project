@@ -423,14 +423,23 @@ export class Workspace {
    *  trình duyệt này chỉ thấy tổ chức của user đang đăng nhập). Modal vì thế không
    *  cảnh báo lúc gõ nữa — bấm Tạo, backend trả 409 kèm câu tiếng Việt sẵn. */
 
+  readonly isCreatingOrg = signal(false);
+
   async createOrg(data: { name: string; slug: string }): Promise<void> {
-    const { org, error } = await this.orgService.createOrg(data.name, data.slug);
-    if (!org) {
-      this.addToast(error ?? 'Failed to create the organization, please try again!', 'error');
-      return;
+    if (this.isCreatingOrg()) return;
+    this.isCreatingOrg.set(true);
+    try {
+      const { org, error } = await this.orgService.createOrg(data.name, data.slug);
+      if (!org) {
+        this.addToast(error ?? 'Failed to create the organization, please try again!', 'error');
+        return;
+      }
+      this.addToast(`Created organization "${org.name}" at /${org.slug}`, 'success');
+      this.showOrgCreateModal.set(false);
+      void this.router.navigate(['/', org.slug, 'workspace']);
+    } finally {
+      this.isCreatingOrg.set(false);
     }
-    this.addToast(`Created organization "${org.name}" at /${org.slug}`, 'success');
-    void this.router.navigate(['/', org.slug, 'workspace']);
   }
 
   // ---- Modal quản lý Organization (mở từ nút 3 chấm ở sidebar) ----
