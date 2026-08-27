@@ -111,6 +111,7 @@
     @case ('manage-workspace') {
     <app-manage-workspace-tab [organizations]="orgService.organizations()" [selectedOrgFilter]="selectedOrgFilter()"
       [workspaces]="workspaces()" [selectedWorkspaceId]="selectedWorkspaceId()" [searchableUsers]="searchableUsers()"
+      [myRoleByOrg]="orgService.myRoleByOrg()"
       (changeOrgFilter)="onOrgFilterChange($event)" (selectWorkspace)="onSelectWorkspace($event)"
       (addMember)="onAddWorkspaceMember($event)" (changeRole)="onChangeWorkspaceRole($event)"
       (removeMember)="onRemoveWorkspaceMember($event)"
@@ -125,7 +126,9 @@
 
 <!-- MODAL: tạo / sửa Workspace -->
 <app-workspace-form-modal [isOpen]="showWorkspaceModal()" [mode]="workspaceModalMode()"
-  [workspace]="selectedWorkspaceForEdit()" [currentUser]="auth.currentUser()" (close)="showWorkspaceModal.set(false)"
+  [workspace]="selectedWorkspaceForEdit()" [currentUser]="auth.currentUser()"
+  [initialOrgId]="selectedOrgFilter() || orgService.activeOrgId()"
+  (close)="showWorkspaceModal.set(false)"
   (save)="handleWorkspaceSave($event)" (requestDelete)="requestDeleteWorkspace($event)">
 </app-workspace-form-modal>
 

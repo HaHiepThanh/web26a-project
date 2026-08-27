@@ -17,6 +17,7 @@ export class ManageWorkspaceTab {
   readonly workspaces = input<WorkspaceWithOrg[]>([]);
   readonly selectedWorkspaceId = input<string | null>(null);
   readonly searchableUsers = input<User[]>([]);
+  readonly myRoleByOrg = input<Record<string, 'owner' | 'admin' | 'member'>>({});
 
   readonly changeOrgFilter = output<string | null>();
   readonly selectWorkspace = output<string>();
@@ -27,10 +28,26 @@ export class ManageWorkspaceTab {
   readonly requestCreateWorkspace = output<void>();
   readonly flashMessage = output<{ message: string; type?: 'success' | 'error' | 'info' }>();
 
-
   readonly selectedWorkspace = computed(() => {
     const id = this.selectedWorkspaceId();
     return this.workspaces().find((w) => w.id === id) || this.workspaces()[0] || null;
+  });
+
+  readonly canManageCurrentWorkspace = computed(() => {
+    const ws = this.selectedWorkspace();
+    if (!ws) return false;
+    const role = this.myRoleByOrg()[ws.orgId];
+    return role === 'owner' || role === 'admin';
+  });
+
+  readonly canCreateWorkspace = computed(() => {
+    const filter = this.selectedOrgFilter();
+    if (filter) {
+      const role = this.myRoleByOrg()[filter];
+      return role === 'owner' || role === 'admin';
+    }
+    const roles = Object.values(this.myRoleByOrg());
+    return roles.length === 0 || roles.some((r) => r === 'owner' || r === 'admin');
   });
 
   // Add Member Modal State

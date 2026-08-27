@@ -86,6 +86,8 @@ export class OrgManageModal {
     return !!o && o.ownerId === this.auth.currentUser()?.id;
   });
 
+  readonly currentUserId = computed(() => this.auth.currentUser()?.id);
+
   readonly nameDirty = computed(() => {
     const o = this.org();
     if (!o) return false;
@@ -108,6 +110,8 @@ export class OrgManageModal {
     if (o.ownerId === me) return true;
     return this.members().some((m) => m.user.id === me && m.role === 'admin');
   });
+
+  readonly isAdminOrOwner = this.canManageLinks;
 
   readonly activeLinks = this.inviteLinks.activeLinks;
   readonly linksLoading = this.inviteLinks.loading;

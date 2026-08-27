@@ -406,12 +406,21 @@ export class Settings {
   readonly selectedWorkspaceForEdit = signal<WorkspaceItem | null>(null);
 
   openCreateWorkspace(): void {
+    const filter = this.selectedOrgFilter();
+    if (filter) {
+      const role = this.orgService.myRoleByOrg()[filter];
+      if (role !== 'owner' && role !== 'admin') {
+        this.flash('Only the Organization Owner or Admins can create workspaces.', 'error');
+        return;
+      }
+    }
     this.workspaceModalMode.set('create');
     this.selectedWorkspaceForEdit.set(null);
     this.showWorkspaceModal.set(true);
   }
 
   async handleWorkspaceSave(data: {
+    orgId?: string;
     name: string;
     description: string;
     visibility: import('../../models').WorkspaceVisibility;
@@ -419,9 +428,15 @@ export class Settings {
     members: WorkspaceMember[];
   }): Promise<void> {
     const { name, description, visibility, memberIds, members } = data;
-    const orgId = this.selectedOrgFilter() || this.orgService.activeOrgId() || this.orgService.organizations()[0]?.id;
+    const orgId = data.orgId || this.selectedOrgFilter() || this.orgService.activeOrgId() || this.orgService.organizations()[0]?.id;
     if (!orgId) {
       this.flash('No active Organization found. Please create or select an organization first.', 'error');
+      return;
+    }
+
+    const role = this.orgService.myRoleByOrg()[orgId];
+    if (role !== 'owner' && role !== 'admin') {
+      this.flash('Only the Organization Owner or Admins can create workspaces.', 'error');
       return;
     }
 
@@ -471,6 +486,11 @@ export class Settings {
   requestDeleteWorkspace(wsId: string): void {
     const ws = this.workspaces().find((w) => w.id === wsId);
     if (!ws) return;
+    const role = this.orgService.myRoleByOrg()[ws.orgId];
+    if (role !== 'owner' && role !== 'admin') {
+      this.flash('Only the Organization Owner or Admins can delete workspaces.', 'error');
+      return;
+    }
     this.workspacePendingDelete.set(ws);
     this.deleteWorkspaceError.set(null);
     this.showDeleteWorkspaceModal.set(true);
@@ -518,6 +538,10 @@ export class Settings {
 
   /** Bước 1 — chỉ mở hộp thoại xác nhận. Chưa gọi API, chưa đụng gì tới dữ liệu. */
   requestDeleteOrg(orgId: string): void {
+    if (this.orgService.myRoleByOrg()[orgId] !== 'owner') {
+      this.flash('Only the Organization Owner can delete the organization.', 'error');
+      return;
+    }
     const org = this.orgService.organizations().find((o) => o.id === orgId);
     if (!org) return;
     this.orgPendingDelete.set(org);

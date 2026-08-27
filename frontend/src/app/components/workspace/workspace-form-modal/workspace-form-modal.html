@@ -12,6 +12,26 @@
     </div>
 
     <form (ngSubmit)="onSubmit()">
+      <!-- Chọn Organization (khi tạo mới và user có nhiều hơn 1 Organization) -->
+      @if (mode() === 'create' && manageableOrganizations().length > 1) {
+      <div class="mb-4">
+        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-base-content"
+          for="workspace-org-select">
+          Organization <span class="text-error">*</span>
+        </label>
+        <select id="workspace-org-select"
+          class="select select-bordered select-sm w-full rounded-md font-bold text-base-content bg-base-100 shadow-xs text-sm border-base-300 focus:border-primary focus:outline-none cursor-pointer"
+          [ngModel]="selectedOrgId()" (ngModelChange)="onOrgChange($event)" name="workspaceOrg">
+          @for (org of manageableOrganizations(); track org.id) {
+            <option [value]="org.id">{{ org.name }}</option>
+          }
+        </select>
+        <p class="mt-1 text-2xs font-semibold text-base-content/50">
+          Choose which Organization this workspace belongs to.
+        </p>
+      </div>
+      }
+
       <!-- Tên Workspace (không có icon/màu — Workspace chỉ hiện bằng tên) -->
       <div class="mb-4">
         <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-base-content"

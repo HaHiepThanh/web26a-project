@@ -1,14 +1,23 @@
 import { BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { SupabaseService } from '../../common/supabase/supabase.service';
+import { ModerationService } from '../../common/moderation/moderation.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 import { AuthService } from './auth.service';
 
 describe('AuthService - uploadAvatar', () => {
-  let service: AuthService;
-  let mockSupabase: any;
+  let mockModeration: any;
 
   beforeEach(async () => {
+    mockModeration = {
+      kiemTra: jest.fn().mockImplementation((buffer: Buffer) => {
+        if (buffer.toString() === 'fake-pdf') {
+          throw new BadRequestException('Not an image');
+        }
+        return Promise.resolve({ mime: 'image/jpeg', duoi: 'jpg' });
+      }),
+    };
+
     mockSupabase = {
       client: {
         storage: {
@@ -51,6 +60,10 @@ describe('AuthService - uploadAvatar', () => {
           useValue: {
             broadcastUserProfileUpdated: jest.fn(),
           },
+        },
+        {
+          provide: ModerationService,
+          useValue: mockModeration,
         },
       ],
     }).compile();

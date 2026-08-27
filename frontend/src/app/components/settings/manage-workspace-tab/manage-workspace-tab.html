@@ -4,11 +4,13 @@
       <h2 class="text-2xl font-black text-base-content tracking-tight">Manage Workspace</h2>
       <p class="mt-1 text-sm text-base-content/60">View and manage Workspace members across your Organizations.</p>
     </div>
+    @if (canCreateWorkspace()) {
     <button type="button" class="btn btn-primary btn-sm rounded-md gap-1.5 px-3.5 font-bold shadow-xs hover:scale-105 transition-all"
       (click)="requestCreateWorkspace.emit()">
       <svg lucidePlus class="h-4 w-4" [strokeWidth]="2.6"></svg>
       <span>New Workspace</span>
     </button>
+    }
   </header>
 
   <!-- 1. BỘ LỌC THEO ORGANIZATION -->
@@ -59,11 +61,13 @@
     </button>
     }
 
+    @if (canCreateWorkspace()) {
     <button type="button" class="btn btn-sm btn-ghost btn-outline rounded-md shrink-0 gap-1.5 text-xs font-bold border-dashed hover:bg-base-200"
       (click)="requestCreateWorkspace.emit()" title="Create a new workspace">
       <svg lucidePlus class="h-3.5 w-3.5" [strokeWidth]="2.6"></svg>
       <span>New</span>
     </button>
+    }
   </div>
   }
 
@@ -106,12 +110,14 @@
           Members ({{ curWs.members.length }})
         </h4>
 
+        @if (canManageCurrentWorkspace()) {
         <button type="button"
           class="btn btn-primary btn-sm rounded-md px-3.5 font-bold shadow-xs gap-1.5 hover:scale-105 transition-all"
           (click)="openAddMember()">
           <svg lucidePlus class="h-3.5 w-3.5" [strokeWidth]="2.6"></svg>
           <span>Add member</span>
         </button>
+        }
       </div>
 
       <div class="overflow-x-auto rounded-md border border-base-300 bg-base-100">
@@ -144,28 +150,32 @@
                 <span class="select-all break-all select-text font-mono text-2xs" [title]="mem.id">{{ mem.id }}</span>
               </td>
 
-              <!-- Role select: bóp nhỏ gọn gàng với rounded-md -->
+              <!-- Role select / badge: chỉ owner/admin được đổi vai trò -->
               <td class="py-3 px-4">
                 @if (mem.role === 'owner') {
                 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-primary text-primary-content font-bold text-xs shadow-xs whitespace-nowrap">
                   <svg lucideCrown class="h-3 w-3" [strokeWidth]="2.4"></svg> Owner</span>
-                } @else {
+                } @else if (canManageCurrentWorkspace()) {
                 <select class="select select-xs rounded-md border border-base-300 bg-base-100 text-base-content font-bold text-xs h-7 min-h-7 px-2.5 w-24 text-center cursor-pointer shadow-2xs focus:border-primary focus:outline-none" [ngModel]="mem.role"
                   (ngModelChange)="onChangeMemberRole(mem.id, $event)">
                   <option value="member">Member</option>
                   <option value="admin">Admin</option>
                   <option value="owner">Owner</option>
                 </select>
+                } @else {
+                <span class="badge badge-sm badge-ghost font-bold text-2xs rounded-md">{{ mem.role === 'admin' ? 'Admin' : 'Member' }}</span>
                 }
               </td>
 
-              <!-- Action -->
+              <!-- Action: chỉ owner/admin được gỡ thành viên -->
               <td class="py-3 px-4 text-right">
-                @if (mem.role !== 'owner') {
+                @if (canManageCurrentWorkspace() && mem.role !== 'owner') {
                 <button type="button" class="text-error font-bold text-xs hover:underline hover:opacity-80 transition-opacity"
                   (click)="onRemoveMember(mem)">
                   Remove
                 </button>
+                } @else {
+                <span class="text-base-content/30 text-xs">—</span>
                 }
               </td>
             </tr>
@@ -174,7 +184,8 @@
         </table>
       </div>
 
-      <!-- Danger zone — xoá workspace được chọn -->
+      <!-- Danger zone — xoá workspace được chọn (chỉ owner/admin mới thấy) -->
+      @if (canManageCurrentWorkspace()) {
       <div class="mt-6 rounded-md border-2 border-error/30 bg-error/5 p-5 shadow-xs">
         <h3 class="flex items-center gap-2 text-sm font-black text-error">
           <svg lucideTriangleAlert class="h-4 w-4 shrink-0" [strokeWidth]="2.4"></svg>
@@ -191,6 +202,7 @@
           </button>
         </div>
       </div>
+      }
     </div>
   </div>
   } @else {
@@ -200,16 +212,21 @@
     <h3 class="text-base font-black text-base-content">No Workspace yet</h3>
     <p class="text-xs text-base-content/60 max-w-md mx-auto">
       @if (selectedOrgFilter() !== null) {
-      This organization has no Workspace yet. Create your first workspace below.
+      This organization has no Workspace yet.
       } @else {
-      No Workspace has been created yet. Create your first workspace below.
+      No Workspace has been created yet.
+      }
+      @if (canCreateWorkspace()) {
+      Create your first workspace below.
       }
     </p>
+    @if (canCreateWorkspace()) {
     <button type="button" class="btn btn-primary btn-sm rounded-md gap-1.5 font-bold mx-auto shadow-xs"
       (click)="requestCreateWorkspace.emit()">
       <svg lucidePlus class="h-4 w-4" [strokeWidth]="2.6"></svg>
       Create Workspace
     </button>
+    }
   </div>
   }
 </section>

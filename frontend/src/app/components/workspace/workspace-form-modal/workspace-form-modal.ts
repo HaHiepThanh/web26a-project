@@ -34,9 +34,11 @@ export class WorkspaceFormModal {
   readonly mode = input<'create' | 'edit'>('create');
   readonly workspace = input<WorkspaceItem | null>(null);
   readonly currentUser = input<User | null>(null);
+  readonly initialOrgId = input<string | null>(null);
 
   readonly close = output<void>();
   readonly save = output<{
+    orgId?: string;
     name: string;
     description: string;
     visibility: WorkspaceVisibility;
@@ -49,6 +51,7 @@ export class WorkspaceFormModal {
    */
   readonly requestDelete = output<string>();
 
+  readonly selectedOrgId = signal<string>('');
   readonly nameInput = signal('');
   readonly nameError = signal<string | null>(null);
   readonly descInput = signal('');
@@ -61,8 +64,22 @@ export class WorkspaceFormModal {
   readonly initialsOf = initialsOf;
   readonly avatarBgFor = avatarBgFor;
 
-  /** Toàn bộ thành viên tổ chức đang mở — nguồn duy nhất cho ô chỉ định. */
-  readonly orgMembers = computed(() => this.orgService.membersOf(this.orgService.activeOrgId()));
+  /** Danh sách tổ chức user có quyền tạo workspace (owner hoặc admin) */
+  readonly manageableOrganizations = computed(() => {
+    const myRoleByOrg = this.orgService.myRoleByOrg();
+    const orgs = this.orgService.organizations();
+    const manageable = orgs.filter((org) => {
+      const role = myRoleByOrg[org.id];
+      return role === 'owner' || role === 'admin';
+    });
+    return manageable.length > 0 ? manageable : orgs;
+  });
+
+  /** Toàn bộ thành viên tổ chức đang chọn — nguồn duy nhất cho ô chỉ định. */
+  readonly orgMembers = computed(() => {
+    const orgId = this.selectedOrgId() || this.orgService.activeOrgId();
+    return this.orgService.membersOf(orgId);
+  });
 
   /** Không gỡ được chính mình ra khỏi workspace mình tạo — gỡ xong là mất luôn quyền vào. */
   readonly ownerId = computed(() => this.currentUser()?.id ?? '');
@@ -103,13 +120,28 @@ export class WorkspaceFormModal {
         this.descInput.set(ws.description);
         this.visibility.set(ws.visibility ?? 'org');
         this.selectedIds.set([...(ws.memberIds ?? [])]);
+        const wsOrgId = (ws as any).orgId || this.orgService.activeOrgId() || '';
+        this.selectedOrgId.set(wsOrgId);
       } else {
         this.nameInput.set('');
         this.descInput.set('');
         this.visibility.set('org');
         this.selectedIds.set(this.ownerId() ? [this.ownerId()] : []);
+        const defOrgId =
+          this.initialOrgId() ||
+          this.orgService.activeOrgId() ||
+          this.manageableOrganizations()[0]?.id ||
+          '';
+        this.selectedOrgId.set(defOrgId);
       }
     });
+  }
+
+  onOrgChange(orgId: string): void {
+    this.selectedOrgId.set(orgId);
+    if (this.ownerId()) {
+      this.selectedIds.set([this.ownerId()]);
+    }
   }
 
   isSelected(userId: string): boolean {
@@ -169,7 +201,14 @@ export class WorkspaceFormModal {
         avatarUrl: u.avatarUrl,
       }));
 
-    this.save.emit({ name, description: this.descInput().trim(), visibility, memberIds, members });
+    this.save.emit({
+      orgId: this.selectedOrgId() || this.orgService.activeOrgId() || undefined,
+      name,
+      description: this.descInput().trim(),
+      visibility,
+      memberIds,
+      members,
+    });
   }
 
   /**

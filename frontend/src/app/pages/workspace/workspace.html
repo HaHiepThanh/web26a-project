@@ -238,7 +238,7 @@
 
 <!-- MODAL: Workspace Form Component (Create & Edit) -->
 <app-workspace-form-modal [isOpen]="showWorkspaceModal()" [mode]="workspaceModalMode()"
-  [workspace]="selectedWorkspaceForEdit()" [currentUser]="currentUser()" (close)="showWorkspaceModal.set(false)"
+  [workspace]="selectedWorkspaceForEdit()" [currentUser]="currentUser()" [initialOrgId]="orgService.activeOrgId()" (close)="showWorkspaceModal.set(false)"
   (save)="handleWorkspaceSave($event)" (requestDelete)="requestWorkspaceDelete($event)">
 </app-workspace-form-modal>
 

@@ -87,7 +87,7 @@ export class Workspace {
   private readonly workspaceUi = inject(WorkspaceUiService);
   private readonly boardService = inject(BoardStore);
   private readonly auth = inject(AuthService);
-  private readonly orgService = inject(OrganizationStore);
+  readonly orgService = inject(OrganizationStore);
   private readonly workspaceService = inject(WorkspaceService);
   private readonly boardPrefs = inject(BoardPrefsStore);
   private readonly tour = inject(TourStore);
@@ -812,6 +812,7 @@ export class Workspace {
   }
 
   async handleWorkspaceSave(data: {
+    orgId?: string;
     name: string;
     description: string;
     visibility: WorkspaceVisibility;
@@ -819,7 +820,7 @@ export class Workspace {
     members: WorkspaceMember[];
   }): Promise<void> {
     const { name, description, visibility, memberIds, members } = data;
-    const orgId = this.orgService.activeOrgId();
+    const orgId = data.orgId || this.orgService.activeOrgId();
     if (!orgId) return;
 
     if (this.workspaceModalMode() === 'create') {
@@ -846,12 +847,17 @@ export class Workspace {
         description: description || 'A brand-new Workspace just got created.',
         boards: [],
       };
-      this.workspaces.update((list) => {
-        const updated = [...list, newWs];
-        this.persist(updated);
-        return updated;
-      });
-      this.activeWorkspaceId.set(newWs.id);
+
+      if (orgId !== this.orgService.activeOrgId()) {
+        this.orgService.switchOrg(orgId);
+      } else {
+        this.workspaces.update((list) => {
+          const updated = [...list, newWs];
+          this.persist(updated);
+          return updated;
+        });
+        this.activeWorkspaceId.set(newWs.id);
+      }
       this.addToast(`🎉 Created Workspace "${newWs.name}"!`, 'success');
     } else {
       const editingWs = this.selectedWorkspaceForEdit();

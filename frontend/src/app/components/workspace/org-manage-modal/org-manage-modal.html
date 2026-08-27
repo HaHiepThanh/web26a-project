@@ -41,7 +41,8 @@
       </section>
       }
 
-      <!-- 2. Mời thành viên -->
+      <!-- 2. Mời thành viên (chỉ owner / admin mới thấy) -->
+      @if (isAdminOrOwner()) {
       <section class="mb-5">
         <h4 class="mb-2 text-2xs font-black uppercase tracking-wide text-base-content/45">Invite a member</h4>
         <!-- Quyền người được mời sẽ nhận khi họ bấm Đồng ý -->
@@ -122,6 +123,7 @@
         </div>
         }
       </section>
+      }
 
 
       <!--
@@ -239,8 +241,8 @@
       </section>
       }
 
-      <!-- 3. Lời mời đang chờ -->
-      @if (pendingInvites().length) {
+      <!-- 3. Lời mời đang chờ (chỉ owner/admin mới thấy) -->
+      @if (isAdminOrOwner() && pendingInvites().length) {
       <section class="mb-5">
         <h4 class="mb-2 text-2xs font-black uppercase tracking-wide text-base-content/45">
           Pending ({{ pendingInvites().length }})
@@ -256,7 +258,7 @@
                 Awaiting response · joining as {{ inv.role === 'admin' ? 'Admin' : 'Member' }}
               </span>
             </span>
-            @if (isOwner()) {
+            @if (isAdminOrOwner()) {
             <button type="button" class="btn btn-ghost btn-xs rounded-md shrink-0 text-2xs font-bold text-error hover:bg-error/10"
               (click)="cancelInvite.emit(inv.id)">Cancel</button>
             }
