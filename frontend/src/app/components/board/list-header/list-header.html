@@ -1,19 +1,19 @@
-<div class="flex items-center justify-between gap-1.5 px-2 pb-1.5 pt-2">
+<div class="flex items-center gap-1 py-1.5 pl-0.5 pr-1.5">
   <span class="flex min-w-0 flex-1 items-center">
     <input
-      class="w-full min-w-0 rounded bg-transparent px-1 py-0.5 text-sm font-bold text-base-content/80 outline-none hover:bg-base-300 hover:text-base-content focus:bg-base-300 focus:text-base-content"
+      class="w-full min-w-0 rounded-[6px] bg-transparent px-1.5 py-1 text-sm font-bold leading-5 text-base-content/85 outline-none hover:bg-base-300 hover:text-base-content focus:bg-base-300 focus:text-base-content"
       [value]="list().name"
       spellcheck="false"
       (change)="onNameChange($event)"
     />
   </span>
 
-  <span class="relative flex shrink-0 items-center gap-1">
-    <span class="badge badge-ghost badge-sm">{{ cardCount() }}</span>
-    <button class="btn btn-square btn-ghost btn-xs relative rounded-[8px] before:absolute before:-inset-3 before:content-['']" (click)="collapseToggle.emit()" title="Collapse list" aria-label="Collapse list">
+  <span class="relative flex shrink-0 items-center gap-0.5">
+    <span class="badge badge-ghost badge-sm mr-0.5 px-1.5 text-2xs font-medium text-base-content/55">{{ cardCount() }}</span>
+    <button class="btn btn-square btn-ghost btn-xs relative rounded-[8px] text-base-content/60 before:absolute before:-inset-2 before:content-[''] hover:text-base-content" (click)="collapseToggle.emit()" title="Collapse list" aria-label="Collapse list">
       <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18l-6-6 6-6"/></svg>
     </button>
-    <button class="btn btn-square btn-ghost btn-xs relative rounded-[8px] before:absolute before:-inset-3 before:content-['']" (click)="toggleMenu()" aria-label="List options">
+    <button class="btn btn-square btn-ghost btn-xs relative rounded-[8px] text-base-content/60 before:absolute before:-inset-2 before:content-[''] hover:text-base-content" (click)="toggleMenu()" aria-label="List options">
       <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg>
     </button>
 

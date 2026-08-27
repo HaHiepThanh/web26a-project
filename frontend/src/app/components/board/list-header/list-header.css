@@ -1,8 +1,8 @@
+/* Nền + sticky đã chuyển lên `.list-head-row` của board-list, nơi header dùng
+   chung một mặt nền với grip kéo-thả. Ở đây chỉ còn việc chiếm hết phần ngang
+   còn lại bên phải grip. */
 :host {
   display: block;
-  flex-shrink: 0;
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  background: var(--bg-surface-hover);
+  flex: 1 1 auto;
+  min-width: 0;
 }

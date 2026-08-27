@@ -1,4 +1,4 @@
-import { Component, inject, input, output } from '@angular/core';
+import { Component, computed, inject, input, output } from '@angular/core';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { Card, Label, List, User } from '../../../models';
 import { CardStore } from '../../../ngrx/card/card.store';
@@ -48,6 +48,13 @@ export class BoardList {
 
   /** Đang chờ server tạo thẻ cho cột này — chuyển tiếp xuống app-add-card. */
   readonly creatingCard = input(false);
+
+  /** Số thẻ hiển thị trên ô thu gọn. Chặn ở "99+" để pill không nong rộng ra
+   *  quá bề ngang cố định của ô. */
+  readonly cardCountLabel = computed(() => {
+    const n = this.cards().length;
+    return n > 99 ? '99+' : String(n);
+  });
 
   readonly renameList = output<string>();
   readonly deleteList = output<void>();

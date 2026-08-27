@@ -1,36 +1,56 @@
 @if (collapsed()) {
-  @if (orientation() === 'row') {
-    <button type="button" class="btn btn-block justify-start gap-2 rounded-t-none border-none bg-base-100/90 px-3 shadow-md backdrop-blur-sm hover:bg-base-300" (click)="toggleCollapse.emit()" title="Expand list">
+  <!-- Ô thu gọn = MỘT container duy nhất: grip (chiếu từ board.html qua khe
+       [listGripCollapsed] riêng) + nút mở lại, cùng nằm trong một mặt nền bo
+       góc. Grip phải dùng khe riêng chứ không dùng chung [listGrip] của nhánh
+       mở rộng: Angular chỉ rót nội dung vào <ng-content> ĐẦU TIÊN khớp selector,
+       nên hai khe trùng selector thì khe thứ hai luôn rỗng. -->
+  <div class="collapsed-tile overflow-hidden rounded-box bg-base-100/90 shadow-md backdrop-blur-sm"
+       [class.collapsed-tile--row]="orientation() === 'row'"
+       [class.collapsed-tile--column]="orientation() === 'column'">
+    <ng-content select="[listGripCollapsed]" />
+
+    <button type="button" class="collapsed-open" (click)="toggleCollapse.emit()"
+            [title]="'Expand list ' + list().name"
+            [attr.aria-label]="'Expand list ' + list().name">
       <svg class="h-3.5 w-3.5 shrink-0 text-base-content/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"/></svg>
-      <span class="flex-1 truncate text-xs font-bold text-base-content/80">{{ list().name }}</span>
-      <span class="badge badge-ghost badge-sm">{{ cards().length }}</span>
+
+      @if (orientation() === 'row') {
+        <span class="min-w-0 flex-1 truncate text-left text-xs font-bold text-base-content/85">{{ list().name }}</span>
+      } @else {
+        <span class="collapsed-title">{{ list().name }}</span>
+      }
+
+      <span class="badge badge-ghost badge-sm shrink-0 px-1.5 text-2xs font-medium text-base-content/60">{{ cardCountLabel() }}</span>
     </button>
-  } @else {
-    <div class="h-full w-full">
-      <button type="button" class="btn h-full min-h-[120px] w-full flex-col gap-2.5 rounded-t-none border-none bg-base-100/90 py-2.5 text-base-content/80 shadow-md backdrop-blur-sm hover:bg-base-300 hover:text-base-content" (click)="toggleCollapse.emit()" title="Expand list">
-        <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"/></svg>
-        <span class="rotate-180 whitespace-nowrap text-xs font-bold [writing-mode:vertical-rl]">{{ list().name }}</span>
-        <span class="badge badge-ghost badge-sm [writing-mode:horizontal-tb]">{{ cards().length }}</span>
-      </button>
-    </div>
-  }
+  </div>
 } @else {
   <!-- `max-h-full` CHỈ cho chế độ cột: cột cần bám trần khung board rồi tự cuộn
        dọc bên trong. Chế độ hàng thì ngược lại — hàng phải cao đúng bằng thẻ cao
        nhất, ghim trần vào đây là thẻ bị cắt cụt. -->
-  <div class="flex w-full flex-col overflow-hidden rounded-b-box rounded-t-none bg-base-100/90 shadow-md backdrop-blur-sm"
+  <!-- `rounded-box` đủ 4 góc. Trên main có commit bỏ bo góc TRÊN
+       (`rounded-b-box rounded-t-none`) để list khớp liền với thanh grip nằm đè
+       phía trên — nhưng thanh grip đó đã không còn: grip giờ nằm TRONG header
+       của chính list này, nên góc trên không còn gì để khớp và phải bo lại. -->
+  <div class="flex w-full flex-col overflow-hidden rounded-box bg-base-100/90 shadow-md backdrop-blur-sm"
        [class.max-h-full]="orientation() === 'column'">
-    <app-list-header
-      [list]="list()"
-      [cardCount]="cards().length"
-      (rename)="renameList.emit($event)"
-      (deleteList)="deleteList.emit()"
-      (collapseToggle)="toggleCollapse.emit()"
-    />
+    <!-- Grip kéo-thả do board.html khai báo rồi chiếu vào đây: nó phải là con
+         (content) của phần tử cdkDrag để CDK nhận ra handle, nhưng phải NẰM
+         TRONG khung bo góc của list thì mới không trông như một thanh rời. -->
+    <div class="list-head-row">
+      <ng-content select="[listGrip]" />
+      <app-list-header
+        [list]="list()"
+        [cardCount]="cards().length"
+        (rename)="renameList.emit($event)"
+        (deleteList)="deleteList.emit()"
+        (collapseToggle)="toggleCollapse.emit()"
+      />
+    </div>
 
     <div
       appFlipReorder
-      class="list-cards flex min-h-[40px] flex-1 gap-2 px-2"
+      class="list-cards flex gap-2 px-2"
+      [class.is-column]="orientation() === 'column'"
       [class.flex-col]="orientation() === 'column'"
       [class.overflow-y-auto]="orientation() === 'column'"
       [class.overflow-x-hidden]="orientation() === 'column'"

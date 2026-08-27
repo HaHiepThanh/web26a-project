@@ -44,8 +44,10 @@
   transition: flex-basis 150ms ease;
 }
 
+/* 34px cũ vừa đủ cho mũi tên nhưng không đủ cho pill số thẻ 2–3 ký tự ("12",
+   "99+") — pill bị tràn khỏi ô. 44px là mức hẹp nhất còn chứa trọn pill. */
 .list-drag-wrap.collapsed {
-  flex: 0 0 34px;
+  flex: 0 0 44px;
 }
 
 .list-drop-placeholder {
@@ -56,6 +58,11 @@
   background: var(--accent-blue-soft);
 }
 
+/* Chỗ trống lúc kéo phải rộng đúng bằng ô thu gọn, không phải bề ngang list mở. */
+.list-drag-wrap.collapsed .list-drop-placeholder {
+  flex: 0 0 44px;
+}
+
 /* CDK portals the preview clone outside this component's DOM (near <body>),
    so view-encapsulated styles need ::ng-deep to reach it. */
 ::ng-deep .cdk-drag-preview {
@@ -64,29 +71,72 @@
   cursor: grabbing;
 }
 
+/* Grip kéo-thả list. Khai ở board.html (phải là content của phần tử cdkDrag) rồi
+   chiếu vào `.list-head-row` của board-list, nên style vẫn thuộc phạm vi Board.
+   Không có nền/viền/bo góc riêng: nó là một nút nhỏ NẰM TRONG header, không phải
+   một thanh riêng phía trên list. */
 .list-grip {
   flex-shrink: 0;
-  height: 14px;
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-  background: var(--bg-surface-hover);
-  border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 18px;
+  height: 24px;
+  border-radius: var(--radius-sm);
   color: var(--text-muted);
   cursor: grab;
+  transition: color var(--transition-fast), background-color var(--transition-fast);
 }
 
 .list-grip:hover {
-  color: var(--text-secondary);
+  color: var(--text-primary);
+  background: var(--bg-card-hover);
 }
 
 .list-grip:active {
   cursor: grabbing;
 }
 
+/* Grip của list ĐÃ THU GỌN. Cũng khai ở board.html rồi chiếu vào khe riêng
+   [listGripCollapsed] BÊN TRONG ô thu gọn — trước đây nó là một thanh có nền và
+   viền riêng nằm NGOÀI ô, nên đọc ra thành hai khối rời nhau. Không nền/viền
+   riêng: nó là một dải mỏng trong chính mặt nền của ô. */
+.list-grip-collapsed {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  cursor: grab;
+  transition: color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.list-grip-collapsed:hover {
+  color: var(--text-primary);
+  background: var(--bg-card-hover);
+}
+
+.list-grip-collapsed:active {
+  cursor: grabbing;
+}
+
+/* Column View: dải NGANG mỏng ở đỉnh ô. */
+.list-drag-wrap .list-grip-collapsed {
+  width: 100%;
+  height: 16px;
+}
+
+/* Row View: dải DỌC mỏng ở cạnh trái ô. */
+.row-list-wrap .list-grip-collapsed {
+  width: 16px;
+  align-self: stretch;
+}
+
+/* `flex: 1` cũ bắt list căng hết chiều cao khung board kể cả khi rỗng.
+   `0 1 auto` = cao theo nội dung, vẫn co lại được khi `.list-drag-wrap` chạm
+   `max-height: 100%` để vùng thẻ bên trong tự cuộn. */
 app-board-list {
-  flex: 1;
+  flex: 0 1 auto;
   min-height: 0;
 }
 
@@ -137,26 +187,9 @@ app-board-list {
   background: var(--accent-blue-soft);
 }
 
-.row-list-grip {
-  flex-shrink: 0;
-  width: 100%;
-  height: 14px;
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-  background: var(--bg-surface-hover);
-  border-bottom: 1px solid var(--border-color);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-  cursor: grab;
-}
-
-.row-list-grip:hover {
-  color: var(--text-secondary);
-}
-
-.row-list-grip:active {
-  cursor: grabbing;
+/* Chỗ trống lúc kéo phải cao đúng bằng hàng đã thu gọn. */
+.row-list-wrap.collapsed .row-list-drop-placeholder {
+  flex: 0 0 44px;
 }
 
 /* app-add-list defaults to a fixed 272px-wide column tile (Column View); in Row

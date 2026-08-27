@@ -5,6 +5,117 @@
   min-height: 0;
 }
 
+/* ==================== Ô thu gọn (collapsed) ====================
+   Một container duy nhất, cùng mặt nền/bo góc với list mở rộng. Grip nằm bên
+   trong ô (không phải thanh rời phía trên), nút mở lại chiếm phần còn lại. */
+.collapsed-tile {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+.collapsed-tile--column {
+  flex-direction: column;
+  min-height: 120px;
+}
+
+.collapsed-tile--row {
+  flex-direction: row;
+  align-items: stretch;
+}
+
+/* Nút mở lại: nhận toàn bộ chỗ trống còn lại của ô nên vùng bấm rộng, và là
+   phần tử DUY NHẤT bắt click — grip nằm ngoài nó nên kéo không lẫn với bấm. */
+.collapsed-open {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  align-items: center;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.collapsed-open:hover {
+  background: var(--bg-card-hover);
+}
+
+.collapsed-open:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: -2px;
+}
+
+/* `space-between` chứ không phải `flex-start`: mũi tên bám đỉnh, pill số thẻ bám
+   đáy, tên nằm giữa — chỗ thừa của ô thấp rơi vào khoảng giữa thay vì dồn hết
+   xuống dưới pill. Tên dài thì không còn chỗ thừa nên nó tự thành flex-start. */
+.collapsed-tile--column .collapsed-open {
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 4px 10px;
+}
+
+.collapsed-tile--row .collapsed-open {
+  flex-direction: row;
+  gap: 8px;
+  padding: 8px 10px;
+}
+
+/* Tiêu đề dọc, chữ ĐỨNG xếp chồng.
+   Trước đây là `vertical-rl` + `rotate(180deg)` = chữ nằm nghiêng: ở cỡ 12px
+   trong ô rộng 44px, "qqq" nghiêng đọc ra thành "bbb". `text-orientation:
+   upright` giữ từng ký tự đứng thẳng nên đọc đúng mặt chữ.
+   `flex: 0 1 auto` + `min-height: 0` để tên dài CO lại nhường chỗ cho mũi tên và
+   pill rồi cắt bằng ellipsis, thay vì đẩy hai phần tử kia ra khỏi ô;
+   `max-height` chặn tên rất dài kéo ô cao bằng cả khung board. */
+.collapsed-tile--column .collapsed-title {
+  flex: 0 1 auto;
+  min-height: 0;
+  max-height: 280px;
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: color-mix(in oklab, var(--text-primary) 85%, transparent);
+}
+
+/* Hàng tiêu đề = grip (chiếu từ board.html) + app-list-header trên CÙNG một dòng.
+   Nền/sticky trước đây nằm ở :host của app-list-header, nay chuyển lên hàng này
+   để cả grip lẫn tiêu đề dùng chung một mặt nền liền mạch. */
+.list-head-row {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding-left: 5px;
+  background: var(--bg-surface-hover);
+}
+
+/* Chiều cao vùng thẻ bám theo NỘI DUNG (flex-grow: 0). Trước đây là `flex-1`
+   nên một list rỗng vẫn giãn hết chiều cao khung board, để lại một ô rỗng cao
+   ngoằng. Vẫn co được (flex-shrink: 1) nên khi nhiều thẻ, `max-h-full` của vỏ
+   list vẫn cắt đúng chỗ và `overflow-y-auto` mọc thanh cuộn như cũ. */
+.list-cards {
+  flex: 1 1 auto;
+  min-height: 40px;
+}
+
+.list-cards.is-column {
+  flex: 0 1 auto;
+  /* Đủ để còn là vùng thả thẻ khi list rỗng, không hơn. */
+  min-height: 30px;
+}
+
 /* Trello-style: cột không rớt dòng, tự cuộn dọc riêng — không ảnh hưởng list khác (#1). */
 .list-cards.cdk-drop-list-dragging .card-drag-wrap:not(.cdk-drag-placeholder) {
   transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
