@@ -5,16 +5,16 @@
 <div
   class="workspace-page mt-4 mx-auto max-w-[1440px] sm:px-3 py-2 w-full h-full min-h-0 flex flex-col overflow-hidden max-lg:h-auto max-lg:overflow-visible">
   <!-- Toast container -->
-  <div class="toast toast-top toast-end z-[9999] pointer-events-none">
+  <div class="toast toast-top toast-end top-16 right-4 z-[9999] pointer-events-none">
     @for (t of toasts(); track t.id) {
     <div
-      class="alert text-xs shadow-lg pointer-events-auto flex items-center justify-between gap-3 py-2 px-3.5 rounded-xl border border-white/10 text-white font-bold"
-      [class.alert-success]="t.type === 'success'" [class.bg-success]="t.type === 'success'"
-      [class.alert-error]="t.type === 'error'" [class.bg-error]="t.type === 'error'"
-      [class.alert-info]="t.type === 'info'" [class.bg-neutral]="t.type === 'info'">
+      class="alert text-xs shadow-xl pointer-events-auto flex items-center justify-between gap-3 py-2 px-3.5 rounded-md border text-white font-bold"
+      [class.alert-success]="t.type === 'success'" [class.bg-success]="t.type === 'success'" [class.border-success]="t.type === 'success'"
+      [class.alert-error]="t.type === 'error'" [class.bg-error]="t.type === 'error'" [class.border-error]="t.type === 'error'"
+      [class.alert-info]="t.type === 'info'" [class.bg-neutral]="t.type === 'info'" [class.border-base-300]="t.type === 'info'">
       <span>{{ t.message }}</span>
       @if (t.action) {
-      <button class="btn btn-xs btn-outline text-white border-white/50 hover:bg-base-100/20"
+      <button class="btn btn-xs btn-outline rounded-md text-white border-white/50 hover:bg-base-100/20"
         (click)="t.action.handler()">{{
         t.action.label }}</button>
       }

@@ -6,7 +6,7 @@
 <div class="flex min-h-full flex-1 bg-base-200 text-base-content max-[900px]:flex-col">
   <!-- Toast Notification -->
   @if (toastMessage()) {
-  <div class="toast toast-top toast-end z-[9999] pointer-events-none">
+  <div class="toast toast-top toast-end top-16 right-4 z-[9999] pointer-events-none">
     <div
       class="alert text-xs shadow-xl pointer-events-auto flex items-center gap-2.5 py-2.5 px-4 rounded-md border text-white font-bold transition-all"
       [class.bg-success]="toastType() === 'success'" [class.border-success]="toastType() === 'success'"

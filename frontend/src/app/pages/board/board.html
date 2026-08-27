@@ -357,17 +357,14 @@
     (clearSelection)="clearSelection()">
   </app-board-bulk-actions>
 
-  <!-- Toast notifications: khi có minimap thì chuyển sang bên trái để tránh đè lên nhau, khi không có minimap thì nằm ở góc phải mặc định -->
-  <div
-    class="toast z-[2000] pointer-events-none transition-all duration-300"
-    [class.toast-end]="!showMinimap()"
-    [class.toast-start]="showMinimap()">
+  <!-- Toast notifications: xếp ở góc phải trên màn hình, ngay dưới header -->
+  <div class="toast toast-top toast-end top-16 right-4 z-[9999] pointer-events-none transition-all duration-300">
     @for (toast of toasts(); track toast.id) {
       <div
-        class="alert pointer-events-auto font-bold shadow-lg"
-        [class.alert-error]="toast.type === 'error'"
-        [class.alert-success]="toast.type === 'success'"
-        [class.alert-info]="toast.type === 'info'">
+        class="alert text-xs pointer-events-auto flex items-center justify-between gap-3 py-2 px-3.5 rounded-md border text-white font-bold shadow-xl"
+        [class.bg-error]="toast.type === 'error'" [class.border-error]="toast.type === 'error'"
+        [class.bg-success]="toast.type === 'success'" [class.border-success]="toast.type === 'success'"
+        [class.bg-neutral]="toast.type === 'info'" [class.border-base-300]="toast.type === 'info'">
         <span>{{ toast.message }}</span>
       </div>
     }

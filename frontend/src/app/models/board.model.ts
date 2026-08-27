@@ -45,6 +45,7 @@ export interface BoardSearchResult {
   workspaceId: string;
   workspaceName: string;
   orgId: string;
+  orgName?: string;
   orgSlug: string;
   visibility: BoardVisibility;
   background: string | null;

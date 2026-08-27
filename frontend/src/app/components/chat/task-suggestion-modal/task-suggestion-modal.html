@@ -1,5 +1,5 @@
 <div class="modal modal-open z-[1100] p-4" (click)="close.emit()">
-  <div class="modal-box flex max-h-[88vh] w-full max-w-3xl flex-col overflow-hidden p-0"
+  <div class="modal-box flex max-h-[88vh] w-full max-w-3xl flex-col overflow-hidden rounded-md p-0"
     (click)="$event.stopPropagation()">
 
     <div class="flex shrink-0 items-start justify-between border-b border-base-200 px-5 py-3.5">
@@ -21,16 +21,16 @@
 
     <div class="flex flex-col gap-3 overflow-y-auto px-5 py-4">
       @for (r of rows(); track $index) {
-        <div class="rounded-xl border-2 p-3 transition"
+        <div class="rounded-md border-2 p-3 transition"
           [class.border-primary]="r.chon"
           [class.border-base-300]="!r.chon"
           [class.opacity-55]="!r.chon">
 
           <div class="mb-2.5 flex items-center gap-2">
-            <input type="checkbox" class="checkbox checkbox-primary checkbox-sm shrink-0"
+            <input type="checkbox" class="checkbox checkbox-primary checkbox-sm rounded-md shrink-0"
               [checked]="r.chon" (change)="toggle($index)" [attr.aria-label]="'Create card ' + r.title" />
             <input type="text" maxlength="200"
-              class="input input-sm min-w-0 flex-1 font-bold"
+              class="input input-sm min-w-0 flex-1 rounded-md font-bold"
               placeholder="Card title" [ngModel]="r.title"
               (ngModelChange)="patch($index, { title: $event })" [name]="'title' + $index" />
           </div>
@@ -38,7 +38,7 @@
           <div class="grid grid-cols-1 gap-2 sm:grid-cols-4">
             <label class="min-w-0">
               <span class="mb-1 block text-3xs font-bold uppercase tracking-wide text-base-content/50">Assignee</span>
-              <select class="select select-sm w-full"
+              <select class="select select-sm w-full rounded-md"
                 [ngModel]="r.assigneeId ?? ''" (ngModelChange)="patch($index, { assigneeId: $event })"
                 [name]="'assignee' + $index">
                 <option value="">Unassigned</option>
@@ -50,14 +50,14 @@
 
             <label class="min-w-0">
               <span class="mb-1 block text-3xs font-bold uppercase tracking-wide text-base-content/50">Due date</span>
-              <input type="date" class="input input-sm w-full"
+              <input type="date" class="input input-sm w-full rounded-md"
                 [ngModel]="r.dueDate ?? ''" (ngModelChange)="patch($index, { dueDate: $event })"
                 [name]="'due' + $index" />
             </label>
 
             <label class="min-w-0">
               <span class="mb-1 block text-3xs font-bold uppercase tracking-wide text-base-content/50">Add to list</span>
-              <select class="select select-sm w-full"
+              <select class="select select-sm w-full rounded-md"
                 [ngModel]="r.listId ?? ''" (ngModelChange)="patch($index, { listId: $event })"
                 [name]="'list' + $index">
                 @for (l of lists(); track l.id) {
@@ -68,7 +68,7 @@
 
             <label class="min-w-0">
               <span class="mb-1 block text-3xs font-bold uppercase tracking-wide text-base-content/50">Priority</span>
-              <select class="select select-sm w-full"
+              <select class="select select-sm w-full rounded-md"
                 [ngModel]="r.priority ?? 'medium'" (ngModelChange)="patch($index, { priority: $event })"
                 [name]="'priority' + $index">
                 @for (p of priorities; track p.id) {
@@ -79,7 +79,7 @@
           </div>
 
           @if (r.description) {
-            <p class="mt-2 rounded-lg bg-base-200/60 px-2.5 py-1.5 text-2xs leading-relaxed text-base-content/70">
+            <p class="mt-2 rounded-md bg-base-200/60 px-2.5 py-1.5 text-2xs leading-relaxed text-base-content/70">
               {{ r.description }}
             </p>
           }
@@ -94,8 +94,8 @@
         Cards appear instantly for everyone viewing this board.
       </span>
       <span class="flex gap-2">
-        <button type="button" class="btn btn-ghost btn-sm" (click)="close.emit()">Cancel</button>
-        <button type="button" class="btn btn-primary btn-sm gap-1.5"
+        <button type="button" class="btn btn-ghost btn-sm rounded-md" (click)="close.emit()">Cancel</button>
+        <button type="button" class="btn btn-primary btn-sm rounded-md gap-1.5"
           [disabled]="!canConfirm()" (click)="onConfirm()">
           @if (saving()) { <span class="loading loading-spinner loading-xs"></span> }
           Create {{ selectedCount() }} card(s)

@@ -166,10 +166,8 @@ export class HeaderActionsService {
   async fetchBoardSearchResults(query: string): Promise<void> {
     this.searchLoading.set(true);
     try {
-      const orgId = this.orgService.activeOrgId();
       const params = new URLSearchParams();
       if (query) params.set('q', query);
-      if (orgId) params.set('orgId', orgId);
 
       const qs = params.toString() ? `?${params.toString()}` : '';
       const results = await this.api.get<BoardSearchResult[]>(`/boards/search${qs}`);

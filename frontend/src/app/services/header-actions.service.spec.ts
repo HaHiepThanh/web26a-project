@@ -88,10 +88,10 @@ describe('HeaderActionsService — Tìm kiếm Board khi ở trang Settings & Bo
 
     vi.advanceTimersByTime(250);
 
-    expect(getSpy).toHaveBeenCalledWith(expect.stringContaining('/boards/search?q=Frontend'));
+    expect(getSpy).toHaveBeenCalledWith('/boards/search?q=Frontend');
   });
 
-  it('ở trang Board: gọi API tìm kiếm board và mở dropdown khi có từ khoá', async () => {
+  it('ở trang Board: gọi API tìm kiếm board trên toàn bộ các organization', async () => {
     vi.spyOn(router, 'url', 'get').mockReturnValue('/my-org/board/b1');
     vi.useFakeTimers();
     const getSpy = vi.spyOn(api, 'get').mockResolvedValue(MOCK_BOARDS);
@@ -104,7 +104,7 @@ describe('HeaderActionsService — Tìm kiếm Board khi ở trang Settings & Bo
 
     vi.advanceTimersByTime(250);
 
-    expect(getSpy).toHaveBeenCalledWith(expect.stringContaining('/boards/search?q=Backend'));
+    expect(getSpy).toHaveBeenCalledWith('/boards/search?q=Backend');
   });
 
   it('ở trang Settings & Board: mở dropdown tìm kiếm khi focus ô search', async () => {

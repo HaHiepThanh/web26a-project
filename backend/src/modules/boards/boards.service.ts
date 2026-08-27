@@ -108,6 +108,7 @@ export interface BoardSearchResult {
   workspaceId: string;
   workspaceName: string;
   orgId: string;
+  orgName?: string;
   orgSlug: string;
   visibility: string;
   background: string | null;
@@ -420,7 +421,7 @@ export class BoardsService {
     // 1. Lấy danh sách tổ chức user tham gia
     let orgQuery = sb
       .from('organization_members')
-      .select('org_id, organizations(slug)')
+      .select('org_id, organizations(name, slug)')
       .eq('user_id', uid);
 
     if (orgId) {
@@ -436,9 +437,11 @@ export class BoardsService {
     if (!memberships?.length) return [];
     const orgIds = memberships.map((m) => m.org_id as string);
     const slugByOrgId = new Map<string, string>();
+    const nameByOrgId = new Map<string, string>();
     for (const m of memberships) {
-      const org = m.organizations as unknown as { slug: string } | null;
+      const org = m.organizations as unknown as { name?: string; slug?: string } | null;
       if (org?.slug) slugByOrgId.set(m.org_id as string, org.slug);
+      if (org?.name) nameByOrgId.set(m.org_id as string, org.name);
     }
 
     // 2. Lấy workspace hợp lệ mà user có quyền xem
@@ -516,6 +519,7 @@ export class BoardsService {
         workspaceId: b.workspace_id,
         workspaceName: ws?.name ?? '',
         orgId: b.org_id,
+        orgName: nameByOrgId.get(b.org_id) ?? '',
         orgSlug: slugByOrgId.get(b.org_id) ?? '',
         visibility: b.visibility,
         background: b.background,
