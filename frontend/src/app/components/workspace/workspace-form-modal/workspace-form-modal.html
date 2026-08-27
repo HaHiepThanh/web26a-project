@@ -123,10 +123,10 @@
               (keydown.enter)="$event.preventDefault()" name="memberSearch" />
           </div>
 
-          <div class="max-h-52 space-y-1.5 overflow-y-auto pr-1">
+          <div class="max-h-52 space-y-1.5 overflow-y-auto p-1">
             @for (m of filteredMembers(); track m.user.id) {
               <button type="button"
-                class="flex w-full cursor-pointer items-center justify-between gap-2.5 rounded-md border p-2 text-left transition shadow-2xs"
+                class="flex w-full cursor-pointer items-center justify-between gap-2.5 rounded-md border p-2.5 text-left transition shadow-2xs"
                 [class.border-primary]="isSelected(m.user.id)"
                 [class.bg-primary/5]="isSelected(m.user.id)"
                 [class.border-base-300]="!isSelected(m.user.id)"

@@ -1,9 +1,6 @@
 @if (isOpen()) {
-<div class="modal modal-open z-[1000] p-4 backdrop-blur-[2px]"
-  (click)="close.emit()">
-  <div
-    class="modal-box max-w-[480px] max-h-[90vh] border border-base-300"
-    (click)="$event.stopPropagation()">
+<div class="modal modal-open z-[1000] p-4 backdrop-blur-[2px]" (click)="close.emit()">
+  <div class="modal-box max-w-[480px] max-h-[90vh] border border-base-300" (click)="$event.stopPropagation()">
     <!-- Header -->
     <div class="mb-5 flex items-center justify-between border-b border-base-200 pb-3.5">
       <div class="flex items-center gap-2.5">
@@ -23,23 +20,16 @@
     <form (ngSubmit)="onSubmit()" class="space-y-4">
       <!-- Organization Name Input -->
       <div>
-        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-base-content" for="org-create-name-input">
+        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-base-content"
+          for="org-create-name-input">
           Organization name <span class="text-error">*</span>
         </label>
-        <input
-          #nameInputField
-          type="text"
-          id="org-create-name-input"
-          maxlength="50"
+        <input #nameInputField type="text" id="org-create-name-input" maxlength="50"
           class="input input-bordered w-full rounded-md font-bold text-base-content bg-base-100 shadow-xs text-sm transition-all"
-          [class.border-error]="nameError()"
-          [class.focus:border-error]="nameError()"
-          [class.border-base-300]="!nameError()"
-          [class.focus:border-primary]="!nameError()"
-          placeholder="e.g. Acme Technologies, Freelance Team... (max 50 characters)"
-          [ngModel]="nameInput()"
-          (ngModelChange)="onNameChange($event)"
-          name="orgName" />
+          [class.border-error]="nameError()" [class.focus:border-error]="nameError()"
+          [class.border-base-300]="!nameError()" [class.focus:border-primary]="!nameError()"
+          placeholder="e.g. Acme Technologies, Freelance Team..." [ngModel]="nameInput()"
+          (ngModelChange)="onNameChange($event)" name="orgName" />
 
         <div class="mt-1 flex items-center justify-between text-2xs text-base-content/50 font-semibold px-1">
           <span>Max 50 characters</span>
@@ -55,26 +45,20 @@
 
       <!-- Organization Slug (đường dẫn riêng) -->
       <div>
-        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-base-content" for="org-create-slug-input">
+        <label class="mb-1.5 block text-xs font-black uppercase tracking-wider text-base-content"
+          for="org-create-slug-input">
           Custom URL <span class="text-error">*</span>
         </label>
 
         <div class="flex items-stretch rounded-md border bg-base-100 shadow-xs transition-all overflow-hidden"
-          [class.border-error]="slugError()"
-          [class.border-success]="slugOk()"
+          [class.border-error]="slugError()" [class.border-success]="slugOk()"
           [class.border-base-300]="!slugError() && !slugOk()">
           <span class="flex items-center bg-base-200 px-2.5 text-2xs font-bold text-base-content/60 select-none">
             /
           </span>
-          <input
-            type="text"
-            id="org-create-slug-input"
-            maxlength="40"
+          <input type="text" id="org-create-slug-input" maxlength="40"
             class="flex-1 min-w-0 bg-transparent px-2.5 py-2 font-mono text-sm font-bold text-base-content outline-none"
-            placeholder="my-company"
-            [ngModel]="slugInput()"
-            (ngModelChange)="onSlugChange($event)"
-            name="orgSlug" />
+            placeholder="my-company" [ngModel]="slugInput()" (ngModelChange)="onSlugChange($event)" name="orgSlug" />
           @if (slugOk()) {
           <span class="flex items-center pr-2.5 text-success">
             <svg lucideCheck class="h-4 w-4" [strokeWidth]="3"></svg>
@@ -99,9 +83,11 @@
       </div>
 
       <!-- Explanatory note -->
-      <div class="alert alert-info alert-soft items-start gap-2 p-3 rounded-md text-xs">
-        <svg lucideSparkles class="h-4 w-4 shrink-0 mt-0.5" [strokeWidth]="2.2"></svg>
-        <span>You'll be the <strong>Owner</strong> of this organization and can invite other members to help manage it.</span>
+      <div
+        class="flex items-start gap-2 rounded-md bg-base-200/70 p-2.5 text-xs text-base-content/70 border border-base-300">
+        <svg lucideSparkles class="h-3.5 w-3.5 shrink-0 mt-0.5 text-primary" [strokeWidth]="2"></svg>
+        <span class="leading-relaxed">You'll be the <strong class="text-base-content font-bold">Owner</strong> of this
+          organization and can invite other members to help manage it.</span>
       </div>
 
       <!-- Actions -->
