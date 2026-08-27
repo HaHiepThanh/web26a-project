@@ -197,7 +197,11 @@ export const TourStore = signalStore(
     needsAck: computed(() => {
       if (!store.running()) return false;
       const step = TOUR_STEPS[store.stepIndex()];
-      return step?.advance.on === 'flag';
+      // `ack` cũng vào đây, và bắt buộc phải vào: bước Meet/Calendar không chờ
+      // hành động nào cả (hai nút đó khoá tới khi liên kết Google). Thiếu nút
+      // Next thì bước cuối tour đứng im không có lối ra nào ngoài Esc — tức
+      // người dùng buộc phải THOÁT tour để thoát tour.
+      return step?.advance.on === 'flag' || step?.advance.on === 'ack';
     }),
   })),
 
@@ -229,6 +233,9 @@ export const TourStore = signalStore(
       if (step.advance.on === 'count') {
         return store.counts()[step.advance.key] > store.baseline()[step.advance.key];
       }
+      // `ack` là bước chỉ để ĐỌC — không có gì để đo, nên không bao giờ tự thoả.
+      // Chỉ nút Next trong `acknowledgeStep()` mới đưa nó đi tiếp.
+      if (step.advance.on === 'ack') return false;
       // ⚠️ Bước tầng 2 KHÔNG bao giờ tự đi tiếp — chỉ đi khi người dùng bấm Next.
       //
       // Tầng 1 là LÀM: tạo được cái workspace là xong việc, tự sang bước sau là
@@ -623,7 +630,10 @@ export const TourStore = signalStore(
        */
       acknowledgeStep(): void {
         const step = TOUR_STEPS[store.stepIndex()];
-        if (!step || step.advance.on !== 'flag') return;
+        // ⚠️ Phải nhận CẢ 'ack'. Chốt chặn cũ chỉ cho 'flag' đi qua, nên bấm
+        //    Finish ở bước Meet/Calendar sẽ rơi vào return rỗng: nút bấm được,
+        //    trông như hỏng, và tour không bao giờ kết thúc.
+        if (!step || (step.advance.on !== 'flag' && step.advance.on !== 'ack')) return;
 
         // Đánh dấu xong rồi đi tiếp. Không gọi `tryAdvance()` vì điều kiện của
         // bước tầng 2 luôn trả false — nó cố tình không tự đi. Nhưng vẫn phải

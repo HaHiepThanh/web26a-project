@@ -51,8 +51,11 @@ const SEED_CARDS: readonly SeedCard[] = [
 const SEED_LISTS = ['To Do', 'In progress', 'Done'] as const;
 
 /**
- * Tin nhắn mồi. Tin CUỐI viết có chủ đích để assistant bắt được việc — đó là
- * thứ bước "try-ai" trỏ vào. Không có nó thì tới bước AI chẳng có gì để chỉ.
+ * Tin nhắn mồi. Tin CUỐI viết có chủ đích để assistant bắt được việc.
+ *
+ * Vẫn cần, dù bước AI riêng đã gộp vào bước chat: popover bước đó nói "trợ lý
+ * đọc chat và thảo sẵn thẻ cho bạn", và câu ấy chỉ thuyết phục khi người dùng
+ * mở khung chat ra là thấy đúng cái chip vừa được nhắc tới.
  */
 const SEED_MESSAGES: readonly string[] = [
   'Morning — pilot class starts Thursday, so this week is tight.',
