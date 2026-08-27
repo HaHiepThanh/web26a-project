@@ -29,15 +29,18 @@
  */
 .composer {
   min-height: 2.5rem;
+  height: 2.5rem;
   max-height: 140px;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.8125rem;
-  line-height: 1.4;
+  padding: 9px 12px;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
   resize: none;
   overflow-y: auto;
+  box-sizing: border-box;
 }
 
 .composer::placeholder {
   white-space: pre-wrap;
   word-break: break-word;
+  line-height: 1.25rem;
 }

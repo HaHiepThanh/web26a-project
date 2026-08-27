@@ -68,7 +68,7 @@ export class ChatInput {
    */
   private autoGrow(el: HTMLTextAreaElement): void {
     el.style.height = 'auto';
-    el.style.height = `${Math.min(el.scrollHeight, MAX_COMPOSER_HEIGHT)}px`;
+    el.style.height = `${Math.max(40, Math.min(el.scrollHeight, MAX_COMPOSER_HEIGHT))}px`;
   }
 
   /** Enter để gửi, Shift+Enter để xuống dòng — không chặn IME (gõ tiếng Việt/Nhật...). */
