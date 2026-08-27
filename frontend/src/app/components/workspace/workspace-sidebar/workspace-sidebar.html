@@ -38,7 +38,9 @@
         [class]="activeWorkspaceId() === ws.id ? 'bg-primary text-primary-content font-bold shadow-xs' : 'text-base-content hover:bg-base-200'"
         (click)="onSelectWorkspace(ws.id)">
         <span class="min-w-0 flex-1 overflow-hidden">
-          <span class="block truncate text-xs font-bold leading-tight" [title]="ws.name">{{ ws.name }}</span>
+          <!-- Xuống dòng thay vì cắt cụt, kèm `break-words` cho tên một từ liền —
+               lý do đầy đủ xem chú thích cùng chỗ trong `org-switcher.html`. -->
+          <span class="line-clamp-3 break-words text-xs font-bold leading-tight" [title]="ws.name">{{ ws.name }}</span>
           <span class="block truncate text-2xs font-medium leading-tight"
             [class]="activeWorkspaceId() === ws.id ? 'text-primary-content/80' : 'text-base-content/55'">
             {{ ws.members.length }} member(s)

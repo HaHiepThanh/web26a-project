@@ -19,7 +19,16 @@
         [class]="org.id === activeOrg()?.id ? 'bg-primary text-primary-content font-bold shadow-xs' : 'text-base-content hover:bg-base-200'"
         (click)="onSelect(org.id)">
         <span class="min-w-0 flex-1 overflow-hidden">
-          <span class="block truncate text-xs font-bold leading-tight" [title]="org.name">{{ org.name }}</span>
+          <!-- Tên tối đa 50 ký tự, dài hơn bề ngang sidebar thì xuống dòng thay vì
+               cắt cụt. `break-words` là BẮT BUỘC, không phải cho đẹp: tên kiểu
+               "faaaa…a" là một từ liền không dấu cách, thiếu nó thì trình duyệt
+               không ngắt từ và `line-clamp` vẫn nằm đúng một dòng bị cắt.
+
+               3 dòng chứ không phải 2: 50 ký tự chỉ gói gọn trong 2 dòng khi
+               toàn chữ thường hẹp; thêm chữ hoa/dấu (kiểu
+               "fhfnfádawfafasfaswaAfhfnfá…") là tràn ngay. Chỉ tên 50 ký tự
+               TOÀN chữ hoa rộng (MMM…/WWW…) mới cần tới dòng thứ 4. -->
+          <span class="line-clamp-3 break-words text-xs font-bold leading-tight" [title]="org.name">{{ org.name }}</span>
           <span class="block truncate text-2xs font-medium leading-tight"
             [class]="org.id === activeOrg()?.id ? 'text-primary-content/80' : 'text-base-content/55'">
             {{ org.memberIds.length }} member(s)

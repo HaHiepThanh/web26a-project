@@ -3,42 +3,43 @@
 
   <div class="drawer-content space-y-6">
 
-    <div class="flex flex-wrap items-center justify-end gap-2">
-      <button class="btn btn-outline btn-sm" (click)="exportWorkloadCsv()">⬇ Export CSV</button>
-    </div>
+    <!-- Nút "Export CSV" nằm ở thanh tiêu đề của modal cha
+         (`workspace-stats-modal.html`), không còn ở đây: để trong này thì nó rơi
+         đúng ngay dưới nút "X" đóng modal, bấm trượt một nhịp là mất luôn bảng
+         thống kê. Modal gọi `exportWorkloadCsv()` qua `viewChild`. -->
 
     <!-- Khối 1: dải chỉ số -->
-    <div class="stats stats-vertical w-full border border-base-300 bg-base-100 shadow-sm sm:stats-horizontal">
+    <div class="stats stats-vertical w-full border border-base-300 bg-base-100 shadow-sm sm:stats-horizontal rounded-md">
       <div class="stat">
         <div class="stat-title">Completed tasks</div>
-        <div class="stat-value text-success">{{ overview().completedCount }}</div>
+        <div class="stat-value text-green-600">{{ overview().completedCount }}</div>
       </div>
       <div class="stat">
         <div class="stat-title">In progress</div>
-        <div class="stat-value text-info">{{ overview().inProgressCount }}</div>
+        <div class="stat-value text-blue-600">{{ overview().inProgressCount }}</div>
       </div>
       <label
         [attr.for]="overdueCards().length > 0 ? overdueDrawerId : null"
         class="stat transition-colors"
         [class.cursor-pointer]="overdueCards().length > 0"
-        [class.hover:bg-error/5]="overdueCards().length > 0"
+        [class.hover:bg-red-500/5]="overdueCards().length > 0"
       >
         <div class="stat-title">Overdue</div>
-        <div class="stat-value text-error">{{ overview().overdueCount }}</div>
+        <div class="stat-value text-red-600">{{ overview().overdueCount }}</div>
         @if (overdueCards().length > 0) {
-          <div class="stat-desc text-error">View details →</div>
+          <div class="stat-desc text-red-600">View details →</div>
         }
       </label>
       <div class="stat">
         <div class="stat-title">On-time rate</div>
-        <div class="stat-value text-warning">{{ overview().onTimeRatePct === null ? '—' : overview().onTimeRatePct + '%' }}</div>
+        <div class="stat-value text-yellow-600">{{ overview().onTimeRatePct === null ? '—' : overview().onTimeRatePct + '%' }}</div>
       </div>
     </div>
 
     <!-- Khối 2: cảnh báo thành viên vắng mặt -->
     @if (inactiveMembers().length > 0) {
-      <div role="alert" class="flex items-center gap-3 rounded-xl border border-warning/40 bg-warning/15 px-4 py-3 text-sm text-base-content shadow-xs dark:bg-warning/20">
-        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-warning text-warning-content shadow-xs">
+      <div role="alert" class="flex items-center gap-3 rounded-md border border-warning/40 bg-warning/15 px-4 py-3 text-sm text-base-content shadow-xs dark:bg-warning/20">
+        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-warning text-warning-content shadow-xs">
           <svg lucideTriangleAlert class="h-4.5 w-4.5" [strokeWidth]="2.5"></svg>
         </div>
         <div class="min-w-0 flex-1">
@@ -52,9 +53,9 @@
     <section class="space-y-2">
       <h2 class="text-xs font-bold uppercase tracking-wide text-base-content/60">Workload by member</h2>
       <div class="flex items-center gap-4 text-xs text-base-content/60">
-        <span class="flex items-center gap-1"><span class="h-2 w-2 rounded-full bg-success"></span>Done</span>
-        <span class="flex items-center gap-1"><span class="h-2 w-2 rounded-full bg-info"></span>In progress</span>
-        <span class="flex items-center gap-1"><span class="h-2 w-2 rounded-full bg-error"></span>Overdue</span>
+        <span class="flex items-center gap-1"><span class="h-2 w-2 rounded-full bg-green-500"></span>Done</span>
+        <span class="flex items-center gap-1"><span class="h-2 w-2 rounded-full bg-blue-500"></span>In progress</span>
+        <span class="flex items-center gap-1"><span class="h-2 w-2 rounded-full bg-red-500"></span>Overdue</span>
       </div>
       <div class="space-y-2">
         @for (m of sortedWorkload(); track trackByUserId($index, m)) {
@@ -62,9 +63,9 @@
             <app-user-avatar [userId]="m.userId" [name]="m.name" [avatarUrl]="m.avatarUrl" [size]="28" />
             <span class="w-36 shrink-0 truncate text-sm">{{ m.name }}</span>
             <div class="flex h-2 flex-1 overflow-hidden rounded-full bg-base-200">
-              <div class="h-full bg-success" [style.width.%]="m.donePct"></div>
-              <div class="h-full bg-info" [style.width.%]="m.doingPct"></div>
-              <div class="h-full bg-error" [style.width.%]="m.overduePct"></div>
+              <div class="h-full bg-green-500" [style.width.%]="m.donePct"></div>
+              <div class="h-full bg-blue-500" [style.width.%]="m.doingPct"></div>
+              <div class="h-full bg-red-500" [style.width.%]="m.overduePct"></div>
             </div>
             <span class="w-6 text-right text-xs text-base-content/60">{{ m.assignedCount }}</span>
           </div>
@@ -77,7 +78,7 @@
       <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div class="flex items-center gap-2">
           <h2 class="text-xs font-bold uppercase tracking-wide text-base-content/60">Activity log</h2>
-          <span class="badge badge-sm badge-ghost font-bold">{{ filteredActivityLogs().length }}</span>
+          <span class="badge badge-sm badge-ghost font-bold rounded-md">{{ filteredActivityLogs().length }}</span>
         </div>
         <div class="flex flex-wrap items-center gap-2">
           <!-- Bề rộng đáp ứng chuyển lên thẻ bọc vì GIỜ NÓ mới là con của flex;
@@ -90,32 +91,32 @@
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
             <input
-              class="input input-sm w-full pl-9"
+              class="input input-sm w-full pl-9 rounded-md font-semibold"
               type="text"
               placeholder="Search keyword..."
               [ngModel]="logSearch()"
               (ngModelChange)="logSearch.set($event)"
             />
           </div>
-          <select class="select select-sm w-36 shrink-0" [ngModel]="actionFilter()" (ngModelChange)="actionFilter.set($event)">
+          <select class="select select-sm w-36 shrink-0 rounded-md font-semibold" [ngModel]="actionFilter()" (ngModelChange)="actionFilter.set($event)">
             @for (group of actionGroups; track trackByGroup($index, group)) {
               <option [value]="group">{{ actionGroupLabel[group] }}</option>
             }
           </select>
-          <select class="select select-sm w-36 shrink-0" [ngModel]="selectedMemberId()" (ngModelChange)="selectedMemberId.set($event)">
+          <select class="select select-sm w-36 shrink-0 rounded-md font-semibold" [ngModel]="selectedMemberId()" (ngModelChange)="selectedMemberId.set($event)">
             <option value="all">All members</option>
             @for (m of memberWorkload(); track trackByUserId($index, m)) {
               <option [value]="m.userId">{{ m.name }}</option>
             }
           </select>
-          <div class="join shrink-0">
-            <button type="button" class="btn btn-sm join-item" [class.btn-active]="logScope() === 'mine'" (click)="logScope.set('mine')">Mine</button>
-            <button type="button" class="btn btn-sm join-item" [class.btn-active]="logScope() === 'team'" (click)="logScope.set('team')">Whole team</button>
+          <div class="join shrink-0 rounded-md overflow-hidden">
+            <button type="button" class="btn btn-sm join-item font-bold" [class.btn-active]="logScope() === 'mine'" (click)="logScope.set('mine')">Mine</button>
+            <button type="button" class="btn btn-sm join-item font-bold" [class.btn-active]="logScope() === 'team'" (click)="logScope.set('team')">Whole team</button>
           </div>
         </div>
       </div>
 
-      <div class="divide-y divide-base-300 overflow-y-auto rounded-box border border-base-300 bg-base-100 min-h-[140px] max-h-[360px]">
+      <div class="divide-y divide-base-300 overflow-y-auto rounded-md border border-base-300 bg-base-100 min-h-[140px] max-h-[360px]">
         @if (filteredActivityLogs().length === 0) {
           <div class="flex h-[140px] items-center justify-center p-4 text-sm text-base-content/50">
             No activity matches the current filters.
@@ -124,7 +125,16 @@
         @for (log of filteredActivityLogs(); track trackByLogId($index, log)) {
           <div class="flex items-start gap-3 p-3">
             <app-user-avatar [userId]="log.userId" [name]="memberName(log.userId)" [avatarUrl]="memberAvatarUrl(log.userId)" [size]="28" />
-            <span class="text-sm leading-7">{{ actionIcon(log.actionType) }}</span>
+            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full" [class]="actionIconClass(log.actionType)">
+              @switch (log.actionType) {
+                @case ('card_created') { <svg lucideFilePlus class="h-3.5 w-3.5" [strokeWidth]="2.5"></svg> }
+                @case ('card_moved') { <svg lucideArrowRight class="h-3.5 w-3.5" [strokeWidth]="2.5"></svg> }
+                @case ('card_updated') { <svg lucidePencil class="h-3.5 w-3.5" [strokeWidth]="2.5"></svg> }
+                @case ('card_deleted') { <svg lucideTrash2 class="h-3.5 w-3.5" [strokeWidth]="2.5"></svg> }
+                @case ('card_assigned') { <svg lucideUserPlus class="h-3.5 w-3.5" [strokeWidth]="2.5"></svg> }
+                @case ('comment_added') { <svg lucideMessageSquare class="h-3.5 w-3.5" [strokeWidth]="2.5"></svg> }
+              }
+            </span>
             <div class="flex flex-col gap-0.5">
               <p class="text-sm text-base-content">{{ log.actionText }}</p>
               <p class="text-xs text-base-content/50">{{ relativeTime(log.createdAt) }}</p>
@@ -152,7 +162,7 @@
             <p class="text-sm text-base-content">{{ card.title }}</p>
             <div class="mt-1 flex items-center justify-between text-xs">
               <span class="text-base-content/60">{{ card.assigneeName }}</span>
-              <span class="font-semibold text-error">Overdue by {{ card.daysOverdue }} day(s)</span>
+              <span class="font-semibold text-red-600">Overdue by {{ card.daysOverdue }} day(s)</span>
             </div>
           </div>
         }

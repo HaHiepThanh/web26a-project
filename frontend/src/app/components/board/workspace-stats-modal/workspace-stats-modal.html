@@ -1,15 +1,27 @@
 <div class="modal modal-open z-[1000] p-5" (click)="close.emit()">
-  <div class="modal-box flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden p-0" (click)="$event.stopPropagation()">
-    <div class="flex shrink-0 items-center justify-between border-b border-base-300 px-5 py-3.5">
+  <div class="modal-box flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden p-0 rounded-md border border-base-300" (click)="$event.stopPropagation()">
+    <div class="flex shrink-0 items-center justify-between gap-3 border-b border-base-300 px-5 py-3.5">
       <div class="flex min-w-0 flex-col">
         <span class="text-base font-bold text-base-content">📊 Stats &amp; Reports</span>
         @if (boardName(); as name) {
           <span class="truncate text-xs text-base-content/50">{{ name }}</span>
         }
       </div>
-      <button type="button" class="btn btn-square btn-ghost btn-sm" (click)="close.emit()" aria-label="Close">
-        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-      </button>
+      <!-- `gap-6` (24px) giữa Export CSV và nút đóng là có chủ đích, không phải
+           canh cho đẹp: hai nút sát nhau thì bấm trượt Export một nhịp là đóng
+           mất cả bảng thống kê và phải tải lại từ đầu. -->
+      <div class="flex shrink-0 items-center gap-6">
+        <!-- Chưa tải xong / lỗi thì không có gì để xuất, ẩn hẳn nút thay vì để
+             bấm ra file rỗng. -->
+        @if (!loading() && !loadError()) {
+          <button type="button" class="btn btn-outline btn-sm rounded-md font-bold" (click)="statsPanel()?.exportWorkloadCsv()">
+            ⬇ Export CSV
+          </button>
+        }
+        <button type="button" class="btn btn-square btn-ghost btn-sm rounded-md" (click)="close.emit()" aria-label="Close">
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
     </div>
 
     <div class="overflow-y-auto px-5 py-5">
@@ -18,7 +30,7 @@
           <span class="loading loading-spinner loading-sm"></span> Calculating stats...
         </div>
       } @else if (loadError(); as err) {
-        <div class="rounded-xl border border-error/40 bg-error/10 px-4 py-6 text-center">
+        <div class="rounded-md border border-error/40 bg-error/10 px-4 py-6 text-center">
           <p class="text-sm font-semibold text-error">{{ err }}</p>
         </div>
       } @else {
