@@ -122,6 +122,22 @@ export class Workspace {
   readonly createBoardInitialWorkspaceId = signal<string | null>(null);
   readonly createBoardInitialTitle = signal('');
 
+  /**
+   * Đang có một lượt tạo board chạy dở hay chưa.
+   *
+   * `handleBoardSubmit` phải `await` backend, mà modal chỉ đóng SAU khi có kết
+   * quả. Trong khoảng chờ đó nút "Create board" vẫn bấm được, nên double-click
+   * (hoặc chuột bị nhảy đúp) bắn thêm nguyên một request nữa — mỗi request tạo
+   * một board thật, giống hệt nhau. Người dùng đã gặp: bấm nhanh mấy lần ra
+   * một loạt board trùng tên.
+   *
+   * Cờ này là chốt chặn thật; nút bị `disabled` chỉ là phần nhìn thấy được.
+   * Giữ cả hai vì chúng chặn hai đường khác nhau: `disabled` lo chuột, còn cờ
+   * lo mọi đường còn lại (Enter trong form, sự kiện đến sát nhau trước khi
+   * Angular kịp vẽ lại nút).
+   */
+  readonly creatingBoard = signal(false);
+
   readonly showWorkspaceModal = signal(false);
   readonly workspaceModalMode = signal<'create' | 'edit'>('create');
   readonly selectedWorkspaceForEdit = signal<WorkspaceItem | null>(null);
@@ -604,6 +620,29 @@ export class Workspace {
   }
 
   async handleBoardSubmit(data: {
+    title: string;
+    workspaceId: string;
+    privacy: Privacy;
+    background: BoardBackground;
+    backgroundImageUrl?: string;
+    selectedMemberIds: string[];
+  }): Promise<void> {
+    // Lượt trước còn đang chạy thì bỏ qua hẳn cú này. Đặt TRƯỚC mọi thứ khác:
+    // chỉ cần lọt qua đây là đã có thêm một board thật trong database.
+    if (this.creatingBoard()) return;
+    this.creatingBoard.set(true);
+    try {
+      await this.taoBoard(data);
+    } finally {
+      // `finally` chứ không phải đặt lại ở cuối: hàm dưới có mấy đường thoát
+      // sớm (không thấy workspace, backend trả về rỗng) và có thể ném lỗi.
+      // Bỏ sót một đường là nút "Create board" khoá vĩnh viễn cho tới khi F5.
+      this.creatingBoard.set(false);
+    }
+  }
+
+  /** Phần việc thật của `handleBoardSubmit`, tách ra cho `try/finally` ở trên gọn. */
+  private async taoBoard(data: {
     title: string;
     workspaceId: string;
     privacy: Privacy;

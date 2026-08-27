@@ -191,8 +191,23 @@
 
       <!-- Actions -->
       <div class="flex justify-end gap-2 pt-3 border-t border-base-300">
-        <button type="button" class="btn btn-ghost rounded-md font-bold" (click)="close.emit()">Cancel</button>
-        <button type="submit" class="btn btn-primary rounded-md font-black px-5 shadow-sm">Create board</button>
+        <!-- Khoá luôn nút Cancel khi đang tạo: đóng modal giữa chừng không huỷ
+             được request đã gửi, board vẫn ra đời, mà người dùng lại tưởng là
+             đã dừng kịp. -->
+        <button type="button" class="btn btn-ghost rounded-md font-bold" [disabled]="submitting()"
+          (click)="close.emit()">Cancel</button>
+        <!-- `disabled` là chốt chặn double-click; đổi chữ + spinner để người
+             dùng biết máy đang chạy chứ không phải bấm hụt — không có phản hồi
+             gì thì phản xạ tự nhiên là bấm thêm lần nữa, đúng thứ gây ra lỗi. -->
+        <button type="submit" class="btn btn-primary rounded-md font-black px-5 shadow-sm"
+          [disabled]="submitting()">
+          @if (submitting()) {
+          <span class="loading loading-spinner loading-xs"></span>
+          Creating…
+          } @else {
+          Create board
+          }
+        </button>
       </div>
     </form>
   </div>

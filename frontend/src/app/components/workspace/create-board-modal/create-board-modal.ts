@@ -19,6 +19,15 @@ export class CreateBoardModal {
   readonly initialWorkspaceId = input<string | null>(null);
   readonly initialTitle = input<string>('');
 
+  /**
+   * Trang cha đang chờ backend tạo board.
+   *
+   * Modal không tự biết được: nó chỉ `emit` rồi thôi, không có đường nào hay
+   * khi nào việc kia xong. Nên trạng thái phải do cha truyền xuống — cha mới là
+   * chỗ nắm `await`.
+   */
+  readonly submitting = input<boolean>(false);
+
   readonly close = output<void>();
   readonly submitBoard = output<{
     title: string;
@@ -149,6 +158,10 @@ export class CreateBoardModal {
   }
 
   onSubmit(): void {
+    // Nút đã `disabled` rồi, nhưng `ngSubmit` còn nổ được bằng phím Enter trong
+    // ô nhập — đường đó không đi qua cái nút nào cả.
+    if (this.submitting()) return;
+
     const title = this.titleInput().trim();
     if (!title) {
       this.titleError.set('Please enter a board name!');

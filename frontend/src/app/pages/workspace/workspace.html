@@ -195,6 +195,7 @@
 <!-- MODAL: Create Board Component -->
 <app-create-board-modal [isOpen]="showCreateBoardModal()" [workspaces]="workspaces()"
   [initialWorkspaceId]="createBoardInitialWorkspaceId()" [initialTitle]="createBoardInitialTitle()"
+  [submitting]="creatingBoard()"
   (close)="showCreateBoardModal.set(false)" (submitBoard)="handleBoardSubmit($event)">
 </app-create-board-modal>
 
