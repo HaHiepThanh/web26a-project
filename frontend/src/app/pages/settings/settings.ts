@@ -32,6 +32,8 @@ import { ProfileTab } from '../../components/settings/profile-tab/profile-tab';
 import { ManageWorkspaceTab } from '../../components/settings/manage-workspace-tab/manage-workspace-tab';
 import { ManageOrganizationTab } from '../../components/settings/manage-organization-tab/manage-organization-tab';
 import { OrgDeleteModal } from '../../components/workspace/org-delete-modal/org-delete-modal';
+import { WorkspaceDeleteModal } from '../../components/workspace/workspace-delete-modal/workspace-delete-modal';
+import { WorkspaceService } from '../../services/workspace.service';
 
 @Component({
   selector: 'app-settings',
@@ -44,6 +46,7 @@ import { OrgDeleteModal } from '../../components/workspace/org-delete-modal/org-
     ManageWorkspaceTab,
     ManageOrganizationTab,
     OrgDeleteModal,
+    WorkspaceDeleteModal,
   ],
   templateUrl: './settings.html',
   styleUrl: './settings.css',
@@ -52,6 +55,7 @@ import { OrgDeleteModal } from '../../components/workspace/org-delete-modal/org-
 export class Settings {
   readonly auth = inject(AuthService);
   readonly orgService = inject(OrganizationStore);
+  private readonly workspaceService = inject(WorkspaceService);
   private readonly boardService = inject(BoardStore);
   private readonly tour = inject(TourStore);
   private readonly router = inject(Router);
@@ -336,6 +340,66 @@ export class Settings {
   readonly orgPendingDelete = signal<Organization | null>(null);
   readonly deletingOrg = signal(false);
   readonly deleteOrgError = signal<string | null>(null);
+
+  // ---- Modal xác nhận xoá Workspace (GitHub style) ----
+  readonly showDeleteWorkspaceModal = signal(false);
+  readonly workspacePendingDelete = signal<WorkspaceItem | null>(null);
+  readonly deletingWorkspace = signal(false);
+  readonly deleteWorkspaceError = signal<string | null>(null);
+
+  /** Bước 1 — chỉ mở hộp thoại xác nhận xoá Workspace. */
+  requestDeleteWorkspace(wsId: string): void {
+    const ws = this.workspaces().find((w) => w.id === wsId);
+    if (!ws) return;
+    this.workspacePendingDelete.set(ws);
+    this.deleteWorkspaceError.set(null);
+    this.showDeleteWorkspaceModal.set(true);
+  }
+
+  /** Huỷ xoá workspace. */
+  cancelDeleteWorkspace(): void {
+    if (this.deletingWorkspace()) return;
+    this.showDeleteWorkspaceModal.set(false);
+    this.workspacePendingDelete.set(null);
+    this.deleteWorkspaceError.set(null);
+  }
+
+  /** Bước 2 — xác nhận xoá Workspace đã gõ đúng tên. */
+  async confirmDeleteWorkspace(): Promise<void> {
+    if (this.deletingWorkspace()) return;
+
+    const ws = this.workspacePendingDelete();
+    if (!ws) return;
+
+    this.deletingWorkspace.set(true);
+    this.deleteWorkspaceError.set(null);
+    try {
+      const error = await this.workspaceService.deleteWorkspace(ws.id);
+      if (error) {
+        this.deleteWorkspaceError.set(error);
+        return;
+      }
+
+      // Xoá khỏi localStorage và danh sách state cục bộ
+      const targetOrgId = (ws as WorkspaceWithOrg).orgId || this.orgService.activeOrgId();
+      const userId = this.auth.currentUser()?.id;
+      const orgWorkspaces = loadStoredWorkspaces(userId, targetOrgId);
+      const saved = orgWorkspaces.filter((w) => w.id !== ws.id);
+      persistWorkspaces(saved, userId, targetOrgId);
+
+      this.workspaces.update((list) => list.filter((w) => w.id !== ws.id));
+      if (this.selectedWorkspaceId() === ws.id) {
+        const remaining = this.workspaces().filter((w) => w.id !== ws.id);
+        this.selectedWorkspaceId.set(remaining.length > 0 ? remaining[0].id : null);
+      }
+
+      this.showDeleteWorkspaceModal.set(false);
+      this.workspacePendingDelete.set(null);
+      this.flash(`Deleted workspace "${ws.name}".`, 'info');
+    } finally {
+      this.deletingWorkspace.set(false);
+    }
+  }
 
   /** Bước 1 — chỉ mở hộp thoại xác nhận. Chưa gọi API, chưa đụng gì tới dữ liệu. */
   requestDeleteOrg(orgId: string): void {

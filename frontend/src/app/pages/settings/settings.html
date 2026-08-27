@@ -113,7 +113,9 @@
       [workspaces]="workspaces()" [selectedWorkspaceId]="selectedWorkspaceId()" [searchableUsers]="searchableUsers()"
       (changeOrgFilter)="onOrgFilterChange($event)" (selectWorkspace)="onSelectWorkspace($event)"
       (addMember)="onAddWorkspaceMember($event)" (changeRole)="onChangeWorkspaceRole($event)"
-      (removeMember)="onRemoveWorkspaceMember($event)" (flashMessage)="flash($event.message, $event.type ?? 'success')">
+      (removeMember)="onRemoveWorkspaceMember($event)"
+      (requestDeleteWorkspace)="requestDeleteWorkspace($event)"
+      (flashMessage)="flash($event.message, $event.type ?? 'success')">
     </app-manage-workspace-tab>
     }
     }
@@ -124,3 +126,9 @@
 <app-org-delete-modal [isOpen]="showDeleteOrgModal()" [org]="orgPendingDelete()" [deleting]="deletingOrg()"
   [error]="deleteOrgError()" (cancel)="cancelDeleteOrg()" (confirm)="confirmDeleteOrg()">
 </app-org-delete-modal>
+
+<!-- MODAL: xác nhận xoá Workspace (gõ lại đúng tên mới bấm được Delete) -->
+<app-workspace-delete-modal [isOpen]="showDeleteWorkspaceModal()" [workspace]="workspacePendingDelete()"
+  [deleting]="deletingWorkspace()" [error]="deleteWorkspaceError()" (cancel)="cancelDeleteWorkspace()"
+  (confirm)="confirmDeleteWorkspace()">
+</app-workspace-delete-modal>

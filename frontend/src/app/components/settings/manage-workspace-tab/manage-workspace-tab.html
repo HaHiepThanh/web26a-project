@@ -160,6 +160,24 @@
           </tbody>
         </table>
       </div>
+
+      <!-- Danger zone — xoá workspace được chọn -->
+      <div class="mt-6 rounded-md border-2 border-error/30 bg-error/5 p-5 shadow-xs">
+        <h3 class="flex items-center gap-2 text-sm font-black text-error">
+          <svg lucideTriangleAlert class="h-4 w-4 shrink-0" [strokeWidth]="2.4"></svg>
+          Danger zone
+        </h3>
+        <div class="mt-3 flex flex-wrap items-center justify-between gap-3">
+          <p class="max-w-lg text-xs font-medium leading-relaxed text-base-content/70">
+            Deleting <span class="font-black text-base-content">{{ curWs.name }}</span> permanently removes
+            every board, list, card, checklist, comment, attachment and chat message inside it. This cannot be undone.
+          </p>
+          <button type="button" class="btn btn-error btn-outline btn-sm shrink-0 rounded-md font-bold"
+            (click)="requestDeleteWorkspace.emit(curWs.id)">
+            🗑️ Delete Workspace
+          </button>
+        </div>
+      </div>
     </div>
   </div>
   } @else {

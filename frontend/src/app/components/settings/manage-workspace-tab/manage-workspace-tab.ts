@@ -1,13 +1,13 @@
 import { Component, computed, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { LucideBuilding2, LucideCrown, LucideGlobe, LucidePlus, LucideX } from '@lucide/angular';
+import { LucideBuilding2, LucideCrown, LucideGlobe, LucidePlus, LucideTriangleAlert, LucideX } from '@lucide/angular';
 import { User } from '../../../models';
 import { Organization, WorkspaceMember, WorkspaceRole, WorkspaceWithOrg } from '../../../mocks';
 import { UserAvatar } from '../../shared/user-avatar/user-avatar';
 
 @Component({
   selector: 'app-manage-workspace-tab',
-  imports: [FormsModule, LucideBuilding2, LucideCrown, LucidePlus, LucideX, UserAvatar],
+  imports: [FormsModule, LucideBuilding2, LucideCrown, LucidePlus, LucideTriangleAlert, LucideX, UserAvatar],
   templateUrl: './manage-workspace-tab.html',
   host: { class: 'block' },
 })
@@ -23,6 +23,7 @@ export class ManageWorkspaceTab {
   readonly addMember = output<{ workspaceId: string; orgId?: string; user: User; role: WorkspaceRole }>();
   readonly changeRole = output<{ workspaceId: string; orgId?: string; memberId: string; newRole: WorkspaceRole }>();
   readonly removeMember = output<{ workspaceId: string; orgId?: string; member: WorkspaceMember }>();
+  readonly requestDeleteWorkspace = output<string>();
   readonly flashMessage = output<{ message: string; type?: 'success' | 'error' | 'info' }>();
 
 
