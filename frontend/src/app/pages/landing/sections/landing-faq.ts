@@ -27,7 +27,7 @@ export class LandingFaq {
   readonly items = [
     {
       q: 'Is it actually free?',
-      a: 'Yes. There is no paid tier, no trial clock and nothing to cancel — no card is asked for at any point.',
+      a: 'Yes. There is no paid tier, no trial clock and nothing to cancel — you are never asked for a card.',
     },
     {
       q: 'Where does my data live?',

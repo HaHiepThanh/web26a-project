@@ -24,16 +24,15 @@ import { RevealDirective } from '../../../directives/reveal.directive';
 })
 export class LandingCompare {
   readonly ours = [
-    'Everything fits on one screen. There is no settings tree to learn and nothing to configure before your first card.',
-    'Your team is small enough that admin tooling is overhead, not a feature.',
+    'Everything fits on one screen — your team is small enough that a settings tree and admin tooling would only get in the way, not help.',
     'Work keeps being born mid-conversation, and you want it to land on the board without being retyped.',
     'You want to keep the data in-house — it can run entirely on a machine you control.',
     'You would rather pay nothing than pay per seat for features nobody opens.',
   ];
 
   readonly theirs = [
-    'You need Power-Ups, Butler automation, or connections to a hundred other services.',
-    'Your company already pays Atlassian and everything lives there already.',
+    "You need Trello's automation and its library of a hundred-plus integrations.",
+    'Your company already pays for Trello and everything already lives there.',
     'You need a native mobile app, offline mode, or enterprise administration.',
     'Your team is large enough that permissions and audit trails matter more than speed.',
   ];

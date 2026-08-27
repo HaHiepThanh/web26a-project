@@ -174,10 +174,6 @@
   }
 }
 
-.brand-accent {
-  color: var(--lp-ink-blue);
-}
-
 .nav-links {
   display: none;
   align-items: center;
