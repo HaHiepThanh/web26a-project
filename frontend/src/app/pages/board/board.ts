@@ -46,6 +46,7 @@ import { BoardMinimap } from '../../components/board/board-minimap/board-minimap
 import { WorkspaceStatsModal } from '../../components/board/workspace-stats-modal/workspace-stats-modal';
 import { BoardHeaderBar } from '../../components/board/board-header-bar/board-header-bar';
 import { BoardBulkActions } from '../../components/board/board-bulk-actions/board-bulk-actions';
+import { ListDeleteModal } from '../../components/board/list-delete-modal/list-delete-modal';
 
 type SortMode = 'manual' | 'priority' | 'due' | 'new';
 type ViewMode = 'status' | 'matrix';
@@ -112,6 +113,7 @@ const MINIMAP_OVERFLOW_RATIO = 1.5;
     BoardBulkActions,
     TaskSuggestionModal,
     ScheduleMeetingModal,
+    ListDeleteModal,
   ],
   templateUrl: './board.html',
   styleUrl: './board.css',
@@ -1044,12 +1046,37 @@ export class Board {
   }
 
   // ---- Xoá / đổi tên danh sách ----
+  readonly showDeleteListModal = signal(false);
+  readonly listPendingDelete = signal<List | null>(null);
+  readonly deletingList = signal(false);
+  readonly deleteListCardsCount = computed(() => {
+    const l = this.listPendingDelete();
+    return l ? this.cardsFor(l.id).length : 0;
+  });
+
   requestDeleteList(list: List): void {
-    const count = this.cardsFor(list.id).length;
-    const message = count > 0 ? `List "${list.name}" still has ${count} card(s) inside — delete them too?` : `Delete list "${list.name}"?`;
-    if (!window.confirm(message)) return;
-    this.cardService.clearListCards(list.id);
-    void this.listService.deleteList(list.id);
+    this.listPendingDelete.set(list);
+    this.showDeleteListModal.set(true);
+  }
+
+  cancelDeleteList(): void {
+    if (this.deletingList()) return;
+    this.showDeleteListModal.set(false);
+    this.listPendingDelete.set(null);
+  }
+
+  async confirmDeleteList(list: List): Promise<void> {
+    if (this.deletingList()) return;
+    this.deletingList.set(true);
+    try {
+      this.cardService.clearListCards(list.id);
+      await this.listService.deleteList(list.id);
+      this.showDeleteListModal.set(false);
+      this.listPendingDelete.set(null);
+      this.addToast(`Deleted list "${list.name}".`, 'info');
+    } finally {
+      this.deletingList.set(false);
+    }
   }
 
   renameList(list: List, name: string): void {

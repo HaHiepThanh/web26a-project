@@ -1,0 +1,69 @@
+@if (isOpen() && list(); as curList) {
+<div class="modal modal-open z-[1200] p-4 backdrop-blur-[2px]" (click)="onBackdropClick()">
+  <div
+    class="modal-box max-w-[440px] border border-error/30 p-0 overflow-hidden rounded-md bg-base-100 shadow-xl"
+    (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between border-b border-base-300 bg-error/5 px-5 py-4">
+      <h3 class="flex items-center gap-2 text-base font-black text-error">
+        <svg lucideTriangleAlert class="h-4.5 w-4.5 shrink-0" [strokeWidth]="2.4"></svg>
+        Delete List
+      </h3>
+      <button
+        type="button"
+        class="btn btn-circle btn-ghost btn-sm text-base-content/60 hover:text-base-content"
+        [disabled]="deleting()"
+        (click)="cancel.emit()"
+        aria-label="Close">
+        <svg lucideX class="h-4 w-4" [strokeWidth]="2.4"></svg>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="px-5 py-4 space-y-3">
+      <p class="text-sm font-semibold text-base-content">
+        Are you sure you want to delete <span class="font-black text-base-content">"{{ curList.name }}"</span>?
+      </p>
+
+      @if (cardsCount() > 0) {
+      <div class="rounded-md border border-warning/30 bg-warning/10 p-3 text-xs">
+        <p class="font-bold text-warning-content">
+          ⚠️ This list contains <b>{{ cardsCount() }}</b> card(s).
+        </p>
+        <p class="mt-1 text-2xs text-base-content/70">
+          Deleting this list will permanently remove all cards inside it.
+        </p>
+      </div>
+      }
+
+      <p class="text-2xs text-base-content/60 leading-relaxed">
+        This action cannot be undone. All cards and data inside this list will be removed.
+      </p>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex items-center justify-end gap-2 border-t border-base-300 px-5 py-3.5 bg-base-200/40">
+      <button
+        type="button"
+        class="btn btn-ghost btn-sm rounded-md font-bold"
+        [disabled]="deleting()"
+        (click)="cancel.emit()">
+        Cancel
+      </button>
+      <button
+        type="button"
+        class="btn btn-error btn-sm rounded-md font-black px-4 shadow-sm"
+        [disabled]="deleting()"
+        (click)="onConfirm()">
+        @if (deleting()) {
+          <span class="loading loading-spinner loading-xs"></span>
+          Deleting...
+        } @else {
+          Delete list
+        }
+      </button>
+    </div>
+  </div>
+</div>
+}

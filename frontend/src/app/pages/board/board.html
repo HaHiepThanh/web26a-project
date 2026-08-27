@@ -336,6 +336,15 @@
     <app-workspace-stats-modal [boardId]="boardId" [boardName]="board()?.name ?? null" (close)="closeStatsModal()" />
   }
 
+  <!-- Modal: Xác nhận xoá Danh sách (List) -->
+  <app-list-delete-modal
+    [isOpen]="showDeleteListModal()"
+    [list]="listPendingDelete()"
+    [cardsCount]="deleteListCardsCount()"
+    [deleting]="deletingList()"
+    (cancel)="cancelDeleteList()"
+    (confirm)="confirmDeleteList($event)" />
+
   <!-- Thanh hành động hàng loạt (#12) -->
   <app-board-bulk-actions
     [selectedCount]="selectedCardIds().size"
