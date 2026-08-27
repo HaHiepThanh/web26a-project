@@ -13,14 +13,18 @@ import { LucideArrowRight, LucideMenu, LucideMoon, LucideSun, LucideX } from '@l
 import { AuthService } from '../../services/auth.service';
 import { ThemeService } from '../../services/theme.service';
 import { LandingAi } from './sections/landing-ai';
+import { LandingCapabilities } from './sections/landing-capabilities';
+import { LandingTry } from './sections/landing-try';
 import { LandingCompare } from './sections/landing-compare';
 import { LandingCta } from './sections/landing-cta';
 import { LandingFaq } from './sections/landing-faq';
 import { LandingFeatures } from './sections/landing-features';
 import { LandingHero } from './sections/landing-hero';
+import { LandingOrigin } from './sections/landing-origin';
 import { LandingStats } from './sections/landing-stats';
+import { LandingWelcome } from './sections/landing-welcome';
 import { LandingSteps } from './sections/landing-steps';
-import { LandingStory } from './sections/landing-story';
+import { SmoothScroll } from './smooth-scroll';
 
 /**
  * Trang giới thiệu — route `/`, đứng ngoài cả auth-layout lẫn app-layout vì nó
@@ -43,10 +47,13 @@ import { LandingStory } from './sections/landing-story';
   selector: 'app-landing',
   imports: [
     RouterLink,
+    LandingWelcome,
     LandingHero,
+    LandingOrigin,
     LandingFeatures,
     LandingAi,
-    LandingStory,
+    LandingCapabilities,
+    LandingTry,
     LandingCompare,
     LandingSteps,
     LandingStats,
@@ -81,15 +88,44 @@ export class Landing implements OnDestroy {
   readonly isDark = computed(() => this.theme() === 'dark');
   readonly isLoggedIn = this.auth.isLoggedIn;
 
+  /** Cuộn quán tính + ScrollTrigger. Chỉ sống trong vòng đời của trang này —
+   *  xem ghi chú đầu file `smooth-scroll.ts` để biết vì sao không bật cho cả app. */
+  private readonly smooth = new SmoothScroll();
+
+  /**
+   * Trang này mượn `night` cho chế độ tối, thay vì `sunset` của app.
+   *
+   * `night` giữ đúng quan hệ màu của `winter` mà cả trang đang xây trên đó —
+   * xanh dương dẫn, tím theo sau (winter: 257→282, night: 233→277). `sunset`
+   * thì primary là CAM, nên gradient xanh→tím của trang bị lệch hẳn tông khi
+   * chuyển sang tối.
+   *
+   * Chỉ mượn trong lúc trang mở; `ngOnDestroy` trả lại cặp của app.
+   */
+  private readonly releaseThemes = this.themeService.useThemes({
+    light: 'winter',
+    dark: 'night',
+  });
+
   /** Đã rời khỏi đỉnh trang chưa — nav đổi từ trong suốt sang nền mờ. */
   readonly scrolled = signal(false);
   readonly menuOpen = signal(false);
 
   readonly navLinks = [
+    // Cố ý KHÔNG có mục cho khu "Everything in the box": nó nằm ngay dưới
+    // Features nên cuộn tới là gặp, mà thanh nav thì hết chỗ thật — xem phần đo
+    // bề rộng ở landing.css. Thêm mục thứ bảy là vỡ hàng ở dải 960–1139px.
+    //
+    // ⚠️ THỨ TỰ Ở ĐÂY PHẢI TRÙNG THỨ TỰ KHU VỰC TRÊN TRANG. Danh sách này không
+    // chỉ để bấm: `sectionObserver` dùng nó để tô đậm mục đang hiện trên màn
+    // hình, nên xếp sai là vạch nhấn chạy giật lùi lúc người ta cuộn xuôi.
+    // Trang: hero → our-story → features → assistant → everything →
+    //        why-not-trello → how-it-works → stats → faq → cta
+    { id: 'our-story', label: 'Our story' },
     { id: 'features', label: 'Features' },
     { id: 'assistant', label: 'Assistant' },
-    { id: 'how-it-works', label: 'How it works' },
     { id: 'why-not-trello', label: 'Why not Trello' },
+    { id: 'how-it-works', label: 'How it works' },
     { id: 'faq', label: 'FAQ' },
   ];
 
@@ -113,6 +149,8 @@ export class Landing implements OnDestroy {
       // Tải lại trang giữa chừng (trình duyệt tự khôi phục vị trí cuộn) hoặc mở
       // thẳng một liên kết có #mốc thì chưa có cú cuộn nào cả — nav sẽ nằm trong
       // suốt đè lên nội dung cho tới khi người dùng lỡ tay cuộn một cái.
+      this.smooth.start();
+
       this.onScroll();
 
       // Phóng cửa sổ từ mobile lên desktop trong lúc menu đang mở: CSS ẩn tấm
@@ -188,6 +226,15 @@ export class Landing implements OnDestroy {
       return;
     event.preventDefault();
     this.closeMenu();
+
+    // Lenis đang chạy thì phải đi qua nó. Gọi window.scrollTo song song sẽ thành
+    // hai bên cùng ghi vị trí cuộn trong cùng một khung hình — hình giật rồi
+    // đứng khựng giữa đường.
+    if (this.smooth.active) {
+      this.smooth.scrollTo(0);
+      return;
+    }
+
     const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
   }
@@ -205,11 +252,22 @@ export class Landing implements OnDestroy {
     const target = this.document.getElementById(id);
     if (!target) return;
 
+    if (this.smooth.active) {
+      // -84px = chiều cao thanh nav cố định cộng một chút thở, đúng con số mà
+      // `scroll-margin-top` trong _landing-shared.css dùng cho lối nhảy mốc của
+      // trình duyệt. Lenis không đọc scroll-margin nên phải bù tay.
+      this.smooth.scrollTo(target, -84);
+      return;
+    }
+
     const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     target.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
   }
 
   ngOnDestroy(): void {
+    this.smooth.stop();
+    // Không trả lại thì cặp winter/night đi theo người dùng sang cả phần app.
+    this.releaseThemes();
     this.sectionObserver?.disconnect();
     this.wideQuery?.removeEventListener('change', this.onBreakpointChange);
     // Rời trang trong lúc menu còn mở (bấm một liên kết trong menu là đúng

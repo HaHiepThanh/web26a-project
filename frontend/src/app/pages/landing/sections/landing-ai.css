@@ -35,7 +35,7 @@
      dùng chung bảng màu với theme tối của app.
      ⚠️ Đổi theme tối sang bộ khác thì phải chép lại khối này. */
   --accent-blue: oklch(75.351% 0.138 232.661);
-  --accent-blue-hover: oklch(82% 0.115 232.661);
+  --accent-blue-hover: oklch(83% 0.11 232.661);
   --accent-blue-soft: oklch(75.351% 0.138 232.661 / 0.15);
   --accent-purple: oklch(68.011% 0.158 276.934);
   --accent-purple-soft: oklch(68.011% 0.158 276.934 / 0.15);
@@ -55,12 +55,20 @@
 
   --lp-bg: oklch(17.86% 0.034 265.754);
   --lp-surface: oklch(20.768% 0.039 265.754);
+<<<<<<< HEAD
   --lp-surface-2: oklch(27.949% 0.036 260.03);
+=======
+  --lp-surface-2: oklch(25% 0.036 265.754);
+>>>>>>> pr-45
   --lp-border: rgba(255, 255, 255, 0.09);
   --lp-border-strong: rgba(255, 255, 255, 0.2);
   --lp-text: oklch(84.153% 0.007 265.754);
   --lp-text-2: oklch(84.153% 0.007 265.754 / 0.78);
+<<<<<<< HEAD
   --lp-text-3: oklch(84.153% 0.007 265.754 / 0.58);
+=======
+  --lp-text-3: oklch(84.153% 0.007 265.754 / 0.68); /* 0.58 chi duoc 4.24:1, duoi nguong AA */
+>>>>>>> pr-45
   --lp-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
   --lp-shadow-md: 0 12px 30px -12px rgba(0, 0, 0, 0.8);
   --lp-shadow-lg: 0 34px 60px -24px rgba(0, 0, 0, 0.9);
@@ -257,7 +265,7 @@
   display: flex;
   align-items: flex-end;
   gap: var(--lp-2);
-  animation: msg-in 380ms var(--lp-ease) both;
+  animation: msg-in var(--lp-dur-3) var(--lp-ease) both;
 }
 
 .msg-me {
@@ -349,7 +357,7 @@
   font-size: var(--lp-text-micro);
   font-weight: 600;
   color: var(--lp-ink-purple);
-  animation: msg-in 300ms var(--lp-ease) both;
+  animation: msg-in var(--lp-dur-3) var(--lp-ease) both;
 }
 
 .ai-thinking svg {
@@ -400,7 +408,7 @@
   border: 1px solid color-mix(in oklab, var(--accent-purple) 55%, transparent);
   border-radius: var(--radius-md);
   background: color-mix(in oklab, var(--accent-purple) 12%, var(--lp-surface-2));
-  animation: suggest-in 520ms var(--lp-ease) both;
+  animation: suggest-in var(--lp-dur-4) var(--lp-ease) both;
 }
 
 /* Quầng sáng nhấp nháy quanh viền — dấu hiệu "vừa được phát hiện". Vẽ bằng một
@@ -541,9 +549,9 @@
   font-weight: 600;
   cursor: pointer;
   transition:
-    filter 160ms ease,
-    background-color 160ms ease,
-    color 160ms ease;
+    filter var(--lp-dur-1) var(--lp-ease),
+    background-color var(--lp-dur-1) var(--lp-ease),
+    color var(--lp-dur-1) var(--lp-ease);
 }
 
 .suggest-btn svg {
@@ -583,7 +591,7 @@
   margin: 0;
   font-size: var(--lp-text-micro);
   color: var(--lp-ink-green);
-  animation: msg-in 320ms var(--lp-ease) both;
+  animation: msg-in var(--lp-dur-3) var(--lp-ease) both;
 }
 
 .created-note svg {
@@ -617,7 +625,7 @@
   border-radius: var(--radius-sm);
   background: var(--lp-surface-2);
   font-size: var(--lp-text-sm);
-  transition: border-color 200ms ease;
+  transition: border-color var(--lp-dur-2) var(--lp-ease);
 }
 
 .is-typing .chat-field {

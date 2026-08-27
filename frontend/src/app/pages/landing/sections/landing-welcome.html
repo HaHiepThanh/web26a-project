@@ -1,0 +1,201 @@
+<!--
+  Màn chào. Xem ghi chú dài ở landing-welcome.ts về lý do nó KHÔNG phải cổng
+  chặn, và vì sao nó nằm dưới cùng để hero trôi lên đè phủ.
+
+  Cố ý KHÔNG có <h1> ở đây. Tấm này là một tấm bìa mang tên sản phẩm, không
+  phải một khu vực có nội dung; còn <h1> thật của trang là câu chào hàng ở hero
+  ("Your team's work, on one board"), và một trang chỉ nên có đúng một cái. Khu
+  vực tự xưng tên bằng `aria-label`.
+-->
+<section class="welcome" aria-label="Welcome to Horizon Hub Harmony">
+  <!--
+    BA LỚP CHIỀU SÂU, tất cả đều trang trí nên aria-hidden hết.
+
+    Trước khi có khối này, màn chào là một nền phẳng trơn — mà hero ngay sau nó
+    lại có cực quang, lưới và thẻ trôi. Hai màn liền nhau, một giàu một trống,
+    nên mắt đọc ra ngay là thiếu.
+
+    Xa nhất: cực quang, cùng kỹ thuật với hero nhưng DỊU HƠN MỘT BẬC — màn chào
+    là chỗ hít vào, hero mới là chỗ thở ra. Cũng nhờ vậy hai màn nối liền được
+    về thị giác thay vì như hai trang khác nhau.
+    Giữa: bóng ba cột Kanban. Không thẻ, không chữ — chỉ là hình bóng của một
+    tấm bảng, nói trước người ta sắp thấy gì mà không tốn một chữ nào. Ba chữ H
+    đứng giữa ba cột thành một bố cục có chủ ý.
+  -->
+  <div class="wc-bg" aria-hidden="true">
+    <span class="wc-aurora wc-a"></span>
+    <span class="wc-aurora wc-b"></span>
+    <span class="wc-aurora wc-c"></span>
+    <span class="wc-grid"></span>
+    <!-- Ba cột nay CÓ TÊN. Trước đó chúng là ba hình chữ nhật vô danh; gắn
+         đúng tên ba cột của bảng thật thì tấm bảng đọc ra được ngay, và dải
+         trên cùng vốn trống nhất cũng có thứ để nhìn. Đây là chỗ trang trí duy
+         nhất trên màn chào mang theo THÔNG TIN chứ không chỉ mang hình. -->
+    <span class="wc-cols">
+      <span></span>
+      <span></span>
+      <span></span>
+    </span>
+
+    <!-- Tên cột nằm ở lớp RIÊNG, không phải trong `.wc-cols`.
+         `.wc-cols` mang một mask tan dần hai đầu để bóng cột không đâm vào mép
+         màn hình — mà đầu cột lại rơi đúng vào đoạn đang tan, nên chữ nằm
+         trong đó bị nhân thêm một lần mờ nữa (đo được alpha còn ~0.34) và
+         thành ra không đọc nổi dù đã tô đậm màu. Tách ra một lớp không mask,
+         dùng chung hình học qua biến, thì bóng cột vẫn tan mềm còn tên cột thì
+         hiện đủ rõ. -->
+    <span class="wc-colnames">
+      <i>To do</i>
+      <i>In progress</i>
+      <i>Done</i>
+    </span>
+
+
+    <!-- Thanh ray dọc hai mép: một đường mảnh, mấy vạch chia, và tên sản phẩm
+         xoay đứng. Lấp đúng dải dọc còn trống sau khi đã có thẻ ở rìa.
+         Nằm TRONG lớp nền và ĐỨNG TRƯỚC mấy tấm thẻ trong cây DOM, nên thẻ vẽ
+         đè lên ray. Để ray ở ngoài thì nó vẽ sau cùng và kẻ một đường xuyên
+         qua giữa mấy tấm thẻ — nhìn thấy rõ, và đọc ra là lỗi. -->
+    <span class="wc-rails">
+      <span class="wc-rail wc-rail-l">
+        <i></i><i></i><i></i>
+        <b>Horizon Hub Harmony</b>
+      </span>
+      <span class="wc-rail wc-rail-r">
+        <i></i><i></i><i></i>
+        <b>Web26A — 2026</b>
+      </span>
+    </span>
+
+    <!--
+      Thẻ Kanban ở HAI RÌA, tràn một phần ra ngoài mép màn hình — như thể tấm
+      bảng còn chạy tiếp ra ngoài khung hình.
+
+      Thuần hình khối: một vạch nhãn màu, vài vạch xám thay cho chữ. Không một
+      ký tự nào, vì đây là trang trí — chữ thật ở đây sẽ tranh đọc với cái tên ở
+      giữa, mà trình đọc màn hình thì lại phải đọc thêm mấy dòng vô nghĩa.
+
+      KHÁC hẳn thẻ trôi ở hero, và khác có chủ đích: hero dùng viên nhỏ, nét,
+      nằm tiền cảnh quanh tiêu đề. Ở đây là thẻ TO, MỜ, LÙI SÂU, nằm ở lớp nền.
+      Hai độ sâu khác nhau thì mắt đọc ra là hai thứ khác nhau, chứ không phải
+      một thứ lặp lại hai lần.
+    -->
+    <span class="wc-cards">
+      <span class="wc-card wc-k1">
+        <i class="wc-lb lb-blue"></i>
+        <i class="wc-ln"></i>
+        <i class="wc-ln wc-ln-s"></i>
+      </span>
+      <span class="wc-card wc-k2">
+        <i class="wc-lb lb-green"></i>
+        <i class="wc-ln"></i>
+      </span>
+      <span class="wc-card wc-k3">
+        <i class="wc-lb lb-amber"></i>
+        <i class="wc-ln"></i>
+        <i class="wc-ln wc-ln-s"></i>
+      </span>
+      <span class="wc-card wc-k4">
+        <i class="wc-lb lb-purple"></i>
+        <i class="wc-ln"></i>
+        <i class="wc-ln wc-ln-s"></i>
+      </span>
+      <span class="wc-card wc-k5">
+        <i class="wc-lb lb-blue"></i>
+        <i class="wc-ln"></i>
+      </span>
+    </span>
+  </div>
+
+  <!-- Gần nhất: chữ nhỏ ở HAI GÓC DƯỚI, biến khoảng trống thành một cái khung
+       có chủ ý thay vì chỗ chưa kịp điền.
+       Cố ý KHÔNG có hai góc trên: thanh nav cố định cao 69px đã chiếm trọn dải
+       đó với logo, sáu mục điều hướng và hai nút — đo được là hai nhãn trên rơi
+       vào y=39, tức nằm ĐÈ LÊN logo và bị nút "Start free" nuốt mất. Thanh nav
+       chính là cái khung phía trên rồi; chen thêm chữ vào chỉ tổ đè nhau. -->
+  <ul class="wc-meta">
+    <li class="wc-bl">Kanban, but quieter</li>
+    <li class="wc-br">Made by three students</li>
+  </ul>
+
+  <!-- Tấm thẻ bám theo con trỏ. Nó nói đúng một câu, trước cả khi ai đọc chữ
+       nào: trang này là về việc cầm một tấm thẻ và di chuyển nó.
+       Chỉ dựng trên thiết bị có con trỏ chính xác và khi người dùng không xin
+       giảm chuyển động — xem `trackPointer()` ở landing-welcome.ts. -->
+  <span class="wc-cursor" #cursorCard aria-hidden="true">
+    <i class="wc-lb lb-purple"></i>
+    <i class="wc-ln"></i>
+    <i class="wc-ln wc-ln-s"></i>
+  </span>
+
+  <div class="wc-inner" #inner>
+    <p class="wc-eyebrow">Welcome</p>
+
+    <!-- Ba chữ H tự viết ra, lần lượt. Cùng kỹ thuật với khu câu chuyện: nét mờ
+         có sẵn để chữ không phải một khoảng trống chờ hoạt ảnh, nét màu chạy đè
+         lên. Ở đây chạy theo THỜI GIAN chứ không theo cuộn — đây là thứ đầu
+         tiên người ta thấy, chưa ai cuộn gì cả. -->
+    <div class="wc-glyphs" aria-hidden="true">
+      @for (m of meanings; track $index) {
+        <span
+          class="wc-h"
+          #glyph
+          [class]="'wc-h tone-' + ['blue', 'purple', 'green'][$index]"
+          [class.is-hot]="hovered() === $index"
+        >
+          <svg viewBox="0 0 100 124" fill="none">
+            <path class="wc-track" d="M18 10V114M18 62H82M82 10V114" />
+            <path class="wc-ink" pathLength="100" d="M18 10V114M18 62H82M82 10V114" />
+          </svg>
+        </span>
+      }
+    </div>
+
+    <!-- Chữ nào con trỏ đang đi ngang thì từ tương ứng đổi sang màu của chữ H
+         đó — mắt tự nối "chữ H khổ lớn" với "từ bắt đầu bằng chữ ấy" mà không
+         cần mũi tên hay chú thích nào. -->
+    <p class="wc-name">
+      <span [class.is-hot]="hovered() === 0">Horizon</span>
+      <span [class.is-hot]="hovered() === 1">Hub</span>
+      <span [class.is-hot]="hovered() === 2">Harmony</span>
+    </p>
+
+    <!--
+      Dòng nghĩa. Ô này LUÔN chiếm chỗ dù chưa có chữ (xem `.wc-meaning` trong
+      CSS): để nó tự co lại khi rỗng thì mỗi lần rê chuột qua một chữ H, cả khối
+      chữ bên dưới lại nhảy lên nhảy xuống — thứ khó chịu hơn nhiều so với một
+      khoảng trống nhỏ đứng yên.
+      `aria-hidden` vì nghĩa của ba từ đã được nói đầy đủ ở khu câu chuyện; đọc
+      thêm ở đây chỉ là lặp, mà lại là lặp một nội dung đổi liên tục theo chuột.
+    -->
+    <p class="wc-meaning" aria-hidden="true">
+      @if (hovered() !== null) {
+        <span>{{ meanings[hovered()!] }}</span>
+      }
+    </p>
+
+    <p class="wc-line">
+      A real-time board where a small team's work — and the conversation around it — finally live
+      in the same place.
+    </p>
+
+    <!-- Ba chip: giới thiệu sơ chức năng ngay ở màn đầu, để người ta biết mình
+         sắp cuộn vào cái gì. Đúng ba, không hơn — đây là tấm bìa, không phải
+         bản kê; bản kê đầy đủ nằm ở khu "Everything in the box". -->
+    <ul class="wc-chips">
+      <li>Real-time board</li>
+      <li>Chat becomes cards</li>
+      <li>Everything included</li>
+    </ul>
+
+    <!-- Chỉ là hình, không phải liên kết. Cả khu vực mang `pointer-events: none`
+         (xem landing-welcome.ts), nên ở đây không được có gì cần bấm — người
+         dùng bàn phím cuộn bằng Space hoặc PageDown như mọi trang khác. -->
+    <p class="wc-cue" aria-hidden="true">
+      <span>Scroll</span>
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M12 4v14M6 13l6 6 6-6" />
+      </svg>
+    </p>
+  </div>
+</section>

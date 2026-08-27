@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { LucideBuilding2, LucideKanban, LucideSparkles, LucideUserPlus } from '@lucide/angular';
+import { LineRevealDirective } from '../../../directives/line-reveal.directive';
 import { RevealDirective } from '../../../directives/reveal.directive';
 
 /**
@@ -12,7 +13,7 @@ import { RevealDirective } from '../../../directives/reveal.directive';
  */
 @Component({
   selector: 'app-landing-steps',
-  imports: [RevealDirective, LucideBuilding2, LucideKanban, LucideSparkles, LucideUserPlus],
+  imports: [LineRevealDirective, RevealDirective, LucideBuilding2, LucideKanban, LucideSparkles, LucideUserPlus],
   templateUrl: './landing-steps.html',
   styleUrls: ['../_landing-shared.css', './landing-steps.css'],
 })

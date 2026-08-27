@@ -1,0 +1,130 @@
+<section
+  class="lp-section caps lp-seam-y"
+  id="everything"
+  aria-labelledby="caps-title"
+  (keydown)="onKeydown($event)"
+>
+  <div class="lp-shell">
+    <div class="lp-head lp-head--center">
+      <p class="lp-eyebrow" appReveal>
+        <span class="lp-eyebrow-dot" aria-hidden="true"></span>
+        Everything in the box
+      </p>
+      <h2 id="caps-title" class="lp-h2" appLineReveal>
+        Four cards. <span class="lp-grad">Open one.</span>
+      </h2>
+      <p class="lp-lead" appReveal [revealDelay]="120">
+        Exactly what happens inside the app: click a card and the detail opens, checklist and all.
+        {{ total }} things, nothing gated behind a tier.
+      </p>
+    </div>
+
+    <!-- Khối bọc CHỈ để mang hiệu ứng nghiêng theo tốc độ cuộn.
+         Không gộp vào `.deck` được: `.deck` đã có `appReveal`, mà GSAP ghi
+         thẳng vào `transform` nên nó sẽ chụp lại đúng trạng thái ẩn của reveal
+         rồi ghim `translate3d(0, 22px, 0)` vào style inline vĩnh viễn — inline
+         thắng CSS, và cả khối nằm thấp hơn chỗ đúng 22px mãi mãi.
+         Cũng KHÔNG gắn lên `.lp-shell` bao ngoài: làm thế thì dòng tiêu đề
+         nghiêng theo, và chữ lớn ngả đi rồi từ từ mới thẳng lại chính là thứ
+         khiến người dùng báo "cảm giác như bị lag". -->
+    <div appScrollSkew>
+      <!-- Bốn tấm thẻ. Khi một thẻ mở, lưới đổi sang chế độ "đang xem chi tiết":
+           thẻ đó chiếm trọn bề ngang, ba thẻ kia co lại thành hàng nhỏ bên dưới. -->
+      <div class="deck" [class.is-open]="open() !== null" appReveal [revealDelay]="180">
+      @for (g of groups; track g.title; let i = $index) {
+        <!-- `view-transition-name` đặt tên cho tấm thẻ để trình duyệt nhận ra
+             thẻ TRƯỚC và thẻ SAU là cùng một vật, rồi tự nội suy vị trí và kích
+             thước — thay vì cho nó biến mất ở ô lưới cũ và hiện ra ở chỗ mới.
+             Tên phải duy nhất trên cả trang, nên gắn kèm chỉ số. -->
+        <article
+          class="tcard"
+          [class]="'tcard tone-' + g.tone"
+          [class.is-open]="open() === i"
+          [class.is-shrunk]="open() !== null && open() !== i"
+          [style.view-transition-name]="'caps-card-' + i"
+        >
+          <!-- Mặt thẻ. Là <button> thật nên bàn phím, Enter/Space và vòng focus
+               đều có sẵn — không phải tự dựng bằng div và tabindex. -->
+          <button
+            #card
+            type="button"
+            class="tcard-face"
+            [attr.aria-expanded]="open() === i"
+            [attr.aria-controls]="'caps-panel-' + i"
+            (click)="toggle(i)"
+          >
+            <span class="tcard-labels" aria-hidden="true">
+              <span class="tl"></span>
+              <span class="tl tl-b"></span>
+            </span>
+
+            <span class="tcard-ico" aria-hidden="true">
+              @switch (g.icon) {
+                @case ('board') {
+                  <svg lucideLayoutGrid [strokeWidth]="2.2"></svg>
+                }
+                @case ('team') {
+                  <svg lucideUsers [strokeWidth]="2.2"></svg>
+                }
+                @case ('sync') {
+                  <svg lucideRadio [strokeWidth]="2.2"></svg>
+                }
+                @default {
+                  <svg lucideSettings2 [strokeWidth]="2.2"></svg>
+                }
+              }
+            </span>
+
+            <span class="tcard-title">{{ g.title }}</span>
+            <span class="tcard-blurb">{{ g.blurb }}</span>
+
+            <!-- Ba mục xem trước: thẻ đóng vẫn nói được nó chứa gì, nên không ai
+                 phải bấm mù. Ẩn khi thẻ đã mở vì lúc đó danh sách đầy đủ đã hiện. -->
+            <span class="tcard-peek" aria-hidden="true">
+              @for (p of g.peek; track p) {
+                <span class="peek">{{ p }}</span>
+              }
+            </span>
+
+            <!-- Dòng chân thẻ, đúng kiểu meta của thẻ thật trong app: một biểu
+                 tượng checklist kèm số. -->
+            <span class="tcard-meta">
+              <span class="meta-chip" aria-hidden="true">
+                <svg viewBox="0 0 20 20"><path d="M4 10.5l3.2 3.2L16 5" /></svg>
+                0/{{ g.items.length }}
+              </span>
+              <span class="tcard-cue">{{ open() === i ? 'Close' : 'Open card' }}</span>
+            </span>
+          </button>
+
+          <!-- Chi tiết thẻ. Chỉ dựng khi mở: ba mươi mục ẩn sẵn trong DOM sẽ
+               khiến trình đọc màn hình đọc phải nội dung của cả bốn thẻ. -->
+          @if (open() === i) {
+            <div class="tcard-detail" [id]="'caps-panel-' + i" role="region" style="view-transition-name: caps-detail">
+              <div class="detail-head">
+                <span class="detail-title">{{ g.items.length }} in this card</span>
+                <button type="button" class="detail-close" (click)="close(i)" aria-label="Close card">
+                  <svg lucideX [strokeWidth]="2.4"></svg>
+                </button>
+              </div>
+
+              <!-- Dựng đúng dạng checklist của app: ô tick vuông bo góc, một mục
+                   một dòng. Người đọc thấy trước thứ họ sẽ gặp bên trong sản phẩm. -->
+              <ul class="checklist">
+                @for (item of g.items; track item) {
+                  <li class="check">
+                    <span class="box" aria-hidden="true">
+                      <svg viewBox="0 0 20 20"><path d="M5 10.5l3.2 3.2L15 7" /></svg>
+                    </span>
+                    <span>{{ item }}</span>
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+        </article>
+      }
+      </div>
+    </div>
+  </div>
+</section>

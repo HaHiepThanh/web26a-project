@@ -1,457 +1,470 @@
 /* ==========================================================================
-   Lưới bento + đèn rọi bám con trỏ
-   ========================================================================== */
+   Khu tính năng — một tấm bảng soi được.
 
+   Bố cục hai cột: danh sách sáu mục bên trái, bảng minh hoạ bên phải. Chọn một
+   mục thì đúng vùng tương ứng trên bảng sáng lên, phần còn lại mờ đi.
+   ========================================================================== */
 .features {
   background: var(--lp-bg);
 }
 
-.bento {
+.explorer {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--lp-4);
+  /* Danh sách hẹp hơn bảng: chữ chỉ cần đủ rộng để đọc, còn bảng là thứ người
+     ta phải nhìn cho rõ. */
+  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+  gap: clamp(24px, 4vw, 56px);
+  align-items: start;
 }
 
-/* Máy tính bảng: hai cột, ô lớn và ô rộng chiếm trọn hàng. */
-@media (min-width: 680px) {
-  .bento {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .bento-lg,
-  .bento-wide,
-  .bento-full {
-    grid-column: span 2;
-  }
+/* -------------------- Danh sách sáu mục -------------------- */
+.feat-list {
+  display: grid;
+  /* Thưa hẳn ra, vì danh sách này giờ được CUỘN QUA chứ không chỉ để bấm. Mỗi
+     mục cần đủ quãng đường để một mình nó nằm trong dải quan sát giữa màn hình;
+     xếp sát nhau thì hai ba mục cùng lọt vào và phần được soi trên bảng nhảy
+     loạn khi cuộn. */
+  gap: clamp(20px, 3vw, 40px);
+  /* Đệm trên dưới để mục ĐẦU và mục CUỐI cũng lên được tới giữa màn hình. Không
+     có nó thì mục đầu chưa kịp được chọn đã trôi qua, còn mục cuối không bao giờ
+     tới lượt vì hết trang trước khi nó vào dải quan sát. */
+  padding-block: 22vh;
 }
 
-/* Máy tính: bốn cột, và đây mới là chỗ nhịp điệu lệch nhau hiện rõ.
-     hàng 1   A A B B
-     hàng 2   A A C D
-     hàng 3   E E F G
-     hàng 4   H H H H  */
-@media (min-width: 1000px) {
-  .bento {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    /* Hàng cao bằng nhau để lưới không bị so le lởm chởm; ô lớn chiếm hai hàng
-       nên tự khắc cao gấp đôi. */
-    grid-auto-rows: minmax(196px, auto);
-  }
-
-  .bento-lg {
-    grid-column: span 2;
-    grid-row: span 2;
-  }
-
-  .bento-wide {
-    grid-column: span 2;
-  }
-
-  /* Viết .bento-card.bento-full chứ không phải .bento-full cho đủ độ ưu tiên.
-     Hai class đơn lẻ ngang điểm nhau (0,1,0), mà media query KHÔNG cộng thêm
-     điểm nào — trong khi khối .bento-card nằm phía DƯỚI trong file này, nên
-     `.bento-full { flex-direction: row }` bị `.bento-card { column }` đè mất.
-     Thiếu chỗ này thì bố cục "chữ trái, chip phải" không bao giờ xảy ra: nội
-     dung bị dồn vào giữa một ô rộng 1136px và chữ bị căn giữa. */
-  .bento-card.bento-full {
-    grid-column: span 4;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--lp-6);
-  }
-
-  /* Khối chữ không được giãn hết ô — chip vai trò cần chỗ ở mép phải. */
-  .bento-full .bento-text {
-    max-width: 62ch;
-  }
-}
-
-/* --------------------------------------------------------------------------
-   Ô
-   -------------------------------------------------------------------------- */
-
-.bento-card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: var(--lp-5);
-  border: 1px solid var(--lp-border);
+.feat {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--lp-3);
+  padding: var(--lp-4);
+  border: 1px solid transparent;
   border-radius: var(--radius-lg);
-  background: var(--lp-surface);
-  box-shadow: var(--lp-shadow-sm);
-  overflow: hidden;
-  /* Cắt nội dung theo bo góc để đèn rọi và minh hoạ không tràn ra ngoài. */
-  isolation: isolate;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
   transition:
-    border-color 240ms var(--lp-ease),
-    transform 240ms var(--lp-ease),
-    box-shadow 240ms var(--lp-ease);
+    background-color var(--lp-dur-2) var(--lp-ease),
+    border-color var(--lp-dur-2) var(--lp-ease);
 }
 
-.bento-card:hover {
+.feat:hover {
+  background: var(--lp-surface-2);
+}
+
+.feat:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+/* Mục đang chọn: đánh dấu bằng BA thứ — nền, viền, và một vạch dọc bên trái —
+   chứ không riêng màu, để người mù màu vẫn đọc ra mình đang ở đâu. */
+.feat.is-active {
+  position: relative;
+  background: var(--lp-surface-2);
   border-color: var(--lp-border-strong);
-  transform: translate3d(0, -3px, 0);
-  box-shadow: var(--lp-shadow-md);
 }
 
-/* Đèn rọi: --mx/--my do `appSpotlight` ghi vào, --spot là công tắc mờ/tỏ. Trên
-   thiết bị cảm ứng directive không gắn gì nên --spot không tồn tại — giá trị
-   thay thế 0 trong var() giữ cho lớp này tắt hẳn. */
-.bento-card::before {
+.feat.is-active::before {
   content: '';
   position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  opacity: var(--spot, 0);
-  transition: opacity 320ms ease;
-  background: radial-gradient(
-    260px circle at var(--mx, 50%) var(--my, 50%),
-    var(--lp-spot),
-    transparent 70%
-  );
+  left: -1px;
+  top: 16%;
+  bottom: 16%;
+  width: 3px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--lp-ink-blue), var(--lp-ink-purple));
 }
 
-.bento-text {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.bento-icon {
+.feat-icon {
   display: grid;
   place-items: center;
-  width: 38px;
-  height: 38px;
-  border-radius: var(--radius-sm);
-  border: 1px solid transparent;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid var(--lp-border);
+  background: var(--lp-surface);
+  color: var(--lp-text-2);
+  transition: color var(--lp-dur-2) var(--lp-ease);
 }
-
-.bento-icon svg {
+.feat-icon svg {
   width: 19px;
   height: 19px;
 }
-
-/* Mỗi ô một sắc thái khác nhau, nhưng KHÔNG dùng màu làm thứ duy nhất phân biệt
-   — tiêu đề và biểu tượng đã nói rõ ô đó là gì. Màu chỉ để nhìn cho vui mắt. */
-.icon-blue {
-  background: var(--accent-blue-soft);
-  border-color: color-mix(in oklab, var(--accent-blue) 24%, transparent);
+.feat.is-active .feat-icon {
   color: var(--lp-ink-blue);
 }
-.icon-violet {
-  background: var(--accent-purple-soft);
-  border-color: color-mix(in oklab, var(--accent-purple) 24%, transparent);
-  color: var(--lp-ink-purple);
-}
-.icon-green {
-  background: color-mix(in oklab, var(--accent-green) 14%, transparent);
-  border-color: color-mix(in oklab, var(--accent-green) 26%, transparent);
-  color: var(--lp-ink-green);
-}
-.icon-amber {
-  background: color-mix(in oklab, var(--warning) 14%, transparent);
-  border-color: color-mix(in oklab, var(--warning) 28%, transparent);
-  color: var(--lp-ink-amber);
+
+.feat-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
 }
 
-.bento-desc {
-  margin: 0;
+.feat-title {
+  font-size: var(--lp-text-h3);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--lp-text);
+}
+
+/* Mô tả LUÔN hiện, kể cả mục không được chọn. Đây là điểm khác quan trọng nhất
+   so với tab thông thường: người lướt nhanh đọc được cả sáu mà không phải bấm
+   cái nào; chọn chỉ để đổi chỗ được soi trên bảng. */
+.feat-desc {
   font-size: var(--lp-text-sm);
   line-height: 1.6;
   color: var(--lp-text-2);
-  max-width: 46ch;
 }
 
-/* --------------------------------------------------------------------------
-   Minh hoạ trong ô lớn — kéo thả
-   -------------------------------------------------------------------------- */
-
-.drag-demo {
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: auto;
-  padding: 12px;
+/* -------------------- Bảng minh hoạ -------------------- */
+.fboard {
+  position: sticky;
+  /* Dính lại khi cuộn: danh sách bên trái dài hơn bảng, không dính thì đọc tới
+     mục cuối là bảng đã trôi mất khỏi màn hình. 84px = chừa chỗ cho thanh nav. */
+  top: 84px;
   border: 1px solid var(--lp-border);
+  border-radius: var(--radius-lg);
+  background: var(--lp-surface);
+  box-shadow: var(--lp-shadow-md);
+  /* `clip` chứ không `hidden` — xem cảnh báo ở _landing-shared.css: `hidden`
+     biến phần tử thành scroll container và giết hoạt ảnh gắn thanh cuộn bên trong. */
+  overflow: clip;
+}
+
+.fboard:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 3px;
+}
+
+.fb-chrome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--lp-3);
+  padding: var(--lp-3) var(--lp-4);
+  border-bottom: 1px solid var(--lp-border);
+  background: var(--lp-surface-2);
+}
+
+.fb-title {
+  font-size: var(--lp-text-sm);
+  font-weight: 600;
+  color: var(--lp-text-2);
+}
+
+.fb-av,
+.fb-role {
+  display: inline-grid;
+  place-items: center;
+  height: 26px;
+  border-radius: 999px;
+  font-size: var(--lp-text-micro);
+  font-weight: 700;
+}
+.fb-av {
+  width: 26px;
+  margin-left: -7px;
+  border: 2px solid var(--lp-surface-2);
+  color: #fff;
+}
+.av-1 {
+  background: var(--lp-solid-purple);
+  margin-left: 0;
+}
+.av-2 {
+  background: var(--lp-solid-blue);
+}
+.av-3 {
+  background: var(--lp-solid-green);
+}
+.fb-role {
+  padding-inline: 10px;
+  margin-left: 8px;
+  border: 1px solid var(--lp-border-strong);
+  color: var(--lp-text-2);
+}
+
+.fb-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--lp-3);
+  padding: var(--lp-4);
+}
+
+.fb-cols {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--lp-2);
+}
+
+.fb-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lp-2);
+  padding: var(--lp-2);
   border-radius: var(--radius-md);
   background: var(--lp-surface-2);
 }
 
-.dd-col {
+.fb-chead {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.dd-title {
-  font-size: 10px;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--lp-text-micro);
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--lp-text-3);
+  color: var(--lp-text-2);
+}
+.fb-chead em {
+  font-style: normal;
+  opacity: 0.7;
 }
 
-.dd-card {
-  height: 34px;
+.fb-card {
+  padding: 10px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--lp-border);
   background: var(--lp-surface);
+  box-shadow: var(--lp-shadow-sm);
 }
 
-.dd-short {
-  height: 26px;
+.fb-card-title {
+  font-size: var(--lp-text-sm);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--lp-text);
+}
+.fb-done {
+  text-decoration: line-through;
+  color: var(--lp-text-2);
+}
+.fb-card-dim .fb-card-title {
+  color: var(--lp-text-2);
 }
 
-.dd-slot {
-  height: 40px;
-  border: 1.5px dashed var(--lp-border-strong);
-  border-radius: var(--radius-sm);
-  background: color-mix(in oklab, var(--accent-blue) 6%, transparent);
-}
-
-/* Thẻ đang được cầm: nghiêng và nổi lên trên ô trống. Rê chuột vào ô lớn thì nó
-   hạ xuống đúng chỗ — hoạt ảnh chỉ chạy khi có người quan tâm, chứ không nhấp
-   nháy suốt ngày ở góc màn hình. */
-.dd-drag {
-  position: absolute;
-  left: 12px;
-  bottom: 12px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 5px;
-  width: calc(50% - 17px);
-  height: 40px;
-  padding: 8px;
-  border-radius: var(--radius-sm);
-  border: 1px solid color-mix(in oklab, var(--accent-blue) 45%, transparent);
-  background: var(--lp-surface);
-  box-shadow: var(--lp-shadow-md);
-  transform: translate3d(14px, -12px, 0) rotate(-4deg);
-  transition: transform 460ms var(--lp-ease);
-}
-
-.bento-lg:hover .dd-drag {
-  transform: translate3d(0, 0, 0) rotate(0deg);
-}
-
-.dd-chip {
-  width: 34px;
-  height: 6px;
-  border-radius: 999px;
-  background: var(--accent-blue);
-}
-
-.dd-line {
-  width: 78%;
-  height: 5px;
-  border-radius: 999px;
-  background: var(--lp-border-strong);
-}
-
-.dd-line-2 {
-  width: 52%;
-}
-
-/* --------------------------------------------------------------------------
-   Minh hoạ nhỏ trong các ô còn lại
-   -------------------------------------------------------------------------- */
-
-.live-row {
-  display: flex;
-  align-items: center;
-  margin-top: auto;
-  padding-top: var(--lp-3);
-}
-
-.live-av {
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  margin-right: -8px;
-  border-radius: 999px;
-  border: 2px solid var(--lp-surface);
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--lp-on-solid);
-}
-
-.av-a {
-  background: var(--lp-solid-blue);
-}
-.av-b {
-  background: var(--lp-solid-purple);
-}
-.av-c {
-  background: var(--lp-solid-green);
-}
-
-/* Con trỏ của người khác — chi tiết nhỏ nhưng nói ngay ra "có người khác đang ở
-   đây cùng bạn", nhanh hơn cả câu mô tả bên trên. */
-.live-cursor {
-  position: relative;
-  margin-left: var(--lp-5);
-  padding: 3px 9px;
-  border-radius: 999px;
-  background: var(--lp-solid-purple);
-  color: var(--lp-on-solid);
-  font-size: 10px;
-  font-weight: 700;
-  animation: cursor-drift 5s ease-in-out infinite;
-}
-
-.live-cursor::before {
-  content: '';
-  position: absolute;
-  left: -9px;
-  top: -6px;
-  border: 5px solid transparent;
-  border-top-color: var(--accent-purple);
-  border-left-color: var(--accent-purple);
-  transform: rotate(-12deg);
-}
-
-@keyframes cursor-drift {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0);
-  }
-  50% {
-    transform: translate3d(10px, -6px, 0);
-  }
-}
-
-.tag-row,
-.role-row {
+.fb-labels {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-top: auto;
-  padding-top: var(--lp-3);
+  gap: 5px;
+  margin-bottom: 7px;
 }
-
-.tg,
-.role {
-  padding: 4px 11px;
-  border-radius: 999px;
-  font-size: var(--lp-text-micro);
-  font-weight: 600;
+.fb-label {
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 10px;
+  font-weight: 700;
 }
-
-.tg-blue {
-  background: var(--accent-blue-soft);
-  color: var(--lp-ink-blue);
-}
-.tg-violet {
+.lb-violet {
   background: var(--accent-purple-soft);
   color: var(--lp-ink-purple);
 }
-.tg-green {
-  background: color-mix(in oklab, var(--accent-green) 16%, transparent);
-  color: var(--lp-ink-green);
+.lb-amber {
+  background: color-mix(in oklab, var(--warning) 20%, transparent);
+  color: var(--lp-ink-amber);
 }
 
-.role {
-  border: 1px solid var(--lp-border-strong);
-  color: var(--lp-text-2);
-  white-space: nowrap;
-}
-
-.role-owner {
-  border-color: color-mix(in oklab, var(--accent-purple) 45%, transparent);
-  background: var(--accent-purple-soft);
-  color: var(--lp-ink-purple);
-}
-
-.check-demo {
+.fb-meta {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-top: auto;
-  padding-top: var(--lp-3);
+  gap: 6px;
+  margin-top: 9px;
+}
+.fb-chip,
+.fb-due {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+}
+.fb-chip {
+  background: var(--lp-surface-2);
+  color: var(--lp-text-2);
+}
+.fb-due {
+  margin-left: auto;
+  background: color-mix(in oklab, var(--warning) 20%, transparent);
+  color: var(--lp-ink-amber);
 }
 
-.cd-bar {
-  flex: 1;
-  height: 7px;
-  border-radius: 999px;
+/* Khung chat: thu hẹp lúc bình thường, nở ra khi được chọn. */
+.fb-chat {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: 62px;
+  padding: var(--lp-2);
+  border-radius: var(--radius-md);
   background: var(--lp-surface-2);
   overflow: hidden;
 }
 
-.cd-bar i {
-  display: block;
-  width: 75%;
-  height: 100%;
-  border-radius: 999px;
-  background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
+/* ⚠️ Độ ưu tiên phải là HAI class, và phải khai lại đủ cả bốn thuộc tính.
+   Khung này vừa là `.fb-chat` vừa là `.zone`, mà rule `.zone` bên dưới cũng đặt
+   `transition` — shorthand thì THAY TRỌN danh sách chứ không cộng dồn, và hai
+   rule cùng độ ưu tiên thì rule đứng sau thắng. Nên khi `transition: width`
+   viết ở `.fb-chat`, nó bị `.zone` xoá sạch: đo được `transition-property` chỉ
+   còn `opacity, box-shadow, transform`, và khung chat nhảy phắt từ 62px sang
+   148px thay vì nở ra.
+   `--lp-ease-inout` riêng cho `width` vì đây là thứ đi VÀ VỀ giữa hai trạng
+   thái, cần mềm ở cả hai đầu chứ không riêng đầu cuối. */
+.zone.fb-chat {
+  transition:
+    opacity var(--lp-dur-3) var(--lp-ease),
+    box-shadow var(--lp-dur-3) var(--lp-ease),
+    transform var(--lp-dur-3) var(--lp-ease),
+    width var(--lp-dur-3) var(--lp-ease-inout);
 }
 
-.cd-num {
+.fb-chat.is-lit {
+  width: 148px;
+}
+.fb-chat-head {
   font-size: var(--lp-text-micro);
   font-weight: 700;
-  color: var(--lp-text-3);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--lp-text-2);
+  white-space: nowrap;
 }
-
-.cmt-demo {
+.fb-msg {
   display: flex;
   align-items: center;
-  gap: var(--lp-2);
-  margin-top: auto;
-  padding-top: var(--lp-3);
+  gap: 5px;
 }
-
-.cmt-av {
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  width: 26px;
-  height: 26px;
+.fb-msg b {
+  display: block;
+  height: 9px;
+  flex: 1;
   border-radius: 999px;
-  background: var(--lp-solid-blue);
-  color: var(--lp-on-solid);
-  font-size: 9px;
+  background: var(--lp-border-strong);
+}
+.fb-msg-me b {
+  background: color-mix(in oklab, var(--lp-ink-blue) 45%, transparent);
+}
+.fb-msg-av {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--lp-solid-purple);
+}
+.fb-suggest {
+  margin-top: auto;
+  padding: 5px 7px;
+  border-radius: var(--radius-sm);
+  border: 1px solid color-mix(in oklab, var(--lp-ink-purple) 40%, transparent);
+  background: var(--accent-purple-soft);
+  font-size: 10px;
   font-weight: 700;
+  color: var(--lp-ink-purple);
+  white-space: nowrap;
 }
 
-.cmt-bubble {
-  padding: 7px 12px;
-  border: 1px solid var(--lp-border);
-  border-radius: 12px;
-  border-bottom-left-radius: 4px;
-  background: var(--lp-surface-2);
-  font-size: var(--lp-text-micro);
-  color: var(--lp-text-2);
+/* -------------------- Cơ chế soi --------------------
+   MỘT quy tắc lo cả sáu vùng. Mặc định mọi vùng mờ đi và lùi lại; vùng đang
+   chọn trở về đủ rõ, nhô lên một chút và có một vòng sáng quanh nó.
+
+   Làm mờ phần KHÔNG được chọn thay vì chỉ tô sáng phần được chọn: mắt bắt sự
+   tương phản nhanh hơn nhiều so với bắt một màu đơn lẻ, nên cách này chỉ đường
+   dứt khoát hơn hẳn. */
+.zone {
+  position: relative;
+  border-radius: var(--radius-sm);
+  opacity: 0.42;
+  transition:
+    opacity var(--lp-dur-3) var(--lp-ease),
+    box-shadow var(--lp-dur-3) var(--lp-ease),
+    transform var(--lp-dur-3) var(--lp-ease);
 }
 
-.cmt-bubble b {
-  color: var(--lp-ink-blue);
+.zone.is-lit {
+  opacity: 1;
+  transform: scale(1.03);
+  box-shadow:
+    0 0 0 2px color-mix(in oklab, var(--lp-ink-blue) 55%, transparent),
+    0 0 0 8px color-mix(in oklab, var(--lp-ink-blue) 14%, transparent);
 }
 
-/* --------------------------------------------------------------------------
-   Giảm chuyển động
-   -------------------------------------------------------------------------- */
+/* Vùng "card" bọc cả nhãn và hạn ở bên trong. Không có dòng này thì khi chọn
+   nhãn, cái vỏ thẻ vẫn mờ 42% và kéo mờ luôn thứ vừa được soi — độ mờ của cha
+   nhân vào con. */
+.zone-card:has(.zone.is-lit) {
+  opacity: 1;
+}
+
+/* Nhưng vỏ thẻ chỉ được nhô lên khi CHÍNH NÓ được chọn, không phải khi con của
+   nó được chọn — nếu không thì hai vòng sáng lồng nhau, rối mắt. */
+.zone-card:has(.zone.is-lit):not(.is-lit) {
+  box-shadow: none;
+  transform: none;
+}
+
+/* -------------------- Màn hình hẹp -------------------- */
+@media (max-width: 900px) {
+  .explorer {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  /* Bảng lên trước danh sách: ở màn hẹp, thấy được thứ đang nói tới rồi mới đọc
+     mô tả thì dễ theo hơn là ngược lại. */
+  .fboard {
+    order: -1;
+    position: static;
+  }
+}
+
+@media (max-width: 620px) {
+  /* Khung chat thu hẹp không còn chỗ; bỏ hẳn và để ba cột chiếm trọn bề ngang. */
+  .fb-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .fb-chat {
+    display: none;
+  }
+  .feat {
+    padding: var(--lp-3);
+  }
+
+  /* Ba cột chuyển sang CUỘN NGANG thay vì cùng chia nhau bề ngang màn hình.
+     Đo ở khung nhìn 348px khi còn chia ba: mỗi cột 81px, tấm thẻ 65px, cột chữ
+     bên trong chỉ còn 43px — tiêu đề 26 ký tự bị ép xuống mỗi dòng MỘT TỪ và
+     cao 94px. Không tràn ra ngoài khung nên phép soát tràn không bắt được,
+     nhưng đọc thì hỏng hẳn.
+     Cho cuộn ngang vừa trả lại bề ngang đọc được, vừa đúng với sản phẩm thật:
+     bảng Kanban trên điện thoại vốn cuộn ngang.
+     An toàn về mặt hoạt ảnh: khu vực này soi vùng bằng IntersectionObserver
+     chứ không dùng `view()`, nên thêm một scroll container ở đây không giết
+     mốc thời gian nào (khác hẳn cái bẫy đã gặp ở khu câu chuyện).
+     Và mọi vùng soi được — thẻ, nhãn, hạn — đều nằm ở CỘT ĐẦU, tức luôn nằm
+     sẵn trong tầm nhìn, nên không cần tự cuộn ngang theo mục đang chọn. */
+  .fb-cols {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: clamp(150px, 60%, 220px);
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    /* Chừa chỗ cho bóng đổ của thẻ khỏi bị cắt ở mép dưới khi cuộn. */
+    padding-bottom: 4px;
+    /* Để nguyên thanh cuộn CHỨ KHÔNG ẩn: nó là thứ duy nhất báo cho người dùng
+       biết bảng còn kéo ngang được. Chỉ làm nó mảnh và nhạt lại cho khớp với
+       phần còn lại, thành một chi tiết có chủ ý thay vì một thanh hệ điều hành
+       lạc vào giữa trang. */
+    scrollbar-width: thin;
+    scrollbar-color: var(--lp-border-strong) transparent;
+  }
+  .fb-col {
+    scroll-snap-align: start;
+  }
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .bento-card,
-  .bento-card::before,
-  .dd-drag {
+  .zone,
+  .fb-chat,
+  .feat,
+  .feat-icon {
     transition: none;
   }
-
-  .live-cursor {
-    animation: none;
-  }
-
-  /* Thẻ đang kéo đứng yên ở tư thế nghiêng: giữ trạng thái "đang cầm", vẫn kể
-     đúng câu chuyện kéo thả mà không có gì nhúc nhích. */
-  .bento-lg:hover .dd-drag {
-    transform: translate3d(14px, -12px, 0) rotate(-4deg);
+  .zone.is-lit {
+    transform: none;
   }
 }

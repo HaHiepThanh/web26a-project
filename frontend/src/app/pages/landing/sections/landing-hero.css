@@ -25,7 +25,7 @@
      không thành trò đu đưa. Transition dài để nó đuổi theo lười biếng, không
      dính chặt vào con trỏ. */
   transform: translate3d(calc(var(--px, 0) * 26px), calc(var(--py, 0) * 26px), 0);
-  transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform var(--lp-dur-4) var(--lp-ease);
 }
 
 /* Lớp trong giữ hoạt ảnh trôi. Tách khỏi lớp ngoài vì transform lồng nhau thì
@@ -719,22 +719,28 @@
      một cột mà không cần biết nó là bao nhiêu pixel. */
   width: calc((100% - 2 * var(--bgap)) / 3);
   padding-inline: var(--cpad);
+  /* Một phép transform đưa thẻ tới đúng ô: cột nhân bề ngang cột, làn nhân
+     chiều cao thẻ. Không còn --dx/--dy vì bảng này thôi kéo thả. */
   transform: translate3d(
     calc(var(--col, 0) * (100% + var(--bgap))),
     calc(var(--cpad) + var(--chead) + var(--cgap) + var(--lane, 0) * 2 * (var(--ch) + var(--cgap))),
     0
   );
-  /* 900ms phải khớp với hằng số trong landing-hero.ts (chỗ hạ cờ `moving`). */
-  transition: transform 900ms var(--lp-ease);
+  /* var(--lp-dur-5) phải khớp với hằng số trong landing-hero.ts (chỗ hạ cờ `moving`). */
+  transition: transform var(--lp-dur-5) var(--lp-ease);
   will-change: transform;
+  /* ⚠️ ĐÃ GỠ cursor: grab và touch-action: none cùng lúc với việc gỡ kéo thả.
+     Giữ con trỏ hình bàn tay là hứa một thứ không còn tồn tại; còn
+     `touch-action: none` thì tệ hơn hẳn — nó chặn luôn cú vuốt để CUỘN TRANG
+     trên điện thoại, tức là đổi một lỗi thật lấy một tính năng đã bỏ. */
 }
 
 .kan-card-travel {
   border-color: color-mix(in oklab, var(--accent-purple) 45%, transparent);
   box-shadow: var(--lp-shadow-md);
   transition:
-    transform 900ms var(--lp-ease),
-    box-shadow 900ms var(--lp-ease);
+    transform var(--lp-dur-5) var(--lp-ease),
+    box-shadow var(--lp-dur-5) var(--lp-ease);
 }
 
 /* Nhấc lên khỏi mặt bảng trong đúng quãng bay — thẻ đang được "cầm" chứ không
@@ -799,4 +805,135 @@
   .col-bloom {
     display: none;
   }
+}
+
+/* --------------------------------------------------------------------------
+   Dòng gợi ý dưới bảng
+   -------------------------------------------------------------------------- */
+
+/* Trước khi chạm: một lời mời. Sau khi kéo: chữ "Saved." — chứng minh đúng câu
+   ở đoạn dẫn phía trên. Đây là chỗ vòng lặp khép lại: đọc lời hứa → tự tay thử
+   → thấy nó đúng. */
+.board-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--lp-2);
+  margin-top: var(--lp-4);
+  font-size: var(--lp-text-sm);
+  font-weight: 500;
+  /* Bậc 1, không phải bậc 2. Hero có nền trắng tinh, mà bậc 2 đặt lên đó chỉ đo
+     được 3.7:1 — dưới ngưỡng AA cho chữ 14px. Dòng này lại là LỜI MỜI: không
+     nhìn thấy nó thì không ai biết bảng kéo được, và cả phần tương tác thành ra
+     vô nghĩa. Đây đúng chỗ không được phép nhạt. */
+  color: var(--lp-text);
+  transition: color var(--lp-dur-2) var(--lp-ease);
+}
+
+.board-hint svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Liên kết xuống khu "Try it" — gạch chân sẵn, không chờ rê chuột: đây là lối
+   đi chính từ hero xuống chỗ tự tay làm, nên nó phải trông như một liên kết
+   ngay từ cái nhìn đầu tiên. */
+.board-hint a {
+  color: var(--lp-ink-blue);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.board-hint a:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board-hint {
+    transition: none;
+  }
+}
+
+/* ==========================================================================
+   Bảng demo TỰ XẾP VÀO CHỖ khi khối hiện lên.
+
+   Ba cột dựng lên trước, rồi từng tấm thẻ rơi xuống đúng cột của nó. Việc này
+   nói hộ một câu mà chữ phải mất cả dòng mới nói xong: "mấy tấm này rời ra
+   được, và chúng có chỗ để đáp". Người xem hiểu ngay là kéo thả được, trước cả
+   khi kịp đọc dòng mời bên dưới.
+
+   Móc vào `.is-revealed` của `appReveal` trên cùng khối, KHÔNG chạy ngay lúc
+   tải trang: chạy độc lập thì hoạt ảnh diễn xong từ lâu trong khi khối vẫn còn
+   trong suốt, và người xem chỉ thấy một tấm bảng hiện ra đã xếp sẵn.
+
+   ⚠️ KHÔNG đụng tới `.kan-card-travel`. Vị trí hai tấm thẻ đó nằm trong
+   `transform` của `.traveller`, do JavaScript ghi qua `--col` / `--lane` mỗi
+   lần bảng tự dời thẻ. Thêm một transform của hoạt ảnh vào đúng phần tử ấy là
+   hai bên tranh nhau ghi cùng một thuộc tính, và cú bay sẽ giật.
+   ========================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  /* ⚠️ KHÔNG viết `.reveal .col { opacity: 0 }` để ẩn trước. Đã thử và hỏng:
+     rule ấy vẫn khớp sau khi `is-revealed` được thêm, nên GIÁ TRỊ GỐC của
+     `opacity` là 0 — mà keyframe 100% ở đây bỏ trống nên nó lấy đúng giá trị
+     gốc. Hoạt ảnh thành ra chạy từ 0 về 0 và ba cột vô hình vĩnh viễn (đo được:
+     `opacity` bằng "0" ở cả ba sau khi khối đã hiện).
+     Không cần ẩn trước thật: `animation-fill-mode: both` đã tự áp trạng thái
+     `from` trong suốt quãng chờ của `animation-delay`, còn trước lúc
+     `is-revealed` thì cả khối `.reveal` vốn đã trong suốt rồi. */
+  .reveal.is-revealed .col {
+    animation: col-rise var(--lp-dur-4) var(--lp-ease) both;
+    animation-delay: var(--enter, 0ms);
+  }
+  /* `--enter` khai ở cột và được thẻ bên trong THỪA HƯỞNG, nên mỗi cột chỉ cần
+     đặt một lần là cả cột đi cùng nhịp. */
+  /* Nhịp GẤP ĐÔI nhịp chung. Cùng lý do đã ghi ở `.lr-i` trong
+     _landing-shared.css: lệch 60ms trên nền thời lượng 520ms chỉ là 12%, mắt
+     đọc ra thành ba cột dựng cùng lúc — mất hẳn cảm giác "đang được xếp vào
+     chỗ", tức là mất luôn điều mà cả hiệu ứng này muốn nói. */
+  .reveal.is-revealed .col:nth-of-type(2) {
+    --enter: calc(var(--lp-stagger) * 2);
+  }
+  .reveal.is-revealed .col:nth-of-type(3) {
+    --enter: calc(var(--lp-stagger) * 4);
+  }
+
+  /* Thẻ rơi XUỐNG từ trên, không trồi lên từ dưới: đúng cảm giác được đặt vào
+     cột, và ngược chiều với cú dựng của cột nên hai chuyển động không lẫn nhau. */
+  .reveal.is-revealed .kan-card:not(.kan-card-travel) {
+    animation: card-drop var(--lp-dur-3) var(--lp-ease) both;
+    animation-delay: calc(var(--enter, 0ms) + var(--lp-stagger) * 2);
+  }
+
+  /* Chỉ khai `from`. Không viết `to` thì trạng thái cuối chính là giá trị gốc
+     của phần tử, nên hoạt ảnh không để lại một transform thừa nằm đó — thứ sẽ
+     âm thầm biến mỗi cột thành khối chứa cho các phần tử định vị tuyệt đối. */
+  @keyframes col-rise {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+  }
+  @keyframes card-drop {
+    from {
+      opacity: 0;
+      transform: translateY(-12px) scale(0.97);
+    }
+  }
+}
+
+/* Chiều sâu cho cú ngả theo cuộn của `.board-stage` (xem buildScrollScene trong
+   landing-hero.ts).
+
+   Phải là THUỘC TÍNH `perspective` đặt ở phần tử CHA, không phải hàm
+   `perspective()` trong transform. Hàm chỉ tạo chiều sâu cho transform của
+   chính phần tử đó — `.board-frame` bên dưới đang dùng cách ấy cho góc nghiêng
+   1,2 độ của riêng nó. Còn muốn con xoay có chiều sâu thì cha phải khai thuộc
+   tính, nếu không `rotateX` chỉ làm phần tử dẹt lại chứ không lùi ra xa.
+
+   Chọn bằng `:has()` chứ không gắn thẳng vào `.lp-shell`: hero có hai khối
+   `.lp-shell`, và khối chứa phần chữ thì không nên có phối cảnh. */
+.lp-shell:has(.board-stage) {
+  perspective: 1600px;
 }

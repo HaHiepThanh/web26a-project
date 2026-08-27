@@ -5,139 +5,151 @@
         <span class="lp-eyebrow-dot" aria-hidden="true"></span>
         Features
       </p>
-      <h2 id="features-title" class="lp-h2" appReveal [revealDelay]="60">
-        Enough for real work, <span class="lp-grad">nothing spare</span>
+      <h2 id="features-title" class="lp-h2" appLineReveal>
+        Not a list — <span class="lp-grad">the board itself</span>
       </h2>
       <p class="lp-lead" appReveal [revealDelay]="120">
-        No three-tier dashboard, no vocabulary you have to look up. Only the things a small team
-        actually touches every day.
+        Scroll and the board follows along — or pick anything on the left to jump straight to it.
+        This is the interface you get, not an illustration of it.
       </p>
     </div>
 
-    <div class="bento">
-      <!-- Ô lớn: thứ người dùng chạm nhiều nhất trong ngày, nên chiếm nhiều
-           chỗ nhất trên lưới. -->
-      <article class="bento-card bento-lg" appSpotlight appReveal>
-        <div class="bento-text">
-          <span class="bento-icon icon-blue" aria-hidden="true">
-            <svg lucideMove [strokeWidth]="2.2"></svg>
-          </span>
-          <h3 class="lp-h3">Drag it, drop it, done</h3>
-          <p class="bento-desc">
-            Move a card to another column or reorder it in place. The position is written the moment
-            you let go — there is no "Save" button to forget.
-          </p>
-        </div>
+    <div class="explorer" appReveal [revealDelay]="180">
+      <!-- Sáu mục = sáu lựa chọn loại trừ nhau điều khiển cùng một vùng hiển
+           thị, tức là đúng định nghĩa của tab. Dùng khuôn chuẩn thì được kèm
+           luôn mũi tên chuyển mục và câu "tab 3 trên 6" cho trình đọc màn hình.
+           Khác kiểu tab thường ở một chỗ: mô tả KHÔNG bị giấu. Cả sáu luôn đọc
+           được, chọn chỉ đổi chỗ được soi trên bảng. -->
+      <div
+        class="feat-list"
+        role="tablist"
+        aria-orientation="vertical"
+        aria-label="Features"
+        (keydown)="onKeydown($event)"
+      >
+        @for (f of features; track f.region; let i = $index) {
+          <button
+            #tab
+            type="button"
+            class="feat"
+            [attr.data-index]="i"
+            [class.is-active]="active() === i"
+            role="tab"
+            [id]="'feat-tab-' + i"
+            [attr.aria-selected]="active() === i"
+            [attr.tabindex]="active() === i ? 0 : -1"
+            aria-controls="feat-board"
+            (click)="select(i)"
+          >
+            <span class="feat-icon" aria-hidden="true">
+              @switch (f.icon) {
+                @case ('columns') {
+                  <svg lucideColumns3 [strokeWidth]="2.2"></svg>
+                }
+                @case ('card') {
+                  <svg lucideSquareKanban [strokeWidth]="2.2"></svg>
+                }
+                @case ('tag') {
+                  <svg lucideTag [strokeWidth]="2.2"></svg>
+                }
+                @case ('due') {
+                  <svg lucideCalendarClock [strokeWidth]="2.2"></svg>
+                }
+                @case ('people') {
+                  <svg lucideUsers [strokeWidth]="2.2"></svg>
+                }
+                @default {
+                  <svg lucideMessageSquare [strokeWidth]="2.2"></svg>
+                }
+              }
+            </span>
+            <span class="feat-text">
+              <span class="feat-title">{{ f.title }}</span>
+              <span class="feat-desc">{{ f.desc }}</span>
+            </span>
+          </button>
+        }
+      </div>
 
-        <!-- Minh hoạ: rê chuột vào ô này thì thẻ tự trượt vào ô trống. -->
-        <div class="drag-demo" aria-hidden="true">
-          <div class="dd-col">
-            <span class="dd-title">In progress</span>
-            <div class="dd-card"></div>
-            <div class="dd-slot"></div>
+      <!-- Bảng minh hoạ. Mỗi vùng soi được mang class `.zone`; vùng đang được
+           chọn thêm `.is-lit`, phần còn lại mờ đi. Một cơ chế, sáu cấu hình. -->
+      <div
+        class="fboard"
+        id="feat-board"
+        role="tabpanel"
+        [attr.aria-labelledby]="'feat-tab-' + active()"
+        tabindex="0"
+      >
+        <!-- Toàn bộ ruột bảng là hình minh hoạ: nội dung thật đã nằm ở danh sách
+             bên trái rồi, để trình đọc màn hình đọc lại lần nữa chỉ là bắt nghe
+             hai lần cùng một thứ. -->
+        <div class="fb-inner" aria-hidden="true">
+          <div class="fb-chrome">
+            <span class="fb-title">Product launch · Q3</span>
+
+            <div class="zone zone-people" [class.is-lit]="isLit('people')">
+              <span class="fb-av av-1">TN</span>
+              <span class="fb-av av-2">MK</span>
+              <span class="fb-av av-3">HN</span>
+              <span class="fb-role">Owner</span>
+            </div>
           </div>
-          <div class="dd-col">
-            <span class="dd-title">Done</span>
-            <div class="dd-card dd-short"></div>
-            <div class="dd-card"></div>
+
+          <div class="fb-body">
+            <div class="fb-cols">
+              <div class="fb-col">
+                <div class="zone zone-columns" [class.is-lit]="isLit('columns')">
+                  <span class="fb-chead">To do<em>4</em></span>
+                </div>
+
+                <!-- Thẻ chính — nơi ba vùng nhỏ (nhãn, hạn, ruột thẻ) cùng nằm. -->
+                <div class="zone zone-card fb-card" [class.is-lit]="isLit('card')">
+                  <div class="zone zone-labels fb-labels" [class.is-lit]="isLit('labels')">
+                    <span class="fb-label lb-violet">Design</span>
+                    <span class="fb-label lb-amber">Urgent</span>
+                  </div>
+                  <p class="fb-card-title">Frame out the landing page</p>
+                  <div class="fb-meta">
+                    <span class="fb-chip">2/5</span>
+                    <span class="fb-chip">3</span>
+                    <span class="zone zone-due fb-due" [class.is-lit]="isLit('due')">Fri</span>
+                  </div>
+                </div>
+
+                <div class="fb-card fb-card-dim">
+                  <p class="fb-card-title">Write up the label API</p>
+                </div>
+              </div>
+
+              <div class="fb-col">
+                <div class="zone zone-columns" [class.is-lit]="isLit('columns')">
+                  <span class="fb-chead">In progress<em>3</em></span>
+                </div>
+                <div class="fb-card fb-card-dim">
+                  <p class="fb-card-title">Review pull request #482</p>
+                </div>
+              </div>
+
+              <div class="fb-col">
+                <div class="zone zone-columns" [class.is-lit]="isLit('columns')">
+                  <span class="fb-chead">Done<em>5</em></span>
+                </div>
+                <div class="fb-card fb-card-dim">
+                  <p class="fb-card-title fb-done">Wire up Google sign-in</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Khung chat. Luôn có mặt nhưng thu hẹp; khi được chọn thì nở ra. -->
+            <aside class="zone zone-chat fb-chat" [class.is-lit]="isLit('chat')">
+              <span class="fb-chat-head">Chat</span>
+              <span class="fb-msg"><i class="fb-msg-av"></i><b></b></span>
+              <span class="fb-msg fb-msg-me"><b></b></span>
+              <span class="fb-suggest">✦ Card suggested</span>
+            </aside>
           </div>
-          <div class="dd-drag">
-            <span class="dd-chip"></span>
-            <span class="dd-line"></span>
-            <span class="dd-line dd-line-2"></span>
-          </div>
         </div>
-      </article>
-
-      <article class="bento-card bento-wide" appSpotlight appReveal [revealDelay]="60">
-        <span class="bento-icon icon-violet" aria-hidden="true">
-          <svg lucideUsers [strokeWidth]="2.2"></svg>
-        </span>
-        <h3 class="lp-h3">Everyone sees the same board</h3>
-        <p class="bento-desc">
-          A teammate changes something and you see it — no refresh, no asking whether anyone updated
-          the board.
-        </p>
-        <div class="live-row" aria-hidden="true">
-          <span class="live-av av-a">TN</span>
-          <span class="live-av av-b">MK</span>
-          <span class="live-av av-c">HN</span>
-          <span class="live-cursor">Trang</span>
-        </div>
-      </article>
-
-      <article class="bento-card" appSpotlight appReveal [revealDelay]="120">
-        <span class="bento-icon icon-amber" aria-hidden="true">
-          <svg lucideTag [strokeWidth]="2.2"></svg>
-        </span>
-        <h3 class="lp-h3">Colour labels</h3>
-        <p class="bento-desc">Sort work by area, then filter the whole board in one click.</p>
-        <div class="tag-row" aria-hidden="true">
-          <span class="tg tg-blue">Interface</span>
-          <span class="tg tg-violet">Backend</span>
-          <span class="tg tg-green">Done</span>
-        </div>
-      </article>
-
-      <article class="bento-card" appSpotlight appReveal [revealDelay]="180">
-        <span class="bento-icon icon-green" aria-hidden="true">
-          <svg lucideListChecks [strokeWidth]="2.2"></svg>
-        </span>
-        <h3 class="lp-h3">Checklists</h3>
-        <p class="bento-desc">Break a large job into a few lines you can tick off.</p>
-        <div class="check-demo" aria-hidden="true">
-          <span class="cd-bar"><i></i></span>
-          <span class="cd-num">3/4</span>
-        </div>
-      </article>
-
-      <article class="bento-card bento-wide" appSpotlight appReveal [revealDelay]="60">
-        <span class="bento-icon icon-blue" aria-hidden="true">
-          <svg lucideMessageSquare [strokeWidth]="2.2"></svg>
-        </span>
-        <h3 class="lp-h3">Talk it through inside the card</h3>
-        <p class="bento-desc">
-          Comments and &#64;mentions sit next to the work itself, not lost somewhere in an inbox.
-        </p>
-        <div class="cmt-demo" aria-hidden="true">
-          <span class="cmt-av">TN</span>
-          <span class="cmt-bubble">I’ll take this one <b>&#64;Huy</b></span>
-        </div>
-      </article>
-
-      <article class="bento-card" appSpotlight appReveal [revealDelay]="120">
-        <span class="bento-icon icon-violet" aria-hidden="true">
-          <svg lucideActivity [strokeWidth]="2.2"></svg>
-        </span>
-        <h3 class="lp-h3">Activity log</h3>
-        <p class="bento-desc">Who changed what, and when. No more hunting for the culprit.</p>
-      </article>
-
-      <article class="bento-card" appSpotlight appReveal [revealDelay]="180">
-        <span class="bento-icon icon-amber" aria-hidden="true">
-          <svg lucideCalendarClock [strokeWidth]="2.2"></svg>
-        </span>
-        <h3 class="lp-h3">Due dates</h3>
-        <p class="bento-desc">Set a date on a card; the badge changes colour as it gets close.</p>
-      </article>
-
-      <article class="bento-card bento-full" appSpotlight appReveal [revealDelay]="60">
-        <div class="bento-text">
-          <span class="bento-icon icon-green" aria-hidden="true">
-            <svg lucideShieldCheck [strokeWidth]="2.2"></svg>
-          </span>
-          <h3 class="lp-h3">Many organizations, three roles, no confusion</h3>
-          <p class="bento-desc">
-            Every organization gets its own URL and its own workspaces. Permissions are checked on
-            the server, not just hidden behind a greyed-out button.
-          </p>
-        </div>
-        <div class="role-row" aria-hidden="true">
-          <span class="role role-owner">Owner</span>
-          <span class="role role-admin">Admin</span>
-          <span class="role role-member">Member</span>
-        </div>
-      </article>
+      </div>
     </div>
   </div>
 </section>

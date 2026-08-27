@@ -1,0 +1,838 @@
+/* ==========================================================================
+   Màn chào — khu vực đầu tiên, cao đúng một màn hình.
+   Xem landing-welcome.ts để biết vì sao nó không phải cổng chặn.
+   ========================================================================== */
+
+/* ⚠️ `sticky` phải đặt ở HOST, không phải ở `.welcome` bên trong.
+   Đã thử đặt ở section và đo ra là không dính: khối chứa của nó khi ấy là chính
+   component host, mà host cao đúng bằng section — nên không còn quãng nào để
+   dính, và nó cuộn đi như thường. Đưa lên host thì khối chứa thành `<main>`,
+   vốn cao cả trang, và nó nằm im được.
+
+   `z-index: 0` để nó ở dưới cùng. Các khu vực sau đều `position: relative` và
+   đứng sau trong cây DOM, nên chúng vẽ đè lên — đó chính là cú "hero trôi lên
+   phủ kín". Không ghim, không giành quyền cuộn: trang vẫn đi đúng theo tay. */
+:host {
+  position: sticky;
+  top: 0;
+  z-index: 0;
+}
+
+.welcome {
+  /* `100svh` chứ không `100vh`: trên điện thoại, `vh` tính theo khung nhìn khi
+     thanh địa chỉ đã thu lại, nên lúc mới vào trang màn chào cao hơn màn hình
+     thật và mũi tên "Scroll" bị đẩy khuất xuống dưới — đúng thứ duy nhất cần
+     nhìn thấy lại là thứ bị cắt. */
+  height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: var(--lp-5);
+  overflow: hidden;
+  background: var(--lp-bg);
+
+  /* ⚠️ BẮT BUỘC. Khu vực này nằm im ở đó suốt phần còn lại của trang (đã trong
+     suốt hoàn toàn nên không ai thấy). Một tấm phủ vô hình mà ăn mất cú bấm là
+     lỗi tệ nhất có thể có — nên nó không nhận sự kiện con trỏ nào. Cũng vì vậy
+     bên trong KHÔNG được có gì cần bấm. */
+  pointer-events: none;
+}
+
+.wc-inner {
+  display: grid;
+  justify-items: center;
+  gap: var(--lp-4);
+  max-width: 720px;
+  text-align: center;
+}
+
+.wc-eyebrow {
+  font-size: var(--lp-text-micro);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--lp-text-3);
+  animation: wc-in var(--lp-dur-4) var(--lp-ease) both;
+}
+
+/* ---------------- Ba chữ H ---------------- */
+.wc-glyphs {
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 2vw, 22px);
+}
+
+.wc-h {
+  display: block;
+  width: clamp(46px, 7vw, 82px);
+  /* Trạng thái mặc định = ĐÃ VIẾT XONG. Trình duyệt không chạy được hoạt ảnh
+     thì thấy ba chữ H hoàn chỉnh — mất phần diễn, không mất nội dung. */
+  stroke-dashoffset: 0;
+}
+.wc-h svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.wc-h path {
+  stroke-width: 9;
+  stroke-linecap: round;
+}
+
+/* Nét mờ có sẵn. Phải tự khai `dasharray: none` — thuộc tính này DI TRUYỀN,
+   không chặn thì nét mờ cũng bị cắt đứt đoạn theo nét chạy. */
+.wc-track {
+  stroke: var(--lp-border-strong);
+  stroke-dasharray: none;
+  stroke-dashoffset: 0;
+}
+
+/* Nét chạy. Cố ý không khai `stroke-dashoffset` ở đây — để nó thừa hưởng từ
+   `.wc-h`, nơi hoạt ảnh chạy. Gắn hoạt ảnh vào <path> thì không ăn: phần tử
+   SVG không sinh hộp bố cục, và `stroke-dashoffset` vốn di truyền được nên
+   chạy ở vỏ ngoài là gọn nhất. */
+.wc-ink {
+  stroke: var(--tone);
+  stroke-dasharray: 100;
+}
+
+.tone-blue {
+  --tone: var(--lp-ink-blue);
+}
+.tone-purple {
+  --tone: var(--lp-ink-purple);
+}
+.tone-green {
+  --tone: var(--lp-ink-green);
+}
+
+/* ---------------- Cái tên ---------------- */
+.wc-name {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 0.32em;
+  font-family: 'Lora', Georgia, 'Times New Roman', serif;
+  font-size: clamp(1.75rem, 1.1rem + 2.6vw, 3rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--lp-text);
+}
+/* Ba từ hiện lần lượt, ngay sau khi ba chữ H viết xong — mắt nối được chữ H
+   khổ lớn với chữ đầu của từng từ. */
+.wc-name span {
+  animation: wc-in var(--lp-dur-4) var(--lp-ease) both;
+}
+.wc-name span:nth-child(1) {
+  animation-delay: 620ms;
+}
+.wc-name span:nth-child(2) {
+  animation-delay: 740ms;
+}
+.wc-name span:nth-child(3) {
+  animation-delay: 860ms;
+}
+
+.wc-line {
+  max-width: 46ch;
+  font-size: var(--lp-text-lead);
+  line-height: 1.6;
+  text-wrap: pretty;
+  color: var(--lp-text-2);
+  animation: wc-in var(--lp-dur-4) var(--lp-ease) 980ms both;
+}
+
+/* ---------------- Ba chip chức năng ---------------- */
+.wc-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--lp-2);
+  margin: var(--lp-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.wc-chips li {
+  padding: 6px 14px;
+  border: 1px solid var(--lp-border-strong);
+  border-radius: 999px;
+  background: var(--lp-surface);
+  font-size: var(--lp-text-micro);
+  font-weight: 600;
+  color: var(--lp-text-2);
+  white-space: nowrap;
+  animation: wc-in var(--lp-dur-4) var(--lp-ease) both;
+}
+.wc-chips li:nth-child(1) {
+  animation-delay: 1080ms;
+}
+.wc-chips li:nth-child(2) {
+  animation-delay: 1160ms;
+}
+.wc-chips li:nth-child(3) {
+  animation-delay: 1240ms;
+}
+
+/* ---------------- Mũi tên cuộn ---------------- */
+.wc-cue {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: var(--lp-5);
+  font-size: var(--lp-text-micro);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--lp-text-3);
+  animation: wc-in var(--lp-dur-4) var(--lp-ease) 1400ms both;
+}
+.wc-cue svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  animation: wc-nudge 1.8s var(--lp-ease) 1900ms infinite;
+}
+
+@keyframes wc-in {
+  from {
+    opacity: 0;
+    translate: 0 14px;
+  }
+}
+
+@keyframes wc-nudge {
+  0%,
+  60%,
+  100% {
+    translate: 0 0;
+  }
+  30% {
+    translate: 0 5px;
+  }
+}
+
+/* ==========================================================================
+   Ba chữ H tự viết ra khi trang mở.
+
+   Chạy theo THỜI GIAN, không theo cuộn — đây là thứ đầu tiên người ta thấy,
+   lúc đó chưa ai cuộn gì cả.
+   ========================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  .wc-h {
+    animation: wc-draw 680ms var(--lp-ease) both;
+  }
+  /* Lệch 160ms mỗi chữ. Nhịp này đã học được ở khu câu chuyện: lệch dưới ~20%
+     thời lượng thì mắt đọc ra là ba chữ đi CÙNG LÚC, và cả hiệu ứng "đang được
+     viết" biến mất. 160 trên 680 là ~24%, đủ để thành ba nhịp rõ ràng. */
+  .wc-h:nth-child(1) {
+    animation-delay: 120ms;
+  }
+  .wc-h:nth-child(2) {
+    animation-delay: 280ms;
+  }
+  .wc-h:nth-child(3) {
+    animation-delay: 440ms;
+  }
+
+  @keyframes wc-draw {
+    from {
+      stroke-dashoffset: 100;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+}
+
+/* Giảm chuyển động: mọi thứ hiện sẵn, đủ nội dung, chỉ bỏ đường đi tới đó. */
+@media (prefers-reduced-motion: reduce) {
+  .wc-eyebrow,
+  .wc-name span,
+  .wc-line,
+  .wc-chips li,
+  .wc-cue {
+    animation: none;
+  }
+  .wc-cue svg {
+    animation: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .wc-chips li {
+    font-size: 11px;
+    padding: 5px 11px;
+  }
+}
+
+/* ==========================================================================
+   BA LỚP NỀN.
+
+   Màn chào trước đây là nền phẳng trơn, trong khi hero ngay sau nó có cực
+   quang, lưới và thẻ trôi — hai màn liền nhau mà một giàu một trống thì mắt
+   đọc ra ngay là thiếu.
+   ========================================================================== */
+
+/* ⚠️ z-index 0, KHÔNG PHẢI -1 — và đây là lỗi đã mắc rồi mới thấy.
+   `.welcome` có nền đặc (`background: var(--lp-bg)`). Một phần tử con mang
+   z-index ÂM sẽ vẽ ra ở lớp nằm SAU nền của chính phần tử cha, nên cả ba lớp
+   cực quang + lưới + bóng cột bị nền che kín — nhìn ra y hệt như chưa hề thêm
+   gì. Ở z-index 0 thì nó nằm trên nền cha và dưới nội dung, đúng chỗ cần.
+   Vì đã đặt số cho lớp này nên các lớp trên cũng phải đặt số: cứ để `auto`
+   thì `.wc-inner` không được định vị sẽ rơi xuống dưới lớp nền này. */
+.wc-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.wc-inner {
+  position: relative;
+  z-index: 2;
+}
+
+.wc-meta {
+  z-index: 1;
+}
+
+/* ---------------- Lớp xa nhất: cực quang ---------------- */
+
+/* Vẽ bằng radial-gradient có điểm dừng mềm, KHÔNG dùng filter: blur().
+   Đây là quy tắc hero đã ghi và nó có lý do đo được: làm mờ một khối 900px
+   buộc trình duyệt vẽ lại rồi lấy mẫu cả vùng đó mỗi khung hình — mất khoảng
+   20fps trên máy dùng card đồ hoạ tích hợp. Gradient thì GPU vẽ một lần rồi
+   chỉ việc dịch. */
+.wc-aurora {
+  position: absolute;
+  border-radius: 50%;
+  will-change: transform;
+}
+
+/* Nhạt hơn hero một bậc (hero dùng --lp-glow-* nguyên bản; ở đây pha loãng còn
+   ~70%). Màn chào là chỗ hít vào — nếu nó rực bằng hero thì hero mất chỗ để
+   mạnh hơn, và cả hai cùng ồn. */
+.wc-a {
+  width: 68vw;
+  height: 68vw;
+  max-width: 880px;
+  max-height: 880px;
+  top: -24%;
+  left: -14%;
+  background: radial-gradient(
+    circle at 50% 50%,
+    color-mix(in oklab, var(--lp-glow-blue) 88%, transparent) 0%,
+    transparent 66%
+  );
+  animation: wc-drift-a 34s ease-in-out infinite alternate;
+}
+
+.wc-b {
+  width: 60vw;
+  height: 60vw;
+  max-width: 780px;
+  max-height: 780px;
+  top: -18%;
+  right: -12%;
+  background: radial-gradient(
+    circle at 50% 50%,
+    color-mix(in oklab, var(--lp-glow-purple) 88%, transparent) 0%,
+    transparent 66%
+  );
+  animation: wc-drift-b 42s ease-in-out infinite alternate;
+}
+
+.wc-c {
+  width: 78vw;
+  height: 44vw;
+  max-width: 1040px;
+  max-height: 580px;
+  bottom: -18%;
+  left: 12%;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    color-mix(in oklab, var(--accent-purple) 18%, transparent) 0%,
+    transparent 70%
+  );
+  animation: wc-drift-c 48s ease-in-out infinite alternate;
+}
+
+@keyframes wc-drift-a {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(7%, 6%, 0) scale(1.12);
+  }
+}
+@keyframes wc-drift-b {
+  from {
+    transform: translate3d(0, 0, 0) scale(1.06);
+  }
+  to {
+    transform: translate3d(-8%, 7%, 0) scale(0.95);
+  }
+}
+@keyframes wc-drift-c {
+  from {
+    transform: translate3d(-5%, 0, 0) scale(0.96);
+  }
+  to {
+    transform: translate3d(6%, -4%, 0) scale(1.1);
+  }
+}
+
+/* Lưới mảnh cho nền có "mặt phẳng" thay vì trôi nổi vô định. Mask làm nó tan
+   dần ra rìa nên không có đường cắt cứng ở mép màn hình. */
+.wc-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, var(--lp-border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--lp-border) 1px, transparent 1px);
+  background-size: 72px 72px;
+  -webkit-mask-image: radial-gradient(ellipse 62% 58% at 50% 45%, #000 0%, transparent 100%);
+  mask-image: radial-gradient(ellipse 62% 58% at 50% 45%, #000 0%, transparent 100%);
+  opacity: 0.55;
+}
+
+/* ---------------- Lớp giữa: bóng ba cột ---------------- */
+
+/* Hình bóng của một tấm bảng Kanban — ba khối dọc, đúng tỉ lệ ba cột của bảng
+   thật. Không thẻ, không chữ: đủ để mắt nhận ra "à, một tấm bảng", chưa tới
+   mức tranh chú ý với cái tên ở giữa.
+   Mask tan hai đầu để cột không đâm vào mép trên/dưới màn hình. */
+/* Hình học của ba cột nằm ở BIẾN, vì hai lớp phải trùng khít nhau: bóng cột
+   (`.wc-cols`, có mask) và tên cột (`.wc-colnames`, không mask). Sửa một chỗ mà
+   quên chỗ kia thì tên cột lệch khỏi cột của nó. */
+.wc-bg {
+  --wc-col-w: min(920px, 84%);
+  --wc-col-gap: clamp(12px, 2vw, 26px);
+  --wc-col-pad: 6vh;
+  /* Đầu cột phải nằm DƯỚI thanh nav cố định (đo được cao 69px). Ở 6vh thì tên
+     cột rơi vào 52–82, tức chữ bị thanh nav cắt mất phần trên. Lúc tên cột còn
+     mờ 26% thì không ai để ý; nay nó đọc được nên phải né hẳn ra. */
+  --wc-col-pad-top: max(6vh, 88px);
+}
+
+.wc-cols,
+.wc-colnames {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--wc-col-gap);
+  width: var(--wc-col-w);
+  margin-inline: auto;
+  padding-top: var(--wc-col-pad-top);
+  padding-bottom: var(--wc-col-pad);
+}
+
+.wc-cols {
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 22%, #000 72%, transparent);
+  mask-image: linear-gradient(180deg, transparent, #000 22%, #000 72%, transparent);
+}
+
+/* Hình cột được vẽ bằng VIỀN là chính, nền chỉ gợi ý.
+   Ở 4% nền / 5% viền thì đo ra là không ai nhìn thấy gì cả. Nhưng cách chữa
+   KHÔNG phải tô đậm cái nền: chữ nằm ĐÈ LÊN mấy cột này, nên mọi mảng đủ đậm
+   để thấy rõ cũng đủ đậm để kéo tụt tương phản của chữ.
+   Một đường viền 1px thì khác — nó vẽ ra được hình dáng, mà chữ gần như không
+   bao giờ rơi trúng đúng một đường mảnh. Nên viền tăng gấp ba, nền hạ xuống. */
+.wc-cols span {
+  border-radius: var(--radius-lg);
+  background: color-mix(in oklab, var(--lp-text) 3%, transparent);
+  border: 1px solid color-mix(in oklab, var(--lp-text) 15%, transparent);
+}
+
+/* ---------------- Lớp gần nhất: chữ bốn góc ---------------- */
+
+.wc-meta {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: clamp(18px, 3.5vw, 40px);
+  list-style: none;
+  pointer-events: none;
+}
+
+.wc-meta li {
+  position: absolute;
+  font-size: var(--lp-text-micro);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lp-text-3);
+  white-space: nowrap;
+  animation: wc-in var(--lp-dur-4) var(--lp-ease) 1520ms both;
+}
+
+.wc-bl {
+  bottom: clamp(18px, 3.5vw, 40px);
+  left: clamp(18px, 3.5vw, 40px);
+}
+.wc-br {
+  bottom: clamp(18px, 3.5vw, 40px);
+  right: clamp(18px, 3.5vw, 40px);
+}
+
+/* Dưới 860px thì bốn góc bắt đầu chạm vào phần chữ ở giữa và vào mũi tên cuộn.
+   Ẩn hẳn — chúng là chi tiết làm đầy khung, không phải nội dung; chen chúc thì
+   mất đúng cái tác dụng sinh ra chúng. */
+@media (max-width: 860px) {
+  .wc-meta {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wc-aurora {
+    animation: none;
+  }
+  .wc-meta li {
+    animation: none;
+  }
+}
+
+/* ==========================================================================
+   Thẻ Kanban ở hai rìa.
+
+   Phần chữ chỉ rộng 720px nên ở màn rộng hai bên còn trống hẳn ra. Mấy tấm thẻ
+   này lấp vào đó, và tràn một phần ra ngoài mép để tấm bảng có vẻ còn chạy tiếp
+   ra ngoài khung hình.
+
+   ⚠️ CHỈ HIỆN TỪ 1180px TRỞ LÊN. Dưới ngưỡng đó, phần chữ 720px và mấy tấm thẻ
+   bắt đầu tranh chỗ: ở 1000px thì mép trong của thẻ trái rơi vào x=160 trong khi
+   chữ bắt đầu ở x=140 — chồng lên nhau, và nền có hoa văn nằm dưới chữ là cách
+   nhanh nhất để giết tương phản.
+   ========================================================================== */
+.wc-cards {
+  display: none;
+}
+
+@media (min-width: 1180px) {
+  .wc-cards {
+    display: block;
+    position: absolute;
+    inset: 0;
+  }
+
+  .wc-card {
+    position: absolute;
+    display: grid;
+    gap: 7px;
+    width: 190px;
+    padding: 13px;
+    border-radius: var(--radius-md);
+    /* Nhạt và lùi sâu. Thẻ ở hero nét và nằm tiền cảnh; hai thứ phải khác nhau
+       về ĐỘ SÂU, nếu không nhìn ra là một hiệu ứng lặp lại hai lần. */
+    background: color-mix(in oklab, var(--lp-surface) 62%, transparent);
+    border: 1px solid color-mix(in oklab, var(--lp-text) 9%, transparent);
+    box-shadow: var(--lp-shadow-sm);
+    opacity: 0.6;
+    animation: wc-float 16s ease-in-out infinite alternate;
+    will-change: transform;
+  }
+
+  /* Vạch nhãn màu — dấu hiệu nhận ra một tấm thẻ Kanban nhanh nhất, kể cả khi
+     thẻ không có chữ nào. */
+  .wc-lb {
+    width: 34px;
+    height: 5px;
+    border-radius: 999px;
+  }
+  .lb-blue {
+    background: var(--lp-solid-blue);
+  }
+  .lb-purple {
+    background: var(--lp-solid-purple);
+  }
+  .lb-green {
+    background: var(--lp-solid-green);
+  }
+  .lb-amber {
+    background: var(--lp-solid-amber);
+  }
+
+  /* Vạch xám thay cho dòng chữ. Cố ý KHÔNG dùng chữ thật — xem ghi chú ở HTML. */
+  .wc-ln {
+    height: 7px;
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--lp-text) 15%, transparent);
+  }
+  .wc-ln-s {
+    width: 62%;
+  }
+
+  /* Ba thẻ bên trái, hai bên phải, mỗi cái một độ cao và một góc nghiêng khác
+     nhau. Tràn ra ngoài mép (giá trị âm) để bảng có vẻ chạy tiếp ra ngoài. */
+  .wc-k1 {
+    top: 16%;
+    left: -46px;
+    rotate: -5deg;
+    animation-duration: 15s;
+  }
+  .wc-k2 {
+    top: 44%;
+    left: 24px;
+    rotate: 3deg;
+    animation-duration: 19s;
+    animation-delay: -4s;
+  }
+  .wc-k3 {
+    bottom: 13%;
+    left: -30px;
+    rotate: -2deg;
+    animation-duration: 17s;
+    animation-delay: -8s;
+  }
+  .wc-k4 {
+    top: 22%;
+    right: -38px;
+    rotate: 4deg;
+    animation-duration: 18s;
+    animation-delay: -2s;
+  }
+  .wc-k5 {
+    bottom: 20%;
+    right: 10px;
+    rotate: -3deg;
+    animation-duration: 21s;
+    animation-delay: -11s;
+  }
+
+  /* Trôi bằng `translate` riêng chứ không gộp vào `transform`: góc nghiêng ở
+     trên dùng thuộc tính `rotate` riêng, hai thứ tách nhau thì không cái nào đè
+     mất cái nào. */
+  @keyframes wc-float {
+    from {
+      translate: 0 0;
+    }
+    to {
+      translate: 0 -18px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .wc-card {
+      animation: none;
+    }
+  }
+}
+
+/* ==========================================================================
+   Tên ba cột.
+
+   Đây là chỗ trang trí DUY NHẤT trên màn chào mang theo thông tin: ba hình chữ
+   nhật vô danh thành một tấm bảng đọc được, và dải trên cùng vốn trống nhất
+   cũng có thứ để nhìn.
+   ========================================================================== */
+.wc-colnames i {
+  /* `start` để tên nằm sát mép trên của chính cột nó, y như đầu cột thật. */
+  align-self: start;
+  padding: 12px 14px 0;
+  font-size: var(--lp-text-micro);
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  /* 80%, KHÔNG phải 26%.
+     Đây là chữ đọc được chứ không phải hình trang trí, nên phải đạt 4.5:1 như
+     mọi dòng chữ khác. Đo được: 26% cho ra 1.53:1 ở nền sáng — tức gần như
+     không ai đọc nổi, mà nó lại đang mang đúng ba cái tên cần đọc. 80% đo ra
+     4.80:1 (sáng) / 7.09:1 (tối).
+     Vẫn không tranh chú ý với cái tên ở giữa: cỡ chữ 11px, in hoa, giãn chữ —
+     mắt đọc ra là nhãn, không phải tiêu đề. */
+  color: color-mix(in oklab, var(--lp-text) 80%, transparent);
+}
+
+/* ==========================================================================
+   Ba chữ H phản ứng khi con trỏ đi ngang.
+
+   ⚠️ KHÔNG dùng được `:hover` của CSS ở đây. Cả khu vực mang
+   `pointer-events: none` (bắt buộc, xem landing-welcome.ts) nên nó không nhận
+   một sự kiện con trỏ nào — `:hover` sẽ không bao giờ khớp. Trạng thái này do
+   JavaScript tính từ `pointermove` trên window rồi gắn class `is-hot`.
+   ========================================================================== */
+.wc-h {
+  transition:
+    transform var(--lp-dur-3) var(--lp-ease),
+    filter var(--lp-dur-2) var(--lp-ease);
+}
+.wc-h.is-hot {
+  transform: translateY(-6px) scale(1.06);
+  /* Sáng lên bằng quầng cùng màu với chính nét chữ — không đổi màu, chỉ tăng
+     cường, nên chữ vẫn là chữ ấy. */
+  filter: drop-shadow(0 0 14px color-mix(in oklab, var(--tone) 55%, transparent));
+}
+
+/* Từ tương ứng đổi sang màu của chữ H đang được rê qua. */
+.wc-name span {
+  transition: color var(--lp-dur-2) var(--lp-ease);
+}
+.wc-name span:nth-child(1).is-hot {
+  color: var(--lp-ink-blue);
+}
+.wc-name span:nth-child(2).is-hot {
+  color: var(--lp-ink-purple);
+}
+.wc-name span:nth-child(3).is-hot {
+  color: var(--lp-ink-green);
+}
+
+/* Dòng nghĩa. `min-height` giữ chỗ sẵn kể cả khi rỗng — để nó tự co thì mỗi lần
+   rê qua một chữ H là cả khối bên dưới nhảy lên nhảy xuống. */
+.wc-meaning {
+  min-height: 1.5em;
+  margin-top: calc(-1 * var(--lp-2));
+  font-size: var(--lp-text-sm);
+  font-style: italic;
+  line-height: 1.5;
+  color: var(--lp-text-2);
+}
+.wc-meaning span {
+  animation: wc-in var(--lp-dur-2) var(--lp-ease) both;
+}
+
+/* ==========================================================================
+   Thanh ray dọc hai mép.
+   ========================================================================== */
+.wc-rails {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.wc-rail {
+  position: absolute;
+  top: 22%;
+  bottom: 22%;
+  width: 1px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    color-mix(in oklab, var(--lp-text) 14%, transparent) 18%,
+    color-mix(in oklab, var(--lp-text) 14%, transparent) 82%,
+    transparent
+  );
+}
+.wc-rail-l {
+  left: clamp(20px, 3vw, 38px);
+}
+.wc-rail-r {
+  right: clamp(20px, 3vw, 38px);
+}
+
+/* Ba vạch chia ngang trên thanh ray. */
+.wc-rail i {
+  width: 7px;
+  height: 1px;
+  background: color-mix(in oklab, var(--lp-text) 22%, transparent);
+}
+
+/* Tên xoay đứng, đặt giữa thanh ray. `writing-mode` chứ không phải `rotate`:
+   xoay bằng transform thì hộp của chữ vẫn nằm ngang và đẩy bố cục ra, còn
+   writing-mode đổi luôn chiều của dòng nên hộp cũng dựng đứng theo. */
+.wc-rail b {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  writing-mode: vertical-rl;
+  padding-block: 10px;
+  /* Nền cùng màu khu vực để đường kẻ không chạy xuyên qua chữ. */
+  background: var(--lp-bg);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  /* 80% vì lý do y hệt tên cột (xem `.wc-colnames i`): 34% đo ra 1.78:1.
+     80% cho 4.97:1 (sáng) / 7.39:1 (tối). */
+  color: color-mix(in oklab, var(--lp-text) 80%, transparent);
+}
+.wc-rail-r b {
+  rotate: 180deg;
+}
+
+/* Nhãn TRÁI tụt xuống thấp, KHÔNG đứng giữa như nhãn phải.
+   Lý do đo được: giữa thanh ray trái rơi đúng vào tấm thẻ `.wc-k2` (đo ở
+   1300×860: nhãn 345–515, thẻ 373–430). Thẻ nay vẽ đè lên ray, nhưng thẻ chỉ
+   mờ 60% nên chữ dựng đứng nằm dưới nó thành một mảng nhoè — tệ hơn cả lúc bị
+   kẻ xuyên qua. Neo vào đáy thì nhãn rơi đúng khoảng trống giữa `.wc-k2` và
+   `.wc-k3`.
+   Bên phải không cần: hai thẻ ở rìa phải đã nằm trên và dưới nhãn sẵn. */
+.wc-rail-l b {
+  top: auto;
+  /* 6% chứ không phải 2%: ở 2% thì đáy nhãn cách tấm `.wc-k3` đúng 10px, mà
+     mấy tấm thẻ có hoạt ảnh trôi lên xuống nên chúng sẽ chạm nhau. */
+  bottom: 6%;
+  translate: -50% 0;
+}
+
+/* Màn hình THẤP: thanh ray co theo chiều cao còn nhãn cao cố định (170px), nên
+   tới một mức nào đó nhãn tràn khỏi khoảng trống và lại chạm thẻ. Bỏ chữ, GIỮ
+   đường kẻ và mấy vạch chia — cái khung vẫn còn, chỉ mất phần chữ vốn là thứ
+   ít quan trọng nhất ở đây. */
+@media (max-height: 780px) {
+  .wc-rail b {
+    display: none;
+  }
+}
+
+/* Dưới 1024px thì hai thanh ray bắt đầu chạm vào phần chữ ở giữa. Ẩn hẳn —
+   chúng làm đầy cái khung, không phải nội dung. */
+/* Dưới 1024px thì hai thanh ray bắt đầu chạm phần chữ ở giữa, còn tên cột thì
+   kẹt giữa thanh nav ở trên và khối chữ ở dưới — đo ở 280×678 là đè thẳng lên
+   chữ "Welcome". Bỏ cả hai, GIỮ bóng cột: hình vẫn đọc ra là một tấm bảng, chỉ
+   mất phần chữ vốn là thứ để lấp khung. */
+@media (max-width: 1024px) {
+  .wc-rails,
+  .wc-colnames {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   Tấm thẻ bám theo con trỏ.
+   ========================================================================== */
+.wc-cursor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  display: grid;
+  gap: 6px;
+  width: 132px;
+  padding: 11px;
+  border-radius: var(--radius-md);
+  background: color-mix(in oklab, var(--lp-surface) 88%, transparent);
+  border: 1px solid color-mix(in oklab, var(--lp-ink-purple) 34%, transparent);
+  box-shadow: var(--lp-shadow-md);
+  /* Neo ở góc trên-trái rồi kéo lệch một nửa: nhờ vậy JavaScript chỉ cần ghi
+     đúng toạ độ con trỏ, không phải trừ đi kích thước thẻ mỗi lần. */
+  margin: -34px 0 0 -66px;
+  pointer-events: none;
+  /* Bắt đầu ẩn — GSAP mới là thứ bật nó lên khi con trỏ vào khung. Không có
+     dòng này thì nó nằm chình ình ở góc trên-trái trước cú rê chuột đầu tiên. */
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wc-h,
+  .wc-name span {
+    transition: none;
+  }
+  .wc-meaning span {
+    animation: none;
+  }
+}

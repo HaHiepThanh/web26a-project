@@ -31,18 +31,23 @@
            ngắt thành "Your team's / work, on / one board" — chữ "on" đứng lẻ
            cuối dòng và cụm màu nhấn bị xé làm đôi giữa hai dòng. Khoá cụm lại
            thì dòng ngắt luôn rơi đúng chỗ ranh giới ý nghĩa. -->
-      <h1 id="hero-title" class="hero-title" appReveal [revealDelay]="70">
+      <h1 id="hero-title" class="hero-title" appLineReveal>
         Your team's work,
         <span class="lp-grad">on&nbsp;one&nbsp;board</span>
       </h1>
 
-      <p class="lp-lead hero-lead" appReveal [revealDelay]="140">
-        A real-time Kanban board for small teams. Dragging is saving — there is no "Save" button.
-        And while your team is chatting, the assistant spots the work and asks you one question
-        before it creates anything.
+      <!-- ⚠️ Câu này KHÔNG được mở lại bằng "a real-time board for small teams".
+           Màn chào ngay trên đã nói đúng câu đó rồi, và hai màn cách nhau có một
+           cú cuộn — đọc lại lần nữa thì hero mất một dòng vào việc lặp, đúng lúc
+           nó cần dùng dòng đó để nói thứ Trello không có.
+           Màn chào lo phần "đây là cái gì"; hero bắt đầu từ chỗ ấy và đi thẳng
+           vào hai điều khác biệt. -->
+      <p class="lp-lead hero-lead" appReveal [revealDelay]="120">
+        Dragging is saving — there is no "Save" button. And while your team is chatting, the
+        assistant spots the work and asks one question before it creates anything.
       </p>
 
-      <div class="hero-cta" appReveal [revealDelay]="210">
+      <div class="hero-cta" appReveal [revealDelay]="180">
         <!-- Nút chính DUY NHẤT của khu vực này. Mọi hành động khác phải nhẹ hơn
              về mặt thị giác, nếu không mắt sẽ không biết bấm gì trước. -->
         <a class="lp-btn lp-btn-primary lp-btn-lg" routerLink="/register" appMagnetic>
@@ -55,7 +60,7 @@
         </a>
       </div>
 
-      <ul class="hero-trust" appReveal [revealDelay]="280">
+      <ul class="hero-trust" appReveal [revealDelay]="240">
         @for (item of trust; track item) {
           <li>
             <svg lucideCheck [strokeWidth]="2.2" aria-hidden="true"></svg>
@@ -90,22 +95,30 @@
   </div>
 
   <!-- ── Bảng trình diễn ────────────────────────────────────────────────────
-       Bảng để NGẮM, không phải để bấm — nên cả khối gắn aria-hidden: nó minh
-       hoạ lại đúng những gì đoạn chữ phía trên đã nói, để trình đọc màn hình
-       đọc thêm một lần nữa chỉ là bắt nghe lặp.
+       Bảng TỰ DIỄN cho tới khi có người chạm vào, rồi giao lại quyền điều khiển.
 
-       Hai tấm thẻ tự đi từ trái sang phải theo hai làn, lệch pha nhau và bắt
-       chéo qua nhau ở giữa. Mỗi cột có đúng một cấu trúc — đầu cột, ô làn trên,
-       một thẻ đứng yên, ô làn dưới — nhờ vậy toạ độ hai chỗ đáp giống hệt nhau ở
-       cả ba cột, và cả màn chuyển động rút gọn còn vài phép cộng. -->
+       Tự diễn là để MỜI. Không có nó thì đây chỉ là một hình tĩnh và gần như
+       không ai nghĩ tới chuyện thử kéo. Nhưng mời được rồi mà vẫn tự dời thẻ thì
+       thành ra giành tay lái với người đang chơi — thẻ tự bay đi ngay lúc họ
+       định kéo nó. Nên lần chạm đầu tiên là dừng hẳn, vĩnh viễn.
+
+       Hai tấm thẻ đi theo hai làn trong ba cột. Mỗi cột có đúng một cấu trúc —
+       đầu cột, ô làn trên, một thẻ đứng yên, ô làn dưới — nhờ vậy toạ độ hai chỗ
+       đáp giống hệt nhau ở cả ba cột, và cả màn chuyển động rút gọn còn vài phép
+       cộng. -->
   <div class="lp-shell" appReveal [revealDelay]="180">
     <!-- .board-floor phải nằm NGOÀI .board-frame: khung có overflow:hidden để
          bo góc nội dung, nên bóng đổ tràn xuống đáy sẽ bị cắt cụt. -->
-    <div class="board-stage" aria-hidden="true">
-      <span class="board-floor"></span>
+    <!-- KHÔNG còn aria-hidden trên cả khối.
+         Bên trong có hai tấm thẻ bấm được bằng bàn phím, mà phần tử lấy được
+         tiêu điểm nằm trong vùng aria-hidden là một lỗi trợ năng nặng: người
+         dùng bàn phím tab vào một thứ trình đọc màn hình khẳng định là không
+         tồn tại. Nên chỉ những phần THUẦN TRANG TRÍ mới được ẩn, từng phần một. -->
+    <div class="board-stage" #stage role="group" aria-label="Try it: a demo board you can rearrange">
+      <span class="board-floor" aria-hidden="true"></span>
 
       <div class="board-frame">
-        <div class="board-chrome">
+        <div class="board-chrome" aria-hidden="true">
           <span class="tl tl-r"></span>
           <span class="tl tl-y"></span>
           <span class="tl tl-g"></span>
@@ -118,9 +131,9 @@
         </div>
 
         <div class="board-body">
-          <div class="board-cols">
+          <div class="board-cols" #grid>
             <!-- Cột 1 -->
-            <div class="col">
+            <div class="col" aria-hidden="true">
               <div class="col-head"><span>To do</span><em>4</em></div>
               <div class="slot"></div>
               <article class="kan-card">
@@ -136,7 +149,7 @@
             </div>
 
             <!-- Cột 2 -->
-            <div class="col">
+            <div class="col" aria-hidden="true">
               <div class="col-head"><span>In progress</span><em>3</em></div>
               <div class="slot"></div>
               <article class="kan-card">
@@ -155,7 +168,7 @@
             </div>
 
             <!-- Cột 3 -->
-            <div class="col">
+            <div class="col" aria-hidden="true">
               <div class="col-head"><span>Done</span><em>5</em></div>
               <div class="slot"></div>
               <article class="kan-card">
@@ -175,7 +188,7 @@
                  ứng lại đúng thứ đang diễn ra trên bảng. Mỗi lần loé là một
                  phần tử riêng nên hoạt ảnh luôn chạy lại từ đầu. -->
             @for (b of blooms(); track b.id) {
-              <span class="col-bloom" [style.--col]="b.col"></span>
+              <span class="col-bloom" aria-hidden="true" [style.--col]="b.col"></span>
             }
 
             <!-- Hai thẻ du hành. Định vị tuyệt đối so với chính lưới ba cột
@@ -187,6 +200,12 @@
                  sang tới cột cuối thì tiêu đề gạch ngang — đúng cách app thật
                  suy ra "đã xong" từ vị trí chứ không từ một ô tick. -->
             @for (spot of spots(); track $index) {
+              <!-- KHÔNG còn kéo thả, và không còn lấy được tiêu điểm.
+                   Bảng này nay chỉ để XEM: bảng của một nhóm đang làm việc.
+                   Chỗ để tự tay làm là khu "Try it" phía dưới, nơi có đủ thêm
+                   thẻ, checklist, nhãn, hạn và nhớ được sau khi tải lại trang —
+                   giữ kéo thả ở cả hai chỗ thì động tác thứ hai không dạy thêm
+                   gì, chỉ lặp lại một bản kém hơn. -->
               <div
                 class="traveller"
                 [class.is-moving]="moving() === $index"
@@ -227,5 +246,14 @@
         </div>
       </div>
     </div>
+
+    <!-- Dòng này nay là LỜI CHỈ ĐƯỜNG, không còn là lời mời nghịch.
+         Bảng trên đầu để xem một nhóm làm việc; bảng để tự tay làm nằm ở khu
+         "Try it". Nói thẳng ra như vậy thì người đọc biết chỗ nào làm được gì,
+         thay vì thử kéo ở đây rồi tưởng trang hỏng. -->
+    <p class="board-hint">
+      A team's board, mid-week. Yours is a few scrolls down —
+      <a href="#try-it">try it there</a>.
+    </p>
   </div>
 </section>

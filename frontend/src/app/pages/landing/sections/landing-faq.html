@@ -5,7 +5,7 @@
         <span class="lp-eyebrow-dot" aria-hidden="true"></span>
         Questions
       </p>
-      <h2 id="faq-title" class="lp-h2" appReveal [revealDelay]="60">
+      <h2 id="faq-title" class="lp-h2" appLineReveal>
         The things people <span class="lp-grad">actually ask</span>
       </h2>
       <p class="lp-body" appReveal [revealDelay]="120">
@@ -14,7 +14,7 @@
       </p>
     </div>
 
-    <div class="faq-list">
+    <div class="faq-list" appScrollSkew>
       @for (item of items; track item.q; let i = $index) {
         <!-- <details> lo sẵn phần đóng mở, phím bấm và trạng thái cho trình đọc
              màn hình. Không có `name` chung: mở câu này không đóng câu kia —

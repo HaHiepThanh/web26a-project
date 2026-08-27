@@ -1,4 +1,6 @@
 import { Component } from '@angular/core';
+import { LineRevealDirective } from '../../../directives/line-reveal.directive';
+import { ScrollSkewDirective } from '../../../directives/scroll-skew.directive';
 import { RevealDirective } from '../../../directives/reveal.directive';
 
 /**
@@ -17,7 +19,7 @@ import { RevealDirective } from '../../../directives/reveal.directive';
  */
 @Component({
   selector: 'app-landing-faq',
-  imports: [RevealDirective],
+  imports: [LineRevealDirective, ScrollSkewDirective, RevealDirective],
   templateUrl: './landing-faq.html',
   styleUrls: ['../_landing-shared.css', './landing-faq.css'],
 })
@@ -25,7 +27,7 @@ export class LandingFaq {
   readonly items = [
     {
       q: 'Is it actually free?',
-      a: 'Yes. There is no paid tier, no trial clock and nothing to cancel — no card is asked for at any point.',
+      a: 'Yes. There is no paid tier, no trial clock and nothing to cancel — you are never asked for a card.',
     },
     {
       q: 'Where does my data live?',

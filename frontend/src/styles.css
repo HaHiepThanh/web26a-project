@@ -357,3 +357,69 @@ details.dropdown > summary + *,
   border-radius: 0.375rem !important;
 }
 
+/* ==========================================================================
+   Lenis — cuộn quán tính, CHỈ dùng ở trang giới thiệu.
+
+   Mấy quy tắc này bắt buộc phải nằm ở tầng toàn cục vì chúng nhắm vào <html>,
+   mà CSS của component Angular thì bị đóng gói lại nên với tới đó không được.
+
+   Chúng TRƠ HOÀN TOÀN khi không ở trang landing: Lenis tự gắn class `.lenis`
+   lên <html> lúc khởi động và gỡ ra lúc huỷ, nên ngoài trang đó không selector
+   nào khớp. Phần app đã đăng nhập vì vậy cuộn y như cũ — cố ý, vì bảng công
+   việc có kéo thả và cuộn quán tính sẽ làm con trỏ lệch pha với mặt bảng.
+   ========================================================================== */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+/* Lenis tự điều khiển vị trí cuộn theo từng khung hình. Để `scroll-behavior:
+   smooth` của trình duyệt chạy song song thì hai bên cùng ghi một giá trị trong
+   cùng một khung — hình giật rồi khựng giữa đường. */
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* Vùng con muốn cuộn bình thường (danh sách trong modal, khung chat...) thì gắn
+   `data-lenis-prevent`; Lenis sẽ nhả bánh xe chuột cho nó. */
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+/* ==========================================================================
+   View Transitions — chỉ trang giới thiệu dùng tới.
+
+   Phải đặt ở style TOÀN CỤC chứ không nhét vào component được:
+   `::view-transition-*` là pseudo-element gắn ở gốc tài liệu, nằm ngoài mọi cây
+   DOM, nên cơ chế đóng gói style của Angular không với tới — viết trong CSS của
+   component thì selector bị thêm thuộc tính phạm vi và không bao giờ khớp.
+
+   Không ảnh hưởng phần còn lại của app: mấy pseudo-element này chỉ tồn tại
+   trong lúc `document.startViewTransition()` đang chạy, mà hiện chỉ khu bản kê
+   của trang giới thiệu gọi tới nó.
+   ========================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-group(*) {
+    /* Khớp bậc 3 và đường cong của hệ chuyển động trang giới thiệu (xem
+       _landing-shared.css). Viết thẳng giá trị vì token `--lp-*` khai trong
+       phạm vi component, còn pseudo-element này ở gốc tài liệu nên không kế
+       thừa được. Đổi thang bên kia thì nhớ đổi cả hai chỗ. */
+    animation-duration: 320ms;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+/* Tôn trọng cài đặt giảm chuyển động: bỏ hẳn phần diễn, đổi trạng thái tức thì.
+   (Mã nguồn cũng đã tự tránh gọi startViewTransition trong trường hợp này —
+   đây là lớp chặn thứ hai, phòng khi có chỗ khác gọi mà quên kiểm tra.) */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

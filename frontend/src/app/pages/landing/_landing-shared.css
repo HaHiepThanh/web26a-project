@@ -28,8 +28,38 @@
      dùng nhất. Tối thêm một nấc là qua ngưỡng ở cả ba nền, mà vẫn nhạt hơn bậc
      hai đủ để phân biệt. */
   --lp-text: var(--text-primary);
-  --lp-text-2: var(--text-secondary);
-  --lp-text-3: var(--text-muted);
+
+  /* Bậc 2 là 82%, KHÔNG phải 78% của `--text-secondary` trong app.
+     78% dính đúng cái bẫy đã mô tả cho bậc 3 ngay dưới đây: đo trên nền trắng
+     thì 4.71:1 nên tưởng đạt, nhưng đặt lên nền lõm (`--lp-bg-sunken`) và
+     `--lp-surface-2` thì tụt còn 4.49:1 — trượt chuẩn AA đúng một phần trăm,
+     mà đó lại là nền của chân trang, dải số liệu, khu bản kê và khu câu chuyện.
+     Đo cả thang trên nền lõm: 78% → 4.49   80% → 4.73   82% → 4.94   84% → 5.22
+     Chọn 82%: qua ngưỡng trên MỌI nền của trang mà vẫn nhạt hơn bậc 1 (8.50:1)
+     đủ rõ để hai bậc không lẫn vào nhau. */
+  --lp-text-2: color-mix(in oklab, var(--color-base-content) 82%, transparent);
+
+  /* Bậc 3 ở theme SÁNG bằng đúng bậc 2 — cố ý, và đây là lý do.
+   *
+   * `--text-muted` của app là `color-mix(... 58%, transparent)`. Đo thật trên nền
+   * trắng: chỉ được 3.66:1, dưới hẳn ngưỡng AA 4.5:1 cho chữ nhỏ — mà nó lại là
+   * bậc chuyên dùng cho chữ 12–14px, đúng loại cần tương phản nhất.
+   *
+   * Đo cả thang để tìm mức đạt (chữ gốc winter trên nền trắng):
+   *     100% → 8.50    78% → 4.71    68% → 3.66    58% → 3.19
+   * Tức là mức thấp nhất còn qua ngưỡng là ~78%, mà bậc 2 cũng đang 78%. Nói
+   * cách khác: chữ gốc của `winter` (sáng 41.9%) KHÔNG đủ tối để đỡ nổi ba bậc
+   * — muốn có bậc thứ ba nhạt hơn thì buộc phải làm tối chữ gốc của cả trang,
+   * một thay đổi lớn hơn nhiều so với thứ nó đổi lại được.
+   *
+   * Nên ở theme sáng, phân cấp bậc 3 do CỠ CHỮ và ĐỘ ĐẬM gánh, không phải màu —
+   * đúng nguyên tắc "đừng bao giờ phân cấp chỉ bằng màu" của Practical UI.
+   * Theme tối thoáng hơn nên vẫn giữ được bậc ba thật; xem khối `night` bên dưới.
+   *
+   * Chỉ ghi đè trong phạm vi trang này. `--text-muted` là token dùng chung cho cả
+   * app — sửa ở đó sẽ đổi màu chữ khắp bảng công việc và phần cài đặt, ngoài
+   * phạm vi việc đang làm. (Phần app dính đúng lỗi này, đã báo riêng.) */
+  --lp-text-3: var(--lp-text-2);
 
   /* ---- Hai họ màu nhấn: dùng làm CHỮ và dùng làm NỀN ĐẶC ----
      Đây là chỗ phải cẩn thận nhất của cả trang. Bộ token màu nhấn trong
@@ -99,7 +129,49 @@
   /* Độ dài dòng lý tưởng 40–80 ký tự. */
   --lp-measure: 62ch;
 
+  /* --------------------------------------------------------------------------
+     HỆ CHUYỂN ĐỘNG
+
+     Trước khi có khối này, trang dùng 21 giá trị thời lượng rời rạc (40ms →
+     900ms) và 26 trên 31 transition chạy bằng `ease` mặc định của trình duyệt,
+     dù token đường cong đã có sẵn và chỉ 5 chỗ dùng tới. Hệ quả không nằm ở
+     chỗ nào cụ thể — nó nằm ở cảm giác chung: mỗi khu vực chuyển động theo một
+     tính cách riêng, và mắt đọc ra "trang này được lắp ráp" chứ không phải
+     "được thiết kế".
+
+     HAI LUẬT, áp cho mọi chuyển động trên trang:
+
+     1. THỜI LƯỢNG CHỌN THEO QUÃNG ĐƯỜNG, không theo cảm tính.
+        Thang dưới đây mỗi bậc gấp ~1,6 lần bậc trước — đủ xa để tai-mắt phân
+        biệt được hai bậc liền nhau, đủ gần để không có khoảng trống phải chế
+        thêm số lẻ.
+
+     2. ĐỔI TẠI CHỖ THÌ NHANH, DI CHUYỂN THÌ CHẬM HƠN.
+        Màu, viền, nền, opacity không vẽ ra đường đi nào nên mắt bắt xong ngay:
+        cho bậc 1–2. Còn transform, width, box-shadow thì mắt phải đi theo, cần
+        thời gian để hãm lại: bậc 3 trở lên.
+     -------------------------------------------------------------------------- */
+
+  --lp-dur-1: 120ms; /* đổi tại chỗ, phần tử nhỏ: link, icon, chip */
+  --lp-dur-2: 200ms; /* đổi tại chỗ, phần tử lớn: thẻ, thanh nav */
+  --lp-dur-3: 320ms; /* di chuyển thấy rõ: thẻ nhấc lên, panel mở ra */
+  --lp-dur-4: 520ms; /* khối lớn hiện dần khi cuộn */
+  --lp-dur-5: 840ms; /* quãng thật dài: thẻ bay sang cột khác, vạch tự vẽ */
+
+  /* Bước so le khi nhiều phần tử cùng hiện. Thưa cho vài phần tử lớn, sít cho
+     danh sách dày — 10 mục mà cách nhau 60ms thì mục cuối phải chờ hơn nửa
+     giây, người đọc tưởng trang treo. */
+  --lp-stagger: 60ms;
+  --lp-stagger-tight: 20ms;
+
+  /* Đường cong.
+     `--lp-ease` (easeOutQuint) cho gần như mọi thứ: bung nhanh rồi hãm mạnh,
+     đúng cảm giác một vật có khối lượng dừng lại — dùng cho cái gì đi tới
+     trạng thái nghỉ.
+     `--lp-ease-inout` chỉ cho thứ đi và VỀ liên tục giữa hai trạng thái, nơi
+     hai đầu đều cần mềm chứ không riêng đầu cuối. */
   --lp-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --lp-ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
 
   display: block;
   color: var(--lp-text);
@@ -136,10 +208,49 @@
   --lp-glow-purple: color-mix(in oklab, var(--accent-purple) 28%, transparent);
   --lp-spot: color-mix(in oklab, var(--accent-blue) 16%, transparent);
 
+  /* Nền tối thoáng hơn nền sáng nên GIỮ ĐƯỢC bậc chữ thứ ba thật.
+     Đo trên nền của khu vực: 68% → 4.57:1, qua ngưỡng; còn 58% mặc định của app
+     chỉ được 4.24 nên vẫn phải nâng. (Ở theme sáng thì không có chỗ cho bậc ba —
+     xem ghi chú dài ở khối `:host` phía trên.) */
+  --lp-text-3: color-mix(in oklab, var(--color-base-content) 68%, transparent);
+
   --lp-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
   --lp-shadow-md: 0 12px 30px -12px rgba(0, 0, 0, 0.75);
   --lp-shadow-lg: 0 34px 60px -24px rgba(0, 0, 0, 0.85);
 }
+
+/* Chỉ trình đọc màn hình thấy.
+   KHÔNG dùng `display: none` hay `visibility: hidden` — hai cái đó giấu khỏi cả
+   trình đọc màn hình, tức là ngược hẳn mục đích. Cách này giữ phần tử trong cây
+   trợ năng nhưng thu nó về một điểm ảnh và cắt sạch phần vẽ ra. */
+.lp-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ⚠️ BẪY: `overflow: hidden` GIẾT hoạt ảnh gắn thanh cuộn nằm bên trong.
+ *
+ * `overflow: hidden` biến phần tử thành một scroll container, mà
+ * `animation-timeline: view()` thì quy chiếu vào scroll container GẦN NHẤT —
+ * nên mọi thứ bên trong sẽ đo tiến độ theo một cái khung không bao giờ cuộn.
+ * Hoạt ảnh không báo lỗi, không tắt: nó đứng im ở một giá trị giữa chừng, trông
+ * y như CSS viết sai. (Đã mất một lúc để truy ra ở khu `.letter-band`: timeline
+ * kẹt ở đúng 34.213% suốt cả quãng cuộn.)
+ *
+ * Cần cắt nội dung tràn thì dùng `overflow: clip` — cắt y hệt, không sinh scroll
+ * container. Chỉ giữ `hidden` khi thật sự cần một vùng cuộn được.
+ *
+ * Hiện các khu ai / hero / features / steps / story / cta / capabilities đều
+ * đang dùng `hidden`. Không sao, vì chúng chưa có hoạt ảnh theo cuộn bên trong —
+ * nhưng THÊM một cái vào đó là nó chết ngay, mà không có lỗi nào chỉ đường.
+ * -------------------------------------------------------------------------- */
 
 /* --------------------------------------------------------------------------
    Khung trang
@@ -284,11 +395,11 @@
   cursor: pointer;
   transform: translate3d(var(--magnet-x), var(--magnet-y), 0);
   transition:
-    transform 220ms var(--lp-ease),
-    box-shadow 220ms var(--lp-ease),
-    background-color 160ms ease,
-    border-color 160ms ease,
-    color 160ms ease;
+    transform var(--lp-dur-2) var(--lp-ease),
+    box-shadow var(--lp-dur-2) var(--lp-ease),
+    background-color var(--lp-dur-1) var(--lp-ease),
+    border-color var(--lp-dur-1) var(--lp-ease),
+    color var(--lp-dur-1) var(--lp-ease);
 }
 
 .lp-btn:focus-visible {
@@ -356,7 +467,7 @@
 }
 
 .lp-btn-arrow {
-  transition: transform 240ms var(--lp-ease);
+  transition: transform var(--lp-dur-2) var(--lp-ease);
 }
 
 .lp-btn:hover .lp-btn-arrow {
@@ -422,15 +533,96 @@
 }
 
 /* --------------------------------------------------------------------------
+   Tiêu đề hiện theo TỪNG DÒNG (đi cùng directive `appLineReveal`).
+
+   Khác `.reveal` bên dưới ở chỗ: `.reveal` cho cả khối mờ lên và dịch 22px, còn
+   ở đây mỗi dòng trượt lên từ dưới một khung cắt, dòng sau đi sau dòng trước.
+   Cảm giác khác hẳn — chữ như được ĐẶT xuống chứ không phải hiện ra.
+   -------------------------------------------------------------------------- */
+
+/* Ẩn cho tới khi directive tách xong, tránh chớp một nhịp chữ chưa tách rồi mới
+   nhảy về trạng thái ẩn. Directive LUÔN gắn `is-ready` kể cả khi tách hỏng, nên
+   không có đường nào để tiêu đề kẹt vô hình. */
+.line-reveal {
+  opacity: 0;
+}
+.line-reveal.is-ready {
+  opacity: 1;
+}
+
+/* Chưa tách được (có đơn vị vắt qua hai dòng, hoặc người dùng bật giảm chuyển
+   động): hiện thẳng — mất phần diễn chứ không mất chữ. */
+.line-reveal.is-ready:not(.is-split) {
+  transition: opacity var(--lp-dur-4) var(--lp-ease);
+}
+
+/* Khung cắt của mỗi dòng.
+
+   Phải nới CẢ TRÊN LẪN DƯỚI, không chỉ dưới:
+   - dưới, vì `overflow: hidden` xén đúng phần nằm dưới đường chân chữ — đuôi
+     g, y, p và toàn bộ dấu tiếng Việt đặt dưới ("ạ" hoá thành "a");
+   - trên, vì `.lp-grad` tự nó đã có `padding-block: 0.08em` để dấu không bị
+     khung gradient xén, nên nội dung cao hơn hộp dòng ở cả hai đầu.
+   Đo trước khi sửa: dòng "on one board" của hero (72px) thiếu 3px, "two minutes
+   away" của CTA (56px) thiếu 2px — đều là dòng có chữ gradient.
+
+   Đệm thì phải kéo lại, nếu không tiêu đề cao lên và xô cả bố cục. Nhưng KHÔNG
+   dùng `margin-block` âm đối xứng được: margin dọc của hai khối anh em sẽ gộp
+   lại lấy giá trị âm nhất (−0.22em) chứ không cộng dồn, nên mỗi mối nối giữa
+   hai dòng vẫn dôi ra đúng 0.22em. Phải khử riêng từng chỗ: hai mép ngoài trừ
+   một lần, còn mối nối bên trong trừ gấp đôi để triệt tiêu đệm của cả hai dòng. */
+.line-reveal.is-split .lr-ln {
+  display: block;
+  overflow: hidden;
+  padding-block: 0.22em;
+}
+.line-reveal.is-split .lr-ln:first-child {
+  margin-top: -0.22em;
+}
+.line-reveal.is-split .lr-ln:last-child {
+  margin-bottom: -0.22em;
+}
+.line-reveal.is-split .lr-ln + .lr-ln {
+  margin-top: -0.44em;
+}
+
+.line-reveal.is-split .lr-i {
+  display: block;
+  /* 110% chứ không 100%: đẩy quá một chút để chắc chắn nằm hẳn ngoài khung cắt
+     kể cả khi chiều cao dòng ra số lẻ. */
+  transform: translateY(110%);
+  transition: transform var(--lp-dur-4) var(--lp-ease);
+  /* GẤP BA nhịp so le chung, và đây là lý do đo được.
+     Gần như mọi tiêu đề trên trang vỡ đúng HAI dòng (8/8 lúc đo). Với nhịp
+     thường 60ms trên nền thời lượng 520ms, dòng thứ hai chỉ trễ 12% — mắt
+     không tách nổi hai chuyển động lệch nhau chừng ấy, nên nó đọc ra là cả
+     khối cùng đi, tức trông y hệt cú fade-up mà hiệu ứng này thay thế. Hoạt
+     ảnh chạy đúng mà nhìn như không có gì.
+     180ms đẩy độ lệch lên ~35%: dòng dưới bắt đầu lúc dòng trên mới đi được
+     một phần ba, đủ để đọc ra thành hai nhịp rõ ràng. Vẫn là bội của nhịp
+     chung nên không phá hệ. */
+  transition-delay: calc(var(--lp-stagger) * 3 * var(--i, 0));
+}
+
+.line-reveal.is-split.is-in .lr-i {
+  transform: none;
+}
+
+/* --------------------------------------------------------------------------
    Hiện dần khi cuộn tới (đi cùng directive `appReveal`)
    -------------------------------------------------------------------------- */
 
 .reveal {
   opacity: 0;
   transform: translate3d(0, 22px, 0);
+  /* NGOẠI LỆ có chủ ý của luật "đổi tại chỗ thì nhanh": ở đây opacity không
+     phải một thay đổi riêng, nó là MỘT PHẦN của cú dịch 22px. Cho nó thời
+     lượng ngắn hơn transform thì phần tử hiện rõ xong mới đi nốt quãng đường
+     còn lại — nhìn ra ngay là hai chuyển động rời nhau. Đi cùng nhau thì phải
+     cùng thời lượng. */
   transition:
-    opacity 620ms var(--lp-ease),
-    transform 620ms var(--lp-ease);
+    opacity var(--lp-dur-4) var(--lp-ease),
+    transform var(--lp-dur-4) var(--lp-ease);
   /* Báo trước cho trình duyệt để nó tách phần tử ra lớp vẽ riêng, nhưng CHỈ khi
      chưa hiện — giữ `will-change` vĩnh viễn trên hàng chục phần tử là cách
      nhanh nhất để ngốn sạch bộ nhớ GPU. */

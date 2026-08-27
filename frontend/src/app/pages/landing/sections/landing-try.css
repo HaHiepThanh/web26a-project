@@ -1,0 +1,777 @@
+/* ==========================================================================
+   "Try it" — bảng chạy thật.
+
+   Dáng thẻ và dáng cột bám sát bảng thật trong app: cái người ta nghịch ở đây
+   phải đúng là cái họ sẽ gặp sau khi đăng ký, nếu không thì đây chỉ là một trò
+   chơi khác chứ không phải bản dùng thử.
+   ========================================================================== */
+.tryit {
+  /* `background-color`, không phải shorthand — khu này dùng `.lp-seam-y`, mà
+     shorthand xoá luôn background-image của nó. */
+  background-color: var(--lp-bg);
+}
+
+/* ---------------- Khung bảng ---------------- */
+.tb {
+  max-width: 1000px;
+  margin-inline: auto;
+  border: 1px solid var(--lp-border-strong);
+  border-radius: var(--radius-xl);
+  background: var(--lp-surface);
+  box-shadow: var(--lp-shadow-lg);
+  overflow: clip;
+}
+
+.tb-chrome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--lp-3);
+  padding: var(--lp-3) var(--lp-4);
+  border-bottom: 1px solid var(--lp-border);
+  background: var(--lp-surface-2);
+}
+
+.tb-name {
+  font-size: var(--lp-text-sm);
+  font-weight: 700;
+  color: var(--lp-text-2);
+}
+
+.tb-reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border: 1px solid var(--lp-border-strong);
+  border-radius: 999px;
+  background: var(--lp-surface);
+  font-size: var(--lp-text-micro);
+  font-weight: 700;
+  color: var(--lp-text-2);
+  cursor: pointer;
+  transition:
+    color var(--lp-dur-1) var(--lp-ease),
+    border-color var(--lp-dur-1) var(--lp-ease);
+}
+.tb-reset:hover {
+  color: var(--lp-text);
+  border-color: var(--lp-ink-blue);
+}
+.tb-reset:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+.tb-reset svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* ---------------- Ba cột ---------------- */
+.tb-cols {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--lp-3);
+  padding: var(--lp-4);
+  align-items: start;
+}
+
+.tb-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lp-2);
+  padding: var(--lp-2);
+  border-radius: var(--radius-md);
+  background: var(--lp-surface-2);
+  /* Cột luôn cao tối thiểu chừng này để vùng thả không biến mất khi cột rỗng —
+     một cột cao 0px thì không thể kéo thẻ vào. */
+  min-height: 150px;
+}
+
+.tb-chead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px;
+  font-size: var(--lp-text-micro);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--lp-text-2);
+}
+.tb-chead em {
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.7;
+}
+
+.tb-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* ---------------- Tấm thẻ ---------------- */
+.tb-card {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--lp-2);
+  padding: 10px 11px;
+  border: 1px solid var(--lp-border);
+  border-radius: var(--radius-sm);
+  background: var(--lp-surface);
+  box-shadow: var(--lp-shadow-sm);
+  cursor: grab;
+  /* Bắt buộc cho kéo thả trên cảm ứng: không có nó thì ngón tay kéo thẻ sẽ cuộn
+     cả trang thay vì dời thẻ. */
+  touch-action: none;
+  /* --dx/--dy do landing-try.ts ghi vào trong lúc kéo. */
+  transform: translate3d(var(--dx, 0), var(--dy, 0), 0);
+  transition:
+    border-color var(--lp-dur-1) var(--lp-ease),
+    box-shadow var(--lp-dur-2) var(--lp-ease);
+}
+
+.tb-card:hover {
+  border-color: var(--lp-border-strong);
+}
+
+.tb-card:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+/* Đang kéo: nhấc hẳn lên khỏi mặt bảng và bỏ transition của transform, vì
+   transform lúc này phải bám sát con trỏ từng pixel — có transition là thẻ lê
+   theo sau ngón tay. */
+.tb-card.is-dragging {
+  z-index: 3;
+  cursor: grabbing;
+  box-shadow: var(--lp-shadow-lg);
+  border-color: var(--lp-ink-blue);
+  transition: none;
+}
+
+.tb-card-title {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--lp-text-sm);
+  line-height: 1.4;
+  color: var(--lp-text);
+  /* Chữ dài phải xuống dòng chứ không tràn ra khỏi thẻ. `anywhere` để một chuỗi
+     không dấu cách cũng bị bẻ. */
+  overflow-wrap: anywhere;
+}
+
+.tb-del {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--lp-text-3);
+  cursor: pointer;
+  /* Ẩn cho tới khi rê chuột hoặc lấy tiêu điểm — bốn cái dấu × chình ình làm
+     tấm thẻ trông như một hộp thoại cảnh báo. */
+  opacity: 0;
+  transition:
+    opacity var(--lp-dur-1) var(--lp-ease),
+    color var(--lp-dur-1) var(--lp-ease);
+}
+.tb-card:hover .tb-del,
+.tb-card:focus-within .tb-del,
+.tb-del:focus-visible {
+  opacity: 1;
+}
+.tb-del:hover {
+  color: var(--lp-ink-amber);
+}
+.tb-del:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 1px;
+}
+.tb-del svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Cột rỗng: nói rõ đây là chỗ thả được, thay vì để một khoảng trắng khó hiểu. */
+.tb-empty {
+  padding: var(--lp-4) var(--lp-2);
+  border: 1px dashed var(--lp-border-strong);
+  border-radius: var(--radius-sm);
+  text-align: center;
+  font-size: var(--lp-text-micro);
+  color: var(--lp-text-3);
+}
+
+/* ---------------- Thêm thẻ ---------------- */
+.tb-add {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  font-size: var(--lp-text-sm);
+  font-weight: 600;
+  color: var(--lp-text-2);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color var(--lp-dur-1) var(--lp-ease),
+    color var(--lp-dur-1) var(--lp-ease);
+}
+.tb-add:hover {
+  background: var(--lp-surface);
+  color: var(--lp-text);
+}
+.tb-add:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: -2px;
+}
+.tb-add svg {
+  width: 14px;
+  height: 14px;
+}
+
+.tb-compose {
+  display: grid;
+  gap: var(--lp-2);
+}
+
+.tb-input {
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid var(--lp-ink-blue);
+  border-radius: var(--radius-sm);
+  background: var(--lp-surface);
+  font: inherit;
+  font-size: var(--lp-text-sm);
+  color: var(--lp-text);
+}
+.tb-input::placeholder {
+  color: var(--lp-text-3);
+}
+.tb-input:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 1px;
+}
+
+.tb-compose-row {
+  display: flex;
+  gap: var(--lp-2);
+}
+
+.tb-add-go,
+.tb-add-cancel {
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-size: var(--lp-text-micro);
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter var(--lp-dur-1) var(--lp-ease);
+}
+.tb-add-go {
+  border: none;
+  background: var(--lp-solid-blue);
+  color: var(--lp-on-solid);
+}
+.tb-add-go:hover {
+  filter: brightness(1.08);
+}
+.tb-add-cancel {
+  border: 1px solid var(--lp-border-strong);
+  background: none;
+  color: var(--lp-text-2);
+}
+.tb-add-go:focus-visible,
+.tb-add-cancel:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+/* ---------------- Chân khu vực ---------------- */
+.tb-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--lp-3);
+  max-width: 62ch;
+  margin: var(--lp-6) auto 0;
+  text-align: center;
+  font-size: var(--lp-text-sm);
+  line-height: 1.7;
+  color: var(--lp-text-2);
+}
+
+.tb-cta {
+  flex: none;
+}
+
+/* ---------------- Màn hình hẹp ---------------- */
+@media (max-width: 720px) {
+  /* Ba cột cạnh nhau ở khổ này chỉ còn chừng 90px mỗi cột — thẻ bị ép mỗi dòng
+     một từ. Cho cuộn ngang, đúng như bảng Kanban thật trên điện thoại. */
+  .tb-cols {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: clamp(180px, 72%, 240px);
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: thin;
+    scrollbar-color: var(--lp-border-strong) transparent;
+  }
+  .tb-col {
+    scroll-snap-align: start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tb-card,
+  .tb-del,
+  .tb-add,
+  .tb-reset {
+    transition: none;
+  }
+}
+
+/* ==========================================================================
+   Ba bước dẫn dắt.
+
+   Vì sao cần: một hộp cát không lời nào thì người ta kéo một thẻ rồi thôi,
+   không biết phải chú ý điều gì — đúng phản hồi "chưa rõ lắm". Ba dấu tick
+   biến chỗ này từ đồ chơi thành một chuỗi chứng minh có đích đến.
+   ========================================================================== */
+.tb-steps {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--lp-2) var(--lp-5);
+  max-width: 900px;
+  margin: 0 auto var(--lp-5);
+  padding: 0;
+  list-style: none;
+  font-size: var(--lp-text-sm);
+  color: var(--lp-text-2);
+}
+
+.tb-steps li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--lp-2);
+  transition: color var(--lp-dur-2) var(--lp-ease);
+}
+.tb-steps li.is-done {
+  color: var(--lp-text);
+}
+.tb-steps b {
+  font-weight: 700;
+  color: var(--lp-ink-green);
+}
+
+.tb-tick {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  flex: none;
+  border: 1px solid var(--lp-border-strong);
+  border-radius: 50%;
+  color: var(--lp-on-solid);
+  transition:
+    background-color var(--lp-dur-2) var(--lp-ease),
+    border-color var(--lp-dur-2) var(--lp-ease);
+}
+.is-done .tb-tick {
+  background: var(--lp-solid-green);
+  border-color: var(--lp-solid-green);
+}
+.tb-tick svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* ==========================================================================
+   Nhãn và hạn trên mặt thẻ — đúng dáng thẻ thật trong app.
+   ========================================================================== */
+.tb-card {
+  /* Xếp dọc vì thẻ nay có nhiều tầng: nhãn, dòng tiêu đề, dòng chân. */
+  flex-direction: column;
+  align-items: stretch;
+  gap: 7px;
+}
+
+.tb-label {
+  width: 34px;
+  height: 5px;
+  border-radius: 999px;
+}
+.lb-blue {
+  background: var(--lp-solid-blue);
+}
+.lb-purple {
+  background: var(--lp-solid-purple);
+}
+.lb-green {
+  background: var(--lp-solid-green);
+}
+.lb-amber {
+  background: var(--lp-solid-amber);
+}
+
+.tb-card-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--lp-2);
+}
+
+.tb-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tb-chip,
+.tb-due {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.tb-chip {
+  background: var(--lp-surface-2);
+  color: var(--lp-text-2);
+}
+/* Tick hết thì đổi màu — một tín hiệu nhỏ nhưng là lý do người ta tick tiếp. */
+.tb-chip.is-full {
+  background: color-mix(in oklab, var(--lp-ink-green) 20%, transparent);
+  color: var(--lp-ink-green);
+}
+.tb-chip svg {
+  width: 11px;
+  height: 11px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.tb-due {
+  background: color-mix(in oklab, var(--warning) 20%, transparent);
+  color: var(--lp-ink-amber);
+}
+
+.tb-card.is-open {
+  border-color: var(--lp-ink-blue);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--lp-ink-blue) 35%, transparent);
+}
+
+/* ==========================================================================
+   Khay chi tiết, nằm dưới bảng.
+   ========================================================================== */
+.tb-detail {
+  padding: var(--lp-4);
+  border-top: 1px solid var(--lp-border);
+  background: var(--lp-surface-2);
+  animation: tb-detail-in var(--lp-dur-3) var(--lp-ease) both;
+}
+@keyframes tb-detail-in {
+  from {
+    opacity: 0;
+    translate: 0 -10px;
+  }
+}
+
+.tb-detail-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--lp-3);
+  margin-bottom: var(--lp-4);
+}
+
+.tb-detail-title {
+  font-size: var(--lp-text-h3);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--lp-text);
+  overflow-wrap: anywhere;
+}
+
+.tb-detail-close {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--lp-border-strong);
+  border-radius: 8px;
+  background: var(--lp-surface);
+  color: var(--lp-text);
+  cursor: pointer;
+}
+.tb-detail-close:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+.tb-detail-close svg {
+  width: 15px;
+  height: 15px;
+}
+
+.tb-detail-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--lp-5);
+  margin-bottom: var(--lp-5);
+}
+
+.tb-field {
+  display: grid;
+  gap: var(--lp-2);
+  min-width: 0;
+}
+
+.tb-field-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--lp-text-micro);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--lp-text-2);
+}
+.tb-field-name em {
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.75;
+}
+
+.tb-swatches,
+.tb-dues {
+  display: flex;
+  gap: 6px;
+}
+
+.tb-swatch {
+  width: 30px;
+  height: 22px;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.tb-swatch.is-on {
+  /* Viền TRẮNG bên trong cộng vòng đậm bên ngoài, vì chính ô màu là thứ đang
+     được chọn — không thể báo trạng thái bằng đổi màu nền của nó. */
+  border-color: var(--lp-surface);
+  box-shadow: 0 0 0 2px var(--lp-text);
+}
+.tb-swatch:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+.tb-duebtn {
+  padding: 4px 11px;
+  border: 1px solid var(--lp-border-strong);
+  border-radius: 999px;
+  background: var(--lp-surface);
+  font-size: var(--lp-text-micro);
+  font-weight: 700;
+  color: var(--lp-text-2);
+  cursor: pointer;
+  transition:
+    background-color var(--lp-dur-1) var(--lp-ease),
+    color var(--lp-dur-1) var(--lp-ease);
+}
+.tb-duebtn.is-on {
+  background: var(--lp-solid-blue);
+  border-color: var(--lp-solid-blue);
+  color: var(--lp-on-solid);
+}
+.tb-duebtn:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+/* ---------------- Checklist ---------------- */
+.tb-checks {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tb-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 5px 6px;
+  border-radius: var(--radius-sm);
+  font-size: var(--lp-text-sm);
+  line-height: 1.5;
+  color: var(--lp-text);
+  cursor: pointer;
+  transition: background-color var(--lp-dur-1) var(--lp-ease);
+}
+.tb-check:hover {
+  background: var(--lp-surface);
+}
+.tb-check input {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  flex: none;
+  accent-color: var(--lp-solid-green);
+  cursor: pointer;
+}
+/* Gạch ngang mục đã xong — dấu hiệu thứ hai ngoài ô tick, để người mù màu vẫn
+   đọc ra trạng thái. */
+.tb-check.is-done span {
+  text-decoration: line-through;
+  color: var(--lp-text-2);
+}
+
+.tb-checks-empty {
+  padding: 5px 6px;
+  font-size: var(--lp-text-sm);
+  color: var(--lp-text-3);
+}
+
+.tb-check-input {
+  margin-top: var(--lp-2);
+  border-color: var(--lp-border-strong);
+}
+
+@media (max-width: 720px) {
+  .tb-detail-grid {
+    gap: var(--lp-4);
+  }
+}
+
+/* ==========================================================================
+   Ô báo chỗ khi kéo.
+
+   Bảng thật dùng `*cdkDragPlaceholder` của Angular CDK; ở đây dựng lại bằng
+   tay vì khu giới thiệu không kéo cả @angular/cdk vào chỉ để làm một cái ô.
+
+   Đây là khác biệt xúc giác lớn nhất giữa "bảng thật" và "bản minh hoạ": không
+   có nó thì thẻ biến mất chỗ này rồi hiện ra chỗ kia lúc thả tay, và người
+   dùng không bao giờ chắc mình đang thả vào đâu cho tới khi đã lỡ tay.
+   ========================================================================== */
+.tb-slot {
+  height: 46px;
+  border: 2px dashed color-mix(in oklab, var(--lp-ink-blue) 55%, transparent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklab, var(--lp-ink-blue) 8%, transparent);
+  /* Nở ra thay vì hiện phắt: ô bung mở đúng kiểu chỗ trống đang được dọn sẵn. */
+  animation: tb-slot-in var(--lp-dur-2) var(--lp-ease) both;
+}
+@keyframes tb-slot-in {
+  from {
+    height: 0;
+    opacity: 0;
+  }
+}
+
+/* Cả cột đích sáng lên. Riêng ô báo chỗ là chưa đủ ở khổ hẹp, nơi cột bên cạnh
+   có thể đang nằm ngoài tầm mắt vì lưới đang cuộn ngang. */
+.tb-col.is-target {
+  /* 6%, KHÔNG phải 10%. Chữ đầu cột nằm TRỰC TIẾP trên nền này, và đo ra thì
+     10% kéo nó từ 4.94:1 xuống 4.44:1 — trượt chuẩn AA đúng lúc cột đang được
+     nhắm tới, tức đúng lúc người dùng cần đọc tên cột nhất.
+     Đo cả thang: 4% → 4.75   6% → 4.63   8% → 4.53   10% → 4.44
+     8% qua ngưỡng nhưng chỉ hơn 0.03, sát tới mức một lần chỉnh màu theme là
+     trượt lại. Lấy 6% cho có biên, rồi bù tín hiệu bằng VÒNG VIỀN đậm hơn —
+     viền không có chữ nằm trên nên tô đậm bao nhiêu cũng không hại ai. */
+  background: color-mix(in oklab, var(--lp-ink-blue) 6%, var(--lp-surface-2));
+  box-shadow: inset 0 0 0 2px color-mix(in oklab, var(--lp-ink-blue) 55%, transparent);
+}
+
+/* Thẻ đang được "cầm": nghiêng nhẹ và to lên một chút, đúng phản xạ ai cũng
+   quen từ bảng vật lý — nhấc lên là vật rời khỏi mặt bàn.
+   Gộp vào cùng một transform với --dx/--dy, vì hai khai báo transform trên cùng
+   phần tử thì cái sau đè mất cái trước. */
+.tb-card.is-dragging {
+  transform: translate3d(var(--dx, 0), var(--dy, 0), 0) rotate(-1.8deg) scale(1.03);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tb-slot {
+    animation: none;
+  }
+  .tb-card.is-dragging {
+    transform: translate3d(var(--dx, 0), var(--dy, 0), 0);
+  }
+}
+
+/* ==========================================================================
+   Lời chào người quay lại.
+
+   Chỉ hiện với người mở lại ở một phiên mới mà bảng cũ vẫn còn — xem
+   landing-try.ts. Cố ý làm NHỎ và không có nút tắt: một dòng chữ thì không cần
+   ai phải đóng nó, còn thêm cái dấu × là biến một lời chào thành một thứ phải
+   xử lý.
+   ========================================================================== */
+.tb-back {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--lp-2);
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto var(--lp-4);
+  padding: 8px 16px;
+  border: 1px solid color-mix(in oklab, var(--lp-ink-green) 35%, transparent);
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--lp-ink-green) 9%, var(--lp-surface));
+  font-size: var(--lp-text-sm);
+  line-height: 1.5;
+  text-align: center;
+  color: var(--lp-text-2);
+  animation: tb-back-in var(--lp-dur-4) var(--lp-ease) both;
+}
+.tb-back b {
+  font-weight: 700;
+  color: var(--lp-text);
+}
+
+.tb-back-dot {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 999px;
+  background: var(--lp-solid-green);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--lp-ink-green) 20%, transparent);
+}
+
+@keyframes tb-back-in {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tb-back {
+    animation: none;
+  }
+}

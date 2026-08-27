@@ -1,0 +1,392 @@
+/* ==========================================================================
+   "Everything in the box" — bốn tấm thẻ, bấm vào thì mở ra chi tiết.
+
+   Mọi thứ ở đây mượn hình thức của thẻ thật trong app: nhãn màu ở mép trên, tiêu
+   đề, dòng meta có số checklist ở chân thẻ. Cú bấm mở chi tiết cũng là thao tác
+   thật. Người đọc học sản phẩm bằng chính động tác họ sẽ dùng.
+   ========================================================================== */
+.caps {
+  /* `background-color`, không phải shorthand `background`: khu vực này dùng
+     `.lp-seam-y`, mà shorthand sẽ xoá luôn background-image của nó (xem cảnh
+     báo ở _landing-shared.css) và hai đường kẻ mảnh trên–dưới biến mất. */
+  background-color: var(--lp-bg-sunken);
+}
+
+.deck {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--lp-3);
+  /* `stretch`, KHÔNG phải `start`.
+     Với `start` thì mỗi thẻ chỉ cao bằng nội dung của chính nó, và vì chip xem
+     trước ở hai thẻ sau dài hơn nên chúng xuống hai hàng — đo được 267, 267,
+     288, 288, lệch 21px. Bốn tấm thẻ cùng một hàng mà cao thấp khác nhau thì
+     nhìn ra ngay là xếp ẩu, chứ không ai nghĩ là có chủ ý. */
+  align-items: stretch;
+}
+
+/* Khi một thẻ mở: lưới chuyển sang một cột, thẻ mở nằm trên, ba thẻ còn lại co
+   xuống thành một hàng nhỏ bên dưới (xem `.is-shrunk`). */
+.deck.is-open {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* -------------------- Tấm thẻ -------------------- */
+.tcard {
+  position: relative;
+  /* Cột dọc để mặt thẻ giãn hết chiều cao ô lưới — không có nó thì `stretch` ở
+     trên chỉ kéo cái khung, còn ruột vẫn co lại và chân thẻ vẫn so le. */
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-lg);
+  background: var(--lp-surface);
+  border: 1px solid var(--lp-border);
+  box-shadow: var(--lp-shadow-sm);
+  transition:
+    transform var(--lp-dur-3) var(--lp-ease),
+    box-shadow var(--lp-dur-3) var(--lp-ease),
+    border-color var(--lp-dur-2) var(--lp-ease);
+}
+
+.tcard:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--lp-shadow-md);
+  border-color: var(--lp-border-strong);
+}
+
+/* Thẻ đang mở chiếm trọn bề ngang và nhô hẳn lên — đúng cảm giác "đang xem chi
+   tiết MỘT thẻ", còn ba thẻ kia lùi lại làm nền. */
+.tcard.is-open {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  transform: none;
+  box-shadow: var(--lp-shadow-lg);
+  border-color: var(--lp-border-strong);
+}
+.tcard.is-open:hover {
+  transform: none;
+}
+
+/* Ba thẻ còn lại: thu nhỏ, mờ bớt, và bỏ phần xem trước cho gọn. */
+.tcard.is-shrunk {
+  opacity: 0.62;
+}
+.tcard.is-shrunk:hover {
+  opacity: 1;
+}
+
+.tcard-face {
+  display: flex;
+  flex-direction: column;
+  /* Chiếm hết chiều cao còn lại của thẻ, để dòng chân có chỗ mà tụt xuống đáy. */
+  flex: 1;
+  align-items: flex-start;
+  gap: var(--lp-2);
+  width: 100%;
+  padding: var(--lp-4);
+  border: none;
+  border-radius: inherit;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+.tcard-face:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: -3px;
+  border-radius: var(--radius-lg);
+}
+
+/* Nhãn màu ở mép trên — dấu hiệu nhận dạng rõ nhất của một tấm thẻ Kanban. */
+.tcard-labels {
+  display: flex;
+  gap: 5px;
+}
+.tl {
+  width: 30px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--lp-solid-blue);
+}
+.tl-b {
+  width: 18px;
+  opacity: 0.5;
+}
+.tone-purple .tl {
+  background: var(--lp-solid-purple);
+}
+.tone-green .tl {
+  background: var(--lp-solid-green);
+}
+.tone-amber .tl {
+  background: var(--lp-solid-amber);
+}
+
+.tcard-ico {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  border: 1px solid var(--lp-border);
+  background: var(--lp-bg-sunken);
+}
+.tcard-ico svg {
+  width: 18px;
+  height: 18px;
+}
+.tone-blue .tcard-ico {
+  color: var(--lp-ink-blue);
+}
+.tone-purple .tcard-ico {
+  color: var(--lp-ink-purple);
+}
+.tone-green .tcard-ico {
+  color: var(--lp-ink-green);
+}
+.tone-amber .tcard-ico {
+  color: var(--lp-ink-amber);
+}
+
+.tcard-title {
+  font-size: var(--lp-text-h3);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+  color: var(--lp-text);
+  /* Cân chữ giữa các dòng để không còn một từ đứng lẻ ở dòng cuối. */
+  text-wrap: balance;
+}
+
+.tcard-blurb {
+  font-size: var(--lp-text-sm);
+  line-height: 1.5;
+  color: var(--lp-text-2);
+}
+
+/* -------------------- Ba mục xem trước -------------------- */
+.tcard-peek {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 2px;
+}
+.peek {
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--lp-border);
+  background: var(--lp-bg-sunken);
+  font-size: var(--lp-text-micro);
+  font-weight: 600;
+  color: var(--lp-text-2);
+  /* Không cho vỡ dòng giữa chừng: một chip bị xé làm đôi trông như lỗi. */
+  white-space: nowrap;
+}
+
+/* Thẻ đã mở hoặc đã co lại thì bỏ phần xem trước — mở rồi thì danh sách đầy đủ
+   đã ở ngay dưới, còn thẻ co lại thì cần gọn. */
+.tcard.is-open .tcard-peek,
+.tcard.is-shrunk .tcard-peek {
+  display: none;
+}
+
+/* -------------------- Chân thẻ -------------------- */
+.tcard-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--lp-2);
+  /* `auto` chứ không phải một khoảng cố định: nó đẩy dòng chân xuống ĐÁY thẻ,
+     nên bốn dòng "0/10 · Open card" nằm thẳng hàng nhau dù phần trên của mỗi
+     thẻ dài ngắn khác nhau. Đây mới là thứ mắt đọc ra là "cùng cỡ". */
+  margin-top: auto;
+  padding-top: var(--lp-3);
+  width: 100%;
+  border-top: 1px solid var(--lp-border);
+}
+.meta-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--lp-text-micro);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--lp-text-2);
+}
+.meta-chip svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.tcard-cue {
+  font-size: var(--lp-text-micro);
+  font-weight: 700;
+  color: var(--lp-ink-blue);
+  white-space: nowrap;
+}
+
+/* Thẻ đã mở thì bỏ dòng chân: phần đầu chi tiết ngay bên dưới đã nói số mục và
+   đã có nút đóng riêng. Để cả hai thì trên màn hình có hai chỗ đóng và hai lần
+   đếm cùng một con số. */
+.tcard.is-open .tcard-meta {
+  display: none;
+}
+
+/* -------------------- Chi tiết thẻ -------------------- */
+.tcard-detail {
+  padding: 0 var(--lp-4) var(--lp-4);
+  animation: detail-in var(--lp-dur-3) var(--lp-ease) both;
+}
+@keyframes detail-in {
+  from {
+    opacity: 0;
+    translate: 0 -8px;
+  }
+}
+
+.detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--lp-3);
+  padding: var(--lp-3) 0;
+  border-top: 1px solid var(--lp-border);
+}
+.detail-title {
+  font-size: var(--lp-text-sm);
+  font-weight: 700;
+  color: var(--lp-text-2);
+}
+.detail-close {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--lp-border-strong);
+  border-radius: 10px;
+  background: var(--lp-surface);
+  color: var(--lp-text);
+  cursor: pointer;
+  transition: border-color var(--lp-dur-1) var(--lp-ease);
+}
+.detail-close:hover {
+  border-color: var(--lp-ink-blue);
+}
+.detail-close:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+.detail-close svg {
+  width: 17px;
+  height: 17px;
+}
+
+/* Checklist — dựng đúng dạng checklist trong app: ô tick vuông bo góc. Người đọc
+   thấy trước thứ họ sẽ gặp bên trong sản phẩm. */
+.checklist {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--lp-2) var(--lp-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.check {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 5px 0;
+  font-size: var(--lp-text-sm);
+  line-height: 1.5;
+  color: var(--lp-text-2);
+}
+
+.box {
+  display: grid;
+  place-items: center;
+  width: 19px;
+  height: 19px;
+  margin-top: 1px;
+  border-radius: 6px;
+  background: color-mix(in oklab, var(--lp-ink-green) 22%, transparent);
+}
+.box svg {
+  width: 13px;
+  height: 13px;
+  fill: none;
+  stroke: var(--lp-ink-green);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Từng mục hiện so le khi thẻ mở ra. */
+@media (prefers-reduced-motion: no-preference) {
+  .check {
+    animation: check-in var(--lp-dur-2) var(--lp-ease) both;
+  }
+  .check:nth-child(1) {
+    animation-delay: calc(var(--lp-stagger-tight) * 2);
+  }
+  .check:nth-child(2) {
+    animation-delay: calc(var(--lp-stagger-tight) * 3);
+  }
+  .check:nth-child(3) {
+    animation-delay: calc(var(--lp-stagger-tight) * 4);
+  }
+  .check:nth-child(4) {
+    animation-delay: calc(var(--lp-stagger-tight) * 5);
+  }
+  .check:nth-child(5) {
+    animation-delay: calc(var(--lp-stagger-tight) * 6);
+  }
+  .check:nth-child(n + 6) {
+    animation-delay: calc(var(--lp-stagger-tight) * 7);
+  }
+  @keyframes check-in {
+    from {
+      opacity: 0;
+      translate: -8px 0;
+    }
+  }
+}
+
+/* -------------------- Màn hình hẹp -------------------- */
+@media (max-width: 900px) {
+  .deck,
+  .deck.is-open {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .checklist {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .deck,
+  .deck.is-open {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  /* Thẻ mở phải nằm trên cùng, không thì nó rơi vào giữa dãy và người dùng bấm
+     xong không thấy chi tiết đâu. */
+  .tcard.is-open {
+    grid-row: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tcard,
+  .detail-close {
+    transition: none;
+  }
+  .tcard:hover {
+    transform: none;
+  }
+  .tcard-detail {
+    animation: none;
+  }
+}

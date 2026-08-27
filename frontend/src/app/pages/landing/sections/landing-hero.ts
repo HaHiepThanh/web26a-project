@@ -1,8 +1,21 @@
-import { Component, ElementRef, OnDestroy, afterNextRender, inject, signal } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  OnDestroy,
+  afterNextRender,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { LucideArrowRight, LucideCheck, LucideSparkles, LucideZap } from '@lucide/angular';
 import { MagneticDirective } from '../../../directives/magnetic.directive';
+import { LineRevealDirective } from '../../../directives/line-reveal.directive';
 import { RevealDirective } from '../../../directives/reveal.directive';
+
+const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 
 /** Một chỗ đáp: cột nào (0–2) và làn nào (0 = trên, 1 = dưới). */
 interface Spot {
@@ -21,10 +34,20 @@ const PAUSE_MAX = 4200;
  * màn hình mật độ cao, không đổi được theo theme sáng/tối, và không kể được câu
  * chuyện "việc chảy từ trái sang phải" bằng chuyển động.
  *
- * ⚠️ Đây là bảng để NGẮM, không phải để bấm. Bản trước từng cho kéo thả và thêm
- * thẻ thật; bỏ đi vì một trang giới thiệu cần dẫn mắt người đọc đi tiếp xuống
- * dưới chứ không giữ họ lại nghịch. Đổi lại, cấu trúc tấm thẻ vẫn bám sát thẻ
- * thật (components/board/card-item) nên nhìn vào là biết sản phẩm ra sao.
+ * BẢNG NÀY KÉO THẢ ĐƯỢC — nhưng có giới hạn, và giới hạn mới là phần quan trọng.
+ *
+ * Một bản trước từng cho kéo thả rồi bị gỡ, với lý do đúng: trang giới thiệu
+ * phải đẩy người đọc đi xuống, không giữ họ lại nghịch. Lần này giữ nguyên tinh
+ * thần đó bằng cách cho ĐÚNG MỘT hành động — dời một tấm thẻ — và bắt nó phục
+ * vụ câu quảng cáo ngay phía trên: hero viết "Dragging is saving, there is no
+ * Save button", thả tay ra là hiện chữ "Saved". Người đọc vừa tự chứng minh câu
+ * đó cho chính mình trong hai giây, rồi đi tiếp.
+ *
+ * Không thêm thẻ, không sửa chữ, không xoá — những thứ đó mới biến trang thành
+ * sân chơi. Ở đây chỉ có một động tác, và nó là chính giá trị cốt lõi.
+ *
+ * Cấu trúc tấm thẻ bám sát thẻ thật (components/board/card-item) nên nhìn vào là
+ * biết sản phẩm ra sao.
  *
  * PHÂN CÔNG GIỮA JS VÀ CSS — phần đáng chú ý nhất ở đây:
  *
@@ -41,7 +64,7 @@ const PAUSE_MAX = 4200;
   selector: 'app-landing-hero',
   imports: [
     RouterLink,
-    RevealDirective,
+    LineRevealDirective, RevealDirective,
     MagneticDirective,
     LucideArrowRight,
     LucideCheck,
@@ -74,7 +97,14 @@ export class LandingHero implements OnDestroy {
    */
   readonly blooms = signal<{ id: number; col: number }[]>([]);
 
+  /** Tên ba cột — dùng cho nhãn trợ năng và cho câu thông báo khi dời thẻ. */
+  readonly columnNames = ['To do', 'In progress', 'Done'];
+  readonly cardTitles = ['Finish the demo slides', 'Lock in the brand palette'];
+
   private readonly host = inject(ElementRef<HTMLElement>);
+  private readonly grid = viewChild<ElementRef<HTMLElement>>('grid');
+  private readonly stage = viewChild<ElementRef<HTMLElement>>('stage');
+  private gsapCtx?: gsap.Context;
   private bloomId = 0;
   private timer?: ReturnType<typeof setTimeout>;
   private liftTimer?: ReturnType<typeof setTimeout>;
@@ -86,6 +116,8 @@ export class LandingHero implements OnDestroy {
       // Người đã xin giảm chuyển động thì hai thẻ đứng yên ở chỗ ban đầu.
       const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
       if (reduced || typeof IntersectionObserver === 'undefined') return;
+
+      this.buildScrollScene();
 
       // Chỉ diễn khi bảng còn trong khung nhìn. Người đã cuộn xuống tận chân
       // trang thì không có lý do gì để một cái hẹn giờ vẫn chạy ở trên đầu.
@@ -100,6 +132,27 @@ export class LandingHero implements OnDestroy {
       );
       this.observer.observe(this.host.nativeElement as HTMLElement);
     });
+  }
+
+  /**
+   * Đặt một thẻ vào ô đích. Nếu ô đó đang có thẻ kia thì HAI THẺ ĐỔI CHỖ, chứ
+   * không từ chối cú thả — người dùng đã ra hiệu rõ ràng là muốn đưa thẻ tới đó,
+   * bật lại là thất hứa với động tác của họ.
+   */
+  private place(index: number, target: Spot): void {
+    const spots = this.spots();
+    const me = spots[index];
+    if (me.col === target.col && me.lane === target.lane) return;
+
+    const otherIndex = 1 - index;
+    const other = spots[otherIndex];
+    const swap = other.col === target.col && other.lane === target.lane;
+
+    this.spots.update((list) =>
+      list.map((v, i) => (i === index ? target : swap && i === otherIndex ? me : v)),
+    );
+
+    this.bloom(target.col);
   }
 
   private start(): void {
@@ -203,8 +256,55 @@ export class LandingHero implements OnDestroy {
     }, 1400);
   }
 
+  /**
+   * Bảng NGẢ RA SAU VÀ LÙI XA khi người dùng cuộn qua hero.
+   *
+   * Khác mọi chuyển động còn lại trên trang ở một điểm quyết định: nó CHẠY THEO
+   * THANH CUỘN (`scrub`), không diễn một lần rồi thôi. Vị trí của hoạt ảnh CHÍNH
+   * LÀ vị trí cuộn — cuộn ngược thì bảng dựng lại. Người dùng điều khiển nó chứ
+   * không xem nó, và đó là thứ tạo cảm giác trang "có chiều sâu vật lý" thay vì
+   * chỉ có mấy hiệu ứng vào-ra.
+   *
+   * ⚠️ Bám vào `.board-stage`, KHÔNG bám `.board-frame`. Khung đã mang sẵn một
+   * góc nghiêng của CSS; GSAP ghi thẳng vào `transform` nên bám vào đó là xoá
+   * mất góc nghiêng ấy. `.board-stage` không có transform nào, và hai transform
+   * lồng nhau thì nhân được với nhau.
+   *
+   * `gsap.context()` gom mọi thứ tạo ra bên trong lại, nên `revert()` lúc huỷ
+   * component dọn sạch cả tween lẫn trigger lẫn style đã ghi — không cần nhớ
+   * từng cái một.
+   */
+  private buildScrollScene(): void {
+    const stage = this.stage()?.nativeElement;
+    if (!stage) return;
+
+    gsap.registerPlugin(ScrollTrigger);
+
+    this.gsapCtx = gsap.context(() => {
+      gsap.to(stage, {
+        rotateX: 14,
+        scale: 0.9,
+        yPercent: -6,
+        opacity: 0.72,
+        // `none` chứ không phải một đường cong: với hoạt ảnh chạy theo cuộn,
+        // đường cong sẽ làm bảng đi nhanh chậm không khớp tay cuộn — cảm giác
+        // như thanh cuộn bị trượt côn.
+        ease: 'none',
+        scrollTrigger: {
+          trigger: this.host.nativeElement,
+          // Bắt đầu lúc đáy hero chạm đáy màn hình, kết thúc lúc đáy hero rời
+          // khỏi đỉnh: đúng quãng người dùng đang rời khu vực này.
+          start: 'bottom bottom',
+          end: 'bottom top',
+          scrub: true,
+        },
+      });
+    }, this.host.nativeElement);
+  }
+
   ngOnDestroy(): void {
     this.observer?.disconnect();
     this.stop();
+    this.gsapCtx?.revert();
   }
 }

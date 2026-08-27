@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LucideArrowRight } from '@lucide/angular';
 import { MagneticDirective } from '../../../directives/magnetic.directive';
+import { LineRevealDirective } from '../../../directives/line-reveal.directive';
 import { RevealDirective } from '../../../directives/reveal.directive';
 
 /**
@@ -13,7 +14,7 @@ import { RevealDirective } from '../../../directives/reveal.directive';
  */
 @Component({
   selector: 'app-landing-cta',
-  imports: [RouterLink, RevealDirective, MagneticDirective, LucideArrowRight],
+  imports: [RouterLink, LineRevealDirective, RevealDirective, MagneticDirective, LucideArrowRight],
   templateUrl: './landing-cta.html',
   styleUrls: ['../_landing-shared.css', './landing-cta.css'],
 })
