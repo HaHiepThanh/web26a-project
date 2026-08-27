@@ -5,6 +5,7 @@ import {
   createUserWithEmailAndPassword,
   linkWithCredential,
   reauthenticateWithCredential,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
@@ -249,6 +250,14 @@ export class AuthService {
     if (!user?.email) throw new Error('You need to sign in first.');
     const credential = EmailAuthProvider.credential(user.email, newPassword);
     await linkWithCredential(user, credential);
+  }
+
+  /**
+   * Gửi email đặt lại mật khẩu qua Firebase Auth.
+   */
+  async sendPasswordReset(email: string): Promise<void> {
+    if (!this.firebase?.auth) throw new Error('Firebase is not configured.');
+    await sendPasswordResetEmail(this.firebase.auth, email.trim());
   }
 
   /**
