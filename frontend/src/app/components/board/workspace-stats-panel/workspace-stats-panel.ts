@@ -21,7 +21,7 @@ type ActionGroup = 'all' | 'created' | 'moved' | 'assigned' | 'updated' | 'delet
 // Mỗi loại hành động một màu badge tròn (bg nhạt + icon đậm), thay cho emoji
 // cũ để nhất quán với bộ icon lucide dùng chung toàn app. Dùng thẳng bảng màu
 // gốc của Tailwind (green/blue/red/yellow) thay vì success/info/warning/error
-// của theme daisyUI — winter/sunset tô 4 màu đó pastel có chủ đích nên đọc
+// của theme daisyUI — winter/night tô 4 màu đó pastel có chủ đích nên đọc
 // nhạt trên nền badge nhỏ, không "pha" gì thêm cho đậm lên nữa.
 const ACTION_ICON_CLASS: Record<ActivityActionType, string> = {
   card_created: 'bg-green-500/15 text-green-600',

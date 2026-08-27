@@ -11,7 +11,7 @@ const STORAGE_KEY = 'trello_theme';
  */
 const DAISY_THEME: Record<Theme, string> = {
   light: 'winter',
-  dark: 'sunset',
+  dark: 'night',
 };
 
 /**

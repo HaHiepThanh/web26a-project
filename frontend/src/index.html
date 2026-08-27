@@ -72,7 +72,7 @@
           var saved = localStorage.getItem('trello_theme');
           var dark =
             saved === 'dark' || (!saved && matchMedia('(prefers-color-scheme: dark)').matches);
-          document.documentElement.setAttribute('data-theme', dark ? 'sunset' : 'winter');
+          document.documentElement.setAttribute('data-theme', dark ? 'night' : 'winter');
           document.documentElement.classList.toggle('dark', dark);
         } catch (e) {
           /* Trình duyệt chặn localStorage — cứ để nguyên data-theme="winter" mặc định. */

@@ -1,11 +1,11 @@
 /* You can add global styles to this file, and also import other style files */
 
 @import 'tailwindcss';
-/* Bộ theme của app = 2 theme dựng sẵn của daisyUI: winter (sáng) / sunset (tối).
-   ThemeService ghi thẳng 'winter'/'sunset' vào [data-theme] nên chính khối CSS
+/* Bộ theme của app = 2 theme dựng sẵn của daisyUI: winter (sáng) / night (tối).
+   ThemeService ghi thẳng 'winter'/'night' vào [data-theme] nên chính khối CSS
    của daisyUI khai báo toàn bộ --color-* — app không tự bịa màu nữa. */
 @plugin 'daisyui' {
-  themes: winter --default, sunset --prefersdark;
+  themes: winter --default, night --prefersdark;
 }
 
 /* ThemeService khoá cứng light-mode (không bao giờ set class .dark lên <html>),
@@ -33,14 +33,15 @@
    Design tokens.
 
    Màu KHÔNG còn được khai ở đây nữa: mọi giá trị dưới đây đều dẫn xuất từ
-   --color-* do chính theme daisyUI đang bật cung cấp (winter khi sáng, sunset
+   --color-* do chính theme daisyUI đang bật cung cấp (winter khi sáng, night
    khi tối). Nhờ vậy chỉ cần MỘT khối :root — đổi [data-theme] là cả bộ token
    tự đổi theo, không phải chép tay hai bảng màu song song như trước.
 
    ⚠️ Tên biến giữ nguyên (--accent-blue, --accent-purple...) để không phải sửa
    hàng trăm chỗ đang dùng chúng, nhưng giá trị giờ là primary/secondary của
-   theme. Ở sunset, primary là CAM chứ không phải xanh — tên chỉ còn mang nghĩa
-   "màu nhấn số 1 / số 2", không còn tả đúng sắc màu.
+   theme. Với cặp winter/night hiện tại thì tên vẫn tả đúng (primary xanh lam,
+   secondary ngả chàm/tím ở cả hai), nhưng chúng chỉ mang nghĩa "màu nhấn số 1 /
+   số 2" — đổi sang theme khác là tên có thể lệch hẳn sắc màu.
    ========================================================================== */
 :root {
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -67,6 +68,11 @@
 
   --border-color: var(--color-base-300);
   --border-subtle: var(--color-base-200);
+  /* Viền khi rê chuột — mặc định của thẻ/ô nhập trước giờ ghi thẳng
+     `hover:border-base-content/20` trong template; tách thành token để theme tối
+     nâng riêng được mà không đụng gì tới theme sáng (giá trị dưới đây đúng bằng
+     `border-base-content/20` cũ). */
+  --border-color-hover: color-mix(in oklab, var(--color-base-content) 20%, transparent);
 
   /* Ba bậc chữ = màu chữ của theme pha loãng dần. Pha với transparent (không
      phải với nền) nên vẫn đúng khi đặt trên bất kỳ bề mặt base-* nào. */
@@ -76,7 +82,7 @@
   --text-white: var(--color-primary-content);
 
   /* Màu nhấn. Bản -hover kéo về phía màu CHỮ của theme: trên winter màu chữ tối
-     nên hover đậm lại, trên sunset màu chữ sáng nên hover sáng lên — tự đảo
+     nên hover đậm lại, trên night màu chữ sáng nên hover sáng lên — tự đảo
      chiều đúng cho cả hai theme mà không cần khai riêng. */
   --accent-blue: var(--color-primary);
   --accent-blue-hover: color-mix(in oklab, var(--color-primary) 82%, var(--color-base-content));
@@ -126,12 +132,74 @@
 }
 
 /* Đổ bóng trên nền tối phải đậm hơn nhiều mới thấy được — đây là thứ duy nhất
-   không dẫn xuất được từ bảng màu nên vẫn phải khai riêng cho sunset. */
-[data-theme='sunset'] {
+   không dẫn xuất được từ bảng màu nên vẫn phải khai riêng cho night. */
+[data-theme='night'] {
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6);
+}
+
+/* ==========================================================================
+   VIỀN TRÊN NỀN TỐI — sửa riêng cho `night`, theme sáng không đụng tới.
+
+   Vấn đề: cả app lấy base-300 làm màu viền (token --border-color và ~140 chỗ
+   ghi thẳng class `border-base-300`). Ở winter điều đó đúng — base-300 là bậc
+   TỐI nhất nên viền đậm hơn mặt nền trắng. Ở night thì lật ngược: base-300
+   (L 17.9%) tối hơn cả base-100 (L 20.8%) lẫn base-200 (L 19.3%), nên viền lún
+   vào nền thay vì nổi lên. Đo thật: 1.06:1 với mặt thẻ — coi như không có viền.
+   Đó là lý do ô nhập trông như không có khung và các thẻ trong board dính liền
+   thành một mảng.
+
+   Cách sửa: trên nền tối, viền phải SÁNG HƠN mặt nền. Lấy màu chữ của theme pha
+   loãng — cùng công thức daisyUI dùng cho .input — nhưng kéo từ 20% (ra đúng
+   3:1, tức sàn WCAG 1.4.11 cho thành phần phi văn bản, mỏng 1px thì vẫn khó
+   thấy) lên 28% ≈ 3.79:1. Bản hover 45% ≈ 5.49:1, sáng gấp ~1.6 lần bản thường
+   nên rê chuột vào vẫn thấy rõ một bậc.
+   ========================================================================== */
+[data-theme='night'] {
+  --border-color: color-mix(in oklab, var(--color-base-content) 28%, transparent);
+  --border-color-hover: color-mix(in oklab, var(--color-base-content) 45%, transparent);
+}
+
+/* Vế thứ hai: ~140 chỗ ghi thẳng `border-base-300` trong template (kể cả class
+   binding của Angular như `[class.border-base-300]="!nameError()"`, không sửa
+   bằng token được) nên phải chặn ngay ở utility. Đặt TRONG @layer utilities chứ
+   không để ngoài: nằm ngoài layer thì đè luôn cả `focus:border-primary` /
+   `hover:border-*` — mất hết phản hồi trạng thái. Ở trong, cùng layer với
+   Tailwind nên chỉ so độ đặc hiệu: (0,1,1) của rule này thắng `.border-base-300`
+   trần (0,1,0) nhưng thua mọi biến thể có pseudo-class (0,2,0). */
+@layer utilities {
+  [data-theme='night'] .border-base-300 {
+    border-color: var(--border-color);
+  }
+}
+
+/* Vế thứ ba: ô nhập KHÔNG ghi class viền nào, để daisyUI tự dựng. Cả .input,
+   .textarea và .select đều đọc chung một biến --input-color (mặc định
+   base-content 20%), nên một dòng là đủ cho cả ba.
+
+   :not() dài dòng nhưng bắt buộc: các biến thể màu (.input-error đang dùng ở 12
+   chỗ, .textarea-error 1 chỗ) cũng gán --input-color với độ đặc hiệu (0,1,0),
+   thấp hơn rule này — không loại trừ thì viền báo lỗi đỏ bị nuốt mất.
+   Có :focus/:focus-within trong danh sách :not() là chủ ý, không thừa: :not()
+   TÍNH độ đặc hiệu (bằng phần tử đặc hiệu nhất bên trong), nên rule này là
+   (0,3,0) — cao hơn `.input:focus{--input-color: base-content}` (0,2,0) của
+   daisyUI. Không loại trừ thì ô nhập đang focus giữ nguyên viền/outline xám mờ,
+   mất luôn dấu hiệu con trỏ đang ở đâu. Cho :focus vào :not() thì phần tử đang
+   focus đơn giản là không khớp rule này, daisyUI lo tiếp — một rule, một danh
+   sách, không phải viết thêm rule thứ hai để giành lại. */
+[data-theme='night']
+  :is(.input, .textarea, .select):not(
+    :focus, :focus-within,
+    .input-ghost, .input-neutral, .input-primary, .input-secondary, .input-accent,
+    .input-info, .input-success, .input-warning, .input-error,
+    .textarea-ghost, .textarea-neutral, .textarea-primary, .textarea-secondary,
+    .textarea-accent, .textarea-info, .textarea-success, .textarea-warning, .textarea-error,
+    .select-ghost, .select-neutral, .select-primary, .select-secondary, .select-accent,
+    .select-info, .select-success, .select-warning, .select-error
+  ) {
+  --input-color: var(--border-color);
 }
 
 /* ==========================================================================
