@@ -3,7 +3,7 @@
 
     <!-- Header -->
     <div class="mb-6 text-center">
-      <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-content shadow-lg">
+      <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-md bg-primary text-primary-content shadow-lg">
         <svg lucideSparkles class="h-7 w-7" [strokeWidth]="2.2"></svg>
       </div>
       <h1 class="text-2xl font-black tracking-tight text-base-content">
@@ -16,7 +16,7 @@
 
     <!-- Lời mời đang chờ — tới ngay qua WebSocket, không cần F5 -->
     @if (invites().length) {
-    <div class="mb-4 rounded-3xl border-2 border-primary/40 bg-base-100 p-5 shadow-xl">
+    <div class="mb-4 rounded-md border-2 border-primary/40 bg-base-100 p-5 shadow-xl">
       <h2 class="mb-1 text-sm font-black text-base-content">
         You have {{ invites().length }} invitation(s)
       </h2>
@@ -25,7 +25,7 @@
       </p>
       <div class="flex flex-col gap-2">
         @for (inv of invites(); track inv.id) {
-        <div class="rounded-2xl border border-base-300 bg-base-200 p-3">
+        <div class="rounded-md border border-base-300 bg-base-200 p-3">
           <div class="text-xs font-bold text-base-content">
             {{ inv.fromUserName }} invited you to "{{ inv.orgName }}"
           </div>
@@ -35,11 +35,11 @@
             Joining as {{ inv.role === 'admin' ? 'Admin' : 'Member' }}
           </div>
           <div class="mt-2.5 flex gap-2">
-            <button type="button" class="btn btn-success btn-sm flex-1 text-white"
+            <button type="button" class="btn btn-success btn-sm rounded-md flex-1 text-white"
               [disabled]="respondingId() === inv.id" (click)="acceptInvite(inv.id)">
               <svg lucideCheck class="h-3.5 w-3.5" [strokeWidth]="3"></svg> Accept
             </button>
-            <button type="button" class="btn btn-ghost btn-sm flex-1"
+            <button type="button" class="btn btn-ghost btn-sm rounded-md flex-1"
               [disabled]="respondingId() === inv.id" (click)="declineInvite(inv.id)">
               Decline
             </button>
@@ -50,7 +50,7 @@
     </div>
     }
 
-    <div class="rounded-3xl border-2 border-base-300 bg-base-100 p-6 shadow-xl">
+    <div class="rounded-md border-2 border-base-300 bg-base-100 p-6 shadow-xl">
       <form (ngSubmit)="onSubmit()">
 
         <!-- Tên tổ chức -->
@@ -60,7 +60,7 @@
             Organization name <span class="text-error">*</span>
           </label>
           <input type="text" id="onboarding-name" maxlength="50"
-            class="input w-full rounded-xl font-bold text-base-content bg-base-100 shadow-xs text-sm"
+            class="input w-full rounded-md font-bold text-base-content bg-base-100 shadow-xs text-sm"
             [class.border-error]="nameError()"
             [class.border-base-300]="!nameError()"
             [ngModel]="nameInput()" (ngModelChange)="onNameChange($event)" name="orgName" />
@@ -82,7 +82,7 @@
             Your custom URL <span class="text-error">*</span>
           </label>
 
-          <div class="flex items-stretch overflow-hidden rounded-xl border-2 bg-base-100 shadow-xs"
+          <div class="flex items-stretch overflow-hidden rounded-md border-2 bg-base-100 shadow-xs"
             [class.border-error]="slugError()"
             [class.border-success]="slugOk()"
             [class.border-base-300]="!slugError() && !slugOk()">
@@ -116,13 +116,13 @@
           </p>
           }
 
-          <div class="alert alert-warning alert-soft mt-2.5 items-start gap-2 p-2.5 text-2xs">
+          <div class="alert alert-warning alert-soft mt-2.5 rounded-md items-start gap-2 p-2.5 text-2xs">
             <svg lucideTriangleAlert class="mt-0.5 h-3.5 w-3.5 shrink-0" [strokeWidth]="2.4"></svg>
             <span><strong>Cannot be changed after creation.</strong> Changing the URL later would break any links you've already shared, so choose carefully.</span>
           </div>
         </div>
 
-        <button type="submit" class="btn btn-primary btn-block font-black shadow-sm"
+        <button type="submit" class="btn btn-primary btn-block rounded-md font-black shadow-sm"
           [disabled]="submitting() || !slugOk() || !nameInput().trim()">
           <svg lucideBuilding2 class="h-4 w-4" [strokeWidth]="2.4"></svg>
           Create Organization &amp; Get Started
@@ -133,7 +133,7 @@
     <!-- Thoát ra: tránh kẹt cứng nếu đăng nhập nhầm tài khoản -->
     <div class="mt-4 text-center">
       <button type="button"
-        class="btn btn-ghost btn-sm gap-1.5 text-xs font-bold text-base-content/60 hover:text-base-content"
+        class="btn btn-ghost btn-sm rounded-md gap-1.5 text-xs font-bold text-base-content/60 hover:text-base-content"
         (click)="onLogout()">
         <svg lucideLogOut class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg>
         Sign in with a different account

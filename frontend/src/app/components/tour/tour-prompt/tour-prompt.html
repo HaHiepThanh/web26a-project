@@ -3,7 +3,7 @@
   <div class="modal-box max-w-[460px] border border-base-300">
 
     <div class="flex items-start gap-3">
-      <span class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
+      <span class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md"
             [class]="seedOpen() ? 'bg-primary/10 text-primary' : 'bg-warning/15 text-warning'">
         @if (seedOpen()) {
         <svg lucideSparkles class="h-5 w-5" [strokeWidth]="2.2"></svg>
@@ -33,11 +33,11 @@
     </div>
 
     <div class="mt-6 flex items-center justify-end gap-2">
-      <button type="button" class="btn btn-ghost btn-sm font-bold" [disabled]="busy()"
+      <button type="button" class="btn btn-ghost btn-sm rounded-md font-bold" [disabled]="busy()"
               (click)="onNo()">
         @if (seedOpen()) { No thanks } @else { Keep them }
       </button>
-      <button type="button" class="btn btn-primary btn-sm font-black px-5" [disabled]="busy()"
+      <button type="button" class="btn btn-primary btn-sm rounded-md font-black px-5" [disabled]="busy()"
               (click)="onYes()">
         @if (busy()) {
           <span class="loading loading-spinner h-3.5 w-3.5"></span>

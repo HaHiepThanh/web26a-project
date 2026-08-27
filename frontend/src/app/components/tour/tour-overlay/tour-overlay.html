@@ -114,19 +114,19 @@
   }
 
   <div class="tour-actions">
-    <button type="button" class="btn btn-ghost btn-xs gap-1 font-bold"
+    <button type="button" class="btn btn-ghost btn-xs rounded-md gap-1 font-bold"
             [disabled]="!canGoBack()" (click)="onBack()">
       <svg lucideArrowLeft class="h-3 w-3" [strokeWidth]="2.4"></svg> Back
     </button>
     @if (needsAck()) {
     <!-- Bước tầng 2: người dùng tự quyết khi nào đi tiếp. Tự nhảy ngay lúc họ
          vừa mở bảng lọc là cướp mất đúng khoảnh khắc bài học sắp diễn ra. -->
-    <button type="button" class="btn btn-primary btn-xs gap-1 font-black px-4" (click)="onAck()">
+    <button type="button" class="btn btn-primary btn-xs rounded-md gap-1 font-black px-4" (click)="onAck()">
       {{ isLastStep() ? 'Finish' : 'Next' }}
       <svg lucideArrowRight class="h-3 w-3" [strokeWidth]="2.4"></svg>
     </button>
     } @else {
-    <button type="button" class="btn btn-ghost btn-xs gap-1 font-bold" (click)="onSkip()">
+    <button type="button" class="btn btn-ghost btn-xs rounded-md gap-1 font-bold" (click)="onSkip()">
       Skip <svg lucideArrowRight class="h-3 w-3" [strokeWidth]="2.4"></svg>
     </button>
     }
@@ -144,7 +144,7 @@
     {{ loi }}
   </p>
   @if (canJumpToWorkspace()) {
-  <button type="button" class="btn btn-primary btn-xs mt-2.5 w-full font-black"
+  <button type="button" class="btn btn-primary btn-xs rounded-md mt-2.5 w-full font-black"
           (click)="onJumpToWorkspace()">
     Take me there
   </button>
