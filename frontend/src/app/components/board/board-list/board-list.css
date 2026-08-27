@@ -14,13 +14,13 @@
    so view-encapsulated styles need ::ng-deep to reach it. */
 ::ng-deep .cdk-drag-preview {
   box-shadow: var(--shadow-lg);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   cursor: grabbing;
 }
 
 .drag-placeholder {
   height: 52px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   border: 2px dashed var(--accent-blue);
   background: var(--accent-blue-soft);
 }

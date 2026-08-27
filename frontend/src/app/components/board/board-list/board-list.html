@@ -18,7 +18,7 @@
   <!-- `max-h-full` CHỈ cho chế độ cột: cột cần bám trần khung board rồi tự cuộn
        dọc bên trong. Chế độ hàng thì ngược lại — hàng phải cao đúng bằng thẻ cao
        nhất, ghim trần vào đây là thẻ bị cắt cụt. -->
-  <div class="flex w-full flex-col overflow-hidden rounded-b-box rounded-t-none bg-base-100/90 shadow-md backdrop-blur-sm"
+  <div class="flex w-full flex-col overflow-hidden rounded-b-md rounded-t-none bg-base-100/90 shadow-md backdrop-blur-sm"
        [class.max-h-full]="orientation() === 'column'">
     <app-list-header
       [list]="list()"
