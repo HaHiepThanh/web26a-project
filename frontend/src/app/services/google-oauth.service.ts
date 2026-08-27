@@ -135,8 +135,8 @@ export class GoogleOauthService {
       await this.goiUnlink(user, 'google.com');
       await this.baoBackend();
       return null;
-    } catch {
-      return 'Could not unlink the Google account. Try again.';
+    } catch (e) {
+      return this.doiLoi(e) || 'Could not unlink the Google account. Try setting a password first.';
     }
   }
 

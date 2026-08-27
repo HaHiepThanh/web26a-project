@@ -121,15 +121,23 @@
     </div>
   </form>
 
-  <!-- 3. Đổi mật khẩu (Xác thực mật khẩu cũ) -->
+  <!-- 3. Đổi / Thiết lập mật khẩu -->
   <div class="rounded-md border border-base-300 bg-base-100 p-6 shadow-xs space-y-4">
     <div>
-      <h3 class="text-sm font-black uppercase tracking-wider text-base-content/80">Change password</h3>
-      <p class="text-xs text-base-content/60 mt-0.5">Verify your current password to set a new one.</p>
+      <h3 class="text-sm font-black uppercase tracking-wider text-base-content/80">
+        {{ hasPasswordAuth() ? 'Change password' : 'Set a password' }}
+      </h3>
+      <p class="text-xs text-base-content/60 mt-0.5">
+        {{ hasPasswordAuth()
+          ? 'Verify your current password to set a new one.'
+          : 'You signed in with Google and do not have a password yet. Set a password below to enable signing in with email and password.'
+        }}
+      </p>
     </div>
 
     <form [formGroup]="passwordForm" (ngSubmit)="onSubmitPassword()" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      <!-- Mật khẩu hiện tại (Cũ) -->
+      <!-- Mật khẩu hiện tại (Cũ) — chỉ hiện khi đã có mật khẩu -->
+      @if (hasPasswordAuth()) {
       <div class="flex flex-col gap-1.5 sm:col-span-2">
         <label class="text-xs font-bold text-base-content/80" for="currentPassword">Current password *</label>
         <input id="currentPassword" type="password"
@@ -139,10 +147,13 @@
         <span class="text-2xs font-bold text-error">Please enter your current password to verify.</span>
         }
       </div>
+      }
 
       <!-- Mật khẩu mới -->
-      <div class="flex flex-col gap-1.5">
-        <label class="text-xs font-bold text-base-content/80" for="newPassword">New password *</label>
+      <div class="flex flex-col gap-1.5" [class.sm:col-span-2]="!hasPasswordAuth()">
+        <label class="text-xs font-bold text-base-content/80" for="newPassword">
+          {{ hasPasswordAuth() ? 'New password *' : 'Create password *' }}
+        </label>
         <input id="newPassword" type="password"
           class="input input-bordered input-sm rounded-md w-full border-base-300 font-semibold text-[12px]"
           formControlName="newPassword" placeholder="At least 8 characters..." />
@@ -174,11 +185,13 @@
       </div>
 
       <!-- Xác nhận mật khẩu mới -->
-      <div class="flex flex-col gap-1.5">
-        <label class="text-xs font-bold text-base-content/80" for="confirmPassword">Confirm new password *</label>
+      <div class="flex flex-col gap-1.5" [class.sm:col-span-2]="!hasPasswordAuth()">
+        <label class="text-xs font-bold text-base-content/80" for="confirmPassword">
+          {{ hasPasswordAuth() ? 'Confirm new password *' : 'Confirm password *' }}
+        </label>
         <input id="confirmPassword" type="password"
           class="input input-bordered input-sm rounded-md w-full border-base-300 font-semibold text-[12px]"
-          formControlName="confirmPassword" placeholder="Re-enter your new password..." />
+          formControlName="confirmPassword" placeholder="Re-enter your password..." />
         @if (passwordForm.hasError('passwordMismatch') && passwordForm.get('confirmPassword')?.touched) {
         <span class="text-2xs font-bold text-error">Passwords do not match.</span>
         }
@@ -187,7 +200,8 @@
       <div class="sm:col-span-2 flex justify-end pt-1">
         <button type="submit" class="btn btn-primary btn-sm rounded-md gap-1.5 px-5 font-black text-[12px] shadow-xs"
           [disabled]="passwordForm.invalid || savingPassword()">
-          <svg lucideLock class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg> Update password
+          <svg lucideLock class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg>
+          {{ hasPasswordAuth() ? 'Update password' : 'Create password' }}
         </button>
       </div>
     </form>
@@ -212,16 +226,28 @@
     </div>
 
     @if (googleEmail(); as linked) {
-    <div class="flex flex-wrap items-center gap-2 rounded-md border border-success/30 bg-success/10 px-4 py-3">
-      <svg class="h-4 w-4 shrink-0 text-success" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-        stroke-width="2.4">
-        <path d="M20 6L9 17l-5-5" />
-      </svg>
-      <span class="min-w-0 flex-1 truncate text-xs font-bold text-base-content">{{ linked }}</span>
-      <button type="button" class="btn btn-ghost btn-xs rounded-md font-bold" [disabled]="googleBusy()"
-        (click)="unlinkGoogle()">
-        Unlink
-      </button>
+    <div>
+      <div class="flex flex-wrap items-center gap-2 rounded-md border border-success/30 bg-success/10 px-4 py-3">
+        <svg class="h-4 w-4 shrink-0 text-success" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2.4">
+          <path d="M20 6L9 17l-5-5" />
+        </svg>
+        <span class="min-w-0 flex-1 truncate text-xs font-bold text-base-content">{{ linked }}</span>
+        <button type="button" class="btn btn-ghost btn-xs rounded-md font-bold"
+          [disabled]="googleBusy() || !hasPasswordAuth()"
+          [title]="!hasPasswordAuth() ? 'You must set a password above before unlinking your Google account.' : 'Unlink Google account'"
+          (click)="unlinkGoogle()">
+          Unlink
+        </button>
+      </div>
+      @if (!hasPasswordAuth()) {
+      <p class="mt-2 text-2xs text-warning font-medium flex items-center gap-1.5">
+        <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <span>Please set a password above before unlinking Google to avoid losing access to your account.</span>
+      </p>
+      }
     </div>
     } @else {
     <div>

@@ -3,6 +3,7 @@ import {
   EmailAuthProvider,
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
+  linkWithCredential,
   reauthenticateWithCredential,
   signInWithEmailAndPassword,
   signInWithPopup,
@@ -230,6 +231,24 @@ export class AuthService {
     if (!this.firebase?.auth) throw new Error('Firebase is not configured.');
     await signInWithEmailAndPassword(this.firebase.auth, email.trim(), password);
     return this.syncFromBackend();
+  }
+
+  /** Kiểm tra user hiện tại đã có phương thức đăng nhập bằng Mật khẩu chưa. */
+  hasPasswordAuth(): boolean {
+    const user = this.firebase?.auth?.currentUser;
+    if (!user) return false;
+    return user.providerData.some((p) => p.providerId === 'password');
+  }
+
+  /**
+   * Thiết lập mật khẩu LẦN ĐẦU cho tài khoản đăng nhập bằng Google (chưa có mật khẩu).
+   * Dùng `linkWithCredential` để gắn provider `password` vào tài khoản Firebase Auth.
+   */
+  async setPassword(newPassword: string): Promise<void> {
+    const user = this.firebase?.auth?.currentUser;
+    if (!user?.email) throw new Error('You need to sign in first.');
+    const credential = EmailAuthProvider.credential(user.email, newPassword);
+    await linkWithCredential(user, credential);
   }
 
   /**

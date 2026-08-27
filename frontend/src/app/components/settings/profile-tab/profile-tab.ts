@@ -153,6 +153,9 @@ export class ProfileTab {
     phone: ['', [Validators.pattern(/^(0|\+84)[0-9]{9,10}$/)]],
   });
 
+  /** Trạng thái tài khoản đã có mật khẩu hay chỉ dùng Google. */
+  readonly hasPasswordAuth = signal<boolean>(true);
+
   readonly passwordForm: FormGroup = this.fb.group(
     {
       currentPassword: ['', [Validators.required]],
@@ -190,6 +193,15 @@ export class ProfileTab {
     effect(() => {
       const user = this.currentUser();
       if (!user) return;
+      const hasPass = this.authService.hasPasswordAuth();
+      this.hasPasswordAuth.set(hasPass);
+      if (!hasPass) {
+        this.passwordForm.get('currentPassword')?.clearValidators();
+      } else {
+        this.passwordForm.get('currentPassword')?.setValidators([Validators.required]);
+      }
+      this.passwordForm.get('currentPassword')?.updateValueAndValidity();
+
       this.avatarPreview.set(user.avatarUrl ?? null);
       this.profileForm.patchValue({
         fullName: user.displayName ?? '',
@@ -320,9 +332,21 @@ export class ProfileTab {
     const { currentPassword, newPassword } = this.passwordForm.getRawValue();
     this.savingPassword.set(true);
     try {
-      await this.authService.changePassword(currentPassword, newPassword);
-      this.passwordForm.reset();
-      this.flashMessage.emit({ message: 'Password changed. Use it the next time you sign in.', type: 'success' });
+      if (this.hasPasswordAuth()) {
+        await this.authService.changePassword(currentPassword, newPassword);
+        this.passwordForm.reset();
+        this.flashMessage.emit({ message: 'Password changed. Use it the next time you sign in.', type: 'success' });
+      } else {
+        await this.authService.setPassword(newPassword);
+        this.hasPasswordAuth.set(true);
+        this.passwordForm.get('currentPassword')?.setValidators([Validators.required]);
+        this.passwordForm.get('currentPassword')?.updateValueAndValidity();
+        this.passwordForm.reset();
+        this.flashMessage.emit({
+          message: 'Password created successfully! You can now sign in with email and password.',
+          type: 'success',
+        });
+      }
     } catch (err) {
       this.flashMessage.emit({ message: this.describePasswordError(err), type: 'error' });
     } finally {
@@ -345,10 +369,14 @@ export class ProfileTab {
         return 'Too many attempts. Please wait a few minutes and try again.';
       case 'auth/requires-recent-login':
         return 'For your security, please sign out and sign in again, then change your password.';
+      case 'auth/provider-already-linked':
+        return 'A password has already been set for this account.';
+      case 'auth/credential-already-in-use':
+        return 'This credential is already linked to another account.';
       case 'auth/network-request-failed':
         return "Couldn't reach the server. Please check your connection.";
       default:
-        return (err as { message?: string })?.message ?? 'Failed to change the password.';
+        return (err as { message?: string })?.message ?? 'Failed to update the password.';
     }
   }
 }
