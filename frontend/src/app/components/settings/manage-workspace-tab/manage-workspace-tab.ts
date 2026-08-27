@@ -40,6 +40,26 @@ export class ManageWorkspaceTab {
     return role === 'owner' || role === 'admin';
   });
 
+  readonly currentOrgRole = computed<'owner' | 'admin' | 'member' | null>(() => {
+    const ws = this.selectedWorkspace();
+    if (!ws) return null;
+    return this.myRoleByOrg()[ws.orgId] ?? null;
+  });
+
+  /**
+   * Quyền gỡ thành viên workspace:
+   * - Owner: gỡ được admin & member.
+   * - Admin: CHỈ gỡ được member (không gỡ owner, không gỡ admin khác).
+   * - Member: không gỡ được ai.
+   */
+  canRemoveWorkspaceMember(mem: WorkspaceMember): boolean {
+    if (mem.role === 'owner') return false;
+    const orgRole = this.currentOrgRole();
+    if (orgRole === 'owner') return true;
+    if (orgRole === 'admin') return mem.role === 'member';
+    return false;
+  }
+
   readonly canCreateWorkspace = computed(() => {
     const filter = this.selectedOrgFilter();
     if (filter) {

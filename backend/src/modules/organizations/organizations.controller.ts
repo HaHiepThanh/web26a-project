@@ -86,8 +86,12 @@ export class OrganizationsController {
   @UseGuards(RolesGuard)
   @Roles('owner', 'admin')
   @Delete(':id/members/:userId')
-  removeMember(@Param('id') id: string, @Param('userId') userId: string) {
-    return this.organizations.removeMember(id, userId);
+  removeMember(
+    @CurrentUser() user: CurrentUserInfo,
+    @Param('id') id: string,
+    @Param('userId') userId: string,
+  ) {
+    return this.organizations.removeMember(user.uid, id, userId);
   }
 
   /** PATCH /organizations/:id — đổi tên tổ chức (slug không đổi được). */

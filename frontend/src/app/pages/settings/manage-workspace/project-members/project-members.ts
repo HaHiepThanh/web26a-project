@@ -261,7 +261,14 @@ export class ProjectMembers {
   readonly memberToRemove = signal<ProjectMember | null>(null);
 
   canRemove(member: ProjectMember): boolean {
-    return this.canEditMembers() && member.userId !== this.boardCreatorId();
+    if (!this.canEditMembers()) return false;
+    if (member.userId === this.boardCreatorId()) return false;
+    // Cho phép tự rời project
+    if (member.userId === this.currentUserId()) return true;
+    const role = this.myRole();
+    if (role === 'owner') return true;
+    if (role === 'admin') return member.role === 'member';
+    return false;
   }
 
   openRemoveConfirm(member: ProjectMember): void {

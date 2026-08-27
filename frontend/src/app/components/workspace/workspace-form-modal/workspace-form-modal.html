@@ -172,7 +172,18 @@
                     <span class="block truncate text-3xs text-base-content/60">{{ m.user.email }}</span>
                   </span>
                 </span>
-                <span class="ml-2 shrink-0 text-base">{{ isSelected(m.user.id) ? '☑️' : '⬜' }}</span>
+                <span class="ml-2 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-all"
+                      [class.border-primary]="isSelected(m.user.id)"
+                      [class.bg-primary]="isSelected(m.user.id)"
+                      [class.text-primary-content]="isSelected(m.user.id)"
+                      [class.border-base-300]="!isSelected(m.user.id)"
+                      [class.bg-base-100]="!isSelected(m.user.id)">
+                  @if (isSelected(m.user.id)) {
+                    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  }
+                </span>
               </button>
             } @empty {
               <p class="px-1 py-3 text-center text-xs font-semibold text-base-content/50">

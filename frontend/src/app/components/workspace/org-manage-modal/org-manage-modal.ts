@@ -88,6 +88,27 @@ export class OrgManageModal {
 
   readonly currentUserId = computed(() => this.auth.currentUser()?.id);
 
+  readonly myRole = computed<Role | null>(() => {
+    const me = this.auth.currentUser()?.id;
+    if (!me) return null;
+    return this.members().find((m) => m.user.id === me)?.role ?? null;
+  });
+
+  /**
+   * Quyền gỡ thành viên:
+   * - Owner: xoá được admin & member.
+   * - Admin: CHỈ xoá được member (không xoá admin khác, không xoá owner, không tự xoá).
+   * - Member: không xoá được ai.
+   */
+  canRemoveMember(mem: OrgMemberView): boolean {
+    const me = this.auth.currentUser()?.id;
+    if (!me || mem.user.id === me || mem.role === 'owner') return false;
+    const role = this.myRole();
+    if (role === 'owner') return true;
+    if (role === 'admin') return mem.role === 'member';
+    return false;
+  }
+
   readonly nameDirty = computed(() => {
     const o = this.org();
     if (!o) return false;

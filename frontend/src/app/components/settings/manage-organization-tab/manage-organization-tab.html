@@ -55,28 +55,33 @@
           Members ({{ orgMembers().length }})
         </h4>
 
+        @if (canManageMembers()) {
         <button type="button"
           class="btn btn-primary btn-sm rounded-md px-3.5 font-bold shadow-xs gap-1.5 hover:scale-105 transition-all"
           (click)="openInviteOrgMember()">
           <svg lucideUserPlus class="h-3.5 w-3.5" [strokeWidth]="2.4"></svg>
           <span>Invite Member</span>
         </button>
+        }
       </div>
 
       <div class="overflow-x-auto rounded-md border border-base-300 bg-base-100">
-        <table class="table table-sm w-full">
+        <table class="table table-sm w-full text-left">
           <thead>
             <tr class="border-b border-base-300 bg-base-200/50 text-3xs font-black uppercase tracking-wider text-base-content/60">
-              <th>Member</th>
-              <th class="text-center w-36">Role</th>
-              <th class="text-right w-24">Action</th>
+              <th class="py-3 px-4 w-[28%]">Member</th>
+              <th class="py-3 px-4 w-[46%]">UUID</th>
+              <th class="py-3 px-4 w-[16%] text-center">Role</th>
+              @if (canManageMembers()) {
+              <th class="py-3 px-4 w-[10%] text-right">Action</th>
+              }
             </tr>
           </thead>
-          <tbody>
+          <tbody class="text-xs font-medium">
             @for (mem of orgMembers(); track mem.user.id) {
             <tr class="border-b border-base-200 hover:bg-base-200/30 transition-colors">
-              <!-- Member Info: Avatar, Name, Email, full UUID -->
-              <td>
+              <!-- Member Info: Avatar, Name, Email -->
+              <td class="py-3 px-4">
                 <div class="flex items-center gap-3">
                   <app-user-avatar [userId]="mem.user.id" [name]="mem.user.displayName || mem.user.email" [avatarUrl]="mem.user.avatarUrl" [size]="32" />
                   <div class="min-w-0">
@@ -86,14 +91,18 @@
                       <span class="badge badge-warning badge-xs font-black text-3xs rounded-md">You</span>
                       }
                     </div>
-                    <div class="text-2xs text-base-content/60 font-mono mt-0.5">{{ mem.user.email }}</div>
-                    <div class="text-3xs text-base-content/40 font-mono select-all">UUID: {{ mem.user.id }}</div>
+                    <div class="text-2xs text-base-content/60 font-mono mt-0.5 truncate">{{ mem.user.email }}</div>
                   </div>
                 </div>
               </td>
 
+              <!-- UUID: hiển thị đầy đủ không cắt ngắn -->
+              <td class="py-3 px-4 font-mono text-2xs text-base-content/80 select-all">
+                <span class="select-all break-all select-text font-mono text-2xs" [title]="mem.user.id">{{ mem.user.id }}</span>
+              </td>
+
               <!-- Role: bóp nhỏ gọn gàng với rounded-md -->
-              <td class="text-center">
+              <td class="py-3 px-4 text-center">
                 @if (mem.role === 'owner') {
                 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-primary text-primary-content font-bold text-xs shadow-xs whitespace-nowrap">
                   <svg lucideCrown class="h-3 w-3" [strokeWidth]="2.4"></svg> Owner</span>
@@ -114,14 +123,16 @@
               </td>
 
               <!-- Action: Remove -->
+              @if (canManageMembers()) {
               <td class="text-right">
-                @if (isOwner() && mem.role !== 'owner' && mem.user.id !== currentUserId()) {
+                @if (canRemoveOrgMember(mem)) {
                 <button type="button" class="btn btn-ghost btn-xs text-error hover:bg-error/10 font-bold rounded-md"
                   [title]="'Remove ' + (mem.user.displayName || mem.user.email)" (click)="onRemoveOrgMember(mem.user.id)">
                   <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
                 </button>
                 }
               </td>
+              }
             </tr>
             }
           </tbody>

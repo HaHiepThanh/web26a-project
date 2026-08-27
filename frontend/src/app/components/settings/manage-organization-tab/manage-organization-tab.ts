@@ -119,11 +119,37 @@ export class ManageOrganizationTab {
     this.removeMember.emit(memberId);
   }
 
+  readonly myRole = computed<Role | null>(() => {
+    const me = this.currentUserId();
+    return this.orgMembers().find((m) => m.user.id === me)?.role ?? null;
+  });
+
   /** Chỉ chủ tổ chức đổi được quyền — nút này ẩn với người khác. */
   readonly isOwner = computed(() => {
     const me = this.currentUserId();
     return !!me && this.orgMembers().some((m) => m.user.id === me && m.role === 'owner');
   });
+
+  /** Owner và Admin có quyền quản lý thành viên (mời / xem cột Action) */
+  readonly canManageMembers = computed(() => {
+    const role = this.myRole();
+    return role === 'owner' || role === 'admin';
+  });
+
+  /**
+   * Quyền gỡ thành viên:
+   * - Owner: xoá được admin & member (trừ chính mình).
+   * - Admin: CHỈ xoá được member. Không xoá admin khác, không xoá owner, không tự xoá mình.
+   * - Member: không xoá được ai.
+   */
+  canRemoveOrgMember(mem: OrgMemberView): boolean {
+    const me = this.currentUserId();
+    if (!me || mem.user.id === me || mem.role === 'owner') return false;
+    const role = this.myRole();
+    if (role === 'owner') return true;
+    if (role === 'admin') return mem.role === 'member';
+    return false;
+  }
 
   onChangeRole(userId: string, value: string): void {
     if (value !== 'admin' && value !== 'member') return;

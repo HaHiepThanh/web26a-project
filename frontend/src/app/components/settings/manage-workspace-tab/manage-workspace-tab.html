@@ -128,7 +128,9 @@
               <th class="py-3 px-4 w-[28%]">Member</th>
               <th class="py-3 px-4 w-[46%]">UUID</th>
               <th class="py-3 px-4 w-[16%]">Role</th>
+              @if (canManageCurrentWorkspace()) {
               <th class="py-3 px-4 w-[10%] text-right">Actions</th>
+              }
             </tr>
           </thead>
           <tbody class="divide-y divide-base-300 text-xs font-medium">
@@ -168,8 +170,9 @@
               </td>
 
               <!-- Action: chỉ owner/admin được gỡ thành viên -->
+              @if (canManageCurrentWorkspace()) {
               <td class="py-3 px-4 text-right">
-                @if (canManageCurrentWorkspace() && mem.role !== 'owner') {
+                @if (canRemoveWorkspaceMember(mem)) {
                 <button type="button" class="text-error font-bold text-xs hover:underline hover:opacity-80 transition-opacity"
                   (click)="onRemoveMember(mem)">
                   Remove
@@ -178,6 +181,7 @@
                 <span class="text-base-content/30 text-xs">—</span>
                 }
               </td>
+              }
             </tr>
             }
           </tbody>

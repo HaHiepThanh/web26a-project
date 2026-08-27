@@ -523,9 +523,27 @@ export class OrganizationsService {
    * thì phải chuyển quyền cho người khác trước.
    */
   async removeMember(
+    callerUid: string,
     orgId: string,
     userId: string,
   ): Promise<{ userId: string; removed: true }> {
+    if (callerUid === userId) {
+      throw new BadRequestException(
+        'Cannot remove yourself from the organization.',
+      );
+    }
+
+    const { data: callerMember } = await this.supabase.client
+      .from('organization_members')
+      .select('role')
+      .eq('org_id', orgId)
+      .eq('user_id', callerUid)
+      .maybeSingle();
+
+    if (!callerMember || (callerMember.role !== 'owner' && callerMember.role !== 'admin')) {
+      throw new ForbiddenException('You do not have permission to remove members.');
+    }
+
     const { data: target, error } = await this.supabase.client
       .from('organization_members')
       .select('user_id, role')
@@ -548,6 +566,11 @@ export class OrganizationsService {
       throw new BadRequestException(
         'Cannot remove the owner. Transfer ownership to someone else first.',
       );
+    }
+
+    // Admin không được xoá admin khác
+    if (callerMember.role === 'admin' && target.role === 'admin') {
+      throw new ForbiddenException('Admins cannot remove other admins.');
     }
 
     const { error: deleteError } = await this.supabase.client
