@@ -36,11 +36,39 @@
         <span class="lp-grad">on&nbsp;one&nbsp;board</span>
       </h1>
 
-      <p class="lp-lead hero-lead" appReveal [revealDelay]="120">
-        A real-time Kanban board for small teams. Dragging is saving — there is no "Save" button.
-        And while your team is chatting, the assistant spots the work and asks you one question
-        before it creates anything.
-      </p>
+      <!--
+        BA NHỊP, tách ra từ chính câu dẫn cũ — nó vốn đã chứa đúng ba lời hứa
+        của sản phẩm, nên không phải viết chữ mới và nội dung trình đọc màn hình
+        đọc được cũng không đổi: vẫn ba câu ấy, vẫn thứ tự ấy.
+
+        Cả ba LUÔN nằm trong DOM và không cái nào bị aria-hidden. Ở chế độ điện
+        ảnh chúng chồng lên nhau trong một ô lưới và chỉ hiện lần lượt theo tay
+        cuộn; ngoài chế độ đó (điện thoại, hoặc người bật giảm chuyển động) thì
+        cả ba xếp thẳng như một đoạn dẫn bình thường.
+      -->
+      <div class="hero-beats" [class.is-cinema]="cinema()" #beats appReveal [revealDelay]="120">
+        <p class="lp-lead hero-lead hero-beat">
+          A real-time Kanban board for small teams.
+        </p>
+        <p class="lp-lead hero-lead hero-beat">
+          Dragging is saving — there is no "Save" button.
+        </p>
+        <p class="lp-lead hero-lead hero-beat">
+          While your team is chatting, the assistant spots the work — and asks before it creates
+          anything.
+        </p>
+      </div>
+
+      @if (cinema()) {
+        <!-- Ba chấm tiến độ. Ghim màn hình mà không nói còn bao lâu mới thoát
+             là kiểu dính tay khó chịu nhất; ba cái chấm trả lại cho người xem
+             cảm giác biết mình đang ở đâu. -->
+        <div class="hero-dots" #dots aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      }
 
       <div class="hero-cta" appReveal [revealDelay]="180">
         <!-- Nút chính DUY NHẤT của khu vực này. Mọi hành động khác phải nhẹ hơn
@@ -109,7 +137,31 @@
          tiêu điểm nằm trong vùng aria-hidden là một lỗi trợ năng nặng: người
          dùng bàn phím tab vào một thứ trình đọc màn hình khẳng định là không
          tồn tại. Nên chỉ những phần THUẦN TRANG TRÍ mới được ẩn, từng phần một. -->
+    <!--
+      Hai thứ CHỈ dùng cho màn mở ba nhịp, và cả hai đều aria-hidden: chúng
+      minh hoạ lại đúng hai câu mà nhịp 2 và nhịp 3 vừa nói thành lời ở trên,
+      nên đọc thêm lần nữa chỉ tổ lặp.
+      Nằm trong `.board-stage` để đi theo bảng khi bảng dịch sang trái ở nhịp 3.
+    -->
     <div class="board-stage" #stage role="group" aria-label="Try it: a demo board you can rearrange">
+      @if (cinema()) {
+        <span class="hero-saved" #saved aria-hidden="true">
+          <svg lucideCheck [strokeWidth]="2.6"></svg>
+          Saved
+        </span>
+
+        <aside class="hero-chat" #chat aria-hidden="true">
+          <p class="hc-head">launch-team</p>
+          <div class="hc-msg">
+            <span class="hc-av">TN</span>
+            <p>Can someone book the room before Friday?</p>
+          </div>
+          <p class="hc-sug">
+            <svg lucideSparkles [strokeWidth]="2.4"></svg>
+            New card · “Book the meeting room”
+          </p>
+        </aside>
+      }
       <span class="board-floor" aria-hidden="true"></span>
 
       <div class="board-frame">

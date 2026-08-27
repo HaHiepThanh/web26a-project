@@ -955,3 +955,157 @@
 .lp-shell:has(.board-stage) {
   perspective: 1600px;
 }
+
+/* ==========================================================================
+   MÀN MỞ BA NHỊP.
+
+   Xem `cinematicOpen()` ở landing-hero.ts. Toàn bộ khối này chỉ có hiệu lực khi
+   `.is-cinema` được bật — tức trên màn ≥900px và người dùng không yêu cầu giảm
+   chuyển động. Ngoài chế độ đó, ba nhịp xếp thẳng thành một đoạn dẫn bình
+   thường và trang chạy y như trước.
+   ========================================================================== */
+
+/* Mặc định (điện thoại, giảm chuyển động): ba câu xếp dọc, sát nhau, đọc ra
+   đúng một đoạn dẫn. Sít hơn khoảng cách đoạn văn thường vì chúng là ba vế của
+   cùng một ý, không phải ba đoạn rời. */
+.hero-beats {
+  display: grid;
+  gap: 6px;
+  max-width: 60ch;
+  margin-inline: auto;
+}
+
+/* Chế độ điện ảnh: ba câu chồng lên nhau trong CÙNG một ô lưới.
+   Dùng lưới chứ không dùng `position: absolute` — ô lưới tự lấy chiều cao của
+   câu dài nhất, nên không có cú nhảy bố cục nào khi đổi nhịp. Với absolute thì
+   khối co về 0 và mọi thứ bên dưới giật lên. */
+.hero-beats.is-cinema .hero-beat {
+  grid-area: 1 / 1;
+}
+
+/* Câu nhịp 1 hiện sẵn; hai câu kia do GSAP đặt về trong suốt ngay ở khung đầu
+   của timeline. KHÔNG ẩn sẵn bằng CSS: nếu JavaScript hỏng hoặc GSAP không
+   chạy, ẩn bằng CSS sẽ khiến hai phần ba lời quảng cáo biến mất vĩnh viễn. */
+
+/* ---------------- Ba chấm tiến độ ---------------- */
+.hero-dots {
+  display: flex;
+  justify-content: center;
+  gap: 7px;
+}
+.hero-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--lp-text-2);
+  /* Chấm đầu sáng sẵn, hai chấm sau mờ — trạng thái đúng của nhịp 1 ngay cả
+     trước khi timeline chạy khung đầu tiên. */
+  opacity: 0.3;
+}
+.hero-dots span:first-child {
+  opacity: 1;
+}
+
+/* ---------------- Huy hiệu "Saved" (nhịp 2) ---------------- */
+.hero-saved {
+  position: absolute;
+  z-index: 4;
+  top: -14px;
+  right: 22px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: var(--lp-solid-green);
+  box-shadow: var(--lp-shadow-md);
+  font-size: var(--lp-text-micro);
+  font-weight: 700;
+  color: var(--lp-on-solid);
+  pointer-events: none;
+  /* Bắt đầu trong suốt: GSAP mới là thứ bật nó lên đúng nhịp. Ở đây phải ẩn
+     sẵn — khác ba câu nhịp, huy hiệu này KHÔNG mang nội dung nào mà thiếu nó
+     người đọc bị mất, nên ẩn là an toàn. */
+  opacity: 0;
+}
+.hero-saved svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* ---------------- Khung chat (nhịp 3) ---------------- */
+.hero-chat {
+  position: absolute;
+  z-index: 4;
+  right: -18px;
+  bottom: 34px;
+  width: min(280px, 42%);
+  display: grid;
+  gap: 9px;
+  padding: 13px;
+  border: 1px solid var(--lp-border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--lp-surface);
+  box-shadow: var(--lp-shadow-lg);
+  pointer-events: none;
+  opacity: 0;
+}
+
+.hc-head {
+  font-size: var(--lp-text-micro);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--lp-text-2);
+}
+
+.hc-msg {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.hc-msg p {
+  font-size: var(--lp-text-sm);
+  line-height: 1.45;
+  color: var(--lp-text);
+}
+
+.hc-av {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--lp-solid-purple);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--lp-on-solid);
+}
+
+/* Thẻ trợ lý đề xuất — tô nền tím nhạt để nó đọc ra là MÁY nói, không phải
+   người nói. Cùng quy ước màu với khu trợ lý AI phía dưới trang. */
+.hc-sug {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 10px;
+  border: 1px solid color-mix(in oklab, var(--lp-ink-purple) 38%, transparent);
+  border-radius: var(--radius-md);
+  /* Nền TRUNG TÍNH, không phải `--accent-purple-soft`.
+     Chữ tím trên nền tím nhạt đo được 8.55:1 ở theme sáng nhưng chỉ 4.06:1 ở
+     theme tối — trượt chuẩn AA đúng một nửa số người dùng. Trên nền trung tính
+     thì được 10.05 và 6.16, đạt cả hai với biên rộng.
+     Tín hiệu "máy nói chứ không phải người nói" chuyển hết sang MÀU CHỮ và
+     VIỀN — hai thứ không có chữ nằm trên nên tô đậm bao nhiêu cũng an toàn. */
+  background: var(--lp-surface-2);
+  font-size: var(--lp-text-micro);
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--lp-ink-purple);
+}
+.hc-sug svg {
+  width: 13px;
+  height: 13px;
+  flex: none;
+}

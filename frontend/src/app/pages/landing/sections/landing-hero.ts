@@ -1,6 +1,7 @@
 import {
   Component,
   ElementRef,
+  Injector,
   OnDestroy,
   afterNextRender,
   inject,
@@ -111,9 +112,32 @@ export class LandingHero implements OnDestroy {
   readonly announcement = signal('');
 
   private readonly host = inject(ElementRef<HTMLElement>);
+  private readonly injector = inject(Injector);
   private readonly grid = viewChild<ElementRef<HTMLElement>>('grid');
   private readonly stage = viewChild<ElementRef<HTMLElement>>('stage');
+  private readonly beatsEl = viewChild<ElementRef<HTMLElement>>('beats');
+  private readonly dotsEl = viewChild<ElementRef<HTMLElement>>('dots');
+  private readonly savedEl = viewChild<ElementRef<HTMLElement>>('saved');
+  private readonly chatEl = viewChild<ElementRef<HTMLElement>>('chat');
   private gsapCtx?: gsap.Context;
+
+  /**
+   * Có chạy màn mở ba nhịp hay không.
+   *
+   * TẮT ở hai trường hợp, và cả hai đều là quyết định thiết kế chứ không phải
+   * giới hạn kỹ thuật:
+   *
+   *  - DƯỚI 900px. Ghim màn hình trên cảm ứng là kiểu giành quyền cuộn khó chịu
+   *    nhất: ngón tay vuốt mà trang không đi, người ta tưởng máy treo. Điện
+   *    thoại giữ hero như cũ, ba nhịp xếp thẳng thành một đoạn dẫn bình thường.
+   *  - GIẢM CHUYỂN ĐỘNG. Ghim hai màn cuộn đúng là loại chuyển động toàn màn
+   *    hình mà cài đặt đó sinh ra để dập.
+   *
+   * Đọc MỘT LẦN lúc dựng chứ không theo dõi tiếp: xoay ngang điện thoại giữa
+   * chừng mà bật/tắt ghim thì vị trí cuộn nhảy loạn, tệ hơn nhiều so với việc
+   * giữ nguyên chế độ cho tới lần tải sau.
+   */
+  readonly cinema = signal(false);
   private bloomId = 0;
   private timer?: ReturnType<typeof setTimeout>;
   private liftTimer?: ReturnType<typeof setTimeout>;
@@ -130,7 +154,11 @@ export class LandingHero implements OnDestroy {
       const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
       if (reduced || typeof IntersectionObserver === 'undefined') return;
 
-      this.buildScrollScene();
+      // Quyết định chế độ TRƯỚC, vì template dựng thêm phần tử (chấm tiến độ,
+      // huy hiệu Saved, khung chat) chỉ khi ở chế độ điện ảnh — phải có chúng
+      // trong DOM rồi mới dựng được timeline.
+      this.cinema.set(window.matchMedia('(min-width: 900px)').matches);
+      afterNextRender(() => this.buildScrollScene(), { injector: this.injector });
 
       // Chỉ diễn khi bảng còn trong khung nhìn. Người đã cuộn xuống tận chân
       // trang thì không có lý do gì để một cái hẹn giờ vẫn chạy ở trên đầu.
@@ -382,31 +410,121 @@ export class LandingHero implements OnDestroy {
    * từng cái một.
    */
   private buildScrollScene(): void {
+    const hero = this.host.nativeElement as HTMLElement;
     const stage = this.stage()?.nativeElement;
     if (!stage) return;
 
     gsap.registerPlugin(ScrollTrigger);
 
     this.gsapCtx = gsap.context(() => {
-      gsap.to(stage, {
-        rotateX: 14,
-        scale: 0.9,
-        yPercent: -6,
-        opacity: 0.72,
-        // `none` chứ không phải một đường cong: với hoạt ảnh chạy theo cuộn,
-        // đường cong sẽ làm bảng đi nhanh chậm không khớp tay cuộn — cảm giác
-        // như thanh cuộn bị trượt côn.
-        ease: 'none',
-        scrollTrigger: {
-          trigger: this.host.nativeElement,
-          // Bắt đầu lúc đáy hero chạm đáy màn hình, kết thúc lúc đáy hero rời
-          // khỏi đỉnh: đúng quãng người dùng đang rời khu vực này.
-          start: 'bottom bottom',
-          end: 'bottom top',
-          scrub: true,
-        },
-      });
-    }, this.host.nativeElement);
+      if (!this.cinema()) {
+        this.recedeOnly(hero, stage);
+        return;
+      }
+      this.cinematicOpen(hero, stage);
+    }, hero);
+
+    // Phông tải xong thì mọi thứ cao thấp khác đi, mà cú ghim lại tính mốc theo
+    // chiều cao — không đo lại thì điểm nhả ghim lệch đúng bằng phần chênh đó.
+    document.fonts?.ready.then(() => ScrollTrigger.refresh());
+  }
+
+  /**
+   * Đường KHÔNG ghim: bảng chỉ ngả ra sau khi người dùng cuộn qua hero.
+   * Dùng cho điện thoại và cho người bật giảm chuyển động.
+   */
+  private recedeOnly(hero: HTMLElement, stage: HTMLElement): void {
+    gsap.to(stage, {
+      rotateX: 14,
+      scale: 0.9,
+      yPercent: -6,
+      opacity: 0.72,
+      ease: 'none',
+      scrollTrigger: { trigger: hero, start: 'bottom bottom', end: 'bottom top', scrub: true },
+    });
+  }
+
+  /**
+   * MÀN MỞ BA NHỊP.
+   *
+   * Hero ghim lại hai màn cuộn; cuộn tới đâu câu chuyện chạy tới đó, rồi nhả ra
+   * và trôi vào phần còn lại của trang. Chạy theo tay cuộn (`scrub`) nên cuộn
+   * ngược thì diễn ngược — người xem điều khiển chứ không ngồi xem.
+   *
+   * ⚠️ MỘT TIMELINE DUY NHẤT, gộp cả cú ngả bảng vốn là một ScrollTrigger
+   * riêng. Hai trigger cùng bám một phần tử mà một cái có `pin` thì cái kia đo
+   * mốc theo chiều cao đã bị pin-spacer chèn thêm — sai chỗ, và rất khó lần ra.
+   * Cú ngả nay nằm ở đoạn cuối timeline: bảng lùi ra xa đúng lúc màn mở khép
+   * lại và trang bàn giao cho khu tiếp theo.
+   *
+   * `ease: 'none'` ở mọi tween: với hoạt ảnh chạy theo cuộn, đường cong làm
+   * hình đi nhanh chậm không khớp tay — cảm giác như thanh cuộn bị trượt côn.
+   */
+  private cinematicOpen(hero: HTMLElement, stage: HTMLElement): void {
+    const beats = gsap.utils.toArray<HTMLElement>('.hero-beat', this.beatsEl()?.nativeElement);
+    const dots = gsap.utils.toArray<HTMLElement>('span', this.dotsEl()?.nativeElement);
+    const saved = this.savedEl()?.nativeElement;
+    const chat = this.chatEl()?.nativeElement;
+    if (beats.length < 3) return;
+
+    const tl = gsap.timeline({
+      defaults: { ease: 'none' },
+      scrollTrigger: {
+        trigger: hero,
+        start: 'top top',
+        // Hai màn cuộn cho ba nhịp. Dài hơn nữa thì người quen lướt nhanh phát
+        // cáu; ngắn hơn thì ba nhịp chồng lên nhau đọc không kịp.
+        end: '+=200%',
+        pin: true,
+        scrub: true,
+        // Bù trước một nhịp cho cú ghim, nếu không sẽ thấy trang giật một cái ở
+        // đúng khoảnh khắc pin bám vào.
+        anticipatePin: 1,
+      },
+    });
+
+    const light = (i: number, at: number) => {
+      if (!dots.length) return;
+      dots.forEach((d, k) => tl.to(d, { opacity: k === i ? 1 : 0.3, duration: 0.04 }, at));
+    };
+
+    // ---- Nhịp 1: tấm bảng vào chỗ ----
+    tl.set(beats[1], { opacity: 0, yPercent: 24 })
+      .set(beats[2], { opacity: 0, yPercent: 24 })
+      .fromTo(stage, { scale: 0.94, yPercent: 4 }, { scale: 1, yPercent: 0, duration: 0.26 }, 0);
+    light(0, 0);
+
+    // ---- Nhịp 2: kéo là lưu ----
+    tl.to(beats[0], { opacity: 0, yPercent: -24, duration: 0.06 }, 0.28)
+      .to(beats[1], { opacity: 1, yPercent: 0, duration: 0.06 }, 0.32);
+    light(1, 0.32);
+    if (saved) {
+      tl.fromTo(
+        saved,
+        { opacity: 0, scale: 0.8, yPercent: 10 },
+        { opacity: 1, scale: 1, yPercent: 0, duration: 0.08 },
+        0.38,
+      ).to(saved, { opacity: 0, duration: 0.06 }, 0.58);
+    }
+
+    // ---- Nhịp 3: trợ lý viết thẻ tiếp theo ----
+    tl.to(beats[1], { opacity: 0, yPercent: -24, duration: 0.06 }, 0.6)
+      .to(beats[2], { opacity: 1, yPercent: 0, duration: 0.06 }, 0.64);
+    light(2, 0.64);
+    if (chat) {
+      // Bảng nhích sang trái để nhường chỗ cho khung chat, thay vì để khung chat
+      // đè lên nó.
+      tl.to(stage, { xPercent: -8, duration: 0.1 }, 0.64).fromTo(
+        chat,
+        { opacity: 0, xPercent: 14 },
+        { opacity: 1, xPercent: 0, duration: 0.1 },
+        0.68,
+      );
+    }
+
+    // ---- Khép lại: bảng lùi ra xa, bàn giao cho trang ----
+    tl.to(stage, { rotateX: 14, scale: 0.9, yPercent: -6, opacity: 0.72, duration: 0.12 }, 0.88);
+    if (chat) tl.to(chat, { opacity: 0, duration: 0.08 }, 0.9);
   }
 
   ngOnDestroy(): void {
