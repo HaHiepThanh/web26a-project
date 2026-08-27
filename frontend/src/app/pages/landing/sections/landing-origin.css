@@ -1,0 +1,446 @@
+/* ==========================================================================
+   "Our story" — trang từ điển, đặt ngay sau hero.
+
+   Việc cần làm ở đây là giải nghĩa ba từ, nên lấy luôn hình thức của thứ vốn
+   sinh ra để giải nghĩa: mục từ, từ loại, lời định nghĩa in nghiêng, rồi một
+   dòng nối nghĩa ấy với thứ có thật trong sản phẩm.
+
+   Chữ có chân (Lora) cho mục từ và lời định nghĩa, sans của trang cho dòng nối
+   với sản phẩm. Hai kiểu chữ = hai giọng: một giọng "từ điển", một giọng "phần
+   mềm". Người đọc phân biệt được ngay đâu là nghĩa của từ, đâu là chuyện của
+   ứng dụng, mà không cần ai chú thích.
+
+   ⚠️ NẰM Ở ĐẦU TRANG nên mọi thứ phải siết lại. Ba mục từ xếp NGANG thay vì
+   chồng dọc: cắt được hai phần ba chiều cao, và bộ ba đứng cạnh nhau tự nó đã
+   nói ra điều mà đoạn kết sắp chứng minh — ba thứ hợp lại làm một.
+   ========================================================================== */
+.origin {
+  position: relative;
+  isolation: isolate;
+  /* `clip`, KHÔNG PHẢI `hidden`.
+     Hai thứ cắt giống hệt nhau, nhưng `overflow: hidden` biến phần tử thành một
+     scroll container — và `view()` quy chiếu vào scroll container GẦN NHẤT, nên
+     ba chữ H sẽ đo tiến độ theo một cái khung không bao giờ cuộn và kẹt cứng ở
+     một giá trị. `clip` cắt nội dung mà không sinh scroll container.
+     Cần cắt vì vệt sáng bên dưới rộng tới 960px: ở khung nhìn 900px nó thò ra
+     hai bên 30px mỗi bên. */
+  overflow: clip;
+  /* `background-color`, không phải shorthand `background`: khu vực này dùng
+     `.lp-seam-y`, mà shorthand xoá luôn background-image của nó. */
+  background-color: var(--lp-bg-sunken);
+}
+
+/* Vệt sáng rất nhạt phía sau — như đèn bàn hắt xuống trang giấy. */
+.origin::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  left: 50%;
+  top: 4%;
+  width: min(960px, 130%);
+  aspect-ratio: 1.7 / 1;
+  translate: -50% 0;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in oklab, var(--color-primary) 12%, transparent),
+    transparent
+  );
+  filter: blur(80px);
+  pointer-events: none;
+}
+
+.origin-h2 {
+  max-width: 26ch;
+}
+
+/* ---------------- Bộ ba mục từ ---------------- */
+.plate {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  /* KHÔNG dùng `gap` + margin âm để căn đường kẻ vào giữa khe. Đã thử và sai:
+     margin âm nới hai cột sau rộng thêm nửa khe, nên cột 1 có bề ngang chữ
+     319px còn hai cột kia 293px — đo được, và chữ ngắt dòng lệch nhau thấy rõ.
+     Cách đúng: khe bằng 0, mỗi mục tự đệm hai bên BẰNG NHAU. Ba ô lưới bằng
+     nhau, trừ đi cùng một lượng đệm thì ba cột chữ bằng nhau tuyệt đối, và
+     đường kẻ rơi đúng giữa hai cột vì hai bên nó đệm như nhau. */
+  gap: 0;
+  max-width: 1120px;
+  margin-inline: auto;
+}
+
+.term {
+  display: grid;
+  /* Hàng cuối `1fr` để ba dòng "So …" luôn bắt đầu ngang nhau dù mục từ dài
+     ngắn khác nhau — không có nó thì ba cột so le, nhìn như xếp ẩu. */
+  grid-template-rows: auto auto auto 1fr;
+  gap: 0;
+  /* Đệm ĐỀU cả ba mục, kể cả hai mép ngoài cùng — xem lý do ở `.plate`. */
+  padding-inline: clamp(18px, 2.4vw, 34px);
+}
+
+/* Kẻ NGĂN giữa các cột, không kẻ QUANH từng mục — đúng lối trình bày của một
+   trang từ điển, và nhẹ hơn hẳn ba cái thẻ có viền. */
+.term + .term {
+  border-left: 1px solid var(--lp-border);
+}
+
+/* Mỗi mục mang một màu nhấn riêng, khai báo một lần rồi dùng lại cho nét chữ H,
+   chữ H đầu mục từ và vạch bên trái dòng cuối. */
+.tone-blue {
+  --tone: var(--lp-ink-blue);
+}
+.tone-purple {
+  --tone: var(--lp-ink-purple);
+}
+.tone-green {
+  --tone: var(--lp-ink-green);
+}
+
+/* ---------------- Chữ H khổ lớn ---------------- */
+.glyph {
+  /* block, không phải inline mặc định của <span>: mốc thời gian `view()` gắn ở
+     ngay phần tử này (xem cuối file) và nó cần một hộp đo được. */
+  display: block;
+  width: clamp(44px, 5vw, 62px);
+  margin-bottom: var(--lp-3);
+  /* Trạng thái mặc định = ĐÃ VIẾT XONG. Nét chạy chỉ là lớp phủ thêm ở dưới. */
+  stroke-dashoffset: 0;
+}
+.glyph svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.glyph path {
+  stroke-width: 9;
+  stroke-linecap: round;
+}
+
+/* Nét mờ có sẵn: chữ H vẫn có mặt trên trang trước khi được viết ra, nên chỗ đó
+   không phải một khoảng trống chờ hoạt ảnh.
+   Phải tự khai `dasharray: none` — `stroke-dasharray` là thuộc tính DI TRUYỀN,
+   không chặn thì nét mờ cũng bị cắt đứt đoạn theo. */
+.glyph-track {
+  stroke: var(--lp-border-strong);
+  stroke-dasharray: none;
+  stroke-dashoffset: 0;
+}
+
+/* Nét chạy. `pathLength="100"` ở HTML quy chuẩn độ dài nét về 100 đơn vị, nên
+   dasharray viết thẳng bằng số, không cần đo bằng JavaScript.
+   Cố ý KHÔNG khai `stroke-dashoffset` ở đây: để nó thừa hưởng từ `.glyph`, nơi
+   hoạt ảnh chạy.
+
+   Chữ H gồm BA nét rời (ba lệnh `M` trong cùng một path), và mẫu gạch đứt của
+   SVG khởi động lại ở đầu mỗi nét. Nên ba nét cùng mọc ra một lúc, mỗi nét từ
+   điểm đầu của nó — KHÔNG phải chạy nối tiếp theo thứ tự cầm bút.
+   Giữ nguyên vì nhìn ra đúng cái nó là: chữ H lớn dần thành hình, chứ không
+   phải một nét bút đơn lẻ bò quanh. */
+.glyph-ink {
+  stroke: var(--tone);
+  stroke-dasharray: 100;
+}
+
+/* ---------------- Mục từ ---------------- */
+.word {
+  font-family: 'Lora', Georgia, 'Times New Roman', serif;
+  font-size: clamp(1.5rem, 1.1rem + 1.4vw, 2.1rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--lp-text);
+}
+
+/* Chữ H đầu mục từ lấy đúng màu của nét chữ H khổ lớn bên trên — mắt tự nối hai
+   thứ lại mà không cần mũi tên hay chú thích nào. */
+.w-h {
+  color: var(--tone);
+}
+
+/* Từ loại. Thu nhỏ hẳn và nhấc lên cao: nó là chú thích ngữ pháp, không phải
+   một phần của cái tên. */
+.pos {
+  margin-left: 8px;
+  font-size: var(--lp-text-micro);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  vertical-align: 0.5em;
+  color: var(--lp-text-3);
+}
+
+/* Lời định nghĩa. Đây là câu QUAN TRỌNG NHẤT của cả khu vực — chính là thứ
+   người đọc tới đây để biết — nên nó lấy màu chữ đậm nhất, không phải màu chữ
+   phụ như thân bài thường. */
+.gloss {
+  margin: 10px 0 0;
+  font-family: 'Lora', Georgia, 'Times New Roman', serif;
+  font-size: clamp(1rem, 0.94rem + 0.3vw, 1.15rem);
+  font-style: italic;
+  line-height: 1.5;
+  text-wrap: pretty;
+  color: var(--lp-text);
+}
+
+/* Dòng nối nghĩa của từ với thứ có thật trong sản phẩm. Vạch màu bên trái tách
+   nó khỏi lời định nghĩa: một bên là nghĩa của từ, một bên là chuyện của phần
+   mềm, và hai thứ đó không nên đọc liền như một đoạn. */
+.here {
+  margin: var(--lp-3) 0 0;
+  padding-left: 14px;
+  border-left: 2px solid color-mix(in oklab, var(--tone) 55%, transparent);
+  font-size: var(--lp-text-sm);
+  line-height: 1.65;
+  text-wrap: pretty;
+  color: var(--lp-text-2);
+}
+
+/* ---------------- Ba chữ hợp lại ---------------- */
+.triad {
+  max-width: 640px;
+  margin: clamp(48px, 6vw, 80px) auto 0;
+  padding-top: clamp(32px, 4vw, 48px);
+  border-top: 1px solid var(--lp-border);
+  text-align: center;
+}
+
+.triad-title {
+  font-size: var(--lp-text-sm);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--lp-text-3);
+}
+
+/* Ba dòng "thiếu một chữ thì hỏng". Đây là phần chứng minh, nên trình bày như
+   ba mệnh đề xếp chồng chứ không phải một đoạn văn — mắt đọc ra ngay là ba lần
+   thử, ba lần thất bại. */
+.lacks {
+  display: grid;
+  gap: var(--lp-2);
+  margin: var(--lp-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.lacks li {
+  font-family: 'Lora', Georgia, 'Times New Roman', serif;
+  font-size: clamp(1rem, 0.95rem + 0.35vw, 1.2rem);
+  font-style: italic;
+  line-height: 1.55;
+  text-wrap: pretty;
+  color: var(--lp-text-2);
+}
+
+/* Tên ba chữ trong mấy dòng này tô đúng màu của cột tương ứng ở trên, nên mắt
+   nối được "cái từ vừa đọc định nghĩa" với "cái từ đang bị đem ra thử". */
+.lacks b {
+  font-style: normal;
+  font-weight: 600;
+}
+.lacks .tone-blue {
+  color: var(--lp-ink-blue);
+}
+.lacks .tone-purple {
+  color: var(--lp-ink-purple);
+}
+.lacks .tone-green {
+  color: var(--lp-ink-green);
+}
+
+.payoff {
+  margin-top: var(--lp-5);
+  font-family: 'Lora', Georgia, 'Times New Roman', serif;
+  font-size: clamp(1.05rem, 0.98rem + 0.4vw, 1.3rem);
+  font-style: italic;
+  line-height: 1.6;
+  text-wrap: pretty;
+  color: var(--lp-text-2);
+}
+.payoff b {
+  /* Vế sau bỏ nghiêng và đậm lên: đây là câu đề bài của cả sản phẩm, không phải
+     một lời bình. */
+  font-style: normal;
+  font-weight: 600;
+  color: var(--lp-text);
+}
+
+/* ---------------- Chữ ký ---------------- */
+.sign-off {
+  max-width: 640px;
+  margin: clamp(36px, 4vw, 56px) auto 0;
+  padding-top: clamp(26px, 3vw, 36px);
+  border-top: 1px solid var(--lp-border);
+  text-align: center;
+}
+
+.coincidence {
+  font-family: 'Lora', Georgia, 'Times New Roman', serif;
+  font-size: var(--lp-text-body);
+  line-height: 1.65;
+  text-wrap: pretty;
+  color: var(--lp-text-2);
+}
+
+.signature {
+  margin-top: var(--lp-3);
+  font-family: 'Dancing Script', 'Segoe Script', cursive;
+  font-size: clamp(2rem, 1.3rem + 2.6vw, 3.1rem);
+  font-weight: 600;
+  line-height: 1.3;
+  /* Nghiêng nhẹ: không ai ký thẳng hàng với mép giấy. */
+  rotate: -1.2deg;
+  color: color-mix(in oklab, var(--lp-text) 88%, #1b3a6b);
+}
+
+.postscript {
+  margin-top: var(--lp-4);
+  font-size: var(--lp-text-sm);
+  font-style: italic;
+  line-height: 1.7;
+  color: var(--lp-text-3);
+}
+.postscript b {
+  font-style: normal;
+  font-weight: 600;
+  color: var(--lp-text-2);
+}
+
+/* ---------------- Màn hình hẹp ---------------- */
+@media (max-width: 860px) {
+  /* Ba cột không còn đủ chỗ: mỗi cột chỉ còn chừng 30 ký tự một dòng. Xếp dọc
+     lại, và chuyển chữ H sang NẰM CẠNH mục từ để không tốn thêm chiều cao. */
+  .plate {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .term {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: none;
+    grid-template-areas:
+      'glyph word'
+      'gloss gloss'
+      'here here';
+    column-gap: var(--lp-3);
+    align-items: center;
+    /* Xếp dọc rồi thì không còn khe ngang để đệm — trả hết bề ngang cho chữ. */
+    padding-inline: 0;
+    padding-block: clamp(24px, 4vw, 34px);
+  }
+  .term + .term {
+    /* Kẻ ngăn xoay từ dọc sang ngang cho khớp hướng xếp mới. */
+    border-left: none;
+    border-top: 1px solid var(--lp-border);
+  }
+  .glyph {
+    grid-area: glyph;
+    width: 42px;
+    margin-bottom: 0;
+  }
+  .word {
+    grid-area: word;
+  }
+  .gloss {
+    grid-area: gloss;
+    margin-top: var(--lp-3);
+  }
+  .here {
+    grid-area: here;
+  }
+}
+
+@media (max-width: 560px) {
+  .signature {
+    rotate: -0.8deg;
+  }
+}
+
+/* ==========================================================================
+   Chuyển động — cả hai chạy bằng scroll timeline của CSS, không một dòng JS.
+
+   Bọc trong @supports vì Firefox chưa hỗ trợ: ở đó chữ H hiện sẵn đủ nét và chữ
+   ký hiện đủ ngay — mất phần diễn, không mất nội dung nào.
+   ========================================================================== */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    /* Ba chữ H TỰ VIẾT RA khi cuộn tới. Không nơi nào khác trên trang có nét
+       chữ chạy, nên đây là chuyển động riêng của khu vực này — và cũng là
+       chuyển động DUY NHẤT của nó: trang đã có kéo thả ở hero, soi theo cuộn ở
+       khu tính năng và bấm mở ở bản kê; thêm một thứ nghịch được nữa ở đây chỉ
+       là ồn.
+
+       ⚠️ Hoạt ảnh gắn ở `.glyph` — cái <span> bọc ngoài — chứ KHÔNG gắn thẳng
+       vào <path>. Phần tử SVG bên trong không sinh hộp bố cục CSS, nên `view()`
+       không có gì để đo vị trí trong khung nhìn và timeline sẽ không bao giờ
+       chạy (đúng loại bẫy đã gặp với <span> inline). `stroke-dashoffset` lại là
+       thuộc tính di truyền, nên chạy trên vỏ ngoài thì nét bên trong nhận đủ.
+
+       PHẢI đẩy lệch nhau bằng `animation-range`. Hồi ba mục từ còn xếp DỌC thì
+       không cần: mỗi chữ H tới lượt vào khung nhìn ở một thời điểm khác nhau.
+       Nay ba cột NẰM NGANG nên cùng cao độ, cùng tiến độ — không đẩy lệch thì
+       ba chữ viết ra y hệt nhau cùng lúc, mất hẳn cảm giác đang được viết.
+       Lệch 6% mỗi cột cho nét chạy quét từ trái sang phải, đúng chiều đọc.
+
+       Phạm vi đặt trong pha `cover`, không phải `entry`: `cover` trải suốt quãng
+       phần tử đi qua khung nhìn nên nét chữ viết xong lúc mục từ đã nằm gọn
+       giữa màn hình. Cũng đừng trộn hai pha (`entry X% cover Y%`) — với khối
+       thấp thì `cover Y%` có thể rơi TRƯỚC `entry X%`, thành phạm vi ngược
+       chiều và hoạt ảnh kẹt cứng ở một khung. */
+    .glyph {
+      animation: draw-h linear both;
+      animation-timeline: view();
+      animation-range: cover 20% cover 42%;
+    }
+    .term:nth-child(2) .glyph {
+      animation-range: cover 26% cover 48%;
+    }
+    .term:nth-child(3) .glyph {
+      animation-range: cover 32% cover 54%;
+    }
+    @keyframes draw-h {
+      from {
+        stroke-dashoffset: 100;
+      }
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    /* Ở khổ hẹp ba mục lại xếp dọc, mỗi chữ H tự tới lượt — trả về cùng một
+       phạm vi cho cả ba, không thì mục cuối phải chờ vô cớ. */
+    @media (max-width: 860px) {
+      .glyph,
+      .term:nth-child(2) .glyph,
+      .term:nth-child(3) .glyph {
+        animation-range: cover 18% cover 46%;
+      }
+    }
+
+    /* Chữ ký tự viết ra.
+       Một dải mặt nạ rộng gấp đôi chữ ký trượt qua nó: phần đục lộ chữ, mép
+       chuyển tiếp mềm làm thành đầu ngòi bút. Vị trí 100% là lúc phần trong
+       suốt đang che (chưa ký), về 0% là phần đục đã quét hết (ký xong). */
+    .signature > span {
+      display: inline-block;
+      -webkit-mask-image: linear-gradient(90deg, #000 0 45%, transparent 58%);
+      mask-image: linear-gradient(90deg, #000 0 45%, transparent 58%);
+      -webkit-mask-size: 220% 100%;
+      mask-size: 220% 100%;
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+      animation: sign linear both;
+      animation-timeline: view();
+      animation-range: cover 32% cover 60%;
+    }
+    @keyframes sign {
+      from {
+        -webkit-mask-position: 100% 0;
+        mask-position: 100% 0;
+      }
+      to {
+        -webkit-mask-position: 0% 0;
+        mask-position: 0% 0;
+      }
+    }
+  }
+}

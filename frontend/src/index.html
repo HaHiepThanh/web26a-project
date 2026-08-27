@@ -60,19 +60,41 @@
       href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
     />
 
+    <!-- Hai bộ chữ chỉ dùng cho ĐÚNG MỘT khu vực: lá thư kể chuyện dự án.
+       Lora (có chân) cho thân thư và Dancing Script cho chữ ký. Đổi mặt chữ ở
+       đúng một chỗ là tín hiệu mạnh nhất để nói "phần này thuộc loại khác" —
+       cả trang còn lại là sans.
+       Đã kiểm: cả hai đều có đủ glyph tiếng Việt, kể cả tổ hợp dày như ằ, ữ, ợ, ế.
+       Tệp font chỉ tải khi thật sự có chữ dùng tới, tức là chỉ ở trang landing;
+       các trang khác chỉ chịu thêm một request CSS nhỏ. -->
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Dancing+Script:wght@600&display=swap"
+    />
+
     <!-- Đặt theme TRƯỚC khi trình duyệt vẽ khung hình đầu tiên.
        ThemeService cũng làm đúng việc này, nhưng nó chỉ chạy sau khi gói JS của
        Angular tải và khởi động xong — trong khoảng đó người chọn nền tối sẽ ăn
        trọn một nháy trắng loá mắt (FOUC). Đoạn script đồng bộ, không phụ thuộc
        gì, chạy ngay tại chỗ này nên nháy trắng biến mất.
-       Logic phải khớp với readInitialTheme() trong services/theme.service.ts. -->
+       Logic phải khớp với readInitialTheme() trong services/theme.service.ts.
+
+       Phần `landing` ở dưới: trang giới thiệu mượn theme tối `night` thay cho
+       `sunset` của app (xem ThemeService.useThemes). Nếu chỗ này cứ ghi 'sunset'
+       thì vào thẳng trang chủ ở chế độ tối sẽ thấy nháy một nhịp tông CAM của
+       sunset rồi mới đổi sang tông xanh của night — đúng loại nháy mà cả đoạn
+       script này sinh ra để dập. -->
     <script>
       (function () {
         try {
           var saved = localStorage.getItem('trello_theme');
           var dark =
             saved === 'dark' || (!saved && matchMedia('(prefers-color-scheme: dark)').matches);
-          document.documentElement.setAttribute('data-theme', dark ? 'sunset' : 'winter');
+          var landing = location.pathname === '/' || location.pathname === '';
+          document.documentElement.setAttribute(
+            'data-theme',
+            dark ? (landing ? 'night' : 'sunset') : 'winter',
+          );
           document.documentElement.classList.toggle('dark', dark);
         } catch (e) {
           /* Trình duyệt chặn localStorage — cứ để nguyên data-theme="winter" mặc định. */

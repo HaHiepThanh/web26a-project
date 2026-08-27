@@ -5,7 +5,11 @@
    ThemeService ghi thẳng 'winter'/'sunset' vào [data-theme] nên chính khối CSS
    của daisyUI khai báo toàn bộ --color-* — app không tự bịa màu nữa. */
 @plugin 'daisyui' {
-  themes: winter --default, sunset --prefersdark;
+  /* `night` chỉ dành cho trang giới thiệu (xem ThemeService.useThemes). Phải khai
+     ở đây thì daisyUI mới biên dịch bảng màu đó vào CSS — thiếu một chữ này là
+     đặt data-theme="night" ra một trang KHÔNG CÓ THEME NÀO, rơi về winter sáng
+     trưng, mà không có lỗi nào báo. Cộng thêm, không đụng `sunset` của app. */
+  themes: winter --default, sunset --prefersdark, night;
 }
 
 /* ThemeService khoá cứng light-mode (không bao giờ set class .dark lên <html>),
@@ -207,4 +211,37 @@
 }
 .bg-board-red {
   background: linear-gradient(135deg, #4c0a0a 0%, #dc2626 50%, #fb7185 100%);
+}
+
+/* ==========================================================================
+   Lenis — cuộn quán tính, CHỈ dùng ở trang giới thiệu.
+
+   Mấy quy tắc này bắt buộc phải nằm ở tầng toàn cục vì chúng nhắm vào <html>,
+   mà CSS của component Angular thì bị đóng gói lại nên với tới đó không được.
+
+   Chúng TRƠ HOÀN TOÀN khi không ở trang landing: Lenis tự gắn class `.lenis`
+   lên <html> lúc khởi động và gỡ ra lúc huỷ, nên ngoài trang đó không selector
+   nào khớp. Phần app đã đăng nhập vì vậy cuộn y như cũ — cố ý, vì bảng công
+   việc có kéo thả và cuộn quán tính sẽ làm con trỏ lệch pha với mặt bảng.
+   ========================================================================== */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+/* Lenis tự điều khiển vị trí cuộn theo từng khung hình. Để `scroll-behavior:
+   smooth` của trình duyệt chạy song song thì hai bên cùng ghi một giá trị trong
+   cùng một khung — hình giật rồi khựng giữa đường. */
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* Vùng con muốn cuộn bình thường (danh sách trong modal, khung chat...) thì gắn
+   `data-lenis-prevent`; Lenis sẽ nhả bánh xe chuột cho nó. */
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
 }

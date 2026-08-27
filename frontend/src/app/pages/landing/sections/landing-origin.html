@@ -1,0 +1,132 @@
+<!--
+  "Our story" — trang từ điển, đặt NGAY SAU hero.
+
+  Vì nằm ở đầu trang nên khu này phải NGẮN. Khách vào trang mới đọc đúng một
+  màn, chưa biết sản phẩm làm được gì; chặn họ bằng một bức tường chữ là mất
+  người. Nên ba mục từ xếp thành BỘ BA NGANG chứ không phải ba khối dọc: vừa
+  cắt được hai phần ba chiều cao, vừa tự nó nói ra điều cần nói — ba thứ đứng
+  cạnh nhau làm thành một.
+
+  Đặt ở đây cũng có cái được: cái tên "Horizon Hub Harmony" vừa đập vào mắt ở
+  thanh nav và hero, và câu hỏi đầu tiên ai cũng nghĩ là "tên gì lạ vậy". Trả
+  lời ngay lúc người ta đang thắc mắc thì đúng nhịp hơn là bắt chờ tới cuối.
+
+  Mỗi dòng "So …" dưới lời định nghĩa còn làm thêm một việc: nó là bản xem
+  trước của tính năng, nên đoạn này không chỉ kể chuyện mà còn bán hàng.
+-->
+<section class="origin lp-section lp-seam-y" id="our-story" aria-labelledby="origin-title">
+  <div class="lp-shell">
+    <div class="lp-head lp-head--center">
+      <p class="lp-eyebrow" appReveal>
+        <span class="lp-eyebrow-dot" aria-hidden="true"></span>
+        Our story
+      </p>
+      <h2 id="origin-title" class="lp-h2 origin-h2" appReveal [revealDelay]="60">
+        Three words. <span class="lp-grad">One board.</span>
+      </h2>
+      <p class="lp-lead" appReveal [revealDelay]="120">
+        Three of us wanted a board with more in it and less in the way, so we built one. That took a
+        fortnight. Naming it took longer.
+      </p>
+    </div>
+
+    <!--
+      <dl> thật, không phải mấy cái div đóng vai. Ba mục này ĐÚNG NGHĨA là danh
+      sách định nghĩa, và trình đọc màn hình sẽ đọc ra quan hệ "từ này — nghĩa
+      này" thay vì ba khối chữ rời.
+    -->
+    <dl class="plate" appReveal [revealDelay]="160">
+      <div class="term tone-blue">
+        <!-- Chữ H khổ lớn, tự viết ra khi cuộn tới. `track` là nét mờ có sẵn để
+             chữ vẫn có mặt trước khi được viết; `ink` là nét chạy. -->
+        <span class="glyph" aria-hidden="true">
+          <svg viewBox="0 0 100 124" fill="none">
+            <path class="glyph-track" d="M18 10V114M18 62H82M82 10V114" />
+            <path class="glyph-ink" pathLength="100" d="M18 10V114M18 62H82M82 10V114" />
+          </svg>
+        </span>
+
+        <dt class="word"><span class="w-h">H</span>orizon <i class="pos">noun</i></dt>
+        <dd class="gloss">The far line a team keeps walking toward.</dd>
+        <dd class="here">So the board is built around what comes next, not a monument to what is
+          finished.</dd>
+      </div>
+
+      <div class="term tone-purple">
+        <span class="glyph" aria-hidden="true">
+          <svg viewBox="0 0 100 124" fill="none">
+            <path class="glyph-track" d="M18 10V114M18 62H82M82 10V114" />
+            <path class="glyph-ink" pathLength="100" d="M18 10V114M18 62H82M82 10V114" />
+          </svg>
+        </span>
+
+        <dt class="word"><span class="w-h">H</span>ub <i class="pos">noun</i></dt>
+        <dd class="gloss">The one place everything meets.</dd>
+        <dd class="here">So cards, chat, files and history sit on one screen, and nothing needs a
+          second tab to make sense.</dd>
+      </div>
+
+      <div class="term tone-green">
+        <span class="glyph" aria-hidden="true">
+          <svg viewBox="0 0 100 124" fill="none">
+            <path class="glyph-track" d="M18 10V114M18 62H82M82 10V114" />
+            <path class="glyph-ink" pathLength="100" d="M18 10V114M18 62H82M82 10V114" />
+          </svg>
+        </span>
+
+        <dt class="word"><span class="w-h">H</span>armony <i class="pos">noun</i></dt>
+        <dd class="gloss">Many people at once, and nobody stepping on anyone.</dd>
+        <dd class="here">So everyone watches the same board change live, and roles decide who may
+          change what.</dd>
+      </div>
+    </dl>
+
+    <!--
+      Ý NGHĨA KHI BA CHỮ ĐI CHUNG.
+
+      Bản trước chỉ đọc lại ba định nghĩa nối đuôi nhau — tức là CỘNG, không phải
+      HỢP, nên chẳng nói thêm được gì. Bản này chứng minh từng cặp đều hỏng khi
+      thiếu chữ thứ ba: mỗi từ vá đúng cái lỗ mà hai từ kia để lại. Đó mới là lý
+      do phải đủ cả ba, và là thứ không từ nào nói được một mình.
+    -->
+    <section class="triad" aria-labelledby="triad-title" appReveal>
+      <h3 id="triad-title" class="triad-title">Why it takes all three</h3>
+
+      <ul class="lacks">
+        <li>
+          A <b class="tone-blue">horizon</b> without a <b class="tone-purple">hub</b> is a goal
+          nobody can see together.
+        </li>
+        <li>
+          A <b class="tone-purple">hub</b> without <b class="tone-green">harmony</b> is one room
+          with everybody talking over each other.
+        </li>
+        <li>
+          <b class="tone-green">Harmony</b> without a <b class="tone-blue">horizon</b> is a happy
+          team going nowhere.
+        </li>
+      </ul>
+
+      <p class="payoff">
+        Take any one away and the other two stop working. Together they are the whole brief:
+        <b>somewhere to go, one place to stand, and room for everyone to work at once.</b>
+      </p>
+    </section>
+
+    <footer class="sign-off">
+      <p class="coincidence" appReveal>
+        Then someone noticed all three begin with the same letter. So do we.
+      </p>
+
+      <!-- Chữ ký. `aria-label` mang câu đọc trôi chảy, vì nét viết tay ở đây là
+           HÌNH của chữ ký chứ không phải chữ để đọc từng ký tự. -->
+      <p class="signature" aria-label="Signed by Hoà, Huy and Hoàng">
+        <span aria-hidden="true">Hoà, Huy &amp; Hoàng</span>
+      </p>
+
+      <p class="postscript">
+        With thanks to <b>Thanh</b>, who reviewed every line of it — the code as well as this page.
+      </p>
+    </footer>
+  </div>
+</section>

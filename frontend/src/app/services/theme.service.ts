@@ -14,6 +14,9 @@ const DAISY_THEME: Record<Theme, string> = {
   dark: 'sunset',
 };
 
+/** Một cặp tên theme daisyUI thay cho cặp mặc định ở trên. */
+export type DaisyThemePair = Record<Theme, string>;
+
 /**
  * Nguồn sự thật duy nhất cho giao diện sáng/tối.
  *
@@ -33,13 +36,23 @@ const DAISY_THEME: Record<Theme, string> = {
 export class ThemeService {
   readonly theme = signal<Theme>(readInitialTheme());
 
+  /**
+   * Bảng theme daisyUI đang có hiệu lực. Mặc định là cặp winter/sunset của app;
+   * một trang có thể tạm mượn cặp khác qua `useThemes()`.
+   *
+   * Là signal chứ không phải biến thường để effect bên dưới tự chạy lại khi
+   * trang đăng ký hoặc trả lại bản ghi đè — nếu không, đổi bảng lúc đang ở chế
+   * độ tối sẽ chẳng có gì xảy ra cho tới lần bấm nút đổi theme kế tiếp.
+   */
+  private readonly pair = signal<DaisyThemePair>(DAISY_THEME);
+
   readonly isDark = () => this.theme() === 'dark';
 
   constructor() {
     effect(() => {
       const theme = this.theme();
       const root = document.documentElement;
-      root.setAttribute('data-theme', DAISY_THEME[theme]);
+      root.setAttribute('data-theme', this.pair()[theme]);
       root.classList.toggle('dark', theme === 'dark');
       try {
         localStorage.setItem(STORAGE_KEY, theme);
@@ -47,6 +60,26 @@ export class ThemeService {
         // Chế độ riêng tư của trình duyệt có thể chặn ghi — đổi theme vẫn phải chạy.
       }
     });
+  }
+
+  /**
+   * Cho một trang mượn cặp theme daisyUI khác trong lúc nó đang mở.
+   *
+   * Có để trang giới thiệu dùng winter/night trong khi phần app còn lại giữ
+   * winter/sunset. Chế độ sáng/tối mà người dùng đang chọn KHÔNG đổi — chỉ đổi
+   * bảng màu vẽ ra cái chế độ đó.
+   *
+   * Vì sao đi qua đây thay vì để trang tự ghi `data-theme` lên <html>: như thế
+   * sẽ có hai chỗ cùng ghi một thuộc tính, và mỗi lần bấm nút đổi theme là
+   * effect ở đây ghi giá trị của app trước, trang ghi đè sau — người dùng thấy
+   * màu nháy một nhịp rồi mới đúng. Một người ghi thì không có cửa cho lỗi đó.
+   *
+   * @returns hàm trả lại cặp mặc định. Trang PHẢI gọi nó lúc bị huỷ, nếu không
+   *          cặp mượn sẽ theo người dùng sang cả phần app.
+   */
+  useThemes(pair: DaisyThemePair): () => void {
+    this.pair.set(pair);
+    return () => this.pair.set(DAISY_THEME);
   }
 
   set(theme: Theme): void {

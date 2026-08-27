@@ -310,12 +310,12 @@
   transform: rotate(-90deg) scale(0.4);
 }
 
-:host-context([data-theme='sunset']) .ico-sun {
+:host-context([data-theme='night']) .ico-sun {
   opacity: 0;
   transform: rotate(90deg) scale(0.4);
 }
 
-:host-context([data-theme='sunset']) .ico-moon {
+:host-context([data-theme='night']) .ico-moon {
   opacity: 1;
   transform: rotate(0deg) scale(1);
 }
@@ -384,7 +384,7 @@
   }
 }
 
-@media (min-width: 960px) {
+@media (min-width: 1000px) {
   .nav-links,
   .nav-actions {
     display: flex;
@@ -406,21 +406,26 @@
 /* KHÔNG còn quy tắc ẩn nút "Sign in".
  *
  * Trước đây nó bị `display: none` dưới 1080px, vì hồi thanh nav còn chật thì đó
- * là thứ ít thiết yếu nhất để hi sinh. Sau khi tên thương hiệu được giấu tới
- * 1140px và menu ngang chỉ bật từ 960px, chỗ trống dư ra hẳn: đo ở 960px —
- * bề rộng hẹp nhất còn hiện cụm nút — vẫn còn 44.9px khe mỗi bên với "Sign in"
- * hiển thị đầy đủ. Giữ quy tắc cũ chỉ khiến nút biến mất vô cớ ở đúng dải
- * 960–1080px, là dải bề rộng của laptop 13" phổ biến. */
+ * là thứ ít thiết yếu nhất để hi sinh. Nay tên thương hiệu được giấu tới 1180px
+ * và menu ngang chỉ bật từ 1000px, nên chỗ trống dư ra hẳn: đo ở 1000px — bề
+ * rộng hẹp nhất còn hiện cụm nút — vẫn còn ~53px khe với "Sign in" hiển thị đầy
+ * đủ. Giữ quy tắc cũ chỉ khiến nút biến mất vô cớ ở dải laptop 13" phổ biến.
+ *
+ * Ngưỡng bật menu ngang từng là 960px; đẩy lên 1000px cùng lúc với việc thêm
+ * mục "Our story" (menu dài thêm 92px). Ở 960px khe chỉ còn 13.4px — dưới mức
+ * an toàn khi phông chữ tải hỏng. Dải 960–999px rơi về nút menu ba gạch, nơi
+ * vẫn có đủ mọi liên kết. */
 
-/* Ngưỡng này từng là 1080px, đo khi cỡ chữ gốc còn bị ép xuống 14px. Sau khi
-   trả root về 16px, mọi thứ trong thanh nav to lên ~14% và 1080 thành ra quá
-   thấp: từ 1081px tên thương hiệu hiện lại (+178px) trong khi chỗ chưa đủ.
-   Cộng thực tế ở trạng thái ĐÃ ĐĂNG NHẬP, nơi nút CTA dài nhất:
-     lề 64 + brand 218 + 24 + menu 478 + 24 + nút theme 44 + 24 + CTA 229 = 1105px
-   Đó là mức khít 0px, nên lấy 1140 để còn ~35px dư cho khác biệt phông chữ.
-   Trạng thái chưa đăng nhập nhẹ hơn (Sign in + Start free ≈ 205px) nhưng dùng
-   chung một ngưỡng cho đỡ phải nhớ hai con số. */
-@media (min-width: 960px) and (max-width: 1139px) {
+/* Ngưỡng này từng là 1140px. Thêm mục "Our story" vào menu ngang làm cụm link
+   dài thêm 92px (478 → 570) nên phải đẩy lên.
+   Đo lại ở trạng thái CHƯA ĐĂNG NHẬP — hoá ra đây mới là trạng thái rộng nhất,
+   ngược với ghi chú cũ: chưa đăng nhập có HAI nút (Sign in + Start free = 205px)
+   còn đã đăng nhập chỉ một nút (Open your workspace = 171px).
+     lề 64 + brand 218 + 24 + menu 570 + 24 + nút theme 44 + 24 + nút 205 = 1173px
+   Ở đúng 1140px thì khe chỉ còn 15.6px — quá mỏng, vì Be Vietnam Pro tải từ
+   Google Fonts và nếu hỏng mạng thì phông dự phòng rộng hơn là vỡ hàng ngay.
+   Lấy 1180 để còn ~56px dư. */
+@media (min-width: 1000px) and (max-width: 1179px) {
   .brand-name {
     display: none;
   }
@@ -479,7 +484,7 @@
 
 /* Từ 960px trở lên, nút "Start free" đã có sẵn trong thanh nav nên thanh này
    thừa — hai CTA cùng lúc chỉ làm loãng sự chú ý. */
-@media (min-width: 960px) {
+@media (min-width: 1000px) {
   .cta-dock {
     display: none;
   }
@@ -496,7 +501,7 @@
 }
 
 /* Chừa chỗ cho thanh CTA dính đáy, nếu không nó che mất dòng cuối chân trang. */
-@media (max-width: 959px) {
+@media (max-width: 999px) {
   .foot {
     padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
   }

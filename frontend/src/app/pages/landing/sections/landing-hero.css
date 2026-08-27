@@ -719,14 +719,43 @@
      một cột mà không cần biết nó là bao nhiêu pixel. */
   width: calc((100% - 2 * var(--bgap)) / 3);
   padding-inline: var(--cpad);
+  /* --dx/--dy là độ lệch con trỏ trong lúc kéo, cộng thẳng vào vị trí ô. Nhờ vậy
+     một phép transform lo cả hai việc — không phải chồng thêm lớp bọc. */
   transform: translate3d(
-    calc(var(--col, 0) * (100% + var(--bgap))),
-    calc(var(--cpad) + var(--chead) + var(--cgap) + var(--lane, 0) * 2 * (var(--ch) + var(--cgap))),
+    calc(var(--col, 0) * (100% + var(--bgap)) + var(--dx, 0px)),
+    calc(
+      var(--cpad) + var(--chead) + var(--cgap) + var(--lane, 0) * 2 * (var(--ch) + var(--cgap)) +
+        var(--dy, 0px)
+    ),
     0
   );
   /* 900ms phải khớp với hằng số trong landing-hero.ts (chỗ hạ cờ `moving`). */
   transition: transform 900ms var(--lp-ease);
   will-change: transform;
+  cursor: grab;
+  /* Chặn cử chỉ mặc định của trình duyệt trên vùng này. Không có dòng này thì
+     trên di động, vuốt để kéo thẻ sẽ bị hiểu thành vuốt để cuộn trang. */
+  touch-action: none;
+}
+
+.traveller:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 4px;
+  border-radius: var(--radius-md);
+}
+
+/* Đang bị kéo: bỏ transition để thẻ bám sát ngón tay theo từng khung hình.
+   Còn nguyên transition thì thẻ chạy sau con trỏ 900ms — cảm giác như đang kéo
+   một vật qua bùn. */
+.traveller.is-dragging {
+  transition: none;
+  z-index: 3;
+  cursor: grabbing;
+}
+
+.traveller.is-dragging .kan-card-travel {
+  transform: scale(1.06) rotate(-2deg);
+  box-shadow: var(--lp-shadow-lg);
 }
 
 .kan-card-travel {
@@ -798,5 +827,45 @@
      tạo ra; dòng này chỉ để chắc, phòng khi có phần tử còn sót lại. */
   .col-bloom {
     display: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Dòng gợi ý dưới bảng
+   -------------------------------------------------------------------------- */
+
+/* Trước khi chạm: một lời mời. Sau khi kéo: chữ "Saved." — chứng minh đúng câu
+   ở đoạn dẫn phía trên. Đây là chỗ vòng lặp khép lại: đọc lời hứa → tự tay thử
+   → thấy nó đúng. */
+.board-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--lp-2);
+  margin-top: var(--lp-4);
+  font-size: var(--lp-text-sm);
+  font-weight: 500;
+  /* Bậc 1, không phải bậc 2. Hero có nền trắng tinh, mà bậc 2 đặt lên đó chỉ đo
+     được 3.7:1 — dưới ngưỡng AA cho chữ 14px. Dòng này lại là LỜI MỜI: không
+     nhìn thấy nó thì không ai biết bảng kéo được, và cả phần tương tác thành ra
+     vô nghĩa. Đây đúng chỗ không được phép nhạt. */
+  color: var(--lp-text);
+  transition: color 300ms ease;
+}
+
+.board-hint svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Đã kéo xong: đổi sang màu nhấn để câu trả lời nổi hơn lời mời. */
+.board-hint.is-done {
+  color: var(--lp-ink-green);
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board-hint {
+    transition: none;
   }
 }

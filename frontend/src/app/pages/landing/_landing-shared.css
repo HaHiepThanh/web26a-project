@@ -28,8 +28,38 @@
      dùng nhất. Tối thêm một nấc là qua ngưỡng ở cả ba nền, mà vẫn nhạt hơn bậc
      hai đủ để phân biệt. */
   --lp-text: var(--text-primary);
-  --lp-text-2: var(--text-secondary);
-  --lp-text-3: var(--text-muted);
+
+  /* Bậc 2 là 82%, KHÔNG phải 78% của `--text-secondary` trong app.
+     78% dính đúng cái bẫy đã mô tả cho bậc 3 ngay dưới đây: đo trên nền trắng
+     thì 4.71:1 nên tưởng đạt, nhưng đặt lên nền lõm (`--lp-bg-sunken`) và
+     `--lp-surface-2` thì tụt còn 4.49:1 — trượt chuẩn AA đúng một phần trăm,
+     mà đó lại là nền của chân trang, dải số liệu, khu bản kê và khu câu chuyện.
+     Đo cả thang trên nền lõm: 78% → 4.49   80% → 4.73   82% → 4.94   84% → 5.22
+     Chọn 82%: qua ngưỡng trên MỌI nền của trang mà vẫn nhạt hơn bậc 1 (8.50:1)
+     đủ rõ để hai bậc không lẫn vào nhau. */
+  --lp-text-2: color-mix(in oklab, var(--color-base-content) 82%, transparent);
+
+  /* Bậc 3 ở theme SÁNG bằng đúng bậc 2 — cố ý, và đây là lý do.
+   *
+   * `--text-muted` của app là `color-mix(... 58%, transparent)`. Đo thật trên nền
+   * trắng: chỉ được 3.66:1, dưới hẳn ngưỡng AA 4.5:1 cho chữ nhỏ — mà nó lại là
+   * bậc chuyên dùng cho chữ 12–14px, đúng loại cần tương phản nhất.
+   *
+   * Đo cả thang để tìm mức đạt (chữ gốc winter trên nền trắng):
+   *     100% → 8.50    78% → 4.71    68% → 3.66    58% → 3.19
+   * Tức là mức thấp nhất còn qua ngưỡng là ~78%, mà bậc 2 cũng đang 78%. Nói
+   * cách khác: chữ gốc của `winter` (sáng 41.9%) KHÔNG đủ tối để đỡ nổi ba bậc
+   * — muốn có bậc thứ ba nhạt hơn thì buộc phải làm tối chữ gốc của cả trang,
+   * một thay đổi lớn hơn nhiều so với thứ nó đổi lại được.
+   *
+   * Nên ở theme sáng, phân cấp bậc 3 do CỠ CHỮ và ĐỘ ĐẬM gánh, không phải màu —
+   * đúng nguyên tắc "đừng bao giờ phân cấp chỉ bằng màu" của Practical UI.
+   * Theme tối thoáng hơn nên vẫn giữ được bậc ba thật; xem khối `night` bên dưới.
+   *
+   * Chỉ ghi đè trong phạm vi trang này. `--text-muted` là token dùng chung cho cả
+   * app — sửa ở đó sẽ đổi màu chữ khắp bảng công việc và phần cài đặt, ngoài
+   * phạm vi việc đang làm. (Phần app dính đúng lỗi này, đã báo riêng.) */
+  --lp-text-3: var(--lp-text-2);
 
   /* ---- Hai họ màu nhấn: dùng làm CHỮ và dùng làm NỀN ĐẶC ----
      Đây là chỗ phải cẩn thận nhất của cả trang. Bộ token màu nhấn trong
@@ -105,22 +135,31 @@
   color: var(--lp-text);
 }
 
-:host-context([data-theme='sunset']) {
-  /* Nền lấy thẳng ba bậc bề mặt của sunset — nền gần đen ngả xanh, không đen
-     tuyền: đen tuyệt đối cạnh chữ sáng tạo tương phản gắt gây mỏi mắt khi đọc
-     dài, đúng điều Practical UI cảnh báo ở chương Colour. Riêng dải "lõm" phải
-     tối hơn nền chính, mà base-300 của sunset lại chỉ chênh 4% — kéo thêm về
-     phía đen cho thấy rõ ranh giới. */
+:host-context([data-theme='night']) {
+  /* Theme tối của RIÊNG trang này là `night`, không phải `sunset` của app —
+     ThemeService.useThemes() mượn nó lúc trang mở và trả lại lúc rời đi. Lý do:
+     `night` giữ đúng quan hệ màu của `winter` mà cả trang xây trên đó (xanh dẫn,
+     tím theo sau — winter 257→282, night 233→277), còn primary của `sunset` là
+     CAM nên gradient xanh→tím lệch hẳn tông khi chuyển tối.
+
+     Nền lấy thẳng ba bậc bề mặt của theme — gần đen ngả xanh, không đen tuyền:
+     đen tuyệt đối cạnh chữ sáng tạo tương phản gắt gây mỏi mắt khi đọc dài, đúng
+     điều Practical UI cảnh báo ở chương Colour. Riêng dải "lõm" phải tối hơn nền
+     chính, mà base-300 chỉ chênh khoảng 3% — kéo thêm về phía đen cho rõ ranh giới. */
   --lp-bg: var(--color-base-100);
   --lp-bg-sunken: color-mix(in oklab, var(--color-base-300) 82%, black);
   --lp-surface: color-mix(in oklab, var(--color-base-100) 92%, white);
   --lp-surface-2: var(--color-base-200);
 
-  /* Toàn bộ họ màu nhấn ở theme tối đảo ngược so với theme sáng: màu của sunset
-     vốn đã sáng (primary ~75%, success/warning ~86%) nên thừa tương phản để làm
-     CHỮ và không cần kéo tối; ngược lại chúng quá sáng để đặt chữ trắng lên
-     trên, nên chữ trên nền đặc chuyển thành gần-đen (chính là base-100). Đây
-     đúng cách Practical UI xử lý khi màu thương hiệu không đủ tương phản. */
+  /* Toàn bộ họ màu nhấn ở theme tối đảo ngược so với theme sáng: màu của `night`
+     vốn đã sáng (primary 75.4%, secondary 68%, success 78.5%, warning 83.2%) nên
+     thừa tương phản để làm CHỮ và không cần kéo tối; ngược lại chúng quá sáng để
+     đặt chữ trắng lên trên, nên chữ trên nền đặc chuyển thành gần-đen (chính là
+     base-100). Đây đúng cách Practical UI xử lý khi màu thương hiệu không đủ
+     tương phản.
+     ⚠️ ĐỔI SANG THEME TỐI KHÁC THÌ PHẢI ĐO LẠI: giả định "vốn đã sáng" chỉ đúng
+     với theme có màu nhấn ở quãng ~68–85%. Ví dụ theme `dark` có primary chỉ 58%,
+     đặt lên nền 25% là rơi xuống quanh 3:1, trượt ngưỡng AA cho chữ nhỏ. */
   --lp-ink-blue: var(--color-primary);
   --lp-ink-purple: var(--color-secondary);
   --lp-ink-green: var(--color-success);
@@ -136,10 +175,49 @@
   --lp-glow-purple: color-mix(in oklab, var(--accent-purple) 28%, transparent);
   --lp-spot: color-mix(in oklab, var(--accent-blue) 16%, transparent);
 
+  /* Nền tối thoáng hơn nền sáng nên GIỮ ĐƯỢC bậc chữ thứ ba thật.
+     Đo trên nền của khu vực: 68% → 4.57:1, qua ngưỡng; còn 58% mặc định của app
+     chỉ được 4.24 nên vẫn phải nâng. (Ở theme sáng thì không có chỗ cho bậc ba —
+     xem ghi chú dài ở khối `:host` phía trên.) */
+  --lp-text-3: color-mix(in oklab, var(--color-base-content) 68%, transparent);
+
   --lp-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
   --lp-shadow-md: 0 12px 30px -12px rgba(0, 0, 0, 0.75);
   --lp-shadow-lg: 0 34px 60px -24px rgba(0, 0, 0, 0.85);
 }
+
+/* Chỉ trình đọc màn hình thấy.
+   KHÔNG dùng `display: none` hay `visibility: hidden` — hai cái đó giấu khỏi cả
+   trình đọc màn hình, tức là ngược hẳn mục đích. Cách này giữ phần tử trong cây
+   trợ năng nhưng thu nó về một điểm ảnh và cắt sạch phần vẽ ra. */
+.lp-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ⚠️ BẪY: `overflow: hidden` GIẾT hoạt ảnh gắn thanh cuộn nằm bên trong.
+ *
+ * `overflow: hidden` biến phần tử thành một scroll container, mà
+ * `animation-timeline: view()` thì quy chiếu vào scroll container GẦN NHẤT —
+ * nên mọi thứ bên trong sẽ đo tiến độ theo một cái khung không bao giờ cuộn.
+ * Hoạt ảnh không báo lỗi, không tắt: nó đứng im ở một giá trị giữa chừng, trông
+ * y như CSS viết sai. (Đã mất một lúc để truy ra ở khu `.letter-band`: timeline
+ * kẹt ở đúng 34.213% suốt cả quãng cuộn.)
+ *
+ * Cần cắt nội dung tràn thì dùng `overflow: clip` — cắt y hệt, không sinh scroll
+ * container. Chỉ giữ `hidden` khi thật sự cần một vùng cuộn được.
+ *
+ * Hiện các khu ai / hero / features / steps / story / cta / capabilities đều
+ * đang dùng `hidden`. Không sao, vì chúng chưa có hoạt ảnh theo cuộn bên trong —
+ * nhưng THÊM một cái vào đó là nó chết ngay, mà không có lỗi nào chỉ đường.
+ * -------------------------------------------------------------------------- */
 
 /* --------------------------------------------------------------------------
    Khung trang

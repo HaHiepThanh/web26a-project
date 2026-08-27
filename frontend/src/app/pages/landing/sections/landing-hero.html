@@ -90,22 +90,30 @@
   </div>
 
   <!-- ── Bảng trình diễn ────────────────────────────────────────────────────
-       Bảng để NGẮM, không phải để bấm — nên cả khối gắn aria-hidden: nó minh
-       hoạ lại đúng những gì đoạn chữ phía trên đã nói, để trình đọc màn hình
-       đọc thêm một lần nữa chỉ là bắt nghe lặp.
+       Bảng TỰ DIỄN cho tới khi có người chạm vào, rồi giao lại quyền điều khiển.
 
-       Hai tấm thẻ tự đi từ trái sang phải theo hai làn, lệch pha nhau và bắt
-       chéo qua nhau ở giữa. Mỗi cột có đúng một cấu trúc — đầu cột, ô làn trên,
-       một thẻ đứng yên, ô làn dưới — nhờ vậy toạ độ hai chỗ đáp giống hệt nhau ở
-       cả ba cột, và cả màn chuyển động rút gọn còn vài phép cộng. -->
+       Tự diễn là để MỜI. Không có nó thì đây chỉ là một hình tĩnh và gần như
+       không ai nghĩ tới chuyện thử kéo. Nhưng mời được rồi mà vẫn tự dời thẻ thì
+       thành ra giành tay lái với người đang chơi — thẻ tự bay đi ngay lúc họ
+       định kéo nó. Nên lần chạm đầu tiên là dừng hẳn, vĩnh viễn.
+
+       Hai tấm thẻ đi theo hai làn trong ba cột. Mỗi cột có đúng một cấu trúc —
+       đầu cột, ô làn trên, một thẻ đứng yên, ô làn dưới — nhờ vậy toạ độ hai chỗ
+       đáp giống hệt nhau ở cả ba cột, và cả màn chuyển động rút gọn còn vài phép
+       cộng. -->
   <div class="lp-shell" appReveal [revealDelay]="180">
     <!-- .board-floor phải nằm NGOÀI .board-frame: khung có overflow:hidden để
          bo góc nội dung, nên bóng đổ tràn xuống đáy sẽ bị cắt cụt. -->
-    <div class="board-stage" aria-hidden="true">
-      <span class="board-floor"></span>
+    <!-- KHÔNG còn aria-hidden trên cả khối.
+         Bên trong có hai tấm thẻ bấm được bằng bàn phím, mà phần tử lấy được
+         tiêu điểm nằm trong vùng aria-hidden là một lỗi trợ năng nặng: người
+         dùng bàn phím tab vào một thứ trình đọc màn hình khẳng định là không
+         tồn tại. Nên chỉ những phần THUẦN TRANG TRÍ mới được ẩn, từng phần một. -->
+    <div class="board-stage" role="group" aria-label="Try it: a demo board you can rearrange">
+      <span class="board-floor" aria-hidden="true"></span>
 
       <div class="board-frame">
-        <div class="board-chrome">
+        <div class="board-chrome" aria-hidden="true">
           <span class="tl tl-r"></span>
           <span class="tl tl-y"></span>
           <span class="tl tl-g"></span>
@@ -118,9 +126,9 @@
         </div>
 
         <div class="board-body">
-          <div class="board-cols">
+          <div class="board-cols" #grid>
             <!-- Cột 1 -->
-            <div class="col">
+            <div class="col" aria-hidden="true">
               <div class="col-head"><span>To do</span><em>4</em></div>
               <div class="slot"></div>
               <article class="kan-card">
@@ -136,7 +144,7 @@
             </div>
 
             <!-- Cột 2 -->
-            <div class="col">
+            <div class="col" aria-hidden="true">
               <div class="col-head"><span>In progress</span><em>3</em></div>
               <div class="slot"></div>
               <article class="kan-card">
@@ -155,7 +163,7 @@
             </div>
 
             <!-- Cột 3 -->
-            <div class="col">
+            <div class="col" aria-hidden="true">
               <div class="col-head"><span>Done</span><em>5</em></div>
               <div class="slot"></div>
               <article class="kan-card">
@@ -175,7 +183,7 @@
                  ứng lại đúng thứ đang diễn ra trên bảng. Mỗi lần loé là một
                  phần tử riêng nên hoạt ảnh luôn chạy lại từ đầu. -->
             @for (b of blooms(); track b.id) {
-              <span class="col-bloom" [style.--col]="b.col"></span>
+              <span class="col-bloom" aria-hidden="true" [style.--col]="b.col"></span>
             }
 
             <!-- Hai thẻ du hành. Định vị tuyệt đối so với chính lưới ba cột
@@ -190,8 +198,17 @@
               <div
                 class="traveller"
                 [class.is-moving]="moving() === $index"
+                [class.is-dragging]="dragging() === $index"
                 [style.--col]="spot.col"
                 [style.--lane]="spot.lane"
+                tabindex="0"
+                role="button"
+                [attr.aria-label]="cardLabel($index)"
+                (pointerdown)="onPointerDown($index, $event)"
+                (pointermove)="onPointerMove($index, $event)"
+                (pointerup)="onPointerUp($index, $event)"
+                (pointercancel)="onPointerUp($index, $event)"
+                (keydown)="onKeydown($index, $event)"
               >
                 <article class="kan-card kan-card-travel">
                   @if ($index === 0) {
@@ -227,5 +244,22 @@
         </div>
       </div>
     </div>
+
+    <!-- Dòng gợi ý. Trước khi chạm: một lời mời. Sau khi kéo: chữ "Saved." —
+         chứng minh đúng câu đã viết ở đoạn dẫn phía trên ("Dragging is saving,
+         there is no Save button"). Người đọc vừa tự kiểm chứng lời quảng cáo
+         bằng chính tay mình, và đó là thứ không câu chữ nào thay được. -->
+    <p class="board-hint" [class.is-done]="moved()">
+      @if (moved()) {
+        <svg lucideCheck [strokeWidth]="2.6" aria-hidden="true"></svg>
+        Saved. No Save button — that is the whole idea.
+      } @else {
+        Drag a card to another column. Or focus it and use the arrow keys.
+      }
+    </p>
+
+    <!-- Thông báo cho trình đọc màn hình sau mỗi lần dời thẻ. `polite` để nó
+         chờ người dùng ngừng nói rồi mới chen vào. -->
+    <p class="lp-sr-only" aria-live="polite">{{ announcement() }}</p>
   </div>
 </section>
