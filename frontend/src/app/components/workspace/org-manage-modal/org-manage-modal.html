@@ -64,7 +64,17 @@
         </div>
 
         <div class="relative">
-          <svg lucideSearch class="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-base-content/35" [strokeWidth]="2.2"></svg>
+          <!-- `z-10` KHÔNG phải trang trí. daisyUI 5 đặt `input.input` thành
+               `position: relative` kèm nền đục `--color-base-100`, mà input lại
+               đứng SAU icon trong DOM — hai phần tử cùng được định vị, cùng
+               `z-index: auto`, nên cái sau vẽ đè lên cái trước và icon nằm lọt
+               dưới nền input. Kết quả: `pl-9` vẫn chừa chỗ nhưng chỗ đó trống
+               trơn, trông như quên đặt icon (thực ra icon vẫn render đủ
+               path+circle, chỉ là không nhìn thấy).
+               Ô tìm kiếm ở header không dính vì nó theo đúng khuôn daisyUI 5:
+               `<label class="input">` làm hộp flex, icon nằm bên trong, không
+               định vị tuyệt đối. -->
+          <svg lucideSearch class="pointer-events-none absolute left-3 top-1/2 z-10 h-3.5 w-3.5 -translate-y-1/2 text-base-content/35" [strokeWidth]="2.2"></svg>
           <input type="text" class="input input-bordered input-sm w-full rounded-md pl-9 font-semibold"
             placeholder="Search by name, email, or paste a user ID..." [ngModel]="searchInput()"
             (ngModelChange)="onSearchChange($event)" (keydown.enter)="onInviteRaw()" />
