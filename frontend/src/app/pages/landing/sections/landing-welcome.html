@@ -1,0 +1,69 @@
+<!--
+  Màn chào. Xem ghi chú dài ở landing-welcome.ts về lý do nó KHÔNG phải cổng
+  chặn, và vì sao nó nằm dưới cùng để hero trôi lên đè phủ.
+
+  Cố ý KHÔNG có <h1> ở đây. Tấm này là một tấm bìa mang tên sản phẩm, không
+  phải một khu vực có nội dung; còn <h1> thật của trang là câu chào hàng ở hero
+  ("Your team's work, on one board"), và một trang chỉ nên có đúng một cái. Khu
+  vực tự xưng tên bằng `aria-label`.
+-->
+<section class="welcome" aria-label="Welcome to Horizon Hub Harmony">
+  <div class="wc-inner" #inner>
+    <p class="wc-eyebrow">Welcome</p>
+
+    <!-- Ba chữ H tự viết ra, lần lượt. Cùng kỹ thuật với khu câu chuyện: nét mờ
+         có sẵn để chữ không phải một khoảng trống chờ hoạt ảnh, nét màu chạy đè
+         lên. Ở đây chạy theo THỜI GIAN chứ không theo cuộn — đây là thứ đầu
+         tiên người ta thấy, chưa ai cuộn gì cả. -->
+    <div class="wc-glyphs" aria-hidden="true">
+      <span class="wc-h tone-blue">
+        <svg viewBox="0 0 100 124" fill="none">
+          <path class="wc-track" d="M18 10V114M18 62H82M82 10V114" />
+          <path class="wc-ink" pathLength="100" d="M18 10V114M18 62H82M82 10V114" />
+        </svg>
+      </span>
+      <span class="wc-h tone-purple">
+        <svg viewBox="0 0 100 124" fill="none">
+          <path class="wc-track" d="M18 10V114M18 62H82M82 10V114" />
+          <path class="wc-ink" pathLength="100" d="M18 10V114M18 62H82M82 10V114" />
+        </svg>
+      </span>
+      <span class="wc-h tone-green">
+        <svg viewBox="0 0 100 124" fill="none">
+          <path class="wc-track" d="M18 10V114M18 62H82M82 10V114" />
+          <path class="wc-ink" pathLength="100" d="M18 10V114M18 62H82M82 10V114" />
+        </svg>
+      </span>
+    </div>
+
+    <p class="wc-name">
+      <span>Horizon</span>
+      <span>Hub</span>
+      <span>Harmony</span>
+    </p>
+
+    <p class="wc-line">
+      A real-time board where a small team's work — and the conversation around it — finally live
+      in the same place.
+    </p>
+
+    <!-- Ba chip: giới thiệu sơ chức năng ngay ở màn đầu, để người ta biết mình
+         sắp cuộn vào cái gì. Đúng ba, không hơn — đây là tấm bìa, không phải
+         bản kê; bản kê đầy đủ nằm ở khu "Everything in the box". -->
+    <ul class="wc-chips">
+      <li>Real-time board</li>
+      <li>Chat becomes cards</li>
+      <li>Everything included</li>
+    </ul>
+
+    <!-- Chỉ là hình, không phải liên kết. Cả khu vực mang `pointer-events: none`
+         (xem landing-welcome.ts), nên ở đây không được có gì cần bấm — người
+         dùng bàn phím cuộn bằng Space hoặc PageDown như mọi trang khác. -->
+    <p class="wc-cue" aria-hidden="true">
+      <span>Scroll</span>
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M12 4v14M6 13l6 6 6-6" />
+      </svg>
+    </p>
+  </div>
+</section>

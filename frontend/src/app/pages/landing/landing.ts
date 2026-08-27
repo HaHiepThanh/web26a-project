@@ -22,6 +22,7 @@ import { LandingFeatures } from './sections/landing-features';
 import { LandingHero } from './sections/landing-hero';
 import { LandingOrigin } from './sections/landing-origin';
 import { LandingStats } from './sections/landing-stats';
+import { LandingWelcome } from './sections/landing-welcome';
 import { LandingSteps } from './sections/landing-steps';
 import { SmoothScroll } from './smooth-scroll';
 
@@ -46,6 +47,7 @@ import { SmoothScroll } from './smooth-scroll';
   selector: 'app-landing',
   imports: [
     RouterLink,
+    LandingWelcome,
     LandingHero,
     LandingOrigin,
     LandingFeatures,

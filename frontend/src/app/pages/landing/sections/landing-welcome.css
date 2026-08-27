@@ -1,0 +1,270 @@
+/* ==========================================================================
+   Màn chào — khu vực đầu tiên, cao đúng một màn hình.
+   Xem landing-welcome.ts để biết vì sao nó không phải cổng chặn.
+   ========================================================================== */
+
+/* ⚠️ `sticky` phải đặt ở HOST, không phải ở `.welcome` bên trong.
+   Đã thử đặt ở section và đo ra là không dính: khối chứa của nó khi ấy là chính
+   component host, mà host cao đúng bằng section — nên không còn quãng nào để
+   dính, và nó cuộn đi như thường. Đưa lên host thì khối chứa thành `<main>`,
+   vốn cao cả trang, và nó nằm im được.
+
+   `z-index: 0` để nó ở dưới cùng. Các khu vực sau đều `position: relative` và
+   đứng sau trong cây DOM, nên chúng vẽ đè lên — đó chính là cú "hero trôi lên
+   phủ kín". Không ghim, không giành quyền cuộn: trang vẫn đi đúng theo tay. */
+:host {
+  position: sticky;
+  top: 0;
+  z-index: 0;
+}
+
+.welcome {
+  /* `100svh` chứ không `100vh`: trên điện thoại, `vh` tính theo khung nhìn khi
+     thanh địa chỉ đã thu lại, nên lúc mới vào trang màn chào cao hơn màn hình
+     thật và mũi tên "Scroll" bị đẩy khuất xuống dưới — đúng thứ duy nhất cần
+     nhìn thấy lại là thứ bị cắt. */
+  height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: var(--lp-5);
+  overflow: hidden;
+  background: var(--lp-bg);
+
+  /* ⚠️ BẮT BUỘC. Khu vực này nằm im ở đó suốt phần còn lại của trang (đã trong
+     suốt hoàn toàn nên không ai thấy). Một tấm phủ vô hình mà ăn mất cú bấm là
+     lỗi tệ nhất có thể có — nên nó không nhận sự kiện con trỏ nào. Cũng vì vậy
+     bên trong KHÔNG được có gì cần bấm. */
+  pointer-events: none;
+}
+
+.wc-inner {
+  display: grid;
+  justify-items: center;
+  gap: var(--lp-4);
+  max-width: 720px;
+  text-align: center;
+}
+
+.wc-eyebrow {
+  font-size: var(--lp-text-micro);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--lp-text-3);
+  animation: wc-in var(--lp-dur-4) var(--lp-ease) both;
+}
+
+/* ---------------- Ba chữ H ---------------- */
+.wc-glyphs {
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 2vw, 22px);
+}
+
+.wc-h {
+  display: block;
+  width: clamp(46px, 7vw, 82px);
+  /* Trạng thái mặc định = ĐÃ VIẾT XONG. Trình duyệt không chạy được hoạt ảnh
+     thì thấy ba chữ H hoàn chỉnh — mất phần diễn, không mất nội dung. */
+  stroke-dashoffset: 0;
+}
+.wc-h svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.wc-h path {
+  stroke-width: 9;
+  stroke-linecap: round;
+}
+
+/* Nét mờ có sẵn. Phải tự khai `dasharray: none` — thuộc tính này DI TRUYỀN,
+   không chặn thì nét mờ cũng bị cắt đứt đoạn theo nét chạy. */
+.wc-track {
+  stroke: var(--lp-border-strong);
+  stroke-dasharray: none;
+  stroke-dashoffset: 0;
+}
+
+/* Nét chạy. Cố ý không khai `stroke-dashoffset` ở đây — để nó thừa hưởng từ
+   `.wc-h`, nơi hoạt ảnh chạy. Gắn hoạt ảnh vào <path> thì không ăn: phần tử
+   SVG không sinh hộp bố cục, và `stroke-dashoffset` vốn di truyền được nên
+   chạy ở vỏ ngoài là gọn nhất. */
+.wc-ink {
+  stroke: var(--tone);
+  stroke-dasharray: 100;
+}
+
+.tone-blue {
+  --tone: var(--lp-ink-blue);
+}
+.tone-purple {
+  --tone: var(--lp-ink-purple);
+}
+.tone-green {
+  --tone: var(--lp-ink-green);
+}
+
+/* ---------------- Cái tên ---------------- */
+.wc-name {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 0.32em;
+  font-family: 'Lora', Georgia, 'Times New Roman', serif;
+  font-size: clamp(1.75rem, 1.1rem + 2.6vw, 3rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--lp-text);
+}
+/* Ba từ hiện lần lượt, ngay sau khi ba chữ H viết xong — mắt nối được chữ H
+   khổ lớn với chữ đầu của từng từ. */
+.wc-name span {
+  animation: wc-in var(--lp-dur-4) var(--lp-ease) both;
+}
+.wc-name span:nth-child(1) {
+  animation-delay: 620ms;
+}
+.wc-name span:nth-child(2) {
+  animation-delay: 740ms;
+}
+.wc-name span:nth-child(3) {
+  animation-delay: 860ms;
+}
+
+.wc-line {
+  max-width: 46ch;
+  font-size: var(--lp-text-lead);
+  line-height: 1.6;
+  text-wrap: pretty;
+  color: var(--lp-text-2);
+  animation: wc-in var(--lp-dur-4) var(--lp-ease) 980ms both;
+}
+
+/* ---------------- Ba chip chức năng ---------------- */
+.wc-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--lp-2);
+  margin: var(--lp-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.wc-chips li {
+  padding: 6px 14px;
+  border: 1px solid var(--lp-border-strong);
+  border-radius: 999px;
+  background: var(--lp-surface);
+  font-size: var(--lp-text-micro);
+  font-weight: 600;
+  color: var(--lp-text-2);
+  white-space: nowrap;
+  animation: wc-in var(--lp-dur-4) var(--lp-ease) both;
+}
+.wc-chips li:nth-child(1) {
+  animation-delay: 1080ms;
+}
+.wc-chips li:nth-child(2) {
+  animation-delay: 1160ms;
+}
+.wc-chips li:nth-child(3) {
+  animation-delay: 1240ms;
+}
+
+/* ---------------- Mũi tên cuộn ---------------- */
+.wc-cue {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: var(--lp-5);
+  font-size: var(--lp-text-micro);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--lp-text-3);
+  animation: wc-in var(--lp-dur-4) var(--lp-ease) 1400ms both;
+}
+.wc-cue svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  animation: wc-nudge 1.8s var(--lp-ease) 1900ms infinite;
+}
+
+@keyframes wc-in {
+  from {
+    opacity: 0;
+    translate: 0 14px;
+  }
+}
+
+@keyframes wc-nudge {
+  0%,
+  60%,
+  100% {
+    translate: 0 0;
+  }
+  30% {
+    translate: 0 5px;
+  }
+}
+
+/* ==========================================================================
+   Ba chữ H tự viết ra khi trang mở.
+
+   Chạy theo THỜI GIAN, không theo cuộn — đây là thứ đầu tiên người ta thấy,
+   lúc đó chưa ai cuộn gì cả.
+   ========================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  .wc-h {
+    animation: wc-draw 680ms var(--lp-ease) both;
+  }
+  /* Lệch 160ms mỗi chữ. Nhịp này đã học được ở khu câu chuyện: lệch dưới ~20%
+     thời lượng thì mắt đọc ra là ba chữ đi CÙNG LÚC, và cả hiệu ứng "đang được
+     viết" biến mất. 160 trên 680 là ~24%, đủ để thành ba nhịp rõ ràng. */
+  .wc-h:nth-child(1) {
+    animation-delay: 120ms;
+  }
+  .wc-h:nth-child(2) {
+    animation-delay: 280ms;
+  }
+  .wc-h:nth-child(3) {
+    animation-delay: 440ms;
+  }
+
+  @keyframes wc-draw {
+    from {
+      stroke-dashoffset: 100;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+}
+
+/* Giảm chuyển động: mọi thứ hiện sẵn, đủ nội dung, chỉ bỏ đường đi tới đó. */
+@media (prefers-reduced-motion: reduce) {
+  .wc-eyebrow,
+  .wc-name span,
+  .wc-line,
+  .wc-chips li,
+  .wc-cue {
+    animation: none;
+  }
+  .wc-cue svg {
+    animation: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .wc-chips li {
+    font-size: 11px;
+    padding: 5px 11px;
+  }
+}

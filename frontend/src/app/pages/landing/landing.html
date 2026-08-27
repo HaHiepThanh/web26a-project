@@ -141,7 +141,12 @@
     (có gì đảm bảo) → bản kê đầy đủ (cụ thể là những gì) → hỏi đáp → cái tên
     (chốt) → CTA.
 
-  Trang chia làm BỐN CHẶNG, mỗi chặng trả lời một câu hỏi khác nhau:
+  Mở đầu là MÀN CHÀO (`welcome`), cao đúng một màn hình. Không phải cổng chặn:
+  nó nằm im ở lớp dưới cùng và mọi khu vực sau trôi lên đè phủ, nên cuộn một cái
+  là qua. Nó nói tên sản phẩm, một câu về sản phẩm, và ba chip chức năng — vừa
+  đủ để người ta biết sắp cuộn vào cái gì. Xem landing-welcome.ts.
+
+  Sau đó trang chia làm BỐN CHẶNG, mỗi chặng trả lời một câu hỏi khác nhau:
 
     1. SẢN PHẨM  — nó là gì (hero) → tên nó nghĩa gì và ai làm (origin) → làm
                    được gì và nằm ở đâu trên màn hình (features) → khác ở đâu
@@ -177,6 +182,11 @@
   trên trang dùng chữ có chân và không có gì để bấm.
 -->
 <main id="noi-dung">
+  <!-- Màn chào: khu vực đầu tiên, cao đúng một màn hình. KHÔNG phải cổng
+       chặn — nó nằm im ở dưới và hero trôi lên đè phủ, nên cuộn một cái là
+       qua. Xem landing-welcome.ts. -->
+  <app-landing-welcome />
+
   <!-- ── 1. SẢN PHẨM: nó là gì và làm được gì ── -->
   <app-landing-hero />
   <app-landing-origin />
