@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { ApiService } from './api.service';
-import { KetQuaHuyHop, Meeting, UpcomingMeeting } from '../models';
+import { KetQuaHuyHop, Meeting, ParsedMeetingPdf, UpcomingMeeting } from '../models';
 
 /** Thân request `POST /meetings` — khớp `CreateMeetingDto` phía backend. */
 export interface TaoLichHopRequest {
@@ -39,5 +39,12 @@ export class MeetingsService {
 
   huy(meetingId: string): Promise<KetQuaHuyHop> {
     return this.api.delete<KetQuaHuyHop>(`/meetings/${meetingId}`);
+  }
+
+  /** Trích xuất dữ liệu cuộc họp từ file PDF xuất từ Google Calendar. */
+  parsePdf(file: File): Promise<ParsedMeetingPdf> {
+    const form = new FormData();
+    form.append('file', file);
+    return this.api.upload<ParsedMeetingPdf>('/meetings/parse-pdf', form);
   }
 }

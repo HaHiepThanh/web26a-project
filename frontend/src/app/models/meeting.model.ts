@@ -56,3 +56,17 @@ export interface KetQuaHuyHop {
    */
   xoaDuocTrenGoogle: boolean;
 }
+
+/** Dữ liệu trích xuất từ file PDF do Google Calendar xuất ra. */
+export interface ParsedMeetingPdf {
+  title: string;
+  organizer: string | null;
+  date: string | null;
+  startTime: string | null;
+  endTime: string | null;
+  duration: number;
+  timeZone: string | null;
+  description: string | null;
+  meetUrl: string | null;
+  attendeeEmails: string[];
+}

@@ -450,4 +450,230 @@ export class MeetingsService {
       );
     }
   }
+
+  /**
+   * Đọc và trích xuất thông tin lịch họp từ file PDF do Google Calendar xuất ra.
+   */
+  async parseGoogleCalendarPdf(buffer: Buffer): Promise<ParsedMeetingPdf> {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const pdf = require('pdf-parse');
+      const res = await pdf(buffer);
+      const rawText: string = res?.text || '';
+
+      if (!rawText.trim()) {
+        throw new BadRequestException('The uploaded PDF has no readable text.');
+      }
+
+      // Xử lý xuống dòng bị ngắt trong email (ví dụ: `hoasen.\nedu.vn`)
+      const unwrapped = rawText
+        .replace(
+          /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]*\.)\r?\n([a-zA-Z0-9.-]+)/g,
+          '$1$2',
+        )
+        .replace(/([a-zA-Z0-9._%+-]+@)\r?\n([a-zA-Z0-9.-]+)/g, '$1$2');
+
+      const lines = unwrapped
+        .split(/\r?\n/)
+        .map((l: string) => l.trim())
+        .filter(Boolean);
+
+      // 1. Người tạo
+      let organizer: string | null = null;
+      const orgLine = lines.find((l: string) =>
+        /^(?:Người tạo|Organizer):/i.test(l),
+      );
+      if (orgLine) {
+        const orgMatch = orgLine.match(/^(?:Người tạo|Organizer):\s*([^·]+)/i);
+        if (orgMatch) organizer = orgMatch[1].trim();
+      }
+
+      // 2. Tiêu đề
+      let title = '';
+      const orgIdx = lines.findIndex((l: string) =>
+        /^(?:Người tạo|Organizer):/i.test(l),
+      );
+      if (orgIdx > 0) {
+        const candidateLines = lines
+          .slice(0, orgIdx)
+          .filter((l: string) => !l.includes('@'));
+        title = candidateLines.join(' ').trim();
+      }
+      if (!title) {
+        title =
+          lines.find(
+            (l: string) =>
+              !l.includes('@') &&
+              !/^(?:Giờ|Time|Ngày|Date|Mô tả|Description)/i.test(l),
+          ) || 'Google Calendar Meeting';
+      }
+
+      // 3. Thời gian
+      let timeStr = '';
+      const timeIdx = lines.findIndex((l: string) =>
+        /^(?:Giờ|Time)$/i.test(l),
+      );
+      if (timeIdx >= 0) {
+        timeStr = lines.slice(timeIdx + 1, timeIdx + 4).join(' ');
+      } else {
+        timeStr = lines.join(' ');
+      }
+
+      const timeMatch = timeStr.match(
+        /(\d{1,2}):(\d{2})\s*(AM|PM|am|pm)?\s*[-–—]\s*(\d{1,2}):(\d{2})\s*(AM|PM|am|pm)?/i,
+      );
+      let startTime: string | null = null;
+      let endTime: string | null = null;
+      let duration = 30;
+
+      if (timeMatch) {
+        const [, h1, m1, ap1, h2, m2, ap2] = timeMatch;
+        let numH1 = parseInt(h1, 10);
+        let numH2 = parseInt(h2, 10);
+        if (ap1) {
+          const isPm = ap1.toUpperCase() === 'PM';
+          if (isPm && numH1 < 12) numH1 += 12;
+          if (!isPm && numH1 === 12) numH1 = 0;
+        }
+        if (ap2) {
+          const isPm = ap2.toUpperCase() === 'PM';
+          if (isPm && numH2 < 12) numH2 += 12;
+          if (!isPm && numH2 === 12) numH2 = 0;
+        } else if (ap1 && !ap2) {
+          const isPm = ap1.toUpperCase() === 'PM';
+          if (isPm && numH2 < 12) numH2 += 12;
+          if (!isPm && numH2 === 12) numH2 = 0;
+        }
+        startTime = `${String(numH1).padStart(2, '0')}:${m1}`;
+        endTime = `${String(numH2).padStart(2, '0')}:${m2}`;
+        const diff =
+          numH2 * 60 + parseInt(m2, 10) - (numH1 * 60 + parseInt(m1, 10));
+        duration = diff > 0 ? diff : 30;
+      }
+
+      // 4. Ngày
+      let date: string | null = null;
+      const dateIdx = lines.findIndex((l: string) =>
+        /^(?:Ngày|Date)$/i.test(l),
+      );
+      const dateSearchBlock =
+        dateIdx >= 0
+          ? lines.slice(dateIdx + 1, dateIdx + 4).join(' ')
+          : lines.join(' ');
+
+      const viDateMatch = dateSearchBlock.match(
+        /(\d{1,2})\s+[Tt]háng\s+(\d{1,2}),?\s+(\d{4})/i,
+      );
+      if (viDateMatch) {
+        const [, d, m, y] = viDateMatch;
+        date = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      } else {
+        const enDateMatch = dateSearchBlock.match(
+          /([a-zA-Z]+)\s+(\d{1,2}),?\s+(\d{4})/i,
+        );
+        if (enDateMatch) {
+          const months: Record<string, number> = {
+            jan: 1,
+            feb: 2,
+            mar: 3,
+            apr: 4,
+            may: 5,
+            jun: 6,
+            jul: 7,
+            aug: 8,
+            sep: 9,
+            oct: 10,
+            nov: 11,
+            dec: 12,
+            january: 1,
+            february: 2,
+            march: 3,
+            april: 4,
+            june: 6,
+            july: 7,
+            august: 8,
+            september: 9,
+            october: 10,
+            november: 11,
+            december: 12,
+          };
+          const m = months[enDateMatch[1].toLowerCase()];
+          if (m) {
+            date = `${enDateMatch[3]}-${String(m).padStart(2, '0')}-${String(enDateMatch[2]).padStart(2, '0')}`;
+          }
+        } else {
+          const slashMatch = dateSearchBlock.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+          if (slashMatch) {
+            date = `${slashMatch[3]}-${String(slashMatch[2]).padStart(2, '0')}-${String(slashMatch[1]).padStart(2, '0')}`;
+          }
+        }
+      }
+
+      // 5. Mô tả
+      let description: string | null = null;
+      const descIdx = lines.findIndex((l: string) =>
+        /^(?:Mô tả|Description)$/i.test(l),
+      );
+      if (descIdx >= 0) {
+        const rawDescLines = lines.slice(descIdx + 1, descIdx + 10);
+        const stopIdx = rawDescLines.findIndex((l: string) =>
+          /^(?:Ghi chú|My notes|Khách|Guests|Lưu ý)/i.test(l),
+        );
+        const finalDescLines =
+          stopIdx >= 0
+            ? rawDescLines.slice(0, stopIdx)
+            : rawDescLines.slice(0, 3);
+        const joinedDesc = finalDescLines.join('\n').trim();
+        description = joinedDesc.length > 0 ? joinedDesc : null;
+      }
+
+      // 6. Meet URL
+      const meetMatch = unwrapped.match(
+        /https:\/\/meet\.google\.com\/[a-z0-9-]+/i,
+      );
+      const meetUrl = meetMatch ? meetMatch[0] : null;
+
+      // 7. Danh sách email người dự
+      const attendeeEmails = [
+        ...new Set(
+          unwrapped.match(
+            /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
+          ) || [],
+        ),
+      ];
+
+      return {
+        title,
+        organizer,
+        date,
+        startTime,
+        endTime,
+        duration,
+        timeZone: timeStr.includes('TP Hồ Chí Minh')
+          ? 'Asia/Ho_Chi_Minh'
+          : null,
+        description,
+        meetUrl,
+        attendeeEmails,
+      };
+    } catch (err) {
+      this.logger.error('Lỗi khi đọc file PDF Google Calendar:', err);
+      throw new BadRequestException(
+        'Could not parse Google Calendar PDF. Please ensure the file was exported from Google Calendar.',
+      );
+    }
+  }
+}
+
+export interface ParsedMeetingPdf {
+  title: string;
+  organizer: string | null;
+  date: string | null;
+  startTime: string | null;
+  endTime: string | null;
+  duration: number;
+  timeZone: string | null;
+  description: string | null;
+  meetUrl: string | null;
+  attendeeEmails: string[];
 }

@@ -11,6 +11,7 @@ import {
 } from '@lucide/angular';
 import { ApiBoardMember } from '../../../models';
 import { ApiService } from '../../../services/api.service';
+import { AuthService } from '../../../services/auth.service';
 import { GoogleCalendarService } from '../../../services/google-calendar.service';
 import { MeetingsService } from '../../../services/meetings.service';
 import { UserAvatar } from '../../shared/user-avatar/user-avatar';
@@ -55,6 +56,7 @@ export interface UngVien {
 })
 export class ScheduleMeetingModal {
   private readonly api = inject(ApiService);
+  private readonly auth = inject(AuthService);
   private readonly calendar = inject(GoogleCalendarService);
   private readonly meetings = inject(MeetingsService);
 
@@ -80,6 +82,7 @@ export class ScheduleMeetingModal {
   readonly daChon = signal<string[]>([]);
 
   readonly dangGui = signal(false);
+  readonly dangNhapFile = signal(false);
   readonly loi = signal<string | null>(null);
   readonly loiTruong = signal<Record<string, string>>({});
   readonly thongBaoNhap = signal<string | null>(null);
@@ -98,6 +101,40 @@ export class ScheduleMeetingModal {
     const set = new Set(this.daChon());
     return this.ungVien().filter((u) => set.has(u.id));
   });
+
+  readonly userEmail = computed(() => this.auth.currentUser()?.email ?? '');
+  readonly organizerName = computed(
+    () =>
+      this.auth.currentUser()?.displayName ||
+      this.auth.currentUser()?.email ||
+      'Thanh Hà Hiệp',
+  );
+
+  inGioPdf(): string {
+    const moc = this.mocThoiGian();
+    const b = moc ? moc.batDau : new Date();
+    const k = moc ? moc.ketThuc : new Date(Date.now() + this.phutKeoDai() * 60_000);
+    const fmt = (d: Date) => {
+      let h = d.getHours();
+      const m = String(d.getMinutes()).padStart(2, '0');
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      h = h % 12 || 12;
+      return `${h}:${m}${ampm}`;
+    };
+    const tzLabel =
+      this.muiGio === 'Asia/Ho_Chi_Minh'
+        ? 'Giờ Đông Dương - TP Hồ Chí Minh'
+        : this.muiGio;
+    return `${fmt(b)} - ${fmt(k)} (${tzLabel})`;
+  }
+
+  inNgayPdf(): string {
+    const moc = this.mocThoiGian();
+    const d = moc ? moc.batDau : new Date();
+    const daysVi = ['chủ nhật', 'thứ 2', 'thứ 3', 'thứ 4', 'thứ 5', 'thứ 6', 'thứ 7'];
+    const thu = daysVi[d.getDay()];
+    return `${thu}, ${d.getDate()} Tháng ${d.getMonth() + 1}, ${d.getFullYear()}`;
+  }
 
   constructor() {
     effect(() => {
@@ -163,7 +200,7 @@ export class ScheduleMeetingModal {
 
   // ---------------------------------------------------------------- Import / Export
 
-  async nhapFileIcs(e: Event): Promise<void> {
+  async nhapFile(e: Event): Promise<void> {
     const input = e.target as HTMLInputElement;
     const f = input.files?.[0];
     input.value = '';
@@ -171,79 +208,138 @@ export class ScheduleMeetingModal {
 
     this.loi.set(null);
     this.thongBaoNhap.set(null);
+    this.dangNhapFile.set(true);
 
     try {
-      const text = await f.text();
-      const kq = docIcs(text);
-      if (kq.loi) {
-        this.loi.set(kq.loi);
-        return;
-      }
+      const isPdf = f.name.toLowerCase().endsWith('.pdf') || f.type === 'application/pdf';
 
-      const sk = kq.suKien[0];
-      if (!sk) {
-        this.loi.set('No usable events found in this .ics file.');
-        return;
-      }
+      if (isPdf) {
+        // Nhập từ file PDF xuất từ Google Calendar
+        const pdfData = await this.meetings.parsePdf(f);
 
-      // 1. Tiêu đề
-      if (sk.title && sk.title !== '(untitled event)') {
-        this.title.set(sk.title);
-      }
-
-      // 2. Mô tả
-      if (sk.description) {
-        this.description.set(sk.description);
-      }
-
-      // 3. Thời gian bắt đầu & kết thúc
-      const batDau = new Date(sk.startAt);
-      const ketThuc = new Date(sk.endAt);
-      this.ngay.set(chuoiNgay(batDau));
-      this.gio.set(chuoiGio(batDau));
-
-      // 4. Thời lượng
-      const diffMinutes = Math.max(15, Math.round((ketThuc.getTime() - batDau.getTime()) / 60_000));
-      const closestDuration = THOI_LUONG.reduce((prev, curr) =>
-        Math.abs(curr - diffMinutes) < Math.abs(prev - diffMinutes) ? curr : prev,
-      );
-      this.phutKeoDai.set(closestDuration);
-
-      // 5. Nhắc trước
-      if (sk.remindMinutes !== null) {
-        const matchRemind = MOC_NHAC.find((m) => m.phut === sk.remindMinutes);
-        if (matchRemind) {
-          this.nhacTruoc.set(sk.remindMinutes);
+        if (pdfData.title) {
+          this.title.set(pdfData.title);
         }
-      }
-
-      // 6. Meet room
-      if (sk.location && laLinkMeet(sk.location)) {
-        this.kemMeet.set(true);
-      }
-
-      // 7. Khớp email người dự với thành viên board
-      let soNguoiKhop = 0;
-      if (sk.attendeeEmails.length > 0) {
-        const emailSet = new Set(sk.attendeeEmails.map((em) => em.toLowerCase()));
-        const khopUids = this.ungVien()
-          .filter((u) => u.moiDuoc && emailSet.has(u.email.toLowerCase()))
-          .map((u) => u.id);
-
-        if (khopUids.length > 0) {
-          soNguoiKhop = khopUids.length;
-          this.daChon.set([...new Set([...this.daChon(), ...khopUids])]);
+        if (pdfData.description) {
+          this.description.set(pdfData.description);
         }
-      }
+        if (pdfData.date) {
+          this.ngay.set(pdfData.date);
+        }
+        if (pdfData.startTime) {
+          this.gio.set(pdfData.startTime);
+        }
+        if (pdfData.duration) {
+          const closestDuration = THOI_LUONG.reduce((prev, curr) =>
+            Math.abs(curr - pdfData.duration) < Math.abs(prev - pdfData.duration) ? curr : prev,
+          );
+          this.phutKeoDai.set(closestDuration);
+        }
+        if (pdfData.meetUrl) {
+          this.kemMeet.set(true);
+        }
 
-      const matchMsg = soNguoiKhop > 0
-        ? ` and pre-selected ${soNguoiKhop} board member(s)`
-        : '';
-      this.thongBaoNhap.set(`Imported meeting details from "${f.name}"${matchMsg}. You can adjust any fields and invitees before scheduling.`);
-      this.loiTruong.set({});
-    } catch {
-      this.loi.set('Failed to parse the .ics file. Please check file format.');
+        // Tự động khớp danh sách email với các thành viên trong board
+        let soNguoiKhop = 0;
+        if (pdfData.attendeeEmails && pdfData.attendeeEmails.length > 0) {
+          const emailSet = new Set(pdfData.attendeeEmails.map((em) => em.toLowerCase()));
+          const khopUids = this.ungVien()
+            .filter((u) => u.moiDuoc && emailSet.has(u.email.toLowerCase()))
+            .map((u) => u.id);
+
+          if (khopUids.length > 0) {
+            soNguoiKhop = khopUids.length;
+            this.daChon.set([...new Set([...this.daChon(), ...khopUids])]);
+          }
+        }
+
+        const matchMsg = soNguoiKhop > 0 ? ` & matched ${soNguoiKhop} board member(s)` : '';
+        this.thongBaoNhap.set(
+          `Imported Google Calendar details from PDF "${f.name}"${matchMsg}. You can review and edit before scheduling.`,
+        );
+        this.loiTruong.set({});
+      } else {
+        // Nhập từ file .ics
+        const text = await f.text();
+        const kq = docIcs(text);
+        if (kq.loi) {
+          this.loi.set(kq.loi);
+          return;
+        }
+
+        const sk = kq.suKien[0];
+        if (!sk) {
+          this.loi.set('No usable events found in this .ics file.');
+          return;
+        }
+
+        // 1. Tiêu đề
+        if (sk.title && sk.title !== '(untitled event)') {
+          this.title.set(sk.title);
+        }
+
+        // 2. Mô tả
+        if (sk.description) {
+          this.description.set(sk.description);
+        }
+
+        // 3. Thời gian bắt đầu & kết thúc
+        const batDau = new Date(sk.startAt);
+        const ketThuc = new Date(sk.endAt);
+        this.ngay.set(chuoiNgay(batDau));
+        this.gio.set(chuoiGio(batDau));
+
+        // 4. Thời lượng
+        const diffMinutes = Math.max(15, Math.round((ketThuc.getTime() - batDau.getTime()) / 60_000));
+        const closestDuration = THOI_LUONG.reduce((prev, curr) =>
+          Math.abs(curr - diffMinutes) < Math.abs(prev - diffMinutes) ? curr : prev,
+        );
+        this.phutKeoDai.set(closestDuration);
+
+        // 5. Nhắc trước
+        if (sk.remindMinutes !== null) {
+          const matchRemind = MOC_NHAC.find((m) => m.phut === sk.remindMinutes);
+          if (matchRemind) {
+            this.nhacTruoc.set(sk.remindMinutes);
+          }
+        }
+
+        // 6. Meet room
+        if (sk.location && laLinkMeet(sk.location)) {
+          this.kemMeet.set(true);
+        }
+
+        // 7. Khớp email người dự với thành viên board
+        let soNguoiKhop = 0;
+        if (sk.attendeeEmails.length > 0) {
+          const emailSet = new Set(sk.attendeeEmails.map((em) => em.toLowerCase()));
+          const khopUids = this.ungVien()
+            .filter((u) => u.moiDuoc && emailSet.has(u.email.toLowerCase()))
+            .map((u) => u.id);
+
+          if (khopUids.length > 0) {
+            soNguoiKhop = khopUids.length;
+            this.daChon.set([...new Set([...this.daChon(), ...khopUids])]);
+          }
+        }
+
+        const matchMsg = soNguoiKhop > 0 ? ` and pre-selected ${soNguoiKhop} board member(s)` : '';
+        this.thongBaoNhap.set(
+          `Imported meeting details from "${f.name}"${matchMsg}. You can adjust any fields and invitees before scheduling.`,
+        );
+        this.loiTruong.set({});
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Could not parse the calendar file.';
+      this.loi.set(msg);
+    } finally {
+      this.dangNhapFile.set(false);
     }
+  }
+
+  /** Alias cho template hoặc test */
+  nhapFileIcs(e: Event): Promise<void> {
+    return this.nhapFile(e);
   }
 
   xuatIcs(): void {

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -6,8 +7,11 @@ import {
   Param,
   Post,
   Query,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { FirebaseAuthGuard } from '../../common/firebase/firebase-auth.guard';
 import { CurrentUser } from '../../common/firebase/current-user.decorator';
 import type { CurrentUserInfo } from '../../common/firebase/current-user.decorator';
@@ -18,6 +22,20 @@ import { CreateMeetingDto } from './dto/create-meeting.dto';
 @Controller('meetings')
 export class MeetingsController {
   constructor(private readonly meetings: MeetingsService) {}
+
+  /**
+   * POST /meetings/parse-pdf — trích xuất thông tin lịch họp từ file PDF của Google Calendar.
+   */
+  @Post('parse-pdf')
+  @UseInterceptors(
+    FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024 } }),
+  )
+  async parsePdf(@UploadedFile() file: Express.Multer.File) {
+    if (!file || !file.buffer) {
+      throw new BadRequestException('Please provide a valid PDF file.');
+    }
+    return this.meetings.parseGoogleCalendarPdf(file.buffer);
+  }
 
   /**
    * GET /meetings/my-upcoming — nguồn cho lời nhắc ở chuông 🔔.

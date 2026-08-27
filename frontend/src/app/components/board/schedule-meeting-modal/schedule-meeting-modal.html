@@ -10,12 +10,18 @@
       </h3>
 
       <div class="flex items-center gap-2">
-        <!-- Import .ics -->
+        <!-- Import (.ics, PDF) -->
         <label class="btn btn-outline btn-xs gap-1.5 font-bold cursor-pointer transition-all hover:bg-base-200"
-          title="Import an .ics calendar file to pre-fill details">
-          <svg lucideUpload class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg>
-          Import .ics
-          <input type="file" accept=".ics,text/calendar" class="hidden" (change)="nhapFileIcs($event)" />
+          [class.pointer-events-none]="dangNhapFile()"
+          title="Import an .ics or .pdf calendar file (Google Calendar export) to pre-fill details">
+          @if (dangNhapFile()) {
+            <span class="loading loading-spinner loading-xs"></span>
+            Importing&hellip;
+          } @else {
+            <svg lucideUpload class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg>
+            Import
+          }
+          <input type="file" accept=".ics,text/calendar,.pdf,application/pdf" class="hidden" [disabled]="dangNhapFile()" (change)="nhapFile($event)" />
         </label>
 
         <!-- Export Dropdown (.ics / PDF) -->
@@ -218,59 +224,112 @@
   </div>
 </div>
 
-<!-- Bản in PDF: chỉ hiển thị khi in qua window.print() -->
-<div id="ban-in-lich-soan" class="hidden print:block p-8 font-sans text-black bg-white">
-  <div class="border-b-2 border-black pb-4 mb-6">
-    <p class="text-xs uppercase tracking-wider text-gray-500 font-bold">Horizon Hub Harmony &bull; Meeting Schedule</p>
-    <h1 class="text-2xl font-black mt-1 text-black">{{ title() || 'Untitled Meeting' }}</h1>
-    @if (boardName()) {
-      <p class="text-sm font-semibold text-gray-600 mt-0.5">Board: {{ boardName() }}</p>
-    }
+<!-- Bản in PDF: Chuẩn giao diện Google Calendar xuất sự kiện -->
+<div id="ban-in-lich-soan" class="hidden print:block font-sans text-black bg-white w-full max-w-[800px] mx-auto">
+  <!-- 1. Dải màu xám đậm trên cùng hiển thị email tài khoản Google -->
+  <div class="bg-[#3c4043] text-white text-right py-2 px-6 text-sm font-medium tracking-wide">
+    {{ userEmail() || 'user@gmail.com' }}
   </div>
 
-  <div class="grid grid-cols-2 gap-4 mb-6 text-sm">
-    <div class="p-3 bg-gray-50 border border-gray-200 rounded">
-      <p class="text-xs font-bold text-gray-500 uppercase">Date &amp; Time</p>
-      <p class="font-bold text-black mt-1">
-        {{ ngay() }} &bull; {{ gio() }} ({{ phutKeoDai() }} min)
-      </p>
-      <p class="text-xs text-gray-500 mt-0.5">Timezone: {{ muiGio }}</p>
-    </div>
+  <div class="px-8 pt-8 pb-12">
+    <!-- 2. Header: Icon lịch Google + Tiêu đề cuộc họp + Người tạo & Phản hồi -->
+    <div class="flex items-start gap-4 mb-8">
+      <!-- Icon lịch cổ điển phong cách Google Calendar -->
+      <div class="w-12 h-12 rounded border border-gray-400 bg-gray-100 flex flex-col items-center justify-between shrink-0 overflow-hidden shadow-xs">
+        <div class="w-full bg-gray-300 border-b border-gray-400 py-0.5 flex justify-around items-center">
+          <div class="w-1.5 h-1.5 rounded-full bg-gray-600"></div>
+          <div class="w-1.5 h-1.5 rounded-full bg-gray-600"></div>
+        </div>
+        <div class="grid grid-cols-3 gap-0.5 p-1 w-full">
+          <div class="h-1 bg-gray-300 rounded-2xs"></div>
+          <div class="h-1 bg-gray-300 rounded-2xs"></div>
+          <div class="h-1 bg-gray-300 rounded-2xs"></div>
+          <div class="h-1 bg-gray-300 rounded-2xs"></div>
+          <div class="h-1 bg-gray-400 rounded-2xs"></div>
+          <div class="h-1 bg-gray-300 rounded-2xs"></div>
+        </div>
+      </div>
 
-    <div class="p-3 bg-gray-50 border border-gray-200 rounded">
-      <p class="text-xs font-bold text-gray-500 uppercase">Meeting Room &amp; Reminder</p>
-      <p class="font-bold text-black mt-1">
-        {{ kemMeet() ? 'Google Meet' : 'No online room' }}
-      </p>
-      <p class="text-xs text-gray-500 mt-0.5">Reminder: {{ nhacTruoc() }} minutes before</p>
-    </div>
-  </div>
-
-  @if (description()) {
-    <div class="mb-6">
-      <h2 class="text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Agenda / Description</h2>
-      <div class="p-3 bg-gray-50 border border-gray-200 rounded text-sm whitespace-pre-wrap text-black">
-        {{ description() }}
+      <div class="flex-1 min-w-0">
+        <h1 class="text-2xl font-bold text-gray-900 leading-snug">
+          {{ title() || 'Kế hoạch Tuần cá nhân sync' }}
+        </h1>
+        <p class="text-[13px] text-gray-700 mt-1 flex flex-wrap items-center gap-1.5">
+          <span>Người tạo: {{ organizerName() }}</span>
+          <span class="text-gray-400">&bull;</span>
+          <span>Trả lời của bạn:</span>
+          <span class="text-emerald-700 font-semibold inline-flex items-center gap-0.5">
+            <svg class="w-3.5 h-3.5 inline" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+            </svg>
+            Có, tôi sẽ tham gia
+          </span>
+        </p>
       </div>
     </div>
-  }
 
-  <div>
-    <h2 class="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">
-      Invited Attendees ({{ daChon().length }})
-    </h2>
-    @if (nguoiDaChon().length > 0) {
-      <ul class="divide-y divide-gray-200 border border-gray-200 rounded">
-        @for (u of nguoiDaChon(); track u.id) {
-          <li class="px-3 py-2 flex items-center justify-between text-xs">
-            <span class="font-bold text-black">{{ u.ten }}</span>
-            <span class="text-gray-600">{{ u.email }}</span>
-          </li>
-        }
-      </ul>
-    } @else {
-      <p class="text-xs text-gray-400 italic">No attendees selected.</p>
-    }
+    <!-- 3. Nội dung 2 cột: Cột trái (Giờ, Ngày, Mô tả, Ghi chú) | Cột phải (Khách) -->
+    <div class="grid grid-cols-12 gap-8">
+      <!-- Cột trái (7/12) -->
+      <div class="col-span-7 space-y-6">
+        <!-- Giờ -->
+        <div>
+          <h3 class="text-xs text-gray-500 font-normal mb-1">Giờ</h3>
+          <p class="text-lg font-bold text-gray-900 leading-tight">
+            {{ inGioPdf() }}
+          </p>
+        </div>
+
+        <!-- Ngày -->
+        <div>
+          <h3 class="text-xs text-gray-500 font-normal mb-1">Ngày</h3>
+          <p class="text-lg font-bold text-gray-900 leading-tight">
+            {{ inNgayPdf() }}
+          </p>
+        </div>
+
+        <!-- Mô tả -->
+        <div>
+          <h3 class="text-xs text-gray-500 font-normal mb-1">Mô tả</h3>
+          <p class="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">
+            {{ description() || 'Scheduled from Horizon Hub Harmony.' }}
+          </p>
+        </div>
+
+        <!-- Ghi chú của tôi -->
+        <div class="pt-2">
+          <h3 class="text-xs text-gray-500 font-normal mb-1">Ghi chú của tôi</h3>
+          <div class="min-h-[60px]"></div>
+        </div>
+      </div>
+
+      <!-- Cột phải: Khách (5/12) với đường kẻ phân cách bên trái -->
+      <div class="col-span-5 border-l border-gray-300 pl-6 space-y-3">
+        <h3 class="text-xs text-gray-500 font-normal mb-2">Khách</h3>
+        <div class="space-y-2">
+          <!-- Người tạo / Current user -->
+          <div class="flex items-start gap-1.5 text-xs text-gray-900">
+            <span class="text-emerald-700 font-bold shrink-0 mt-0.5">✔</span>
+            <span class="font-medium break-words">{{ organizerName() }}</span>
+          </div>
+
+          <!-- Các thành viên được mời -->
+          @for (u of nguoiDaChon(); track u.id) {
+            @if (u.email !== userEmail()) {
+              <div class="flex items-start gap-1.5 text-xs text-gray-800">
+                <span class="text-emerald-700 font-bold shrink-0 mt-0.5">✔</span>
+                <div class="min-w-0 flex-1">
+                  @if (u.ten && u.ten !== u.email) {
+                    <div class="font-medium text-gray-900">{{ u.ten }}</div>
+                  }
+                  <div class="text-gray-600 break-all">{{ u.email }}</div>
+                </div>
+              </div>
+            }
+          }
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 }

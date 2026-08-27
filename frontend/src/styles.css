@@ -223,27 +223,29 @@
    `visibility` thì phần tử vẫn nằm trong bố cục, chỉ là không vẽ ra.
    ===================================================================== */
 @media print {
+  @page {
+    margin: 12mm 0;
+    size: auto;
+  }
   body * {
     visibility: hidden !important;
   }
-  #ban-in-lich,
-  #ban-in-lich *,
   #ban-in-lich-soan,
   #ban-in-lich-soan * {
     visibility: visible !important;
   }
-  #ban-in-lich,
   #ban-in-lich-soan {
     position: absolute !important;
     left: 0 !important;
     top: 0 !important;
     width: 100% !important;
-    padding: 24px !important;
+    padding: 0 !important;
+    margin: 0 !important;
     background: #fff !important;
     color: #000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
-  /* Không để một cuộc họp bị cắt đôi qua hai trang giấy. */
-  #ban-in-lich .muc-hop,
   #ban-in-lich-soan .muc-hop {
     break-inside: avoid;
     page-break-inside: avoid;
