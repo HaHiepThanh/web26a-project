@@ -27,10 +27,44 @@
     <span class="wc-aurora wc-b"></span>
     <span class="wc-aurora wc-c"></span>
     <span class="wc-grid"></span>
+    <!-- Ba cột nay CÓ TÊN. Trước đó chúng là ba hình chữ nhật vô danh; gắn
+         đúng tên ba cột của bảng thật thì tấm bảng đọc ra được ngay, và dải
+         trên cùng vốn trống nhất cũng có thứ để nhìn. Đây là chỗ trang trí duy
+         nhất trên màn chào mang theo THÔNG TIN chứ không chỉ mang hình. -->
     <span class="wc-cols">
       <span></span>
       <span></span>
       <span></span>
+    </span>
+
+    <!-- Tên cột nằm ở lớp RIÊNG, không phải trong `.wc-cols`.
+         `.wc-cols` mang một mask tan dần hai đầu để bóng cột không đâm vào mép
+         màn hình — mà đầu cột lại rơi đúng vào đoạn đang tan, nên chữ nằm
+         trong đó bị nhân thêm một lần mờ nữa (đo được alpha còn ~0.34) và
+         thành ra không đọc nổi dù đã tô đậm màu. Tách ra một lớp không mask,
+         dùng chung hình học qua biến, thì bóng cột vẫn tan mềm còn tên cột thì
+         hiện đủ rõ. -->
+    <span class="wc-colnames">
+      <i>To do</i>
+      <i>In progress</i>
+      <i>Done</i>
+    </span>
+
+
+    <!-- Thanh ray dọc hai mép: một đường mảnh, mấy vạch chia, và tên sản phẩm
+         xoay đứng. Lấp đúng dải dọc còn trống sau khi đã có thẻ ở rìa.
+         Nằm TRONG lớp nền và ĐỨNG TRƯỚC mấy tấm thẻ trong cây DOM, nên thẻ vẽ
+         đè lên ray. Để ray ở ngoài thì nó vẽ sau cùng và kẻ một đường xuyên
+         qua giữa mấy tấm thẻ — nhìn thấy rõ, và đọc ra là lỗi. -->
+    <span class="wc-rails">
+      <span class="wc-rail wc-rail-l">
+        <i></i><i></i><i></i>
+        <b>Horizon Hub Harmony</b>
+      </span>
+      <span class="wc-rail wc-rail-r">
+        <i></i><i></i><i></i>
+        <b>Web26A — 2026</b>
+      </span>
     </span>
 
     <!--
@@ -84,6 +118,16 @@
     <li class="wc-br">Made by three students</li>
   </ul>
 
+  <!-- Tấm thẻ bám theo con trỏ. Nó nói đúng một câu, trước cả khi ai đọc chữ
+       nào: trang này là về việc cầm một tấm thẻ và di chuyển nó.
+       Chỉ dựng trên thiết bị có con trỏ chính xác và khi người dùng không xin
+       giảm chuyển động — xem `trackPointer()` ở landing-welcome.ts. -->
+  <span class="wc-cursor" #cursorCard aria-hidden="true">
+    <i class="wc-lb lb-purple"></i>
+    <i class="wc-ln"></i>
+    <i class="wc-ln wc-ln-s"></i>
+  </span>
+
   <div class="wc-inner" #inner>
     <p class="wc-eyebrow">Welcome</p>
 
@@ -92,30 +136,42 @@
          lên. Ở đây chạy theo THỜI GIAN chứ không theo cuộn — đây là thứ đầu
          tiên người ta thấy, chưa ai cuộn gì cả. -->
     <div class="wc-glyphs" aria-hidden="true">
-      <span class="wc-h tone-blue">
-        <svg viewBox="0 0 100 124" fill="none">
-          <path class="wc-track" d="M18 10V114M18 62H82M82 10V114" />
-          <path class="wc-ink" pathLength="100" d="M18 10V114M18 62H82M82 10V114" />
-        </svg>
-      </span>
-      <span class="wc-h tone-purple">
-        <svg viewBox="0 0 100 124" fill="none">
-          <path class="wc-track" d="M18 10V114M18 62H82M82 10V114" />
-          <path class="wc-ink" pathLength="100" d="M18 10V114M18 62H82M82 10V114" />
-        </svg>
-      </span>
-      <span class="wc-h tone-green">
-        <svg viewBox="0 0 100 124" fill="none">
-          <path class="wc-track" d="M18 10V114M18 62H82M82 10V114" />
-          <path class="wc-ink" pathLength="100" d="M18 10V114M18 62H82M82 10V114" />
-        </svg>
-      </span>
+      @for (m of meanings; track $index) {
+        <span
+          class="wc-h"
+          #glyph
+          [class]="'wc-h tone-' + ['blue', 'purple', 'green'][$index]"
+          [class.is-hot]="hovered() === $index"
+        >
+          <svg viewBox="0 0 100 124" fill="none">
+            <path class="wc-track" d="M18 10V114M18 62H82M82 10V114" />
+            <path class="wc-ink" pathLength="100" d="M18 10V114M18 62H82M82 10V114" />
+          </svg>
+        </span>
+      }
     </div>
 
+    <!-- Chữ nào con trỏ đang đi ngang thì từ tương ứng đổi sang màu của chữ H
+         đó — mắt tự nối "chữ H khổ lớn" với "từ bắt đầu bằng chữ ấy" mà không
+         cần mũi tên hay chú thích nào. -->
     <p class="wc-name">
-      <span>Horizon</span>
-      <span>Hub</span>
-      <span>Harmony</span>
+      <span [class.is-hot]="hovered() === 0">Horizon</span>
+      <span [class.is-hot]="hovered() === 1">Hub</span>
+      <span [class.is-hot]="hovered() === 2">Harmony</span>
+    </p>
+
+    <!--
+      Dòng nghĩa. Ô này LUÔN chiếm chỗ dù chưa có chữ (xem `.wc-meaning` trong
+      CSS): để nó tự co lại khi rỗng thì mỗi lần rê chuột qua một chữ H, cả khối
+      chữ bên dưới lại nhảy lên nhảy xuống — thứ khó chịu hơn nhiều so với một
+      khoảng trống nhỏ đứng yên.
+      `aria-hidden` vì nghĩa của ba từ đã được nói đầy đủ ở khu câu chuyện; đọc
+      thêm ở đây chỉ là lặp, mà lại là lặp một nội dung đổi liên tục theo chuột.
+    -->
+    <p class="wc-meaning" aria-hidden="true">
+      @if (hovered() !== null) {
+        <span>{{ meanings[hovered()!] }}</span>
+      }
     </p>
 
     <p class="wc-line">
