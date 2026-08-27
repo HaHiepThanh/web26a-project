@@ -1,0 +1,347 @@
+/* ==========================================================================
+   "Try it" — bảng chạy thật.
+
+   Dáng thẻ và dáng cột bám sát bảng thật trong app: cái người ta nghịch ở đây
+   phải đúng là cái họ sẽ gặp sau khi đăng ký, nếu không thì đây chỉ là một trò
+   chơi khác chứ không phải bản dùng thử.
+   ========================================================================== */
+.tryit {
+  /* `background-color`, không phải shorthand — khu này dùng `.lp-seam-y`, mà
+     shorthand xoá luôn background-image của nó. */
+  background-color: var(--lp-bg);
+}
+
+/* ---------------- Khung bảng ---------------- */
+.tb {
+  max-width: 1000px;
+  margin-inline: auto;
+  border: 1px solid var(--lp-border-strong);
+  border-radius: var(--radius-xl);
+  background: var(--lp-surface);
+  box-shadow: var(--lp-shadow-lg);
+  overflow: clip;
+}
+
+.tb-chrome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--lp-3);
+  padding: var(--lp-3) var(--lp-4);
+  border-bottom: 1px solid var(--lp-border);
+  background: var(--lp-surface-2);
+}
+
+.tb-name {
+  font-size: var(--lp-text-sm);
+  font-weight: 700;
+  color: var(--lp-text-2);
+}
+
+.tb-reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border: 1px solid var(--lp-border-strong);
+  border-radius: 999px;
+  background: var(--lp-surface);
+  font-size: var(--lp-text-micro);
+  font-weight: 700;
+  color: var(--lp-text-2);
+  cursor: pointer;
+  transition:
+    color var(--lp-dur-1) var(--lp-ease),
+    border-color var(--lp-dur-1) var(--lp-ease);
+}
+.tb-reset:hover {
+  color: var(--lp-text);
+  border-color: var(--lp-ink-blue);
+}
+.tb-reset:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+.tb-reset svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* ---------------- Ba cột ---------------- */
+.tb-cols {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--lp-3);
+  padding: var(--lp-4);
+  align-items: start;
+}
+
+.tb-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lp-2);
+  padding: var(--lp-2);
+  border-radius: var(--radius-md);
+  background: var(--lp-surface-2);
+  /* Cột luôn cao tối thiểu chừng này để vùng thả không biến mất khi cột rỗng —
+     một cột cao 0px thì không thể kéo thẻ vào. */
+  min-height: 150px;
+}
+
+.tb-chead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px;
+  font-size: var(--lp-text-micro);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--lp-text-2);
+}
+.tb-chead em {
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.7;
+}
+
+.tb-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* ---------------- Tấm thẻ ---------------- */
+.tb-card {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--lp-2);
+  padding: 10px 11px;
+  border: 1px solid var(--lp-border);
+  border-radius: var(--radius-sm);
+  background: var(--lp-surface);
+  box-shadow: var(--lp-shadow-sm);
+  cursor: grab;
+  /* Bắt buộc cho kéo thả trên cảm ứng: không có nó thì ngón tay kéo thẻ sẽ cuộn
+     cả trang thay vì dời thẻ. */
+  touch-action: none;
+  /* --dx/--dy do landing-try.ts ghi vào trong lúc kéo. */
+  transform: translate3d(var(--dx, 0), var(--dy, 0), 0);
+  transition:
+    border-color var(--lp-dur-1) var(--lp-ease),
+    box-shadow var(--lp-dur-2) var(--lp-ease);
+}
+
+.tb-card:hover {
+  border-color: var(--lp-border-strong);
+}
+
+.tb-card:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+/* Đang kéo: nhấc hẳn lên khỏi mặt bảng và bỏ transition của transform, vì
+   transform lúc này phải bám sát con trỏ từng pixel — có transition là thẻ lê
+   theo sau ngón tay. */
+.tb-card.is-dragging {
+  z-index: 3;
+  cursor: grabbing;
+  box-shadow: var(--lp-shadow-lg);
+  border-color: var(--lp-ink-blue);
+  transition: none;
+}
+
+.tb-card-title {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--lp-text-sm);
+  line-height: 1.4;
+  color: var(--lp-text);
+  /* Chữ dài phải xuống dòng chứ không tràn ra khỏi thẻ. `anywhere` để một chuỗi
+     không dấu cách cũng bị bẻ. */
+  overflow-wrap: anywhere;
+}
+
+.tb-del {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--lp-text-3);
+  cursor: pointer;
+  /* Ẩn cho tới khi rê chuột hoặc lấy tiêu điểm — bốn cái dấu × chình ình làm
+     tấm thẻ trông như một hộp thoại cảnh báo. */
+  opacity: 0;
+  transition:
+    opacity var(--lp-dur-1) var(--lp-ease),
+    color var(--lp-dur-1) var(--lp-ease);
+}
+.tb-card:hover .tb-del,
+.tb-card:focus-within .tb-del,
+.tb-del:focus-visible {
+  opacity: 1;
+}
+.tb-del:hover {
+  color: var(--lp-ink-amber);
+}
+.tb-del:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 1px;
+}
+.tb-del svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Cột rỗng: nói rõ đây là chỗ thả được, thay vì để một khoảng trắng khó hiểu. */
+.tb-empty {
+  padding: var(--lp-4) var(--lp-2);
+  border: 1px dashed var(--lp-border-strong);
+  border-radius: var(--radius-sm);
+  text-align: center;
+  font-size: var(--lp-text-micro);
+  color: var(--lp-text-3);
+}
+
+/* ---------------- Thêm thẻ ---------------- */
+.tb-add {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  font-size: var(--lp-text-sm);
+  font-weight: 600;
+  color: var(--lp-text-2);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color var(--lp-dur-1) var(--lp-ease),
+    color var(--lp-dur-1) var(--lp-ease);
+}
+.tb-add:hover {
+  background: var(--lp-surface);
+  color: var(--lp-text);
+}
+.tb-add:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: -2px;
+}
+.tb-add svg {
+  width: 14px;
+  height: 14px;
+}
+
+.tb-compose {
+  display: grid;
+  gap: var(--lp-2);
+}
+
+.tb-input {
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid var(--lp-ink-blue);
+  border-radius: var(--radius-sm);
+  background: var(--lp-surface);
+  font: inherit;
+  font-size: var(--lp-text-sm);
+  color: var(--lp-text);
+}
+.tb-input::placeholder {
+  color: var(--lp-text-3);
+}
+.tb-input:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 1px;
+}
+
+.tb-compose-row {
+  display: flex;
+  gap: var(--lp-2);
+}
+
+.tb-add-go,
+.tb-add-cancel {
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-size: var(--lp-text-micro);
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter var(--lp-dur-1) var(--lp-ease);
+}
+.tb-add-go {
+  border: none;
+  background: var(--lp-solid-blue);
+  color: var(--lp-on-solid);
+}
+.tb-add-go:hover {
+  filter: brightness(1.08);
+}
+.tb-add-cancel {
+  border: 1px solid var(--lp-border-strong);
+  background: none;
+  color: var(--lp-text-2);
+}
+.tb-add-go:focus-visible,
+.tb-add-cancel:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+/* ---------------- Chân khu vực ---------------- */
+.tb-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--lp-3);
+  max-width: 62ch;
+  margin: var(--lp-6) auto 0;
+  text-align: center;
+  font-size: var(--lp-text-sm);
+  line-height: 1.7;
+  color: var(--lp-text-2);
+}
+
+.tb-cta {
+  flex: none;
+}
+
+/* ---------------- Màn hình hẹp ---------------- */
+@media (max-width: 720px) {
+  /* Ba cột cạnh nhau ở khổ này chỉ còn chừng 90px mỗi cột — thẻ bị ép mỗi dòng
+     một từ. Cho cuộn ngang, đúng như bảng Kanban thật trên điện thoại. */
+  .tb-cols {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: clamp(180px, 72%, 240px);
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: thin;
+    scrollbar-color: var(--lp-border-strong) transparent;
+  }
+  .tb-col {
+    scroll-snap-align: start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tb-card,
+  .tb-del,
+  .tb-add,
+  .tb-reset {
+    transition: none;
+  }
+}

@@ -14,6 +14,7 @@ import { AuthService } from '../../services/auth.service';
 import { ThemeService } from '../../services/theme.service';
 import { LandingAi } from './sections/landing-ai';
 import { LandingCapabilities } from './sections/landing-capabilities';
+import { LandingTry } from './sections/landing-try';
 import { LandingCompare } from './sections/landing-compare';
 import { LandingCta } from './sections/landing-cta';
 import { LandingFaq } from './sections/landing-faq';
@@ -50,6 +51,7 @@ import { SmoothScroll } from './smooth-scroll';
     LandingFeatures,
     LandingAi,
     LandingCapabilities,
+    LandingTry,
     LandingCompare,
     LandingSteps,
     LandingStats,

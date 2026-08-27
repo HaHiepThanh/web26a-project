@@ -1,0 +1,135 @@
+<!--
+  Bảng CHẠY THẬT. Xem ghi chú dài ở landing-try.ts về lý do khu này tồn tại và
+  vì sao nó không dùng lại component bảng của app.
+
+  Đặt sau khu bản kê: lúc đó khách đã xem hết sản phẩm có gì và đang ở đúng
+  trạng thái "để tôi thử xem". Đặt sớm hơn thì họ chưa biết thử cái gì.
+-->
+<section class="tryit lp-section lp-seam-y" id="try-it" aria-labelledby="try-title">
+  <div class="lp-shell">
+    <div class="lp-head lp-head--center">
+      <p class="lp-eyebrow" appReveal>
+        <span class="lp-eyebrow-dot" aria-hidden="true"></span>
+        Try it
+      </p>
+      <h2 id="try-title" class="lp-h2" appLineReveal>
+        Build one <span class="lp-grad">right here.</span>
+      </h2>
+      <p class="lp-lead" appReveal [revealDelay]="120">
+        Not a screenshot and not a video. Add a card, drag it across, throw it away. Nothing to sign
+        up for, and it will still be here when you come back.
+      </p>
+    </div>
+
+    <div class="tb" appReveal [revealDelay]="180">
+      <div class="tb-chrome">
+        <span class="tb-name">Your board</span>
+        <button type="button" class="tb-reset" (click)="reset()">
+          <svg lucideRotateCcw [strokeWidth]="2.2"></svg>
+          Reset
+        </button>
+      </div>
+
+      <!-- `appFlipReorder` cho thẻ TRƯỢT sang cột mới thay vì nhảy tức thì.
+           Không có nó thì việc đổi cột chỉ là dời node trong DOM — không có
+           thuộc tính nào biến thiên để CSS nội suy. -->
+      <div class="tb-cols" #grid appFlipReorder>
+        @for (name of columns; track name; let ci = $index) {
+          <section class="tb-col" [attr.aria-label]="name + ' column'">
+            <header class="tb-chead">
+              <span>{{ name }}</span>
+              <em>{{ cardsIn(ci).length }}</em>
+            </header>
+
+            <ul class="tb-list">
+              @for (card of cardsIn(ci); track card.id) {
+                <li>
+                  <!--
+                    Thẻ là <article> mang tabindex chứ không phải <button>: bên
+                    trong đã có nút xoá riêng, mà nút lồng trong nút là HTML sai
+                    và trình duyệt sẽ tự gỡ ra.
+                    `data-flip-id` là thứ FlipReorder dùng để nhận ra thẻ nào là
+                    thẻ nào giữa hai lần bố cục.
+                  -->
+                  <article
+                    class="tb-card"
+                    [class.is-dragging]="dragging() === card.id"
+                    [attr.data-flip-id]="card.id"
+                    tabindex="0"
+                    [attr.aria-label]="
+                      card.title +
+                      ', in ' +
+                      name +
+                      '. Use the left and right arrow keys to move it, Delete to remove it.'
+                    "
+                    (keydown)="onCardKeydown(card, $event)"
+                    (pointerdown)="onPointerDown(card, $event)"
+                    (pointermove)="onPointerMove(card, $event)"
+                    (pointerup)="onPointerUp(card, $event)"
+                    (pointercancel)="onPointerUp(card, $event)"
+                  >
+                    <span class="tb-card-title">{{ card.title }}</span>
+
+                    <button
+                      type="button"
+                      class="tb-del"
+                      (click)="remove(card)"
+                      [attr.aria-label]="'Delete ' + card.title"
+                    >
+                      <svg lucideX [strokeWidth]="2.4"></svg>
+                    </button>
+                  </article>
+                </li>
+              } @empty {
+                <li class="tb-empty" aria-hidden="true">Drop one here</li>
+              }
+            </ul>
+
+            @if (composing() === ci) {
+              <!-- #newCard là ô nhập; truyền thẳng phần tử vào add() thay vì
+                   giữ một signal cho từng cột — giá trị chỉ cần đọc đúng một
+                   lần lúc bấm Enter. -->
+              <div class="tb-compose">
+                <input
+                  #newCard
+                  class="tb-input"
+                  type="text"
+                  maxlength="80"
+                  [attr.aria-label]="'New card in ' + name"
+                  placeholder="What needs doing?"
+                  (keydown.enter)="add(ci, newCard)"
+                  (keydown.escape)="closeComposer()"
+                  autofocus
+                />
+                <div class="tb-compose-row">
+                  <button type="button" class="tb-add-go" (click)="add(ci, newCard)">Add</button>
+                  <button type="button" class="tb-add-cancel" (click)="closeComposer()">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            } @else {
+              <button type="button" class="tb-add" (click)="openComposer(ci)">
+                <svg lucidePlus [strokeWidth]="2.4"></svg>
+                Add a card
+              </button>
+            }
+          </section>
+        }
+      </div>
+    </div>
+
+    <p class="tb-foot" appReveal>
+      That board is saved in this browser only — nobody else can see it. Want one your team can
+      see?
+      <a class="lp-btn lp-btn-primary tb-cta" routerLink="/register">
+        Start free
+        <svg lucideArrowRight class="lp-btn-arrow" [strokeWidth]="2.2"></svg>
+      </a>
+    </p>
+  </div>
+
+  <!-- Mọi thao tác đều được đọc lên: người dùng bàn phím và trình đọc màn hình
+       không thấy thẻ trượt sang cột nào, nên phải nói ra. -->
+  <p class="lp-sr-only" role="status" aria-live="polite">{{ announcement() }}</p>
+</section>
