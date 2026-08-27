@@ -1,8 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
+import { vi } from 'vitest';
 
 import { CardDetailModal } from './card-detail-modal';
 import { Card } from '../../../models';
+import { AttachmentStore } from '../../../ngrx/attachment/attachment.store';
 
 const CARD: Card = {
   id: 'c1',
@@ -20,30 +22,25 @@ function pngFile(name = 'a.png', size = 10): File {
   return new File([new Uint8Array(size)], name, { type: 'image/png' });
 }
 
-/**
- * Giả một lần chọn tệp từ `<input type="file">`.
- *
- * Không dựng `<input>` thật + `DataTransfer`: jsdom không có `DataTransfer`, và
- * `input.files` là thuộc tính chỉ-đọc nên cũng không gán tay được. `onFilesSelected`
- * chỉ cần `target.files` duyệt được bằng `Array.from` và `target.value` ghi được.
- */
 function chonTep(component: CardDetailModal, ...files: File[]): void {
   component.onFilesSelected({ target: { files, value: '' } } as unknown as Event);
 }
 
-/**
- * Đính kèm nằm TRONG bản nháp: chọn tệp chỉ đổi trên màn hình, phải bấm "Lưu
- * thay đổi" mới thật sự tải lên. Đây là phần dễ vỡ nhất khi sửa modal sau này.
- */
-describe('CardDetailModal — đính kèm chờ lưu', () => {
+describe('CardDetailModal — đính kèm và lưu thẻ', () => {
   let fixture: ComponentFixture<CardDetailModal>;
   let component: CardDetailModal;
+  let attachmentStore: InstanceType<typeof AttachmentStore>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [CardDetailModal],
       providers: [provideHttpClient()],
     }).compileComponents();
+
+    attachmentStore = TestBed.inject(AttachmentStore);
+    vi.spyOn(attachmentStore, 'addFiles').mockResolvedValue([]);
+    vi.spyOn(attachmentStore, 'remove').mockResolvedValue();
+    vi.spyOn(attachmentStore, 'toggleCover').mockResolvedValue();
 
     fixture = TestBed.createComponent(CardDetailModal);
     component = fixture.componentInstance;
@@ -58,88 +55,71 @@ describe('CardDetailModal — đính kèm chờ lưu', () => {
     expect(component.attachmentRows().length).toBe(0);
   });
 
-  it('chọn tệp chỉ vào bản nháp, chưa gửi lên server', () => {
-    chonTep(component, pngFile('anh.png'));
-
-    const rows = component.attachmentRows();
-    expect(rows.length).toBe(1);
-    expect(rows[0].isPending).toBe(true);
-    expect(rows[0].id).toBeNull(); // chưa có id vì chưa tải lên
-    // Có tệp chờ là đủ để nút "Lưu thay đổi" sáng lên, dù không đụng ô nào khác.
-    expect(component.dirty()).toBe(true);
-    expect(component.canSave()).toBe(true);
-  });
-
-  it('bỏ tệp chưa lưu thì mất khỏi bản nháp, không còn gì để lưu', () => {
-    chonTep(component, pngFile('anh.png'));
-    component.removeAttachment(component.attachmentRows()[0]);
-
-    expect(component.attachmentRows().length).toBe(0);
-    expect(component.dirty()).toBe(false);
-  });
-
-  it('"Bỏ thay đổi" huỷ sạch tệp đang chờ', () => {
-    chonTep(component, pngFile('a.png'), pngFile('b.png'));
-    expect(component.attachmentRows().length).toBe(2);
-
-    component.discard();
-
-    expect(component.attachmentRows().length).toBe(0);
-    expect(component.dirty()).toBe(false);
-  });
-
   it('tệp quá 10MB bị bỏ qua và báo lý do', () => {
     chonTep(component, pngFile('to-qua.png', 11 * 1024 * 1024));
 
-    expect(component.attachmentRows().length).toBe(0);
     expect(component.attachmentError()).toContain('to-qua.png');
+    expect(attachmentStore.addFiles).not.toHaveBeenCalled();
   });
 
-  it('gắn tệp hình đầu tiên thì tự động tích hợp làm ảnh bìa ngay lập tức', () => {
-    chonTep(component, pngFile('bia1.png'));
-    const row = component.attachmentRows()[0];
+  it('chọn tệp hợp lệ thì gửi upload ngay lập tức lên server', () => {
+    const file = pngFile('anh.png');
+    chonTep(component, file);
 
-    // Tự động là bìa mà không cần bấm toggleCover
-    expect(row.isCover).toBe(true);
-    expect(component.coverRow()?.key).toBe(row.key);
-    expect(component.dirty()).toBe(true);
+    expect(attachmentStore.addFiles).toHaveBeenCalledWith('c1', [file]);
   });
 
-  it('gắn thêm hình khác thì giữ nguyên ảnh bìa đầu tiên, người dùng có thể tự điều chỉnh', () => {
-    chonTep(component, pngFile('hinh1.png'));
-    chonTep(component, pngFile('hinh2.png'));
+  it('dán ảnh từ clipboard (Ctrl+V / Cmd+V) thì tự động nhận diện và upload', () => {
+    const file = pngFile('pasted.png');
+    const mockClipboardEvent = {
+      preventDefault: vi.fn(),
+      clipboardData: {
+        items: [
+          {
+            kind: 'file',
+            type: 'image/png',
+            getAsFile: () => file,
+          },
+        ],
+      },
+    } as unknown as ClipboardEvent;
 
-    const rows = component.attachmentRows();
-    expect(rows.length).toBe(2);
-    // Hình 1 vẫn là bìa
-    expect(rows[0].isCover).toBe(true);
-    expect(rows[1].isCover).toBe(false);
-    expect(component.coverRow()?.key).toBe(rows[0].key);
+    component.onPaste(mockClipboardEvent);
 
-    // Người dùng chủ động đổi sang hình 2
-    component.toggleCover(rows[1]);
-    expect(component.attachmentRows()[0].isCover).toBe(false);
-    expect(component.attachmentRows()[1].isCover).toBe(true);
-    expect(component.coverRow()?.key).toBe(rows[1].key);
+    expect(mockClipboardEvent.preventDefault).toHaveBeenCalled();
+    expect(attachmentStore.addFiles).toHaveBeenCalled();
   });
 
-  it('gắn tệp không phải hình (PDF) thì không tự đặt làm ảnh bìa', () => {
-    const pdf = new File([new Uint8Array(10)], 'tai-lieu.pdf', { type: 'application/pdf' });
-    chonTep(component, pdf);
+  it('xoá đính kèm gọi trực tiếp attachmentService.remove', async () => {
+    await component.removeAttachment({
+      key: 'saved:att-1',
+      id: 'att-1',
+      name: 'anh.png',
+      size: 100,
+      mimeType: 'image/png',
+      isImage: true,
+      url: 'https://example.com/anh.png',
+      isCover: false,
+      isPending: false,
+    });
 
-    expect(component.attachmentRows().length).toBe(1);
-    expect(component.attachmentRows()[0].isCover).toBe(false);
-    expect(component.coverRow()).toBeNull();
+    expect(attachmentStore.remove).toHaveBeenCalledWith('c1', 'att-1');
   });
 
-  it('bỏ tệp đang là bìa thì bìa cũng bỏ theo, không trỏ vào tệp đã mất', () => {
-    chonTep(component, pngFile('bia.png'));
-    const row = component.attachmentRows()[0];
-    expect(component.coverRow()?.key).toBe(row.key);
+  it('đổi ảnh bìa gọi trực tiếp attachmentService.toggleCover', async () => {
+    await component.toggleCover({
+      key: 'saved:att-1',
+      id: 'att-1',
+      name: 'anh.png',
+      size: 100,
+      mimeType: 'image/png',
+      isImage: true,
+      url: 'https://example.com/anh.png',
+      isCover: false,
+      isPending: false,
+    });
 
-    component.removeAttachment(row);
-
-    expect(component.coverRow()).toBeNull();
+    expect(attachmentStore.toggleCover).toHaveBeenCalledWith('c1', 'att-1');
   });
 
   it('bấm "Delete card" thì hiện dải cảnh báo xác nhận xoá', () => {
