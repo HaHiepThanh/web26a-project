@@ -39,24 +39,24 @@ Khai báo ở [`src/styles.css`](src/styles.css):
 
 ```css
 @plugin 'daisyui' {
-  themes: winter --default, sunset --prefersdark;
+  themes: winter --default, night --prefersdark;
 }
 ```
 
-- **winter** = chế độ sáng, **sunset** = chế độ tối.
+- **winter** = chế độ sáng, **night** = chế độ tối.
 - `ThemeService` giữ tên nội bộ là `'light' | 'dark'` (hàng chục chỗ đang so
   sánh `theme() === 'dark'`), rồi ánh xạ sang tên daisyUI khi ghi ra
   `[data-theme]`:
 
 ```ts
-const DAISY_THEME: Record<Theme, string> = { light: 'winter', dark: 'sunset' };
+const DAISY_THEME: Record<Theme, string> = { light: 'winter', dark: 'night' };
 ```
 
 - Lựa chọn được lưu ở `localStorage['trello_theme']`, mặc định lần đầu theo
   `prefers-color-scheme` của hệ điều hành.
 - Nút chuyển sáng/tối nằm trên header (giữa nút lời mời và nút Cài đặt).
 
-> ⚠️ Khi viết CSS phụ thuộc theme tối, selector là `[data-theme='sunset']`,
+> ⚠️ Khi viết CSS phụ thuộc theme tối, selector là `[data-theme='night']`,
 > **không phải** `[data-theme='dark']`.
 
 ---
@@ -77,11 +77,12 @@ Tất cả token app đều dẫn xuất từ `--color-*` của theme đang bậ
 --accent-purple: var(--color-secondary);  /* "màu nhấn 2" */
 ```
 
-> ⚠️ **Tên biến không còn tả đúng màu.** `--accent-blue` ở theme `sunset` là màu
-> **cam** (primary của sunset), không phải xanh. Tên giữ nguyên chỉ để khỏi phải
-> sửa hàng trăm chỗ đang dùng. Hiểu là "màu nhấn số 1 / số 2".
+> ⚠️ **Tên biến chỉ mang nghĩa "màu nhấn số 1 / số 2".** Với cặp `winter`/`night`
+> hiện tại thì tên còn tả đúng (primary xanh lam, secondary ngả chàm/tím ở cả
+> hai), nhưng đổi sang theme khác là sắc màu có thể lệch hẳn khỏi tên. Tên giữ
+> nguyên chỉ để khỏi phải sửa hàng trăm chỗ đang dùng.
 
-Chỉ `--shadow-*` là khai riêng cho `sunset` (bóng trên nền tối phải đậm hơn mới
+Chỉ `--shadow-*` là khai riêng cho `night` (bóng trên nền tối phải đậm hơn mới
 thấy được — thứ duy nhất không dẫn xuất được từ bảng màu).
 
 **Khi viết mới:** dùng thẳng class daisyUI (`bg-base-100`) thay vì

@@ -8,7 +8,7 @@
 
 /* ---------- Design tokens (giống login.css) ---------- */
 .register-frame {
-  /* 2 trang auth dùng chung màu nhấn và token bo góc với theme daisyUI đang bật (winter/sunset) */
+  /* 2 trang auth dùng chung màu nhấn và token bo góc với theme daisyUI đang bật (winter/night) */
   --primary: var(--accent-blue);
   --primary-dark: var(--accent-blue-hover);
   --slate-50: #f8fafc;

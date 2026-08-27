@@ -45,7 +45,7 @@
      nhìn vẫn là một bảng màu. Tỉ số kèm sau mỗi dòng là kết quả đo thật trên
      nền trang / nền tô nhạt tương ứng.
 
-     Từ khi app chuyển sang dùng theme dựng sẵn của daisyUI (winter/sunset),
+     Từ khi app chuyển sang dùng theme dựng sẵn của daisyUI (winter/night),
      8 giá trị này không còn ghi hex cứng được nữa — bảng màu gốc nằm trong
      theme, hex chép tay sẽ lệch ngay khi đổi theme. Thay bằng color-mix() kéo
      màu của theme về phía đen: theme sáng dùng bậc màu nhạt cho nền (winter có
@@ -105,18 +105,18 @@
   color: var(--lp-text);
 }
 
-:host-context([data-theme='sunset']) {
-  /* Nền lấy thẳng ba bậc bề mặt của sunset — nền gần đen ngả xanh, không đen
+:host-context([data-theme='night']) {
+  /* Nền lấy thẳng ba bậc bề mặt của night — nền gần đen ngả xanh, không đen
      tuyền: đen tuyệt đối cạnh chữ sáng tạo tương phản gắt gây mỏi mắt khi đọc
      dài, đúng điều Practical UI cảnh báo ở chương Colour. Riêng dải "lõm" phải
-     tối hơn nền chính, mà base-300 của sunset lại chỉ chênh 4% — kéo thêm về
+     tối hơn nền chính, mà base-300 của night lại chỉ chênh ~3% — kéo thêm về
      phía đen cho thấy rõ ranh giới. */
   --lp-bg: var(--color-base-100);
   --lp-bg-sunken: color-mix(in oklab, var(--color-base-300) 82%, black);
   --lp-surface: color-mix(in oklab, var(--color-base-100) 92%, white);
   --lp-surface-2: var(--color-base-200);
 
-  /* Toàn bộ họ màu nhấn ở theme tối đảo ngược so với theme sáng: màu của sunset
+  /* Toàn bộ họ màu nhấn ở theme tối đảo ngược so với theme sáng: màu của night
      vốn đã sáng (primary ~75%, success/warning ~86%) nên thừa tương phản để làm
      CHỮ và không cần kéo tối; ngược lại chúng quá sáng để đặt chữ trắng lên
      trên, nên chữ trên nền đặc chuyển thành gần-đen (chính là base-100). Đây
