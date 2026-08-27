@@ -1,9 +1,9 @@
-<div class="mb-2 flex max-h-44 flex-col gap-1 overflow-y-auto pr-0.5">
+<div class="mb-2 grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-48 overflow-y-auto pr-1">
   @for (lb of labels(); track lb.id) {
-    <div class="group flex items-center justify-between gap-1.5 rounded-md px-1.5 py-1 hover:bg-base-200/70 transition-colors">
-      <label class="flex min-w-0 flex-1 cursor-pointer items-center gap-2">
+    <div class="group flex items-center justify-between gap-1.5 rounded-md border border-base-200/80 bg-base-100 px-2 py-1 hover:bg-base-200/60 hover:border-base-300 transition-all">
+      <label class="flex min-w-0 flex-1 cursor-pointer items-center gap-2" [title]="lb.name">
         <input type="checkbox" class="sr-only" [checked]="isSelected(lb.id)" (change)="toggle(lb.id)" />
-        <span class="flex h-5 w-[30px] shrink-0 items-center justify-center rounded-md text-white shadow-2xs font-bold text-xs" [style.background]="lb.color">
+        <span class="flex h-5 w-6 shrink-0 items-center justify-center rounded-md text-white shadow-2xs font-bold text-xs" [style.background]="lb.color">
           @if (isSelected(lb.id)) {
             <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
           }
@@ -14,23 +14,23 @@
       <div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
         <button
           type="button"
-          class="btn btn-ghost btn-square btn-xs h-6 w-6 min-h-0 rounded-md text-base-content/60 hover:text-primary hover:bg-base-300/60"
+          class="btn btn-ghost btn-square btn-xs h-5 w-5 min-h-0 rounded-md text-base-content/60 hover:text-primary hover:bg-base-300/60"
           (click)="startEditLabel(lb, $event)"
           title="Edit label">
-          <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          <svg class="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
         <button
           type="button"
-          class="btn btn-ghost btn-square btn-xs h-6 w-6 min-h-0 rounded-md text-base-content/60 hover:text-error hover:bg-error/10"
+          class="btn btn-ghost btn-square btn-xs h-5 w-5 min-h-0 rounded-md text-base-content/60 hover:text-error hover:bg-error/10"
           (click)="deleteLabel(lb.id, $event)"
           title="Delete label">
-          <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+          <svg class="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
         </button>
       </div>
     </div>
   }
   @if (labels().length === 0) {
-    <div class="px-1 py-1.5 text-2xs text-base-content/50">This board has no labels yet — create the first one below.</div>
+    <div class="col-span-full px-1 py-1.5 text-2xs text-base-content/50">This board has no labels yet — create the first one below.</div>
   }
 </div>
 
