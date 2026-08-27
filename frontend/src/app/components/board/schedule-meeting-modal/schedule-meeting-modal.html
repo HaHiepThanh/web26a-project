@@ -1,6 +1,6 @@
 @if (isOpen()) {
 <div class="modal modal-open z-[1000] p-4 backdrop-blur-[2px]" (click)="close.emit()">
-  <div class="modal-box max-h-[90vh] max-w-[580px] border border-base-300 shadow-2xl" (click)="$event.stopPropagation()">
+  <div class="modal-box max-h-[90vh] max-w-[580px] rounded-md border border-base-300 shadow-2xl" (click)="$event.stopPropagation()">
 
     <!-- Header: Title + Action buttons (Import .ics, Export) + Close -->
     <div class="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-base-200 pb-3">
@@ -11,7 +11,7 @@
 
       <div class="flex items-center gap-2">
         <!-- Import (.ics, PDF) -->
-        <label class="btn btn-outline btn-xs gap-1.5 font-bold cursor-pointer transition-all hover:bg-base-200"
+        <label class="btn btn-outline btn-xs rounded-md gap-1.5 font-bold cursor-pointer transition-all hover:bg-base-200"
           [class.pointer-events-none]="dangNhapFile()"
           title="Import an .ics or .pdf calendar file (Google Calendar export) to pre-fill details">
           @if (dangNhapFile()) {
@@ -26,26 +26,26 @@
 
         <!-- Export Dropdown (.ics / PDF) -->
         <div class="dropdown dropdown-end">
-          <button tabindex="0" type="button" class="btn btn-outline btn-xs gap-1 font-bold transition-all hover:bg-base-200" title="Export meeting draft">
+          <button tabindex="0" type="button" class="btn btn-outline btn-xs rounded-md gap-1 font-bold transition-all hover:bg-base-200" title="Export meeting draft">
             <svg lucideDownload class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg>
             Export
             <svg class="h-3 w-3 opacity-60" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
           </button>
-          <ul tabindex="0" class="dropdown-content menu z-[100] mt-1 w-36 rounded-box border border-base-300 bg-base-100 p-1 shadow-xl text-xs font-bold">
+          <ul tabindex="0" class="dropdown-content menu z-[100] mt-1 w-36 rounded-md border border-base-300 bg-base-100 p-1 shadow-xl text-xs font-bold">
             <li>
-              <button type="button" class="gap-2" (click)="xuatIcs()">
+              <button type="button" class="gap-2 rounded-md" (click)="xuatIcs()">
                 <svg lucideDownload class="h-3.5 w-3.5 text-primary"></svg> Export .ics
               </button>
             </li>
             <li>
-              <button type="button" class="gap-2" (click)="xuatPdf()">
+              <button type="button" class="gap-2 rounded-md" (click)="xuatPdf()">
                 <svg lucideFileText class="h-3.5 w-3.5 text-secondary"></svg> Export PDF
               </button>
             </li>
           </ul>
         </div>
 
-        <button class="btn btn-circle btn-ghost btn-xs ml-1" (click)="close.emit()" aria-label="Close">
+        <button class="btn btn-circle btn-ghost btn-xs rounded-md ml-1" (click)="close.emit()" aria-label="Close">
           <svg lucideX class="h-4 w-4" [strokeWidth]="2.4"></svg>
         </button>
       </div>
@@ -58,13 +58,13 @@
       <label class="mb-1.5 block text-xs font-black uppercase tracking-wider" for="link-gg">
         Paste a Google Calendar event link
       </label>
-      <div class="join w-full">
+      <div class="flex w-full items-stretch shadow-xs">
         <input id="link-gg" type="url" inputmode="url"
-          class="input input-bordered join-item w-full rounded-md bg-base-100 text-sm shadow-xs"
+          class="input input-bordered w-full rounded-l-md rounded-r-none bg-base-100 text-sm font-medium focus:z-10"
           placeholder="https://calendar.google.com/calendar/event?action=TEMPLATE&amp;tmeid=..."
           [ngModel]="linkGoogle()" (ngModelChange)="linkGoogle.set($event)" name="linkGoogle"
           (keydown.enter)="$event.preventDefault(); docLink()" />
-        <button type="button" class="btn btn-primary join-item gap-1.5"
+        <button type="button" class="btn btn-primary rounded-l-none rounded-r-md shrink-0 gap-1.5 -ml-px font-bold px-4"
           [disabled]="!linkGoogle().trim() || dangDocLink()" (click)="docLink()">
           @if (dangDocLink()) {
             <span class="loading loading-spinner loading-xs"></span> Reading&hellip;
@@ -79,14 +79,14 @@
       </p>
     </div>
 
-    <!-- Thông báo sau khi Import .ics -->
+    <!-- Thông báo sau khi Import .ics / Google Calendar -->
     @if (thongBaoNhap()) {
-      <div role="status" class="alert alert-info border border-info/40 bg-info/10 text-xs font-semibold mb-3 py-2 flex items-center justify-between">
-        <div class="flex items-center gap-2">
+      <div role="status" class="alert alert-info rounded-md border border-info/40 bg-info/10 text-xs font-semibold mb-3 py-2.5 flex items-center justify-between shadow-xs">
+        <div class="flex items-center gap-2 min-w-0 flex-1">
           <svg lucideUpload class="h-4 w-4 shrink-0 text-info" [strokeWidth]="2.2"></svg>
-          <span>{{ thongBaoNhap() }}</span>
+          <span class="truncate">{{ thongBaoNhap() }}</span>
         </div>
-        <button type="button" class="btn btn-ghost btn-circle btn-xs h-5 w-5 min-h-0" (click)="thongBaoNhap.set(null)">
+        <button type="button" class="btn btn-ghost btn-circle btn-xs rounded-md h-5 w-5 min-h-0 shrink-0 ml-2" (click)="thongBaoNhap.set(null)">
           <svg lucideX class="h-3 w-3" [strokeWidth]="2.2"></svg>
         </button>
       </div>
@@ -110,7 +110,7 @@
     <!-- Thời gian: BẮT ĐẦU và KẾT THÚC tường minh (không còn chọn "bao lâu") -->
     <div class="mb-1.5 flex items-center justify-between">
       <span class="text-xs font-black uppercase tracking-wider">When</span>
-      <button type="button" class="btn btn-ghost btn-xs" (click)="homNay()">Today</button>
+      <button type="button" class="btn btn-ghost btn-xs rounded-md font-bold" (click)="homNay()">Today</button>
     </div>
 
     <!-- HAI cột: cột trái là mốc BẮT ĐẦU, cột phải là mốc KẾT THÚC.
@@ -154,7 +154,7 @@
     <div class="mt-1.5 flex flex-wrap items-center gap-1">
       <span class="text-2xs font-semibold text-base-content/40">Quick:</span>
       @for (p of goiYDai; track p) {
-        <button type="button" class="btn btn-ghost btn-xs px-1.5 text-2xs"
+        <button type="button" class="btn btn-ghost btn-xs rounded-md px-1.5 text-2xs"
           [class.btn-active]="soPhut() === p" (click)="datDai(p)">{{ p }}m</button>
       }
       @if (soPhut() !== null && soPhut()! > 0) {
@@ -256,7 +256,7 @@
 
     <!-- Phòng Meet -->
     <label class="mb-4 flex cursor-pointer items-center gap-3 rounded-md border border-base-300 px-3 py-2.5">
-      <input type="checkbox" class="checkbox checkbox-primary checkbox-sm"
+      <input type="checkbox" class="checkbox checkbox-primary checkbox-sm rounded-md"
         [ngModel]="kemMeet()" (ngModelChange)="kemMeet.set($event)" name="kemMeet" />
       <svg lucideVideo class="h-4 w-4 text-base-content/60" [strokeWidth]="2.2"></svg>
       <span class="text-sm font-bold">Add a Google Meet room</span>
@@ -269,7 +269,7 @@
           Invite <span class="text-error">*</span>
         </span>
         @if (soNguoiMoiDuoc() > 0) {
-          <button type="button" class="btn btn-ghost btn-xs font-bold" (click)="chonHet()">
+          <button type="button" class="btn btn-ghost btn-xs rounded-md font-bold" (click)="chonHet()">
             {{ daChon().length === soNguoiMoiDuoc() ? 'Clear all' : 'Select all' }}
           </button>
         }
@@ -288,7 +288,7 @@
               [class.cursor-pointer]="u.moiDuoc"
               [class.opacity-50]="!u.moiDuoc"
               [attr.title]="u.moiDuoc ? null : u.ten + ' has not linked a Google account yet, so we cannot put this meeting in their Google Calendar. Ask them to link it in Settings -> Profile.'">
-              <input type="checkbox" class="checkbox checkbox-primary checkbox-sm"
+              <input type="checkbox" class="checkbox checkbox-primary checkbox-sm rounded-md"
                 [disabled]="!u.moiDuoc"
                 [checked]="daChon().includes(u.id)"
                 (change)="doiChon(u.id)" />
@@ -298,7 +298,7 @@
                 <span class="block truncate text-2xs text-base-content/50">{{ u.email }}</span>
               </span>
               @if (!u.moiDuoc) {
-                <span class="badge badge-ghost badge-sm shrink-0 font-semibold">No Google</span>
+                <span class="badge badge-ghost badge-sm shrink-0 rounded-md font-semibold">No Google</span>
               }
             </label>
           } @empty {
@@ -318,17 +318,17 @@
     </div>
 
     @if (loi()) {
-      <div role="alert" class="alert alert-error mb-4 py-2.5">
+      <div role="alert" class="alert alert-error rounded-md border border-error/40 bg-error/10 mb-4 py-2.5 shadow-xs">
         <svg lucideTriangleAlert class="h-4 w-4 shrink-0" [strokeWidth]="2.2"></svg>
         <span class="text-xs font-semibold">{{ loi() }}</span>
       </div>
     }
 
     <div class="modal-action mt-2">
-      <button type="button" class="btn btn-ghost btn-sm font-bold" [disabled]="dangGui()" (click)="close.emit()">
+      <button type="button" class="btn btn-ghost btn-sm rounded-md font-bold" [disabled]="dangGui()" (click)="close.emit()">
         Cancel
       </button>
-      <button type="button" class="btn btn-primary btn-sm gap-1.5 font-bold" [disabled]="dangGui()" (click)="guiDi()">
+      <button type="button" class="btn btn-primary btn-sm rounded-md gap-1.5 font-bold" [disabled]="dangGui()" (click)="guiDi()">
         @if (dangGui()) {
           <span class="loading loading-spinner loading-xs"></span>
           Creating&hellip;
