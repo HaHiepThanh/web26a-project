@@ -7,6 +7,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { AccessService } from '../../common/access/access.service';
+import { ModerationService } from '../../common/moderation/moderation.service';
 import { SupabaseService } from '../../common/supabase/supabase.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 
@@ -151,6 +152,7 @@ export class BoardsService {
     private readonly supabase: SupabaseService,
     private readonly realtime: RealtimeGateway,
     private readonly access: AccessService,
+    private readonly moderation: ModerationService,
   ) {}
 
   /**
@@ -803,27 +805,25 @@ export class BoardsService {
         `Background image must be at most ${MAX_NEN_BYTES / 1024 / 1024}MB.`,
       );
     }
-    const loaiChoPhep: Record<string, string> = {
-      'image/jpeg': '.jpg',
-      'image/png': '.png',
-      'image/webp': '.webp',
-    };
-    const duoi = loaiChoPhep[file.mimetype];
-    if (!duoi) {
-      throw new BadRequestException(
-        'Only JPG, PNG or WEBP images are allowed.',
-      );
-    }
-
     const board = await this.access.assertBoardAccess(uid, boardId);
     await this.assertCanManage(uid, board.orgId);
+
+    // Kiểm quyền TRƯỚC, kiểm duyệt ảnh SAU: mỗi lượt kiểm duyệt là một lượt gọi
+    // API tính tiền, không có lý do gì tiêu nó cho một request rồi sẽ bị 403.
+    //
+    // `kiemTra` suy mime/đuôi từ NỘI DUNG THẬT, thay cho `file.mimetype` do
+    // client khai — bản cũ tin chuỗi đó nên đổi tên file là qua được cửa.
+    const { mime, duoi } = await this.moderation.kiemTra(
+      file.buffer,
+      `board-background board=${boardId}`,
+    );
 
     // Tên có mốc thời gian nên mỗi lần đổi là một file mới — không dựa vào
     // `upsert` để tránh trình duyệt vẫn hiện ảnh cũ trong bộ nhớ đệm.
     const duongDan = `${boardId}/${Date.now()}${duoi}`;
     const { error: loiTai } = await this.supabase.client.storage
       .from(BUCKET_NEN)
-      .upload(duongDan, file.buffer, { contentType: file.mimetype });
+      .upload(duongDan, file.buffer, { contentType: mime });
 
     if (loiTai) {
       this.logger.error(

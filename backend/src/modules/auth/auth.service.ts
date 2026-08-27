@@ -6,6 +6,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
+import { ModerationService } from '../../common/moderation/moderation.service';
 import { SupabaseService } from '../../common/supabase/supabase.service';
 import { CurrentUserInfo } from '../../common/firebase/current-user.decorator';
 import { UpdateProfileDto } from './dto/update-profile.dto';
@@ -111,6 +112,7 @@ export class AuthService {
   constructor(
     private readonly supabase: SupabaseService,
     private readonly realtime: RealtimeGateway,
+    private readonly moderation: ModerationService,
   ) {}
 
   /**
@@ -418,26 +420,27 @@ export class AuthService {
     if (!file) {
       throw new BadRequestException('No image file uploaded.');
     }
-    const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    if (!ALLOWED_MIME.includes(file.mimetype)) {
-      throw new BadRequestException(
-        'Only JPG, PNG, WEBP, or GIF images are allowed.',
-      );
-    }
 
-    const extMap: Record<string, string> = {
-      'image/jpeg': '.jpg',
-      'image/png': '.png',
-      'image/webp': '.webp',
-      'image/gif': '.gif',
-    };
-    const ext = extMap[file.mimetype] || '.jpg';
-    const storagePath = `${user.uid}/${Date.now()}${ext}`;
+    // KIỂM DUYỆT TRƯỚC KHI LƯU.
+    //
+    // ⚠️ Bucket `avatars` là bucket CÔNG KHAI (`getPublicUrl` bên dưới). Lưu
+    //    trước rồi quét sau nghĩa là ảnh có một khoảng thời gian sống dưới một
+    //    URL ai cũng mở được, không cần đăng nhập — vài giây cũng đủ phát tán.
+    //
+    // `kiemTra` cũng trả về mime/đuôi suy từ NỘI DUNG THẬT của file. Bản cũ tin
+    // `file.mimetype`, mà chuỗi đó do client khai: đổi tên `x.exe` thành
+    // `x.png` rồi khai `image/png` là qua được danh sách trắng.
+    const { mime, duoi } = await this.moderation.kiemTra(
+      file.buffer,
+      `avatar uid=${user.uid}`,
+    );
+
+    const storagePath = `${user.uid}/${Date.now()}${duoi}`;
 
     const { error: uploadError } = await this.supabase.client.storage
       .from('avatars')
       .upload(storagePath, file.buffer, {
-        contentType: file.mimetype,
+        contentType: mime,
         upsert: true,
       });
 

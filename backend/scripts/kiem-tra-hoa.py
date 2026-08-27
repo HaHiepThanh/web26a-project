@@ -21,7 +21,9 @@ G, R, Y, DIM, RS = '\033[32m', '\033[31m', '\033[33m', '\033[2m', '\033[0m'
 
 
 def read_env(name):
-    p = os.path.join(ROOT, '.env')
+    p = os.path.join(ROOT, '..', 'secrets', '.env')
+    if not os.path.exists(p):          # máy chưa gộp env thì vẫn chạy được
+        p = os.path.join(ROOT, '.env')
     if not os.path.exists(p):
         return None
     for line in open(p, encoding='utf-8'):

@@ -23,8 +23,10 @@ G, R, Y, DIM, RS = '\033[32m', '\033[31m', '\033[33m', '\033[2m', '\033[0m'
 # ---------------------------------------------------------------- tiện ích
 
 def doc_env(ten):
-    """Đọc 1 biến trong backend/.env"""
-    p = os.path.join(ROOT, '.env')
+    """Đọc 1 biến trong secrets/.env (dự phòng: backend/.env)"""
+    p = os.path.join(ROOT, '..', 'secrets', '.env')
+    if not os.path.exists(p):          # máy chưa gộp env thì vẫn chạy được
+        p = os.path.join(ROOT, '.env')
     if not os.path.exists(p):
         return None
     for line in open(p, encoding='utf-8'):
@@ -359,7 +361,7 @@ if url and key:
             print(f'  {Y}!{RS} không xoá được {oid}: {e}')
     print(f'  {G}✔{RS} đã xoá {xoa} tổ chức test, database sạch như trước khi chạy')
 else:
-    print(f'  {Y}!{RS} không đọc được backend/.env — để lại tổ chức test slug "{SLUG}"')
+    print(f'  {Y}!{RS} không đọc được secrets/.env — để lại tổ chức test slug "{SLUG}"')
 
 # ---------------------------------------------------------------- kết quả
 

@@ -8,6 +8,7 @@ import {
 import { randomUUID } from 'node:crypto';
 import { SupabaseService } from '../../common/supabase/supabase.service';
 import { AccessService } from '../../common/access/access.service';
+import { ModerationService } from '../../common/moderation/moderation.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 /** Bucket đã tạo sẵn ở Supabase Storage — RIÊNG TƯ, chỉ lấy được qua signed URL. */
@@ -69,6 +70,7 @@ export class AttachmentsService {
     private readonly supabase: SupabaseService,
     private readonly access: AccessService,
     private readonly realtime: RealtimeGateway,
+    private readonly moderation: ModerationService,
   ) {}
 
   /** Đổi dòng thô + cấp link ký tạm. Ký hàng loạt trong 1 request, không ký từng cái. */
@@ -189,6 +191,21 @@ export class AttachmentsService {
 
     const card = await this.access.assertCardAccess(uid, cardId);
 
+    // KIỂM DUYỆT ẢNH TRƯỚC KHI LƯU.
+    //
+    // Đường này quan trọng hơn vẻ ngoài của nó: ảnh ĐẦU TIÊN của thẻ tự động
+    // thành BÌA THẺ (xem `isCover` bên dưới), tức nó hiện thẳng trên mặt board
+    // cho cả nhóm thấy mà không ai phải bấm vào. Lọc avatar và ảnh nền mà bỏ
+    // qua đây thì gần như chưa lọc gì.
+    //
+    // Tệp không phải ảnh (PDF, docx...) vẫn đi qua bình thường — đây là tính
+    // năng đính kèm tài liệu làm việc.
+    const { laAnh, mime: mimeThat } = await this.moderation.kiemTraNeuLaAnh(
+      file.buffer,
+      `attachment card=${cardId}`,
+      file.originalname,
+    );
+
     // Đường dẫn do SERVER đặt, không lấy tên tệp người dùng gửi lên.
     // ⚠️ Tên tệp từ client có thể chứa "../" hoặc ký tự lạ — ghép thẳng vào
     //    đường dẫn là mở đường ghi đè file của thẻ khác. Tên gốc vẫn được giữ,
@@ -206,7 +223,8 @@ export class AttachmentsService {
     const { error: uploadError } = await this.supabase.client.storage
       .from(BUCKET)
       .upload(storagePath, file.buffer, {
-        contentType: file.mimetype,
+        // Ảnh thì dùng mime suy từ nội dung thật, không dùng chuỗi client khai.
+        contentType: mimeThat ?? file.mimetype,
         upsert: false,
       });
 
@@ -215,7 +233,10 @@ export class AttachmentsService {
       throw new InternalServerErrorException('Failed to upload file');
     }
 
-    const isImage = file.mimetype.startsWith('image/');
+    // Theo NỘI DUNG THẬT, không theo chuỗi client khai: bản cũ đọc
+    // `file.mimetype` nên khai `image/png` cho một file zip là nó vẫn được đặt
+    // làm bìa thẻ rồi hỏng khi hiển thị.
+    const isImage = laAnh;
     // Ảnh ĐẦU TIÊN của thẻ tự động thành bìa — trước đây phải bấm riêng "Set as
     // cover" mới thấy, còn mặt thẻ ngoài board thì không có gì báo hiệu "thẻ
     // này có đính kèm" nên gần như không ai biết mà bấm. Chỉ tự set khi thẻ

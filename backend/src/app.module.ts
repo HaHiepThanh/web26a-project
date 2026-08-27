@@ -18,6 +18,7 @@ import { ActivityModule } from './modules/activity/activity.module';
 import { CommentsModule } from './modules/comments/comments.module';
 import { RealtimeModule } from './modules/realtime/realtime.module';
 import { AccessModule } from './common/access/access.module';
+import { ModerationModule } from './common/moderation/moderation.module';
 import { ChecklistModule } from './modules/checklist/checklist.module';
 import { AttachmentsModule } from './modules/attachments/attachments.module';
 import { BoardPrefsModule } from './modules/board-prefs/board-prefs.module';
@@ -29,10 +30,18 @@ import { MeetingsModule } from './modules/meetings/meetings.module';
 
 @Module({
   imports: [
-    // envFilePath: .env đặt ở GỐC dự án (ngang hàng backend/), cạnh secrets/.
-    // Đường dẫn tính từ thư mục chạy lệnh npm, tức backend/. Vẫn giữ './.env'
-    // làm phương án dự phòng cho ai đặt file trong backend/ như .env.example nói.
-    ConfigModule.forRoot({ isGlobal: true, envFilePath: ['../.env', '.env'] }),
+    // MỌI biến môi trường nằm ở MỘT file duy nhất: `secrets/.env`.
+    //
+    // Trước đây chúng rải ở hai nơi — `backend/.env` (nơi code thật sự đọc) và
+    // `secrets/.env` (nơi không ai đọc). Hệ quả: đặt khoá vào `secrets/.env`
+    // rồi tưởng đã cấu hình xong, mà backend không hề thấy.
+    //
+    // Đường dẫn tính từ thư mục chạy lệnh npm, tức `backend/`. Hai mục sau chỉ
+    // là dự phòng cho máy chưa gộp; NestJS lấy giá trị ở FILE ĐẦU TIÊN tìm thấy.
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: ['../secrets/.env', '../.env', '.env'],
+    }),
     // Hạ tầng dùng chung (global)
     SupabaseModule,
     FirebaseModule,
@@ -40,6 +49,8 @@ import { MeetingsModule } from './modules/meetings/meetings.module';
     RealtimeModule,
     // Kiểm tra quyền dùng chung — @Global, xem common/access/access.service.ts.
     AccessModule,
+    // Kiểm duyệt ảnh 18+ — @Global, mọi đường upload ảnh đi qua nó.
+    ModerationModule,
     // Feature modules — lõi
     AuthModule,
     UsersModule,

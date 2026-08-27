@@ -23,7 +23,7 @@
           <label class="btn btn-primary btn-sm rounded-md font-bold cursor-pointer gap-1.5 shadow-xs" [class.btn-disabled]="savingAvatar()">
             @if (savingAvatar()) { <span class="loading loading-spinner loading-xs"></span> } @else { <svg lucideCamera class="h-3.5 w-3.5" [strokeWidth]="2.2"></svg> }
             <span>Upload photo</span>
-            <input type="file" accept="image/*" class="sr-only" [disabled]="savingAvatar()" (change)="onUploadAvatar($event)" />
+            <input type="file" accept="image/jpeg,image/png,image/webp" class="sr-only" [disabled]="savingAvatar()" (change)="onUploadAvatar($event)" />
           </label>
           @if (avatarPreview()) {
           <button type="button" class="btn btn-ghost btn-sm rounded-md font-bold text-error hover:bg-error/10" [disabled]="savingAvatar()" (click)="onRemoveAvatar()">

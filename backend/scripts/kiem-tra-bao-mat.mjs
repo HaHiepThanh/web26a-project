@@ -22,11 +22,22 @@
  *    (list, card, bình luận, chat, nhật ký) — nơi người viết quên kiểm tra
  *    vì nghĩ "đã chặn ở board rồi".
  */
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
+
+/**
+ * Đường dẫn tới file biến môi trường DUY NHẤT của dự án: `secrets/.env`.
+ *
+ * Vẫn thử `backend/.env` sau đó, để máy nào chưa gộp env vẫn chạy được script.
+ */
+function duongDanEnv() {
+  const uuTien = [join(ROOT, '..', 'secrets', '.env'), join(ROOT, '.env')];
+  return uuTien.find((p) => existsSync(p)) ?? uuTien[0];
+}
+
 const BASE = process.env.BASE_URL ?? 'http://localhost:3000';
 const G = '\x1b[32m', R = '\x1b[31m', Y = '\x1b[33m', DIM = '\x1b[2m', RS = '\x1b[0m';
 
@@ -39,7 +50,7 @@ function check(code, desc, ok, why = '') {
 const section = (t) => console.log(`\n${Y}── ${t} ${'─'.repeat(Math.max(0, 56 - t.length))}${RS}`);
 
 function readEnv(name) {
-  for (const line of readFileSync(join(ROOT, '.env'), 'utf8').split('\n')) {
+  for (const line of readFileSync(duongDanEnv(), 'utf8').split('\n')) {
     const t = line.trim();
     if (!t || t.startsWith('#') || !t.includes('=')) continue;
     const [k, ...rest] = t.split('=');

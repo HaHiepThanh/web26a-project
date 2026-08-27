@@ -59,7 +59,7 @@
             class="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md border-2 border-dashed border-base-300 text-base-content/50 transition hover:border-primary hover:text-primary"
             title="Upload a background image">
             <svg lucideImage class="h-4 w-4" [strokeWidth]="2.2"></svg>
-            <input type="file" accept="image/*" class="hidden" (change)="onBgImageSelected($event)" />
+            <input type="file" accept="image/jpeg,image/png,image/webp" class="hidden" (change)="onBgImageSelected($event)" />
           </label>
           }
         </div>
