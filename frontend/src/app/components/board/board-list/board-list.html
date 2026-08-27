@@ -30,14 +30,13 @@
 
     <div
       appFlipReorder
-      class="list-cards flex min-h-[40px] flex-1 gap-2 px-2"
+      class="list-cards flex min-h-[40px] flex-1 gap-2 px-2 py-2"
       [class.flex-col]="orientation() === 'column'"
       [class.overflow-y-auto]="orientation() === 'column'"
       [class.overflow-x-hidden]="orientation() === 'column'"
       [class.flex-row]="orientation() === 'row'"
       [class.items-start]="orientation() === 'row'"
       [class.overflow-x-auto]="orientation() === 'row'"
-      [class.py-2]="orientation() === 'row'"
       cdkDropList
       [id]="list().id"
       [cdkDropListData]="cards()"
