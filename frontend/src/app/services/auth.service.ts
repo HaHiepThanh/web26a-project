@@ -2,6 +2,7 @@ import { Injectable, inject, signal, computed } from '@angular/core';
 import {
   EmailAuthProvider,
   GoogleAuthProvider,
+  confirmPasswordReset,
   createUserWithEmailAndPassword,
   linkWithCredential,
   reauthenticateWithCredential,
@@ -11,6 +12,7 @@ import {
   signOut,
   updatePassword,
   updateProfile,
+  verifyPasswordResetCode,
   onAuthStateChanged,
 } from 'firebase/auth';
 import { FirebaseService } from './firebase.service';
@@ -258,6 +260,22 @@ export class AuthService {
   async sendPasswordReset(email: string): Promise<void> {
     if (!this.firebase?.auth) throw new Error('Firebase is not configured.');
     await sendPasswordResetEmail(this.firebase.auth, email.trim());
+  }
+
+  /**
+   * Xác thực mã reset password từ URL (trả về email người dùng nếu hợp lệ).
+   */
+  async verifyResetCode(oobCode: string): Promise<string> {
+    if (!this.firebase?.auth) throw new Error('Firebase is not configured.');
+    return verifyPasswordResetCode(this.firebase.auth, oobCode);
+  }
+
+  /**
+   * Đặt mật khẩu mới bằng mã reset password từ email.
+   */
+  async confirmReset(oobCode: string, newPassword: string): Promise<void> {
+    if (!this.firebase?.auth) throw new Error('Firebase is not configured.');
+    await confirmPasswordReset(this.firebase.auth, oobCode, newPassword);
   }
 
   /**
