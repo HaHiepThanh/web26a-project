@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, output, signal, viewChild } from '@angular/core';
 import { ApiBoardStats, WorkspaceStatsData } from '../../../models';
 import { ApiService } from '../../../services/api.service';
 import { ActivityStore } from '../../../ngrx/activity/activity.store';
@@ -31,6 +31,12 @@ export class WorkspaceStatsModal {
   readonly boardName = input<string | null>(null);
 
   readonly close = output<void>();
+
+  /** Nút "Export CSV" đứng ở thanh tiêu đề (cạnh nút đóng) nhưng dữ liệu đã sắp
+   *  xếp để xuất file lại nằm trong panel — trỏ thẳng vào panel để gọi, khỏi
+   *  chép lại logic sắp xếp `sortedWorkload()` ở hai nơi. Chỉ có mặt ở nhánh
+   *  `@else` của template nên phải hứng trường hợp `undefined` khi đang tải/lỗi. */
+  readonly statsPanel = viewChild(WorkspaceStatsPanel);
 
   readonly loading = signal(true);
   readonly loadError = signal<string | null>(null);

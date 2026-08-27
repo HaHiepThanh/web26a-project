@@ -3,9 +3,10 @@
 
   <div class="drawer-content space-y-6">
 
-    <div class="flex flex-wrap items-center justify-end gap-2">
-      <button class="btn btn-outline btn-sm" (click)="exportWorkloadCsv()">⬇ Export CSV</button>
-    </div>
+    <!-- Nút "Export CSV" nằm ở thanh tiêu đề của modal cha
+         (`workspace-stats-modal.html`), không còn ở đây: để trong này thì nó rơi
+         đúng ngay dưới nút "X" đóng modal, bấm trượt một nhịp là mất luôn bảng
+         thống kê. Modal gọi `exportWorkloadCsv()` qua `viewChild`. -->
 
     <!-- Khối 1: dải chỉ số -->
     <div class="stats stats-vertical w-full border border-base-300 bg-base-100 shadow-sm sm:stats-horizontal">
