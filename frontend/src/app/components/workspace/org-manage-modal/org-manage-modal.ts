@@ -63,6 +63,12 @@ export class OrgManageModal {
   readonly changeRole = output<{ orgId: string; userId: string; role: Role }>();
   readonly cancelInvite = output<string>();
   readonly rename = output<{ orgId: string; name: string }>();
+  /**
+   * YÊU CẦU xoá, không phải lệnh xoá: trang cha mở hộp thoại xác nhận (gõ lại
+   * đúng tên tổ chức) rồi mới thật sự gọi API. Nhờ vậy double-click lên nút xoá
+   * là vô hại — cú click thứ hai rơi vào nền hộp thoại vừa hiện.
+   */
+  readonly requestDelete = output<string>();
 
   readonly initialsOf = initialsOf;
   readonly avatarBgFor = avatarBgFor;
@@ -224,6 +230,12 @@ export class OrgManageModal {
     const name = this.nameInput().trim();
     if (!o || !name) return;
     this.rename.emit({ orgId: o.id, name });
+  }
+
+  /** Chỉ MỞ hộp thoại xác nhận — không xoá gì ở đây. */
+  onDeleteClick(): void {
+    const o = this.org();
+    if (o) this.requestDelete.emit(o.id);
   }
 
   // ------------------------------------------------------------ link mời

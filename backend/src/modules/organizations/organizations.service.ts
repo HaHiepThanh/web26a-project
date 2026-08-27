@@ -613,6 +613,63 @@ export class OrganizationsService {
   }
 
   /**
+   * Xoá hẳn tổ chức.
+   *
+   * ⚠️ CHỈ OWNER. Khác `rename` (owner hoặc admin đều được): đổi tên thì sửa lại
+   *    được, còn xoá thì kéo theo TOÀN BỘ dữ liệu của tổ chức và không có đường
+   *    lùi. Quyền đó chỉ thuộc về đúng một người.
+   *
+   * ⚠️ ON DELETE CASCADE khai trong database.sql khiến một dòng lệnh ở đây quét
+   *    sạch 9 bảng: organization_members, organization_invites, workspaces →
+   *    boards → lists → cards → labels, activity_logs, messages. Không có bản
+   *    sao lưu nào ở tầng ứng dụng.
+   *
+   * `RolesGuard` ở controller đã chặn sẵn theo @Roles('owner'), nhưng vẫn kiểm
+   * tra lại tại đây: guard đọc `req.params.id`, đổi tên tham số route một cái là
+   * nó âm thầm hết tác dụng. Hai lớp cho một thao tác không thể hoàn tác.
+   */
+  async remove(
+    uid: string,
+    orgId: string,
+  ): Promise<{ id: string; deleted: true }> {
+    const { data: org, error: readError } = await this.supabase.client
+      .from('organizations')
+      .select('id, owner_id')
+      .eq('id', orgId)
+      .maybeSingle();
+
+    if (readError) {
+      // id sai định dạng uuid → coi như không tồn tại, đừng để lọt thành 500.
+      if (readError.code === '22P02')
+        throw new NotFoundException('Organization not found.');
+      this.logger.error(
+        `Đọc tổ chức thất bại (org=${orgId}): ${readError.message}`,
+      );
+      throw new InternalServerErrorException('Failed to load organization');
+    }
+    if (!org) throw new NotFoundException('Organization not found.');
+
+    const role = await this.assertMember(uid, orgId);
+    if (role !== 'owner') {
+      throw new ForbiddenException(
+        'Only the organization owner can delete it.',
+      );
+    }
+
+    const { error } = await this.supabase.client
+      .from('organizations')
+      .delete()
+      .eq('id', orgId);
+
+    if (error) {
+      this.logger.error(`Xoá tổ chức thất bại (org=${orgId}): ${error.message}`);
+      throw new InternalServerErrorException('Failed to delete organization');
+    }
+
+    return { id: orgId, deleted: true };
+  }
+
+  /**
    * Lời mời tổ chức này ĐÃ GỬI mà chưa ai trả lời.
    *
    * Khác `findMyInvites` (lời mời gửi TỚI tôi): đây là danh sách người mình đang

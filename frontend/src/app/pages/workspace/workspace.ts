@@ -12,6 +12,7 @@ import {
   Board,
   BoardBackground,
   BoardVisibility,
+  Organization,
   OrgInviteRole,
   OrgMemberView,
   Role,
@@ -40,6 +41,8 @@ import { WorkspaceCardItem } from '../../components/workspace/workspace-card-ite
 import { CreateBoardModal } from '../../components/workspace/create-board-modal/create-board-modal';
 import { BoardEditModal } from '../../components/workspace/board-edit-modal/board-edit-modal';
 import { WorkspaceFormModal } from '../../components/workspace/workspace-form-modal/workspace-form-modal';
+import { WorkspaceDeleteModal } from '../../components/workspace/workspace-delete-modal/workspace-delete-modal';
+import { OrgDeleteModal } from '../../components/workspace/org-delete-modal/org-delete-modal';
 
 
 /** 3 lựa chọn trên giao diện khớp 1-1 với 3 giá trị backend nhận. */
@@ -66,6 +69,8 @@ function toPrivacy(visibility: string): Privacy {
     CreateBoardModal,
     BoardEditModal,
     WorkspaceFormModal,
+    WorkspaceDeleteModal,
+    OrgDeleteModal,
     LucideBuilding2,
     LucideGlobe,
     LucideLock,
@@ -141,6 +146,12 @@ export class Workspace {
   readonly showWorkspaceModal = signal(false);
   readonly workspaceModalMode = signal<'create' | 'edit'>('create');
   readonly selectedWorkspaceForEdit = signal<WorkspaceItem | null>(null);
+
+  /** Hộp thoại xác nhận xoá workspace (phải gõ lại đúng tên mới bấm được). */
+  readonly showDeleteWorkspaceModal = signal(false);
+  readonly workspacePendingDelete = signal<WorkspaceItem | null>(null);
+  readonly deletingWorkspace = signal(false);
+  readonly deleteWorkspaceError = signal<string | null>(null);
 
   readonly showBoardEditModal = signal(false);
   readonly editingBoard = signal<{ workspaceId: string; board: BoardItem } | null>(null);
@@ -268,6 +279,16 @@ export class Workspace {
   }
 
   closeAllModals(): void {
+    // Đang ở bước xác nhận xoá → Esc chỉ rút khỏi bước đó, giữ lại modal Edit
+    // phía dưới cùng phần đang sửa dở. Và tuyệt nhiên không xoá gì cả.
+    if (this.showDeleteWorkspaceModal()) {
+      this.cancelWorkspaceDelete();
+      return;
+    }
+    if (this.showDeleteOrgModal()) {
+      this.cancelOrgDelete();
+      return;
+    }
     this.showCreateBoardModal.set(false);
     this.showWorkspaceModal.set(false);
     this.closeManageOrg();
@@ -481,6 +502,81 @@ export class Workspace {
     const error = await this.orgService.updateOrg(data.orgId, { name: data.name });
     this.orgManageModal()?.showResult(error, 'Organization info updated.');
     if (!error) this.addToast(`Updated organization "${data.name}".`, 'success');
+  }
+
+  // ---- Xoá tổ chức (gõ lại đúng tên mới xoá được) ----
+
+  readonly showDeleteOrgModal = signal(false);
+  readonly orgPendingDelete = signal<Organization | null>(null);
+  readonly deletingOrg = signal(false);
+  readonly deleteOrgError = signal<string | null>(null);
+
+  /**
+   * Số workspace sẽ mất theo, để cảnh báo nói bằng con số thật.
+   *
+   * `workspaces()` chỉ chứa workspace của tổ chức ĐANG MỞ, nên với tổ chức khác
+   * (mở Manage từ ô chuyển tổ chức) ta không biết con số. Trả `null` = "không
+   * rõ" và để hộp thoại nói chung chung — thà không nêu số còn hơn nêu số sai
+   * cho một thao tác không hoàn tác được.
+   */
+  readonly orgPendingDeleteWorkspaceCount = computed<number | null>(() => {
+    const org = this.orgPendingDelete();
+    if (!org) return null;
+    return org.id === this.orgService.activeOrgId() ? this.workspaces().length : null;
+  });
+
+  /** Bước 1 — chỉ mở hộp thoại xác nhận. Chưa gọi API, chưa đụng gì tới dữ liệu. */
+  requestOrgDelete(orgId: string): void {
+    const org = this.organizations().find((o) => o.id === orgId);
+    if (!org) return;
+    this.orgPendingDelete.set(org);
+    this.deleteOrgError.set(null);
+    this.showDeleteOrgModal.set(true);
+  }
+
+  /** Huỷ (Cancel / X / nền / Esc) — tổ chức giữ nguyên, modal quản lý vẫn còn nguyên dữ liệu. */
+  cancelOrgDelete(): void {
+    // Đang gọi API dở thì không cho rút lui: đóng modal lúc này chỉ làm người
+    // dùng tưởng đã huỷ được, trong khi request vẫn đang chạy tới server.
+    if (this.deletingOrg()) return;
+    this.showDeleteOrgModal.set(false);
+    this.orgPendingDelete.set(null);
+    this.deleteOrgError.set(null);
+  }
+
+  /** Bước 2 — người dùng đã gõ đúng tên tổ chức và bấm Delete. */
+  async confirmOrgDelete(): Promise<void> {
+    // Chốt chặn cuối cho double-click: cú click thứ hai vào đây quay đầu ngay,
+    // không bắn thêm một request xoá thứ hai.
+    if (this.deletingOrg()) return;
+
+    const org = this.orgPendingDelete();
+    if (!org) return;
+
+    this.deletingOrg.set(true);
+    this.deleteOrgError.set(null);
+    try {
+      const error = await this.orgService.deleteOrg(org.id);
+      if (error) {
+        // Hỏng thì GIỮ modal mở kèm lỗi — đóng lại như thể đã xong là nói dối
+        // người dùng: tổ chức vẫn còn đó và họ không biết để thử lại.
+        this.deleteOrgError.set(error);
+        return;
+      }
+
+      this.showDeleteOrgModal.set(false);
+      this.orgPendingDelete.set(null);
+      this.closeManageOrg();
+      this.addToast(`Deleted organization "${org.name}".`, 'info');
+
+      // `deleteOrg` đã reload xong, và store tự chọn lại tổ chức hợp lệ. Nhưng
+      // slug của tổ chức vừa xoá vẫn nằm trên thanh địa chỉ, nên phải rời khỏi
+      // URL đó — nếu không, F5 một cái là rơi vào trang không tồn tại.
+      const slug = this.orgService.activeOrgSlug();
+      void this.router.navigate(slug ? ['/', slug, 'workspace'] : ['/onboarding']);
+    } finally {
+      this.deletingOrg.set(false);
+    }
   }
 
   copyMyUuid(): void {
@@ -786,27 +882,62 @@ export class Workspace {
     this.showWorkspaceModal.set(false);
   }
 
-  async handleWorkspaceDelete(wsId: string): Promise<void> {
+  /** Bước 1 — chỉ mở hộp thoại xác nhận. Chưa gọi API, chưa đụng gì tới dữ liệu. */
+  requestWorkspaceDelete(wsId: string): void {
     const ws = this.workspaces().find((w) => w.id === wsId);
+    if (!ws) return;
+    this.workspacePendingDelete.set(ws);
+    this.deleteWorkspaceError.set(null);
+    this.showDeleteWorkspaceModal.set(true);
+  }
 
-    // Xoá trên server TRƯỚC. Xoá ở giao diện trước rồi server hỏng là danh sách
-    // trên màn hình lệch với database cho tới lần F5 kế tiếp.
-    const error = await this.workspaceService.deleteWorkspace(wsId);
-    if (error) {
-      this.addToast(error, 'error');
-      return;
-    }
+  /** Huỷ (Cancel / X / nền / Esc) — workspace giữ nguyên, modal Edit vẫn còn nguyên dữ liệu. */
+  cancelWorkspaceDelete(): void {
+    // Đang gọi API dở thì không cho rút lui: đóng modal lúc này chỉ làm người
+    // dùng tưởng đã huỷ được, trong khi request vẫn đang chạy tới server.
+    if (this.deletingWorkspace()) return;
+    this.showDeleteWorkspaceModal.set(false);
+    this.workspacePendingDelete.set(null);
+    this.deleteWorkspaceError.set(null);
+  }
 
-    this.workspaces.update((list) => {
-      const updated = list.filter((w) => w.id !== wsId);
-      this.persist(updated);
-      return updated;
-    });
-    if (this.activeWorkspaceId() === wsId) {
-      this.activeWorkspaceId.set(null);
+  /** Bước 2 — người dùng đã gõ đúng tên workspace và bấm Delete. */
+  async confirmWorkspaceDelete(): Promise<void> {
+    // Chốt chặn cuối cho double-click: cú click thứ hai vào đây quay đầu ngay,
+    // không bắn thêm một request xoá thứ hai.
+    if (this.deletingWorkspace()) return;
+
+    const ws = this.workspacePendingDelete();
+    if (!ws) return;
+
+    this.deletingWorkspace.set(true);
+    this.deleteWorkspaceError.set(null);
+    try {
+      // Xoá trên server TRƯỚC. Xoá ở giao diện trước rồi server hỏng là danh sách
+      // trên màn hình lệch với database cho tới lần F5 kế tiếp.
+      const error = await this.workspaceService.deleteWorkspace(ws.id);
+      if (error) {
+        // Hỏng thì GIỮ modal mở kèm lỗi — đóng lại như thể đã xong là nói dối
+        // người dùng: workspace vẫn còn đó và họ không biết để thử lại.
+        this.deleteWorkspaceError.set(error);
+        return;
+      }
+
+      this.workspaces.update((list) => {
+        const updated = list.filter((w) => w.id !== ws.id);
+        this.persist(updated);
+        return updated;
+      });
+      if (this.activeWorkspaceId() === ws.id) {
+        this.activeWorkspaceId.set(null);
+      }
+      this.showDeleteWorkspaceModal.set(false);
+      this.workspacePendingDelete.set(null);
+      this.showWorkspaceModal.set(false);
+      this.addToast(`Deleted Workspace "${ws.name}"`, 'info');
+    } finally {
+      this.deletingWorkspace.set(false);
     }
-    this.showWorkspaceModal.set(false);
-    this.addToast(`Deleted Workspace "${ws?.name || ''}"`, 'info');
   }
 
   // ---- Toast notifications ----
@@ -825,3 +956,4 @@ export class Workspace {
     this.toasts.update((list) => list.filter((t) => t.id !== id));
   }
 }
+

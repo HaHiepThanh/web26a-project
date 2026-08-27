@@ -331,7 +331,17 @@
     </div>
 
     <!-- Footer -->
-    <div class="flex shrink-0 justify-end border-t border-base-200 px-5 py-3">
+    <div class="flex shrink-0 items-center justify-between gap-2 border-t border-base-200 px-5 py-3">
+      <!-- Chỉ owner thấy. Admin đổi được tên tổ chức nhưng KHÔNG xoá được nó —
+           xoá là quét sạch mọi workspace bên trong và không có đường lùi. -->
+      @if (isOwner()) {
+      <button type="button" class="btn btn-error btn-outline btn-sm rounded-md font-bold"
+        (click)="onDeleteClick()">
+        🗑️ Delete Organization
+      </button>
+      } @else {
+      <div></div>
+      }
       <button type="button" class="btn btn-ghost btn-sm rounded-md font-bold" (click)="close.emit()">Close</button>
     </div>
   </div>

@@ -173,8 +173,8 @@
       <div class="flex items-center justify-between pt-3 border-t border-base-300">
         @if (mode() === 'edit') {
         <button type="button" class="btn btn-error btn-outline btn-sm rounded-md font-bold"
-          (click)="confirmDelete()">
-          {{ deleteConfirmArmed() ? '⚠️ Confirm delete?' : '🗑️ Delete Workspace' }}
+          (click)="onDeleteClick()">
+          🗑️ Delete Workspace
         </button>
         } @else {
         <div></div>

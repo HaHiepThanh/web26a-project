@@ -1,7 +1,14 @@
 import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { LucideBuilding2, LucideCrown, LucidePlus, LucideUserPlus, LucideX } from '@lucide/angular';
+import {
+  LucideBuilding2,
+  LucideCrown,
+  LucidePlus,
+  LucideTriangleAlert,
+  LucideUserPlus,
+  LucideX,
+} from '@lucide/angular';
 import { Organization } from '../../../mocks';
 import { OrgInviteRole, OrgMemberView, Role, User } from '../../../models';
 import { UserSearchService } from '../../../services/user-search.service';
@@ -10,7 +17,7 @@ import { UserAvatar } from '../../shared/user-avatar/user-avatar';
 
 @Component({
   selector: 'app-manage-organization-tab',
-  imports: [NgClass, FormsModule, LucideBuilding2, LucideCrown, LucidePlus, LucideUserPlus, LucideX, OrgCreateModal, UserAvatar],
+  imports: [NgClass, FormsModule, LucideBuilding2, LucideCrown, LucidePlus, LucideTriangleAlert, LucideUserPlus, LucideX, OrgCreateModal, UserAvatar],
   templateUrl: './manage-organization-tab.html',
   host: { class: 'block' },
 })
@@ -34,6 +41,11 @@ export class ManageOrganizationTab {
   readonly inviteMember = output<{ user: User; role: OrgInviteRole }>();
   readonly removeMember = output<string>();
   readonly changeRole = output<{ userId: string; role: Role }>();
+  /**
+   * YÊU CẦU xoá tổ chức, không phải lệnh xoá: trang Cài đặt mở hộp thoại xác
+   * nhận (gõ lại đúng tên) rồi mới thật sự gọi API.
+   */
+  readonly requestDeleteOrg = output<string>();
   readonly flashMessage = output<{ message: string; type?: 'success' | 'error' | 'info' }>();
 
 

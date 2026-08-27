@@ -43,12 +43,15 @@ export class WorkspaceFormModal {
     memberIds: string[];
     members: WorkspaceMember[];
   }>();
-  readonly delete = output<string>();
+  /**
+   * YÊU CẦU xoá, không phải lệnh xoá: trang cha mở hộp thoại xác nhận (gõ lại
+   * đúng tên workspace) rồi mới thật sự gọi API.
+   */
+  readonly requestDelete = output<string>();
 
   readonly nameInput = signal('');
   readonly nameError = signal<string | null>(null);
   readonly descInput = signal('');
-  readonly deleteConfirmArmed = signal(false);
 
   readonly visibility = signal<WorkspaceVisibility>('org');
   /** id những người được tick. Người tạo luôn nằm trong đây và không gỡ được. */
@@ -89,7 +92,6 @@ export class WorkspaceFormModal {
       const ws = this.workspace();
       const m = this.mode();
       this.nameError.set(null);
-      this.deleteConfirmArmed.set(false);
       this.memberSearch.set('');
 
       // Danh sách thành viên tổ chức có thể chưa nạp (mở thẳng bằng URL) — gọi
@@ -170,12 +172,14 @@ export class WorkspaceFormModal {
     this.save.emit({ name, description: this.descInput().trim(), visibility, memberIds, members });
   }
 
-  confirmDelete(): void {
-    if (!this.deleteConfirmArmed()) {
-      this.deleteConfirmArmed.set(true);
-      return;
-    }
+  /**
+   * Chỉ MỞ hộp thoại xác nhận — không xoá gì ở đây.
+   *
+   * Nhờ vậy double-click lên nút này là vô hại: cú click thứ hai rơi vào nền
+   * hộp thoại vừa hiện chứ không vào một nút "xác nhận" nằm sẵn cùng chỗ.
+   */
+  onDeleteClick(): void {
     const ws = this.workspace();
-    if (ws) this.delete.emit(ws.id);
+    if (ws) this.requestDelete.emit(ws.id);
   }
 }

@@ -213,11 +213,24 @@
 <!-- MODAL: Quản lý Organization (mời/xoá thành viên, đổi tên) -->
 <app-org-manage-modal [isOpen]="showOrgManageModal()" [org]="managingOrg()" [members]="managingOrgMembers()"
   [pendingInvites]="managingOrgInvites()" (close)="closeManageOrg()" (invite)="inviteMember($event)" (changeRole)="changeOrgMemberRole($event)"
-  (removeMember)="removeOrgMember($event)" (cancelInvite)="cancelOrgInvite($event)" (rename)="renameOrg($event)">
+  (removeMember)="removeOrgMember($event)" (cancelInvite)="cancelOrgInvite($event)" (rename)="renameOrg($event)"
+  (requestDelete)="requestOrgDelete($event)">
 </app-org-manage-modal>
+
+<!-- MODAL: xác nhận xoá Organization (gõ lại đúng tên mới bấm được Delete) -->
+<app-org-delete-modal [isOpen]="showDeleteOrgModal()" [org]="orgPendingDelete()"
+  [workspaceCount]="orgPendingDeleteWorkspaceCount()" [deleting]="deletingOrg()" [error]="deleteOrgError()"
+  (cancel)="cancelOrgDelete()" (confirm)="confirmOrgDelete()">
+</app-org-delete-modal>
 
 <!-- MODAL: Workspace Form Component (Create & Edit) -->
 <app-workspace-form-modal [isOpen]="showWorkspaceModal()" [mode]="workspaceModalMode()"
   [workspace]="selectedWorkspaceForEdit()" [currentUser]="currentUser()" (close)="showWorkspaceModal.set(false)"
-  (save)="handleWorkspaceSave($event)" (delete)="handleWorkspaceDelete($event)">
+  (save)="handleWorkspaceSave($event)" (requestDelete)="requestWorkspaceDelete($event)">
 </app-workspace-form-modal>
+
+<!-- MODAL: xác nhận xoá Workspace (gõ lại đúng tên mới bấm được Delete) -->
+<app-workspace-delete-modal [isOpen]="showDeleteWorkspaceModal()" [workspace]="workspacePendingDelete()"
+  [deleting]="deletingWorkspace()" [error]="deleteWorkspaceError()" (cancel)="cancelWorkspaceDelete()"
+  (confirm)="confirmWorkspaceDelete()">
+</app-workspace-delete-modal>

@@ -128,6 +128,23 @@ export class OrganizationsController {
     return this.organizations.cancelInvite(user.uid, inviteId);
   }
 
+  /**
+   * DELETE /organizations/:id — xoá hẳn tổ chức. CHỈ OWNER.
+   *
+   * ⚠️ Kéo theo toàn bộ workspace / board / list / card / bình luận / tin nhắn
+   *    của tổ chức nhờ ON DELETE CASCADE. Không hoàn tác được.
+   *
+   * Khai SAU các route DELETE nhiều đoạn ('invites/:inviteId',
+   * ':id/members/:userId') theo đúng quy ước ở đầu file: route tĩnh/dài trước,
+   * route động 1 đoạn sau.
+   */
+  @UseGuards(RolesGuard)
+  @Roles('owner')
+  @Delete(':id')
+  remove(@CurrentUser() user: CurrentUserInfo, @Param('id') id: string) {
+    return this.organizations.remove(user.uid, id);
+  }
+
   /** POST /organizations/:id/invites — mời 1 người theo userId (owner hoặc admin). */
   @UseGuards(RolesGuard)
   @Roles('owner', 'admin')

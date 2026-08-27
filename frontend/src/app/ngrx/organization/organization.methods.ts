@@ -270,6 +270,23 @@ export function withOrganizationMethods() {
             }
           },
 
+          /**
+           * Xoá hẳn tổ chức (chỉ owner). Kéo theo toàn bộ workspace/board/thẻ
+           * bên trong — backend cascade, không hoàn tác được.
+           *
+           * `reload()` sau khi xoá để danh sách tổ chức và tổ chức đang mở được
+           * tính lại từ server, thay vì tự gỡ ở client rồi đoán xem nên nhảy đi đâu.
+           */
+          async deleteOrg(orgId: string): Promise<string | null> {
+            try {
+              await api.delete('/organizations/' + orgId);
+              await this.reload();
+              return null;
+            } catch (e) {
+              return describeError(e, 'Không xoá được tổ chức.');
+            }
+          },
+
           /** Lời mời đã gửi của 1 tổ chức (chỉ owner/admin gọi được). */
           async loadPendingInvites(orgId: string): Promise<void> {
             if (!orgId) return;

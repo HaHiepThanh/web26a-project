@@ -102,7 +102,8 @@
       [currentUserId]="auth.currentUser()?.id ?? null" (switchOrg)="onSwitchOrg($event)"
       (createOrg)="onCreateOrg($event)"
       (inviteMember)="onInviteOrgMember($event)" (removeMember)="onRemoveOrgMember($event)" (changeRole)="onChangeOrgRole($event)"
-      (flashMessage)="flash($event.message, $event.type ?? 'success')">
+      (flashMessage)="flash($event.message, $event.type ?? 'success')"
+      (requestDeleteOrg)="requestDeleteOrg($event)">
     </app-manage-organization-tab>
     }
 
@@ -118,3 +119,8 @@
     }
   </main>
 </div>
+
+<!-- MODAL: xác nhận xoá Organization (gõ lại đúng tên mới bấm được Delete) -->
+<app-org-delete-modal [isOpen]="showDeleteOrgModal()" [org]="orgPendingDelete()" [deleting]="deletingOrg()"
+  [error]="deleteOrgError()" (cancel)="cancelDeleteOrg()" (confirm)="confirmDeleteOrg()">
+</app-org-delete-modal>

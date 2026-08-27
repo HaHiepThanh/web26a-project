@@ -10,7 +10,15 @@ import { AuthService } from '../../services/auth.service';
 import { OrganizationStore } from '../../ngrx/organization/organization.store';
 import { TourStore } from '../../ngrx/tour/tour.store';
 import { BoardStore } from '../../ngrx/board/board.store';
-import { OrgInviteRole, OrgMemberView, Privacy, Role, User, WorkspaceRole } from '../../models';
+import {
+  Organization,
+  OrgInviteRole,
+  OrgMemberView,
+  Privacy,
+  Role,
+  User,
+  WorkspaceRole,
+} from '../../models';
 import { NAV_ITEMS, SettingsTab } from './settings.models';
 import {
   WorkspaceItem,
@@ -23,6 +31,7 @@ import {
 import { ProfileTab } from '../../components/settings/profile-tab/profile-tab';
 import { ManageWorkspaceTab } from '../../components/settings/manage-workspace-tab/manage-workspace-tab';
 import { ManageOrganizationTab } from '../../components/settings/manage-organization-tab/manage-organization-tab';
+import { OrgDeleteModal } from '../../components/workspace/org-delete-modal/org-delete-modal';
 
 @Component({
   selector: 'app-settings',
@@ -34,6 +43,7 @@ import { ManageOrganizationTab } from '../../components/settings/manage-organiza
     ProfileTab,
     ManageWorkspaceTab,
     ManageOrganizationTab,
+    OrgDeleteModal,
   ],
   templateUrl: './settings.html',
   styleUrl: './settings.css',
@@ -320,6 +330,64 @@ export class Settings {
     this.flash(`Changed ${name} to ${data.role === 'admin' ? 'Admin' : 'Member'}.`);
   }
 
+  // ---- Xoá tổ chức (gõ lại đúng tên mới xoá được) ----
+
+  readonly showDeleteOrgModal = signal(false);
+  readonly orgPendingDelete = signal<Organization | null>(null);
+  readonly deletingOrg = signal(false);
+  readonly deleteOrgError = signal<string | null>(null);
+
+  /** Bước 1 — chỉ mở hộp thoại xác nhận. Chưa gọi API, chưa đụng gì tới dữ liệu. */
+  requestDeleteOrg(orgId: string): void {
+    const org = this.orgService.organizations().find((o) => o.id === orgId);
+    if (!org) return;
+    this.orgPendingDelete.set(org);
+    this.deleteOrgError.set(null);
+    this.showDeleteOrgModal.set(true);
+  }
+
+  /** Huỷ (Cancel / X / nền) — tổ chức giữ nguyên, không đổi gì. */
+  cancelDeleteOrg(): void {
+    // Đang gọi API dở thì không cho rút lui: đóng modal lúc này chỉ làm người
+    // dùng tưởng đã huỷ được, trong khi request vẫn đang chạy tới server.
+    if (this.deletingOrg()) return;
+    this.showDeleteOrgModal.set(false);
+    this.orgPendingDelete.set(null);
+    this.deleteOrgError.set(null);
+  }
+
+  /** Bước 2 — người dùng đã gõ đúng tên tổ chức và bấm Delete. */
+  async confirmDeleteOrg(): Promise<void> {
+    // Chốt chặn cuối cho double-click: cú click thứ hai vào đây quay đầu ngay,
+    // không bắn thêm một request xoá thứ hai.
+    if (this.deletingOrg()) return;
+
+    const org = this.orgPendingDelete();
+    if (!org) return;
+
+    this.deletingOrg.set(true);
+    this.deleteOrgError.set(null);
+    try {
+      const error = await this.orgService.deleteOrg(org.id);
+      if (error) {
+        // Hỏng thì GIỮ modal mở kèm lỗi — tổ chức vẫn còn đó, người dùng thử lại được.
+        this.deleteOrgError.set(error);
+        return;
+      }
+
+      this.showDeleteOrgModal.set(false);
+      this.orgPendingDelete.set(null);
+      this.flash(`Deleted organization "${org.name}".`, 'info');
+
+      // Không còn tổ chức nào thì trang Cài đặt cũng không có gì để quản lý nữa.
+      if (!this.orgService.activeOrgSlug()) {
+        void this.router.navigate(['/onboarding']);
+      }
+    } finally {
+      this.deletingOrg.set(false);
+    }
+  }
+
   /** Slug đã bị chiếm hay chưa thì CHỈ backend biết (nó giữ tổ chức của mọi người,
    *  trình duyệt này chỉ thấy tổ chức của user đang đăng nhập). Modal vì thế không
    *  cảnh báo lúc gõ nữa — bấm Tạo, backend trả 409 kèm câu tiếng Việt sẵn. */
@@ -358,3 +426,4 @@ export class Settings {
     this.flash('Removed member from the Organization.');
   }
 }
+

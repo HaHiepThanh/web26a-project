@@ -129,6 +129,27 @@
       </div>
     </div>
   </div>
+
+  <!-- Danger zone — chỉ owner thấy. Admin quản lý được thành viên và workspace
+       nhưng KHÔNG xoá được cả tổ chức: thao tác đó không có đường lùi. -->
+  @if (isOwner() && activeOrg(); as org) {
+  <div class="rounded-3xl border-2 border-error/30 bg-error/5 p-5 shadow-xs">
+    <h3 class="flex items-center gap-2 text-sm font-black text-error">
+      <svg lucideTriangleAlert class="h-4 w-4 shrink-0" [strokeWidth]="2.4"></svg>
+      Danger zone
+    </h3>
+    <div class="mt-3 flex flex-wrap items-center justify-between gap-3">
+      <p class="max-w-lg text-xs font-medium leading-relaxed text-base-content/70">
+        Deleting <span class="font-black text-base-content">{{ org.name }}</span> permanently removes
+        every workspace, board, card, comment and chat message inside it. This cannot be undone.
+      </p>
+      <button type="button" class="btn btn-error btn-outline btn-sm shrink-0 rounded-md font-bold"
+        (click)="requestDeleteOrg.emit(org.id)">
+        🗑️ Delete Organization
+      </button>
+    </div>
+  </div>
+  }
   } @else {
   <div
     class="rounded-md border-2 border-dashed border-base-300 bg-base-100 p-8 text-center shadow-xs space-y-3">
