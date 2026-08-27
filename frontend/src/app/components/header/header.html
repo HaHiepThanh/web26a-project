@@ -68,9 +68,18 @@
                 (click)="selectBoard(b)">
                 <div class="flex w-full items-center gap-2.5">
                   <span
-                    class="flex h-7 w-7 shrink-0 items-center justify-center rounded text-white shadow-xs"
+                    class="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-md text-white shadow-xs"
                     [class]="b.background ? b.background : 'bg-primary'">
-                    <svg lucideKanban class="h-4 w-4" [strokeWidth]="2"></svg>
+                    @if (b.backgroundImageUrl) {
+                      <img
+                        [src]="b.backgroundImageUrl"
+                        [alt]="b.name"
+                        class="absolute inset-0 h-full w-full object-cover"
+                        loading="lazy" />
+                      <div class="absolute inset-0 bg-black/10"></div>
+                    } @else {
+                      <svg lucideKanban class="h-4 w-4" [strokeWidth]="2"></svg>
+                    }
                   </span>
                   <div class="min-w-0 flex-1">
                     <span class="block truncate text-xs font-semibold text-base-content">{{ b.name }}</span>

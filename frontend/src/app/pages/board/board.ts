@@ -145,7 +145,10 @@ export class Board {
   private readonly tour = inject(TourStore);
   private readonly router = inject(Router);
 
-  readonly boardId = this.route.snapshot.paramMap.get('id') ?? 'demo-board';
+  private readonly currentBoardId = signal(this.route.snapshot.paramMap.get('id') ?? 'demo-board');
+  get boardId(): string {
+    return this.currentBoardId();
+  }
 
   readonly board = this.boardService.currentBoard;
   /** Board không tồn tại / đã bị xoá / không thuộc tổ chức của mình — `loadBoard()`
@@ -697,19 +700,30 @@ export class Board {
     // thắt board.ts). Rời trang thì trả về `null` để store không tưởng nhầm vẫn
     // còn đang mở board này.
     const routeContext = inject(RouteContextStore);
-    routeContext.setActiveBoard(this.boardId);
+    let roiPhong: (() => void) | null = null;
 
-    // Quên số cột/thẻ của board trước — chúng là số của riêng một board, mang
-    // sang board khác là mốc của tour sai hẳn. Xem `resetBoardCounts()`.
-    this.tour.resetBoardCounts();
-    inject(DestroyRef).onDestroy(() => routeContext.setActiveBoard(null));
+    const khoiTaoBoard = (id: string) => {
+      this.currentBoardId.set(id);
+      routeContext.setActiveBoard(id);
+      this.tour.resetBoardCounts();
+      void this.bootstrap();
+      if (roiPhong) roiPhong();
+      roiPhong = this.realtime.joinBoard(id);
+    };
 
-    void this.bootstrap();
+    khoiTaoBoard(this.currentBoardId());
 
-    // Vào phòng WebSocket của board này, và RỜI khi rời trang. Thiếu vế thứ hai
-    // thì mở lần lượt 5 board là đang nghe cùng lúc cả 5.
-    const roiPhong = this.realtime.joinBoard(this.boardId);
-    inject(DestroyRef).onDestroy(roiPhong);
+    this.route.paramMap.subscribe((params) => {
+      const id = params.get('id');
+      if (id && id !== this.currentBoardId()) {
+        khoiTaoBoard(id);
+      }
+    });
+
+    inject(DestroyRef).onDestroy(() => {
+      routeContext.setActiveBoard(null);
+      if (roiPhong) roiPhong();
+    });
 
     // Người khác vừa xoá đúng board mình đang mở → rời đi, đừng để người dùng
     // thao tác tiếp rồi ăn 404 ở mọi nút bấm.

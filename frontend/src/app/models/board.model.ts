@@ -48,4 +48,5 @@ export interface BoardSearchResult {
   orgSlug: string;
   visibility: BoardVisibility;
   background: string | null;
+  backgroundImageUrl?: string | null;
 }

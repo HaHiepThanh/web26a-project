@@ -110,6 +110,7 @@ export interface BoardSearchResult {
   orgSlug: string;
   visibility: string;
   background: string | null;
+  backgroundImageUrl: string | null;
 }
 
 /**
@@ -464,7 +465,7 @@ export class BoardsService {
     let boardQuery = sb
       .from('boards')
       .select(
-        'id, org_id, workspace_id, name, visibility, background, board_members(user_id)',
+        'id, org_id, workspace_id, name, visibility, background, background_image_path, board_members(user_id)',
       )
       .in('workspace_id', wsIds);
 
@@ -480,26 +481,47 @@ export class BoardsService {
       throw new InternalServerErrorException('Failed to search boards');
     }
 
-    return (boardRows ?? [])
-      .filter((b) => {
-        if (b.visibility !== 'private') return true;
-        const bMembers =
-          (b.board_members as unknown as { user_id: string }[]) ?? [];
-        return bMembers.some((m) => m.user_id === uid);
-      })
-      .map((b) => {
-        const ws = wsMap.get(b.workspace_id);
-        return {
-          id: b.id,
-          name: b.name,
-          workspaceId: b.workspace_id,
-          workspaceName: ws?.name ?? '',
-          orgId: b.org_id,
-          orgSlug: slugByOrgId.get(b.org_id) ?? '',
-          visibility: b.visibility,
-          background: b.background,
-        };
-      });
+    const filtered = (boardRows ?? []).filter((b) => {
+      if (b.visibility !== 'private') return true;
+      const bMembers =
+        (b.board_members as unknown as { user_id: string }[]) ?? [];
+      return bMembers.some((m) => m.user_id === uid);
+    });
+
+    const duongDan = filtered
+      .map((b) => b.background_image_path)
+      .filter((p): p is string => !!p);
+
+    const theoDuongDan = new Map<string, string>();
+    if (duongDan.length > 0) {
+      const { data: signed, error } = await this.supabase.client.storage
+        .from(BUCKET_NEN)
+        .createSignedUrls(duongDan, NEN_URL_TTL);
+      if (error) {
+        this.logger.warn(`Ký link ảnh nền khi search thất bại: ${error.message}`);
+      } else {
+        for (const s of signed ?? []) {
+          if (s.path && s.signedUrl) theoDuongDan.set(s.path, s.signedUrl);
+        }
+      }
+    }
+
+    return filtered.map((b) => {
+      const ws = wsMap.get(b.workspace_id);
+      return {
+        id: b.id,
+        name: b.name,
+        workspaceId: b.workspace_id,
+        workspaceName: ws?.name ?? '',
+        orgId: b.org_id,
+        orgSlug: slugByOrgId.get(b.org_id) ?? '',
+        visibility: b.visibility,
+        background: b.background,
+        backgroundImageUrl: b.background_image_path
+          ? (theoDuongDan.get(b.background_image_path) ?? null)
+          : null,
+      };
+    });
   }
 
   /**

@@ -16,6 +16,7 @@ const MOCK_BOARDS: BoardSearchResult[] = [
     orgSlug: 'my-org',
     visibility: 'workspace',
     background: 'bg-board-blue',
+    backgroundImageUrl: 'https://example.com/bg1.png',
   },
   {
     id: 'b2',
@@ -26,10 +27,11 @@ const MOCK_BOARDS: BoardSearchResult[] = [
     orgSlug: 'my-org',
     visibility: 'private',
     background: null,
+    backgroundImageUrl: null,
   },
 ];
 
-describe('HeaderActionsService — Tìm kiếm Board khi ở trang Settings', () => {
+describe('HeaderActionsService — Tìm kiếm Board khi ở trang Settings & Board', () => {
   let service: HeaderActionsService;
   let api: ApiService;
   let router: Router;
@@ -63,6 +65,8 @@ describe('HeaderActionsService — Tìm kiếm Board khi ở trang Settings', ()
     service.onSearchInput('Frontend');
 
     expect(service.isSettingsPage()).toBe(false);
+    expect(service.isBoardPage()).toBe(false);
+    expect(service.isDropdownSearchPage()).toBe(false);
     expect(service.searchDropdownOpen()).toBe(false);
     expect(workspaceUi.searchQuery()).toBe('Frontend');
     expect(getSpy).not.toHaveBeenCalled();
@@ -77,6 +81,7 @@ describe('HeaderActionsService — Tìm kiếm Board khi ở trang Settings', ()
     const getSpy = vi.spyOn(api, 'get').mockResolvedValue(MOCK_BOARDS);
 
     expect(service.isSettingsPage()).toBe(true);
+    expect(service.isDropdownSearchPage()).toBe(true);
 
     service.onSearchInput('Frontend');
     expect(service.searchDropdownOpen()).toBe(true);
@@ -86,7 +91,23 @@ describe('HeaderActionsService — Tìm kiếm Board khi ở trang Settings', ()
     expect(getSpy).toHaveBeenCalledWith(expect.stringContaining('/boards/search?q=Frontend'));
   });
 
-  it('ở trang Settings: mở dropdown tìm kiếm khi focus ô search', async () => {
+  it('ở trang Board: gọi API tìm kiếm board và mở dropdown khi có từ khoá', async () => {
+    vi.spyOn(router, 'url', 'get').mockReturnValue('/my-org/board/b1');
+    vi.useFakeTimers();
+    const getSpy = vi.spyOn(api, 'get').mockResolvedValue(MOCK_BOARDS);
+
+    expect(service.isBoardPage()).toBe(true);
+    expect(service.isDropdownSearchPage()).toBe(true);
+
+    service.onSearchInput('Backend');
+    expect(service.searchDropdownOpen()).toBe(true);
+
+    vi.advanceTimersByTime(250);
+
+    expect(getSpy).toHaveBeenCalledWith(expect.stringContaining('/boards/search?q=Backend'));
+  });
+
+  it('ở trang Settings & Board: mở dropdown tìm kiếm khi focus ô search', async () => {
     vi.spyOn(router, 'url', 'get').mockReturnValue('/settings');
     vi.spyOn(api, 'get').mockResolvedValue(MOCK_BOARDS);
 

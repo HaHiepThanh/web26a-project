@@ -122,15 +122,24 @@ export class HeaderActionsService {
     return this.router.url.split('?')[0].split('#')[0].includes('/settings');
   }
 
+  isBoardPage(): boolean {
+    return this.router.url.split('?')[0].split('#')[0].includes('/board');
+  }
+
+  isDropdownSearchPage(): boolean {
+    const cleanUrl = this.router.url.split('?')[0].split('#')[0];
+    return cleanUrl.includes('/settings') || cleanUrl.includes('/board');
+  }
+
   onSearchInput(value: string): void {
     this.searchQuery.set(value);
     this.workspaceUi.setSearchQuery(value);
 
     const trimmed = value.trim();
 
-    // CHỈ khi ở trang Settings mới xổ dropdown và gọi API tìm kiếm
-    // Ở trang Workspace thì không xổ dropdown mà chỉ lọc tại chỗ
-    if (this.isSettingsPage()) {
+    // Khi ở trang Settings hoặc trang Board thì xổ dropdown và gọi API tìm kiếm
+    // Ở trang Workspace thì không xổ dropdown mà chỉ lọc tại chỗ trên lưới workspace
+    if (this.isDropdownSearchPage()) {
       this.searchDropdownOpen.set(true);
       if (this.searchDebounceTimer) {
         clearTimeout(this.searchDebounceTimer);
@@ -145,8 +154,8 @@ export class HeaderActionsService {
   }
 
   onSearchFocus(): void {
-    // CHỈ khi ở trang Settings mới xổ dropdown khi focus ô search
-    if (this.isSettingsPage()) {
+    // Khi ở trang Settings hoặc trang Board thì xổ dropdown khi focus ô search
+    if (this.isDropdownSearchPage()) {
       this.searchDropdownOpen.set(true);
       if (this.searchResults().length === 0) {
         void this.fetchBoardSearchResults(this.searchQuery().trim());
