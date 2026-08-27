@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { LucideCheck, LucideMinus } from '@lucide/angular';
+import { LineRevealDirective } from '../../../directives/line-reveal.directive';
 import { RevealDirective } from '../../../directives/reveal.directive';
 
 /**
@@ -17,7 +18,7 @@ import { RevealDirective } from '../../../directives/reveal.directive';
  */
 @Component({
   selector: 'app-landing-compare',
-  imports: [RevealDirective, LucideCheck, LucideMinus],
+  imports: [LineRevealDirective, RevealDirective, LucideCheck, LucideMinus],
   templateUrl: './landing-compare.html',
   styleUrls: ['../_landing-shared.css', './landing-compare.css'],
 })

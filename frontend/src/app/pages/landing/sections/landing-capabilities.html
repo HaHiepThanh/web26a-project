@@ -10,7 +10,7 @@
         <span class="lp-eyebrow-dot" aria-hidden="true"></span>
         Everything in the box
       </p>
-      <h2 id="caps-title" class="lp-h2" appReveal [revealDelay]="60">
+      <h2 id="caps-title" class="lp-h2" appLineReveal>
         Four cards. <span class="lp-grad">Open one.</span>
       </h2>
       <p class="lp-lead" appReveal [revealDelay]="120">
@@ -23,11 +23,16 @@
          thẻ đó chiếm trọn bề ngang, ba thẻ kia co lại thành hàng nhỏ bên dưới. -->
     <div class="deck" [class.is-open]="open() !== null" appReveal [revealDelay]="180">
       @for (g of groups; track g.title; let i = $index) {
+        <!-- `view-transition-name` đặt tên cho tấm thẻ để trình duyệt nhận ra
+             thẻ TRƯỚC và thẻ SAU là cùng một vật, rồi tự nội suy vị trí và kích
+             thước — thay vì cho nó biến mất ở ô lưới cũ và hiện ra ở chỗ mới.
+             Tên phải duy nhất trên cả trang, nên gắn kèm chỉ số. -->
         <article
           class="tcard"
           [class]="'tcard tone-' + g.tone"
           [class.is-open]="open() === i"
           [class.is-shrunk]="open() !== null && open() !== i"
+          [style.view-transition-name]="'caps-card-' + i"
         >
           <!-- Mặt thẻ. Là <button> thật nên bàn phím, Enter/Space và vòng focus
                đều có sẵn — không phải tự dựng bằng div và tabindex. -->
@@ -86,7 +91,7 @@
           <!-- Chi tiết thẻ. Chỉ dựng khi mở: ba mươi mục ẩn sẵn trong DOM sẽ
                khiến trình đọc màn hình đọc phải nội dung của cả bốn thẻ. -->
           @if (open() === i) {
-            <div class="tcard-detail" [id]="'caps-panel-' + i" role="region">
+            <div class="tcard-detail" [id]="'caps-panel-' + i" role="region" style="view-transition-name: caps-detail">
               <div class="detail-head">
                 <span class="detail-title">{{ g.items.length }} in this card</span>
                 <button type="button" class="detail-close" (click)="close(i)" aria-label="Close card">

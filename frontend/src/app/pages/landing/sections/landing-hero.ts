@@ -10,6 +10,7 @@ import {
 import { RouterLink } from '@angular/router';
 import { LucideArrowRight, LucideCheck, LucideSparkles, LucideZap } from '@lucide/angular';
 import { MagneticDirective } from '../../../directives/magnetic.directive';
+import { LineRevealDirective } from '../../../directives/line-reveal.directive';
 import { RevealDirective } from '../../../directives/reveal.directive';
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
@@ -61,7 +62,7 @@ const PAUSE_MAX = 4200;
   selector: 'app-landing-hero',
   imports: [
     RouterLink,
-    RevealDirective,
+    LineRevealDirective, RevealDirective,
     MagneticDirective,
     LucideArrowRight,
     LucideCheck,

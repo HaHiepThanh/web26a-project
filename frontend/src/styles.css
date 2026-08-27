@@ -245,3 +245,37 @@ html.lenis body {
 .lenis.lenis-smooth [data-lenis-prevent] {
   overscroll-behavior: contain;
 }
+
+/* ==========================================================================
+   View Transitions — chỉ trang giới thiệu dùng tới.
+
+   Phải đặt ở style TOÀN CỤC chứ không nhét vào component được:
+   `::view-transition-*` là pseudo-element gắn ở gốc tài liệu, nằm ngoài mọi cây
+   DOM, nên cơ chế đóng gói style của Angular không với tới — viết trong CSS của
+   component thì selector bị thêm thuộc tính phạm vi và không bao giờ khớp.
+
+   Không ảnh hưởng phần còn lại của app: mấy pseudo-element này chỉ tồn tại
+   trong lúc `document.startViewTransition()` đang chạy, mà hiện chỉ khu bản kê
+   của trang giới thiệu gọi tới nó.
+   ========================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-group(*) {
+    /* Khớp bậc 3 và đường cong của hệ chuyển động trang giới thiệu (xem
+       _landing-shared.css). Viết thẳng giá trị vì token `--lp-*` khai trong
+       phạm vi component, còn pseudo-element này ở gốc tài liệu nên không kế
+       thừa được. Đổi thang bên kia thì nhớ đổi cả hai chỗ. */
+    animation-duration: 320ms;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+/* Tôn trọng cài đặt giảm chuyển động: bỏ hẳn phần diễn, đổi trạng thái tức thì.
+   (Mã nguồn cũng đã tự tránh gọi startViewTransition trong trường hợp này —
+   đây là lớp chặn thứ hai, phòng khi có chỗ khác gọi mà quên kiểm tra.) */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

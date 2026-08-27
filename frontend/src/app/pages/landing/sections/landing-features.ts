@@ -14,6 +14,7 @@ import {
   LucideTag,
   LucideUsers,
 } from '@lucide/angular';
+import { LineRevealDirective } from '../../../directives/line-reveal.directive';
 import { RevealDirective } from '../../../directives/reveal.directive';
 
 /** Một vùng có thể soi trên bảng minh hoạ. */
@@ -61,7 +62,7 @@ interface Feature {
 @Component({
   selector: 'app-landing-features',
   imports: [
-    RevealDirective,
+    LineRevealDirective, RevealDirective,
     LucideCalendarClock,
     LucideColumns3,
     LucideMessageSquare,

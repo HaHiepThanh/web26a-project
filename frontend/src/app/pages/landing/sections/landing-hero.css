@@ -869,3 +869,70 @@
     transition: none;
   }
 }
+
+/* ==========================================================================
+   Bảng demo TỰ XẾP VÀO CHỖ khi khối hiện lên.
+
+   Ba cột dựng lên trước, rồi từng tấm thẻ rơi xuống đúng cột của nó. Việc này
+   nói hộ một câu mà chữ phải mất cả dòng mới nói xong: "mấy tấm này rời ra
+   được, và chúng có chỗ để đáp". Người xem hiểu ngay là kéo thả được, trước cả
+   khi kịp đọc dòng mời bên dưới.
+
+   Móc vào `.is-revealed` của `appReveal` trên cùng khối, KHÔNG chạy ngay lúc
+   tải trang: chạy độc lập thì hoạt ảnh diễn xong từ lâu trong khi khối vẫn còn
+   trong suốt, và người xem chỉ thấy một tấm bảng hiện ra đã xếp sẵn.
+
+   ⚠️ KHÔNG đụng tới `.kan-card-travel`. Hai tấm thẻ đó do JavaScript điều khiển
+   qua `--dx/--dy` trong transform; thêm transform của hoạt ảnh vào là hai bên
+   tranh nhau ghi cùng một thuộc tính, và cú kéo sẽ giật.
+
+   An toàn với phần kéo thả: chỗ đáp tính bằng cách chia hộp của cả lưới
+   `.board-cols` làm ba phần, mà lưới đó không hề được hoạt ảnh — nên toạ độ
+   không phụ thuộc việc từng cột có đang dịch chuyển hay không. Phép đo cũng chỉ
+   chạy lúc thả chuột, tức là rất lâu sau khi hoạt ảnh kết thúc.
+   ========================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  /* ⚠️ KHÔNG viết `.reveal .col { opacity: 0 }` để ẩn trước. Đã thử và hỏng:
+     rule ấy vẫn khớp sau khi `is-revealed` được thêm, nên GIÁ TRỊ GỐC của
+     `opacity` là 0 — mà keyframe 100% ở đây bỏ trống nên nó lấy đúng giá trị
+     gốc. Hoạt ảnh thành ra chạy từ 0 về 0 và ba cột vô hình vĩnh viễn (đo được:
+     `opacity` bằng "0" ở cả ba sau khi khối đã hiện).
+     Không cần ẩn trước thật: `animation-fill-mode: both` đã tự áp trạng thái
+     `from` trong suốt quãng chờ của `animation-delay`, còn trước lúc
+     `is-revealed` thì cả khối `.reveal` vốn đã trong suốt rồi. */
+  .reveal.is-revealed .col {
+    animation: col-rise var(--lp-dur-4) var(--lp-ease) both;
+    animation-delay: var(--enter, 0ms);
+  }
+  /* `--enter` khai ở cột và được thẻ bên trong THỪA HƯỞNG, nên mỗi cột chỉ cần
+     đặt một lần là cả cột đi cùng nhịp. */
+  .reveal.is-revealed .col:nth-of-type(2) {
+    --enter: var(--lp-stagger);
+  }
+  .reveal.is-revealed .col:nth-of-type(3) {
+    --enter: calc(var(--lp-stagger) * 2);
+  }
+
+  /* Thẻ rơi XUỐNG từ trên, không trồi lên từ dưới: đúng cảm giác được đặt vào
+     cột, và ngược chiều với cú dựng của cột nên hai chuyển động không lẫn nhau. */
+  .reveal.is-revealed .kan-card:not(.kan-card-travel) {
+    animation: card-drop var(--lp-dur-3) var(--lp-ease) both;
+    animation-delay: calc(var(--enter, 0ms) + var(--lp-stagger));
+  }
+
+  /* Chỉ khai `from`. Không viết `to` thì trạng thái cuối chính là giá trị gốc
+     của phần tử, nên hoạt ảnh không để lại một transform thừa nằm đó — thứ sẽ
+     âm thầm biến mỗi cột thành khối chứa cho các phần tử định vị tuyệt đối. */
+  @keyframes col-rise {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+  }
+  @keyframes card-drop {
+    from {
+      opacity: 0;
+      transform: translateY(-12px) scale(0.97);
+    }
+  }
+}

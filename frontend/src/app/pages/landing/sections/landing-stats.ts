@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { CountUpDirective } from '../../../directives/count-up.directive';
+import { LineRevealDirective } from '../../../directives/line-reveal.directive';
 import { RevealDirective } from '../../../directives/reveal.directive';
 
 /**
@@ -17,7 +18,7 @@ import { RevealDirective } from '../../../directives/reveal.directive';
  */
 @Component({
   selector: 'app-landing-stats',
-  imports: [RevealDirective, CountUpDirective],
+  imports: [LineRevealDirective, RevealDirective, CountUpDirective],
   templateUrl: './landing-stats.html',
   styleUrls: ['../_landing-shared.css', './landing-stats.css'],
 })

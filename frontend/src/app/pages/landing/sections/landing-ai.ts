@@ -7,6 +7,7 @@ import {
   LucideSparkles,
   LucideX,
 } from '@lucide/angular';
+import { LineRevealDirective } from '../../../directives/line-reveal.directive';
 import { RevealDirective } from '../../../directives/reveal.directive';
 
 /**
@@ -47,7 +48,7 @@ const BEAT = {
 @Component({
   selector: 'app-landing-ai',
   imports: [
-    RevealDirective,
+    LineRevealDirective, RevealDirective,
     LucideArrowRight,
     LucideCheck,
     LucideHash,

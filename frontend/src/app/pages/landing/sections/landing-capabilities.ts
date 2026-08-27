@@ -1,5 +1,14 @@
-import { Component, ElementRef, signal, viewChildren } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  Injector,
+  afterNextRender,
+  inject,
+  signal,
+  viewChildren,
+} from '@angular/core';
 import { LucideLayoutGrid, LucideRadio, LucideSettings2, LucideUsers, LucideX } from '@lucide/angular';
+import { LineRevealDirective } from '../../../directives/line-reveal.directive';
 import { RevealDirective } from '../../../directives/reveal.directive';
 
 /**
@@ -26,7 +35,7 @@ import { RevealDirective } from '../../../directives/reveal.directive';
 @Component({
   selector: 'app-landing-capabilities',
   imports: [
-    RevealDirective,
+    LineRevealDirective, RevealDirective,
     LucideLayoutGrid,
     LucideRadio,
     LucideSettings2,
@@ -113,10 +122,67 @@ export class LandingCapabilities {
   readonly open = signal<number | null>(null);
 
   private readonly cardEls = viewChildren<ElementRef<HTMLElement>>('card');
+  private readonly injector = inject(Injector);
 
   /** Bấm một thẻ: mở nó ra, hoặc đóng lại nếu nó đang mở. */
   toggle(index: number): void {
-    this.open.update((cur) => (cur === index ? null : index));
+    this.transition(() => this.open.update((cur) => (cur === index ? null : index)));
+  }
+
+  /**
+   * Chạy một thay đổi trạng thái qua View Transitions API.
+   *
+   * Vì sao đáng dùng ở ĐÚNG chỗ này: thẻ mở ra là một cú đổi bố cục thật — nó
+   * nhảy từ một ô lưới hẹp sang chiếm trọn bề ngang, ba thẻ kia co lại và đổi
+   * chỗ. Bằng CSS thuần thì không có cách nào nối hai bố cục đó lại, vì phần tử
+   * đổi ô lưới chứ không đổi transform; kết quả là nó biến mất chỗ này rồi hiện
+   * ra chỗ kia. View Transitions cho trình duyệt chụp trước–sau rồi tự nội suy,
+   * nên tấm thẻ NỞ RA đúng nghĩa thay vì nhảy cóc.
+   *
+   * ⚠️ TRẢ VỀ PROMISE, đừng đổi trạng thái rồi thoát ngay.
+   * Trình duyệt chụp ảnh "sau" tại thời điểm callback kết thúc. Mà ghi một
+   * signal của Angular chỉ ĐẶT LỊCH cho một vòng phát hiện thay đổi chạy sau,
+   * nên callback đồng bộ sẽ kết thúc lúc DOM còn y nguyên — hoạt ảnh chạy giữa
+   * hai khung hình giống hệt nhau, tức là không thấy gì cả.
+   *
+   * Đã thử `ChangeDetectorRef.detectChanges()` ngay trong callback và ĐO RA LÀ
+   * KHÔNG ĂN: sau khi callback chạy xong vẫn không có `.tcard-detail`, không cả
+   * `.is-open` lẫn `.is-shrunk` — mọi binding chỉ lên ở vòng kế tiếp sau chừng
+   * 60ms. Nên phải đi đường chính thức: `startViewTransition` chấp nhận callback
+   * bất đồng bộ và chờ promise xong mới chụp, còn `afterNextRender` cho biết
+   * đúng lúc Angular đã dựng xong DOM.
+   *
+   * Có hẹn giờ chặn: nếu vì lý do nào đó không có vòng dựng nào xảy ra, promise
+   * sẽ không bao giờ xong và View Transition treo — màn hình đứng hình ở ảnh
+   * chụp cũ, không bấm được gì. Thà mất hiệu ứng còn hơn khoá giao diện.
+   *
+   * Trình duyệt không hỗ trợ hoặc người dùng bật giảm chuyển động thì đổi thẳng.
+   */
+  private transition(update: () => void): void {
+    const doc = document as Document & {
+      startViewTransition?: (cb: () => void | Promise<void>) => unknown;
+    };
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+    if (reduced || typeof doc.startViewTransition !== 'function') {
+      update();
+      return;
+    }
+
+    doc.startViewTransition(
+      () =>
+        new Promise<void>((resolve) => {
+          update();
+          const stop = setTimeout(resolve, 250);
+          afterNextRender(
+            () => {
+              clearTimeout(stop);
+              resolve();
+            },
+            { injector: this.injector },
+          );
+        }),
+    );
   }
 
   /**
@@ -126,7 +192,7 @@ export class LandingCapabilities {
    * lại từ đầu trang — đúng loại bẫy mà các hộp thoại hay mắc.
    */
   close(index: number): void {
-    this.open.set(null);
+    this.transition(() => this.open.set(null));
     this.cardEls()[index]?.nativeElement.focus();
   }
 

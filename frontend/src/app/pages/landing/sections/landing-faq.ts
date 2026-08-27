@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { LineRevealDirective } from '../../../directives/line-reveal.directive';
 import { RevealDirective } from '../../../directives/reveal.directive';
 
 /**
@@ -17,7 +18,7 @@ import { RevealDirective } from '../../../directives/reveal.directive';
  */
 @Component({
   selector: 'app-landing-faq',
-  imports: [RevealDirective],
+  imports: [LineRevealDirective, RevealDirective],
   templateUrl: './landing-faq.html',
   styleUrls: ['../_landing-shared.css', './landing-faq.css'],
 })

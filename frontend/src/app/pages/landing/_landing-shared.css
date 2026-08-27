@@ -133,7 +133,7 @@
      HỆ CHUYỂN ĐỘNG
 
      Trước khi có khối này, trang dùng 21 giá trị thời lượng rời rạc (40ms →
-     var(--lp-dur-5)) và 26 trên 31 transition chạy bằng `ease` mặc định của trình duyệt,
+     900ms) và 26 trên 31 transition chạy bằng `ease` mặc định của trình duyệt,
      dù token đường cong đã có sẵn và chỉ 5 chỗ dùng tới. Hệ quả không nằm ở
      chỗ nào cụ thể — nó nằm ở cảm giác chung: mỗi khu vực chuyển động theo một
      tính cách riêng, và mắt đọc ra "trang này được lắp ráp" chứ không phải
@@ -539,6 +539,73 @@
   opacity: 0.42;
   mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
+}
+
+/* --------------------------------------------------------------------------
+   Tiêu đề hiện theo TỪNG DÒNG (đi cùng directive `appLineReveal`).
+
+   Khác `.reveal` bên dưới ở chỗ: `.reveal` cho cả khối mờ lên và dịch 22px, còn
+   ở đây mỗi dòng trượt lên từ dưới một khung cắt, dòng sau đi sau dòng trước.
+   Cảm giác khác hẳn — chữ như được ĐẶT xuống chứ không phải hiện ra.
+   -------------------------------------------------------------------------- */
+
+/* Ẩn cho tới khi directive tách xong, tránh chớp một nhịp chữ chưa tách rồi mới
+   nhảy về trạng thái ẩn. Directive LUÔN gắn `is-ready` kể cả khi tách hỏng, nên
+   không có đường nào để tiêu đề kẹt vô hình. */
+.line-reveal {
+  opacity: 0;
+}
+.line-reveal.is-ready {
+  opacity: 1;
+}
+
+/* Chưa tách được (có đơn vị vắt qua hai dòng, hoặc người dùng bật giảm chuyển
+   động): hiện thẳng — mất phần diễn chứ không mất chữ. */
+.line-reveal.is-ready:not(.is-split) {
+  transition: opacity var(--lp-dur-4) var(--lp-ease);
+}
+
+/* Khung cắt của mỗi dòng.
+
+   Phải nới CẢ TRÊN LẪN DƯỚI, không chỉ dưới:
+   - dưới, vì `overflow: hidden` xén đúng phần nằm dưới đường chân chữ — đuôi
+     g, y, p và toàn bộ dấu tiếng Việt đặt dưới ("ạ" hoá thành "a");
+   - trên, vì `.lp-grad` tự nó đã có `padding-block: 0.08em` để dấu không bị
+     khung gradient xén, nên nội dung cao hơn hộp dòng ở cả hai đầu.
+   Đo trước khi sửa: dòng "on one board" của hero (72px) thiếu 3px, "two minutes
+   away" của CTA (56px) thiếu 2px — đều là dòng có chữ gradient.
+
+   Đệm thì phải kéo lại, nếu không tiêu đề cao lên và xô cả bố cục. Nhưng KHÔNG
+   dùng `margin-block` âm đối xứng được: margin dọc của hai khối anh em sẽ gộp
+   lại lấy giá trị âm nhất (−0.22em) chứ không cộng dồn, nên mỗi mối nối giữa
+   hai dòng vẫn dôi ra đúng 0.22em. Phải khử riêng từng chỗ: hai mép ngoài trừ
+   một lần, còn mối nối bên trong trừ gấp đôi để triệt tiêu đệm của cả hai dòng. */
+.line-reveal.is-split .lr-ln {
+  display: block;
+  overflow: hidden;
+  padding-block: 0.22em;
+}
+.line-reveal.is-split .lr-ln:first-child {
+  margin-top: -0.22em;
+}
+.line-reveal.is-split .lr-ln:last-child {
+  margin-bottom: -0.22em;
+}
+.line-reveal.is-split .lr-ln + .lr-ln {
+  margin-top: -0.44em;
+}
+
+.line-reveal.is-split .lr-i {
+  display: block;
+  /* 110% chứ không 100%: đẩy quá một chút để chắc chắn nằm hẳn ngoài khung cắt
+     kể cả khi chiều cao dòng ra số lẻ. */
+  transform: translateY(110%);
+  transition: transform var(--lp-dur-4) var(--lp-ease);
+  transition-delay: calc(var(--lp-stagger) * var(--i, 0));
+}
+
+.line-reveal.is-split.is-in .lr-i {
+  transform: none;
 }
 
 /* --------------------------------------------------------------------------
