@@ -940,3 +940,18 @@
     }
   }
 }
+
+/* Chiều sâu cho cú ngả theo cuộn của `.board-stage` (xem buildScrollScene trong
+   landing-hero.ts).
+
+   Phải là THUỘC TÍNH `perspective` đặt ở phần tử CHA, không phải hàm
+   `perspective()` trong transform. Hàm chỉ tạo chiều sâu cho transform của
+   chính phần tử đó — `.board-frame` bên dưới đang dùng cách ấy cho góc nghiêng
+   1,2 độ của riêng nó. Còn muốn con xoay có chiều sâu thì cha phải khai thuộc
+   tính, nếu không `rotateX` chỉ làm phần tử dẹt lại chứ không lùi ra xa.
+
+   Chọn bằng `:has()` chứ không gắn thẳng vào `.lp-shell`: hero có hai khối
+   `.lp-shell`, và khối chứa phần chữ thì không nên có phối cảnh. */
+.lp-shell:has(.board-stage) {
+  perspective: 1600px;
+}

@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { LineRevealDirective } from '../../../directives/line-reveal.directive';
+import { ScrollSkewDirective } from '../../../directives/scroll-skew.directive';
 import { RevealDirective } from '../../../directives/reveal.directive';
 
 /**
@@ -29,7 +30,7 @@ import { RevealDirective } from '../../../directives/reveal.directive';
  */
 @Component({
   selector: 'app-landing-origin',
-  imports: [LineRevealDirective, RevealDirective],
+  imports: [LineRevealDirective, ScrollSkewDirective, RevealDirective],
   templateUrl: './landing-origin.html',
   styleUrls: ['../_landing-shared.css', './landing-origin.css'],
 })

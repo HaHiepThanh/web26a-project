@@ -10,7 +10,7 @@
       </p>
     </div>
 
-    <dl class="lp-stat-row">
+    <dl class="lp-stat-row" appScrollSkew>
       @for (stat of stats; track stat.label; let i = $index) {
         <div class="lp-stat" appReveal [revealDelay]="i * 80">
           <dt class="lp-stat-value">

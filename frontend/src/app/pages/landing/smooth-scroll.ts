@@ -1,6 +1,7 @@
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Lenis from 'lenis';
+import { resetScrollVelocity, setScrollVelocity } from './scroll-velocity';
 
 /**
  * Cuộn có quán tính (Lenis) + trục thời gian theo cuộn (GSAP ScrollTrigger),
@@ -25,7 +26,18 @@ import Lenis from 'lenis';
  */
 export class SmoothScroll {
   private lenis?: Lenis;
-  private readonly onLenisScroll = () => ScrollTrigger.update();
+  /**
+   * Mỗi nhịp cuộn của Lenis: cập nhật ScrollTrigger, đồng thời ghi lại vận tốc
+   * cho các hiệu ứng phản ứng theo tốc độ cuộn (xem scroll-velocity.ts).
+   *
+   * Lấy số của Lenis chứ không tự tính hiệu vị trí giữa hai sự kiện `scroll`
+   * gốc: Lenis đã nội suy nên số của nó mượt sẵn, còn hiệu số thô thì nhiễu và
+   * nhảy cóc mỗi khi trình duyệt gộp sự kiện.
+   */
+  private readonly onLenisScroll = (e: { velocity: number }) => {
+    setScrollVelocity(e.velocity);
+    ScrollTrigger.update();
+  };
   private tickerFn?: (time: number) => void;
 
   /** Có đang chạy không — dùng để quyết định cuộn tới mốc bằng Lenis hay bằng DOM. */
@@ -74,6 +86,9 @@ export class SmoothScroll {
     if (this.tickerFn) gsap.ticker.remove(this.tickerFn);
     gsap.ticker.lagSmoothing(500, 33); // trả về mặc định của GSAP
     this.lenis?.off('scroll', this.onLenisScroll);
+    // Về 0 khi rời trang: giữ lại vận tốc cũ thì lần sau quay lại, phần tử đầu
+    // tiên nghe được sẽ đọc phải số của lần cuộn trước và giật một cái.
+    resetScrollVelocity();
     this.lenis?.destroy();
     this.lenis = undefined;
     this.tickerFn = undefined;

@@ -8,6 +8,8 @@ import {
   viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { LucideArrowRight, LucideCheck, LucideSparkles, LucideZap } from '@lucide/angular';
 import { MagneticDirective } from '../../../directives/magnetic.directive';
 import { LineRevealDirective } from '../../../directives/line-reveal.directive';
@@ -110,6 +112,8 @@ export class LandingHero implements OnDestroy {
 
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly grid = viewChild<ElementRef<HTMLElement>>('grid');
+  private readonly stage = viewChild<ElementRef<HTMLElement>>('stage');
+  private gsapCtx?: gsap.Context;
   private bloomId = 0;
   private timer?: ReturnType<typeof setTimeout>;
   private liftTimer?: ReturnType<typeof setTimeout>;
@@ -125,6 +129,8 @@ export class LandingHero implements OnDestroy {
       // Người đã xin giảm chuyển động thì hai thẻ đứng yên ở chỗ ban đầu.
       const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
       if (reduced || typeof IntersectionObserver === 'undefined') return;
+
+      this.buildScrollScene();
 
       // Chỉ diễn khi bảng còn trong khung nhìn. Người đã cuộn xuống tận chân
       // trang thì không có lý do gì để một cái hẹn giờ vẫn chạy ở trên đầu.
@@ -357,8 +363,55 @@ export class LandingHero implements OnDestroy {
     }, 1400);
   }
 
+  /**
+   * Bảng NGẢ RA SAU VÀ LÙI XA khi người dùng cuộn qua hero.
+   *
+   * Khác mọi chuyển động còn lại trên trang ở một điểm quyết định: nó CHẠY THEO
+   * THANH CUỘN (`scrub`), không diễn một lần rồi thôi. Vị trí của hoạt ảnh CHÍNH
+   * LÀ vị trí cuộn — cuộn ngược thì bảng dựng lại. Người dùng điều khiển nó chứ
+   * không xem nó, và đó là thứ tạo cảm giác trang "có chiều sâu vật lý" thay vì
+   * chỉ có mấy hiệu ứng vào-ra.
+   *
+   * ⚠️ Bám vào `.board-stage`, KHÔNG bám `.board-frame`. Khung đã mang sẵn một
+   * góc nghiêng của CSS; GSAP ghi thẳng vào `transform` nên bám vào đó là xoá
+   * mất góc nghiêng ấy. `.board-stage` không có transform nào, và hai transform
+   * lồng nhau thì nhân được với nhau.
+   *
+   * `gsap.context()` gom mọi thứ tạo ra bên trong lại, nên `revert()` lúc huỷ
+   * component dọn sạch cả tween lẫn trigger lẫn style đã ghi — không cần nhớ
+   * từng cái một.
+   */
+  private buildScrollScene(): void {
+    const stage = this.stage()?.nativeElement;
+    if (!stage) return;
+
+    gsap.registerPlugin(ScrollTrigger);
+
+    this.gsapCtx = gsap.context(() => {
+      gsap.to(stage, {
+        rotateX: 14,
+        scale: 0.9,
+        yPercent: -6,
+        opacity: 0.72,
+        // `none` chứ không phải một đường cong: với hoạt ảnh chạy theo cuộn,
+        // đường cong sẽ làm bảng đi nhanh chậm không khớp tay cuộn — cảm giác
+        // như thanh cuộn bị trượt côn.
+        ease: 'none',
+        scrollTrigger: {
+          trigger: this.host.nativeElement,
+          // Bắt đầu lúc đáy hero chạm đáy màn hình, kết thúc lúc đáy hero rời
+          // khỏi đỉnh: đúng quãng người dùng đang rời khu vực này.
+          start: 'bottom bottom',
+          end: 'bottom top',
+          scrub: true,
+        },
+      });
+    }, this.host.nativeElement);
+  }
+
   ngOnDestroy(): void {
     this.observer?.disconnect();
     this.stop();
+    this.gsapCtx?.revert();
   }
 }

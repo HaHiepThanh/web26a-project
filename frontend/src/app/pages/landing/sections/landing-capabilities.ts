@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { LucideLayoutGrid, LucideRadio, LucideSettings2, LucideUsers, LucideX } from '@lucide/angular';
 import { LineRevealDirective } from '../../../directives/line-reveal.directive';
+import { ScrollSkewDirective } from '../../../directives/scroll-skew.directive';
 import { RevealDirective } from '../../../directives/reveal.directive';
 
 /**
@@ -35,7 +36,9 @@ import { RevealDirective } from '../../../directives/reveal.directive';
 @Component({
   selector: 'app-landing-capabilities',
   imports: [
-    LineRevealDirective, RevealDirective,
+    LineRevealDirective,
+    ScrollSkewDirective,
+    RevealDirective,
     LucideLayoutGrid,
     LucideRadio,
     LucideSettings2,
