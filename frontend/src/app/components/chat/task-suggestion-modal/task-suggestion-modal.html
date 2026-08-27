@@ -38,37 +38,41 @@
           <div class="grid grid-cols-1 gap-2 sm:grid-cols-4">
             <label class="min-w-0">
               <span class="mb-1 block text-3xs font-bold uppercase tracking-wide text-base-content/50">Assignee</span>
-              <select class="select select-sm w-full rounded-md"
+              <select class="select select-sm w-full max-w-full rounded-md truncate pr-8"
                 [ngModel]="r.assigneeId ?? ''" (ngModelChange)="patch($index, { assigneeId: $event })"
                 [name]="'assignee' + $index">
                 <option value="">Unassigned</option>
                 @for (m of members(); track m.id) {
-                  <option [value]="m.id">{{ m.displayName || m.email }}</option>
+                  <option [value]="m.id" [title]="m.displayName || m.email">
+                    {{ formatShortName(m.displayName || m.email, 15) }}
+                  </option>
                 }
               </select>
             </label>
 
             <label class="min-w-0">
               <span class="mb-1 block text-3xs font-bold uppercase tracking-wide text-base-content/50">Due date</span>
-              <input type="date" class="input input-sm w-full rounded-md"
+              <input type="date" class="input input-sm w-full max-w-full rounded-md"
                 [ngModel]="r.dueDate ?? ''" (ngModelChange)="patch($index, { dueDate: $event })"
                 [name]="'due' + $index" />
             </label>
 
             <label class="min-w-0">
               <span class="mb-1 block text-3xs font-bold uppercase tracking-wide text-base-content/50">Add to list</span>
-              <select class="select select-sm w-full rounded-md"
+              <select class="select select-sm w-full max-w-full rounded-md truncate pr-8"
                 [ngModel]="r.listId ?? ''" (ngModelChange)="patch($index, { listId: $event })"
                 [name]="'list' + $index">
                 @for (l of lists(); track l.id) {
-                  <option [value]="l.id">{{ l.name }}</option>
+                  <option [value]="l.id" [title]="l.name">
+                    {{ formatShortName(l.name, 15) }}
+                  </option>
                 }
               </select>
             </label>
 
             <label class="min-w-0">
               <span class="mb-1 block text-3xs font-bold uppercase tracking-wide text-base-content/50">Priority</span>
-              <select class="select select-sm w-full rounded-md"
+              <select class="select select-sm w-full rounded-md truncate pr-8"
                 [ngModel]="r.priority ?? 'medium'" (ngModelChange)="patch($index, { priority: $event })"
                 [name]="'priority' + $index">
                 @for (p of priorities; track p.id) {

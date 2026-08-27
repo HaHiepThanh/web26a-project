@@ -357,6 +357,12 @@ details.dropdown > summary + *,
   border-radius: 0.375rem !important;
 }
 
+.select {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
 /* ==========================================================================
    Lenis — cuộn quán tính, CHỈ dùng ở trang giới thiệu.
 

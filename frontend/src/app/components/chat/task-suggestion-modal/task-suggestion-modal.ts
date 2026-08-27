@@ -70,6 +70,11 @@ export class TaskSuggestionModal {
     });
   }
 
+  formatShortName(name: string | null | undefined, max = 15): string {
+    if (!name) return '';
+    return name.length > max ? name.slice(0, max).trim() + '...' : name;
+  }
+
   patch(index: number, changes: Partial<DongThe>): void {
     this.rows.update((all) => all.map((r, i) => (i === index ? { ...r, ...changes } : r)));
   }
