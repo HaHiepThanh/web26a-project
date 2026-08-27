@@ -97,7 +97,7 @@ export class LandingFeatures implements OnDestroy {
       region: 'due',
       icon: 'due',
       title: 'Dates that warn you',
-      desc: 'The badge shifts colour as the day closes in, and anything overdue comes looking for you.',
+      desc: 'The badge turns red the moment a card is overdue, and it comes looking for you in the notification bell too.',
     },
     {
       region: 'people',
