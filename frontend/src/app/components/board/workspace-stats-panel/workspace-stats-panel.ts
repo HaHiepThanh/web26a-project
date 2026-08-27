@@ -1,6 +1,15 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { LucideTriangleAlert, LucideX } from '@lucide/angular';
+import {
+  LucideArrowRight,
+  LucideFilePlus,
+  LucideMessageSquare,
+  LucidePencil,
+  LucideTrash2,
+  LucideTriangleAlert,
+  LucideUserPlus,
+  LucideX,
+} from '@lucide/angular';
 import { ActivityActionType, ActivityLog, MemberWorkloadStat, WorkspaceStatsData } from '../../../models';
 import { AuthService } from '../../../services/auth.service';
 import { UserAvatar } from '../../shared/user-avatar/user-avatar';
@@ -9,13 +18,18 @@ import { UserAvatar } from '../../shared/user-avatar/user-avatar';
 type LogScope = 'mine' | 'team';
 type ActionGroup = 'all' | 'created' | 'moved' | 'assigned' | 'updated' | 'deleted';
 
-const ACTION_ICON: Record<ActivityActionType, string> = {
-  card_created: '🆕',
-  card_moved: '➡️',
-  card_updated: '✏️',
-  card_deleted: '🗑️',
-  card_assigned: '👤',
-  comment_added: '💬',
+// Mỗi loại hành động một màu badge tròn (bg nhạt + icon đậm), thay cho emoji
+// cũ để nhất quán với bộ icon lucide dùng chung toàn app. Dùng thẳng bảng màu
+// gốc của Tailwind (green/blue/red/yellow) thay vì success/info/warning/error
+// của theme daisyUI — winter/sunset tô 4 màu đó pastel có chủ đích nên đọc
+// nhạt trên nền badge nhỏ, không "pha" gì thêm cho đậm lên nữa.
+const ACTION_ICON_CLASS: Record<ActivityActionType, string> = {
+  card_created: 'bg-green-500/15 text-green-600',
+  card_moved: 'bg-blue-500/15 text-blue-600',
+  card_updated: 'bg-yellow-500/15 text-yellow-600',
+  card_deleted: 'bg-red-500/15 text-red-600',
+  card_assigned: 'bg-primary/15 text-primary',
+  comment_added: 'bg-secondary/15 text-secondary',
 };
 
 const ACTION_GROUP: Record<ActivityActionType, ActionGroup> = {
@@ -51,7 +65,18 @@ let instanceSeq = 0;
  */
 @Component({
   selector: 'app-workspace-stats-panel',
-  imports: [FormsModule, LucideTriangleAlert, LucideX, UserAvatar],
+  imports: [
+    FormsModule,
+    LucideArrowRight,
+    LucideFilePlus,
+    LucideMessageSquare,
+    LucidePencil,
+    LucideTrash2,
+    LucideTriangleAlert,
+    LucideUserPlus,
+    LucideX,
+    UserAvatar,
+  ],
   templateUrl: './workspace-stats-panel.html',
 })
 export class WorkspaceStatsPanel {
@@ -125,8 +150,8 @@ export class WorkspaceStatsPanel {
     return this.memberWorkload().find((m) => m.userId === userId)?.avatarUrl || undefined;
   }
 
-  actionIcon(actionType: ActivityActionType): string {
-    return ACTION_ICON[actionType];
+  actionIconClass(actionType: ActivityActionType): string {
+    return ACTION_ICON_CLASS[actionType];
   }
 
   relativeTime(iso: string): string {

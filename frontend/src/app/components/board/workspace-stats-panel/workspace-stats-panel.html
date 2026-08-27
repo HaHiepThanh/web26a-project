@@ -11,27 +11,27 @@
     <div class="stats stats-vertical w-full border border-base-300 bg-base-100 shadow-sm sm:stats-horizontal">
       <div class="stat">
         <div class="stat-title">Completed tasks</div>
-        <div class="stat-value text-success">{{ overview().completedCount }}</div>
+        <div class="stat-value text-green-600">{{ overview().completedCount }}</div>
       </div>
       <div class="stat">
         <div class="stat-title">In progress</div>
-        <div class="stat-value text-info">{{ overview().inProgressCount }}</div>
+        <div class="stat-value text-blue-600">{{ overview().inProgressCount }}</div>
       </div>
       <label
         [attr.for]="overdueCards().length > 0 ? overdueDrawerId : null"
         class="stat transition-colors"
         [class.cursor-pointer]="overdueCards().length > 0"
-        [class.hover:bg-error/5]="overdueCards().length > 0"
+        [class.hover:bg-red-500/5]="overdueCards().length > 0"
       >
         <div class="stat-title">Overdue</div>
-        <div class="stat-value text-error">{{ overview().overdueCount }}</div>
+        <div class="stat-value text-red-600">{{ overview().overdueCount }}</div>
         @if (overdueCards().length > 0) {
-          <div class="stat-desc text-error">View details →</div>
+          <div class="stat-desc text-red-600">View details →</div>
         }
       </label>
       <div class="stat">
         <div class="stat-title">On-time rate</div>
-        <div class="stat-value text-warning">{{ overview().onTimeRatePct === null ? '—' : overview().onTimeRatePct + '%' }}</div>
+        <div class="stat-value text-yellow-600">{{ overview().onTimeRatePct === null ? '—' : overview().onTimeRatePct + '%' }}</div>
       </div>
     </div>
 
@@ -52,9 +52,9 @@
     <section class="space-y-2">
       <h2 class="text-xs font-bold uppercase tracking-wide text-base-content/60">Workload by member</h2>
       <div class="flex items-center gap-4 text-xs text-base-content/60">
-        <span class="flex items-center gap-1"><span class="h-2 w-2 rounded-full bg-success"></span>Done</span>
-        <span class="flex items-center gap-1"><span class="h-2 w-2 rounded-full bg-info"></span>In progress</span>
-        <span class="flex items-center gap-1"><span class="h-2 w-2 rounded-full bg-error"></span>Overdue</span>
+        <span class="flex items-center gap-1"><span class="h-2 w-2 rounded-full bg-green-500"></span>Done</span>
+        <span class="flex items-center gap-1"><span class="h-2 w-2 rounded-full bg-blue-500"></span>In progress</span>
+        <span class="flex items-center gap-1"><span class="h-2 w-2 rounded-full bg-red-500"></span>Overdue</span>
       </div>
       <div class="space-y-2">
         @for (m of sortedWorkload(); track trackByUserId($index, m)) {
@@ -62,9 +62,9 @@
             <app-user-avatar [userId]="m.userId" [name]="m.name" [avatarUrl]="m.avatarUrl" [size]="28" />
             <span class="w-36 shrink-0 truncate text-sm">{{ m.name }}</span>
             <div class="flex h-2 flex-1 overflow-hidden rounded-full bg-base-200">
-              <div class="h-full bg-success" [style.width.%]="m.donePct"></div>
-              <div class="h-full bg-info" [style.width.%]="m.doingPct"></div>
-              <div class="h-full bg-error" [style.width.%]="m.overduePct"></div>
+              <div class="h-full bg-green-500" [style.width.%]="m.donePct"></div>
+              <div class="h-full bg-blue-500" [style.width.%]="m.doingPct"></div>
+              <div class="h-full bg-red-500" [style.width.%]="m.overduePct"></div>
             </div>
             <span class="w-6 text-right text-xs text-base-content/60">{{ m.assignedCount }}</span>
           </div>
@@ -124,7 +124,16 @@
         @for (log of filteredActivityLogs(); track trackByLogId($index, log)) {
           <div class="flex items-start gap-3 p-3">
             <app-user-avatar [userId]="log.userId" [name]="memberName(log.userId)" [avatarUrl]="memberAvatarUrl(log.userId)" [size]="28" />
-            <span class="text-sm leading-7">{{ actionIcon(log.actionType) }}</span>
+            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full" [class]="actionIconClass(log.actionType)">
+              @switch (log.actionType) {
+                @case ('card_created') { <svg lucideFilePlus class="h-3.5 w-3.5" [strokeWidth]="2.5"></svg> }
+                @case ('card_moved') { <svg lucideArrowRight class="h-3.5 w-3.5" [strokeWidth]="2.5"></svg> }
+                @case ('card_updated') { <svg lucidePencil class="h-3.5 w-3.5" [strokeWidth]="2.5"></svg> }
+                @case ('card_deleted') { <svg lucideTrash2 class="h-3.5 w-3.5" [strokeWidth]="2.5"></svg> }
+                @case ('card_assigned') { <svg lucideUserPlus class="h-3.5 w-3.5" [strokeWidth]="2.5"></svg> }
+                @case ('comment_added') { <svg lucideMessageSquare class="h-3.5 w-3.5" [strokeWidth]="2.5"></svg> }
+              }
+            </span>
             <div class="flex flex-col gap-0.5">
               <p class="text-sm text-base-content">{{ log.actionText }}</p>
               <p class="text-xs text-base-content/50">{{ relativeTime(log.createdAt) }}</p>
@@ -152,7 +161,7 @@
             <p class="text-sm text-base-content">{{ card.title }}</p>
             <div class="mt-1 flex items-center justify-between text-xs">
               <span class="text-base-content/60">{{ card.assigneeName }}</span>
-              <span class="font-semibold text-error">Overdue by {{ card.daysOverdue }} day(s)</span>
+              <span class="font-semibold text-red-600">Overdue by {{ card.daysOverdue }} day(s)</span>
             </div>
           </div>
         }
