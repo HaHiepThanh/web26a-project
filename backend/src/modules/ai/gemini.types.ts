@@ -1,3 +1,5 @@
+import { TenBatDuoc } from './nhan-dien-ten.util';
+
 /** Một thẻ do AI đề xuất. Khớp field với `Card` để tạo thẳng được, không phải map. */
 export interface SuggestedCard {
   title: string;
@@ -27,6 +29,13 @@ export interface DetectTasksInput {
   /** Vài tin gần nhất, cũ → mới. Dùng để nối được ngữ cảnh nhiều câu. */
   recent: { displayName: string; content: string }[];
   members: { id: string; displayName: string }[];
+  /**
+   * Những người được GỌI TÊN trong tin nhắn, đã đối chiếu sẵn bằng thuật toán.
+   *
+   * Model không phải tự đoán "H.Thanh là ai" nữa — việc đó có luật rõ ràng và
+   * kiểm thử được, để `nhan-dien-ten.util.ts` lo.
+   */
+  nhacTen: TenBatDuoc[];
   lists: { id: string; name: string }[];
   /** Hôm nay theo giờ Việt Nam, 'YYYY-MM-DD'. */
   today: string;

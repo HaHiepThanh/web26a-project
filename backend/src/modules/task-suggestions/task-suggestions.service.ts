@@ -10,6 +10,7 @@ import { AccessService } from '../../common/access/access.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 import { GeminiService } from '../ai/gemini.service';
 import { SuggestedCard } from '../ai/gemini.types';
+import { batTen } from '../ai/nhan-dien-ten.util';
 import { CardsService } from '../cards/cards.service';
 
 /** Số tin nhắn gần nhất gửi kèm làm ngữ cảnh — đủ để nối câu, không quá dài. */
@@ -100,21 +101,21 @@ export class TaskSuggestionsService {
       const { members, lists, recent, sender } = await this.thuThapNguCanh(msg);
       if (!members.length || !lists.length) return; // board rỗng thì tạo thẻ vào đâu
 
-      // Bộ lọc rẻ chạy SAU khi có tên thành viên, để "Hoà ơi..." cũng tính là
-      // một dấu hiệu dù không có ký tự @.
-      if (
-        !this.gemini.shouldAnalyze(
-          msg.content,
-          members.map((m) => m.displayName),
-        )
-      )
-        return;
+      // Đối chiếu tên MỘT LẦN rồi dùng cho cả hai việc: quyết định có gọi model
+      // không, và nói thẳng cho model biết ai là ai. Tách ra làm hai lần thì
+      // cổng lọc và prompt có thể hiểu khác nhau về cùng một tin nhắn.
+      const nhacTen = batTen(msg.content, members);
+
+      // Bộ lọc rẻ chạy SAU khi có tên thành viên, để "Hoà ơi..." hay "H.Thanh"
+      // cũng tính là một dấu hiệu dù không có ký tự @.
+      if (!this.gemini.shouldAnalyze(msg.content, nhacTen)) return;
 
       const ketQua = await this.gemini.detectTasks({
         content: msg.content,
         sender,
         recent,
         members,
+        nhacTen,
         lists,
         today: homNayVN(),
       });

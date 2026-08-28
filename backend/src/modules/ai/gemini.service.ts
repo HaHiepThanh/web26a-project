@@ -5,6 +5,7 @@ import {
   DetectTasksResult,
   SuggestedCard,
 } from './gemini.types';
+import { TenBatDuoc } from './nhan-dien-ten.util';
 
 const API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
 
@@ -235,7 +236,7 @@ export class GeminiService {
    * một nhóm chat là "ok", "ừ", "xong rồi nhé" — lọc trước ở đây thì những tin
    * đó không bao giờ chạm tới model.
    */
-  shouldAnalyze(content: string, memberNames: string[]): boolean {
+  shouldAnalyze(content: string, nhacTen: TenBatDuoc[]): boolean {
     if (!this.enabled) return false;
 
     const text = content.trim();
@@ -244,9 +245,11 @@ export class GeminiService {
     const lower = text.toLowerCase();
     const coDongTu = TU_KHOA_GIAO_VIEC.some((k) => lower.includes(k));
     const coThoiGian = TU_KHOA_THOI_GIAN.some((k) => lower.includes(k));
-    const coNhacTen =
-      lower.includes('@') ||
-      memberNames.some((n) => n && lower.includes(n.toLowerCase()));
+    // Bản trước chỉ so khớp TÊN ĐẦY ĐỦ dạng chuỗi con, nên "ê H.Thanh, hãy lên
+    // kế hoạch chức năng thanh toán" trượt hết: không có '@', "h.thanh" không
+    // nằm trong "hà hiệp thanh", và câu đó cũng không có mốc thời gian → không
+    // đủ 2/3 dấu hiệu → Gemini không hề được gọi.
+    const coNhacTen = lower.includes('@') || nhacTen.length > 0;
 
     // GỌI ĐÍCH DANH LÀ ĐỦ, không cần dấu hiệu thứ hai.
     //
@@ -346,6 +349,13 @@ export class GeminiService {
       'tin nhắn tiếng Anh → title tiếng Anh; tin nhắn tiếng Việt → title tiếng Việt.',
       '',
       'CÁCH XÁC ĐỊNH NGƯỜI PHỤ TRÁCH:',
+      '- Mục "NGƯỜI ĐƯỢC GỌI TÊN" đã được máy chủ đối chiếu sẵn bằng thuật toán và',
+      '  CHÍNH XÁC HƠN phán đoán của bạn. Tin nhắn giao việc cho một cái tên có trong',
+      '  danh sách đó thì PHẢI dùng đúng id đã ghi, không tự tìm lại trong danh sách',
+      '  thành viên. Ghi "MƠ HỒ" nghĩa là board có nhiều người trùng tên riêng —',
+      '  chọn một trong các id được liệt kê, chọn ai cũng được.',
+      '- Người Việt hay viết tắt họ/tên đệm: "H.Thanh" = "Hà Hiệp Thanh",',
+      '  "P.Thanh" = "Lê Phương Thanh". Máy chủ đã giải sẵn các dạng này.',
       '- Gọi thẳng tên ("Ê Hoà", "Hoà ơi", "@Hoà", "Hey Hoa") → người đó phụ trách.',
       '- Đại từ ngôi thứ nhất ("tao", "tôi", "mình", "t", "I", "me") → NGƯỜI GỬI tin nhắn.',
       '  Ví dụ "để tao còn làm chức năng thanh toán" nghĩa là NGƯỜI GỬI phụ trách việc đó.',
@@ -381,6 +391,23 @@ export class GeminiService {
     const cot = input.lists
       .map((l) => `  - id="${l.id}" tên="${l.name}"`)
       .join('\n');
+    // Ghi rõ ai đã được đối chiếu ra ai. Model chỉ còn việc trích đầu việc.
+    const goiTen = input.nhacTen.length
+      ? input.nhacTen
+          .map((t) => {
+            const ten = (id: string) =>
+              `id="${id}" (${
+                input.members.find((m) => m.id === id)?.displayName ?? '?'
+              })`;
+            return t.ids.length === 1
+              ? `  - "${t.nguyenVan}" → ${ten(t.ids[0])}`
+              : `  - "${t.nguyenVan}" → MƠ HỒ, chọn một trong: ${t.ids
+                  .map(ten)
+                  .join(', ')}`;
+          })
+          .join('\n')
+      : '  (không ai được gọi tên)';
+
     const nganhCanh = input.recent.length
       ? input.recent.map((m) => `  ${m.displayName}: ${m.content}`).join('\n')
       : '  (không có)';
@@ -393,6 +420,9 @@ export class GeminiService {
       '',
       'CÁC CỘT TRONG BOARD:',
       cot || '  (không có)',
+      '',
+      'NGƯỜI ĐƯỢC GỌI TÊN TRONG TIN NHẮN (máy chủ đã đối chiếu sẵn):',
+      goiTen,
       '',
       'VÀI TIN NHẮN TRƯỚC ĐÓ (cũ → mới):',
       nganhCanh,
