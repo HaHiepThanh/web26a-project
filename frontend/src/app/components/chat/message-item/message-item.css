@@ -109,3 +109,31 @@
   filter: drop-shadow(1px 0 0 var(--vien-toi)) drop-shadow(-1px 0 0 var(--vien-toi))
     drop-shadow(0 1px 0 var(--vien-toi)) drop-shadow(0 -1px 0 var(--vien-toi));
 }
+
+/**
+ * CHO PHÉP CỘT CO LẠI — nếu không, một tin nhắn dài đẩy vỡ cả khung chat.
+ *
+ * daisyUI đặt `grid-template-columns: 1fr auto`. Trong CSS Grid, `1fr` là
+ * `minmax(auto, 1fr)` — mức TỐI THIỂU là `auto`, tức bằng kích thước nội dung
+ * nhỏ nhất của cột. Với một chuỗi dài ít chỗ ngắt, mức tối thiểu đó rất lớn nên
+ * cột phình ra, `max-width: 100%` bên trong không còn ý nghĩa, và ô trích dẫn
+ * tràn ngang ra ngoài khung.
+ *
+ * `minmax(0, 1fr)` bỏ mức tối thiểu đó đi. Từ đây `max-w-full` và `line-clamp`
+ * mới có tác dụng: nội dung xuống dòng, cắt ở hai dòng rồi thêm dấu ba chấm.
+ */
+.chat.chat-start {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+.chat.chat-end {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+/* Ô trích dẫn và bong bóng đều là ô lưới/flex — phải cho phép co dưới mức
+   nội dung thì `max-width` mới chặn được. */
+.chat .chat-header,
+.chat .chat-bubble {
+  min-width: 0;
+  max-width: 100%;
+}

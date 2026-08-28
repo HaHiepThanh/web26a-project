@@ -68,6 +68,17 @@ describe('MessageItem', () => {
       expect(chu()).toContain('đã trả lời bạn');
     });
 
+    it('trích dẫn DÀI bị cắt ở hai dòng, không được đẩy vỡ khung', async () => {
+      // Tin nhắn dài từng đẩy tràn ngang cả khung chat: `1fr` của CSS Grid có
+      // mức tối thiểu bằng kích thước nội dung, nên cột phình theo chuỗi dài.
+      // Bố cục thật không kiểm được trong jsdom (không có engine dàn trang),
+      // nên ở đây khoá phần KHAI BÁO — mất `line-clamp-2` là test đỏ.
+      await dung(tin({ replyToId: 'm-0', replyTo: trichDan({ content: 'x'.repeat(400) }) }));
+      const noiDung = fixture.debugElement.query(By.css('.chat-header button span'));
+      expect(noiDung.nativeElement.className).toContain('line-clamp-2');
+      expect(noiDung.nativeElement.className).toContain('break-words');
+    });
+
     it('ô trích dẫn nằm NGOÀI bong bóng, ở hàng phía trên', async () => {
       // Đặt lồng trong bong bóng thì phải nuôi hai bộ màu (nền primary đặc và
       // nền thường); ra ngoài thì chỉ còn một, và đúng lối Messenger.
