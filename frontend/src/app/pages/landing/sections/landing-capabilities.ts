@@ -62,10 +62,13 @@ export class LandingCapabilities {
         'Drag cards between columns',
         'Description, checklist and a done toggle',
         'Colour labels you name yourself',
+        'Priority: high, medium or low',
         'Due dates that warn as they near',
         'Comments with avatars and history',
         'Attachments, with image covers',
         'Filter and sort without losing your place',
+        'Pick several cards and move or label them at once',
+        'Collapse a column you are not using',
         'Board backgrounds, colour or image',
         'A minimap for wide boards',
       ],
@@ -75,11 +78,13 @@ export class LandingCapabilities {
       tone: 'purple' as const,
       title: 'Team and access',
       blurb: 'Who is in, and what they may do.',
-      peek: ['Google sign-in', 'Three roles', 'Email invites'],
+      peek: ['Google or password', 'Three roles', 'Invite links'],
       items: [
-        'Sign in with Google, no password to invent',
+        'Sign in with Google, or with an email and password',
+        'Forgot your password? Reset it by email',
+        'Change your password from settings',
         'Organizations with a URL of their own',
-        'Invitations by email',
+        'Invitations by email, or one link anyone can join with',
         'Three roles: owner, admin, member',
         'Workspaces per team or department',
         'Change or revoke a member’s role',
@@ -91,11 +96,12 @@ export class LandingCapabilities {
       tone: 'green' as const,
       title: 'Staying in sync',
       blurb: 'Knowing what changed, without asking.',
-      peek: ['Live updates', 'Board chat', 'Activity log'],
+      peek: ['Live updates', 'Board chat', 'Meetings'],
       items: [
         'Live updates as teammates move cards',
         'Activity log in plain sentences',
         'Chat beside every board',
+        'Schedule board meetings, with Google Calendar and Meet',
         'An assistant that turns chat into card suggestions',
         'Overdue and due-soon reminders',
         'Search your boards from the header',
@@ -112,14 +118,12 @@ export class LandingCapabilities {
         'A guided tour on your first visit',
         'Light and dark themes, remembered',
         'An offline notice, and recovery when you return',
-        'Phone and tablet layouts',
+        'Phone and tablet layouts, with an action bar at your thumb',
         'Display name and avatar, updating live',
         'Keyboard and screen-reader support',
       ],
     },
   ];
-
-  readonly total = this.groups.reduce((sum, g) => sum + g.items.length, 0);
 
   /** Thẻ đang mở, hoặc null khi cả bốn đều đóng. */
   readonly open = signal<number | null>(null);

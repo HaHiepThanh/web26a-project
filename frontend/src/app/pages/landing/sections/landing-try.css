@@ -1,14 +1,21 @@
 /* ==========================================================================
-   "Try it" — bảng chạy thật.
+   Bảng chạy thật — nay nằm TRONG hero, ngay dưới câu chào.
 
    Dáng thẻ và dáng cột bám sát bảng thật trong app: cái người ta nghịch ở đây
    phải đúng là cái họ sẽ gặp sau khi đăng ký, nếu không thì đây chỉ là một trò
    chơi khác chứ không phải bản dùng thử.
    ========================================================================== */
 .tryit {
-  /* `background-color`, không phải shorthand — khu này dùng `.lp-seam-y`, mà
-     shorthand xoá luôn background-image của nó. */
-  background-color: var(--lp-bg);
+  /* ⚠️ KHÔNG tô nền ở đây. Hồi còn là một khu vực riêng, khối này mang
+     `background-color: var(--lp-bg)` để phủ kín dải của nó. Nay nó nằm trong
+     hero, mà hero có cực quang chạy phía sau — tô nền đục là dán một tấm thảm
+     trắng đè lên đúng đoạn đẹp nhất của nền (đo được `oklch(1 0 0)`, đục hoàn
+     toàn). Để trong suốt thì cực quang chạy liền một mạch sau lưng tấm bảng.
+
+     Khoảng đệm trên tách bảng khỏi khối chữ của hero: hai khối dính sát nhau
+     (đo được cách 0px) thì ba bước dẫn dắt trông như dòng cuối của đoạn chữ
+     chứ không như phần mở đầu của tấm bảng. */
+  padding-top: clamp(28px, 4vw, 52px);
 }
 
 /* ---------------- Khung bảng ---------------- */

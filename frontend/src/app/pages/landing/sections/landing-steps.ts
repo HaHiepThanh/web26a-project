@@ -23,7 +23,7 @@ export class LandingSteps {
       no: '01',
       icon: 'org' as const,
       title: 'Create the organization',
-      desc: 'Sign in with Google and name your team. You become the owner and get a URL of your own.',
+      desc: 'Sign in with Google or an email and password, then name your team. You become the owner and get a URL of your own.',
     },
     {
       no: '02',

@@ -17,7 +17,6 @@ import {
   LucideX,
 } from '@lucide/angular';
 import { FlipReorder } from '../../../directives/flip-reorder.directive';
-import { LineRevealDirective } from '../../../directives/line-reveal.directive';
 import { RevealDirective } from '../../../directives/reveal.directive';
 
 export type TryLabel = 'blue' | 'purple' | 'green' | 'amber';
@@ -39,10 +38,10 @@ interface TryCard {
   checks: TryCheck[];
 }
 
-/** Những gì được lưu lại. `dirty` là thứ chứng minh được bước ba — xem `restore`. */
+/** Những gì được lưu lại. Hai cờ `added`/`moved` để hai bước dẫn dắt vẫn còn
+    dấu tick sau khi tải lại trang. */
 interface Saved {
   cards: TryCard[];
-  dirty: boolean;
   added: boolean;
   moved: boolean;
 }
@@ -113,25 +112,37 @@ const SEED: TryCard[] = [
 ];
 
 /**
- * "Try it" — một tấm bảng CHẠY THẬT ngay trên trang giới thiệu.
+ * Tấm bảng CHẠY THẬT của trang giới thiệu — nằm ngay trong hero, dưới câu chào.
  *
- * VÌ SAO PHẦN NÀY TỒN TẠI. Cả trang cho tới đây đều rất giỏi việc MÔ TẢ sản
- * phẩm, nhưng khách chưa hề dùng thứ gì. Mà lời hứa lớn nhất là "đơn giản tới
- * mức không cần học", và không câu chữ nào chứng minh được điều đó bằng việc để
+ * ⚠️ TRƯỚC ĐÂY LÀ MỘT KHU VỰC RIÊNG mang tên "Try it", đặt mãi sau khu bản kê,
+ * còn đầu trang thì có một tấm bảng KHÁC chỉ để nhìn (tự diễn, không chạm được).
+ * Hai tấm kể cùng một chuyện, mà tấm người đọc gặp trước lại là tấm yếu hơn —
+ * hero phải mang thêm một dòng chỉ đường "bảng của bạn ở vài màn phía dưới" chỉ
+ * để chữa cái nhầm do chính nó gây ra. Nay gộp còn một: bảng đầu tiên người ta
+ * thấy cũng chính là bảng người ta chạm được, và lời hứa ở hero được chứng minh
+ * ngay tại chỗ thay vì hẹn xuống dưới.
+ *
+ * VÌ SAO PHẦN NÀY TỒN TẠI. Trang giới thiệu rất giỏi việc MÔ TẢ sản phẩm, nhưng
+ * khách thì chưa dùng thử thứ gì. Mà lời hứa lớn nhất là "đơn giản tới mức
+ * không cần học", và không câu chữ nào chứng minh được điều đó bằng việc để
  * người ta tự làm trong ba mươi giây.
  *
  * HAI THỨ KHIẾN NÓ KHÁC MỘT BẢN DEMO KANBAN THÔNG THƯỜNG:
  *
  *  1. THẺ CHỨA ĐƯỢC THỨ THẬT — checklist tick được, nhãn màu, hạn. Đây đúng là
- *     thứ khu "Everything in the box" vừa hứa; thiếu nó thì bản demo này đang
+ *     thứ khu "Everything in the box" phía dưới hứa; thiếu nó thì bản demo này đang
  *     chứng minh phần mà mọi Trello clone đều có, và không chứng minh phần khác
  *     biệt nào cả.
  *
- *  2. BA BƯỚC CÓ DẪN DẮT, mà bước cuối là "bấm F5 đi". Hero viết "Dragging is
- *     saving — there is no Save button", và cho tới giờ đó chỉ là một lời KHẲNG
- *     ĐỊNH. Bước ba biến nó thành thứ khách tự chứng minh cho chính họ. Một hộp
- *     cát không có dẫn dắt thì người ta kéo một thẻ rồi thôi, không biết phải
- *     chú ý điều gì.
+ *  2. CÓ DẪN DẮT — hai dòng nói thẳng ra hai việc đáng làm. Một hộp cát không
+ *     có dẫn dắt thì người ta kéo một thẻ rồi thôi, không biết phải chú ý điều
+ *     gì.
+ *
+ *     TỪNG CÓ BƯỚC THỨ BA là "bấm F5 đi", để chứng minh câu "Dragging is saving
+ *     — there is no Save button" ở hero. Đã gỡ: bảo người đang đọc trang giới
+ *     thiệu tải lại trang là một lời khuyên tự chống lại mình. Việc chứng minh
+ *     nay dồn cả vào `returning` — lời chào chỉ hiện với người TỰ quay lại ở
+ *     một phiên mới, tức đúng lúc nó nặng ký nhất.
  *
  * VÌ SAO KHÔNG DÙNG LẠI COMPONENT BẢNG CỦA APP: component đó buộc vào store và
  * backend — cần workspace, quyền, kết nối realtime. Kéo cả dây đó vào trang
@@ -142,7 +153,6 @@ const SEED: TryCard[] = [
   imports: [
     RouterLink,
     FlipReorder,
-    LineRevealDirective,
     RevealDirective,
     LucideArrowRight,
     LucideCheck,
@@ -172,11 +182,9 @@ export class LandingTry {
   readonly dropCol = signal<number | null>(null);
   readonly announcement = signal('');
 
-  // ---- Ba bước dẫn dắt -----------------------------------------------------
+  // ---- Hai bước dẫn dắt ----------------------------------------------------
   readonly didAdd = signal(false);
   readonly didMove = signal(false);
-  /** Đã tải lại trang và bảng vẫn còn — chỉ bật được ở `restore()`. */
-  readonly didReload = signal(false);
 
   /**
    * Người này quay lại ở một PHIÊN MỚI và bảng cũ vẫn còn nguyên.
@@ -188,7 +196,6 @@ export class LandingTry {
    * sau một ngày chứ không phải sau năm giây.
    */
   readonly returning = signal(false);
-  readonly allDone = computed(() => this.didAdd() && this.didMove() && this.didReload());
 
   private readonly grid = viewChild<ElementRef<HTMLElement>>('grid');
   private dragFrom = { x: 0, y: 0 };
@@ -221,7 +228,6 @@ export class LandingTry {
     effect(() => {
       const snapshot: Saved = {
         cards: this.cards(),
-        dirty: this.didAdd() || this.didMove(),
         added: this.didAdd(),
         moved: this.didMove(),
       };
@@ -293,7 +299,6 @@ export class LandingTry {
     this.openCard.set(null);
     this.didAdd.set(false);
     this.didMove.set(false);
-    this.didReload.set(false);
     this.announce('Board reset.');
   }
 
@@ -465,11 +470,7 @@ export class LandingTry {
   // ==========================================================================
 
   /**
-   * Đọc bảng đã lưu, và nhân tiện quyết định bước ba đã xong chưa.
-   *
-   * `dirty` là mấu chốt: nếu bản ghi cho biết người dùng ĐÃ tự sửa bảng ở phiên
-   * trước, thì việc chúng ta đang khôi phục được nó ngay lúc này CHÍNH LÀ bằng
-   * chứng "tải lại trang mà vẫn còn". Không cần đo đếm gì thêm.
+   * Đọc bảng đã lưu.
    *
    * Bọc try/catch và kiểm tra kiểu từng trường: localStorage là dữ liệu NGƯỜI
    * DÙNG SỬA ĐƯỢC, và một chuỗi JSON hỏng sẽ ném lỗi ngay lúc dựng trang —
@@ -502,7 +503,6 @@ export class LandingTry {
       const meta = Array.isArray(parsed) ? null : (parsed as Saved);
       if (meta?.added) this.didAdd.set(true);
       if (meta?.moved) this.didMove.set(true);
-      if (meta?.dirty) this.didReload.set(true);
 
       // Đếm tiếp từ sau id lớn nhất đã lưu, không thì thẻ mới trùng id với thẻ
       // cũ và FLIP sẽ nhầm hai thẻ khác nhau là một.

@@ -12,21 +12,19 @@ import {
   LucideMessageSquare,
   LucideSquareKanban,
   LucideTag,
-  LucideUsers,
 } from '@lucide/angular';
 import { LineRevealDirective } from '../../../directives/line-reveal.directive';
 import { RevealDirective } from '../../../directives/reveal.directive';
 
 /** Một vùng có thể soi trên bảng minh hoạ. */
-type Region = 'columns' | 'card' | 'labels' | 'due' | 'people' | 'chat';
+type Region = 'columns' | 'card' | 'labels' | 'due' | 'chat';
 
 interface Feature {
   region: Region;
-  icon: 'columns' | 'card' | 'tag' | 'due' | 'people' | 'chat';
+  icon: 'columns' | 'card' | 'tag' | 'due' | 'chat';
   title: string;
   desc: string;
 }
-
 
 /**
  * Khu tính năng — MỘT tấm bảng soi được, thay cho lưới tám thẻ trước đây.
@@ -46,18 +44,18 @@ interface Feature {
  *
  *    Khu vực này thay luôn cho một khu riêng trước đây ("Scroll on — the board
  *    explains itself"): khu đó cũng là bảng ghim + các bước cuộn qua, và bốn
- *    bước của nó là tập con của sáu mục ở đây. Hai lần kể cùng một chuyện bằng
+ *    bước của nó là tập con của năm mục ở đây. Hai lần kể cùng một chuyện bằng
  *    cùng một hình thì lần thứ hai chỉ làm loãng.
  *
- * 2. DÙNG KHUÔN TAB CHUẨN (`tablist`/`tab`/`tabpanel`). Sáu mục là sáu lựa chọn
+ * 2. DÙNG KHUÔN TAB CHUẨN (`tablist`/`tab`/`tabpanel`). Năm mục là năm lựa chọn
  *    loại trừ nhau điều khiển cùng một vùng hiển thị — đúng định nghĩa của tab.
  *    Được kèm luôn: mũi tên trái/phải chuyển mục, Home/End nhảy đầu cuối, và
- *    trình đọc màn hình đọc ra "tab 3 trên 6" mà không phải tự chế gì.
+ *    trình đọc màn hình đọc ra "tab 3 trên 5" mà không phải tự chế gì.
  *
- * 3. KHÔNG GIẤU NỘI DUNG. Cả sáu mục cùng mô tả của chúng luôn hiện đủ trong
+ * 3. KHÔNG GIẤU NỘI DUNG. Cả năm mục cùng mô tả của chúng luôn hiện đủ trong
  *    danh sách bên trái; chọn chỉ đổi chỗ được soi trên bảng. Người lướt nhanh
  *    vẫn đọc được hết mà không phải bấm cái nào — khác hẳn kiểu tab thường,
- *    nơi năm phần sáu nội dung bị giấu đi.
+ *    nơi bốn phần năm nội dung bị giấu đi.
  */
 @Component({
   selector: 'app-landing-features',
@@ -68,7 +66,6 @@ interface Feature {
     LucideMessageSquare,
     LucideSquareKanban,
     LucideTag,
-    LucideUsers,
   ],
   templateUrl: './landing-features.html',
   styleUrls: ['../_landing-shared.css', './landing-features.css'],
@@ -98,12 +95,6 @@ export class LandingFeatures implements OnDestroy {
       icon: 'due',
       title: 'Dates that warn you',
       desc: 'The badge turns red the moment a card is overdue, and it comes looking for you in the notification bell too.',
-    },
-    {
-      region: 'people',
-      icon: 'people',
-      title: 'Your team, live',
-      desc: 'Roles decide who may do what. Every change lands on everyone else’s screen as it happens.',
     },
     {
       region: 'chat',
@@ -136,7 +127,7 @@ export class LandingFeatures implements OnDestroy {
         },
         // Bóp vùng quan sát thành một dải mỏng 10% ngay giữa màn hình, nên mỗi
         // lúc gần như chỉ có đúng một mục "đang được đọc". Để nguyên khung nhìn
-        // thì cả sáu mục cùng thoả điều kiện và không biết chọn cái nào.
+        // thì cả năm mục cùng thoả điều kiện và không biết chọn cái nào.
         { rootMargin: '-45% 0px -45% 0px', threshold: 0 },
       );
 

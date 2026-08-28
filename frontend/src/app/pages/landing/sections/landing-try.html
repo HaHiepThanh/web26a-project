@@ -1,31 +1,28 @@
 <!--
-  Bảng CHẠY THẬT. Xem ghi chú dài ở landing-try.ts về lý do khu này tồn tại,
-  vì sao thẻ phải có nội dung thật, và vì sao bước ba là "bấm F5".
+  Bảng CHẠY THẬT. Xem ghi chú dài ở landing-try.ts về lý do nó tồn tại, vì sao
+  thẻ phải có nội dung thật, và vì sao bước ba là "bấm F5".
 
-  Đặt sau khu bản kê: lúc đó khách đã xem hết sản phẩm có gì và đang ở đúng
-  trạng thái "để tôi thử xem". Đặt sớm hơn thì họ chưa biết thử cái gì.
+  ⚠️ KHÔNG còn là một khu vực riêng. Nó nằm TRONG hero, ngay dưới câu chào —
+  trước đây trang có hai tấm bảng: một tấm giả tự diễn ở đầu trang, và tấm thật
+  này nằm mãi phía dưới. Hai tấm cùng kể một chuyện, mà tấm đầu lại là tấm không
+  đụng vào được, nên người đọc gặp bảng lần đầu ở dạng yếu nhất của nó. Gộp lại
+  còn một tấm: bảng đầu tiên người ta thấy cũng chính là bảng người ta chạm được.
+
+  Vì vậy ở đây KHÔNG có tiêu đề riêng nữa — câu chào của hero ("Your team's
+  work, on one board") đã làm đúng việc đó, thêm một <h2> nữa chỉ là nói lại.
+  Ba bước dẫn dắt bên dưới tự nói ra rằng tấm bảng này bấm được.
 -->
-<section class="tryit lp-section lp-seam-y" id="try-it" aria-labelledby="try-title">
+<div class="tryit" id="try-it">
   <div class="lp-shell">
-    <div class="lp-head lp-head--center">
-      <p class="lp-eyebrow" appReveal>
-        <span class="lp-eyebrow-dot" aria-hidden="true"></span>
-        Try it
-      </p>
-      <h2 id="try-title" class="lp-h2" appLineReveal>
-        Build one <span class="lp-grad">right here.</span>
-      </h2>
-      <p class="lp-lead" appReveal [revealDelay]="120">
-        Not a screenshot and not a video. Open a card, tick something off, drag it across. Nothing
-        to sign up for.
-      </p>
-    </div>
-
-    <!-- BA BƯỚC DẪN DẮT.
+    <!-- HAI BƯỚC DẪN DẮT.
          Một hộp cát không có dẫn dắt thì người ta kéo một thẻ rồi thôi, không
-         biết phải chú ý điều gì. Bước ba mới là cú chốt: nó biến câu "kéo là
-         lưu, không có nút Save" ở hero từ lời khẳng định thành thứ khách tự
-         chứng minh. -->
+         biết phải chú ý điều gì. Hai dòng này nói thẳng ra hai việc đáng làm.
+
+         TỪNG CÓ BƯỚC THỨ BA là "bấm F5 đi", để khách tự chứng minh câu "kéo là
+         lưu, không có nút Save" ở hero. Đã gỡ: bảo người đang xem trang giới
+         thiệu tải lại trang là một lời khuyên tự chống lại mình — nhiều người
+         sẽ không quay lại. Việc chứng minh nay để dành cho lời chào ngay bên
+         dưới, thứ chỉ hiện với người TỰ quay lại ở một phiên mới. -->
     <ol class="tb-steps" appReveal [revealDelay]="150">
       <li [class.is-done]="didAdd()">
         <span class="tb-tick" aria-hidden="true">
@@ -42,18 +39,6 @@
           }
         </span>
         Drag it to another column
-      </li>
-      <li [class.is-done]="didReload()">
-        <span class="tb-tick" aria-hidden="true">
-          @if (didReload()) {
-            <svg lucideCheck [strokeWidth]="3"></svg>
-          }
-        </span>
-        @if (didReload()) {
-          <b>Still here.</b> That is what “no Save button” means.
-        } @else {
-          Now reload the page
-        }
       </li>
     </ol>
 
@@ -308,4 +293,4 @@
   <!-- Mọi thao tác đều được đọc lên: người dùng bàn phím và trình đọc màn hình
        không thấy thẻ trượt sang cột nào, nên phải nói ra. -->
   <p class="lp-sr-only" role="status" aria-live="polite">{{ announcement() }}</p>
-</section>
+</div>
