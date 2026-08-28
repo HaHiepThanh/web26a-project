@@ -1,4 +1,4 @@
-import { IsString, IsUUID, MinLength } from 'class-validator';
+import { IsOptional, IsString, IsUUID, MinLength } from 'class-validator';
 
 export class CreateMessageDto {
   // 'loose': id trong DB sinh bằng md5(...)::uuid, không phải version 4 chuẩn.
@@ -8,4 +8,10 @@ export class CreateMessageDto {
   @IsString()
   @MinLength(1, { message: 'Message content is required.' })
   content: string;
+
+  /** Tin đang được trả lời. Server còn kiểm nó có thuộc đúng board này không —
+   *  xem `kiemTraTinDuocTraLoi` trong chat.service.ts. */
+  @IsOptional()
+  @IsUUID('loose', { message: 'replyToId must be a uuid.' })
+  replyToId?: string;
 }

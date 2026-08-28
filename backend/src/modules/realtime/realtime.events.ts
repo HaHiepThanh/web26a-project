@@ -26,6 +26,10 @@ export type BoardEventType =
   | 'comment.created'
   | 'comment.deleted'
   | 'chat.message'
+  /** Một tin vừa được SỬA hoặc THU HỒI. Dùng chung một sự kiện vì cả hai
+   *  đều chỉ là "dòng này vừa đổi"; thiếu nó thì máy người khác vẫn hiện
+   *  nội dung cũ tới khi F5. */
+  | 'chat.message.updated'
   | 'activity.created'
   | 'board.updated'
   | 'board.deleted'

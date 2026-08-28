@@ -1,5 +1,5 @@
-import { Component, ElementRef, computed, input, output, signal, viewChild } from '@angular/core';
-import { User } from '../../../models';
+import { Component, ElementRef, computed, effect, input, output, signal, viewChild } from '@angular/core';
+import { Message, User } from '../../../models';
 
 /** Ô soạn tin cao tối đa ngần này rồi mới cuộn — khớp `max-height` trong chat-input.css. */
 const MAX_COMPOSER_HEIGHT = 140;
@@ -13,7 +13,23 @@ const MAX_COMPOSER_HEIGHT = 140;
 })
 export class ChatInput {
   readonly members = input<User[]>([]);
-  readonly send = output<string>();
+  /** Tin đang được trả lời — hiện dải nhắc phía trên ô soạn. */
+  readonly replyingTo = input<Message | null>(null);
+  /** Tin đang được sửa. Loại trừ nhau với `replyingTo`. */
+  readonly editing = input<Message | null>(null);
+  readonly currentUserId = input<string>('');
+
+  /**
+   * Đổi từ `output<string>` sang kiểu có `replyToId`.
+   *
+   * TypeScript sẽ báo đỏ ở CẢ HAI chỗ dùng (`chat-panel` và
+   * `dashboard-chat-thread`) — đúng như mong muốn: sửa một nơi quên nơi kia là
+   * lỗi im lặng chỉ lộ ra ở một trong hai khung chat.
+   */
+  readonly send = output<{ text: string; replyToId?: string }>();
+  readonly saveEdit = output<{ id: string; text: string }>();
+  /** Bỏ dải nhắc (nút ✕ hoặc phím Esc). */
+  readonly cancelContext = output<void>();
 
   readonly value = signal('');
   private readonly mentionQuery = signal<string | null>(null);
@@ -30,6 +46,20 @@ export class ChatInput {
     }
   }
 
+  readonly tenDangTraLoi = computed(() => {
+    const m = this.replyingTo();
+    if (!m) return '';
+    if (m.userId === this.currentUserId()) return 'chính mình';
+    return m.user?.displayName ?? 'Anonymous';
+  });
+
+  readonly trichDoan = computed(() => {
+    const m = this.replyingTo();
+    if (!m) return '';
+    if (m.deletedAt) return 'Tin nhắn đã được thu hồi';
+    return m.content.length > 90 ? m.content.slice(0, 90) + '…' : m.content;
+  });
+
   readonly mentionOpen = computed(() => this.mentionQuery() !== null);
   readonly mentionMatches = computed(() => {
     const q = this.mentionQuery();
@@ -39,6 +69,17 @@ export class ChatInput {
       .filter((m) => (m.displayName ?? m.email).toLowerCase().startsWith(lower))
       .slice(0, 5);
   });
+
+  constructor() {
+    // Bắt đầu sửa thì đổ nội dung cũ vào ô soạn; thoát sửa thì dọn sạch.
+    // `syncTextarea` là bắt buộc — xem chú thích ở `textareaRef`.
+    effect(() => {
+      const m = this.editing();
+      const text = m?.content ?? '';
+      this.value.set(text);
+      this.syncTextarea(text);
+    });
+  }
 
   onInput(event: Event): void {
     const el = event.target as HTMLTextAreaElement;
@@ -73,6 +114,11 @@ export class ChatInput {
 
   /** Enter để gửi, Shift+Enter để xuống dòng — không chặn IME (gõ tiếng Việt/Nhật...). */
   onKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape' && (this.replyingTo() || this.editing())) {
+      event.preventDefault();
+      this.cancelContext.emit();
+      return;
+    }
     if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
       event.preventDefault();
       this.onSend();
@@ -103,7 +149,14 @@ export class ChatInput {
   onSend(): void {
     const text = this.value().trim();
     if (!text) return;
-    this.send.emit(text);
+
+    const dangSua = this.editing();
+    if (dangSua) {
+      this.saveEdit.emit({ id: dangSua.id, text });
+    } else {
+      this.send.emit({ text, replyToId: this.replyingTo()?.id });
+    }
+
     this.value.set('');
     this.syncTextarea('');
     this.mentionQuery.set(null);

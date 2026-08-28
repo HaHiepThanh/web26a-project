@@ -2,7 +2,7 @@
      `.chat` là một grid; `chat-start`/`chat-end` tự lo cột nào chứa avatar, căn
      trái hay phải, và quay đuôi bong bóng về đúng phía — nên ở đây KHÔNG cần
      flex-row-reverse / ml-auto / self-end tự dựng như bản cũ nữa. -->
-<div class="chat" [class.chat-start]="!isOwn()" [class.chat-end]="isOwn()">
+<div class="chat group" [class.chat-start]="!isOwn()" [class.chat-end]="isOwn()">
   <div class="chat-image">
     <app-user-avatar [userId]="message().userId" [name]="avatarName()" [avatarUrl]="avatarUrl()" [size]="28" />
   </div>
@@ -10,14 +10,61 @@
   <div class="chat-header pb-0.5 font-semibold text-base-content/75">{{ senderLabel() }}</div>
 
   <div [class]="bubbleClass()">
-    @for (part of contentParts(); track $index) {
-      @if (part.isMention) {
-        <span [class]="mentionClass()">{{ part.text }}</span>
-      } @else {
-        <span>{{ part.text }}</span>
+    <!-- Ô trích dẫn. CHỈ MỘT TẦNG: `trichDan()` không mang theo trích dẫn của
+         chính nó, nên đây không có (và không được có) nhánh đệ quy nào. -->
+    @if (trichDan(); as q) {
+      <button type="button"
+        class="mb-1 block w-full rounded border-l-2 px-2 py-1 text-left text-3xs leading-snug hover:brightness-110"
+        [class]="quoteClass()" (click)="jumpTo.emit(q.id)"
+        [title]="'Nhảy tới tin nhắn của ' + tenTrichDan()">
+        <span class="block font-bold">{{ tenTrichDan() }}</span>
+        <span class="line-clamp-2 break-words" [class.italic]="!!q.deletedAt">{{ noiDungTrichDan() }}</span>
+      </button>
+    }
+
+    @if (daThuHoi()) {
+      <span class="italic opacity-60">{{ nhanThuHoi }}</span>
+    } @else {
+      @for (part of contentParts(); track $index) {
+        @if (part.isMention) {
+          <span [class]="mentionClass()">{{ part.text }}</span>
+        } @else {
+          <span>{{ part.text }}</span>
+        }
       }
     }
   </div>
 
-  <time class="chat-footer pt-0.5 text-base-content/50" [attr.datetime]="message().createdAt">{{ timeLabel() }}</time>
+  <div class="chat-footer flex items-center gap-1 pt-0.5 text-base-content/50">
+    <time [attr.datetime]="message().createdAt">{{ timeLabel() }}</time>
+    @if (daSua()) {
+      <span class="text-3xs italic">· đã chỉnh sửa</span>
+    }
+
+    <!-- Nút LUÔN HIỆN ở mức mờ, không dùng hiện-khi-rê-chuột: điện thoại không
+         có hover nên kiểu đó là mất nút hẳn trên máy cảm ứng. -->
+    @if (!daThuHoi()) {
+      <button type="button" class="btn btn-ghost btn-xs h-4 min-h-0 px-1 opacity-40 hover:opacity-100"
+        (click)="reply.emit(message())" aria-label="Trả lời" title="Trả lời">
+        <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M9 17l-5-5 5-5M4 12h11a5 5 0 015 5v1" />
+        </svg>
+      </button>
+    }
+
+    @if (suaDuoc()) {
+      <button type="button" class="btn btn-ghost btn-xs h-4 min-h-0 px-1 opacity-40 hover:opacity-100"
+        (click)="startEdit.emit(message())" aria-label="Sửa" title="Sửa">
+        <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z" />
+        </svg>
+      </button>
+      <button type="button" class="btn btn-ghost btn-xs h-4 min-h-0 px-1 opacity-40 hover:opacity-100 hover:text-error"
+        (click)="recall.emit(message())" aria-label="Thu hồi" title="Thu hồi">
+        <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" />
+        </svg>
+      </button>
+    }
+  </div>
 </div>

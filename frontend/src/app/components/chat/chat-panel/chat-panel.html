@@ -82,9 +82,13 @@
     [memberNames]="memberNames()" [members]="members()"
     [suggestionsByMessageId]="suggestionsByMessageId()"
     (openSuggestion)="openSuggestion($event)"
-    (dismissSuggestion)="dismissSuggestion($event)" />
+    (dismissSuggestion)="dismissSuggestion($event)" [hasMore]="soan.hasMore()" [taiThem]="soan.taiThem"
+    (reply)="soan.batDauTraLoi($event)" (startEdit)="soan.batDauSua($event)"
+    (recall)="soan.thuHoi($event)" />
 
-  <app-chat-input [members]="members()" (send)="onSend($event)" />
+  <app-chat-input [members]="members()" (send)="onSend($event)" [replyingTo]="soan.replyingTo()" [editing]="soan.editing()"
+    [currentUserId]="currentUserId()" (saveEdit)="soan.luuSua($event)"
+    (cancelContext)="soan.huy()" />
 
   @if (!isMobile()) {
   <div

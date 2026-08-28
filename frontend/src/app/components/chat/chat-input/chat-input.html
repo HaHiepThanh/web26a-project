@@ -10,6 +10,31 @@
   </ul>
   }
 
+  <!-- Dải nhắc: đang trả lời ai, hoặc đang sửa tin nào. Hai trạng thái loại
+       trừ nhau nên chỉ một dải duy nhất. -->
+  @if (editing()) {
+    <div class="flex items-center gap-2 border-t border-base-300 bg-base-200/60 px-3 py-1.5 text-3xs">
+      <svg class="h-3 w-3 shrink-0 text-warning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z" />
+      </svg>
+      <span class="min-w-0 flex-1 truncate"><span class="font-bold">Đang sửa tin nhắn</span></span>
+      <button type="button" class="btn btn-circle btn-ghost btn-xs h-4 min-h-0 w-4" (click)="cancelContext.emit()"
+        aria-label="Huỷ sửa" title="Huỷ (Esc)">✕</button>
+    </div>
+  } @else if (replyingTo()) {
+    <div class="flex items-center gap-2 border-t border-base-300 bg-base-200/60 px-3 py-1.5 text-3xs">
+      <svg class="h-3 w-3 shrink-0 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M9 17l-5-5 5-5M4 12h11a5 5 0 015 5v1" />
+      </svg>
+      <span class="min-w-0 flex-1 truncate">
+        <span class="font-bold">Đang trả lời {{ tenDangTraLoi() }}</span>
+        <span class="text-base-content/60"> · {{ trichDoan() }}</span>
+      </span>
+      <button type="button" class="btn btn-circle btn-ghost btn-xs h-4 min-h-0 w-4" (click)="cancelContext.emit()"
+        aria-label="Huỷ trả lời" title="Huỷ (Esc)">✕</button>
+    </div>
+  }
+
   <div class="flex items-end gap-2 bg-base-100 px-3 pb-3 pt-1.5">
     <textarea #msgInput rows="1"
       class="composer min-w-0 flex-1 rounded-[var(--radius-field)] border border-base-300 bg-base-100 text-base-content placeholder:text-base-content/45 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"

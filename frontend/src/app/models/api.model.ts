@@ -226,25 +226,41 @@ export interface ApiCreatedComment {
   createdAt: string;
 }
 
-/** GET /chat?boardId= — đã join sang bảng `users`. */
+/**
+ * Hình dạng DUY NHẤT của một tin nhắn từ backend — dùng cho `GET /chat`,
+ * `POST /chat`, `PATCH /chat/:id`, `DELETE /chat/:id` VÀ payload WebSocket
+ * `chat.message` / `chat.message.updated`.
+ *
+ * Trước đây có hai kiểu (`ApiMessage` cho danh sách, `ApiCreatedMessage` cho
+ * tin vừa tạo) nên phải nuôi HAI hàm ánh xạ song song — thêm một trường là hai
+ * chỗ phải nhớ sửa, quên một chỗ thì lỗi chỉ lộ ra ở đúng một luồng.
+ */
 export interface ApiMessage {
-  id: string;
-  userId: string;
-  content: string;
-  createdAt: string;
-  user: { displayName: string | null; avatarUrl: string | null } | null;
-}
-
-/** POST /chat — dòng vừa tạo, chưa join `users`. Cũng chính là hình dạng của sự
- *  kiện WebSocket `chat.message` mà server phát cho mọi người đang mở board. */
-export interface ApiCreatedMessage {
   id: string;
   orgId: string;
   boardId: string;
   userId: string;
   content: string;
   createdAt: string;
+  editedAt: string | null;
+  deletedAt: string | null;
+  replyToId: string | null;
+  replyTo: {
+    id: string;
+    userId: string;
+    content: string;
+    deletedAt: string | null;
+    user: { displayName: string | null; avatarUrl: string | null } | null;
+  } | null;
+  user: { displayName: string | null; avatarUrl: string | null } | null;
 }
+
+/** GET /chat — MỘT TRANG, cũ → mới. `hasMore` để biết còn cuộn lên được nữa không. */
+export interface ApiMessagePage {
+  messages: ApiMessage[];
+  hasMore: boolean;
+}
+
 
 
 /* ------------------------------------------------------------------ *

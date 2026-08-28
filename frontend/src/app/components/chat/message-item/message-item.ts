@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { Message, User } from '../../../models';
 import { UserAvatar } from '../../shared/user-avatar/user-avatar';
 
@@ -10,6 +10,8 @@ interface ContentPart {
   text: string;
   isMention: boolean;
 }
+
+export const NHAN_THU_HOI = 'Tin nhắn đã được thu hồi';
 
 /** 1 tin nhắn: căn phải/trái theo "mình" hay "người khác" + avatar, @nhắc tên tô màu (#8). */
 @Component({
@@ -23,6 +25,24 @@ export class MessageItem {
   readonly sender = input<User | null>(null);
   readonly isOwn = input(false);
   readonly memberNames = input<string[]>([]);
+  /** Để biết ô trích dẫn nên ghi tên người hay ghi "You". */
+  readonly currentUserId = input<string>('');
+  /** Đang được nháy sáng vì vừa có người bấm vào ô trích dẫn trỏ tới nó. */
+  readonly highlighted = input(false);
+
+  readonly reply = output<Message>();
+  readonly startEdit = output<Message>();
+  readonly recall = output<Message>();
+  /** Bấm vào ô trích dẫn → nhảy tới tin gốc. */
+  readonly jumpTo = output<string>();
+
+  readonly nhanThuHoi = NHAN_THU_HOI;
+
+  readonly daThuHoi = computed(() => !!this.message().deletedAt);
+  /** Tin đã thu hồi thì không còn khái niệm "đã sửa" nữa. */
+  readonly daSua = computed(() => !this.daThuHoi() && !!this.message().editedAt);
+  /** Chỉ người gửi mới sửa/thu hồi được — server cũng kiểm lại, đây chỉ là phép lịch sự. */
+  readonly suaDuoc = computed(() => this.isOwn() && !this.daThuHoi());
 
   readonly senderLabel = computed(() => {
     if (this.isOwn()) return 'You';
@@ -43,14 +63,52 @@ export class MessageItem {
   readonly avatarUrl = computed(() => this.sender()?.avatarUrl ?? this.message().user?.avatarUrl);
 
   /**
+   * Ô trích dẫn.
+   *
+   * ⚠️ `MessageQuote` CỐ Ý không có `replyTo` lồng bên trong — xem chú thích ở
+   *    `message.model.ts`. Nên ở đây không có nhánh đệ quy nào, và cũng không
+   *    được thêm: A trả lời B, C trả lời A, D trả lời C… lồng tới tầng thứ ba
+   *    là bể khung chat ~300px.
+   */
+  readonly trichDan = computed(() => this.message().replyTo ?? null);
+
+  readonly tenTrichDan = computed(() => {
+    const q = this.trichDan();
+    if (!q) return '';
+    if (q.userId === this.currentUserId()) return 'You';
+    return q.user?.displayName ?? 'Anonymous';
+  });
+
+  readonly noiDungTrichDan = computed(() => {
+    const q = this.trichDan();
+    if (!q) return '';
+    return q.deletedAt ? NHAN_THU_HOI : q.content;
+  });
+
+  /**
    * Bong bóng theo daisyUI (`chat-bubble`), đè lại vài kích thước cho vừa khung
    * chat hẹp ~300px: daisyUI mặc định `min-height: 2rem` + `padding-inline: 1rem`
    * là quá rộng rãi ở đây, tin một dòng sẽ cao gần gấp đôi nội dung thật.
    */
   readonly bubbleClass = computed(() => {
-    const chung = 'chat-bubble min-h-0 min-w-0 break-words px-3 py-1.5 text-xs leading-relaxed';
-    return this.isOwn() ? `${chung} chat-bubble-primary` : chung;
+    let c = 'chat-bubble min-h-0 min-w-0 break-words px-3 py-1.5 text-xs leading-relaxed transition-shadow';
+    if (this.isOwn()) c += ' chat-bubble-primary';
+    if (this.highlighted()) c += ' ring-2 ring-warning ring-offset-1 ring-offset-base-100';
+    return c;
   });
+
+  /**
+   * Ô trích dẫn cũng PHỤ THUỘC nền bong bóng, y hệt `mentionClass`.
+   *
+   * Trên `chat-bubble-primary` (nền primary đặc) mà dùng `bg-base-content/10`
+   * thì ô trích dẫn gần như tàng hình. Phải mượn `primary-content` — màu chữ
+   * tương phản mà daisyUI đã chọn sẵn cho nền đó.
+   */
+  readonly quoteClass = computed(() =>
+    this.isOwn()
+      ? 'border-primary-content/50 bg-primary-content/15 text-primary-content/85'
+      : 'border-primary/60 bg-base-content/10 text-base-content/70',
+  );
 
   /**
    * Cách tô @nhắc tên, PHỤ THUỘC nền bong bóng.

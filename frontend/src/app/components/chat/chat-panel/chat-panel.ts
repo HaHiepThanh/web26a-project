@@ -3,6 +3,8 @@ import { ChatTaskSuggestion, User } from '../../../models';
 import { ChatStore } from '../../../ngrx/chat/chat.store';
 import { RealtimeService } from '../../../services/realtime.service';
 import { TaskSuggestionStore } from '../../../ngrx/task-suggestion/task-suggestion.store';
+import { SoanTin } from '../soan-tin';
+import { mocMoi, tinMoiHon } from '../../../utils/tin-moi.util';
 import { BoardStore } from '../../../ngrx/board/board.store';
 import { CardStore } from '../../../ngrx/card/card.store';
 import { ListStore } from '../../../ngrx/list/list.store';
@@ -97,10 +99,15 @@ export class ChatPanel {
   /** Gợi ý tra theo messageId — chip vẽ ngay dưới đúng tin nhắn sinh ra nó. */
   readonly suggestionsByMessageId = this.suggestions.byMessageId;
 
+  /** Trạng thái trả lời/sửa + phân trang. Dùng chung với `dashboard-chat-thread`. */
+  readonly soan = new SoanTin(this.chat, () => this.boardId(), () => this.members());
+
   // Bóc tiền tố "(số) " nếu tab title đang còn sót từ lần vào board trước — nếu không
   // sẽ chồng thành "(2) (2) ..." mỗi lần vào lại board (ChatPanel tạo mới mỗi lần).
   private readonly originalTitle = document.title.replace(/^\(\d+\)\s*/, '');
-  private lastSeenCount = 0;
+  /** `createdAt` của tin mới nhất đã xét. Neo theo THỜI GIAN, không phải số
+   *  lượng — xem `tin-moi.util.ts`. */
+  private mocDaXet = '';
 
   constructor() {
     const onResize = () => this.viewportWidth.set(window.innerWidth);
@@ -129,12 +136,8 @@ export class ChatPanel {
 
     effect(() => {
       const list = this.messages();
-      if (list.length <= this.lastSeenCount) {
-        this.lastSeenCount = list.length;
-        return;
-      }
-      const newOnes = list.slice(this.lastSeenCount);
-      this.lastSeenCount = list.length;
+      const newOnes = tinMoiHon(list, this.mocDaXet);
+      this.mocDaXet = mocMoi(list, this.mocDaXet);
       const fromOthers = newOnes.filter((m) => m.userId !== this.currentUserId());
       if (!fromOthers.length || !this.collapsed()) return;
 
@@ -213,8 +216,8 @@ export class ChatPanel {
     localStorage.setItem(WIDTH_KEY, String(this.width()));
   }
 
-  async onSend(content: string): Promise<void> {
-    await this.chat.sendMessage(this.boardId(), content, this.members());
+  async onSend(e: { text: string; replyToId?: string }): Promise<void> {
+    await this.soan.gui(e);
   }
 
   openSuggestion(s: ChatTaskSuggestion): void {

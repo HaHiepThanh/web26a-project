@@ -5,6 +5,7 @@ import { BoardStore } from '../../../ngrx/board/board.store';
 import { avatarColorFor, initialsOf } from '../../../utils/avatar.util';
 import { ChatStore } from '../../../ngrx/chat/chat.store';
 import { TaskSuggestionStore } from '../../../ngrx/task-suggestion/task-suggestion.store';
+import { SoanTin } from '../soan-tin';
 import { CardStore } from '../../../ngrx/card/card.store';
 import { ListStore } from '../../../ngrx/list/list.store';
 import { RealtimeService } from '../../../services/realtime.service';
@@ -58,6 +59,9 @@ export class DashboardChatThread {
 
   readonly suggestionsByMessageId = this.suggestions.byMessageId;
 
+  /** Trạng thái trả lời/sửa + phân trang. Dùng chung với `chat-panel`. */
+  readonly soan = new SoanTin(this.chat, () => this.board().id, () => this.members());
+
   constructor() {
     // effect() (không phải constructor body trực tiếp) vì input.required() chỉ có
     // giá trị SAU khi Angular gán input — giống lý do ChatPanel dùng effect cho boardId().
@@ -82,8 +86,8 @@ export class DashboardChatThread {
     this.chat.markSeen(boardId);
   }
 
-  async onSend(content: string): Promise<void> {
-    await this.chat.sendMessage(this.board().id, content, this.members());
+  async onSend(e: { text: string; replyToId?: string }): Promise<void> {
+    await this.soan.gui(e);
   }
 
   openSuggestion(s: ChatTaskSuggestion): void {
