@@ -130,8 +130,13 @@ export class MessageItem {
    */
   readonly quoteClass = computed(
     () =>
-      'block w-fit max-w-full overflow-hidden rounded-md bg-base-200 px-2.5 py-1 ' +
-      'text-left text-3xs leading-snug text-base-content/70 transition-colors hover:bg-base-300',
+      // `border-base-300` chứ không phải một sắc độ tự chế: `styles.css` có sẵn
+      // một quy tắc trong @layer utilities đổi mọi `border-base-300` sang
+      // `--border-color` khi ở theme `night`. Nhờ vậy ô trích dẫn có cùng viền
+      // với nút Start meeting / Filter, và chỉnh một chỗ là đổi cả app.
+      'block w-fit max-w-full overflow-hidden rounded-md border border-base-300 ' +
+      'bg-base-200 px-2.5 py-1 text-left text-3xs leading-snug ' +
+      'text-base-content/70 transition-colors hover:bg-base-300',
   );
 
   /**
