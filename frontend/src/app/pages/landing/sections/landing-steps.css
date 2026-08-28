@@ -2,8 +2,22 @@
    Cách dùng — bốn bước
    ========================================================================== */
 
+/* Nền LÕM, không phải nền thường — để giữ nhịp đậm nhạt của cả trang.
+
+   Trang xen kẽ nền sáng và nền lõm để mắt biết mình vừa sang một khu khác. Dải
+   số liệu "Four numbers" từng nằm ngay dưới khu này và nó mang nền lõm, nên nó
+   chính là chỗ ngắt nhịp. Gỡ dải đó đi thì bốn khu liền nhau — so sánh, cách
+   dùng, hỏi đáp, kêu gọi — cùng một màu nền, và đoạn cuối trang phẳng lì.
+
+   Chọn khu này chứ không phải khu hỏi đáp: bốn bước ở đây là THẺ nền sáng, đặt
+   trên nền lõm thì chúng nổi lên, đúng cách khu "Everything in the box" đang
+   làm. Còn hỏi đáp chỉ là mấy dòng kẻ mảnh, chẳng có gì để nổi.
+
+   `background-color` chứ KHÔNG phải shorthand `background`: khu này nay dùng
+   `.lp-seam-y`, mà shorthand sẽ xoá luôn background-image của nó và hai đường
+   kẻ trên–dưới biến mất. */
 .lp-steps {
-  background: var(--lp-bg);
+  background-color: var(--lp-bg-sunken);
 }
 
 .lp-step-grid {
