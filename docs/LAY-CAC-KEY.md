@@ -32,6 +32,7 @@ cp backend/.env.example secrets/.env
 | `GEMINI_API_KEY` | Google AI Studio | ✅ Gợi ý thẻ + kiểm duyệt ảnh (đủ 9 nhóm) |
 | `MODERATION_GEMINI_API_KEY` | Google AI Studio (**project khác**) | Khuyến nghị — tách hạn mức tần suất |
 | `GOOGLE_VISION_API_KEY` | Google Cloud Console | **Tuỳ chọn** — cần bật thanh toán; bỏ qua được |
+| `BREVO_API_KEY` | app.brevo.com | ✅ **Bắt buộc trên máy chủ** — gửi email đặt lại mật khẩu |
 | `firebaseApiKey` (frontend) | Firebase Console | ✅ Frontend cần |
 
 ---
@@ -244,7 +245,74 @@ trong `.env` và nhớ khởi động lại.
 
 ---
 
-## 5. Chạy thử
+## 5. `BREVO_API_KEY` — gửi email đặt lại mật khẩu
+
+### Vì sao không dùng thẳng Gmail SMTP
+
+Đã thử rồi và đã hỏng trên production. Railway chặn cứng cổng ra 25/465/587 ở
+gói Free/Trial/Hobby; chỉ Pro trở lên mới mở. Cùng bộ `SMTP_USER`/`SMTP_PASS`
+chạy ngon ở máy bạn rồi chết câm khi lên máy chủ, với log đúng như thế này:
+
+```
+ERROR [MailService] Gửi mail thất bại tới <học viên>@gmail.com
+Error: Connection timeout            code: 'ETIMEDOUT', command: 'CONN'
+Error: connect ENETUNREACH 2404:6800:4003:c02::6c:465
+```
+
+`command: 'CONN'` nghĩa là **chưa hề bắt tay được với Gmail** — không phải sai
+mật khẩu. Brevo đi bằng HTTPS (cổng 443) nên không dính.
+
+Cấu hình vẫn giữ cả hai đường: có `BREVO_API_KEY` thì dùng Brevo, để trống thì
+rơi về `SMTP_*` (tiện cho máy lập trình). Cả hai hỏng thì app tự quay về đường
+gửi mail của Firebase.
+
+### Bước 1 — Tạo tài khoản và lấy khoá
+
+1. Vào <https://app.brevo.com> đăng ký (miễn phí, **không cần thẻ**).
+2. Góc phải trên → tên tài khoản → **SMTP & API**.
+3. Thẻ **API Keys** → **Generate a new API key** → đặt tên `horizon-hub-harmony`.
+4. Chép khoá **ngay lúc đó** — đóng hộp thoại là không xem lại được nữa.
+
+### Bước 2 — Xác minh địa chỉ người gửi (đừng bỏ qua)
+
+Brevo không cho gửi từ một địa chỉ chưa xác minh. Không làm bước này thì mọi
+lần gửi trả về `400`.
+
+1. **Settings** → **Senders, Domains & Dedicated IPs** → thẻ **Senders**.
+2. **Add a sender** → điền tên hiển thị và địa chỉ Gmail của bạn.
+3. Mở hộp thư, bấm liên kết xác minh Brevo vừa gửi.
+
+Chỉ cần xác minh **một địa chỉ**, không cần tên miền riêng. Xong là gửi được
+cho bất kỳ ai.
+
+### Bước 3 — Dán vào `secrets/.env`
+
+```bash
+BREVO_API_KEY=xkeysib-...
+MAIL_FROM_EMAIL=địa-chỉ-vừa-xác-minh@gmail.com
+MAIL_FROM_NAME=Horizon Hub Harmony
+```
+
+Rồi dán **cùng ba biến đó** vào Railway → service backend → **Variables**.
+
+### Bước 4 — Kiểm tra
+
+Khởi động backend và tìm dòng này trong log:
+
+```
+[MailService] MailService dùng Brevo HTTPS API (người gửi: ...)
+```
+
+Thấy `MailService đã khởi tạo SMTP transporter` thay vào đó nghĩa là
+`BREVO_API_KEY` chưa được đọc — kiểm tra xem có để trống hoặc gõ nhầm tên biến
+không.
+
+Hạn mức miễn phí là **300 thư/ngày**. Hết hạn mức thì Brevo trả `429`, app hạ
+cầu dao và tự quay về đường gửi mail của Firebase trong 5 phút.
+
+---
+
+## 6. Chạy thử
 
 ```bash
 cd backend && npm run start:dev
