@@ -28,38 +28,51 @@
  *
  * `ring` vẽ quanh HỘP CHỮ NHẬT của bong bóng, còn cái đuôi là phần tử giả nằm
  * NGOÀI hộp đó — nên vòng sáng cắt ngang qua đuôi và bong bóng trông như bị
- * gãy. `drop-shadow` thì bám theo hình ĐÃ VẼ RA, kể cả đuôi, nên quầng sáng ôm
- * trọn hình dáng thật.
+ * gãy. `drop-shadow` bám theo hình ĐÃ VẼ RA, kể cả đuôi.
  *
- * Bản trước dùng `ring-2 ring-warning` — vừa cắt ngang đuôi, vừa quá nhạt vì
- * `--color-warning` của theme `winter` là một sắc be rất nhạt.
+ * Bốn `drop-shadow` lệch bốn hướng, độ nhoè 0 → vẽ ra một đường VIỀN ôm sát
+ * hình thật. Chỉ dùng quầng sáng thôi là không đủ: trên nền sáng, sáng-trên-
+ * sáng gần như vô hình.
+ *
+ * ── VÌ SAO MÀU CỐ ĐỊNH, KHÔNG DÙNG `--color-warning`
+ *
+ * Ở theme `night`, `--color-warning` có độ bão hoà .139 nên nổi tốt trên nền
+ * tối. Nhưng ở theme `winter` nó là `oklch(89% .045 71)` — độ bão hoà .045,
+ * gần như một sắc be nhạt. Trên nền trắng thì không thấy gì.
+ *
+ * Đây là màu BÁO HIỆU chứ không phải màu thương hiệu, nên nó cần nổi bằng
+ * nhau ở cả hai nền thay vì đi theo bảng màu. Đã đối chiếu tận mắt: hổ phách
+ * này rõ ở cả `winter` lẫn `night`, và không chói ở nền tối.
  */
 .chat-bubble.dang-sang {
+  --mau-sang: oklch(72% 0.19 62);
+  --vien-sang: drop-shadow(2px 0 0 var(--mau-sang))
+    drop-shadow(-2px 0 0 var(--mau-sang)) drop-shadow(0 2px 0 var(--mau-sang))
+    drop-shadow(0 -2px 0 var(--mau-sang));
+
+  filter: var(--vien-sang) drop-shadow(0 0 8px var(--mau-sang));
   animation: nhay-sang 1.6s ease-out;
-  filter: drop-shadow(0 0 3px var(--color-warning))
-    drop-shadow(0 0 9px var(--color-warning));
 }
 
+/* Viền giữ nguyên suốt, chỉ quầng sáng phập phồng — mắt bắt được chuyển động
+   mà hình dáng không nhảy. */
 @keyframes nhay-sang {
   0% {
-    filter: drop-shadow(0 0 0 var(--color-warning));
+    filter: var(--vien-sang) drop-shadow(0 0 0 var(--mau-sang));
   }
-  20% {
-    filter: drop-shadow(0 0 5px var(--color-warning))
-      drop-shadow(0 0 16px var(--color-warning));
+  25% {
+    filter: var(--vien-sang) drop-shadow(0 0 18px var(--mau-sang));
   }
-  45% {
-    filter: drop-shadow(0 0 2px var(--color-warning))
-      drop-shadow(0 0 6px var(--color-warning));
+  55% {
+    filter: var(--vien-sang) drop-shadow(0 0 5px var(--mau-sang));
   }
-  70% {
-    filter: drop-shadow(0 0 5px var(--color-warning))
-      drop-shadow(0 0 16px var(--color-warning));
+  80% {
+    filter: var(--vien-sang) drop-shadow(0 0 16px var(--mau-sang));
   }
 }
 
 /* Người tắt hiệu ứng chuyển động vẫn phải THẤY được tin nào vừa được nhảy tới,
-   nên giữ nguyên quầng sáng, chỉ bỏ phần nhấp nháy. */
+   nên giữ nguyên viền và quầng, chỉ bỏ phần nhấp nháy. */
 @media (prefers-reduced-motion: reduce) {
   .chat-bubble.dang-sang {
     animation: none;
