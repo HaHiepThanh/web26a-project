@@ -203,7 +203,7 @@
 
       <!-- Search Input -->
       <div class="space-y-1.5">
-        <label class="text-xs font-bold text-base-content/80">Search by name, email, or user ID</label>
+        <label class="text-xs font-bold text-base-content/80">Search by email or user ID (UUID)</label>
         <div class="relative">
           <!-- `z-10` bắt buộc: daisyUI 5 đặt `input.input` thành `position: relative`
                kèm nền đục, mà input đứng SAU icon trong DOM — cùng được định vị,
@@ -217,7 +217,7 @@
           </svg>
           <input type="text"
             class="input input-bordered input-sm rounded-md w-full border-base-300 pl-9 font-semibold"
-            placeholder="Enter an exact email or paste an ID to find people outside the organization..." [ngModel]="orgInviteQuery()"
+            placeholder="Search by email or paste a user ID (UUID)..." [ngModel]="orgInviteQuery()"
             (ngModelChange)="onInviteQueryChange($event)" />
           @if (searching()) {
             <span class="loading loading-spinner loading-xs absolute right-3 top-1/2 -translate-y-1/2 text-base-content/50"></span>

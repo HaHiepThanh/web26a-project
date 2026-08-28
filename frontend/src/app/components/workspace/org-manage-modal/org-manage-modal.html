@@ -31,8 +31,8 @@
         <h4 class="mb-2 text-2xs font-black uppercase tracking-wide text-base-content/45">Organization info</h4>
         <div class="flex items-center gap-2">
           <input type="text" maxlength="50" class="input input-bordered input-sm w-full rounded-md font-semibold"
-            placeholder="Organization name (max 50 characters)..." [ngModel]="nameInput()" (ngModelChange)="nameInput.set($event)"
-            (keydown.enter)="onSaveName()" />
+            placeholder="Organization name (max 50 characters)..." [ngModel]="nameInput()"
+            (ngModelChange)="nameInput.set($event)" (keydown.enter)="onSaveName()" />
           <button type="button" class="btn btn-primary btn-sm rounded-md shrink-0 gap-1" [disabled]="!nameDirty()"
             (click)="onSaveName()">
             <svg lucideCheck class="h-3.5 w-3.5" [strokeWidth]="3"></svg> Save
@@ -50,14 +50,12 @@
           <span class="text-3xs font-black uppercase tracking-wide text-base-content/45">Joining as</span>
           <div class="join rounded-md overflow-hidden">
             <button type="button" class="btn join-item btn-xs text-3xs font-bold"
-              [class.btn-active]="inviteRole() === 'member'"
-              (click)="inviteRole.set('member')"
+              [class.btn-active]="inviteRole() === 'member'" (click)="inviteRole.set('member')"
               title="View and work on boards, cannot manage members">
               Member
             </button>
             <button type="button" class="btn join-item btn-xs text-3xs font-bold"
-              [class.btn-active]="inviteRole() === 'admin'"
-              (click)="inviteRole.set('admin')"
+              [class.btn-active]="inviteRole() === 'admin'" (click)="inviteRole.set('admin')"
               title="Invite/remove members, create and delete workspaces and boards">
               Admin
             </button>
@@ -75,22 +73,26 @@
                Ô tìm kiếm ở header không dính vì nó theo đúng khuôn daisyUI 5:
                `<label class="input">` làm hộp flex, icon nằm bên trong, không
                định vị tuyệt đối. -->
-          <svg lucideSearch class="pointer-events-none absolute left-3 top-1/2 z-10 h-3.5 w-3.5 -translate-y-1/2 text-base-content/35" [strokeWidth]="2.2"></svg>
+          <svg lucideSearch
+            class="pointer-events-none absolute left-3 top-1/2 z-10 h-3.5 w-3.5 -translate-y-1/2 text-base-content/35"
+            [strokeWidth]="2.2"></svg>
           <input type="text" class="input input-bordered input-sm w-full rounded-md pl-9 font-semibold"
-            placeholder="Search by name, email, or paste a user ID..." [ngModel]="searchInput()"
+            placeholder="Search by email or paste a user UUID" [ngModel]="searchInput()"
             (ngModelChange)="onSearchChange($event)" (keydown.enter)="onInviteRaw()" />
           @if (searching()) {
-            <span class="loading loading-spinner loading-xs absolute right-3 top-1/2 -translate-y-1/2 text-base-content/40"></span>
+          <span
+            class="loading loading-spinner loading-xs absolute right-3 top-1/2 -translate-y-1/2 text-base-content/40"></span>
           }
         </div>
         <p class="mt-1 px-1 text-3xs leading-snug text-base-content/45">
-          Enter an exact email or paste an ID to find people outside the organization; a name search only matches people already in it.
+          Enter an exact email or paste a user ID (UUID) to find and invite people to the organization.
         </p>
 
         @if (searchInput().trim()) {
         <div class="mt-1.5 overflow-hidden rounded-md border border-base-300 bg-base-200/40">
           @for (u of searchResults(); track u.id) {
-          <button type="button" class="btn btn-ghost h-auto min-h-0 w-full justify-start gap-2.5 rounded-none px-2.5 py-2 text-left font-normal normal-case"
+          <button type="button"
+            class="btn btn-ghost h-auto min-h-0 w-full justify-start gap-2.5 rounded-none px-2.5 py-2 text-left font-normal normal-case"
             (click)="onInvite(u)">
             <app-user-avatar [userId]="u.id" [name]="u.displayName || u.email" [avatarUrl]="u.avatarUrl" [size]="28" />
             <span class="min-w-0 flex-1">
@@ -103,22 +105,23 @@
             </span>
           </button>
           } @empty {
-            @if (searching()) {
-            <p class="px-2.5 py-2.5 text-2xs font-semibold text-base-content/50">Searching...</p>
-            } @else {
-            <button type="button" class="btn btn-ghost h-auto min-h-0 w-full justify-start gap-2 rounded-none px-2.5 py-2.5 text-left font-normal normal-case"
-              (click)="onInviteRaw()">
-              <svg lucideUserPlus class="h-3.5 w-3.5 shrink-0 text-primary" [strokeWidth]="2.4"></svg>
-              <span class="min-w-0 flex-1 text-2xs font-semibold text-base-content/70">
-                <span class="block truncate">
-                  No one found — send anyway to "<span class="font-mono">{{ searchInput().trim() }}</span>"?
-                </span>
-                <span class="block text-3xs text-base-content/45">
-                  This will only work if that's a real user ID.
-                </span>
+          @if (searching()) {
+          <p class="px-2.5 py-2.5 text-2xs font-semibold text-base-content/50">Searching...</p>
+          } @else {
+          <button type="button"
+            class="btn btn-ghost h-auto min-h-0 w-full justify-start gap-2 rounded-none px-2.5 py-2.5 text-left font-normal normal-case"
+            (click)="onInviteRaw()">
+            <svg lucideUserPlus class="h-3.5 w-3.5 shrink-0 text-primary" [strokeWidth]="2.4"></svg>
+            <span class="min-w-0 flex-1 text-2xs font-semibold text-base-content/70">
+              <span class="block truncate">
+                No one found — send anyway to "<span class="font-mono">{{ searchInput().trim() }}</span>"?
               </span>
-            </button>
-            }
+              <span class="block text-3xs text-base-content/45">
+                This will only work if that's a real user ID (UUID) or email.
+              </span>
+            </span>
+          </button>
+          }
           }
         </div>
         }
@@ -142,8 +145,7 @@
           <label class="flex items-center gap-1.5">
             <span class="text-3xs font-black uppercase tracking-wide text-base-content/45">Expires</span>
             <select class="select select-sm select-bordered rounded-md text-xs font-semibold"
-              [ngModel]="linkExpiryDays()" (ngModelChange)="linkExpiryDays.set(+$event)"
-              name="linkExpiryDays">
+              [ngModel]="linkExpiryDays()" (ngModelChange)="linkExpiryDays.set(+$event)" name="linkExpiryDays">
               <option [value]="1">1 day</option>
               <option [value]="7">7 days</option>
               <option [value]="30">30 days</option>
@@ -152,8 +154,8 @@
 
           <label class="flex items-center gap-1.5">
             <span class="text-3xs font-black uppercase tracking-wide text-base-content/45">Joins as</span>
-            <select class="select select-sm select-bordered rounded-md text-xs font-semibold"
-              [ngModel]="linkRole()" (ngModelChange)="linkRole.set($event)" name="linkRole">
+            <select class="select select-sm select-bordered rounded-md text-xs font-semibold" [ngModel]="linkRole()"
+              (ngModelChange)="linkRole.set($event)" name="linkRole">
               <option value="member">Member</option>
               <option value="admin">Admin</option>
             </select>
@@ -162,8 +164,8 @@
           <label class="flex items-center gap-1.5">
             <span class="text-3xs font-black uppercase tracking-wide text-base-content/45">Max uses</span>
             <input type="number" min="1" max="500" placeholder="No limit"
-              class="input input-sm input-bordered w-24 rounded-md text-xs font-semibold"
-              [ngModel]="linkMaxUses()" (ngModelChange)="linkMaxUses.set($event)" name="linkMaxUses" />
+              class="input input-sm input-bordered w-24 rounded-md text-xs font-semibold" [ngModel]="linkMaxUses()"
+              (ngModelChange)="linkMaxUses.set($event)" name="linkMaxUses" />
           </label>
 
           <button type="button" class="btn btn-primary btn-sm rounded-md gap-1.5 px-3 text-xs font-bold"
@@ -181,8 +183,7 @@
         @if (justCreated(); as fresh) {
         <div class="mb-2 flex items-center gap-1.5 rounded-md border border-primary/30 bg-primary/5 p-1.5">
           <input #freshInput type="text" readonly [value]="fullLink(fresh.token)"
-            class="input input-sm input-bordered grow rounded-md font-mono text-2xs"
-            (focus)="freshInput.select()" />
+            class="input input-sm input-bordered grow rounded-md font-mono text-2xs" (focus)="freshInput.select()" />
           <button type="button" class="btn btn-primary btn-sm rounded-md shrink-0 gap-1 px-2.5 text-2xs font-bold"
             (click)="onCopy(fresh, freshInput)">
             @if (copiedId() === fresh.id) {
@@ -211,8 +212,8 @@
             </span>
 
             <div class="flex shrink-0 items-center gap-1">
-              <button type="button" class="btn btn-ghost btn-xs rounded-md px-1.5"
-                [title]="'Copy this link'" (click)="onCopy(link, rowInput)">
+              <button type="button" class="btn btn-ghost btn-xs rounded-md px-1.5" [title]="'Copy this link'"
+                (click)="onCopy(link, rowInput)">
                 @if (copiedId() === link.id) {
                 <svg lucideCheck class="h-3.5 w-3.5 text-success" [strokeWidth]="2.4"></svg>
                 } @else {
@@ -221,8 +222,7 @@
               </button>
 
               <button type="button" class="btn btn-ghost btn-xs rounded-md px-1.5 text-error hover:bg-error/10"
-                title="Revoke this link" [disabled]="revokingIds().has(link.id)"
-                (click)="onRevokeLink(link.id)">
+                title="Revoke this link" [disabled]="revokingIds().has(link.id)" (click)="onRevokeLink(link.id)">
                 @if (revokingIds().has(link.id)) {
                 <span class="loading loading-spinner loading-xs"></span>
                 } @else {
@@ -234,7 +234,8 @@
           }
         </div>
         } @else if (!linksLoading()) {
-        <p class="rounded-md border border-dashed border-base-300 px-3 py-2.5 text-2xs font-semibold text-base-content/70">
+        <p
+          class="rounded-md border border-dashed border-base-300 px-3 py-2.5 text-2xs font-semibold text-base-content/70">
           No active invite links. Create one to let people join without an individual invite.
         </p>
         }
@@ -250,7 +251,8 @@
         <div class="flex flex-col gap-1.5">
           @for (inv of pendingInvites(); track inv.id) {
           <div class="flex items-center gap-2.5 rounded-md border border-dashed border-base-300 px-3 py-2">
-            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-3xs font-black text-white opacity-60"
+            <span
+              class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-3xs font-black text-white opacity-60"
               [style.background-color]="avatarBgFor(inv.toUserId)">?</span>
             <span class="min-w-0 flex-1">
               <span class="block truncate text-2xs font-bold text-base-content">{{ inv.fromUserName }}</span>
@@ -259,7 +261,8 @@
               </span>
             </span>
             @if (isAdminOrOwner()) {
-            <button type="button" class="btn btn-ghost btn-xs rounded-md shrink-0 text-2xs font-bold text-error hover:bg-error/10"
+            <button type="button"
+              class="btn btn-ghost btn-xs rounded-md shrink-0 text-2xs font-bold text-error hover:bg-error/10"
               (click)="cancelInvite.emit(inv.id)">Cancel</button>
             }
           </div>
@@ -275,12 +278,15 @@
         </h4>
         <div class="flex flex-col gap-1.5">
           @for (mem of members(); track mem.user.id) {
-          <div class="grid grid-cols-[1fr_auto_auto] items-center gap-3 rounded-md border border-base-300 bg-base-100 px-3 py-2">
+          <div
+            class="grid grid-cols-[1fr_auto_auto] items-center gap-3 rounded-md border border-base-300 bg-base-100 px-3 py-2">
             <!-- Cột 1: Avatar + Tên + Email (Bên trái) -->
             <div class="flex min-w-0 items-center gap-2.5">
-              <app-user-avatar [userId]="mem.user.id" [name]="mem.user.displayName || mem.user.email" [avatarUrl]="mem.user.avatarUrl" [size]="32" />
+              <app-user-avatar [userId]="mem.user.id" [name]="mem.user.displayName || mem.user.email"
+                [avatarUrl]="mem.user.avatarUrl" [size]="32" />
               <div class="min-w-0 flex-1">
-                <span class="block truncate text-xs font-bold text-base-content">{{ mem.user.displayName || mem.user.email }}</span>
+                <span class="block truncate text-xs font-bold text-base-content">{{ mem.user.displayName ||
+                  mem.user.email }}</span>
                 <span class="block truncate text-3xs text-base-content/50">{{ mem.user.email }}</span>
               </div>
             </div>
@@ -292,28 +298,27 @@
                 <svg lucideCrown class="h-3 w-3" [strokeWidth]="2.2"></svg> Owner
               </span>
               } @else {
-                @if (isOwner()) {
-                <select class="select select-xs select-bordered h-7 min-h-0 w-22 rounded-md px-2 py-0 text-3xs font-bold"
-                  title="Change this member's role"
-                  [value]="mem.role"
-                  (change)="onChangeRole(mem.user.id, $any($event.target).value)">
-                  <option value="member">Member</option>
-                  <option value="admin">Admin</option>
-                </select>
-                } @else {
-                <span class="badge badge-sm h-6 min-h-0 px-2 font-bold rounded-md text-3xs"
-                  [class.badge-warning]="mem.role === 'admin'"
-                  [class.badge-ghost]="mem.role !== 'admin'">
-                  {{ mem.role === 'admin' ? 'Admin' : 'Member' }}
-                </span>
-                }
+              @if (isOwner()) {
+              <select class="select select-xs select-bordered h-7 min-h-0 w-22 rounded-md px-2 py-0 text-3xs font-bold"
+                title="Change this member's role" [value]="mem.role"
+                (change)="onChangeRole(mem.user.id, $any($event.target).value)">
+                <option value="member">Member</option>
+                <option value="admin">Admin</option>
+              </select>
+              } @else {
+              <span class="badge badge-sm h-6 min-h-0 px-2 font-bold rounded-md text-3xs"
+                [class.badge-warning]="mem.role === 'admin'" [class.badge-ghost]="mem.role !== 'admin'">
+                {{ mem.role === 'admin' ? 'Admin' : 'Member' }}
+              </span>
+              }
               }
             </div>
 
             <!-- Cột 3: Nút Remove (Cố định chiều rộng bên phải để tất cả dropdown quyền thẳng hàng nhau) -->
             <div class="flex w-20 items-center justify-end">
               @if (canRemoveMember(mem)) {
-              <button type="button" class="btn btn-ghost btn-xs h-7 min-h-0 rounded-md px-1.5 gap-1 font-bold text-error hover:bg-error/10"
+              <button type="button"
+                class="btn btn-ghost btn-xs h-7 min-h-0 rounded-md px-1.5 gap-1 font-bold text-error hover:bg-error/10"
                 title="Remove from organization" (click)="onRemove(mem.user.id)">
                 <svg lucideTrash2 class="h-3 w-3" [strokeWidth]="2.2"></svg> Remove
               </button>
@@ -337,8 +342,7 @@
       <!-- Chỉ owner thấy. Admin đổi được tên tổ chức nhưng KHÔNG xoá được nó —
            xoá là quét sạch mọi workspace bên trong và không có đường lùi. -->
       @if (isOwner()) {
-      <button type="button" class="btn btn-error btn-outline btn-sm rounded-md font-bold"
-        (click)="onDeleteClick()">
+      <button type="button" class="btn btn-error btn-outline btn-sm rounded-md font-bold" (click)="onDeleteClick()">
         🗑️ Delete Organization
       </button>
       } @else {
