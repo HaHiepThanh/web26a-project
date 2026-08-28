@@ -10,7 +10,6 @@ import { SupabaseService } from '../../common/supabase/supabase.service';
 import { AccessService } from '../../common/access/access.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 import { CreateMeetingDto } from './dto/create-meeting.dto';
-import { ImportMeetingsDto } from './dto/import-meetings.dto';
 
 
 
@@ -203,125 +202,6 @@ export class MeetingsService {
     return this.toResponse(row, await this.layNguoiDu([row.id]));
   }
 
-
-  /**
-   * NHẬP HÀNG LOẠT từ file lịch.
-   *
-   * Khác `create()` ở ba điểm, và cả ba đều cố ý:
-   *
-   *   1. KHÔNG tạo sự kiện bên Google. File .ics vốn xuất ra TỪ một lịch — đẩy
-   *      ngược lên là nhân đôi trong lịch người dùng và bắn lại thư mời cho
-   *      những người đã nhận từ lâu.
-   *   2. Ghi MỘT lần cho cả loạt thay vì gọi API 30 lần.
-   *   3. Báo chuông MỘT lời tóm tắt cho mỗi người, không phải 30 lời. Nhập một
-   *      học kỳ mà mỗi buổi một thông báo là chuông của cả nhóm không dùng được
-   *      nữa.
-   */
-  async nhapHangLoat(
-    uid: string,
-    dto: ImportMeetingsDto,
-  ): Promise<{ daTao: number; boQua: number }> {
-    const board = await this.access.assertBoardAccess(uid, dto.boardId);
-    await this.access.assertCanManage(uid, board.orgId);
-
-    if (dto.events.length === 0) {
-      throw new BadRequestException('Pick at least one event to import.');
-    }
-
-    const { uids: nguoiXemDuoc, boardName, orgSlug } =
-      await this.access.nguoiXemDuocBoard(dto.boardId);
-
-    // Lọc lại người dự, không tin danh sách gửi lên — cùng lý do như `create`.
-    const duocPhep = new Set(nguoiXemDuoc);
-    const nguoiDu = new Set((dto.attendeeIds ?? []).filter((id) => duocPhep.has(id)));
-    nguoiDu.add(uid);
-
-    // Bỏ những buổi có giờ không hợp lệ thay vì để database ném lỗi 500 giữa
-    // chừng và người dùng mất cả mẻ.
-    const hopLe = dto.events.filter(
-      (e) => new Date(e.endAt).getTime() > new Date(e.startAt).getTime(),
-    );
-    if (hopLe.length === 0) {
-      throw new BadRequestException('None of the selected events has a valid time range.');
-    }
-
-    const { data, error } = await this.supabase.client
-      .from('board_meetings')
-      .insert(
-        hopLe.map((e) => ({
-          board_id: dto.boardId,
-          org_id: board.orgId,
-          title: e.title.trim().slice(0, 200),
-          description: e.description?.trim() || null,
-          start_at: new Date(e.startAt).toISOString(),
-          end_at: new Date(e.endAt).toISOString(),
-          time_zone: dto.timeZone,
-          // Buổi nhập từ file KHÔNG tự bật nhắc: nhập một học kỳ mà mỗi buổi
-          // đều nhắc là chuông kêu suốt. Người dùng bật lại từng buổi nếu muốn.
-          remind_minutes: 0,
-          google_event_id: null,
-          google_html_link: null,
-          meet_url: e.meetUrl || null,
-          created_by: uid,
-          recurrence: null,
-        })),
-      )
-      .select();
-
-    if (error || !data?.length) {
-      this.logger.error(`Nhập lịch thất bại (board=${dto.boardId}): ${error?.message}`);
-      throw new InternalServerErrorException('Failed to import the meetings.');
-    }
-    const tatCa = data as MeetingRow[];
-
-    const { error: loiNguoiDu } = await this.supabase.client
-      .from('board_meeting_attendees')
-      .insert(
-        tatCa.flatMap((r) => [...nguoiDu].map((u) => ({ meeting_id: r.id, user_id: u }))),
-      );
-    if (loiNguoiDu) {
-      await this.supabase.client
-        .from('board_meetings')
-        .delete()
-        .in('id', tatCa.map((r) => r.id));
-      this.logger.error(`Lưu người dự thất bại: ${loiNguoiDu.message}`);
-      throw new InternalServerErrorException('Failed to save the attendees.');
-    }
-
-    void this.baoNhapHangLoat(uid, tatCa.length, [...nguoiDu], {
-      boardId: dto.boardId,
-      boardName,
-      orgSlug,
-    });
-
-    return { daTao: tatCa.length, boQua: dto.events.length - hopLe.length };
-  }
-
-  /** MỘT thông báo tóm tắt cho cả mẻ nhập — xem ghi chú ở `nhapHangLoat`. */
-  private async baoNhapHangLoat(
-    actorUid: string,
-    soBuoi: number,
-    nguoiNhan: string[],
-    noi: { boardId: string; boardName: string; orgSlug: string },
-  ): Promise<void> {
-    try {
-      const ten = await this.access.tenHienThi(actorUid);
-      for (const uid of nguoiNhan) {
-        if (uid === actorUid) continue;
-        this.realtime.emitToUser(uid, 'meeting.scheduled', actorUid, {
-          meetingId: '',
-          boardId: noi.boardId,
-          boardName: noi.boardName,
-          orgSlug: noi.orgSlug,
-          title: `${soBuoi} imported meeting${soBuoi > 1 ? 's' : ''}`,
-          startAt: new Date().toISOString(),
-          byUserName: ten,
-        });
-      }
-    } catch (e) {
-      this.logger.warn(`Không báo được mẻ nhập: ${(e as Error).message}`);
-    }
-  }
 
 
   // ------------------------------------------------------------------ nội bộ

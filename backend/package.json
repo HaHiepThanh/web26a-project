@@ -25,7 +25,7 @@
     "kiem-tra:hoa": "python3 scripts/kiem-tra-hoa.py",
     "kiem-tra:hoang": "python3 scripts/kiem-tra-hoang.py",
     "kiem-tra:websocket": "node scripts/kiem-tra-websocket.mjs",
-    "kiem-tra": "npm run kiem-tra:huy && npm run kiem-tra:hoa && npm run kiem-tra:hoang && npm run kiem-tra:websocket && npm run kiem-tra:pham-vi && npm run kiem-tra:bo-sung && npm run kiem-tra:ai && npm run kiem-tra:bao-mat && npm run kiem-tra:link-moi && npm run kiem-tra:chong-xam-nhap && npm run kiem-tra:lich-hop && npm run kiem-tra:kiem-duyet-anh && npm run kiem-tra:nhap-lich",
+    "kiem-tra": "npm run kiem-tra:huy && npm run kiem-tra:hoa && npm run kiem-tra:hoang && npm run kiem-tra:websocket && npm run kiem-tra:pham-vi && npm run kiem-tra:bo-sung && npm run kiem-tra:ai && npm run kiem-tra:bao-mat && npm run kiem-tra:link-moi && npm run kiem-tra:chong-xam-nhap && npm run kiem-tra:lich-hop && npm run kiem-tra:kiem-duyet-anh",
     "kiem-tra:pham-vi": "node scripts/kiem-tra-pham-vi.mjs",
     "kiem-tra:bo-sung": "node scripts/kiem-tra-bo-sung.mjs",
     "kiem-tra:ai": "node scripts/kiem-tra-ai.mjs",
@@ -33,8 +33,7 @@
     "kiem-tra:link-moi": "node scripts/kiem-tra-link-moi.mjs",
     "kiem-tra:chong-xam-nhap": "node scripts/kiem-tra-chong-xam-nhap.mjs",
     "kiem-tra:lich-hop": "node scripts/kiem-tra-lich-hop.mjs",
-    "kiem-tra:kiem-duyet-anh": "node scripts/kiem-tra-kiem-duyet-anh.mjs",
-    "kiem-tra:nhap-lich": "node scripts/kiem-tra-nhap-lich.mjs"
+    "kiem-tra:kiem-duyet-anh": "node scripts/kiem-tra-kiem-duyet-anh.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.115.0",
@@ -48,7 +47,6 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "firebase-admin": "^14.2.0",
-    "node-ical": "^0.27.1",
     "nodemailer": "^9.0.6",
     "pdf-parse": "^1.1.1",
     "reflect-metadata": "^0.2.2",
