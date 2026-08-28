@@ -7,7 +7,9 @@ const BOARD = [HIEP, PHUONG, HOA];
 
 /** Rút gọn: chỉ lấy cặp (chuỗi gõ ra, uid) cho dễ đọc kỳ vọng. */
 const ids = (s: string, tv = BOARD) =>
-  batTen(s, tv).map((t) => `${t.nguyenVan}=${t.ids.join('|')}`).sort();
+  batTen(s, tv)
+    .map((t) => `${t.nguyenVan}=${t.ids.join('|')}`)
+    .sort();
 
 describe('chuanHoa', () => {
   it('bỏ dấu, viết thường, đổi đ thành d', () => {
@@ -120,7 +122,9 @@ describe('batTen — vặt', () => {
 
   it('tên hiển thị chỉ một từ vẫn dùng được', () => {
     const tv = [{ id: 'u-x', displayName: 'websocketb' }];
-    expect(batTen('websocketb ơi lên kế hoạch phân quyền', tv)[0].ids).toEqual(['u-x']);
+    expect(batTen('websocketb ơi lên kế hoạch phân quyền', tv)[0].ids).toEqual([
+      'u-x',
+    ]);
     // nhưng vẫn phải có dấu hiệu gọi
     expect(batTen('sửa lại websocketb cho đúng', tv)).toEqual([]);
   });

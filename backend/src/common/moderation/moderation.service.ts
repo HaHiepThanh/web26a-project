@@ -1,10 +1,25 @@
-import { BadRequestException, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  OnModuleInit,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createHash } from 'node:crypto';
-import { doanLoaiAnh, DUOI_THEO_LOAI, LoaiAnh, MIME_THEO_LOAI } from './anh.util';
+import {
+  doanLoaiAnh,
+  DUOI_THEO_LOAI,
+  LoaiAnh,
+  MIME_THEO_LOAI,
+} from './anh.util';
 import { laTepThucThi } from './tep-thuc-thi.util';
 import {
-  KetQuaKiemDuyet, MucDo, NGUONG_CHAN, NhaCungCapKiemDuyet, NhomViPham, TEN_NHOM,
+  KetQuaKiemDuyet,
+  MucDo,
+  NGUONG_CHAN,
+  NhaCungCapKiemDuyet,
+  NhomViPham,
+  TEN_NHOM,
 } from './moderation.types';
 import { GeminiVisionProvider } from './gemini-vision.provider';
 import { docCauHinh } from './cau-hinh.util';
@@ -53,7 +68,8 @@ export class ModerationService implements OnModuleInit {
     // `MODERATION_ENABLED=false` mới tắt được — tắt là một quyết định, không
     // được là hệ quả tình cờ của việc thiếu biến môi trường.
     const khai = docCauHinh(config, 'MODERATION_ENABLED');
-    this.bat = khai === undefined ? this.nhaCungCap.length > 0 : khai !== 'false';
+    this.bat =
+      khai === undefined ? this.nhaCungCap.length > 0 : khai !== 'false';
   }
 
   onModuleInit(): void {
@@ -122,7 +138,17 @@ export class ModerationService implements OnModuleInit {
     }
 
     if (!this.bat) {
-      return { mime, duoi, ketQua: { choPhep: true, viPham: [], diem: {}, nguon: [], coLoi: false } };
+      return {
+        mime,
+        duoi,
+        ketQua: {
+          choPhep: true,
+          viPham: [],
+          diem: {},
+          nguon: [],
+          coLoi: false,
+        },
+      };
     }
 
     // 3. Ảnh này đã bị từ chối trước đó chưa — chặn ngay, khỏi tốn lượt gọi.
@@ -183,7 +209,9 @@ export class ModerationService implements OnModuleInit {
     // nghi ngờ. Một `.exe` ở đó là đường phát tán mã độc mượn uy tín của app.
     const loaiThucThi = laTepThucThi(buffer, tenTep);
     if (loaiThucThi) {
-      this.logger.warn(`Chặn tệp thực thi (${boiCanh}): ${tenTep} — ${loaiThucThi}`);
+      this.logger.warn(
+        `Chặn tệp thực thi (${boiCanh}): ${tenTep} — ${loaiThucThi}`,
+      );
       throw new BadRequestException(
         `Executable files cannot be attached (detected: ${loaiThucThi}). ` +
           'Zip it or share a link instead.',
@@ -220,14 +248,16 @@ export class ModerationService implements OnModuleInit {
       const p = this.nhaCungCap[i];
       if (r.status === 'rejected') {
         coLoi = true;
-        this.logger.warn(`Nhà cung cấp ${p.ten} lỗi: ${String(r.reason).slice(0, 200)}`);
+        this.logger.warn(
+          `Nhà cung cấp ${p.ten} lỗi: ${String(r.reason).slice(0, 200)}`,
+        );
         return;
       }
       nguon.push(p.ten);
       for (const [k, v] of Object.entries(r.value)) {
         const nhom = k as NhomViPham;
         const cu = diem[nhom] ?? 0;
-        if ((v as MucDo) > cu) diem[nhom] = v as MucDo;
+        if (v > cu) diem[nhom] = v;
       }
     });
 

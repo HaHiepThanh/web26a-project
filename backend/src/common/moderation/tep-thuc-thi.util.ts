@@ -58,12 +58,42 @@ const CHU_KY: { ten: string; bytes: number[] }[] = [
  */
 const DUOI_CAM = new Set([
   // Windows — chạy ngay khi bấm đúp
-  'exe', 'com', 'scr', 'bat', 'cmd', 'pif', 'cpl', 'hta', 'msc',
-  'vbs', 'vbe', 'wsf', 'wsh', 'jse', 'ps1', 'psm1', 'reg', 'lnk', 'scf', 'inf',
+  'exe',
+  'com',
+  'scr',
+  'bat',
+  'cmd',
+  'pif',
+  'cpl',
+  'hta',
+  'msc',
+  'vbs',
+  'vbe',
+  'wsf',
+  'wsh',
+  'jse',
+  'ps1',
+  'psm1',
+  'reg',
+  'lnk',
+  'scf',
+  'inf',
   // Bộ cài đặt
-  'msi', 'msp', 'dmg', 'pkg', 'deb', 'rpm', 'apk', 'appx', 'app',
+  'msi',
+  'msp',
+  'dmg',
+  'pkg',
+  'deb',
+  'rpm',
+  'apk',
+  'appx',
+  'app',
   // Thư viện liên kết động / mã đã biên dịch
-  'dll', 'so', 'dylib', 'jar', 'class',
+  'dll',
+  'so',
+  'dylib',
+  'jar',
+  'class',
 ]);
 
 /**

@@ -11,9 +11,6 @@ import { AccessService } from '../../common/access/access.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 import { CreateMeetingDto } from './dto/create-meeting.dto';
 
-
-
-
 export interface MeetingAttendee {
   id: string;
   displayName: string | null;
@@ -138,7 +135,8 @@ export class MeetingsService {
     //
     // `occurrences` do client trải sẵn (xem ghi chú ở CreateMeetingDto). Ở đây
     // chỉ kiểm lại rồi ghi. Rỗng thì đúng một dòng như cũ.
-    const keoDai = new Date(dto.endAt).getTime() - new Date(dto.startAt).getTime();
+    const keoDai =
+      new Date(dto.endAt).getTime() - new Date(dto.startAt).getTime();
     const mocBatDau = dto.occurrences?.length ? dto.occurrences : [dto.startAt];
 
     const dong = mocBatDau.map((moc, i) => ({
@@ -179,7 +177,9 @@ export class MeetingsService {
     const { error: loiNguoiDu } = await this.supabase.client
       .from('board_meeting_attendees')
       .insert(
-        tatCa.flatMap((r) => [...nguoiDu].map((u) => ({ meeting_id: r.id, user_id: u }))),
+        tatCa.flatMap((r) =>
+          [...nguoiDu].map((u) => ({ meeting_id: r.id, user_id: u })),
+        ),
       );
 
     if (loiNguoiDu) {
@@ -189,7 +189,10 @@ export class MeetingsService {
       await this.supabase.client
         .from('board_meetings')
         .delete()
-        .in('id', tatCa.map((r) => r.id));
+        .in(
+          'id',
+          tatCa.map((r) => r.id),
+        );
       this.logger.error(`Lưu người dự thất bại: ${loiNguoiDu.message}`);
       throw new InternalServerErrorException('Failed to save the attendees.');
     }
@@ -201,8 +204,6 @@ export class MeetingsService {
 
     return this.toResponse(row, await this.layNguoiDu([row.id]));
   }
-
-
 
   // ------------------------------------------------------------------ nội bộ
 
@@ -304,7 +305,7 @@ export class MeetingsService {
     try {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
       const pdf = require('pdf-parse');
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       const res = (await pdf(buffer)) as { text?: string };
       const rawText: string = res?.text || '';
 

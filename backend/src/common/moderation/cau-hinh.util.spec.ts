@@ -47,7 +47,10 @@ describe('GeminiVisionProvider — chọn khoá', () => {
 
   it('có khoá riêng thì ưu tiên khoá riêng', () => {
     const p = new GeminiVisionProvider(
-      cfg({ MODERATION_GEMINI_API_KEY: 'khoa-rieng', GEMINI_API_KEY: 'khoa-chung' }),
+      cfg({
+        MODERATION_GEMINI_API_KEY: 'khoa-rieng',
+        GEMINI_API_KEY: 'khoa-chung',
+      }),
     );
     expect(p.bat).toBe(true);
   });

@@ -44,10 +44,7 @@ export class LabelsController {
   }
 
   @Delete(':id')
-  remove(
-    @CurrentUser() user: CurrentUserInfo,
-    @Param('id') labelId: string,
-  ) {
+  remove(@CurrentUser() user: CurrentUserInfo, @Param('id') labelId: string) {
     return this.labels.delete(user.uid, labelId);
   }
 

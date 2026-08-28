@@ -22,7 +22,9 @@ describe('shouldAnalyze — cổng lọc rẻ', () => {
     // Chính là yêu cầu gốc. Bản trước trượt cả ba dấu hiệu: không có '@',
     // "h.thanh" không phải chuỗi con của "hà hiệp thanh", và câu không có mốc
     // thời gian nào — nên Gemini không bao giờ được gọi.
-    expect(quaCong('ê H.Thanh, hãy lên kế hoạch chức năng thanh toán')).toBe(true);
+    expect(quaCong('ê H.Thanh, hãy lên kế hoạch chức năng thanh toán')).toBe(
+      true,
+    );
     expect(quaCong('P.Thanh lo phần giỏ hàng nhé')).toBe(true);
   });
 
@@ -50,7 +52,9 @@ describe('shouldAnalyze — cổng lọc rẻ', () => {
   });
 
   it('thiếu khoá thì tắt hẳn', () => {
-    const g = new GeminiService({ get: () => undefined } as unknown as ConfigService);
+    const g = new GeminiService({
+      get: () => undefined,
+    } as unknown as ConfigService);
     expect(g.shouldAnalyze('ê H.Thanh làm giúp phần này nhé', [])).toBe(false);
   });
 });
@@ -67,7 +71,13 @@ describe('detectTasks — prompt gửi cho model', () => {
           {
             content: {
               parts: [
-                { text: JSON.stringify({ isTask: false, confidence: 0, cards: [] }) },
+                {
+                  text: JSON.stringify({
+                    isTask: false,
+                    confidence: 0,
+                    cards: [],
+                  }),
+                },
               ],
             },
           },
@@ -95,7 +105,9 @@ describe('detectTasks — prompt gửi cho model', () => {
   it('nói THẲNG cho model biết H.Thanh là uid nào', async () => {
     // Model tự suy được, nhưng không ổn định — cùng câu, lúc ra Hiệp lúc ra
     // Phương. Đối chiếu sẵn thì nó chỉ còn việc trích đầu việc.
-    const prompt = await goi('ê H.Thanh, hãy lên kế hoạch chức năng thanh toán');
+    const prompt = await goi(
+      'ê H.Thanh, hãy lên kế hoạch chức năng thanh toán',
+    );
     expect(prompt).toContain('"h.thanh" → id="u-hiep" (Hà Hiệp Thanh)');
   });
 

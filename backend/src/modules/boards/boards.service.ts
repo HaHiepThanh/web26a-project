@@ -439,7 +439,10 @@ export class BoardsService {
     const slugByOrgId = new Map<string, string>();
     const nameByOrgId = new Map<string, string>();
     for (const m of memberships) {
-      const org = m.organizations as unknown as { name?: string; slug?: string } | null;
+      const org = m.organizations as unknown as {
+        name?: string;
+        slug?: string;
+      } | null;
       if (org?.slug) slugByOrgId.set(m.org_id as string, org.slug);
       if (org?.name) nameByOrgId.set(m.org_id as string, org.name);
     }
@@ -503,7 +506,9 @@ export class BoardsService {
         .from(BUCKET_NEN)
         .createSignedUrls(duongDan, NEN_URL_TTL);
       if (error) {
-        this.logger.warn(`Ký link ảnh nền khi search thất bại: ${error.message}`);
+        this.logger.warn(
+          `Ký link ảnh nền khi search thất bại: ${error.message}`,
+        );
       } else {
         for (const s of signed ?? []) {
           if (s.path && s.signedUrl) theoDuongDan.set(s.path, s.signedUrl);
@@ -615,7 +620,9 @@ export class BoardsService {
     if (duplicateBoard) {
       const existingMembers = await this.memberIdsOf(duplicateBoard.id);
       return (
-        await this.kyAnhNen([toBoard(duplicateBoard as BoardRow, existingMembers)])
+        await this.kyAnhNen([
+          toBoard(duplicateBoard as BoardRow, existingMembers),
+        ])
       )[0];
     }
 

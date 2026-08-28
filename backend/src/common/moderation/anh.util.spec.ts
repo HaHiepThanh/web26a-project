@@ -9,10 +9,21 @@ const chu = (s: string) => Buffer.from(s, 'ascii');
 describe('doanLoaiAnh — nhận dạng bằng magic bytes', () => {
   it('nhận đúng JPEG, PNG, GIF, WEBP', () => {
     expect(doanLoaiAnh(buf(0xff, 0xd8, 0xff, 0xe0))).toBe('jpeg');
-    expect(doanLoaiAnh(buf(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a))).toBe('png');
-    expect(doanLoaiAnh(Buffer.concat([chu('GIF89a'), Buffer.alloc(32)]))).toBe('gif');
     expect(
-      doanLoaiAnh(Buffer.concat([chu('RIFF'), Buffer.alloc(4), chu('WEBP'), Buffer.alloc(32)])),
+      doanLoaiAnh(buf(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a)),
+    ).toBe('png');
+    expect(doanLoaiAnh(Buffer.concat([chu('GIF89a'), Buffer.alloc(32)]))).toBe(
+      'gif',
+    );
+    expect(
+      doanLoaiAnh(
+        Buffer.concat([
+          chu('RIFF'),
+          Buffer.alloc(4),
+          chu('WEBP'),
+          Buffer.alloc(32),
+        ]),
+      ),
     ).toBe('webp');
   });
 
@@ -29,10 +40,24 @@ describe('doanLoaiAnh — nhận dạng bằng magic bytes', () => {
   it('RIFF mà KHÔNG phải WEBP thì không nhận nhầm', () => {
     // WAV và AVI cũng bắt đầu bằng "RIFF" — chỉ xét 4 byte đầu là nhận nhầm.
     expect(
-      doanLoaiAnh(Buffer.concat([chu('RIFF'), Buffer.alloc(4), chu('WAVE'), Buffer.alloc(32)])),
+      doanLoaiAnh(
+        Buffer.concat([
+          chu('RIFF'),
+          Buffer.alloc(4),
+          chu('WAVE'),
+          Buffer.alloc(32),
+        ]),
+      ),
     ).toBeNull();
     expect(
-      doanLoaiAnh(Buffer.concat([chu('RIFF'), Buffer.alloc(4), chu('AVI '), Buffer.alloc(32)])),
+      doanLoaiAnh(
+        Buffer.concat([
+          chu('RIFF'),
+          Buffer.alloc(4),
+          chu('AVI '),
+          Buffer.alloc(32),
+        ]),
+      ),
     ).toBeNull();
   });
 
@@ -43,7 +68,11 @@ describe('doanLoaiAnh — nhận dạng bằng magic bytes', () => {
   });
 
   it('nhận cả GIF87a lẫn GIF89a', () => {
-    expect(doanLoaiAnh(Buffer.concat([chu('GIF87a'), Buffer.alloc(32)]))).toBe('gif');
-    expect(doanLoaiAnh(Buffer.concat([chu('GIF89a'), Buffer.alloc(32)]))).toBe('gif');
+    expect(doanLoaiAnh(Buffer.concat([chu('GIF87a'), Buffer.alloc(32)]))).toBe(
+      'gif',
+    );
+    expect(doanLoaiAnh(Buffer.concat([chu('GIF89a'), Buffer.alloc(32)]))).toBe(
+      'gif',
+    );
   });
 });

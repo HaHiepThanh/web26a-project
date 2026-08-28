@@ -71,7 +71,10 @@ export interface TinNhanRa {
 function toUser(row: unknown): NguoiGui | null {
   const u = row as JoinedUserRow | null;
   if (!u) return null;
-  return { displayName: u.display_name ?? null, avatarUrl: u.avatar_url ?? null };
+  return {
+    displayName: u.display_name ?? null,
+    avatarUrl: u.avatar_url ?? null,
+  };
 }
 
 /**
@@ -87,7 +90,8 @@ function noiDung(row: { content: string; deleted_at: string | null }): string {
 /** Con trỏ phân trang: `<created_at>_<id>`. */
 export function docConTro(cursor: string): { at: string; id: string } {
   const cat = cursor.lastIndexOf('_');
-  if (cat <= 0) throw new BadRequestException('Con trỏ phân trang không hợp lệ.');
+  if (cat <= 0)
+    throw new BadRequestException('Con trỏ phân trang không hợp lệ.');
   return { at: cursor.slice(0, cat), id: cursor.slice(cat + 1) };
 }
 
@@ -129,7 +133,10 @@ export class ChatService {
     await this.access.assertBoardAccess(uid, boardId);
     const sb = this.supabase.client;
 
-    const n = Math.min(Math.max(Number(limit) || TRANG_MAC_DINH, 1), TRANG_TOI_DA);
+    const n = Math.min(
+      Math.max(Number(limit) || TRANG_MAC_DINH, 1),
+      TRANG_TOI_DA,
+    );
 
     let q = sb
       .from('messages')
@@ -185,7 +192,9 @@ export class ChatService {
     if (idGoc.length) {
       const { data } = await this.supabase.client
         .from('messages')
-        .select('id, user_id, content, deleted_at, users(display_name, avatar_url)')
+        .select(
+          'id, user_id, content, deleted_at, users(display_name, avatar_url)',
+        )
         .in('id', idGoc);
 
       for (const r of (data ?? []) as unknown as Record<string, unknown>[]) {
@@ -252,7 +261,7 @@ export class ChatService {
       throw new InternalServerErrorException('Failed to send message');
     }
 
-    const [created] = await this.gan([data as unknown as Record<string, unknown>]);
+    const [created] = await this.gan([data]);
 
     // Đây là lý do chính khiến dự án cần WebSocket: chat mà phải F5 mới thấy tin
     // của người khác thì không gọi là chat được.
@@ -320,7 +329,7 @@ export class ChatService {
       throw new InternalServerErrorException('Failed to edit message');
     }
 
-    return this.phatCapNhat(data as unknown as Record<string, unknown>, uid);
+    return this.phatCapNhat(data, uid);
   }
 
   /**
@@ -348,7 +357,7 @@ export class ChatService {
       throw new InternalServerErrorException('Failed to recall message');
     }
 
-    return this.phatCapNhat(data as unknown as Record<string, unknown>, uid);
+    return this.phatCapNhat(data, uid);
   }
 
   /** Lấy tin + kiểm quyền: phải xem được board VÀ phải là người gửi. */
@@ -384,12 +393,7 @@ export class ChatService {
     actorUid: string,
   ): Promise<TinNhanRa> {
     const [ra] = await this.gan([row]);
-    this.realtime.emitToBoard(
-      ra.boardId,
-      'chat.message.updated',
-      actorUid,
-      ra,
-    );
+    this.realtime.emitToBoard(ra.boardId, 'chat.message.updated', actorUid, ra);
     return ra;
   }
 

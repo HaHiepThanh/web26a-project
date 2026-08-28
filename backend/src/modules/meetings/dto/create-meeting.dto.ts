@@ -68,9 +68,12 @@ export class CreateMeetingDto {
    * Regex chặt vì chuỗi sẽ được ghi thẳng vào file .ics của người dùng.
    */
   @IsOptional()
-  @Matches(/^(RRULE:)?FREQ=(DAILY|WEEKLY|MONTHLY|YEARLY)(;[A-Z]+=[A-Za-z0-9,\-:+]+)*$/, {
-    message: 'recurrence must be an RRULE such as FREQ=WEEKLY;COUNT=12.',
-  })
+  @Matches(
+    /^(RRULE:)?FREQ=(DAILY|WEEKLY|MONTHLY|YEARLY)(;[A-Z]+=[A-Za-z0-9,\-:+]+)*$/,
+    {
+      message: 'recurrence must be an RRULE such as FREQ=WEEKLY;COUNT=12.',
+    },
+  )
   @MaxLength(200, { message: 'recurrence is too long.' })
   recurrence?: string | null;
 
@@ -89,8 +92,13 @@ export class CreateMeetingDto {
    */
   @IsOptional()
   @IsArray({ message: 'occurrences must be a list.' })
-  @IsISO8601({}, { each: true, message: 'each occurrence must be an ISO 8601 timestamp.' })
-  @ArrayMaxSize(200, { message: 'A repeating meeting cannot have more than 200 occurrences.' })
+  @IsISO8601(
+    {},
+    { each: true, message: 'each occurrence must be an ISO 8601 timestamp.' },
+  )
+  @ArrayMaxSize(200, {
+    message: 'A repeating meeting cannot have more than 200 occurrences.',
+  })
   occurrences?: string[];
 
   @IsOptional()

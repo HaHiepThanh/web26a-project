@@ -166,7 +166,7 @@ export class MailService {
         this.gayLuc = Date.now();
         this.logger.error(
           `ĐƯỜNG GỬI MAIL (${this.duong}) ĐANG HỎNG — tạm nghỉ ${NGHI_SAU_KHI_GAY_MS / 60_000} phút, ` +
-            `app sẽ quay về đường gửi mail của Firebase: ${(err as Error).message}`,
+            `app sẽ quay về đường gửi mail của Firebase: ${err.message}`,
         );
       } else {
         this.logger.error(`Gửi mail thất bại tới ${toEmail}:`, err);

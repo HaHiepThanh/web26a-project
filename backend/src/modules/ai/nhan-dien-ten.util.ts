@@ -36,14 +36,41 @@ export interface TenBatDuoc {
  * Đã bỏ dấu: "ê"→"e", "này"→"nay", "bạn"→"ban".
  */
 const DAU_HIEU_TRUOC = new Set([
-  'e', 'ey', 'hey', 'hi', 'nay', 'ban', 'chao', 'anh', 'chi', 'em', 'bro',
-  'ong', 'ba', 'co', 'chu', 'may', 'thang',
+  'e',
+  'ey',
+  'hey',
+  'hi',
+  'nay',
+  'ban',
+  'chao',
+  'anh',
+  'chi',
+  'em',
+  'bro',
+  'ong',
+  'ba',
+  'co',
+  'chu',
+  'may',
+  'thang',
 ]);
 
 /** Từ đứng SAU: "ơi"→"oi", "à"→"a", "nhé"→"nhe". */
 const DAU_HIEU_SAU = new Set([
-  'oi', 'a', 'ah', 'ơi', 'nhe', 'nha', 'ne', 'nhi', 'dau', 'ui', 'gium',
-  'giup', 'lam', 'co',
+  'oi',
+  'a',
+  'ah',
+  'ơi',
+  'nhe',
+  'nha',
+  'ne',
+  'nhi',
+  'dau',
+  'ui',
+  'gium',
+  'giup',
+  'lam',
+  'co',
 ]);
 
 /** Bí danh ngắn hơn ngần này thì bỏ — "a", "b" khớp lung tung. */
@@ -78,7 +105,10 @@ export function chuanHoa(s: string): string {
  * cả hai đều đúng nên cả hai đều được sinh ra.
  */
 function biDanh(displayName: string): { alias: string; kieu: KieuKhop }[] {
-  const tu = chuanHoa(displayName).replace(/[.,@]/g, ' ').split(' ').filter(Boolean);
+  const tu = chuanHoa(displayName)
+    .replace(/[.,@]/g, ' ')
+    .split(' ')
+    .filter(Boolean);
   if (!tu.length) return [];
 
   const ra: { alias: string; kieu: KieuKhop }[] = [];
@@ -182,7 +212,8 @@ export function batTen(
       if (!khop) continue;
 
       if (khop.kieu === 'ten-rieng') {
-        const truoc = cum[0].coAt || (i > 0 && DAU_HIEU_TRUOC.has(tu[i - 1].sach));
+        const truoc =
+          cum[0].coAt || (i > 0 && DAU_HIEU_TRUOC.has(tu[i - 1].sach));
         const sau =
           cum[dai - 1].coPhay ||
           (i + dai < tu.length && DAU_HIEU_SAU.has(tu[i + dai].sach));

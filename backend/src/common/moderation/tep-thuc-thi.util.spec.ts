@@ -1,7 +1,9 @@
 import { laTepThucThi } from './tep-thuc-thi.util';
 
-const b = (...d: number[]) => Buffer.concat([Buffer.from(d), Buffer.alloc(32, 0x41)]);
-const chu = (s: string) => Buffer.concat([Buffer.from(s, 'ascii'), Buffer.alloc(32, 0x41)]);
+const b = (...d: number[]) =>
+  Buffer.concat([Buffer.from(d), Buffer.alloc(32, 0x41)]);
+const chu = (s: string) =>
+  Buffer.concat([Buffer.from(s, 'ascii'), Buffer.alloc(32, 0x41)]);
 const SACH = chu('%PDF-1.7');
 
 describe('laTepThucThi — theo MAGIC BYTES', () => {
@@ -20,8 +22,12 @@ describe('laTepThucThi — theo MAGIC BYTES', () => {
   });
 
   it('bắt script có shebang, .class của Java và mã Android', () => {
-    expect(laTepThucThi(chu('#!/bin/bash'), 'note.txt')).toMatch(/shell script/);
-    expect(laTepThucThi(b(0xca, 0xfe, 0xba, 0xbe), 'x.dat')).toMatch(/executable/);
+    expect(laTepThucThi(chu('#!/bin/bash'), 'note.txt')).toMatch(
+      /shell script/,
+    );
+    expect(laTepThucThi(b(0xca, 0xfe, 0xba, 0xbe), 'x.dat')).toMatch(
+      /executable/,
+    );
     expect(laTepThucThi(b(0x64, 0x65, 0x78, 0x0a), 'x.dat')).toMatch(/Android/);
   });
 });
@@ -59,13 +65,22 @@ describe('laTepThucThi — KHÔNG chặn nhầm việc thật', () => {
     expect(laTepThucThi(SACH, 'bao-cao.pdf')).toBeNull();
     expect(laTepThucThi(chu('PK'), 'tai-lieu.docx')).toBeNull();
     expect(
-      laTepThucThi(b(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a), 'anh.png'),
+      laTepThucThi(
+        b(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a),
+        'anh.png',
+      ),
     ).toBeNull();
   });
 
   it('mã nguồn KHÔNG bị chặn — nhóm làm phần mềm hay gửi nhau xem hộ', () => {
     // Chúng cũng không TỰ chạy khi tải về, phải cố ý mở bằng trình thông dịch.
-    for (const t of ['index.js', 'app.ts', 'main.py', 'deploy.sh', 'Program.cs']) {
+    for (const t of [
+      'index.js',
+      'app.ts',
+      'main.py',
+      'deploy.sh',
+      'Program.cs',
+    ]) {
       expect(laTepThucThi(chu('console.log(1)'), t)).toBeNull();
     }
   });

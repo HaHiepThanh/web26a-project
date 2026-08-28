@@ -26,13 +26,23 @@ function taoSupabase() {
       const buoc: Record<string, unknown> = { table };
       nhatKy.push(buoc);
       const q: Record<string, unknown> = {};
-      for (const m of ['select', 'eq', 'in', 'order', 'limit', 'or', 'insert', 'update']) {
+      for (const m of [
+        'select',
+        'eq',
+        'in',
+        'order',
+        'limit',
+        'or',
+        'insert',
+        'update',
+      ]) {
         q[m] = (...args: unknown[]) => {
           buoc[m] = args;
           return q;
         };
       }
-      const lay = () => Promise.resolve(hang.shift() ?? { data: null, error: null });
+      const lay = () =>
+        Promise.resolve(hang.shift() ?? { data: null, error: null });
       q.single = lay;
       q.maybeSingle = lay;
       q.then = (res: (v: KetQua) => unknown, rej: (e: unknown) => unknown) =>
@@ -71,7 +81,9 @@ describe('ChatService', () => {
       { analyze: jest.fn() } as unknown as TaskSuggestionsService,
       {
         assertBoardAccess: jest.fn().mockResolvedValue({ orgId: 'org-1' }),
-        nguoiXemDuocBoard: jest.fn().mockResolvedValue({ uids: [], boardName: '', orgSlug: '' }),
+        nguoiXemDuocBoard: jest
+          .fn()
+          .mockResolvedValue({ uids: [], boardName: '', orgSlug: '' }),
       } as unknown as AccessService,
     );
   });
@@ -99,7 +111,9 @@ describe('ChatService', () => {
 
   describe('findAll', () => {
     it('lấy DƯ MỘT dòng để biết còn trang nữa không', async () => {
-      sb.hang.push({ data: Array.from({ length: 11 }, (_, i) => dong({ id: `m-${i}` })) });
+      sb.hang.push({
+        data: Array.from({ length: 11 }, (_, i) => dong({ id: `m-${i}` })),
+      });
       const ra = await service.findAll('u-1', 'b-1', undefined, 10);
 
       expect(ra.hasMore).toBe(true);
@@ -127,7 +141,12 @@ describe('ChatService', () => {
     it('tin ĐÃ THU HỒI không mang nội dung ra khỏi backend', async () => {
       // Trả nội dung rồi để giao diện tự ẩn là ẩn giả: mở tab Network là đọc được.
       sb.hang.push({
-        data: [dong({ content: 'lỡ tay gửi nhầm', deleted_at: '2026-01-02T00:00:00Z' })],
+        data: [
+          dong({
+            content: 'lỡ tay gửi nhầm',
+            deleted_at: '2026-01-02T00:00:00Z',
+          }),
+        ],
       });
       const ra = await service.findAll('u-1', 'b-1');
       expect(ra.messages[0].content).toBe('');
@@ -142,21 +161,39 @@ describe('ChatService', () => {
         ],
       });
       sb.hang.push({
-        data: [{ id: 'm-1', user_id: 'u-9', content: 'câu gốc', deleted_at: null, users: null }],
+        data: [
+          {
+            id: 'm-1',
+            user_id: 'u-9',
+            content: 'câu gốc',
+            deleted_at: null,
+            users: null,
+          },
+        ],
       });
 
       const ra = await service.findAll('u-1', 'b-1');
 
       expect(sb.nhatKy).toHaveLength(2); // 1 câu chính + 1 câu trích dẫn
       expect(sb.nhatKy[1].in).toEqual(['id', ['m-1']]); // gộp, không hỏi hai lần
-      expect(ra.messages.every((m) => m.replyTo?.content === 'câu gốc')).toBe(true);
+      expect(ra.messages.every((m) => m.replyTo?.content === 'câu gốc')).toBe(
+        true,
+      );
     });
 
     it('ô trích dẫn KHÔNG mang theo trích dẫn của chính nó', async () => {
       // Chặn lồng vô hạn ngay từ hợp đồng dữ liệu, không đợi tới giao diện.
       sb.hang.push({ data: [dong({ id: 'm-2', reply_to_id: 'm-1' })] });
       sb.hang.push({
-        data: [{ id: 'm-1', user_id: 'u-9', content: 'gốc', deleted_at: null, users: null }],
+        data: [
+          {
+            id: 'm-1',
+            user_id: 'u-9',
+            content: 'gốc',
+            deleted_at: null,
+            users: null,
+          },
+        ],
       });
       const ra = await service.findAll('u-1', 'b-1');
       expect(ra.messages[0].replyTo).not.toHaveProperty('replyTo');
@@ -182,7 +219,17 @@ describe('ChatService', () => {
     it('hợp lệ thì lưu reply_to_id và phát WebSocket', async () => {
       sb.hang.push({ data: { id: 'm-0' } }); // kiểm tra tin gốc
       sb.hang.push({ data: dong({ id: 'm-2', reply_to_id: 'm-0' }) }); // insert
-      sb.hang.push({ data: [{ id: 'm-0', user_id: 'u-9', content: 'gốc', deleted_at: null, users: null }] });
+      sb.hang.push({
+        data: [
+          {
+            id: 'm-0',
+            user_id: 'u-9',
+            content: 'gốc',
+            deleted_at: null,
+            users: null,
+          },
+        ],
+      });
 
       const ra = await service.create('b-1', 'u-1', 'trả lời nè', 'm-0');
 
@@ -191,7 +238,10 @@ describe('ChatService', () => {
       ]);
       expect(ra.replyTo?.content).toBe('gốc');
       expect(realtime.emitToBoard).toHaveBeenCalledWith(
-        'b-1', 'chat.message', 'u-1', expect.objectContaining({ id: 'm-2' }),
+        'b-1',
+        'chat.message',
+        'u-1',
+        expect.objectContaining({ id: 'm-2' }),
       );
     });
 
@@ -199,7 +249,9 @@ describe('ChatService', () => {
       sb.hang.push({ data: dong() });
       await service.create('b-1', 'u-1', 'bình thường');
       expect(sb.nhatKy).toHaveLength(1); // chỉ mỗi insert
-      expect(sb.nhatKy[0].insert).toEqual([expect.objectContaining({ reply_to_id: null })]);
+      expect(sb.nhatKy[0].insert).toEqual([
+        expect.objectContaining({ reply_to_id: null }),
+      ]);
     });
   });
 
@@ -227,16 +279,24 @@ describe('ChatService', () => {
 
     it('sửa xong đánh dấu edited_at và phát chat.message.updated', async () => {
       sb.hang.push({ data: dong() });
-      sb.hang.push({ data: dong({ content: 'đã đổi', edited_at: '2026-01-02T00:00:00Z' }) });
+      sb.hang.push({
+        data: dong({ content: 'đã đổi', edited_at: '2026-01-02T00:00:00Z' }),
+      });
 
       const ra = await service.update('u-1', 'm-1', 'đã đổi');
 
       expect(sb.nhatKy[1].update).toEqual([
-        expect.objectContaining({ content: 'đã đổi', edited_at: expect.any(String) }),
+        expect.objectContaining({
+          content: 'đã đổi',
+          edited_at: expect.any(String),
+        }),
       ]);
       expect(ra.editedAt).toBeTruthy();
       expect(realtime.emitToBoard).toHaveBeenCalledWith(
-        'b-1', 'chat.message.updated', 'u-1', expect.anything(),
+        'b-1',
+        'chat.message.updated',
+        'u-1',
+        expect.anything(),
       );
     });
 
@@ -244,7 +304,9 @@ describe('ChatService', () => {
       // Xoá dòng thì reply_to_id của mọi câu trả lời thành NULL và ô trích dẫn
       // mất sạch ngữ cảnh.
       sb.hang.push({ data: dong() });
-      sb.hang.push({ data: dong({ content: 'xin chào', deleted_at: '2026-01-02T00:00:00Z' }) });
+      sb.hang.push({
+        data: dong({ content: 'xin chào', deleted_at: '2026-01-02T00:00:00Z' }),
+      });
 
       const ra = await service.recall('u-1', 'm-1');
 

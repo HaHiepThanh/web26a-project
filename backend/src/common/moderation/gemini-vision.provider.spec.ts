@@ -13,7 +13,12 @@ function dung(): GeminiVisionProvider {
 function traLoi(body: unknown, ok = true, status = 200) {
   (global as unknown as { fetch: unknown }).fetch = jest
     .fn()
-    .mockResolvedValue({ ok, status, json: async () => body, text: async () => '' });
+    .mockResolvedValue({
+      ok,
+      status,
+      json: async () => body,
+      text: async () => '',
+    });
 }
 
 /** Phản hồi bình thường: model trả JSON điểm từng nhóm. */
@@ -32,9 +37,17 @@ describe('GeminiVisionProvider', () => {
     // kiểm, trong khi log vẫn báo "BẬT".
     traLoi(diem({}));
     const ra = await dung().cham(PNG, 'image/png');
-    expect(Object.keys(ra).sort()).toEqual(
-      ['bao_luc', 'gay_soc', 'goi_duc', 'khieu_dam', 'ma_tuy', 'mau_me', 'thu_ghet', 'tu_hai', 'vu_khi'],
-    );
+    expect(Object.keys(ra).sort()).toEqual([
+      'bao_luc',
+      'gay_soc',
+      'goi_duc',
+      'khieu_dam',
+      'ma_tuy',
+      'mau_me',
+      'thu_ghet',
+      'tu_hai',
+      'vu_khi',
+    ]);
   });
 
   it('đọc đúng điểm model trả về', async () => {
@@ -67,7 +80,10 @@ describe('GeminiVisionProvider', () => {
         promptFeedback: {
           blockReason: 'SAFETY',
           safetyRatings: [
-            { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', probability: 'HIGH' },
+            {
+              category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+              probability: 'HIGH',
+            },
           ],
         },
       });
@@ -100,7 +116,10 @@ describe('GeminiVisionProvider', () => {
         promptFeedback: {
           blockReason: 'SAFETY',
           safetyRatings: [
-            { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', probability: 'NEGLIGIBLE' },
+            {
+              category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+              probability: 'NEGLIGIBLE',
+            },
             { category: 'HARM_CATEGORY_HATE_SPEECH', probability: 'LOW' },
           ],
         },

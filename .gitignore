@@ -42,3 +42,7 @@ skills-lock.json
 # File environment Postman chua Firebase Web API key — gui truc tiep cho hoc vien,
 # KHONG commit (tranh GitHub secret scanning bao dong lai).
 backend/postman/*.postman_environment.json
+
+# Bộ nhớ đệm của lần deploy Firebase Hosting — sinh lại mỗi lần deploy,
+# không phải mã nguồn. Để nó được git theo dõi thì mỗi lần deploy lại bẩn cây.
+.firebase/

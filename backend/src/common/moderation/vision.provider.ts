@@ -49,7 +49,10 @@ export class VisionProvider implements NhaCungCapKiemDuyet {
     return !!this.apiKey;
   }
 
-  async cham(buffer: Buffer, _mime: string): Promise<Partial<Record<NhomViPham, MucDo>>> {
+  async cham(
+    buffer: Buffer,
+    _mime: string,
+  ): Promise<Partial<Record<NhomViPham, MucDo>>> {
     const controller = new AbortController();
     const hen = setTimeout(() => controller.abort(), TIMEOUT_MS);
     try {
@@ -68,7 +71,9 @@ export class VisionProvider implements NhaCungCapKiemDuyet {
       });
 
       if (!res.ok) {
-        throw new Error(`HTTP ${res.status} ${(await res.text()).slice(0, 200)}`);
+        throw new Error(
+          `HTTP ${res.status} ${(await res.text()).slice(0, 200)}`,
+        );
       }
 
       const data = (await res.json()) as {

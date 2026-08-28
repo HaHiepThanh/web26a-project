@@ -20,7 +20,9 @@ function brevoTraLoi(status: number, than = '') {
 
 /** Giả lập Brevo không với tới được (hết giờ, mất mạng). */
 function brevoNem(err: Error) {
-  (global as unknown as { fetch: unknown }).fetch = jest.fn().mockRejectedValue(err);
+  (global as unknown as { fetch: unknown }).fetch = jest
+    .fn()
+    .mockRejectedValue(err);
 }
 
 /** Gắn một transporter giả cho nhánh SMTP. */
@@ -60,7 +62,9 @@ describe('MailService — chọn đường gửi', () => {
   it('không khai gì thì daCauHinh = false và không gửi', async () => {
     const m = new MailService(cfg({}));
     expect(m.daCauHinh).toBe(false);
-    expect(await m.sendPasswordResetEmail('ai@do.com', 'https://x/y')).toBe(false);
+    expect(await m.sendPasswordResetEmail('ai@do.com', 'https://x/y')).toBe(
+      false,
+    );
   });
 
   it('SMTP ép IPv4 và siết thời gian chờ', () => {
@@ -81,7 +85,9 @@ describe('MailService — gửi qua Brevo', () => {
   it('gửi thành công', async () => {
     const f = brevoTraLoi(201);
     const m = new MailService(cfg(KHOA));
-    expect(await m.sendPasswordResetEmail('hv@gmail.com', 'https://x/y')).toBe(true);
+    expect(await m.sendPasswordResetEmail('hv@gmail.com', 'https://x/y')).toBe(
+      true,
+    );
 
     const [url, init] = f.mock.calls[0];
     expect(url).toBe('https://api.brevo.com/v3/smtp/email');
@@ -98,7 +104,9 @@ describe('MailService — gửi qua Brevo', () => {
       cfg({ BREVO_API_KEY: 'k', SMTP_USER: 'cu@gmail.com' }),
     );
     await m.sendPasswordResetEmail('hv@gmail.com', 'https://x/y');
-    expect(JSON.parse(f.mock.calls[0][1].body).sender.email).toBe('cu@gmail.com');
+    expect(JSON.parse(f.mock.calls[0][1].body).sender.email).toBe(
+      'cu@gmail.com',
+    );
   });
 
   it('có đặt trần thời gian chờ', async () => {
@@ -121,7 +129,9 @@ describe('MailService — cầu dao khi đường gửi hỏng', () => {
     brevoTraLoi(401, 'unauthorized');
     const m = new MailService(cfg(KHOA));
     expect(m.daCauHinh).toBe(true);
-    expect(await m.sendPasswordResetEmail('hv@gmail.com', 'https://x/y')).toBe(false);
+    expect(await m.sendPasswordResetEmail('hv@gmail.com', 'https://x/y')).toBe(
+      false,
+    );
     expect(m.daCauHinh).toBe(false);
   });
 
@@ -135,9 +145,11 @@ describe('MailService — cầu dao khi đường gửi hỏng', () => {
   });
 
   it('không với tới được Brevo (hết giờ) hạ cầu dao', async () => {
-    brevoNem(Object.assign(new Error('The operation was aborted'), {
-      name: 'TimeoutError',
-    }));
+    brevoNem(
+      Object.assign(new Error('The operation was aborted'), {
+        name: 'TimeoutError',
+      }),
+    );
     const m = new MailService(cfg(KHOA));
     await m.sendPasswordResetEmail('hv@gmail.com', 'https://x/y');
     expect(m.daCauHinh).toBe(false);
@@ -159,8 +171,12 @@ describe('MailService — cầu dao khi đường gửi hỏng', () => {
         command: 'CONN',
       });
     });
-    const m = new MailService(cfg({ SMTP_USER: 'a@gmail.com', SMTP_PASS: 'x' }));
-    expect(await m.sendPasswordResetEmail('hv@gmail.com', 'https://x/y')).toBe(false);
+    const m = new MailService(
+      cfg({ SMTP_USER: 'a@gmail.com', SMTP_PASS: 'x' }),
+    );
+    expect(await m.sendPasswordResetEmail('hv@gmail.com', 'https://x/y')).toBe(
+      false,
+    );
     expect(m.daCauHinh).toBe(false);
   });
 
@@ -185,7 +201,9 @@ describe('MailService — cầu dao khi đường gửi hỏng', () => {
 
     jest.spyOn(Date, 'now').mockReturnValue(Date.now() + 6 * 60_000);
     brevoTraLoi(201);
-    expect(await m.sendPasswordResetEmail('hv@gmail.com', 'https://x/y')).toBe(true);
+    expect(await m.sendPasswordResetEmail('hv@gmail.com', 'https://x/y')).toBe(
+      true,
+    );
     jest.restoreAllMocks();
     expect(m.daCauHinh).toBe(true);
   });

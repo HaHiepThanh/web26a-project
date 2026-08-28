@@ -540,8 +540,13 @@ export class OrganizationsService {
       .eq('user_id', callerUid)
       .maybeSingle();
 
-    if (!callerMember || (callerMember.role !== 'owner' && callerMember.role !== 'admin')) {
-      throw new ForbiddenException('You do not have permission to remove members.');
+    if (
+      !callerMember ||
+      (callerMember.role !== 'owner' && callerMember.role !== 'admin')
+    ) {
+      throw new ForbiddenException(
+        'You do not have permission to remove members.',
+      );
     }
 
     const { data: target, error } = await this.supabase.client
@@ -685,7 +690,9 @@ export class OrganizationsService {
       .eq('id', orgId);
 
     if (error) {
-      this.logger.error(`Xoá tổ chức thất bại (org=${orgId}): ${error.message}`);
+      this.logger.error(
+        `Xoá tổ chức thất bại (org=${orgId}): ${error.message}`,
+      );
       throw new InternalServerErrorException('Failed to delete organization');
     }
 

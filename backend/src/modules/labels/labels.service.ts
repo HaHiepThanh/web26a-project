@@ -249,7 +249,8 @@ export class LabelsService {
       .eq('id', labelId)
       .maybeSingle();
     if (labelError) {
-      if (laUuidSai(labelError)) throw new NotFoundException('Label not found.');
+      if (laUuidSai(labelError))
+        throw new NotFoundException('Label not found.');
       throw new InternalServerErrorException('Failed to load label.');
     }
     if (!label) {
@@ -288,7 +289,8 @@ export class LabelsService {
       .eq('id', labelId)
       .maybeSingle();
     if (labelError) {
-      if (laUuidSai(labelError)) throw new NotFoundException('Label not found.');
+      if (laUuidSai(labelError))
+        throw new NotFoundException('Label not found.');
       throw new InternalServerErrorException('Failed to load label.');
     }
     if (!label) {
@@ -298,7 +300,10 @@ export class LabelsService {
     await this.access.assertBoardAccess(uid, label.board_id as string);
 
     // Gỡ liên kết khỏi các card
-    await this.supabase.client.from('card_labels').delete().eq('label_id', labelId);
+    await this.supabase.client
+      .from('card_labels')
+      .delete()
+      .eq('label_id', labelId);
 
     const { error } = await this.supabase.client
       .from('labels')
@@ -308,6 +313,8 @@ export class LabelsService {
       throw new InternalServerErrorException('Failed to delete label.');
     }
 
-    this.realtime.emitToBoard(label.board_id as string, 'label.deleted', uid, { id: labelId });
+    this.realtime.emitToBoard(label.board_id as string, 'label.deleted', uid, {
+      id: labelId,
+    });
   }
 }

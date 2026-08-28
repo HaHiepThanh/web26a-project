@@ -52,7 +52,9 @@ const NHAN_AN_TOAN: Record<string, NhomViPham> = {
  */
 const RESPONSE_SCHEMA = {
   type: 'OBJECT',
-  properties: Object.fromEntries(NHOM_TAT_CA.map((n) => [n, { type: 'INTEGER' }])),
+  properties: Object.fromEntries(
+    NHOM_TAT_CA.map((n) => [n, { type: 'INTEGER' }]),
+  ),
   required: NHOM_TAT_CA,
 };
 
@@ -93,7 +95,11 @@ export class GeminiVisionProvider implements NhaCungCapKiemDuyet {
     //    Khoá thuộc PROJECT KHÁC thì có hạn mức riêng, nên tách được là tách.
     // `docCauHinh` coi chuỗi rỗng là chưa đặt — `??` thì không, và dòng
     // `MODERATION_GEMINI_API_KEY=` để trống từng làm tắt cả nhà cung cấp.
-    this.apiKey = docCauHinh(config, 'MODERATION_GEMINI_API_KEY', 'GEMINI_API_KEY');
+    this.apiKey = docCauHinh(
+      config,
+      'MODERATION_GEMINI_API_KEY',
+      'GEMINI_API_KEY',
+    );
     // Model riêng cho kiểm duyệt, tách khỏi `GEMINI_MODEL` của phần gợi ý thẻ:
     // hai việc có yêu cầu khác nhau và có thể cần đổi model độc lập.
     this.model =
@@ -105,7 +111,10 @@ export class GeminiVisionProvider implements NhaCungCapKiemDuyet {
     return !!this.apiKey;
   }
 
-  async cham(buffer: Buffer, mime: string): Promise<Partial<Record<NhomViPham, MucDo>>> {
+  async cham(
+    buffer: Buffer,
+    mime: string,
+  ): Promise<Partial<Record<NhomViPham, MucDo>>> {
     const controller = new AbortController();
     const hen = setTimeout(() => controller.abort(), TIMEOUT_MS);
     try {
@@ -124,7 +133,12 @@ export class GeminiVisionProvider implements NhaCungCapKiemDuyet {
             {
               role: 'user',
               parts: [
-                { inlineData: { mimeType: mime, data: buffer.toString('base64') } },
+                {
+                  inlineData: {
+                    mimeType: mime,
+                    data: buffer.toString('base64'),
+                  },
+                },
               ],
             },
           ],
@@ -140,7 +154,9 @@ export class GeminiVisionProvider implements NhaCungCapKiemDuyet {
       });
 
       if (!res.ok) {
-        throw new Error(`HTTP ${res.status} ${(await res.text()).slice(0, 200)}`);
+        throw new Error(
+          `HTTP ${res.status} ${(await res.text()).slice(0, 200)}`,
+        );
       }
 
       const data = (await res.json()) as {
@@ -171,7 +187,10 @@ export class GeminiVisionProvider implements NhaCungCapKiemDuyet {
           const nhom = NHAN_AN_TOAN[r.category ?? ''];
           // Chỉ lấy nhãn thực sự cao; Gemini trả về CẢ những nhãn mức
           // NEGLIGIBLE cho mọi ảnh, gom hết vào là ảnh nào cũng vi phạm.
-          if (nhom && (r.probability === 'HIGH' || r.probability === 'MEDIUM')) {
+          if (
+            nhom &&
+            (r.probability === 'HIGH' || r.probability === 'MEDIUM')
+          ) {
             ra[nhom] = 3;
           }
         }
@@ -194,7 +213,9 @@ export class GeminiVisionProvider implements NhaCungCapKiemDuyet {
         // INTEGER, không ép khoảng giá trị. Model trả 7 hay -1 đều lọt qua
         // schema rồi làm hỏng phép so ngưỡng.
         const v = Number(tho[n]);
-        ra[n] = (Number.isFinite(v) ? Math.min(3, Math.max(0, Math.round(v))) : 0) as MucDo;
+        ra[n] = (
+          Number.isFinite(v) ? Math.min(3, Math.max(0, Math.round(v))) : 0
+        ) as MucDo;
       }
       return ra;
     } finally {

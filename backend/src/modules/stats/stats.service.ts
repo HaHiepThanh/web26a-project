@@ -93,11 +93,7 @@ export class StatsService {
     // thấy đúng ảnh thật, không bị rơi về chữ cái đầu.
     const workloadRows = (workloadRes.data ?? []) as Record<string, unknown>[];
     const userIds = [
-      ...new Set(
-        workloadRows
-          .map((r) => r.user_id as string)
-          .filter(Boolean),
-      ),
+      ...new Set(workloadRows.map((r) => r.user_id as string).filter(Boolean)),
     ];
 
     const userMap = new Map<

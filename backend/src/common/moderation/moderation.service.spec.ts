@@ -9,7 +9,10 @@ const PNG = Buffer.concat([
   Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
   Buffer.alloc(64, 0x41),
 ]);
-const GIF = Buffer.concat([Buffer.from('GIF89a', 'ascii'), Buffer.alloc(64, 0x41)]);
+const GIF = Buffer.concat([
+  Buffer.from('GIF89a', 'ascii'),
+  Buffer.alloc(64, 0x41),
+]);
 const PDF = Buffer.from('%PDF-1.7\n%aaaaaaaaaaaaaaaa', 'ascii');
 
 /** Ảnh PNG khác nhau về nội dung → hash khác nhau (để thử bộ nhớ hash). */
@@ -32,12 +35,17 @@ function nhaCungCap(
       if (ket instanceof Error) throw ket;
       return ket;
     },
-  } as NhaCungCapKiemDuyet & { soLanGoi: number };
+  };
 }
 
 /** Dựng service với danh sách nhà cung cấp tuỳ ý (bỏ qua DI thật). */
-function dungService(ds: NhaCungCapKiemDuyet[], bat = 'true'): ModerationService {
-  const config = { get: (k: string) => (k === 'MODERATION_ENABLED' ? bat : undefined) };
+function dungService(
+  ds: NhaCungCapKiemDuyet[],
+  bat = 'true',
+): ModerationService {
+  const config = {
+    get: (k: string) => (k === 'MODERATION_ENABLED' ? bat : undefined),
+  };
   const svc = new ModerationService(
     config as unknown as ConfigService,
     { ten: 'vision', bat: false } as unknown as VisionProvider,
@@ -52,7 +60,9 @@ describe('ModerationService', () => {
   describe('cửa vào: định dạng', () => {
     it('từ chối file không phải ảnh', async () => {
       const svc = dungService([nhaCungCap('a', {})]);
-      await expect(svc.kiemTra(PDF, 'test')).rejects.toThrow(BadRequestException);
+      await expect(svc.kiemTra(PDF, 'test')).rejects.toThrow(
+        BadRequestException,
+      );
       await expect(svc.kiemTra(PDF, 'test')).rejects.toThrow(/not a valid/i);
     });
 
@@ -71,7 +81,9 @@ describe('ModerationService', () => {
         Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
         Buffer.alloc(9 * 1024 * 1024, 0x41),
       ]);
-      await expect(svc.kiemTra(to, 'test')).rejects.toThrow(/cannot be content-checked/i);
+      await expect(svc.kiemTra(to, 'test')).rejects.toThrow(
+        /cannot be content-checked/i,
+      );
       expect(p.soLanGoi).toBe(0);
     });
 
@@ -97,7 +109,9 @@ describe('ModerationService', () => {
     it('câu báo lỗi nêu đúng nhóm vi phạm, không lộ tên kỹ thuật', async () => {
       const svc = dungService([nhaCungCap('a', { bao_luc: 3, mau_me: 3 })]);
       await expect(svc.kiemTra(PNG, 'test')).rejects.toThrow(/violence/i);
-      await expect(svc.kiemTra(pngKhac(2), 'test')).rejects.not.toThrow(/bao_luc/);
+      await expect(svc.kiemTra(pngKhac(2), 'test')).rejects.not.toThrow(
+        /bao_luc/,
+      );
     });
   });
 
@@ -132,12 +146,16 @@ describe('ModerationService', () => {
   describe('fail-closed', () => {
     it('MỌI nhà cung cấp lỗi → CHẶN, không cho qua', async () => {
       const svc = dungService([nhaCungCap('a', new Error('mạng hỏng'))]);
-      await expect(svc.kiemTra(PNG, 'test')).rejects.toThrow(/could not be checked/i);
+      await expect(svc.kiemTra(PNG, 'test')).rejects.toThrow(
+        /could not be checked/i,
+      );
     });
 
     it('câu báo lỗi nói đó là lỗi hệ thống, KHÔNG đổ cho ảnh người dùng', async () => {
       const svc = dungService([nhaCungCap('a', new Error('timeout'))]);
-      await expect(svc.kiemTra(PNG, 'test')).rejects.not.toThrow(/blocked|content check \(/i);
+      await expect(svc.kiemTra(PNG, 'test')).rejects.not.toThrow(
+        /blocked|content check \(/i,
+      );
     });
 
     it('một bên lỗi nhưng bên còn lại thấy vi phạm → vẫn chặn đúng lý do', async () => {
@@ -155,12 +173,16 @@ describe('ModerationService', () => {
         nhaCungCap('a', new Error('sập')),
         nhaCungCap('b', { khieu_dam: 0 }),
       ]);
-      await expect(svc.kiemTra(PNG, 'test')).rejects.toThrow(/could not be checked/i);
+      await expect(svc.kiemTra(PNG, 'test')).rejects.toThrow(
+        /could not be checked/i,
+      );
     });
 
     it('KHÔNG có nhà cung cấp nào mà vẫn bật → chặn hết (cấu hình sai)', async () => {
       const svc = dungService([]);
-      await expect(svc.kiemTra(PNG, 'test')).rejects.toThrow(/could not be checked/i);
+      await expect(svc.kiemTra(PNG, 'test')).rejects.toThrow(
+        /could not be checked/i,
+      );
     });
   });
 
@@ -183,7 +205,9 @@ describe('ModerationService', () => {
       await expect(svc.kiemTra(PNG, 'test')).rejects.toThrow();
       expect(p.soLanGoi).toBe(1);
 
-      await expect(svc.kiemTra(PNG, 'test')).rejects.toThrow(/rejected by the content check/i);
+      await expect(svc.kiemTra(PNG, 'test')).rejects.toThrow(
+        /rejected by the content check/i,
+      );
       expect(p.soLanGoi).toBe(1); // không tăng
     });
 
@@ -216,7 +240,9 @@ describe('ModerationService', () => {
         },
       };
       const svc = dungService([p]);
-      await expect(svc.kiemTra(PNG, 'test')).rejects.toThrow(/could not be checked/i);
+      await expect(svc.kiemTra(PNG, 'test')).rejects.toThrow(
+        /could not be checked/i,
+      );
 
       hong = false; // API hồi phục
       await expect(svc.kiemTra(PNG, 'test')).resolves.toBeTruthy();
@@ -227,20 +253,26 @@ describe('ModerationService', () => {
     it('tài liệu không phải ảnh thì cho qua, không gọi API', async () => {
       const p = nhaCungCap('a', { khieu_dam: 3 });
       const svc = dungService([p]);
-      await expect(svc.kiemTraNeuLaAnh(PDF, 'test')).resolves.toEqual({ laAnh: false });
+      await expect(svc.kiemTraNeuLaAnh(PDF, 'test')).resolves.toEqual({
+        laAnh: false,
+      });
       expect(p.soLanGoi).toBe(0);
     });
 
     it('ảnh đội lốt tài liệu VẪN bị kiểm', async () => {
       // Nhận dạng theo magic bytes nên đổi tên thành .pdf không giúp gì.
       const svc = dungService([nhaCungCap('a', { khieu_dam: 3 })]);
-      await expect(svc.kiemTraNeuLaAnh(PNG, 'test')).rejects.toThrow(/sexual content/i);
+      await expect(svc.kiemTraNeuLaAnh(PNG, 'test')).rejects.toThrow(
+        /sexual content/i,
+      );
     });
 
     it('ảnh sạch thì báo là ảnh và trả mime thật', async () => {
       const svc = dungService([nhaCungCap('a', {})]);
       await expect(svc.kiemTraNeuLaAnh(PNG, 'test')).resolves.toEqual({
-        laAnh: true, mime: 'image/png', duoi: '.png',
+        laAnh: true,
+        mime: 'image/png',
+        duoi: '.png',
       });
     });
   });

@@ -33,8 +33,6 @@ export class MeetingsController {
     return this.meetings.parseGoogleCalendarPdf(file.buffer);
   }
 
-
-
   /**
    * POST /meetings — lưu bản sao cuộc họp VỪA ĐƯỢC TẠO trên Google Calendar.
    *
@@ -45,5 +43,4 @@ export class MeetingsController {
   create(@CurrentUser() user: CurrentUserInfo, @Body() body: CreateMeetingDto) {
     return this.meetings.create(user.uid, body);
   }
-
 }

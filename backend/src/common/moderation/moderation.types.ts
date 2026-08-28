@@ -59,5 +59,8 @@ export interface NhaCungCapKiemDuyet {
   readonly ten: string;
   readonly bat: boolean;
   /** Ném lỗi khi gọi hỏng — `ModerationService` bắt và xử theo fail-closed. */
-  cham(buffer: Buffer, mime: string): Promise<Partial<Record<NhomViPham, MucDo>>>;
+  cham(
+    buffer: Buffer,
+    mime: string,
+  ): Promise<Partial<Record<NhomViPham, MucDo>>>;
 }
