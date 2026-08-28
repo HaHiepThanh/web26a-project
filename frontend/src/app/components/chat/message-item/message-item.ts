@@ -44,6 +44,29 @@ export class MessageItem {
   /** Chỉ người gửi mới sửa/thu hồi được — server cũng kiểm lại, đây chỉ là phép lịch sự. */
   readonly suaDuoc = computed(() => this.isOwn() && !this.daThuHoi());
 
+  /** Tên THẬT của người gửi — `senderLabel()` trả "You" nên không dùng để ghép câu được. */
+  readonly tenNguoiGui = computed(() => {
+    const s = this.sender() ?? this.message().user;
+    return s?.displayName ?? s?.email ?? 'Anonymous';
+  });
+
+  /**
+   * Câu "ai trả lời ai" đặt phía trên bong bóng, theo lối Messenger.
+   *
+   * Thay cho việc ghi tên người được trích ngay trong ô trích dẫn: đọc "Bạn đã
+   * trả lời chính mình" nhanh hơn nhiều so với việc nhìn một cái tên rồi tự đối
+   * chiếu xem nó là ai.
+   */
+  readonly nhanTraLoi = computed(() => {
+    const q = this.trichDan();
+    if (!q) return '';
+    const toi = q.userId === this.currentUserId();
+    if (this.isOwn()) return toi ? 'Bạn đã trả lời chính mình' : `Bạn đã trả lời ${this.tenTrichDan()}`;
+    return toi
+      ? `${this.tenNguoiGui()} đã trả lời bạn`
+      : `${this.tenNguoiGui()} đã trả lời ${this.tenTrichDan()}`;
+  });
+
   readonly senderLabel = computed(() => {
     if (this.isOwn()) return 'You';
     const s = this.sender();
@@ -75,7 +98,6 @@ export class MessageItem {
   readonly tenTrichDan = computed(() => {
     const q = this.trichDan();
     if (!q) return '';
-    if (q.userId === this.currentUserId()) return 'You';
     return q.user?.displayName ?? 'Anonymous';
   });
 
@@ -99,31 +121,17 @@ export class MessageItem {
   });
 
   /**
-   * Ô trích dẫn cũng PHỤ THUỘC nền bong bóng, y hệt `mentionClass`.
+   * Ô trích dẫn — nay nằm NGOÀI bong bóng, ở hàng `chat-header` phía trên,
+   * đúng lối Messenger.
    *
-   * Trên `chat-bubble-primary` (nền primary đặc) mà dùng `bg-base-content/10`
-   * thì ô trích dẫn gần như tàng hình. Phải mượn `primary-content` — màu chữ
-   * tương phản mà daisyUI đã chọn sẵn cho nền đó.
+   * Nhờ ra ngoài mà nó hết phụ thuộc nền bong bóng: bản trước phải nuôi hai bộ
+   * màu (một cho nền primary đặc, một cho nền thường) vì đặt lồng bên trong.
+   * `place-items` của daisyUI tự căn nó về đúng phía trái/phải.
    */
-  readonly quoteClass = computed(() => {
-    // GỘP HẾT vào một chuỗi thay vì trộn `class="..."` tĩnh với `[class]`:
-    // hai nguồn cho cùng một thuộc tính là chỗ rất dễ tưởng nhầm cái nào thắng.
-    //
-    // `w-fit` chứ KHÔNG `w-full`: ô trích dẫn full-width kéo bong bóng nở hết
-    // cỡ, nên một câu "Ừ" hai ký tự cũng thành khối to bằng cả khung chat.
-    const chung =
-      'mb-1.5 block w-fit max-w-full overflow-hidden rounded-md border-l-[3px] ' +
-      'px-2 py-1 text-left leading-snug transition-opacity hover:opacity-75';
-    return this.isOwn()
-      ? `${chung} border-primary-content bg-primary-content/25 text-primary-content`
-      : `${chung} border-primary bg-base-100 text-base-content`;
-  });
-
-  /** Tên người được trích — mượn màu nhấn để mắt bắt được ngay đây là "của ai". */
-  readonly quoteNameClass = computed(() =>
-    this.isOwn()
-      ? 'block text-3xs font-bold text-primary-content'
-      : 'block text-3xs font-bold text-primary',
+  readonly quoteClass = computed(
+    () =>
+      'block w-fit max-w-full overflow-hidden rounded-md bg-base-200 px-2.5 py-1 ' +
+      'text-left text-3xs leading-snug text-base-content/70 transition-colors hover:bg-base-300',
   );
 
   /**

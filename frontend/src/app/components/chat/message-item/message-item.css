@@ -78,3 +78,34 @@
     animation: none;
   }
 }
+
+/**
+ * THEME SÁNG — chữ trong bong bóng của mình cho trắng hẳn.
+ *
+ * `--color-primary-content` của `winter` là một sắc xanh rất nhạt chứ không
+ * phải trắng; trên nền primary đặc thì đọc bị mờ. Chỉ đè ở `winter`: theme
+ * `night` có primary SÁNG màu nên chữ phải TỐI, ép trắng là mất chữ.
+ */
+[data-theme='winter'] .chat-bubble.chat-bubble-primary {
+  color: #fff;
+}
+
+/**
+ * THEME TỐI — viền cho bong bóng của NGƯỜI KHÁC.
+ *
+ * Nền bong bóng (`--color-base-300`) quá gần nền trang nên không thấy ranh
+ * giới tin nhắn. Bong bóng của mình không cần vì nó là màu primary, tự tách.
+ *
+ * ⚠️ Vẽ viền bằng bốn `drop-shadow` chứ KHÔNG dùng `border`/`outline`:
+ *    `border` làm đổi kích thước hộp nên đuôi lệch khỏi mép, còn `outline` thì
+ *    vẽ quanh hộp chữ nhật và cắt ngang đuôi. `drop-shadow` bám theo hình đã
+ *    vẽ ra nên viền ôm trọn cả đuôi.
+ *
+ * Lớp `.dang-sang` ghi đè `filter` này khi tin đang được nháy sáng — đúng thứ
+ * tự ưu tiên mong muốn.
+ */
+[data-theme='night'] .chat-bubble:not(.chat-bubble-primary) {
+  --vien-toi: color-mix(in oklch, var(--color-base-content) 22%, transparent);
+  filter: drop-shadow(1px 0 0 var(--vien-toi)) drop-shadow(-1px 0 0 var(--vien-toi))
+    drop-shadow(0 1px 0 var(--vien-toi)) drop-shadow(0 -1px 0 var(--vien-toi));
+}

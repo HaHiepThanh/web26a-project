@@ -7,19 +7,28 @@
     <app-user-avatar [userId]="message().userId" [name]="avatarName()" [avatarUrl]="avatarUrl()" [size]="28" />
   </div>
 
-  <div class="chat-header pb-0.5 font-semibold text-base-content/75">{{ senderLabel() }}</div>
-
-  <div [class]="bubbleClass()">
-    <!-- Ô trích dẫn. CHỈ MỘT TẦNG: `trichDan()` không mang theo trích dẫn của
-         chính nó, nên đây không có (và không được có) nhánh đệ quy nào. -->
+  <!-- Theo lối Messenger: ô trích dẫn nằm NGOÀI bong bóng, ở hàng phía trên.
+       `.chat-header` là `grid-row-start: 1` và `place-items` của daisyUI tự căn
+       nó về đúng phía, nên không phải dựng lại lưới. -->
+  <div class="chat-header max-w-full flex-col gap-0.5 pb-0.5 font-semibold text-base-content/75"
+    [class.items-end]="isOwn()" [class.items-start]="!isOwn()">
     @if (trichDan(); as q) {
+      <span class="flex items-center gap-1 text-base-content/55">
+        <svg class="h-2.5 w-2.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+          <path d="M9 17l-5-5 5-5M4 12h11a5 5 0 015 5v1" />
+        </svg>
+        {{ nhanTraLoi() }}
+      </span>
       <button type="button" [class]="quoteClass()" (click)="jumpTo.emit(q.id)"
         [title]="'Nhảy tới tin nhắn của ' + tenTrichDan()">
-        <span [class]="quoteNameClass()">{{ tenTrichDan() }}</span>
-        <span class="line-clamp-2 break-words text-3xs opacity-70" [class.italic]="!!q.deletedAt">{{ noiDungTrichDan() }}</span>
+        <span class="line-clamp-2 break-words" [class.italic]="!!q.deletedAt">{{ noiDungTrichDan() }}</span>
       </button>
+    } @else {
+      {{ senderLabel() }}
     }
+  </div>
 
+  <div [class]="bubbleClass()">
     @if (daThuHoi()) {
       <span class="italic opacity-60">{{ nhanThuHoi }}</span>
     } @else {

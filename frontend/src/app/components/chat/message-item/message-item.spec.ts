@@ -45,16 +45,37 @@ describe('MessageItem', () => {
   const chu = () => (fixture.nativeElement as HTMLElement).textContent ?? '';
 
   describe('ba ca lồng nhau', () => {
-    it('A trả lời B → ô trích dẫn ghi tên B', async () => {
+    it('A trả lời B → nhãn ghi "Bạn đã trả lời Bảo"', async () => {
       await dung(tin({ replyToId: 'm-0', replyTo: trichDan() }));
       expect(oTrichDan().length).toBe(1);
-      expect(chu()).toContain('Bảo');
+      expect(chu()).toContain('Bạn đã trả lời Bảo');
       expect(chu()).toContain('câu gốc');
     });
 
-    it('A trả lời CHÍNH MÌNH → ô trích dẫn ghi "You"', async () => {
+    it('A trả lời CHÍNH MÌNH → nhãn ghi "Bạn đã trả lời chính mình"', async () => {
+      // Theo lối Messenger: nói thẳng quan hệ thay vì bắt người đọc nhìn một
+      // cái tên rồi tự đối chiếu xem nó là ai.
       await dung(tin({ replyToId: 'm-0', replyTo: trichDan({ userId: A, user: { displayName: 'An', avatarUrl: null } }) }));
-      expect(chu()).toContain('You');
+      expect(chu()).toContain('Bạn đã trả lời chính mình');
+    });
+
+    it('NGƯỜI KHÁC trả lời MÌNH → nhãn ghi "... đã trả lời bạn"', async () => {
+      await dung(
+        tin({ userId: B, replyToId: 'm-0', replyTo: trichDan({ userId: A, user: { displayName: 'An', avatarUrl: null } }) }),
+        false,
+        A,
+      );
+      expect(chu()).toContain('đã trả lời bạn');
+    });
+
+    it('ô trích dẫn nằm NGOÀI bong bóng, ở hàng phía trên', async () => {
+      // Đặt lồng trong bong bóng thì phải nuôi hai bộ màu (nền primary đặc và
+      // nền thường); ra ngoài thì chỉ còn một, và đúng lối Messenger.
+      await dung(tin({ replyToId: 'm-0', replyTo: trichDan() }));
+      const trongHeader = fixture.debugElement.queryAll(By.css('.chat-header button[title^="Nhảy tới"]'));
+      const trongBubble = fixture.debugElement.queryAll(By.css('.chat-bubble button[title^="Nhảy tới"]'));
+      expect(trongHeader.length).toBe(1);
+      expect(trongBubble.length).toBe(0);
     });
 
     it('A trả lời một TIN VỐN ĐÃ LÀ TRẢ LỜI → vẫn CHỈ MỘT ô trích dẫn', async () => {
