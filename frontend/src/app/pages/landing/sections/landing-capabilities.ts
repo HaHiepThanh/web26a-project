@@ -125,8 +125,6 @@ export class LandingCapabilities {
     },
   ];
 
-  readonly total = this.groups.reduce((sum, g) => sum + g.items.length, 0);
-
   /** Thẻ đang mở, hoặc null khi cả bốn đều đóng. */
   readonly open = signal<number | null>(null);
 

@@ -13,9 +13,16 @@
       <h2 id="caps-title" class="lp-h2" appLineReveal>
         Four cards. <span class="lp-grad">Open one.</span>
       </h2>
+      <!-- ⚠️ KHÔNG đếm số ở đây nữa. Câu này từng ghi "{{ total }} things", một
+           con số tự cộng từ mảng bên dưới. Nghe thì chắc chắn, nhưng nó chỉ
+           đếm đúng những gì DANH SÁCH NÀY có — mà danh sách là bản chọn lọc,
+           không phải bản kiểm kê. Lần rà gần nhất tìm ra bảy tính năng đã làm
+           xong nhưng chưa từng được liệt kê, tức con số đã sai suốt một thời
+           gian mà không ai biết. Một con số chính xác giả còn tệ hơn không có
+           số: nó mời người đọc đi đếm, và họ sẽ đếm ra thiếu. -->
       <p class="lp-lead" appReveal [revealDelay]="120">
         Exactly what happens inside the app: click a card and the detail opens, checklist and all.
-        {{ total }} things, nothing gated behind a tier.
+        Nothing here is gated behind a tier.
       </p>
     </div>
 
