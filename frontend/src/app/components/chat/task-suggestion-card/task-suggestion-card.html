@@ -52,13 +52,19 @@
       </ul>
 
       <div class="mt-2.5 flex items-center gap-1.5">
-        <button type="button" class="btn btn-secondary btn-xs rounded-md flex-1 gap-1 font-bold" (click)="open.emit()">
-          <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+        <!-- ⚠️ Nhãn ngắn CÓ CHỦ ĐÍCH. "Review & Create" từng xuống dòng thành
+             2 dòng trong khung chat hẹp (~260-300px) — nút cao vọt lên so với
+             Dismiss bên cạnh, trông như vỡ layout. Rút còn "Review" là đủ
+             nghĩa: modal mở ra đã tự nói "AI suggested N card(s)" và có nút
+             "Create N card(s)" của riêng nó. `whitespace-nowrap` giữ chắc dù
+             sau này đổi nhãn dài hơn. -->
+        <button type="button" class="btn btn-secondary btn-xs rounded-md flex-1 gap-1 whitespace-nowrap font-bold" (click)="open.emit()">
+          <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
             <path d="M20 6L9 17l-5-5" />
           </svg>
-          Review &amp; Create
+          Review
         </button>
-        <button type="button" class="btn btn-ghost btn-xs rounded-md font-medium text-base-content/55" (click)="dismiss.emit()">
+        <button type="button" class="btn btn-ghost btn-xs shrink-0 rounded-md whitespace-nowrap font-medium text-base-content/55" (click)="dismiss.emit()">
           Dismiss
         </button>
       </div>

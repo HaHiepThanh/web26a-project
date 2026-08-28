@@ -192,7 +192,12 @@ export const TOUR_STEPS: readonly TourStep[] = [
     placement: 'bottom',
     dim: false,
     title: 'Talk next to the work',
-    body: 'The chat lives beside the board, not in another app. Drag its edge to resize, collapse it when you need room, and everyone sees messages as they arrive. The assistant reads along: when a message hides real work, it drafts cards for it — every field editable, every card unticked with one click. It proposes, you decide.',
+    // Câu ví dụ cụ thể ("Hoa, ship ... by Friday") không phải văn hoa — nó dạy
+    // đúng luật thật của `shouldAnalyze()`: nhắc thẳng tên ai đó, HOẶC vừa có
+    // động từ giao việc vừa có mốc thời gian. Không nói ra thì người dùng viết
+    // tự nhiên ("nhớ làm cái kia nhé") rất dễ rơi ngoài cả hai điều kiện, không
+    // thấy gợi ý nào xuất hiện, và tưởng tính năng hỏng.
+    body: 'The chat lives beside the board, not in another app. Drag its edge to resize, collapse it when you need room, and everyone sees messages as they arrive. The assistant reads along: name someone and give a deadline — "Hoa, ship the report by Friday" — and it drafts a card, every field editable. It proposes, you decide.',
   },
   {
     // Bước GIỚI THIỆU, không bắt làm thử — và đó là điều bắt buộc, không phải
