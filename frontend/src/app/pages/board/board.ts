@@ -214,8 +214,8 @@ export class Board {
    * Hẹn lịch xong.
    *
    * Modal đã tự lo gọi Google và lưu về backend — ở đây chỉ báo cho người dùng.
-   * Không cần nạp lại gì: lời nhắc do `MeetingReminderService` tự kéo về, còn
-   * người được mời nhận thông báo qua WebSocket.
+   * Không cần nạp lại gì: người được mời nhận thông báo qua WebSocket, còn lời
+   * nhắc trước giờ họp thì Google Calendar lo.
    */
   onMeetingScheduled(e: { title: string; meetUrl: string | null }): void {
     const themMeet = e.meetUrl ? ' A Google Meet room was added.' : '';

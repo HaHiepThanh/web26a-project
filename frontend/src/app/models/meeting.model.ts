@@ -28,36 +28,8 @@ export interface Meeting {
   recurrence: string | null;
 }
 
-/**
- * Một dòng `GET /meetings/my-upcoming` — cuộc họp sắp tới của TÔI.
- *
- * Nhẹ hơn `Meeting` vì chỉ phục vụ việc nhắc ở chuông: đủ để dựng câu thông báo
- * và bấm vào là tới đúng board.
- */
-export interface UpcomingMeeting {
-  id: string;
-  boardId: string;
-  boardName: string;
-  orgSlug: string;
-  title: string;
-  startAt: string;
-  remindMinutes: number;
-  meetUrl: string | null;
-}
 
 /** Kết quả `DELETE /meetings/:id`. */
-export interface KetQuaHuyHop {
-  id: string;
-  googleEventId: string | null;
-  /**
-   * Người vừa huỷ có xoá được sự kiện bên Google không.
-   *
-   * Chỉ đúng khi họ CHÍNH LÀ người tạo — Calendar API xoá theo lịch `primary`
-   * của chủ token, người khác gọi sẽ nhận 404. `false` nghĩa là lịch bên Google
-   * vẫn còn và giao diện phải nói thẳng điều đó.
-   */
-  xoaDuocTrenGoogle: boolean;
-}
 
 /** Dữ liệu trích xuất từ file PDF do Google Calendar xuất ra. */
 export interface ParsedMeetingPdf {

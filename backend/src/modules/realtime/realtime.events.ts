@@ -62,12 +62,10 @@ export type UserEventType =
   /** Có người @nhắc tên mình trong chat của một board. */
   | 'chat.mention'
   /** Có người hẹn một cuộc họp và mời mình — báo NGAY lúc tạo. */
-  | 'meeting.scheduled'
-  /** Cuộc họp mình được mời vừa bị huỷ. */
-  | 'meeting.canceled';
+  | 'meeting.scheduled';
 
 /**
- * Payload của `meeting.scheduled` / `meeting.canceled`.
+ * Payload của `meeting.scheduled`.
  *
  * Đủ để dựng câu thông báo và điều hướng tới `/:orgSlug/board/:boardId` mà
  * không phải gọi thêm API — cùng nguyên tắc với `CardAssignedPayload`.

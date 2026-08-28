@@ -289,9 +289,6 @@ export class RealtimeService {
         this.notifications.addMeetingScheduled(event.data as MeetingPingPayload);
         break;
 
-      case 'meeting.canceled':
-        this.notifications.addMeetingCanceled(event.data as MeetingPingPayload);
-        break;
     }
   }
 

@@ -12,32 +12,8 @@ import { RealtimeGateway } from '../realtime/realtime.gateway';
 import { CreateMeetingDto } from './dto/create-meeting.dto';
 import { ImportMeetingsDto } from './dto/import-meetings.dto';
 
-/**
- * Cửa sổ `my-upcoming` nhìn về phía trước.
- *
- * Phải LỚN HƠN mức nhắc trước tối đa (1440 phút = 24 giờ), nếu không một cuộc
- * hẹn "nhắc trước 1 ngày" sẽ rơi đúng mép cửa sổ: lúc đáng nhắc thì nó vừa mới
- * lọt vào tầm nhìn, và chỉ cần lần hỏi kế tiếp trễ vài phút là mất lời nhắc.
- * 25 giờ cho dư một tiếng đệm.
- */
-const NHIN_TRUOC_MS = 25 * 60 * 60 * 1000;
 
-/**
- * Nhìn lui một chút để bắt cuộc họp VỪA tới giờ nhắc mà người dùng lúc đó chưa
- * mở app. Mở lên trong vòng 5 phút đầu vẫn còn kịp thấy lời nhắc.
- */
-const NHIN_LUI_MS = 5 * 60 * 1000;
 
-export interface UpcomingMeeting {
-  id: string;
-  boardId: string;
-  boardName: string;
-  orgSlug: string;
-  title: string;
-  startAt: string;
-  remindMinutes: number;
-  meetUrl: string | null;
-}
 
 export interface MeetingAttendee {
   id: string;
@@ -151,15 +127,15 @@ export class MeetingsService {
     const nguoiDu = new Set(dto.attendeeIds.filter((id) => duocPhep.has(id)));
 
     // Người tạo LUÔN là một người dự — giống Google Calendar (người tổ chức
-    // cũng nằm trong danh sách khách). Nhờ vậy truy vấn `my-upcoming` chỉ cần
-    // nhìn đúng một bảng: không phải hỏi thêm "hoặc tôi là người tạo".
+    // cũng nằm trong danh sách khách). Nhờ vậy mọi truy vấn "ai dự buổi này"
+    // chỉ cần nhìn đúng một bảng, không phải hỏi thêm "hoặc tôi là người tạo".
     nguoiDu.add(uid);
 
     // MỖI LẦN DIỄN RA LÀ MỘT DÒNG.
     //
-    // Bộ nhắc đặt hẹn giờ theo `start_at` — một mốc cụ thể; nó không biết đọc
-    // quy tắc lặp. Lưu một dòng kèm "mỗi thứ Hai" thì chuông chỉ kêu tuần đầu
-    // rồi im mãi.
+    // Bảng lưu theo `start_at` — một mốc cụ thể; nó không biết đọc quy tắc lặp.
+    // Lưu một dòng kèm "mỗi thứ Hai" thì chỉ có tuần đầu là tồn tại trong dữ
+    // liệu, và bản `.ics` xuất ra cũng thiếu.
     //
     // `occurrences` do client trải sẵn (xem ghi chú ở CreateMeetingDto). Ở đây
     // chỉ kiểm lại rồi ghi. Rỗng thì đúng một dòng như cũ.
@@ -200,7 +176,7 @@ export class MeetingsService {
     const row = tatCa[0];
 
     // Người dự phải gắn cho MỌI lần diễn ra, không chỉ lần đầu — nếu không thì
-    // từ tuần thứ hai trở đi `my-upcoming` không thấy gì và chuông im.
+    // từ lần thứ hai trở đi không tra được ai là khách của buổi đó.
     const { error: loiNguoiDu } = await this.supabase.client
       .from('board_meeting_attendees')
       .insert(
@@ -347,171 +323,6 @@ export class MeetingsService {
     }
   }
 
-  /** Lịch họp của một board — sắp tới trước, đã qua thì thôi không trả. */
-  async findForBoard(uid: string, boardId: string): Promise<MeetingResponse[]> {
-    await this.access.assertBoardAccess(uid, boardId);
-
-    const { data, error } = await this.supabase.client
-      .from('board_meetings')
-      .select()
-      .eq('board_id', boardId)
-      .is('canceled_at', null)
-      // Cuộc đã kết thúc thì không còn việc gì để làm với nó; danh sách chỉ để
-      // biết "sắp tới có gì". Lịch sử đầy đủ vẫn nằm trong Google Calendar.
-      .gte('end_at', new Date().toISOString())
-      .order('start_at', { ascending: true });
-
-    if (error) {
-      this.logger.error(`Đọc lịch họp thất bại: ${error.message}`);
-      throw new InternalServerErrorException('Failed to load meetings.');
-    }
-
-    const rows = (data ?? []) as MeetingRow[];
-    if (rows.length === 0) return [];
-
-    const nguoiDu = await this.layNguoiDu(rows.map((r) => r.id));
-    return rows.map((r) => this.toResponse(r, nguoiDu));
-  }
-
-  /**
-   * Cuộc họp sắp tới của TÔI — nguồn cho lời nhắc ở chuông 🔔.
-   *
-   * Trả về cả những cuộc đã qua mốc nhắc nhưng chưa bắt đầu, để người vừa mở
-   * app lên vẫn thấy được lời nhắc thay vì lỡ mất vì lúc đó máy đang tắt.
-   *
-   * Việc quyết định "đã tới lúc nhắc chưa" nằm ở CLIENT chứ không ở đây: client
-   * đặt hẹn giờ cục bộ nên nhắc đúng phút, còn nếu để server quyết thì độ chính
-   * xác không thể hơn nhịp hỏi (vài phút một lần).
-   */
-  async myUpcoming(uid: string): Promise<UpcomingMeeting[]> {
-    const bayGio = Date.now();
-
-    // `!inner` biến quan hệ thành INNER JOIN, nhờ đó `.eq` lên cột của bảng nối
-    // lọc được ngay trong một truy vấn. Không có `!inner` thì PostgREST vẫn trả
-    // về mọi cuộc họp, chỉ là khối lồng bên trong rỗng — lọc hụt mà không báo lỗi.
-    const { data, error } = await this.supabase.client
-      .from('board_meetings')
-      .select(
-        'id, board_id, title, start_at, remind_minutes, meet_url, boards(name, organizations(slug)), board_meeting_attendees!inner(user_id)',
-      )
-      .eq('board_meeting_attendees.user_id', uid)
-      .is('canceled_at', null)
-      .gte('start_at', new Date(bayGio - NHIN_LUI_MS).toISOString())
-      .lte('start_at', new Date(bayGio + NHIN_TRUOC_MS).toISOString())
-      .order('start_at', { ascending: true });
-
-    if (error) {
-      this.logger.error(`Đọc lịch sắp tới thất bại: ${error.message}`);
-      throw new InternalServerErrorException(
-        'Failed to load upcoming meetings.',
-      );
-    }
-
-    return (data ?? []).map((r) => {
-      const board = r.boards as unknown as {
-        name: string;
-        organizations: { slug: string } | null;
-      } | null;
-      return {
-        id: r.id as string,
-        boardId: r.board_id as string,
-        boardName: board?.name ?? '',
-        orgSlug: board?.organizations?.slug ?? '',
-        title: r.title as string,
-        startAt: r.start_at as string,
-        remindMinutes: r.remind_minutes as number,
-        meetUrl: (r.meet_url as string) ?? null,
-      };
-    });
-  }
-
-  /**
-   * Huỷ cuộc họp — đánh dấu MỀM, không xoá dòng.
-   *
-   * Người đã nhận mail mời vẫn cần tra lại được là cuộc họp đó từng tồn tại;
-   * và lịch sử họp là dữ liệu người dùng, cùng lý do đã giữ lịch sử chat khi
-   * thành viên rời tổ chức.
-   *
-   * ⚠️ Chỗ này KHÔNG xoá được sự kiện bên Google. Xoá bên đó cần token OAuth
-   *    của NGƯỜI TẠO, mà token chỉ sống trong tab của họ. Nên response trả kèm
-   *    `googleEventId`: nếu người đang huỷ chính là người tạo thì trình duyệt
-   *    của họ tự gọi Google xoá nốt (và Google gửi mail báo huỷ). Người khác
-   *    huỷ thì lịch bên Google còn lại — giao diện phải nói thẳng điều đó thay
-   *    vì im lặng để họ tưởng đã xong.
-   */
-  async cancel(
-    uid: string,
-    meetingId: string,
-  ): Promise<{
-    id: string;
-    googleEventId: string | null;
-    xoaDuocTrenGoogle: boolean;
-  }> {
-    const { data, error } = await this.supabase.client
-      .from('board_meetings')
-      .select()
-      .eq('id', meetingId)
-      .maybeSingle();
-
-    if (error && error.code !== '22P02') {
-      this.logger.error(`Đọc cuộc họp thất bại: ${error.message}`);
-      throw new InternalServerErrorException('Failed to load the meeting.');
-    }
-    if (!data) throw new NotFoundException('Meeting not found.');
-    const row = data as MeetingRow;
-
-    // Đi qua assertBoardAccess trước: người ngoài tổ chức phải nhận 404, không
-    // phải 403 — 403 là vô tình xác nhận "id này có thật".
-    const board = await this.access.assertBoardAccess(uid, row.board_id);
-
-    const laNguoiTao = row.created_by === uid;
-    if (!laNguoiTao) {
-      const role = await this.access.roleInOrg(uid, board.orgId);
-      if (role !== 'owner' && role !== 'admin') {
-        throw new ForbiddenException(
-          'Only the meeting creator, the organization owner, or an admin can cancel a meeting.',
-        );
-      }
-    }
-
-    if (row.canceled_at) {
-      // Huỷ hai lần không phải lỗi — bấm nhầm nút hai lần là chuyện thường.
-      return {
-        id: row.id,
-        googleEventId: row.google_event_id,
-        xoaDuocTrenGoogle: false,
-      };
-    }
-
-    const { error: loiHuy } = await this.supabase.client
-      .from('board_meetings')
-      .update({ canceled_at: new Date().toISOString() })
-      .eq('id', meetingId);
-
-    if (loiHuy) {
-      this.logger.error(`Huỷ cuộc họp thất bại: ${loiHuy.message}`);
-      throw new InternalServerErrorException('Failed to cancel the meeting.');
-    }
-
-    const nguoiDu = await this.layNguoiDu([meetingId]);
-    const { boardName, orgSlug } = await this.access.nguoiXemDuocBoard(
-      row.board_id,
-    );
-    void this.baoLichHop(
-      uid,
-      'meeting.canceled',
-      row,
-      (nguoiDu.get(meetingId) ?? []).map((a) => a.id),
-      { boardName, orgSlug },
-    );
-
-    return {
-      id: row.id,
-      googleEventId: row.google_event_id,
-      // Chỉ người tạo mới cầm được token xoá sự kiện bên Google.
-      xoaDuocTrenGoogle: laNguoiTao && !!row.google_event_id,
-    };
-  }
 
   // ------------------------------------------------------------------ nội bộ
 
@@ -579,7 +390,7 @@ export class MeetingsService {
    */
   private async baoLichHop(
     actorUid: string,
-    loai: 'meeting.scheduled' | 'meeting.canceled',
+    loai: 'meeting.scheduled',
     row: MeetingRow,
     nguoiNhan: string[],
     noi: { boardName: string; orgSlug: string },

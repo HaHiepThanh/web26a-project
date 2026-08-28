@@ -9,20 +9,14 @@ export interface AppNotification {
     | 'card.overdue'
     | 'meeting.started'
     | 'chat.mention'
-    | 'meeting.scheduled'
-    | 'meeting.canceled'
-    /** Sắp tới giờ một cuộc họp mình được mời. Giống `card.overdue`, loại này do
-     *  CLIENT tự dựng từ `GET /meetings/my-upcoming` — "sắp tới giờ" không phải
-     *  hành động của ai cả, nó xảy ra do thời gian trôi, nên không có sự kiện
-     *  realtime nào để mà phát. */
-    | 'meeting.reminder';
+    | 'meeting.scheduled';
   /** Câu hiển thị đầy đủ, dựng sẵn lúc nhận để khỏi phải tra lại tên board/workspace. */
   text: string;
   /** Bấm vào thì đi đâu — route là `/:orgSlug/board/:boardId`. */
   orgSlug: string;
   boardId: string;
-  /** Thẻ liên quan — mọi loại `meeting.*` và `chat.mention` không gắn với thẻ
-   *  nào, nên để rỗng. Điều hướng chỉ cần `orgSlug` + `boardId`. */
+  /** Thẻ liên quan — `meeting.*` và `chat.mention` không gắn với thẻ nào, nên
+   *  để rỗng. Điều hướng chỉ cần `orgSlug` + `boardId`. */
   cardId: string;
   createdAt: string;
   read: boolean;

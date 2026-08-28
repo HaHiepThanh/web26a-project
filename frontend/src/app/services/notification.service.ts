@@ -222,58 +222,7 @@ export class NotificationService {
     });
   }
 
-  /** Một cuộc họp mình được mời vừa bị huỷ. */
-  addMeetingCanceled(p: {
-    meetingId: string;
-    boardId: string;
-    boardName: string;
-    orgSlug: string;
-    title: string;
-    startAt: string;
-    byUserName: string;
-  }): void {
-    this.add({
-      id: `meeting-canceled-${p.meetingId}`,
-      type: 'meeting.canceled',
-      text: `${p.byUserName} canceled "${p.title}" (${gioDoc(p.startAt)}) — board "${p.boardName}"`,
-      orgSlug: p.orgSlug,
-      boardId: p.boardId,
-      cardId: '',
-      createdAt: new Date().toISOString(),
-      read: false,
-    });
-  }
 
-  /**
-   * Sắp tới giờ một cuộc họp mình được mời.
-   *
-   * `id` CỐ Ý không kèm `Date.now()` — cùng lý do với `addCardOverdue`: nguồn
-   * của loại này là một truy vấn được hỏi lại nhiều lần
-   * (`GET /meetings/my-upcoming`), nên id có thời điểm sẽ đẻ ra một thông báo
-   * mới ở mỗi lần hỏi và chuông ngập cùng một cuộc họp. Khoá theo cuộc họp thì
-   * mỗi cuộc chỉ nhắc ĐÚNG MỘT lần.
-   */
-  addMeetingReminder(p: {
-    id: string;
-    boardId: string;
-    boardName: string;
-    orgSlug: string;
-    title: string;
-    startAt: string;
-  }): void {
-    const conMay = Math.max(0, Math.round((new Date(p.startAt).getTime() - Date.now()) / 60_000));
-    const khiNao = conMay <= 0 ? 'is starting now' : `starts in ${conMay} min`;
-    this.add({
-      id: `meeting-remind-${p.id}`,
-      type: 'meeting.reminder',
-      text: `"${p.title}" ${khiNao} (${gioDoc(p.startAt)}) — board "${p.boardName}"`,
-      orgSlug: p.orgSlug,
-      boardId: p.boardId,
-      cardId: '',
-      createdAt: new Date().toISOString(),
-      read: false,
-    });
-  }
 
   markRead(id: string): void {
     this.items.update((all) => {

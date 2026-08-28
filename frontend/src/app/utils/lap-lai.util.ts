@@ -6,10 +6,14 @@
  *
  * ─── VÌ SAO PHẢI TRẢI RA THÀNH TỪNG LẦN ───
  *
- * Bộ nhắc của app (`MeetingReminderService`) đặt hẹn giờ theo `start_at` — một
- * mốc thời gian CỤ THỂ. Nó không biết đọc quy tắc lặp. Nên một cuộc họp "mỗi
- * thứ Hai" phải được trải thành từng dòng riêng thì chuông mới kêu đúng từng
- * tuần. Quy tắc gốc vẫn được giữ lại để xuất ra `.ics` cho đúng, và để hiển thị.
+ * Bảng `board_meetings` lưu theo `start_at` — một mốc thời gian CỤ THỂ, không
+ * biết đọc quy tắc lặp. Nên một cuộc họp "mỗi thứ Hai" phải được trải thành
+ * từng dòng riêng. Quy tắc gốc vẫn được giữ lại để xuất ra `.ics` cho đúng, và
+ * để hiển thị cho người đọc.
+ *
+ * (Trước đây còn một lý do nữa: bộ nhắc trước giờ họp đặt hẹn giờ theo từng
+ * mốc. Bộ nhắc đó đã gỡ — nó đọc lại dữ liệu đã lưu nên kêu nhầm khi người
+ * dùng xoá sự kiện bên Google Calendar mà app không hay biết.)
  */
 
 export type TanSuat = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
