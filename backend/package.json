@@ -33,7 +33,8 @@
     "kiem-tra:link-moi": "node scripts/kiem-tra-link-moi.mjs",
     "kiem-tra:chong-xam-nhap": "node scripts/kiem-tra-chong-xam-nhap.mjs",
     "kiem-tra:lich-hop": "node scripts/kiem-tra-lich-hop.mjs",
-    "kiem-tra:kiem-duyet-anh": "node scripts/kiem-tra-kiem-duyet-anh.mjs"
+    "kiem-tra:kiem-duyet-anh": "node scripts/kiem-tra-kiem-duyet-anh.mjs",
+    "gieo:demo": "node scripts/gieo-du-lieu-demo.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.115.0",
