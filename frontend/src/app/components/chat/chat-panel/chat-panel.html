@@ -69,25 +69,28 @@
       }
     </h3>
     <div class="flex shrink-0 items-center gap-1">
-      <!-- Gợi ý cách viết để AI bắt được task. Icon sparkle + màu secondary
-           CHÍNH LÀ hai thứ nhận diện "Assistant" trong task-suggestion-card —
-           dùng lại nguyên xi để người đã từng thấy gợi ý AI nối được hai chỗ
-           với nhau ngay. Chữ "AI" ngắn gọn để rõ nghĩa ngay cả với người CHƯA
-           từng thấy gợi ý nào (đúng nhóm cần hint nhất).
-
-           Bấm để bật/tắt BANNER NẰM TRONG LUỒNG LAYOUT bên dưới, không phải
-           dropdown/tooltip nổi — xem lý do ở `showAiHint` trong chat-panel.ts. -->
-      <button type="button" class="btn btn-ghost btn-xs gap-1 rounded-[8px] font-bold text-secondary"
-        [class.btn-active]="showAiHint()"
+      <!-- Nút AI Guide đẹp & hiện đại -->
+      <button type="button"
+        class="btn btn-xs gap-1 rounded-md px-2 font-bold border transition-all duration-200 shadow-2xs select-none"
+        [class.bg-secondary]="showAiHint()"
+        [class.text-secondary-content]="showAiHint()"
+        [class.border-secondary]="showAiHint()"
+        [class.shadow-sm]="showAiHint()"
+        [class.bg-secondary/10]="!showAiHint()"
+        [class.text-secondary]="!showAiHint()"
+        [class.border-secondary/30]="!showAiHint()"
+        [class.hover:bg-secondary/20]="!showAiHint()"
         (click)="showAiHint.set(!showAiHint())"
         [attr.aria-expanded]="showAiHint()"
-        aria-label="How the assistant catches tasks">
-        <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        aria-label="How the AI assistant catches tasks"
+        title="How AI Assistant detects tasks">
+        <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
           <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z" />
         </svg>
-        AI
+        <span class="text-3xs tracking-wider uppercase">AI Guide</span>
       </button>
-      <button type="button" class="btn btn-square btn-ghost btn-xs relative rounded-[8px] before:absolute before:-inset-3 before:content-['']" (click)="toggleCollapsed()"
+
+      <button type="button" class="btn btn-square btn-ghost btn-xs relative rounded-md text-base-content/60 hover:text-base-content before:absolute before:-inset-3 before:content-['']" (click)="toggleCollapsed()"
         [attr.aria-label]="isMobile() ? 'Close chat' : 'Collapse chat panel'" [attr.title]="isMobile() ? 'Close chat' : 'Collapse chat panel'">
         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M15 18l-6-6 6-6" />
@@ -97,19 +100,36 @@
   </div>
 
   @if (showAiHint()) {
-    <div class="shrink-0 border-b border-[var(--accent-purple)]/20 bg-secondary/10 px-3 py-2 text-2xs leading-relaxed text-base-content/75">
-      <!-- Câu này PHẢI khớp `shouldAnalyze` ở backend (gemini.service.ts). Bản
-           trước nói "mention someone by name, that's enough" — sai hai chỗ, và
-           sai theo kiểu người dùng làm đúng lời khuyên mà vẫn không thấy gì:
-             • "Huy please finish the login page" → tên trơn không có dấu hiệu
-               gọi thì `batTen` không nhận, AI bỏ qua.
-             • "@Huy fix bug" → đủ 12 ký tự, dưới mức tối thiểu 15, AI bỏ qua. -->
-      <span class="font-bold text-secondary">How the assistant catches tasks —</span>
-      name who it's for: <strong>@Huy</strong>, <strong>Nguyen Van Huy</strong> or
-      <strong>N.Huy</strong>. A first name on its own needs something after it, like
-      <strong>"Huy,"</strong> or <strong>"Huy ơi"</strong>. No name? Say what to do
-      <strong>and</strong> when, like "ship the report by Friday". Very short lines
-      are skipped either way.
+    <div class="relative shrink-0 border-b border-[var(--accent-purple)]/20 bg-base-200/90 backdrop-blur-xs p-3 text-2xs leading-relaxed text-base-content/85 shadow-xs transition-all">
+      <div class="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-base-300/60">
+        <span class="flex items-center gap-1.5 text-2xs font-bold text-secondary uppercase tracking-wider">
+          <svg class="h-3.5 w-3.5 text-secondary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z" />
+          </svg>
+          AI Task Detection Rules
+        </span>
+        <button type="button" class="btn btn-ghost btn-circle btn-xs h-5 w-5 min-h-0 text-base-content/40 hover:text-base-content"
+          (click)="showAiHint.set(false)" aria-label="Close AI hint">
+          <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="space-y-1.5 text-3xs text-base-content/80">
+        <div class="flex items-start gap-1.5">
+          <span class="shrink-0 text-secondary font-bold">1.</span>
+          <span><strong>Mention someone:</strong> <code>@Name</code>, full name (e.g. <em>Nguyen Van Huy</em>) or <em>"Huy, finish login page"</em>.</span>
+        </div>
+        <div class="flex items-start gap-1.5">
+          <span class="shrink-0 text-secondary font-bold">2.</span>
+          <span><strong>Or action + deadline:</strong> Say what to do and when (e.g. <em>"ship report by Friday"</em>).</span>
+        </div>
+      </div>
+
+      <p class="mt-2 text-3xs text-base-content/45 italic border-t border-base-300/40 pt-1">
+        💡 Very short lines (&lt;15 chars) are skipped to avoid false triggers.
+      </p>
     </div>
   }
 
