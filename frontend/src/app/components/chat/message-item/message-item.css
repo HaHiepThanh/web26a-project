@@ -86,7 +86,12 @@
  * phải trắng; trên nền primary đặc thì đọc bị mờ. Chỉ đè ở `winter`: theme
  * `night` có primary SÁNG màu nên chữ phải TỐI, ép trắng là mất chữ.
  */
-[data-theme='winter'] .chat-bubble.chat-bubble-primary {
+/* ⚠️ PHẢI dùng `:host-context()`, KHÔNG viết `[data-theme='winter'] …` thẳng.
+   Angular bao đóng kiểu emulated gắn `[_ngcontent-…]` vào MỌI compound selector,
+   kể cả tổ tiên — `[data-theme=winter][_ngcontent-…]`. Thẻ <html> nằm ngoài
+   component nên không bao giờ mang thuộc tính đó, và quy tắc chết lặng: không
+   khớp, không báo lỗi, build vẫn xanh. */
+:host-context([data-theme='winter']) .chat-bubble.chat-bubble-primary {
   color: #fff;
 }
 
@@ -114,7 +119,7 @@
  *
  * (Bản trước tự đặt 22% — vừa lệch hệ, vừa mờ hơn mức dự án đã chốt.)
  */
-[data-theme='night'] .chat-bubble:not(.chat-bubble-primary) {
+:host-context([data-theme='night']) .chat-bubble:not(.chat-bubble-primary) {
   filter: drop-shadow(1px 0 0 var(--border-color))
     drop-shadow(-1px 0 0 var(--border-color))
     drop-shadow(0 1px 0 var(--border-color))
