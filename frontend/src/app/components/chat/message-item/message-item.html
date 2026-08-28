@@ -33,10 +33,12 @@
     }
   </div>
 
-  <div class="chat-footer flex items-center gap-1 pt-0.5 text-base-content/50">
+  <div class="chat-footer flex items-center gap-1 pt-0.5 text-base-content/60">
     <time [attr.datetime]="message().createdAt">{{ timeLabel() }}</time>
+    <!-- Bỏ chữ nghiêng và nâng tương phản: ở cỡ ~9px, tiếng Việt có dấu mà in
+         nghiêng ở mức /50 thì phải nhìn kỹ mới đọc ra. -->
     @if (daSua()) {
-      <span class="text-3xs italic">· đã chỉnh sửa</span>
+      <span class="text-2xs font-medium text-base-content/75">· đã chỉnh sửa</span>
     }
 
     <!-- Nút LUÔN HIỆN ở mức mờ, không dùng hiện-khi-rê-chuột: điện thoại không

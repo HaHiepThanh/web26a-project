@@ -1,3 +1,37 @@
 :host {
   display: block;
 }
+
+/**
+ * BỎ ĐUÔI BONG BÓNG của daisyUI.
+ *
+ * Cái đuôi (`chat-bubble::before`) là nguồn của HAI lỗi nhìn thấy được, và cả
+ * hai đều không vá gọn được khi còn giữ nó:
+ *
+ *  1. ĐƯỜNG TRẮNG ĐỨT GÃY. Đuôi neo ở `inset-inline-start: 100%` — đúng mép
+ *     phải bong bóng. Bề rộng bong bóng do nội dung quyết định nên thường rơi
+ *     vào nửa pixel; trình duyệt vẽ ra một sợi trắng ở chỗ nối. Chỉnh mask hay
+ *     dịch 1px chỉ đổi chỗ hở chứ không hết.
+ *
+ *  2. GÓC DƯỚI VUÔNG. daisyUI cố ý bỏ bo góc phía có đuôi
+ *     (`border-end-end-radius: 0`) để đuôi gắn vào cho liền. Không có đuôi thì
+ *     góc vuông đó chỉ còn là một khuyết tật.
+ *
+ * Bỏ đuôi thì cả hai biến mất, và bong bóng thành hình chữ nhật bo đều — đúng
+ * lối Telegram/Slack. Người gửi đã được nhận ra bằng avatar, nhãn tên phía trên
+ * và bên căn trái/phải, nên cái đuôi không mang thêm thông tin gì.
+ *
+ * Chọn lọc `.chat.chat-end` (0,3,0) để thắng `.chat-end .chat-bubble` (0,2,0)
+ * của daisyUI mà không phải dùng `!important`.
+ */
+.chat .chat-bubble::before {
+  display: none;
+}
+
+.chat.chat-end .chat-bubble {
+  border-end-end-radius: var(--radius-field);
+}
+
+.chat.chat-start .chat-bubble {
+  border-end-start-radius: var(--radius-field);
+}
