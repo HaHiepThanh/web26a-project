@@ -1,6 +1,5 @@
 <!-- gap nhỏ vì `.chat` của daisyUI đã tự có `padding-block: .25rem` ở mỗi tin;
      giữ gap-2.5 như bản bong bóng cũ là cộng dồn thành khoảng hở quá thưa. -->
-<div class="relative flex h-full min-h-0 flex-col">
 <div class="flex h-full flex-col gap-1 overflow-y-auto px-3 py-2.5" #scrollArea (scroll)="onScroll()">
   <!-- Mốc canh cho IntersectionObserver. Phải nằm TRÊN mọi tin nhắn: chạm vào
        nó nghĩa là người dùng đã cuộn tới đầu danh sách và cần tin cũ hơn. -->
@@ -35,9 +34,12 @@
   }
 </div>
 
-  @if (khongTimThay()) {
-    <div class="pointer-events-none absolute inset-x-3 top-2 rounded-md bg-warning/90 px-3 py-1.5 text-center text-3xs font-semibold text-warning-content shadow">
-      Tin nhắn gốc đã quá cũ, không tải tới nơi được.
-    </div>
-  }
-</div>
+<!-- Neo vào `:host` (đã `position: relative` trong CSS) chứ KHÔNG bọc thêm một
+     div quanh vùng cuộn: mỗi tầng thêm vào là một mắt xích nữa trong chuỗi
+     chiều cao phần trăm, và đó chính là thứ vừa làm khung chat mất chiều cao,
+     hết cuộn được và đẩy ô soạn tin ra khỏi màn hình. -->
+@if (khongTimThay()) {
+  <div class="pointer-events-none absolute inset-x-3 top-2 rounded-md bg-warning/90 px-3 py-1.5 text-center text-3xs font-semibold text-warning-content shadow">
+    Tin nhắn gốc đã quá cũ, không tải tới nơi được.
+  </div>
+}

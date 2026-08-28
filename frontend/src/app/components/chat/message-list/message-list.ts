@@ -17,6 +17,7 @@ const TOI_DA_LAN_NGUOC = 5;
   selector: 'app-message-list',
   imports: [MessageItem, TaskSuggestionCard],
   templateUrl: './message-list.html',
+  styleUrl: './message-list.css',
 })
 export class MessageList {
   readonly messages = input<Message[]>([]);

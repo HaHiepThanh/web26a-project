@@ -2,4 +2,7 @@
   display: block;
   flex: 1;
   min-height: 0;
+  /* Mốc neo cho dải thông báo "không tìm thấy tin gốc". Đặt ở đây thay vì bọc
+     thêm một div: div bọc làm hỏng chuỗi chiều cao phần trăm bên trong. */
+  position: relative;
 }

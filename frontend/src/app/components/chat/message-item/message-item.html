@@ -13,12 +13,10 @@
     <!-- Ô trích dẫn. CHỈ MỘT TẦNG: `trichDan()` không mang theo trích dẫn của
          chính nó, nên đây không có (và không được có) nhánh đệ quy nào. -->
     @if (trichDan(); as q) {
-      <button type="button"
-        class="mb-1 block w-full rounded border-l-2 px-2 py-1 text-left text-3xs leading-snug hover:brightness-110"
-        [class]="quoteClass()" (click)="jumpTo.emit(q.id)"
+      <button type="button" [class]="quoteClass()" (click)="jumpTo.emit(q.id)"
         [title]="'Nhảy tới tin nhắn của ' + tenTrichDan()">
-        <span class="block font-bold">{{ tenTrichDan() }}</span>
-        <span class="line-clamp-2 break-words" [class.italic]="!!q.deletedAt">{{ noiDungTrichDan() }}</span>
+        <span [class]="quoteNameClass()">{{ tenTrichDan() }}</span>
+        <span class="line-clamp-2 break-words text-3xs opacity-70" [class.italic]="!!q.deletedAt">{{ noiDungTrichDan() }}</span>
       </button>
     }
 

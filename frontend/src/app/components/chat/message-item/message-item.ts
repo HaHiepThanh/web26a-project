@@ -104,10 +104,25 @@ export class MessageItem {
    * thì ô trích dẫn gần như tàng hình. Phải mượn `primary-content` — màu chữ
    * tương phản mà daisyUI đã chọn sẵn cho nền đó.
    */
-  readonly quoteClass = computed(() =>
+  readonly quoteClass = computed(() => {
+    // GỘP HẾT vào một chuỗi thay vì trộn `class="..."` tĩnh với `[class]`:
+    // hai nguồn cho cùng một thuộc tính là chỗ rất dễ tưởng nhầm cái nào thắng.
+    //
+    // `w-fit` chứ KHÔNG `w-full`: ô trích dẫn full-width kéo bong bóng nở hết
+    // cỡ, nên một câu "Ừ" hai ký tự cũng thành khối to bằng cả khung chat.
+    const chung =
+      'mb-1.5 block w-fit max-w-full overflow-hidden rounded-md border-l-[3px] ' +
+      'px-2 py-1 text-left leading-snug transition-opacity hover:opacity-75';
+    return this.isOwn()
+      ? `${chung} border-primary-content bg-primary-content/25 text-primary-content`
+      : `${chung} border-primary bg-base-100 text-base-content`;
+  });
+
+  /** Tên người được trích — mượn màu nhấn để mắt bắt được ngay đây là "của ai". */
+  readonly quoteNameClass = computed(() =>
     this.isOwn()
-      ? 'border-primary-content/50 bg-primary-content/15 text-primary-content/85'
-      : 'border-primary/60 bg-base-content/10 text-base-content/70',
+      ? 'block text-3xs font-bold text-primary-content'
+      : 'block text-3xs font-bold text-primary',
   );
 
   /**
