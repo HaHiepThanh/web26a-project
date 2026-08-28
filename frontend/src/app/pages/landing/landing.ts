@@ -14,14 +14,12 @@ import { AuthService } from '../../services/auth.service';
 import { ThemeService } from '../../services/theme.service';
 import { LandingAi } from './sections/landing-ai';
 import { LandingCapabilities } from './sections/landing-capabilities';
-import { LandingTry } from './sections/landing-try';
 import { LandingCompare } from './sections/landing-compare';
 import { LandingCta } from './sections/landing-cta';
 import { LandingFaq } from './sections/landing-faq';
 import { LandingFeatures } from './sections/landing-features';
 import { LandingHero } from './sections/landing-hero';
 import { LandingOrigin } from './sections/landing-origin';
-import { LandingStats } from './sections/landing-stats';
 import { LandingWelcome } from './sections/landing-welcome';
 import { LandingSteps } from './sections/landing-steps';
 import { SmoothScroll } from './smooth-scroll';
@@ -53,10 +51,8 @@ import { SmoothScroll } from './smooth-scroll';
     LandingFeatures,
     LandingAi,
     LandingCapabilities,
-    LandingTry,
     LandingCompare,
     LandingSteps,
-    LandingStats,
     LandingFaq,
     LandingCta,
     LucideArrowRight,
@@ -120,7 +116,7 @@ export class Landing implements OnDestroy {
     // chỉ để bấm: `sectionObserver` dùng nó để tô đậm mục đang hiện trên màn
     // hình, nên xếp sai là vạch nhấn chạy giật lùi lúc người ta cuộn xuôi.
     // Trang: hero → our-story → features → assistant → everything →
-    //        why-not-trello → how-it-works → stats → faq → cta
+    //        why-not-trello → how-it-works → faq → cta
     { id: 'our-story', label: 'Our story' },
     { id: 'features', label: 'Features' },
     { id: 'assistant', label: 'Assistant' },
