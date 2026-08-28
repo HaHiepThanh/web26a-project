@@ -93,7 +93,8 @@ export class MessageItem {
   readonly bubbleClass = computed(() => {
     let c = 'chat-bubble min-h-0 min-w-0 break-words px-3 py-1.5 text-xs leading-relaxed transition-shadow';
     if (this.isOwn()) c += ' chat-bubble-primary';
-    if (this.highlighted()) c += ' ring-2 ring-warning ring-offset-1 ring-offset-base-100';
+    // Lớp thật nằm ở message-item.css — `ring` cắt ngang đuôi bong bóng.
+    if (this.highlighted()) c += ' dang-sang';
     return c;
   });
 
