@@ -15,7 +15,7 @@ import { AuthService } from '../../../services/auth.service';
 import { GoogleCalendarService } from '../../../services/google-calendar.service';
 import { MeetingsService } from '../../../services/meetings.service';
 import { UserAvatar } from '../../shared/user-avatar/user-avatar';
-import { docIcs, taoIcs } from '../../../utils/ics.util';
+import { docIcs, moTaSoLuong, taoIcs } from '../../../utils/ics.util';
 import {
   moTaQuyTac, QuyTacLap, TAN_SUAT, TanSuat, taoRrule, TOI_DA_LAN, traiQuyTac,
 } from '../../../utils/lap-lai.util';
@@ -431,13 +431,8 @@ export class ScheduleMeetingModal {
         }
 
         const matchMsg = soNguoiKhop > 0 ? ` and pre-selected ${soNguoiKhop} board member(s)` : '';
-        // Nói rõ file có bao nhiêu buổi và ta đang mở buổi nào: người dùng chọn
-        // một khoảng ngày rồi chỉ thấy MỘT biểu mẫu thì rất dễ tưởng đã mất
-        // phần còn lại.
-        const nhieu =
-          kq.suKien.length > 1
-            ? ` The file has ${kq.suKien.length} events in this range — the first one is loaded below; adjust the date range or import again for the others.`
-            : '';
+
+        const nhieu = moTaSoLuong(kq.suKien);
         this.thongBaoNhap.set(
           `Imported meeting details from "${f.name}"${matchMsg}.${nhieu} You can adjust any fields and invitees before scheduling.`,
         );

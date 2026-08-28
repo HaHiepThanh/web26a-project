@@ -206,6 +206,30 @@ export interface KetQuaDocIcs {
   soBoQua: number;
 }
 
+/**
+ * Câu mô tả "file này chứa gì" để hiện sau khi nhập.
+ *
+ * ⚠️ `suKien.length` GỘP hai trường hợp rất khác nhau, vì bộ đọc trải quy tắc
+ *    lặp ra: một file chứa ĐÚNG MỘT lịch "mỗi ngày trong một tháng" cũng cho ra
+ *    36 phần tử, y như một file chứa 36 buổi khác nhau. Đếm theo `uid` mới ra
+ *    số sự kiện GỐC.
+ *
+ *    Phân biệt được thì mới nói đúng: một chuỗi lặp thì quy tắc đã nạp và
+ *    KHÔNG mất gì, còn nhiều sự kiện thì phần sau thật sự chưa vào.
+ */
+export function moTaSoLuong(suKien: SuKienNhap[]): string {
+  if (suKien.length === 0) return '';
+  const soGoc = new Set(suKien.map((x) => x.uid ?? x.title)).size;
+
+  if (soGoc === 1 && suKien[0].quyTac) {
+    return ` This is one recurring event (${suKien.length} occurrences) — the repeat rule is loaded, so scheduling once covers the whole series.`;
+  }
+  if (soGoc > 1) {
+    return ` The file holds ${soGoc} different events; only the first is loaded here — the others are not imported.`;
+  }
+  return '';
+}
+
 /** Nhiều nhất chừng này sự kiện một file — chặn một file lịch cả năm nhập vào
  *  đây rồi bắn hàng trăm thông báo. */
 export const TOI_DA_SU_KIEN = 100;
