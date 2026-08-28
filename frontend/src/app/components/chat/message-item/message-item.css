@@ -103,11 +103,22 @@
  *
  * Lớp `.dang-sang` ghi đè `filter` này khi tin đang được nháy sáng — đúng thứ
  * tự ưu tiên mong muốn.
+ *
+ * ── DÙNG `--border-color`, KHÔNG TỰ CHẾ SẮC ĐỘ
+ *
+ * `styles.css` đã chốt một màu viền riêng cho theme tối, kèm cả tính toán:
+ * `base-content` pha 28% ≈ 3.79:1, đặt trên sàn WCAG 1.4.11 cho thành phần phi
+ * văn bản. Mọi nút viền trong app — Start meeting, Filter, Stats — đều lấy từ
+ * đó. Bong bóng chat phải cùng một nguồn thì viền mới trông là MỘT hệ, và mai
+ * sau chỉnh độ sáng viền toàn app chỉ phải sửa một chỗ.
+ *
+ * (Bản trước tự đặt 22% — vừa lệch hệ, vừa mờ hơn mức dự án đã chốt.)
  */
 [data-theme='night'] .chat-bubble:not(.chat-bubble-primary) {
-  --vien-toi: color-mix(in oklch, var(--color-base-content) 22%, transparent);
-  filter: drop-shadow(1px 0 0 var(--vien-toi)) drop-shadow(-1px 0 0 var(--vien-toi))
-    drop-shadow(0 1px 0 var(--vien-toi)) drop-shadow(0 -1px 0 var(--vien-toi));
+  filter: drop-shadow(1px 0 0 var(--border-color))
+    drop-shadow(-1px 0 0 var(--border-color))
+    drop-shadow(0 1px 0 var(--border-color))
+    drop-shadow(0 -1px 0 var(--border-color));
 }
 
 /**
