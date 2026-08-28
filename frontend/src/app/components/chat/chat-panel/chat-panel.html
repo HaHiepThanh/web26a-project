@@ -69,6 +69,24 @@
       }
     </h3>
     <div class="flex shrink-0 items-center gap-1">
+      <!-- Gợi ý cách viết để AI bắt được task. Icon sparkle + màu secondary
+           CHÍNH LÀ hai thứ nhận diện "Assistant" trong task-suggestion-card —
+           dùng lại nguyên xi để người đã từng thấy gợi ý AI nối được hai chỗ
+           với nhau ngay. Chữ "AI" ngắn gọn để rõ nghĩa ngay cả với người CHƯA
+           từng thấy gợi ý nào (đúng nhóm cần hint nhất).
+
+           Bấm để bật/tắt BANNER NẰM TRONG LUỒNG LAYOUT bên dưới, không phải
+           dropdown/tooltip nổi — xem lý do ở `showAiHint` trong chat-panel.ts. -->
+      <button type="button" class="btn btn-ghost btn-xs gap-1 rounded-[8px] font-bold text-secondary"
+        [class.btn-active]="showAiHint()"
+        (click)="showAiHint.set(!showAiHint())"
+        [attr.aria-expanded]="showAiHint()"
+        aria-label="How the assistant catches tasks">
+        <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z" />
+        </svg>
+        AI
+      </button>
       <button type="button" class="btn btn-square btn-ghost btn-xs relative rounded-[8px] before:absolute before:-inset-3 before:content-['']" (click)="toggleCollapsed()"
         [attr.aria-label]="isMobile() ? 'Close chat' : 'Collapse chat panel'" [attr.title]="isMobile() ? 'Close chat' : 'Collapse chat panel'">
         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -77,6 +95,14 @@
       </button>
     </div>
   </div>
+
+  @if (showAiHint()) {
+    <div class="shrink-0 border-b border-[var(--accent-purple)]/20 bg-secondary/10 px-3 py-2 text-2xs leading-relaxed text-base-content/75">
+      <span class="font-bold text-secondary">How the assistant catches tasks —</span>
+      mention someone by name, that's enough. No name? Add what to do <strong>and</strong>
+      when, like "ship the report by Friday".
+    </div>
+  }
 
   <app-message-list [messages]="messages()" [usersById]="usersById()" [currentUserId]="currentUserId()"
     [memberNames]="memberNames()" [members]="members()"

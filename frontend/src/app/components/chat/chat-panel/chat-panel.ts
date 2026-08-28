@@ -82,6 +82,19 @@ export class ChatPanel {
   readonly pulse = signal(false);
   readonly toastMessage = signal<{ name: string; text: string } | null>(null);
 
+  /**
+   * Banner giải thích cách viết để AI bắt được task — bấm nút "AI" ở tiêu đề
+   * để bật/tắt.
+   *
+   * Cố ý là MỘT HÀNG NẰM TRONG LUỒNG LAYOUT (`@if` chèn giữa header và
+   * message-list), không phải lớp phủ nổi kiểu dropdown/tooltip: khung bọc
+   * ngoài cùng của panel (`.chat-dock-shell`) có `overflow: hidden`, nên một
+   * lớp phủ `position: absolute` rất dễ bị CẮT MẤT ở panel hẹp — bấm vào chỉ
+   * thấy im lặng, đúng lỗi vừa gặp với `title` không hiện trên thiết bị chạm.
+   * Nằm trong luồng thì không có gì để cắt cả.
+   */
+  readonly showAiHint = signal(false);
+
   readonly messages = this.chat.messages;
   readonly members = this.boardService.members;
   /** uid thật của người đang đăng nhập — tin của mình mới căn phải. */
