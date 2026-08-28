@@ -47,5 +47,9 @@ import { LandingTry } from './landing-try';
   styleUrls: ['../_landing-shared.css', './landing-hero.css'],
 })
 export class LandingHero {
-  readonly trust = ['Free for small teams', 'Sign in with Google', 'Nothing to install'];
+  // "Google or email sign-in", KHÔNG phải "Sign in with Google": app nhận cả hai
+  // lối vào (Google, hoặc email kèm mật khẩu, kèm cả quên/đặt lại mật khẩu). Ghi
+  // mỗi Google là loại nhầm những người không muốn dùng tài khoản Google — mà họ
+  // vẫn đăng ký được bình thường.
+  readonly trust = ['Free for small teams', 'Google or email sign-in', 'Nothing to install'];
 }
