@@ -141,7 +141,7 @@ Built as a graduation project by four developers over 360 commits.
 
 | Member | Focus |
 |---|---|
-| [@HaHiepThanh](https://github.com/HaHiepThanh) — Hà Hiệp Thanh | Tech lead · architecture, realtime, authorization, AI, chat, deployment |
-| [@HuyDino](https://github.com/HuyDino) — Nguyễn Minh Anh Huy | Landing page, UI |
-| [@Fen0633](https://github.com/Fen0633) — Nguyen Dac Hoang | Board features, UX |
-| [@ngoduchoa113-glitch](https://github.com/ngoduchoa113-glitch) | Board features |
+| [@HaHiepThanh](https://github.com/HaHiepThanh) — Hà Hiệp Thanh |
+| [@HuyDino](https://github.com/HuyDino) — Nguyễn Minh Anh Huy |
+| [@Fen0633](https://github.com/Fen0633) — Nguyễn Đắc Hoàng |
+| [@ngoduchoa113-glitch](https://github.com/ngoduchoa113-glitch) |
