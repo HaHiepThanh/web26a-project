@@ -140,7 +140,7 @@ Migrations in `backend/migrations/` apply in numeric order. `npm run gieo:demo` 
 Built as a graduation project by four developers over 360 commits.
 
 | Member |
-|---|---|
+|---|
 | [@HaHiepThanh](https://github.com/HaHiepThanh) — Hà Hiệp Thanh |
 | [@HuyDino](https://github.com/HuyDino) — Nguyễn Minh Anh Huy |
 | [@Fen0633](https://github.com/Fen0633) — Nguyễn Đắc Hoàng |
